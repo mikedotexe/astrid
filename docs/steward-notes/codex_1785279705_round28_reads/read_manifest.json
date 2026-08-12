@@ -1,0 +1,18 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785279705831547000_1f9c36bde5",
+  "source_first_projection_generation_id": "projection_1785279706811014000_234df70bfb",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 5,
+  "reports": [
+    {
+      "filename": "introspection_proposal_phase_transitions_1785278253.txt",
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "lived_state_witness_id": "lsw_cf01cf7ed566861384b4d91f2d0a92d4b9a5b9d6c66c254431d83a49718555f0",
+      "sha256": "453e1edce1fa4344a6603af88205834a2c6fe0bf1a24c6791c93b90ffab73fee",
+      "summary": "summary.md",
+      "claims": "claims.json"
+    }
+  ]
+}

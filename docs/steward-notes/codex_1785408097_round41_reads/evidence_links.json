@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c001",
+      "kind": "lived_state",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_minime_sensory_bus_1785407877.txt",
+      "note": "Minime's sediment and distinguishability report remains primary qualitative evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c002,c003,c004",
+      "kind": "code_and_test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs;/Users/v/other/minime/minime/src/spectral_fingerprint.rs",
+      "note": "Exact source separates sensory retention/degradation from eigenvalue and distinguishability mechanics; focused bounded-curve tests pass."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c005,c006",
+      "kind": "study_and_typed_evidence",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md;/Users/v/other/minime/minime/src/regulator/core/viscosity.rs",
+      "note": "The direct source-separation study is preregistered, and current regulator evidence already carries explicit persistence terms."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c007",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/claims/minime_sensory_bus_1785407877.json",
+      "note": "Live sensory, pressure, porosity, packing, admission, and controller changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c001,c002,c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_types.rs",
+      "note": "Complete source confirms the include shell and preserves the report's own ghost-mapping warning."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c004,c005",
+      "kind": "code_and_test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/viscosity.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Explicit persistence, pressure-profile, semantic-viscosity, porosity, silt, mobility, and drag mechanics pass focused tests without applying control."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c006,c007",
+      "kind": "study_and_authority_boundary",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "Mode-packing primacy is not inferred; the offline comparison grants no live tuning authority."
+    }
+  ]
+}

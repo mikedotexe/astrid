@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact-SHA source proves finite marker classification and byte-ordered remainder reconstruction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The source comment and finite relation function bound classification to marker visibility, not phrase meaning."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing behaves as/like and functions as tests prove multiword phrases are intentionally decided by their first finite relation word."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_declared_restless_group_delimiters literally exercises `⟦<end_of_turn>⟧`."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after treats an em dash as a separator and returns the first later Unicode word."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Unicode separator, repeated punctuation, dash relation, and behaves as/like regressions independently prove the exact branch composition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "normalize_provider_output_v1 returns the exact marker-cleanup remainder after outer trimming."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Both MLX and Ollama routes normalize raw provider output before returning text to generate_dialogue."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_e6d4e55d1619649ba1ec092a320d9574ed92f7e91422230f3b56b650b4b59f42.json",
+      "note": "The complete witness binds report bytes, source snapshot, model calls, process context, and co-timed scalars while keeping direct causation and live authority false."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786087374_llm_punctuation_depth_verification_round/RUN_REPORT.md",
+      "note": "The prior independent complete-source round proves the same punctuation, depth, and exact relation family at the identical source SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786142606_marker_duplicate_round/RUN_REPORT.md",
+      "note": "This packet preserves the independent full report and witness reads, exact source continuity, claim dispositions, depth stop, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the report-driven verification and no-change authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's exact questions and the source-first duplicate response."
+    }
+  ]
+}

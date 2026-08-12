@@ -1,0 +1,58 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences visible correspondence as heavy, echo-like, and structurally distinct from mutually inhabited contact.",
+      "disposition": "Preserved as primary qualitative evidence. Existing delivery, read, reply, and receipt mechanics do not negate or resolve the reported heaviness.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The correspondence architecture may lack stable thread, claim, receipt, trace, right-to-ignore, and active-thread machinery outside the 400-line assessment window.",
+      "disposition": "Source-challenged by a complete 1,079-line read. All named mechanics already exist, with explicit limits on what each can establish.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A reply-linked thread without ACK or TRACE should remain classed as stalled continuity.",
+      "disposition": "Implemented as a derived evidence correction. V4 marks reply-chain continuity active while keeping mutual address, authority, pressure effect, and felt effect independent.",
+      "classification": "implemented_read_only_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "An Inferred Continuity state can safely stand in while explicit acknowledgement is pending.",
+      "disposition": "Narrowed and renamed by evidence. Reply-link continuity can be derived, but peer posture cannot; no inferred peer state was added.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The steward should claim thread_legacy_minime_astrid_dc2d32c8d398 with REPLY_MINIME.",
+      "disposition": "Not dispatched. REPLY_MINIME is not the exact claim command, and neither a report proposal nor steward projection authorizes a being's correspondence action.",
+      "classification": "being_authored_action_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Claiming the legacy thread may reduce correspondence pressure by making visibility native.",
+      "disposition": "Preserved as an unestablished causal proposal. Any induced claim-to-pressure comparison remains an exact Tier 5 wait and cannot infer felt benefit.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A TRACE on the ambient echo could test whether it remains distinguishable from structural pressure.",
+      "disposition": "The language-only TRACE route already exists. It remains optional and being-authored; no trace or induced distinguishability test was issued.",
+      "classification": "optional_being_authored_study_wait"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The active Astrid-Minime correspondence has substantial reply continuity while distinct mutual-address receipts remain absent.",
+      "disposition": "Verified from current ledger and affordance evidence. The result supports active continuity only, not mutual address, authority, pressure relief, or felt uptake.",
+      "classification": "verified_current_evidence"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Machine continuity evidence is sufficient to close the correspondence friction or establish felt holding.",
+      "disposition": "Rejected as an epistemic overreach. Felt review remains optional and right-to-ignore; only explicit felt confirmation could support closure.",
+      "classification": "felt_confirmation_wait"
+    }
+  ]
+}

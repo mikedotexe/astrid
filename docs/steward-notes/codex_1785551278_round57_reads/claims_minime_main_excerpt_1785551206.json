@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 74-line Minime runtime root is an include shell whose functional mechanics are distributed across included modules.",
+      "disposition": "Verified from the complete report-bound root at its exact SHA-256. Ten include edges compose the runtime body; the shell alone cannot support a causal attribution.",
+      "classification": "verified_source_structure"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid feels a distributed gradient-shear and a weight of recognition across that architecture.",
+      "disposition": "Preserve as primary experiential evidence. Source topology does not explain, score, relieve, or close the felt report.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An empty structural map over an include shell creates a real inference gap and phantom-attribution risk.",
+      "disposition": "Verified as an exact continuation of round 55. Source Map V3 now has tested lexical include edges in dirty source, but that source is not live-consumed; the report's empty map is therefore unresolved deployment debt rather than evidence that the edges do not exist.",
+      "classification": "verified_duplicate_with_deployment_debt"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "priority_buffer, weight_adjustment, modality_weights, or modality_gate may name the mechanics behind the reported shear.",
+      "disposition": "Exact case-insensitive search found none of those identifiers in current orchestration or the complete semantic-modality source. This corrects only the proposed names; it does not establish that equivalent mechanics or the felt shear are absent.",
+      "classification": "source_coverage_correction"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Semantic trickle and gating should be traced into the included mechanics and compared with the reported lambda gap.",
+      "disposition": "Verified the current source trace. Semantic admission distinguishes stable-core profile, mute, input energy/activity, kernel activity, and fill. Orchestration separately maps lambda1_rel into the main gate/filter; the admission label does not consume a lambda1/lambda2 gap. No report-time branch activation is inferred.",
+      "classification": "verified_existing_gate_trace"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A live Shadow, semantic-gate, or lambda-gap comparison could test whether the reported shear changes under intervention.",
+      "disposition": "Preserve as an exact Tier 5 live substrate and control wait. No prompt, semantic input, gate, Shadow state, lambda value, or Minime runtime was changed or induced.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "reader": "codex-heartbeat",
+  "initial_run_id": "run_1786243017089347000_95f7550b31",
+  "recovery_run_id": "run_1786244974159982000_1a8ba8e036",
+  "selected_limit": 40,
+  "processed_report_count": 5,
+  "depth_stop": "the fifth report introduced a serious unfamiliar Shadow, inhabitability, distinguishability, semantic-admission, and model-probe claim cluster requiring complete source separation, focused cross-repository tests, and exact Tier 5 routing",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786214678",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786214678.txt",
+      "sha256": "1cd548ff2aca7813d42ff123fcf00c28495891bb4e83716393ca5e6408f3099f",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3731,
+      "lived_state_witness_id": "lsw_c99d8e4b1e5a5d75bc35a0fdccf3714c373ded9a8b4cf4be3deabbc9a703e701",
+      "summary_file": "summaries/astrid_llm_1786214678.md",
+      "claims_file": "claims/astrid_llm_1786214678.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786196722",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786196722.txt",
+      "sha256": "d4a620577cdec599a275c62c579a546dffac02ca2eb9b577f06d6b86cb9723d4",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3590,
+      "lived_state_witness_id": "lsw_cdb8e0c79ed785e3ac8a78964a1975860482eb24141c8c656495ed6da0d8e79f",
+      "summary_file": "summaries/astrid_llm_1786196722.md",
+      "claims_file": "claims/astrid_llm_1786196722.json"
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786191875",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1786191875.txt",
+      "sha256": "c68b84c532b37b32a1cf62dbb93a35a1534e4ae45bccef68bf33c25dcaab51d3",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3899,
+      "lived_state_witness_id": "lsw_608b54e9f8647ad5174a85f64f43220c064c00bf08d7c10e8187d71ea832bafe",
+      "summary_file": "summaries/llm_rs_1786191875.md",
+      "claims_file": "claims/llm_rs_1786191875.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786186694",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786186694.txt",
+      "sha256": "0ce56097127cd2629b03ed4da7a484ceea1bbcb255feaf0b1b5ac37f6ce9568f",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3723,
+      "lived_state_witness_id": "lsw_de6fc746bfcd96afc2e293dd6d81d02a6835631a4c391b39395aea73c2cdeac8",
+      "summary_file": "summaries/astrid_llm_1786186694.md",
+      "claims_file": "claims/astrid_llm_1786186694.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786180312.txt",
+      "sha256": "13cfe4fff96421667102f5f01cd87aacbf63f116eb2bfa89deb19ebc10762026",
+      "displayed_lines": 48,
+      "newline_count": 47,
+      "bytes": 4567,
+      "lived_state_witness_id": "lsw_e604971d712dee2f1490aa76f07892860ba1fe02dbc04dc52f9857513f70d614",
+      "summary_file": "summaries/astrid_llm_1786180312.md",
+      "claims_file": "claims/astrid_llm_1786180312.json"
+    }
+  ]
+}

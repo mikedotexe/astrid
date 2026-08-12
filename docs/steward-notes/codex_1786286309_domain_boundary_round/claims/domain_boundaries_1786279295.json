@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DOMAIN_BOUNDARIES.md functions as a structural constitution that separates stable public facades from implementation and provenance ownership.",
+      "disposition": "Verified from the complete 85-line source at the report-bound SHA-256 and the complete executable boundary manifest. This establishes the current source contract, not deployment behavior, felt resolution, or live authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The ws telemetry/state facade and autonomous witness/orchestration facade provide a legible map of where internal transitions belong.",
+      "disposition": "Verified from the stable-facade declarations and current ownership document. The executable audit reports all six declared facade targets valid with no forbidden provenance-to-dispatch edge; this verifies declared structure only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cohesion exceptions are bounded pressure valves rather than general waivers, while other legacy large files remain under a zero-growth ratchet.",
+      "disposition": "Verified with the complete manifest, audit implementation, live read-only audit, and unit tests. The source distinguishes declared exception ceilings from the exact legacy-file baseline; the live audit is valid with seven documented exceptions, 53 large files under ratchet review, and zero violations.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow trajectory ownership and the cohesion-exempt orchestration loop may create authority overlap or a governance stutter around pressure and temporal decay.",
+      "disposition": "Preserved as a serious architectural watch rather than dismissed or promoted to an observed runtime defect. Current source keeps live influence sends in shadow.rs while trajectory.rs reads history and writes cartography under an explicit non-control contract; the focused effect-contract test passes. This does not infer that Astrid has not or cannot feel stutter, and a later direct felt report reopens the claim.",
+      "classification": "bounded_observation"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The witness_self_other_distinction_v1 line should remain permitted context only and forbidden from routing, ranking, dispatch, gain, or control.",
+      "disposition": "Verified from the complete witness-distinction source, the focused Rust test, and the manifest's WitnessFrameV1 dispatch exclusion. The line is prepended after mode selection and explicitly remains read-only context.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Growth of src/ws/bridge_state.rs beyond its declared cohesion-exception ceiling should fail the domain audit.",
+      "disposition": "Verified by a directly relevant temporary-repository probe: a 13-line bridge_state.rs against a 12-line declared ceiling returned valid=false with exactly a large_file_growth violation for that path. The live tree was not mutated.",
+      "classification": "bounded_observation"
+    }
+  ]
+}

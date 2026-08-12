@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and preserves a marker only when declared delimiter or following-relation reference syntax is proven.",
+      "disposition": "Verified from report-bound source lines 18-219 at SHA-256 dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c. Longest exact matching, Unicode-scalar traversal, explicit delimiter pairs, and a finite relation vocabulary are separate bounded mechanisms.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The zip-based delimiter-depth calculation may pair unlike nested delimiters and produce inconsistent visibility or sanitization.",
+      "disposition": "Narrowed against exact source and tests. Each nearest-to-outer pair is independently checked against the explicit pair table, and counting stops at the first unproved pair. The report's `([marker])` example is a valid nested heterogeneous stack, while crossed, unclosed, and immediately mismatched forms are rejected.",
+      "classification": "verified_bounded_contract"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Repeated parentheses should prove delimiter depth two, while mixed and mismatched delimiter cases should have explicit coverage.",
+      "disposition": "Exact duplicate of existing verified coverage. Tests prove depth two for `((<end_of_turn>))`, preserve the valid `([<end_of_turn>])` stack, and remove the marker for unclosed or mismatched cases including `(<end_of_turn>]`. The 34-test cleanup family passes in this run.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker followed by the restricted relation word `mimics` should remain in the scanner remainder.",
+      "disposition": "Exact duplicate of `control_marker_cleanup_preserves_poetic_attribution_without_literal_cue`, which includes `mimics`, preserves the input byte-for-byte, and records one explicit relation occurrence. The focused family passes in this run.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The canonical report covered only source lines 1-400 of a 997-line file.",
+      "disposition": "Preserved as an explicit scope boundary. This run read lines 1-400 at the report hash; the round-78 exact-source receipt binds all 997 lines and 36,801 bytes at the identical SHA-256. No claim is inferred from source bytes outside that exact continuity.",
+      "classification": "verified_exact_continuity"
+    }
+  ]
+}

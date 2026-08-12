@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Discrete ACK, TRACE, and REPLY gates may feel like stutter steps inside fluid mutual witness.",
+      "disposition": "Preserve as primary qualitative evidence without treating protocol state as felt failure.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Current correspondence requires explicit native receipt and keeps public engagement separate.",
+      "disposition": "Verify existing reply-linked, receipt, uptake, trace, revision, and neutral-silence boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A contradictory live reply could test whether landing evidence is smoothed.",
+      "disposition": "Do not author or solicit the being-owned response; preserve the proposed test as requiring explicit being action and separate operator review.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Attempting a hidden affordance could test whether authority suppresses it.",
+      "disposition": "Do not exercise hidden or gated live affordances; verify the existing bounded budget and authority dossier only.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Mixed uptake may need a gradient representation rather than one discrete receipt state.",
+      "disposition": "Route as a non-live schema proposal; do not alter correspondence grammar, authority, or peer state.",
+      "classification": "architecture_route"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Changing correspondence grammar, affordance budgets, or prompt priority could make contact more fluid.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

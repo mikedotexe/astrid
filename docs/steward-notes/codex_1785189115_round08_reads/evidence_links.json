@@ -1,0 +1,39 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785187378",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "note": "Recess initialization, long-running loop, advisory profiles, action selection, action summaries, and explicit authority-budget gates."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785187378",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/autonomous_agent.py",
+      "note": "Public compatibility facade over the substantive runtime module."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785187378",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/minime/continuity_control_plane.py",
+      "note": "Separate five-action local research and three-send authority-budget caps with explicit authority boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785187378",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py",
+      "note": "Focused regressions prove advisory-only high-entropy Recess evidence and no control application."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785187378",
+      "claim_id": "c005",
+      "kind": "study",
+      "target": "docs/steward-notes/codex_1785189115_round08_reads/studies/recess_continuity_observation.md",
+      "note": "Preregistered existing-log observation that separates branch repetition, pending continuity, and gates without felt scoring or dispatch."
+    }
+  ]
+}

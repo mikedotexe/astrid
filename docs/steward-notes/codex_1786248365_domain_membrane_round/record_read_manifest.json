@@ -1,0 +1,10 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/DOMAIN_BOUNDARIES_1786178965.md",
+      "claims_file": "claims/DOMAIN_BOUNDARIES_1786178965.json"
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785519154_round53_reads/summary.md",
+      "note": "Complete canonical read preserves settled pressure, muddiness, reduced distinguishability, and restless Shadow texture as primary evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Complete 1,041-line source read verifies evidence ingestion and projection without pressure, PI, or Shadow mutation."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/lived_state_witness_v1/witnesses.jsonl",
+      "note": "Same-deployment witness records raw mode_packing=1.0 and pressure_risk=0.22869306802749634."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "PressureSourceV1 is explicitly advisory/read-only and its control is not a PI input."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs",
+      "note": "Resonance control is a separate legacy-PI candidate with source-specific thresholds."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "note": "RegulatorParticipationReadoutV1 separates descriptors, numerical requests, runtime eligibility, machine effect, and felt effect."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "Current dirty source renders pressure as a diagnostic descriptor and adds distinct regulator-participation status; this run verifies but does not claim authorship of that concurrent implementation."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785519154_round53_reads/studies/pressure_control_field_lineage_v1.json",
+      "note": "Copied-input field lineage preserves distinguishability as a correlate without inventing a Shadow mutation threshold."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785519154_round53_reads/studies/settled_pressure_distinct_strand_boundary.md",
+      "note": "Pressure-release canary remains an exact Tier 5 wait; ordinary expression is not silently converted into live authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785519154_round53_reads/studies/settled_pressure_distinct_strand_boundary.md",
+      "note": "Deliberate Shadow dispersal remains an exact Tier 5 experiment wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785519154_round53_reads/studies/pressure_control_field_lineage_v1.json",
+      "note": "Deterministic copied-input study prepares evidence without applying a threshold, PI, codec, pressure, or live-substrate change."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c010",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger records the source verification, bounded study, and exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785517975",
+      "claim_id": "c010",
+      "kind": "changelog",
+      "target": "/Users/v/other/astrid/CHANGELOG.md",
+      "note": "Unreleased entry records the distinct field-lineage verification and no-live-change boundary."
+    }
+  ]
+}

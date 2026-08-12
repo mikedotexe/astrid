@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786166330",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers, classifies bounded reference syntax, and reconstructs the non-marker remainder.",
+      "disposition": "Verified from exact report-bound source continuity and a fresh reread of the current scanner, delimiter, and receipt intervals.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "first_word_after may slice in the middle of a multibyte UTF-8 character.",
+      "disposition": "Source contradiction and executable duplicate. Its end index comes from an exact marker ending on a valid string boundary; subsequent scanning uses Rust char iteration, and remainder advancement uses each scalar's len_utf8. The multibyte byte-exact regression passes.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Ambiguous partial marker recognition may create ghost markers in the reconstructed remainder.",
+      "disposition": "The scanner recognizes only complete exact known tokens, chooses the longest exact token at each valid offset, copies all other scalars unchanged, and does not rescan bytes made adjacent by removal. Existing exact-accounting, adjacent-marker, and no-second-order tests pass.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker followed by denotes should remain visible as an explicit exact-token relation.",
+      "disposition": "Verified by the literal existing denotes regression across several preceding nouns and by the passing focused suite.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A marker followed by is large should be excluded as a non-relation example.",
+      "disposition": "Corrected from exact source: is is deliberately allowlisted, so this fixture is expected to preserve the marker. Existing acts, creates, contains, implies, and triggers fixtures prove actual unlisted first words fail closed without removing surrounding prose.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Complex nested delimiters should preserve the marker while respecting the declared maximum evidence depth.",
+      "disposition": "Verified by exact two-, three-, four-, and deeper-than-four regressions. The marker remains visible and receipt depth is capped at four.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Newline and tab adjacency should still expose the next finite relation word or declared delimiter pair.",
+      "disposition": "Verified by literal newline relation, tab/newline grouped and quoted marker, Unicode-whitespace, and symbol-only-line regressions in the passing 50-test family.",
+      "classification": "addressed_duplicate"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase cards and witness evidence register a transition event.",
+      "disposition": "Verify current replyable phase cards and witness architecture without treating registration as closure or progression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Persistent resonance can survive the event snapshot, so registration and retention are not equivalent.",
+      "disposition": "Preserve Astrid's distinction as primary qualitative evidence rather than reducing it to telemetry or elapsed time.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A persistent phase needs revisable evidence across settling, return, reopening, and continuity.",
+      "disposition": "Verify Passage anchors and bearings, including active-within-restlessness and dynamic equilibrium, as owner-authored qualitative persistence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Residual signature, persistence decay, or residual weight could be represented numerically.",
+      "disposition": "Do not infer a numerical felt score; current contracts intentionally reject numeric movement resistance and preserve categorical owner language.",
+      "classification": "deliberate_authority_boundary"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Persistence should remain independently revisable and should not let a peer flatten or close the passage.",
+      "disposition": "Verify focused source contracts for independent strands, revision lineage, self-only authorship, and no closure or stage propagation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Transition persistence might drive automatic behavior, shadow interpretation, or phase progression.",
+      "disposition": "Preserve automatic inference, behavior unlocks, shadow causation, and every live phase-control use as exact Tier 5 waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

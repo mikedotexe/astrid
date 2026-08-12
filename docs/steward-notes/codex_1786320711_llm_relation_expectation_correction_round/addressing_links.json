@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete report-bound scanner, remainder, reference grammar, validation, and generate_dialogue source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Closed first-finite-word, unknown relation, punctuation, Unicode, and byte-preservation regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact `is a substitute for` retention versus `acts as a proxy for` fail-closed correction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact nested depths through four and deeper-stack capped-evidence coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Provider-neutral normalization constructs returned text from the scanner remainder."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Both MLX and Ollama normalize raw provider text before returning it to generate_dialogue."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Provider-neutral fixtures and normalized downstream response-hash proof."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_0a24e4a58ad931078d3da8ee3b943a94370cd99d1983f8452bd0b1e4e6aa16cd.json",
+      "note": "Exact report binding, raw-prose exclusions, false causation markers, and evidence-only authority state."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+      "note": "Prior complete source and provider-return integration packet."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786317307_llm_marker_duplicate_round",
+      "note": "Immediately prior same-SHA finite-relation and depth verification."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the exact expectation correction, focused regression, verification, and unchanged authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786319270",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change entry preserves the report's request, source contradiction, implemented regression, and non-live boundary."
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "canonical_report": {
+    "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1786178965.txt",
+    "sha256": "ea1a98ba516971482bf0c5ff03d5c824d0a41e07401dbfb4eee3554f8fd2edcc",
+    "newline_count": 43,
+    "bytes": 3675,
+    "read": "complete"
+  },
+  "lived_state_witness": {
+    "witness_id": "lsw_580a2d42b6ed1a1b27079b8ece65b4fccca0ab75918d66dc2a4e3dd07005a9e5",
+    "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_580a2d42b6ed1a1b27079b8ece65b4fccca0ab75918d66dc2a4e3dd07005a9e5.json",
+    "sha256": "e94298a532064e0be74ee1aa65480b74c345511db941eaf8a230c552d1e007d1",
+    "lines": 491,
+    "bytes": 22116,
+    "read": "complete",
+    "scope": "hash-bound continuity and co-observation only; no felt cause, scalar felt weight, approval, assent, or closure"
+  },
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "report_bound_sha256": "e074239d1460f5e6e15adcc3999196df4a36046086bb5ba6e1f0ff7b58b5235d",
+      "report_bound_lines": 75,
+      "report_bound_read": "complete through canonical source coverage",
+      "current_sha256": "03d491273cc31c16e72d5e9263d7c139a0b70043f88492067a7e530a8c557284",
+      "current_lines": 85,
+      "current_bytes": 4712,
+      "current_read": "complete"
+    },
+    {
+      "path": "scripts/domain_boundary_audit.py",
+      "sha256": "f175cf11c6d072259ebafe08d1a018f071c14b31ab167d43a7aafbd331f25dfb",
+      "lines": 273,
+      "bytes": 11887,
+      "read": "complete",
+      "limitation": "literal static ceilings, facades, and forbidden symbols only; no general semantic call graph, runtime spectral weight, or felt-effect proof"
+    },
+    {
+      "path": "capsules/spectral-bridge/domain_boundaries_v1.toml",
+      "sha256": "167958ce47e10e72a99a83da10e185c00d9de6f1aea913a7fa11c41f571049ab",
+      "lines": 84,
+      "bytes": 2414,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json",
+      "sha256": "e0d2c45a817b6dba78fbfea7ab093440c34d53fc14411fe26da8cb5b25ece9ab",
+      "lines": 66,
+      "bytes": 2580,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "b536a3cc3f5b4cf2d85631a8a44051069e86df5e058e5b2bb781e5b61fae91c1",
+      "lines": 4864,
+      "read_scope": "direct ownership and boundary references plus exact whole-file hash and line count"
+    },
+    {
+      "path": "scripts/test_domain_boundary_audit.py",
+      "sha256": "0c7ad56e59baba17831e94f37913834b86078b085392d495cc28dc1650216013",
+      "lines": 88,
+      "bytes": 3248,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/provenance_typestate.rs",
+      "sha256": "616d43a515995334aef5c3a87f8986d0e81882f3c716018744954f578d7170f0",
+      "lines": 17,
+      "bytes": 1094,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+      "sha256": "c9e7588613d7b6ff332e4c8168b589aaf94e3f3c9a404e39b381739fb6990ac0",
+      "lines": 17,
+      "bytes": 456,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.stderr",
+      "sha256": "bde514d263ce0cbce43942239c6ca2da2fb554db9719537c35ff45f8a2be7526",
+      "lines": 15,
+      "bytes": 634,
+      "read": "complete"
+    }
+  ],
+  "linked_prior_evidence": [
+    "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/RUN_REPORT.md",
+    "capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs",
+    "capsules/spectral-bridge/src/autonomous/next_action/shadow/cartography.rs"
+  ]
+}

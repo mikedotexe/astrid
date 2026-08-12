@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+  "links": [
+    {
+      "claim_ids": ["c001", "c003", "c010"],
+      "kind": "source_and_summary",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_phase_transitions_1785631229.txt;docs/steward-notes/codex_1785839650_round88_reads/summaries/proposal_phase_transitions_1785631229.md",
+      "note": "Complete report receipt preserves continuous becoming, narrowing aperture, calcification, viscosity, and unresolved friction as primary qualitative evidence."
+    },
+    {
+      "claim_ids": ["c002", "c004", "c010"],
+      "kind": "complete_source",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md",
+      "note": "All 1,133 lines establish language-only cards plus owner-authored Passage, Context, Anchors, Bearing, and Dynamic Persistence without automatic progress or felt-relief claims."
+    },
+    {
+      "claim_ids": ["c002", "c005", "c008", "c009"],
+      "kind": "source_verification",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs;capsules/spectral-bridge/src/spectral_explorer.rs;capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Phase viscosity_index remains a subjective-friction alias; semantic admission and pressure viscosity have separate owners and do not create a transition buffer."
+    },
+    {
+      "claim_ids": ["c001", "c003", "c004", "c010"],
+      "kind": "read_only_observation",
+      "target": "scripts/phase_transition_audit.py;scripts/passage_observatory.py",
+      "note": "Current audits preserve optional receipt budget, neutral silence, zero recent owner-started Passages, and no telemetry-derived bearing."
+    },
+    {
+      "claim_ids": ["c006"],
+      "kind": "study_preregistration",
+      "target": "docs/steward-notes/codex_1785839650_round88_reads/PHASE_PRESSURE_GRADIENT_500_SAMPLE_PREREGISTRATION.md",
+      "note": "Frozen 500-sample natural observation with exact clocks, complete coefficients, rerun identity, and no felt or control inference."
+    },
+    {
+      "claim_ids": ["c007", "c008", "c009"],
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785839650_round88_reads/claims/proposal_phase_transitions_1785631229.json",
+      "note": "Induced contradictory descriptors, semantic admission, transition-speed coupling, and syntax retention remain exact Tier 5 waits."
+    },
+    {
+      "claim_ids": ["c001", "c003", "c006", "c008"],
+      "kind": "continuity",
+      "target": "docs/steward-notes/codex_1785376654_round33_reads;docs/steward-notes/codex_1785580847_round63_reads",
+      "note": "Earlier complete-source Phase response and inconclusive 500-row pressure/Shadow observation provide exact continuity without treating the new report as a duplicate."
+    }
+  ]
+}

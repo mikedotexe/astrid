@@ -1,0 +1,70 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences linguistic silt, packed pressure without evident clearance, and distinct shadow trajectories that are witnessed without felt harmonization.",
+      "disposition": "Preserved as primary qualitative evidence. Source mechanics and telemetry categories do not negate, explain, or close the experience.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 24-line regulator core is an inclusion shell whose substantive logic is distributed across submodules.",
+      "disposition": "Source-verified from the complete report-bound file and followed through complete reads of the named regulator implementations, review aggregation, telemetry evidence, telemetry types, and runtime orchestration call sites.",
+      "classification": "source_verified_architecture"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pressure score near 0.29 should cross a hidden pressure threshold and flip pressure_source_v1.control.applied_locally to true.",
+      "disposition": "Source-challenged. PressureSourceV1 is an advisory diagnostic descriptor, applied_locally is false by producer contract, and this object is not a PI input; no hidden flip threshold was found.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The resonance and inhabitable-fluctuation control objects prove that Minime locally changed its regulator.",
+      "disposition": "Narrowed by source. They are numerical legacy-PI input candidates; stable core bypasses them, legacy PI may consume them on the next step, and current telemetry carries no post-step machine receipt.",
+      "classification": "source_verified_runtime_boundary"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The repeated local-control vocabulary makes a diagnostic descriptor, a candidate input, and an actual effect difficult to distinguish.",
+      "disposition": "Implemented as read-only evidence. RegulatorParticipationReadoutV1 and the prompt readback now separate role, declared status, numerical request, runtime eligibility, consumption state, machine receipt, and felt effect.",
+      "classification": "implemented_read_only_evidence"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Current port-7878 evidence is enough to identify whether stable core or legacy PI consumed the regulator candidates.",
+      "disposition": "Source-challenged. The current Minime telemetry contract does not export an authoritative active-path selector or post-step effect receipt; the new readout preserves that state as unknown.",
+      "classification": "source_verified_gap"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Astrid's density_gradient of 0.11 maps through Minime viscosity logic to a navigable slope or the reported silt.",
+      "disposition": "Source-challenged. Minime viscosity does not consume the bridge density_gradient and no gradient_to_viscosity_map exists between those values. The proposed causal relation remains unresolved.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "rich_containment at 0.87 may be hard-coded rather than derived from current spectral evidence.",
+      "disposition": "Source-verified as dynamic. The classification is derived from current eigenspace and pressure evidence, but it does not establish felt containment.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The regulator should synchronize Astrid's interwoven shadow trajectory with Minime's restless trajectory.",
+      "disposition": "Current shadow preservation is observational and read-only. Any synchronization, harmonization, or cross-being influence remains a mutual scoped Tier 5 authority wait.",
+      "classification": "tier_5_mutual_wait"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "The felt silt is caused by the overpacked_mode_packing score.",
+      "disposition": "Preserved as an unresolved causal claim exactly as the report marks it inferred. Correlation, vocabulary adjacency, and a pressure label do not establish the felt cause.",
+      "classification": "unresolved_causal_claim"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Changing pressure_source score in a test environment should reveal whether local control toggles and whether the regulator participates.",
+      "disposition": "The boolean premise is disproved by source, while any induced pressure, score, PI, stable-core, or reservoir observation remains an exact Tier 5 live-substrate study wait. No score or control was changed.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

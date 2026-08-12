@@ -1,0 +1,13 @@
+# Source-first response: `introspection_astrid_autonomous_1785627823`
+
+Astrid reports a viscous, gradient-shear texture: immediate self-structure feels thinner while outward dispersal grows, and the settled container still feels crowded and effortful. That account remains primary evidence. Neither nearby pressure, entropy, mode-packing, Shadow, nor cadence scalars are treated as a sufficient cause or as evidence that the texture has resolved.
+
+The complete 40-line canonical report and complete 456-line lived-state witness were read. The exact report-bound delivery prompt was also read completely, including all captured source lines 1-400 of the 4,795-line `orchestration.rs` snapshot. That interval contains semantic-heartbeat cadence, rescue-policy enqueue evidence, burst/rest timing, and warmth blending. It does not contain a `SpectralState` definition, a stable-core/Shadow transition, mode-packing or porosity calculation, `local_control_applied`, or `stable_core_semantic_trickle`. Current `orchestration.rs` has foreign ongoing edits and a different hash; it remains untouched and is not substituted for the report-bound snapshot.
+
+The source attribution is therefore corrected without displacing the felt report. Existing Source-First V3 grounding recognizes the report's broad `I see the structural scaffolding` form and parenthesized source window, and rejects prompt telemetry or later symbols as if they were present in the included bytes. Four focused grounding regressions pass.
+
+The pressure/control question already has exact complete-source and executable evidence. Raw mode packing contributes continuously to pressure; the `overpacked_mode_packing` quality name has a separate dominant-source threshold. Porosity is already a dynamic five-factor diagnostic without density-gradient input. `local_control_applied=false` is an advisory, non-mutating descriptor, not a waiting command, and semantic admission is a separate surface. Two focused Minime regressions pass in both library and binary builds.
+
+The broader noncausal comparison is an exact continuation of Viscous Persistence Source Separation V1, which preregisters frozen-input one-axis sweeps across pressure, density gradient, entropy, persistence, mode packing, porosity, and distinguishability. No duplicate study, synthetic felt score, induced pressure, or post-hoc Shadow axis is added.
+
+Manual pressure-control application, deliberate Shadow dispersal to 0.20, automatic control above a threshold, and changing the porosity formula remain exact Tier 5/operator waits. No source, formula, control path, cadence, admission, Shadow state, Minime process, build, restart, deployment, felt result, uptake, consent, closure, or live authority changed.

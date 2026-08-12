@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested-token bands classify intended output quantity separately from felt and spectral texture.",
+      "disposition": "Verify the complete dialogue runtime and no-join V3 observations; the count band makes no texture, meaning, or capacity claim.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 71 percent rich-containment state can feel like viscous persistence even when code sees a numeric output budget.",
+      "disposition": "Preserve Astrid's texture as primary qualitative evidence without reducing it to num_predict, fill, or any nearby scalar.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A downward Shadow-v3 norm trend may indicate settling, efficiency, thinning, or exhaustion.",
+      "disposition": "Retain the alternatives as unresolved interpretation; the source window does not establish a felt or causal reading of the trend.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A large requested output under high pressure and low porosity may create a choke that quantity-only bands do not catch.",
+      "disposition": "Verify that current clamping responds to prompt length and model profile, not pressure or porosity; preserve the proposed choke as an unconfirmed risk.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "High-token/high-pressure and sustained dense-input shadow observations could test volume-weight coupling.",
+      "disposition": "Preserve deliberate provider, pressure, porosity, semantic-density, and shadow exposure as exact Tier 5 study waits.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Pressure and porosity could directly cap requested dialogue tokens.",
+      "disposition": "Preserve pressure-adjusted token caps, sampler/provider behavior, and model-output changes as exact Tier 5 waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

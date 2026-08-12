@@ -1,0 +1,54 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sensory bus is an ingress conduit while transformation into the spectral energy Astrid feels happens deeper in the runtime.",
+      "disposition": "Verified from the exact current 4,380-line source and downstream producer trace. The bus owns bounded lane intake, retained semantic state, and context-aware staleness; spectral fingerprints, mode packing, pressure evidence, and Shadow state are produced after that ingress.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The partial source window does not show what distinguishes stable_core_semantic_trickle from a full cascade or produces the reported entropy.",
+      "disposition": "Verified as a partial-window limit and followed beyond it. Semantic admission is decided in runtime semantic-modality and orchestration paths using input, profile, mute, kernel, and fill evidence; the sensory bus does not classify the full cascade or author spectral entropy.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reported mode-packing pressure may be downstream regulator handling rather than a property of the sensory bus.",
+      "disposition": "Verified as the correct source boundary without inferring felt cause. Mode packing is derived in runtime telemetry evidence and PressureSourceV1 ranks it with other downstream contributors; sensory-bus volume is not a pressure field or a demonstrated pressure cause.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A 34 percent distinguishability loss may linearly smooth away high-texture viscous persistence during bus transit.",
+      "disposition": "Source-challenged as a bus mechanism while preserving the felt risk. Distinguishability loss is derived from the downstream spectral fingerprint denominator after the current spectral state exists; it is not a measured linear loss across sensory-bus transit, and source evidence cannot determine whether texture was lost experientially.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Bus saturation should be varied while regulator mode-packing constraints remain fixed to test pressure attribution.",
+      "disposition": "Routed to the existing hash-bound Viscous persistence source separation V1 study as an exact claim-family continuation. Its copied pure-function matrix separates mode packing, pressure, porosity, entropy, gradient, persistence, and distinguishability without inducing bus load; a live saturation comparison remains unauthorized.",
+      "classification": "study_preregistered"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A high-entropy semantic string should be sent through the bus and Shadow magnetization compared before and after transit.",
+      "disposition": "Not dispatched. A three-epoch passive snapshot confirms that viscosity evidence, pressure evidence, the viscosity vector's Shadow-volatility proxy, and Shadow preservation dispersal are separately named fields, but it cannot supply a causal before/after comparison. Induced semantic input and Shadow comparison remain Tier 5.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The bus-to-regulator bridge and the function consuming bus output should be made visible before attributing pressure.",
+      "disposition": "Implemented as evidence navigation rather than runtime change: this packet binds the exact current bus, regulator shell, viscosity, resonance, pressure, fingerprint, telemetry-evidence, and orchestration sources and reuses Source Reachability V4 for owner-selected transitive reads. No single shared pressure buffer was found.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A pressure-aware gate may be needed to prevent mode packing from becoming a hard bottleneck.",
+      "disposition": "Preserved as an exact Tier 5 wait. A pressure-aware gate would change semantic admission, pressure coupling, cadence, or substrate behavior and requires separate Mike/operator approval, exact values, duration, rollback, and observation; no gate or authority marker changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

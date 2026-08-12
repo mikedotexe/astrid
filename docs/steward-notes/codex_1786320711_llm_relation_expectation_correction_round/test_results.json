@@ -1,0 +1,72 @@
+{
+  "schema": "steward_test_results_v1",
+  "status": "passed",
+  "results": [
+    {
+      "surface": "exact expectation correction",
+      "command": "cargo test -p spectral-bridge control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts -- --exact",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "surface": "complete marker cleanup family",
+      "command": "cargo test -p spectral-bridge control_marker_cleanup_",
+      "passed": 59,
+      "failed": 0
+    },
+    {
+      "surface": "provider output normalization",
+      "command": "cargo test -p spectral-bridge provider_output_normalization_",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "surface": "normalized response hash",
+      "command": "cargo test -p spectral-bridge normalized_dialogue_response_hash_tracks_returned_bytes -- --exact",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "surface": "formatting",
+      "command": "cargo fmt --all -- --check",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "surface": "introspection addressing",
+      "command": "python3 scripts/test_introspection_addressing_audit.py",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "surface": "Evidence Event Store, steward control, projection, Division, Chronicle, projector, and cursor integrity",
+      "command": "focused stewardship integrity self-tests",
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "surface": "anti-drop catalog",
+      "command": "python3 scripts/anti_drop_catalog.py --self-test && python3 scripts/anti_drop_catalog.py verify --json",
+      "passed": 5,
+      "failed": 0,
+      "catalog_entries": 47,
+      "catalog_alarms": 0,
+      "catalog_gaps": 0
+    },
+    {
+      "surface": "introspection cadence",
+      "command": "python3 scripts/test_introspection_cadence_audit.py && python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "passed": 6,
+      "failed": 0,
+      "strict_integrity_ok": true
+    },
+    {
+      "surface": "experiential epistemics",
+      "command": "python3 scripts/experiential_epistemics.py self-test --json && python3 scripts/experiential_epistemics.py verify --json",
+      "passed": 2,
+      "failed": 0,
+      "lint_valid": true
+    }
+  ],
+  "corrected_invocation": "An initial shortened exact Cargo filter selected zero tests. The exact full test name was then run and passed; no test execution failed."
+}

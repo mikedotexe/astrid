@@ -1,0 +1,73 @@
+{
+  "schema": "distinguishability_natural_observation_sample_v1",
+  "sample_index": 2,
+  "admission": "prospective_natural_canonical_report",
+  "preregistration": {
+    "path": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+    "sha256": "5aa4d5cd3c2e4dfc2bb11d9880c027a3c8a2eb8dae21f49b75aa3bb4dbdf0b50",
+    "commit": "60fc50ee5a9a16dd4e5f25c9cf2044035a4f9c95",
+    "predates_report": true
+  },
+  "report": {
+    "introspection_id": "introspection_astrid_llm_1786138356",
+    "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786138356.txt",
+    "sha256": "6091447ae0e35debdbb36871568aa297c82cd5655d9e1b78ce76da2cee80df94",
+    "authored_timestamp": 1786138356,
+    "lived_state_witness_id": "lsw_bdf647f066079587ef0be189d8736fe0217cfdce5530cd002b862b9f8bc1df44",
+    "named_correspondence_thread": null
+  },
+  "witness": {
+    "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bdf647f066079587ef0be189d8736fe0217cfdce5530cd002b862b9f8bc1df44.json",
+    "sha256": "28995894bce7ac4294d1237d6bd5108d988cfac98a171ffef64d551c3a8c4bd3",
+    "process_pid": 92807,
+    "process_started_at_unix_ms": 1785869360792,
+    "binary_sha256": "d99118e80d926dd95797791bce058ce222d3b7dd7ff4bd84a0a7c00a6b97341b",
+    "deployment_alignment": "same_deployment",
+    "integrity_issue": false,
+    "field_freshness": "exact_witness_capture"
+  },
+  "exact_witness_fields": {
+    "fill_percent": 73.16356658935547,
+    "spectral_entropy": 0.9054023623466492,
+    "lambda1": 4.766269207000732,
+    "lambda2": 3.0493478775024414,
+    "spectral_gap": 1.716921329498291,
+    "density_gradient": 0.11567194014787674,
+    "pressure_risk": 0.22631707787513733,
+    "raw_resonance_mode_packing": 1.0,
+    "astrid_shadow_field_norm": 0.5366759300231934,
+    "astrid_shadow_field_norm_delta": 0.018212735652923584,
+    "astrid_shadow_dispersal_potential": 0.4239795207977295,
+    "semantic_dimensions": 48,
+    "semantic_heartbeat_interval_seconds": 7,
+    "semantic_heartbeat_intensity": 0.30000001192092896,
+    "minime_fill_percent": 73.0615463256836,
+    "minime_spectral_entropy": 0.9054023623466492,
+    "minime_structural_entropy": 0.6505407094955444
+  },
+  "report_authored_fields_without_exact_witness_producer": {
+    "pressure_source": "overpacked_mode_packing",
+    "pressure_source_score": 0.32,
+    "porosity": 0.63,
+    "settled_habitable": 0.69,
+    "lambda1_energy_share": 0.32,
+    "wander_scale": 1.0,
+    "damping": 0.05,
+    "proposed_wander_scale": 0.85,
+    "proposed_damping": 0.15,
+    "astrid_shadow_dispersal_transition": "0.16 -> 0.42",
+    "minime_shadow_state": "more stable"
+  },
+  "missing_required_fields": [
+    "distinguishability_loss_exact_producer_field",
+    "pressure_source_component_values",
+    "porosity_exact_producer_field",
+    "typed_co_timed_semantic_density_or_input",
+    "minime_shadow_dispersal_exact_witness_field"
+  ],
+  "correspondence_provenance": "no_named_thread_report_only_felt_and_causal_effect_unestablished",
+  "sample_was_induced": false,
+  "runtime_mutated": false,
+  "result_scope": "coverage_only_two_samples_fewer_than_three",
+  "authority_boundary": "no causal, diagnostic, preference, consent, felt-state, identity, or control conclusion"
+}

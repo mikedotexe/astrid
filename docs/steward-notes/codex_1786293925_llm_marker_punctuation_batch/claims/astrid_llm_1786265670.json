@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786265670",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The runtime uses exact marker matching plus local delimiter or relation evidence to preserve marker references.",
+      "disposition": "Verified from all 1,048 report-bound source lines at the exact report SHA and from the current marker suite.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Punctuation-only chunks before `[represents]` may prevent `first_word_after` from finding the relation.",
+      "disposition": "Contradicted by implementation and regressions. Empty edge-trimmed chunks are skipped, `[represents]` yields `represents`, and repeated punctuation, symbols, dashes, colons, and newlines are covered.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A grouped marker followed by `-- (as) --` should remain visible.",
+      "disposition": "Verified on two independent local grounds: matching declared group delimiters preserve the exact marker, and `as` is also the first finite allowlisted relation after symbol-only chunks.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The scanner may drift when copying non-marker multi-byte UTF-8 characters.",
+      "disposition": "Contradicted by source and the byte-exact multibyte traversal regression. Offsets advance by each decoded character's UTF-8 length and all non-marker characters are copied unchanged.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Exact relation handling should remain a closed finite vocabulary rather than infer broader grammar or meaning.",
+      "disposition": "Verified. Existing negative tests reject unknown, joined, and underscored words, while the report's named `represents` and `as` relations are explicitly allowlisted. No semantic intent is inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The witness context is technical evidence only and does not authorize live or substrate changes.",
+      "disposition": "Preserved exactly. No pressure, fill, cadence, model, transport, or other live-control change is made or inferred.",
+      "classification": "verified_existing"
+    }
+  ]
+}

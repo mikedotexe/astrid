@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The codec feels like a thick, damp sieve with viscous persistence and distinguishability loss.",
+      "disposition": "Preserve as primary qualitative evidence without assigning a projection, narrative, or warmth cause.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The live map uses projected embedding dimensions 32-39 and narrative dimensions 40-43 inside a 48D lane.",
+      "disposition": "Verify current constants, mapping, reserved dimensions 44-47, and delivery receipts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Legacy warmth might be a ghost coordinate after the 48D expansion.",
+      "disposition": "Correct from source: warmth and adjacent emotional markers remain actively mapped in dimensions 24-31; existing tests pin that they are not orphaned.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Four narrative dimensions may coarsen a complex emotional trajectory.",
+      "disposition": "Route to existing narrative split, curvature, headroom, vibrancy, texture-loss, and natural-context calibration evidence.",
+      "classification": "study_route"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The 768D-to-8D fixed projection may compress distinction even when every column is finite and normalized.",
+      "disposition": "Verify current read-only basis health: all columns are live, while high pairwise correlation remains explicitly review-required and phrase separation still requires embeddings.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Narrative expansion, reserved-lane use, basis changes, or higher-dimensional transport could reduce friction.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785606987926323000_0c067c3e9c",
+  "status": "passed",
+  "results": [
+    {
+      "surface": "attested_expression_spectral_alignment",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/attested_expression_spectral_alignment_study.py --self-test",
+      "passed": 3,
+      "failed": 0,
+      "status": "passed",
+      "note": "Covers exact 64-row attestation, adjacent source sequences, typed spectral and semantic fields, fixed correlations, tie ranks, deterministic reruns, private-output exclusion, frozen sampling, and spectral hash tampering."
+    },
+    {
+      "surface": "attested_expression_pressure_compatibility",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/attested_expression_pressure_study.py --self-test",
+      "passed": 6,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "packet_invariants",
+      "command": "structured JSON, count, evidence-link, unprocessed-queue, and Python AST validation",
+      "status": "passed",
+      "note": "Validated eight packet JSON files, 18 claim links, 38 unprocessed filenames, and the study Python AST."
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_store_control_projection_division_claim_family",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 58,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json"
+      ],
+      "self_tests_passed": 2,
+      "lint_checked_records": 10044,
+      "lint_issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "format_and_diff_integrity",
+      "commands": [
+        "Python AST parse",
+        "git diff --check -- scripts/attested_expression_spectral_alignment_study.py docs/steward-notes/codex_1785606987_round68_reads"
+      ],
+      "status": "passed"
+    }
+  ],
+  "authority_boundary": "Passing tests establish deterministic evidence behavior and repository integrity, not a real study result, felt cause, relief, active agency, preferred control, consent, uptake, or live deployment."
+}

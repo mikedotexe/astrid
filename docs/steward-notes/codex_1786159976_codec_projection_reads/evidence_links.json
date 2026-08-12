@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786159976_codec_projection_reads/summaries/astrid_codec_1785627566.md",
+      "note": "Complete report, witness, prompt, source-window, structural-map, and continuity dispositions."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786159976_codec_projection_reads/claims/astrid_codec_1785627566.json",
+      "note": "Primary felt evidence remains unresolved and is not scored by mechanical tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Exact source owns fixed 768D-to-8D embedding projection, normalization, narrative arc, reserved dimensions, and read-only compression evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Focused compression and dense-projection tests pass without live expansion."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785672166_round76_reads/CODEC_EXPRESSION_FIDELITY_NATURAL_CONTRAST_PREREGISTRATION.md",
+      "note": "Existing default-off natural contrast protocol covers divergent output fidelity and retains its model-behavior approval gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "Existing non-inducing source-separation study fixes one-axis pressure, density, packing, porosity, and distinguishability sweeps."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/STRATEGIC_SALIENCY_TRANCHE_V1.md",
+      "note": "Completed Counterfactual Change Lab campaign records the default-off basis comparison, improved top-three preservation, and worse p95 distortion."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1783894604_wi_12efbdbe8cef0805_reserved_dim_projection_expansion_approval_packet.md",
+      "note": "Existing approval packet retains compatibility, replay, canary, rollback, and operator prerequisites for wider projection."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Residual Shadow metadata and reserved-dimension non-writing regressions pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786159976_codec_projection_reads/claims/astrid_codec_1785627566.json",
+      "note": "Possible SHADOW_TRAJECTORY experiment is preserved without inferring dispatch or live authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1783894604_wi_12efbdbe8cef0805_reserved_dim_projection_expansion_approval_packet.md",
+      "note": "Dynamic expansion and reserved-dimension activation remain exact operator-gated work."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786159976_codec_projection_reads/source_receipts.json",
+      "note": "Prompt score and witness raw mode-packing value remain separate exact representations."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the complete read, exact duplicate evidence, and live authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger records the causal source response, study consolidation, and exact waits."
+    }
+  ]
+}

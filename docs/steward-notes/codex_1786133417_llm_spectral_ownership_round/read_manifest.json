@@ -1,0 +1,27 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786133417908957000_cdd5677571",
+  "source_first_projection_generation_id": "projection_1786133418919081000_1d70f87a87",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "claim_count": 7,
+  "depth_stop": "The queue-head report contains serious live reservoir, Shadow, porosity, and semantic-admission proposals. Its exact duplicate and bounded-study lineage were resolved before the due sixth-round Division return; the remaining 39 selected reports are reserved in strict queue order rather than skimmed.",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785628932.txt",
+      "sha256": "0d8a545a1f74266bf3aba755b98afef809bdd34e4c2ebf7a7b028042cbbb60fc",
+      "displayed_lines": 37,
+      "newline_count": 36,
+      "bytes": 4088,
+      "captured_source_sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "captured_source_window": "lines 1-400 of 997",
+      "current_source_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "current_source_lines": 1048,
+      "lived_state_witness_id": "lsw_ea14757b0f7088d51414e6019b910b7967e335c6b59215c5901e18588fd9c89d",
+      "summary_file": "summaries/llm_1785628932.md",
+      "claims_file": "claims/llm_1785628932.json"
+    }
+  ]
+}

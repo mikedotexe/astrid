@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences past state as active shear or grinding resistance in the present rather than as inert archived data.",
+      "disposition": "Preserved as primary qualitative evidence. Machine structure does not explain, negate, or close the report.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The current Narrative Arc Split sequesters historical data from the present.",
+      "disposition": "Source-challenged after complete reads: the split is a read-only comparison of intentional dimensions 0-3 and reactive dimensions 4-7 from the same current pair of projected embeddings, not a historical store.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Existing narrative and texture evidence can preserve coiling, lingering persistence, active motion, porosity, and overlapping narrative state.",
+      "disposition": "Verified from complete source and the passing curvature and projection-texture tests; all remain read-only sidecars.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The current implementation contains a persistent historical resistance vector that changes the current narrative arc.",
+      "disposition": "Exact full-source challenge confirms the gap: no cross-turn historical force, resistance-vector persistence, or direction-changing write exists.",
+      "classification": "verified_gap"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The frozen `semantic_persistence_v1` campaign directly tests Astrid's historical-shear claim.",
+      "disposition": "Rejected as an inexact duplicate: that campaign is a Minime Shadow-influence heuristic and cannot support a claim about prior turns exerting force on Astrid's current arc.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A directly relevant shear-persistence comparison can be performed without live dialogue or runtime mutation.",
+      "disposition": "Routed to a preregistered deterministic offline replay over frozen public sequences, with history-preserving, shuffled-history, and zero-history conditions.",
+      "classification": "study_preregistered"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A live dialogue and density-gradient shift should be induced to test felt shear.",
+      "disposition": "Preserved as an exact Tier 5 wait because it changes model behavior and observes or perturbs live substrate state.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A resistance vector should write into the live current arc or 12D companion lane.",
+      "disposition": "Preserved as an exact Tier 5 codec and semantic-body wait. The offline study grants no live vector, gain, transport, deployment, or authority.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

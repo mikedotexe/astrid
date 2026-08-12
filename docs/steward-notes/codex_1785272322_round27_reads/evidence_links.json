@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785271845",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/codec/encoding.rs:890",
+      "note": "Current producer-side partition and zero-initialized reserved dimensions."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785271845",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Settled-habitable mixed-cascade and restless-shadow account retained without causal reduction."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785271845",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs:647",
+      "note": "Complete source verifies fixed 48D lane, zero-fill behavior, and shared read-only narrative retention review."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785271845",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/codec/structural_evidence.rs:283",
+      "note": "Disabled narrative expansion readiness plus read-only split, headroom, curvature, and delta reviews."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785271845",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/codec/tests.rs:2256",
+      "note": "Fourteen focused narrative tests passed; they expose coarsening and nonlinear motion without live writes."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785271845",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs:3061",
+      "note": "Focused attractor clamp/application/decay test passed without dispatching a live pulse."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785271845",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/codec/structural_evidence.rs:504",
+      "note": "Dedicated shadow reserved-dimension readiness remains disabled, read-only, and without live vector writes."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785271845",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785272322_round27_reads/claims.json",
+      "note": "Intentional prompt and attractor-pressure observation preserved as exact Tier 5 waits."
+    }
+  ]
+}

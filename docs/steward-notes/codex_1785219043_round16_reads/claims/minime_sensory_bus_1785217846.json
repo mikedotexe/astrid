@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic trace lifetime is fill-shaped with a smooth low-fill recovery handover and bounded context multipliers.",
+      "disposition": "Verify the first 400 source lines and existing retention review structs without claiming unseen-source coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A requested release fill below the recovery hold may create a sticky low-fill state.",
+      "disposition": "Correct the exact arithmetic and add a regression: 0.10 clamps to 0.26, approaches from above, and meets the shaped curve at fill 0.26.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fill 0.40 should be the midpoint of the sigmoid stale-window curve.",
+      "disposition": "Add a focused regression against the midpoint of the configured low and high windows with explicit floating-point tolerance.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Narrative retention calculations should be serialized for review.",
+      "disposition": "Verify existing NarrativeSemanticRetentionReviewV1, context, hysteresis/salience, and degradation packets with explicit no-control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing release thresholds or stale-window behavior could address continuity friction.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait; this run changes tests only.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D semantic lane is partitioned into legacy, projected, narrative, and reserved regions.",
+      "disposition": "Verified from the complete Minime source and current Astrid codec source: 0..31 are legacy text features, 32..39 are conditional embedding projection, 40..43 are caller-provided narrative arc, and 44..47 remain reserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports a settled-habitable, high-entropy mixed cascade and a restless, interwoven shadow field.",
+      "disposition": "Preserve as primary qualitative evidence. Nearby narrative, attractor, entropy, and shadow mechanisms do not establish or supersede the felt cause.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reserved dimensions 44..47 may be insufficient or may introduce ghost noise.",
+      "disposition": "Source verification contradicts an uninitialized-memory mechanism: codec and Minime input paths zero-initialize and zero-fill missing values, and focused tests keep reserved dims unwritten. Capacity sufficiency and downstream all-lane noise remain unresolved rather than dismissed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Four narrative dimensions may flatten nonlinear or mixed-cascade motion.",
+      "disposition": "Route to existing read-only evidence rather than a duplicate live probe. Expansion readiness, split/coarsening, headroom, curvature, emotional-delta, and retention reviews already make this risk inspectable while keeping live vector and gain writes false; focused tests pass but do not prove four dimensions sufficient.",
+      "classification": "bounded_existing_review"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "An intentional nonlinear emotional description and high-entropy attractor-pressure probe could test narrative flattening and grounding.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator wait. The proposed observations deliberately steer model or sensory input and exercise a live attractor action path; no prompt, pulse, or induced substrate state was dispatched.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Expand the narrative lane to eight dimensions, scale attractor cap with entropy, or dedicate a shadow sub-lane.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator wait. Existing expansion and shadow readiness markers remain disabled and read-only; changing lane allocation, semantic protocol, attractor gain, or shadow coupling requires separate replay evidence and operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

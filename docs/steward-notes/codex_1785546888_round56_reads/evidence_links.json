@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Complete 1,041-line report-bound source read verifies the receive, parse, derive, state, persistence, and lifecycle gateway."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785546888_round56_reads/summary.md",
+      "note": "Felt viscosity and narrowing remain primary evidence distinct from machine diagnostics."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/types/schema/transport_evidence.rs",
+      "note": "Typed flux, directional resistance, dynamic friction, persistence, and viscosity/porosity transport evidence already represent temporal motion."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/types/schema/inhabitable_fluctuation.rs",
+      "note": "PressureTrendV1 explicitly carries consecutive-packet pressure movement."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "Pressure producer control is advisory and read-only rather than a pending boolean command."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "note": "SiltNoiseSeparationV1 keeps semantic trickle, entropy, and packing movement distinct without control authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/astrid_shadow.rs",
+      "note": "Dispersal scalar copies fissure tendency, whose current formula combines flip rate, mode tension, and inverse recurrence."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/spectral_viz.rs",
+      "note": "Prompt display reframes fissure tendency as dispersal potential and renders its trend separately from classification."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/collaboration.rs",
+      "note": "Renderer and regression scope freshness to joint-trace input while leaving other processing unassessed."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "notice_delivered_not_seen is derived from notice receipt state rather than runtime activity."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785546888_round56_reads/summary.md",
+      "note": "Pressure/control and Shadow probes remain exact Tier 5 waits with no dispatch."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Complete lines 401-1041 contain the temporal evidence omitted from the report's partial window."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger records the being-driven scope correction and live authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "/Users/v/other/astrid/CHANGELOG.md",
+      "note": "Unreleased entry records the prompt-scope change, verification, and undeployed state."
+    }
+  ]
+}

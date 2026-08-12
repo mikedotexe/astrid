@@ -2525,6 +2525,73 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts() {
+        let retained =
+            "Here, <end_of_turn> is a substitute for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(retained);
+
+        assert_eq!(super::first_word_after(retained, "Here, <end_of_turn>".len()), "is");
+        assert_eq!(stripped, retained);
+        let report = report.expect("allowlisted `is` relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        let rejected =
+            "Here, <end_of_turn> acts as a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(rejected);
+
+        assert_eq!(
+            super::first_word_after(rejected, "Here, <end_of_turn>".len()),
+            "acts"
+        );
+        assert_eq!(
+            stripped,
+            "Here,  acts as a proxy for the boundary I am naming."
+        );
+        let report = report.expect("unlisted `acts` relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_uses_only_the_first_finite_relation_word() {
+        let retained = "Here, <end_of_turn> functions like a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(retained);
+
+        assert_eq!(stripped, retained);
+        let report = report.expect("allowlisted first relation word report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        let rejected = "Here, <end_of_turn> acts like a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(rejected);
+
+        assert_eq!(
+            stripped,
+            "Here,  acts like a proxy for the boundary I am naming."
+        );
+        let report = report.expect("unlisted first relation word report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_does_not_expand_relation_allowlist_to_implies() {
         let text = "Here, <end_of_turn> implies the boundary I am naming.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -2600,6 +2667,77 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_rejects_punctuation_joined_allowlist_prefix() {
+        let preserved = "Here, <end_of_turn> echoes the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(preserved);
+
+        assert_eq!(stripped, preserved);
+        let report = report.expect("allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+
+        for joined in ["is-not", "is/not"] {
+            let rejected = format!("Here, <end_of_turn> {joined} the boundary I am naming.");
+            let (stripped, report) = sanitize_model_control_markers_with_report(&rejected);
+
+            assert_eq!(
+                super::first_word_after(&rejected, "Here, <end_of_turn>".len()),
+                joined
+            );
+            assert_eq!(
+                stripped,
+                format!("Here,  {joined} the boundary I am naming.")
+            );
+            let report = report.expect("punctuation-joined non-relation report");
+            assert_eq!(report.removed_total, 1);
+            assert_eq!(report.preserved_explicit_reference_total, 0);
+            assert_eq!(
+                report.context_receipts[0].reference_syntax,
+                "none_cleanup_candidate"
+            );
+        }
+    }
+
+    #[test]
+    fn control_marker_cleanup_handles_multibyte_symbol_before_relation() {
+        let text = "Here, <end_of_turn> \u{1f9e9}behaves as a named boundary.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(
+            super::first_word_after(text, "Here, <end_of_turn>".len()),
+            "behaves"
+        );
+        assert_eq!(stripped, text);
+        let report = report.expect("multibyte-symbol relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_skips_symbol_only_line_before_exact_relation() {
+        let text = "Here, <end_of_turn>\n\u{1f30a}\n   echoes the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(
+            super::first_word_after(text, "Here, <end_of_turn>".len()),
+            "echoes"
+        );
+        assert_eq!(stripped, text);
+        let report = report.expect("symbol-line exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_relation_across_newline() {
         let text = "<end_of_turn>\nrepresents the boundary I am naming.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -2623,6 +2761,51 @@ mod tests {
         assert_eq!(
             report.context_receipts[0].reference_syntax,
             "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows() {
+        for (text, expected) in [("<end_of_turn>.", "."), ("<end_of_turn>\n", "\n")] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+            assert_eq!(stripped, expected);
+            assert!(super::first_word_after(text, "<end_of_turn>".len()).is_empty());
+            let report = report.expect("empty relation cleanup report");
+            assert_eq!(report.removed_total, 1);
+            assert_eq!(report.preserved_explicit_reference_total, 0);
+            assert_eq!(
+                report.context_receipts[0].reference_syntax,
+                "none_cleanup_candidate"
+            );
+        }
+    }
+
+    #[test]
+    fn control_marker_cleanup_handles_colon_relation_without_broadening_allowlist() {
+        let preserved = "<end_of_turn>: behaves.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(preserved);
+
+        assert_eq!(stripped, preserved);
+        let report = report.expect("colon-separated allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        let non_relation = "<end_of_turn>: is_not an allowlisted relation.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(non_relation);
+
+        assert_eq!(stripped, ": is_not an allowlisted relation.");
+        let report = report.expect("colon-separated non-relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
         );
     }
 

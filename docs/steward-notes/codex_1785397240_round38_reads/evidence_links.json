@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785397002",
+      "claim_id": "c001,c003,c004,c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Complete-source reading and focused tests verify exact marker syntax, supported relations, nesting, and longest-match priority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785397002",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The new `implies` regression closes the exact missing relation-boundary evidence without broadening live grammar."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785396669",
+      "claim_id": "c001,c002,c003",
+      "kind": "typed_evidence",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/evidence/resonance_stability.rs",
+      "note": "Typed read-only viscosity evidence and bounded lived-state association preserve the report while withholding causal and felt-mechanism claims."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785396669",
+      "claim_id": "c004",
+      "kind": "study_route",
+      "target": "docs/steward-notes/codex_1785397240_round38_reads/claims/astrid_types_1785396669.json",
+      "note": "The natural-context comparison remains optional, non-inducing, and explicitly reviewed rather than scheduled."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785396669",
+      "claim_id": "c005",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785397240_round38_reads/claims/astrid_types_1785396669.json",
+      "note": "Artificial lambda1 perturbation remains an exact Tier 5 live-reservoir wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785396669",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/evidence/resonance_stability.rs",
+      "note": "The requested viscosity surface already exists through resonance-density components; no duplicate ABI field was added."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785396260",
+      "claim_id": "c001,c003,c004,c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Complete source and focused tests expose sequencing, lock timing, lifecycle counts, parse evidence, and reconnect backoff."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785396260",
+      "claim_id": "c002,c006",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785397240_round38_reads/claims/astrid_ws_1785396260.json",
+      "note": "A pong timeout or worker queue would alter live reconnect, ordering, or cadence semantics and remains Tier 5."
+    }
+  ]
+}

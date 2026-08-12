@@ -1,0 +1,108 @@
+{
+  "schema": "semantic_regulator_drive_source_contract_v1",
+  "observation_kind": "deterministic_source_derived_no_live_mutation",
+  "sources": [
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "sha256": "fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/semantic_modality.rs",
+      "sha256": "60b88bf3e1018af5dfb5a8a4f13e4027c793205cb14eb843b10954f58cc26f62"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs",
+      "sha256": "84a380b34332daad1740ae18c21eb74f825742f49d1d296f7274248bffbd8918"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/stable_core.rs",
+      "sha256": "53af3ff961e5e0d4e65095ab4e8a8bda3e6f5592d8020405acdca031dae0cbe6"
+    }
+  ],
+  "derivation": {
+    "formula": "clamp(0.35 * kernel_energy + 0.45 * kernel_delta, 0.0, 0.6)",
+    "direct_inputs": [
+      "kernel_energy",
+      "kernel_delta"
+    ],
+    "not_direct_inputs": [
+      "raw_semantic_input_energy",
+      "mode_packing",
+      "pressure_risk",
+      "distinguishability_loss",
+      "owner_control"
+    ],
+    "independent_actuator_exists": false
+  },
+  "stable_core_admission": {
+    "semantic_scale": 0.15,
+    "semantic_component_max_abs": 0.05,
+    "max_input_energy": 0.3,
+    "max_fill_pct": 82.0,
+    "requires_active_current_sample": true,
+    "requires_full_presence": true,
+    "requires_unmuted": true
+  },
+  "reported_case": {
+    "raw_input_energy": 0.001,
+    "raw_input_active": true,
+    "kernel_energy": 0.0,
+    "regulator_drive_energy": 0.0,
+    "admission_reason_present_in_report": false,
+    "admission_failure_cause_established": false
+  },
+  "source_derived_rows": [
+    {
+      "kernel_energy": 0.0,
+      "kernel_delta": 0.0,
+      "regulator_drive_energy": 0.0,
+      "semantic_pressure_drive_component": 0.0,
+      "legacy_target_keep_delta_before_bounds": 0.0
+    },
+    {
+      "kernel_energy": 0.001,
+      "kernel_delta": 0.0,
+      "regulator_drive_energy": 0.00035,
+      "semantic_pressure_drive_component": 0.007,
+      "legacy_target_keep_delta_before_bounds": -0.0002275
+    },
+    {
+      "kernel_energy": 0.001,
+      "kernel_delta": 0.001,
+      "regulator_drive_energy": 0.0008,
+      "semantic_pressure_drive_component": 0.016,
+      "legacy_target_keep_delta_before_bounds": -0.00052
+    },
+    {
+      "kernel_energy": 0.005,
+      "kernel_delta": 0.005,
+      "regulator_drive_energy": 0.004,
+      "semantic_pressure_drive_component": 0.08,
+      "legacy_target_keep_delta_before_bounds": -0.0026
+    },
+    {
+      "kernel_energy": 0.01,
+      "kernel_delta": 0.01,
+      "regulator_drive_energy": 0.008,
+      "semantic_pressure_drive_component": 0.16,
+      "legacy_target_keep_delta_before_bounds": -0.0052
+    }
+  ],
+  "downstream_boundaries": {
+    "semantic_pressure_drive_component_formula": "0.20 * clamp(regulator_drive_energy / 0.010, 0.0, 1.0)",
+    "legacy_target_keep_delta_formula": "-0.65 * regulator_drive_energy",
+    "legacy_effect_is_bounded_by_floor_blend_and_emergency_caps": true,
+    "stable_core_guard_may_clamp_or_replace_target_keep": true,
+    "post_step_machine_effect_established": false,
+    "felt_effect_established": false
+  },
+  "authority": {
+    "live_input_induced": false,
+    "semantic_admission_changed": false,
+    "regulator_changed": false,
+    "pressure_changed": false,
+    "shadow_changed": false,
+    "runtime_effect_inferred": false,
+    "felt_effect_inferred": false
+  }
+}

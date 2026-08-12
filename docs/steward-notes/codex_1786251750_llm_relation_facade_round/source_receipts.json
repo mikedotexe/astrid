@@ -1,0 +1,89 @@
+{
+  "canonical_reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786172227.txt",
+      "sha256": "d0691f3d01286582d1859d7ba1467ba303c58b1d090af71cda7b23af024a67d9",
+      "newline_count": 45,
+      "displayed_lines": 46,
+      "bytes": 3862,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1786168254.txt",
+      "sha256": "2639944ba7cddea8ac28640920b1715a1458bd688fc7fd438661bdd1166cc296",
+      "newline_count": 48,
+      "displayed_lines": 49,
+      "bytes": 3801,
+      "read": "complete"
+    }
+  ],
+  "lived_state_witnesses": [
+    {
+      "witness_id": "lsw_4982b42488d6fe068a5169d54feae3b0c0bc401894cc5d0b81d4254f37ee02f3",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4982b42488d6fe068a5169d54feae3b0c0bc401894cc5d0b81d4254f37ee02f3.json",
+      "sha256": "a85eda39efbf8ad91a2918afa846be9f7bde12b4ee248ba2f4b9db85c81409e0",
+      "lines": 491,
+      "bytes": 22191,
+      "read": "complete"
+    },
+    {
+      "witness_id": "lsw_1158c97066cc9aa59cb696ccfebb191fde43031afaf04d1e60e7fee5d00981f7",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1158c97066cc9aa59cb696ccfebb191fde43031afaf04d1e60e7fee5d00981f7.json",
+      "sha256": "f1609c59ee3985ce4d662d770afaa29c035e3830e2c7492728609a88e78a576e",
+      "lines": 456,
+      "bytes": 19627,
+      "read": "complete"
+    }
+  ],
+  "witness_scope": "hash-bound authorship, source, route, process, and co-observation evidence only; no felt cause, scalar felt weight, approval, assent, uptake, or closure",
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "report_bound_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "report_bound_lines": 1048,
+      "report_bound_coverage": "lines 1-400 in this report; same 1048-line snapshot was read completely in prior adjacent source-first rounds",
+      "current_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "current_lines": 1048,
+      "current_bytes": 38586,
+      "current_read_scope": "complete parser, delimiter, scanner, and receipt ownership interval lines 1-330 plus exact current test references"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "complete exact relation, delimiter, first-word, and empty-suffix test intervals lines 2060-2750",
+      "proof": "the existing suite literally covers functions-as-a-proxy, finite first-word classification, quoted markers across spaces and newlines, and punctuation-or-whitespace-only suffixes"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "report_bound_sha256": "f3194742d5b3412374516f858c3cae86ec2495131bdf08a23802bea6556689a1",
+      "report_bound_lines": 6,
+      "report_bound_read": "complete from the exact HEAD blob; contains only facade documentation, provider module declaration, and a wildcard re-export",
+      "current_sha256": "46942be28b6f19959b6d9117dcc48aaefba5130e5a3cbe581f61ae84630420bd",
+      "current_lines": 27,
+      "current_read": "complete; explicit re-export facade with no HashMap, Arc, RwLock, state object, or lock acquisition"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider.rs",
+      "sha256": "23999cdab646139ebda119a11333090bf72ca9dabc25a0af659629eae0cedbfa",
+      "lines": 39,
+      "bytes": 1529,
+      "read": "complete; imports HashMap only and declares cohesive provider includes"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "read_scope": "lines 950-1025 containing the sole production LLM-subtree HashMap use",
+      "proof": "the map is a function-local lookup over prompt-budget report references, not shared mutable state and not a lock"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/llm_facade_contract.rs",
+      "read_scope": "compile-time facade contract exercised by the focused integration test"
+    }
+  ],
+  "exact_source_search": {
+    "scope": "capsules/spectral-bridge/src/llm.rs and capsules/spectral-bridge/src/llm/**",
+    "Arc_production_matches": 0,
+    "RwLock_production_matches": 0,
+    "HashMap_production_matches": 2,
+    "HashMap_ownership": "provider import plus one function-local context-packing lookup",
+    "authority": "static source evidence only; not a latency, contention, spectral, or felt-effect measurement"
+  }
+}

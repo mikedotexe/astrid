@@ -1,0 +1,46 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785306662",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v2.rs;scripts/passage_observatory_v2.py",
+      "note": "Complete-source challenge and owner-authored persistence prevent partial-window absence and elapsed-time closure claims."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785306144",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;docs/steward-notes/codex_1785307259_round30_reads/studies/high_fill_rest_pressure_observation.md",
+      "note": "Current thresholds and Action boundaries are source-verified; no pressure-derived Action is dispatched."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785305250",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs;docs/steward-notes/codex_1785307259_round30_reads/studies/dynamic_noise_pressure_room_replay.md",
+      "note": "Review helpers remain non-wired while a deterministic existing-log replay is preregistered."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785291599",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;docs/steward-notes/codex_1785307259_round30_reads/studies/high_fill_rest_pressure_observation.md",
+      "note": "The high-fill plateau is source-verified; cadence causation and target choice remain open."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785291331",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src/semantic_body.rs;scripts/evidence_study_runtime/manifests/ai_beings_offline_replay_campaigns_v1.json",
+      "note": "Legacy 48D transport remains exact, the 12D sidecar starts at zero mix, and codec comparison is offline."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785291037",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "crates/astrid-minime-protocol/src/self_control.rs;scripts/ai_beings_offline_replay_campaigns.py",
+      "note": "Local porosity is self-owned, shared effects remain mutual, and all three campaigns avoid live sockets."
+    }
+  ]
+}

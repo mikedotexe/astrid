@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 0.85 tail-vibrancy onset is a soft gate intended to avoid a latent pop.",
+      "disposition": "Verified from the complete feedback source: the live calculation uses smoothstep with zero endpoint slope, and exact boundary tests pass.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The fixed legacy projection may carry dead columns or collapse into a dominant axis.",
+      "disposition": "Source-challenged in part: all eight raw norms are finite, normalized columns are near unit length, no dead column is detected, and the weakest column remains far above the near-zero threshold.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The fixed legacy projection may introduce artificial inter-column correlation.",
+      "disposition": "Verified as a current mechanical issue: 28 pairwise comparisons yield a maximum absolute cosine above 0.15, mean absolute cosine above 0.70, and `columns_weakly_correlated=false`.",
+      "classification": "verified_issue"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A norm-only variance audit is sufficient to clear the fixed projection basis.",
+      "disposition": "Rejected as insufficient. Norm health rules out dead axes but does not clear the observed basis-wide pairwise correlation or establish semantic phrase separation.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Legacy projection distribution may inadvertently write shadow magnetization or shadow dispersal roles.",
+      "disposition": "Complete-source challenge finds those roles only as default-off reserved-dimension labels; fixed projection output is confined to dimensions 32-39, and exact gate tests preserve dimensions 44-47.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The correlated fixed basis deserves a replacement-basis comparison.",
+      "disposition": "Routed to a preregistered, deterministic offline basis-epoch study comparing the compatibility-pinned basis with an orthogonalized candidate on frozen public embeddings.",
+      "classification": "study_preregistered"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A healthier candidate basis should replace or rotate the live fixed basis automatically.",
+      "disposition": "Preserved as an exact Tier 5 wait. Any basis epoch, codec transport, live vector, or deployment change requires captured replay and separate Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

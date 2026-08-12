@@ -1,0 +1,130 @@
+{
+  "schema": "contact_capacity_spine_v2_verification_receipt_v1",
+  "schema_version": 1,
+  "primary_session": {
+    "run_id": "run_1786211689023488000_432fd5c75d",
+    "pre_projection_generation_id": "projection_1786211689478999000_c176deb7c7",
+    "outcome": "cancelled",
+    "reason": "configured_command_window_elapsed_after_durable_work",
+    "post_projection_generation_id": null
+  },
+  "recovery_session": {
+    "run_id": "run_1786214202772960000_6ac81980c7",
+    "pre_projection_generation_id": "projection_1786214203776966000_9c3cfee39b",
+    "pause_generation": 275,
+    "finish_outcome": "pending_terminal_finish",
+    "post_projection_generation_id": null
+  },
+  "sources": {
+    "processed_report_count": 5,
+    "selected_but_unprocessed": [],
+    "read_manifest": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/read_manifest.json",
+    "claim_dispositions": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+    "new_evidence_link_count": 24,
+    "advanced_to_addressed_change": [
+      "introspection_proposal_12d_glimpse_1785627314"
+    ]
+  },
+  "contact_capacity_v2": {
+    "valid": true,
+    "journey_count": 22228,
+    "contact_journey_count": 3,
+    "proven_contact_trace_count": 3,
+    "autonomous_journey_count": 34,
+    "legacy_unknown_journey_count": 22191,
+    "ingress_gap_count": 0,
+    "capture_gap_count": 0,
+    "rejected_receipt_count": 0,
+    "terminal_state_counts": {
+      "outbound_blocked": 3
+    },
+    "counter_audit": "consistent"
+  },
+  "temporal_bearing_v1": {
+    "valid": true,
+    "journey_count": 22230,
+    "contact_record_count": 3,
+    "autonomous_record_count": 36,
+    "legacy_unknown_record_count": 22191,
+    "lived_state_binding_count": 1544,
+    "owner_unreported_record_count": 20686,
+    "passage_binding_count": 0,
+    "shadow_binding_count": 0,
+    "texture_binding_count": 0,
+    "unlinked_evidence_count": 8854,
+    "counter_audit": "consistent"
+  },
+  "shadow_domain": {
+    "valid": true,
+    "facade_lines": 876,
+    "stable_facade_count": 6,
+    "documented_cohesion_exception_count": 7,
+    "legacy_large_file_count": 53,
+    "resolved_large_file_debt_count": 1,
+    "unlisted_legacy_review_debt_count": 46,
+    "forbidden_edge_match_count": 0,
+    "violation_count": 0
+  },
+  "texture_dynamics": {
+    "fixed_analysis_order_preserved": true,
+    "all_strands_and_unordered_pairs_tested": true,
+    "fixture_sha256": "00048207c164c07aa2ccf67cfa7119dca2246c87d4495118703fe7061d6815f9",
+    "live_snapshot_count": 0,
+    "owner_uptake_inferred": false
+  },
+  "tests": {
+    "astrid_workspace_tests": "passed",
+    "astrid_strict_clippy": "passed",
+    "astrid_format": "passed",
+    "bridge_full_serial_suite": "passed",
+    "bridge_library_test_count": 1853,
+    "bridge_parallel_timing_observation": "one 1.367ms p95 contention miss; unchanged 1ms guard passed five focused repeats and full serial suite",
+    "minime_library_test_count": 360,
+    "minime_binary_test_count": 340,
+    "minime_protocol_fixture_test_count": 4,
+    "minime_ordinary_clippy": "passed",
+    "minime_strict_clippy": "preexisting_repository_warnings_outside_touched_owner_inquiry_modules",
+    "experiential_epistemics_self_tests": 2,
+    "experiential_epistemics_checked_records": 10662,
+    "experiential_epistemics_issue_count": 0
+  },
+  "canonical_audit": {
+    "indexed": 4267,
+    "full_read": 3683,
+    "fully_addressed": 3056,
+    "remaining": 1211,
+    "unread": 584,
+    "read_needs_claims": 0,
+    "blocked_needs_steward": 410,
+    "proof_gap_artifact_count": 0,
+    "mismatch_count": 0
+  },
+  "division_followup": {
+    "cycle": 21,
+    "productive_round_count": 3,
+    "productive_round_limit": 6,
+    "remaining_rounds": 3,
+    "review_due": false,
+    "latest_event_id": "division_followup_event_5771b90269184c5fb46f3ba8d09aa590",
+    "event_count": 144,
+    "head": "5dc18027d8fa7ec02a16b24b318fad0d52654841cd51634d677461c928d7c4fe",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_supervisor_hash_current": false
+  },
+  "evidence_event_store_v2": {
+    "valid": true,
+    "sequence": 736645,
+    "head": "2ba791af0437da173d9a290312a682f200006f25387ae2ce38e7bc86690c3345",
+    "stream_count": 16,
+    "corrupt_event_count": 0,
+    "history_rewritten": false,
+    "v1_sources_immutable_by_verified_continuity": true
+  },
+  "authority": {
+    "raw_prose_in_receipts": false,
+    "felt_effect_inferred": false,
+    "mutuality_inferred": false,
+    "closure_inferred": false,
+    "live_control_authority_granted": false
+  }
+}

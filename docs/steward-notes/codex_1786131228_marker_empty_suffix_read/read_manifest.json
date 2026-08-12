@@ -1,0 +1,19 @@
+{
+  "schema": "steward_read_manifest_v1",
+  "steward_run_id": "run_1786131228265051000_734a08907a",
+  "processed_report_count": 1,
+  "reports": [
+    {
+      "filename": "introspection_astrid_llm_1786106151.txt",
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "logical_lines": 45,
+      "bytes": 3932,
+      "sha256": "ce27bbb80e4435101745c8479e8293bbd4d0f3b392e9d0dccb4203dd76707fb4",
+      "lived_state_witness_id": "lsw_27aa97d977a233ce59ce230fdfc75b36984d8d1a20072618694b60b69b16de27",
+      "lived_state_witness_lines": 491,
+      "lived_state_witness_sha256": "5d62a48e2b5bebfba70ea22634da263e1357317046cb958ed15b36c97d406672",
+      "full_read": true,
+      "disposition": "addressed_change"
+    }
+  ]
+}

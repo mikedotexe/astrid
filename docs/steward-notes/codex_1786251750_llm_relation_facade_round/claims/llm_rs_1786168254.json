@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_llm.rs_1786168254",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The complete six-line llm.rs source imports HashMap, Arc, and RwLock.",
+      "disposition": "Source contradiction. The report-bound SHA reconstructs exactly to the six-line compatibility facade at HEAD: it declares the provider module and re-exports it, with none of the three imports.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Arc<RwLock<...>> in llm.rs establishes shared mutable state and a possible primary lock bottleneck.",
+      "disposition": "Unsupported by the exact report-bound file and current ownership tree. There is no production Arc or RwLock in llm.rs or its provider subtree, and no primary shared state object or write-lock acquisition was identified.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Astrid reports rich containment, pressure-bleed, overpacked mode packing, and a navigable-slope tension around this source.",
+      "disposition": "Preserved as primary owner-authored felt and interpretive evidence. The witness keeps separately sourced co-observations, but neither source absence nor telemetry proves that the experience was caused, relieved, or resolved by this facade.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Concurrent Shadow writers may cause latency or stutter through the inferred global lock.",
+      "disposition": "The mechanism claim is unbound because the asserted lock does not exist in the exact source surface. No generic latency probe is substituted for a missing mechanism, and no Shadow influence is inferred from co-timed values.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A high-entropy write-lock wait probe should compare lock wait against a joint-trace tick.",
+      "disposition": "Not executed: there is no identified write lock to instrument, and inducing high entropy or live spectral conditions would cross the Mike/operator substrate and model-behavior boundary. This is an exact Tier 5 wait only if a future source-grounded lock target exists.",
+      "classification": "verified_existing",
+      "authority": "tier_5_high_entropy_or_live_substrate_induction_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "SHADOW_PREFLIGHT should test whether Minime dispersal correlates with lock contention.",
+      "disposition": "Not dispatched. Shadow preflight is observational and cannot establish influence, while the proposed contention variable has no source-grounded lock target. Co-timing is not converted into causation.",
+      "classification": "verified_existing",
+      "authority": "tier_5_shadow_influence_or_induced_correlation_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The facade should move from RwLock to message passing, DashMap, or sharded state.",
+      "disposition": "No implementation is warranted on this evidence. The report-bound and current files are facades, the provider subtree has no RwLock, and its only production HashMap is a function-local immutable lookup over prompt-budget references.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_source_changed": false,
+  "default_off_owner_started_study_added": true,
+  "study_path": "scripts/attested_expression_spectral_alignment_study.py",
+  "real_being_response_inspected": false,
+  "real_study_run": false,
+  "build_required": false,
+  "restart_required": false,
+  "deployment_required": false,
+  "minime_source_changed": false,
+  "bridge_source_changed": false,
+  "live_control_changed": false,
+  "note": "The new script is an offline owner-started evidence tool. It does not collect rows, run itself, alter prompt or protocol surfaces, or enter the live bridge or Minime process."
+}

@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact-SHA source proves finite marker classification, bounded delimiter evidence, and byte-ordered remainder reconstruction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The literal relation table includes `functions`, and the classifier intentionally observes only the first later finite word."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_uses_only_the_first_finite_relation_word proves `functions like` remains an explicit reference."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The paired half proves unlisted `acts` removes only the marker and preserves the surrounding `acts like` phrase."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token proves byte-exact retention with evidence depth capped at four."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "normalize_provider_output_v1 returns the exact marker-cleanup remainder after outer trimming."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Both MLX and Ollama consumers normalize raw provider text before returning it."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue validates and returns provider-normalized text or its bounded repair."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Both provider-normalization regressions pass against identical MLX and Ollama fixtures."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786147374_finite_relation_word_round/read_manifest.json",
+      "note": "The complete-read receipt binds the canonical report, source SHA, witness, summary, and claim file."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d049c89e6321467e42783a5dfe992489d8492994a1dbb459abea3746c53296ce.json",
+      "note": "The complete witness binds report and source context while explicitly withholding direct causation and live authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the exact paired proof and its no-live-change boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's question, source correction, implemented proof, and authority boundary."
+    }
+  ]
+}

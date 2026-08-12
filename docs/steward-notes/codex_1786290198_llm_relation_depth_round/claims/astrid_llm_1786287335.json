@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786287335",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers, reconstructs a clean remainder, and retains metadata for each exact match.",
+      "disposition": "Verified from all 1,048 lines of the report-bound source at its exact SHA-256. The scanner takes longest exact matches, copies every unmatched UTF-8 scalar, retains referenced marker bytes, and records bounded hash-only context metadata.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A multiword phrase such as `serves as a primary gateway` may cause `first_word_after` to capture `as` or miss the intended relation.",
+      "disposition": "Exact source contradicts the proposed miss. `first_word_after` returns the first non-empty finite word, `serves`, and `serves` is explicitly allowlisted. Subsequent phrase words are intentionally outside this finite marker-visibility classifier. Existing proxy and first-finite-word regressions make the boundary executable without broadening the vocabulary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A known marker followed by `behaves` should remain in the reconstructed remainder as an explicit reference.",
+      "disposition": "Verified by `control_marker_cleanup_preserves_poetic_attribution_without_literal_cue`, which literally covers both `behaves as` and `behaves like`; the current 58-test marker family passes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested matching delimiters should preserve an exact marker and report bounded delimiter depth through `MAX_EXACT_REFERENCE_DELIMITER_DEPTH`.",
+      "disposition": "Verified by nested-stack, repeated-pair, exact depth-three, exact depth-four, Unicode-whitespace, mismatch, unclosed, and deeper-than-four capped-evidence regressions. The evidence depth is bounded at four without dropping the referenced marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Punctuation-heavy output should not make relation detection brittle or rewrite surrounding bytes.",
+      "disposition": "Verified by repeated-punctuation, dash, colon, newline, Unicode-symbol, symbol-only-line, punctuation-joined-word, empty-tail, and byte-exact UTF-8 regressions. Recognized finite words preserve the marker; unknown or absent words fail closed by removing only the exact marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The partial source observation and lived-state witness are evidence, not proof of activation, causation, felt resolution, or control authority.",
+      "disposition": "Preserved exactly. The complete same-SHA source read closes the unseen-source gap while the witness's false causation and authority markers, raw-prose exclusions, and evidence-only state remain unchanged. No deployed effect, model behavior, or felt status is inferred.",
+      "classification": "verified_existing"
+    }
+  ]
+}

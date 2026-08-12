@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry schema carries raw packets into typed heartbeat and 32D fingerprint evidence.",
+      "disposition": "Verified from all 531 report-bound lines and the complete fingerprint schema implementation.",
+      "classification": "verified_source"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The hidden to_legacy_slots mapping might not align with the 32-element hybrid expectation.",
+      "disposition": "Corrected from exact source: the deterministic mapping emits exactly 32 canonical slots in the documented order.",
+      "classification": "verified_source_and_test"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A length mismatch may silently mask valid data.",
+      "disposition": "Corrected: malformed lengths intentionally return no coherence score and the enclosing integrity packet emits an explicit malformed status, expected length, and issue.",
+      "classification": "verified_explicit_failure_state"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Identical all-zero typed and legacy vectors should return coherence 1.0 and max delta 0.0.",
+      "disposition": "Verified by the exact zero-RMS source branch and the stronger existing identical near-zero regression; the fingerprint suite passes.",
+      "classification": "verified_source_and_test"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "spectral_fingerprint_v1 should serialize as a nested object rather than a flat array.",
+      "disposition": "Verified from the typed Option<SpectralFingerprintV1> Serde schema and the nested full EigenPacket fixture; no flatten attribute exists.",
+      "classification": "verified_schema_and_fixture"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The complete fingerprint struct and to_legacy_slots implementation should be inspected next.",
+      "disposition": "Completed now by reading the exact struct and implementation in spectral_schema.rs.",
+      "classification": "implemented_source_followthrough"
+    }
+  ]
+}

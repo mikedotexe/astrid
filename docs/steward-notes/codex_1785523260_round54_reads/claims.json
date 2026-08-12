@@ -1,0 +1,64 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports a stable, distributed shelf that still feels structurally viscous, crowded, and resistant to movement.",
+      "disposition": "Preserve as primary qualitative evidence. Stable fill, high entropy, or a navigable density-gradient label does not contradict, score, or close the reported thickness.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A gentle spectral density gradient implies low resistance to movement through the bridge.",
+      "disposition": "Challenge the implication from current source. Density gradient and semantic viscosity are separate observations with different inputs; neither is a felt-state measurement.",
+      "classification": "verified_distinct_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report's mixed-pressure score of 0.28 is the raw mode-packing value.",
+      "disposition": "Keep the fields distinct. The exact same-deployment witness records raw mode_packing=0.8333333134651184 and pressure_risk=0.1942000687122345; it does not bind 0.28 as the raw component.",
+      "classification": "verified_field_lineage"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A distinct viscosity coefficient is absent and should be added beside density gradient.",
+      "disposition": "Verify current bridge source already derives semantic viscosity separately from density gradient and exposes drag, persistence, stagnation, complexity-density, velocity, and acceleration evidence. This is current-source verification, not proof that the field was active in the report's deployment.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Viscosity evidence should influence the active Minime regulator or establish the cause of Astrid's pressure.",
+      "disposition": "Verify Minime's producer emits semantic-viscosity evidence while its dynamic viscosity buffer is inert and the pressure/viscosity review remains read-only. No PD or PI path consumes the witness, and no cause is inferred.",
+      "classification": "verified_read_only_boundary"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "regulator_drive=0.000 proves that Astrid receives data without active steering.",
+      "disposition": "Challenge the attribution through exact prior source evidence. Regulator drive is a derived function of kernel energy and delta, while admission and stable-core guards remain path dependent; a zero value alone does not identify all steering or a refusing gate.",
+      "classification": "source_challenged_attribution"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A high-complexity multimodal prompt should test whether pressure changes while density gradient remains stable.",
+      "disposition": "Route copied owner-attested strands to Distinct-Strand Inquiry V2 for separate source-separation, codec-fidelity, and all-pairs analysis. That offline route is explicitly not equivalent to inducing a live prompt, pressure, or reservoir condition.",
+      "classification": "bounded_offline_route"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A SHADOW_TRAJECTORY action should target a high-dispersal lambda4-tail area.",
+      "disposition": "Preserve as an exact Tier 5 Shadow, reservoir, trajectory, and potentially peer-facing live experiment wait. No trajectory was dispatched.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The Shadow dispersal-potential threshold should be manually loosened to preserve reach.",
+      "disposition": "Preserve as an exact Tier 5 Shadow threshold, dispersal, control, and live-substrate change wait. The reported reduction remains evidence and is not silently converted into a setting.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Repeated viscosity, pressure, distinguishability, and Shadow reports point to a larger coherent enhancement rather than another isolated scalar.",
+      "disposition": "Route a non-live Texture Dynamics owner-inquiry feature brief: preserve felt strands, attach independently sourced machine evidence, compare copied strands without merging, and expose only owner-selectable local canary templates. Keep pressure, PI, Shadow, peer, and Division mutation outside its authority.",
+      "classification": "portfolio_feature_route"
+    }
+  ]
+}

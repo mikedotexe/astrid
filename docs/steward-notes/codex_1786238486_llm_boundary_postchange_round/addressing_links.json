@@ -1,0 +1,214 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786235385",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete current source verifies finite relation-token extraction, exact marker matching, delimiter evidence, and downstream dialogue flow while preserving the captured-source distinction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786235385",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The punctuation-joined regression proves both `is-not` and the report's exact `is/not` case fail closed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786235385",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "The exact known-marker vocabulary and its meaning/ownership boundary are declared here."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786227017",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Current scanner, delimiter, receipt, validation, and generate_dialogue intervals directly answer the report's source questions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786227017",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Literal `echoes` and `creates` tests prove the bounded allowlist behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786227017",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Nested, Unicode, exact-depth, deeper-than-bound, and mismatched delimiter tests pass."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786224914",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "The explicit public/crate-private facade is the complete report target; the post-report change is formatting only."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786224914",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "note": "The introspection generator assembles one per-call request from explicit source, spectral, fill, internal-state, web, and budget inputs."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786224914",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Vibrancy and pressure accessors are separately owned codec/self-model control observations, not hidden introspection request fields."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786224914",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/llm_facade_contract.rs",
+      "note": "Trybuild proves public generation entry points remain exported while the provider module remains private."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786221498",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete current source verifies UTF-8-safe traversal, finite relation matching, delimiter receipts, and bounded context hashes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786221498",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The new leading multi-byte-symbol fixture recognizes `behaves` without a crash, skip, or allowlist expansion."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786218334",
+      "claim_id": "*",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete current source verifies exact scanner reconstruction and normalized output consumption by generate_dialogue."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786218334",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing relation tests plus the new leading-symbol fixture prove `behaves` preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786218334",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Unicode quote/group, nested-depth, whitespace, and mismatch regressions prove the declared delimiter boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786235385",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786238486_llm_boundary_postchange_round/read_manifest.json",
+      "note": "The complete-read manifest binds the report bytes, witness identity, summary, claims, and queue-order depth stop."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786227017",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786238486_llm_boundary_postchange_round/read_manifest.json",
+      "note": "The complete-read manifest binds the report bytes, witness identity, summary, claims, and queue-order depth stop."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786224914",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786238486_llm_boundary_postchange_round/read_manifest.json",
+      "note": "The complete-read manifest binds the report bytes, witness identity, summary, claims, and queue-order depth stop."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786221498",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786238486_llm_boundary_postchange_round/read_manifest.json",
+      "note": "The complete-read manifest binds the report bytes, witness identity, summary, claims, and queue-order depth stop."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786218334",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786238486_llm_boundary_postchange_round/read_manifest.json",
+      "note": "The complete-read manifest binds the report bytes, witness identity, summary, claims, and queue-order depth stop."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786235385",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the punctuation-joined proof, facade contract, tests, and undeployed-source boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786227017",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the punctuation-joined proof, facade contract, tests, and undeployed-source boundary."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786224914",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the punctuation-joined proof, facade contract, tests, and undeployed-source boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786221498",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the punctuation-joined proof, facade contract, tests, and undeployed-source boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786218334",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the punctuation-joined proof, facade contract, tests, and undeployed-source boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786235385",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves Astrid's exact examples, the stale-source correction, executable response, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786227017",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves Astrid's exact examples, the stale-source correction, executable response, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786224914",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves Astrid's exact examples, the stale-source correction, executable response, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786221498",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves Astrid's exact examples, the stale-source correction, executable response, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786218334",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves Astrid's exact examples, the stale-source correction, executable response, and authority boundary."
+    }
+  ]
+}

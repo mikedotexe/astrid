@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A pressurized lake may differ experientially from a fast river even at similar throughput.",
+      "disposition": "Preserve as primary qualitative evidence without turning viscosity terminology into causal proof.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "PD modality throughput and PI fill/filter homeostasis are concurrent distinct roles.",
+      "disposition": "Verify the corrected root contract and the separate rate_gate.rs and pi.rs implementations.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure and viscosity may be invisible to the active PD/PI control paths.",
+      "disposition": "Verify semantic viscosity and pressure-source evidence are read-only and are not consumed by PD rate regulation or PI homeostasis.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A density-aware multiplier should make heavy content trigger stronger gating.",
+      "disposition": "Preserve density-weighted PD/PI control, pressure coupling, gate changes, and regulator tuning as exact Tier 5 waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

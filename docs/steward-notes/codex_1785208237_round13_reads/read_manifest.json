@@ -1,0 +1,10 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785208037",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_regulator.md",
+      "claims_file": "claims/minime_regulator.json"
+    }
+  ]
+}

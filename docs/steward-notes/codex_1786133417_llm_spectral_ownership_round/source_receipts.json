@@ -1,0 +1,57 @@
+{
+  "source_reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785628932.txt",
+      "sha256": "0d8a545a1f74266bf3aba755b98afef809bdd34e4c2ebf7a7b028042cbbb60fc",
+      "newline_count": 36,
+      "displayed_lines": 37,
+      "bytes": 4088,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ea14757b0f7088d51414e6019b910b7967e335c6b59215c5901e18588fd9c89d.json",
+      "sha256": "9bdd7dadb8b559d1f284d01ad4f167d26d289bce97a63ced0d27d13e37a3c046",
+      "newline_count": 456,
+      "bytes": 19757,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "captured_sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "captured_lines": 997,
+      "captured_window_sha256": "1582bea557b264567d97076831dc6901809bb7b904ff53005e7cd4f349d1d814",
+      "captured_window": "1-400",
+      "captured_source_read": "complete by exact-SHA continuity",
+      "captured_source_read_basis": "docs/steward-notes/codex_1785568169_round61_reads/source_receipts.json records the complete 997-line source at this exact SHA",
+      "current_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "current_lines": 1048,
+      "current_bytes": 38557,
+      "current_reviewed_interval": "1-400",
+      "current_reviewed_interval_read": "complete",
+      "source_ownership_result": "dialogue and marker evidence, not spectral physics, reservoir control, mode packing, porosity, maximum overlap, or semantic admission"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785566694.txt",
+      "sha256": "e53b9b90ad575fe777b9a69acf2af006682a2c10c087fc6ffaf32d6612b9b9b2",
+      "displayed_lines": 35,
+      "newline_count": 34,
+      "bytes": 4231,
+      "read": "complete",
+      "role": "exact same-source claim-family response"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "sha256": "5cc969eae80091c81e3db70830a3d2f2cf00a1f400fd8fe8f836c8ba083bd9e0",
+      "read_scope": "complete relevant copied-input source-separation contract",
+      "authority": "offline_non_inducing_no_felt_or_causal_authority"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+      "sha256": "c150e495a03e1eba7c679e33a291772cc6b18f4e6381a9a691d21d093e3d93a2",
+      "read_scope": "complete natural-observation contract",
+      "authority": "unrun_natural_only_no_dispatch_or_causal_authority"
+    }
+  ]
+}

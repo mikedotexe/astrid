@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sensory bus is a conduit for discrete and retained input into the runtime.",
+      "disposition": "Verified from the prior complete source receipt plus the exact current eleven-line diff and unchanged surrounding mechanics. The bus is not the sole author of the report's spectral classifications.",
+      "classification": "verified_source_continuity"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A settled-habitable label coexists with felt density-softening, heaviness, and reduced clarity.",
+      "disposition": "Preserve as primary experiential evidence. Low fluctuation and machine habitability do not supersede or close the reported texture.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Over-smoothing may blur the distinction between a new impulse and ongoing execution.",
+      "disposition": "Verify the existing bounded context-retention and degradation evidence without promoting it to cause. Pressure and entropy velocity may extend stale context, while density gradient enters a separate clarity curve; neither path proves the reported blur came from smoothing.",
+      "classification": "verified_existing_distinct_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "buffer_weighting or density_friction_coefficient may be the relevant sensory-bus mechanism.",
+      "disposition": "Exact current search found neither identifier. The existing read-only degradation curve is the closest clarity mechanism and remains distinct from an actuator or felt-cause claim.",
+      "classification": "source_coverage_correction"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Mode packing and the Shadow field may actively inform sensory softening.",
+      "disposition": "Correct the source boundary. Neither `mode_packing` nor `shadow_field` occurs in the current sensory bus; those report-adjacent fields originate elsewhere. No absence claim is made about the wider runtime.",
+      "classification": "source_coverage_correction"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Induce pressure_risk 0.40 at fixed fill and independently spike entropy to test density-softening.",
+      "disposition": "Preserve both as exact Tier 5 live substrate experiments. No pressure, fill, entropy, gradient, semantic input, or sensory state was induced.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The newly present semantic_strand_retention_turns field changes how historical strands influence current input.",
+      "disposition": "Do not infer an effect. The exact eleven-line current diff adds bounded storage and accessors, but current source search finds no runtime consumer. The foreign edit is preserved without attribution or mutation.",
+      "classification": "verified_inert_current_diff"
+    }
+  ]
+}

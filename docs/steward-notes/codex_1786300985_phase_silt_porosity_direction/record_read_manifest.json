@@ -1,0 +1,11 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "reader": "codex-heartbeat",
+      "summary_file": "ROUND_PACKET.md",
+      "claims_file": "claims.json"
+    }
+  ]
+}
+

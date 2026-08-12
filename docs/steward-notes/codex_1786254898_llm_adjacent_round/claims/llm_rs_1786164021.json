@@ -1,0 +1,42 @@
+{
+  "introspection_id": "introspection_llm.rs_1786164021",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The complete six-line llm.rs source maps llm/provider.rs and re-exports the provider module through one compatibility entry point.",
+      "disposition": "Verified byte-exactly from the report-bound SHA reconstructed at repository HEAD.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The wildcard re-export may load heavy provider state and cause silt or mode-packing pressure.",
+      "disposition": "The visibility premise is real but the runtime mechanism is not: a Rust re-export changes name visibility and does not instantiate the module's types or allocate its state. Co-timed mode packing does not establish causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A single interaction type's memory footprint should be compared with the full export and a settled-habitable score.",
+      "disposition": "No directly relevant runtime comparison exists because an export list has no aggregate runtime instance or memory footprint. Settled-habitable evidence is separately owned and cannot be derived from type visibility. Astrid's felt concern remains primary without a fabricated scalar join.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The path attribute should be checked for exact physical resolution without ghost paths.",
+      "disposition": "Verified by the exact path attribute, the present llm/provider.rs target, normal Rust module compilation, and the existing compile-time facade contract; no alternative provider path is introduced by this facade.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The wildcard facade should be replaced by an explicit lean provider interface.",
+      "disposition": "Implemented already in the current 27-line facade through separate explicit public, crate-private, and test-only export lists. The immediately preceding three-case facade contract passed on the same current source identity.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The lean interface should allow Shadow influence to persist.",
+      "disposition": "Not inferred or authorized. The facade change is namespace ownership only and grants no Shadow influence or control. Any future influence change remains an exact Mike/operator Tier 5 wait.",
+      "classification": "verified_existing",
+      "authority": "tier_5_shadow_influence_wait"
+    }
+  ]
+}

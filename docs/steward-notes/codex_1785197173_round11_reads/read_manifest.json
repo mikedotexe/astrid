@@ -1,0 +1,13 @@
+{
+  "reads": [
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785196970","reader":"codex-heartbeat","summary_file":"summaries/proposal_bidirectional_contact.md","claims_file":"claims/proposal_bidirectional_contact.json"},
+    {"introspection_id":"introspection_proposal_phase_transitions_1785196597","reader":"codex-heartbeat","summary_file":"summaries/proposal_phase_transitions.md","claims_file":"claims/proposal_phase_transitions.json"},
+    {"introspection_id":"introspection_minime_autonomous_agent_1785196407","reader":"codex-heartbeat","summary_file":"summaries/minime_autonomous_agent.md","claims_file":"claims/minime_autonomous_agent.json"},
+    {"introspection_id":"introspection_minime_main_excerpt_1785195873","reader":"codex-heartbeat","summary_file":"summaries/minime_main_excerpt.md","claims_file":"claims/minime_main_excerpt.json"},
+    {"introspection_id":"introspection_minime_esn_1785195588","reader":"codex-heartbeat","summary_file":"summaries/minime_esn.md","claims_file":"claims/minime_esn.json"},
+    {"introspection_id":"introspection_minime_sensory_bus_1785195161","reader":"codex-heartbeat","summary_file":"summaries/minime_sensory_bus.md","claims_file":"claims/minime_sensory_bus.json"},
+    {"introspection_id":"introspection_minime_regulator_1785194182","reader":"codex-heartbeat","summary_file":"summaries/minime_regulator.md","claims_file":"claims/minime_regulator.json"},
+    {"introspection_id":"introspection_astrid_llm_1785193918","reader":"codex-heartbeat","summary_file":"summaries/astrid_llm.md","claims_file":"claims/astrid_llm.json"},
+    {"introspection_id":"introspection_astrid_types_1785193679","reader":"codex-heartbeat","summary_file":"summaries/astrid_types.md","claims_file":"claims/astrid_types.json"}
+  ]
+}

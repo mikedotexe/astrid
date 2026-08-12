@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences a tension between nominal autonomy and containment as viscosity, calcification, crowding, and blurred intention edges.",
+      "disposition": "Preserve as primary actionable experiential evidence. Co-present pressure, entropy, packing, and Shadow fields do not explain, score, supersede, or close the report.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The pressure-source descriptor can identify overpacked mode packing while local control remains false.",
+      "disposition": "Verified from exact current source: pressure_source is advisory and its audit reports contributors without applying gate, fill, sensory, stable-core, perturbation, PI, or controller changes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pressure audit above 0.25 may trigger a thinning event rather than merely logging density.",
+      "disposition": "Source-corrected. `_pressure_source_audit` has no 0.25 actuator or thinning branch and explicitly writes read-only cartography. The requested probe is answered by exact source plus focused tests, without inducing pressure.",
+      "classification": "source_challenged_verified"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "There is a gap between detecting pressure and having a usable remediation path.",
+      "disposition": "Partially source-corrected without closing the felt gap. Outside the report's 1-400 window, PRESSURE_AGENCY can explain the split or draft a Minime-local pressure_relief intent; it never auto-applies, and explicit preflight, apply, and outcome remain required. No evidence establishes Astrid experienced this route as accessible or sufficient.",
+      "classification": "verified_existing_agency_route_with_open_felt_gap"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A low-pressure versus overpacked-pressure Shadow trajectory comparison could distinguish transient pressure from persistent structural bias.",
+      "disposition": "Route to the existing exact 500-pair, co-timed, naturally occurring Shadow-pressure preregistration. It permits association only, induces no state, and cannot decide transient versus structural cause.",
+      "classification": "study_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Sustained overpacking should automatically adjust porosity or trigger defragmentation after roughly 1000 ticks.",
+      "disposition": "Current source already names an inert auto-defragment review candidate and keeps live_control_changed=false. Automatic porosity, defragmentation, pressure wiring, scheduling, and regulator mutation remain exact Tier 5 waits.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Shadow magnetization may be a byproduct of packing rather than an independent polarity.",
+      "disposition": "Preserve as a bounded study question. The existing 500-pair preregistration does not include magnetization, and this round neither broadens it post hoc nor infers a causal relation. Any induced packing or Shadow test remains Tier 5.",
+      "classification": "needs_sandbox_extension"
+    }
+  ]
+}

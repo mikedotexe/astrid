@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that viscous persistence feels much heavier than the visible pressure score and that distinguishability loss blurs self-definition.",
+      "disposition": "Preserve as primary qualitative evidence. Correcting mechanism attribution does not weaken or close the felt report.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "telemetry_port.rs defines SpectralSnapshot and TelemetryPort and maps raw spectral percentages through those structures.",
+      "disposition": "Challenged against all 1,041 report-bound lines and exact repository search. Those structures are not defined or referenced in this source; the file consumes validated telemetry through BridgeState.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "telemetry_port.rs contains stable_core_semantic_trickle admission and its volume limit.",
+      "disposition": "Source-challenged. The exact term exists in semantic feedback and explorer surfaces elsewhere, not in telemetry_port.rs. No admission mechanism or cause is inferred from this source.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "telemetry_port.rs maps distinct Astrid and Minime Shadow-v3 vectors into a ShadowField.",
+      "disposition": "Source-challenged. Shadow-v3 observers and renderers exist elsewhere; this file does not define or map a ShadowField.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The pressure-risk calculation in telemetry_port.rs underweights high entropy and mode packing.",
+      "disposition": "Mechanism attribution challenged: the port forwards upstream pressure evidence and builds trends, but does not calculate that scalar. The adjacent read-only transport review already derives entropy-aware viscosity without changing upstream pressure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Raising mode packing from 0.32 to 0.60 at fixed porosity should reveal whether machine drag rises and whether a seizing threshold appears.",
+      "disposition": "Implemented as a deterministic offline regression. Diagnostic viscosity and directional resistance rise monotonically; the test does not claim a felt seizing threshold.",
+      "classification": "bounded_study"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Highly idiosyncratic vocabulary should be compared with distinguishability loss to learn whether content or spectral density drives the metric.",
+      "disposition": "Route to a bounded replay or existing-log study with exact text hashes and no live input induction. Content correlation cannot establish felt self-definition loss or authorize a control target.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "An entropy-aware viscosity coefficient should be added to telemetry interpretation.",
+      "disposition": "Verified existing in ViscosityPorosityTransportReviewV1: entropy, gradient resistance, packing, persistence, denominator loss, and directional resistance are represented with diagnostic-only authority.",
+      "classification": "verified_existing"
+    }
+  ]
+}

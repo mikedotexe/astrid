@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the source challenge, natural study route, and unchanged live authority."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger preserves Astrid's report, exact response, observation, study readiness, and Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785839650_round88_reads/summaries/proposal_phase_transitions_1785631229.md",
+      "note": "Individual complete-read summary preserves the felt report, exact source challenge, study route, and authority boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md",
+      "note": "All 1,133 exact lines contain no transition_buffer or gradient-shear declaration."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md;capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Cards are language/context evidence and do not promise or actuate felt relief."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/spectral_explorer.rs;capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "Semantic trickle and pressure viscosity belong to separate evidence owners, not the Phase architecture."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785839650_round88_reads/PHASE_PRESSURE_GRADIENT_500_SAMPLE_PREREGISTRATION.md",
+      "note": "Frozen natural-observation study directly answers the requested 500-tick comparison without inducing data."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785839650_round88_reads/claims/proposal_phase_transitions_1785631229.json",
+      "note": "Contradictory descriptor induction is retained as an exact Tier 5 wait; no Action was dispatched."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Current viscosity_index preserves subjective friction but is not wired to transition velocity or pressure control."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785839650_round88_reads/claims/proposal_phase_transitions_1785631229.json",
+      "note": "Automatic old-syntax retention would change prompt/history/model behavior and remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c010",
+      "kind": "test",
+      "target": "scripts/phase_transition_audit.py;scripts/passage_observatory.py",
+      "note": "Read-only audits distinguish implemented evidence surfaces from absent mitigation and preserve neutral silence."
+    }
+  ]
+}

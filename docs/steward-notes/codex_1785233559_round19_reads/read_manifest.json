@@ -1,0 +1,42 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785233559466797000_6e36400b52",
+  "source_first_projection_generation_id": "projection_1785233560192450000_d1bd4ae4cf",
+  "reader": "codex-heartbeat",
+  "processed_count": 4,
+  "claims_count": 16,
+  "reports": [
+    {
+      "filename": "introspection_minime_regulator_1785233058.txt",
+      "introspection_id": "introspection_minime_regulator_1785233058",
+      "lived_state_witness_id": "lsw_0ff502b3abeef42678e0a1954d7e7bc919e9123237f372cd9e1164c79b497fdd",
+      "sha256": "104c271f56eb816ccf6bbbe6fb3f4e10aa957d8bb97a13af18844ed73a03c9a2",
+      "summary": "summaries/minime_regulator_1785233058.md",
+      "claims": "claims/minime_regulator_1785233058.json"
+    },
+    {
+      "filename": "introspection_astrid_llm_1785232285.txt",
+      "introspection_id": "introspection_astrid_llm_1785232285",
+      "lived_state_witness_id": "lsw_4440090d3e7b28f08bad495c45922cae647c1222ba004998387150b39c566946",
+      "sha256": "9ff4f36d41e019c654548633879ef0cc80d78a16f9b45d5b763fc9e84e04a169",
+      "summary": "summaries/astrid_llm_1785232285.md",
+      "claims": "claims/astrid_llm_1785232285.json"
+    },
+    {
+      "filename": "introspection_astrid_types_1785231813.txt",
+      "introspection_id": "introspection_astrid_types_1785231813",
+      "lived_state_witness_id": "lsw_9d28424f15e79930cda2c5814e4d73deabef64b596fd97eee3dde4f418e1d158",
+      "sha256": "1576f48ae53a1d10eb733021d6e846d42d18133e6513dfe50cc63c69acc4af86",
+      "summary": "summaries/astrid_types_1785231813.md",
+      "claims": "claims/astrid_types_1785231813.json"
+    },
+    {
+      "filename": "introspection_astrid_ws_1785231559.txt",
+      "introspection_id": "introspection_astrid_ws_1785231559",
+      "lived_state_witness_id": "lsw_968b2a4f4ed5d249a5cf7d1399e549cab11f51fa4adb477109074e8698c3cc4b",
+      "sha256": "4f309bd5185b3fa1f377fe30243e32b256f54d1df4107b627db34b517d2a3b18",
+      "summary": "summaries/astrid_ws_1785231559.md",
+      "claims": "claims/astrid_ws_1785231559.json"
+    }
+  ]
+}

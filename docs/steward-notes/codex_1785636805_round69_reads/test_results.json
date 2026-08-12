@@ -1,0 +1,58 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785636805017230000_71312cd43c",
+  "status": "passed",
+  "results": [
+    {
+      "surface": "minime_library",
+      "command": "cargo test --manifest-path minime/Cargo.toml --lib",
+      "passed": 355,
+      "failed": 0,
+      "status": "passed",
+      "note": "Four pre-existing dead-code warnings remain in dormant Division fanout and gateway proof helpers."
+    },
+    {
+      "surface": "pressure_agency",
+      "command": "python3 -m unittest tests.test_self_regulation_leases.SelfRegulationLeaseTests.test_pressure_agency_status_and_request_keep_pi_advisory",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_store_control_projection_division_claim_family",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 67,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json"
+      ],
+      "self_tests_passed": 2,
+      "lint_checked_records": 10062,
+      "lint_issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "packet_invariants",
+      "command": "jq validation and fixed claim, link, queue, and deployment-boundary checks",
+      "claims": 26,
+      "packet_evidence_links": 25,
+      "recorded_addressing_links": 47,
+      "unprocessed_filenames": 36,
+      "status": "passed"
+    }
+  ],
+  "authority_boundary": "Passing tests establish source mechanics and deterministic evidence behavior, not felt cause, relief, report-time activation, accessible agency, preferred control, consent, uptake, or live deployment."
+}

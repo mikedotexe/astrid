@@ -1,0 +1,37 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785599788",
+      "introspection_path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_bidirectional_contact_1785599788.txt",
+      "introspection_sha256": "f034b6dc153d92112da88744002c5564880980a52dd9a61c0cf9bb159a09314d",
+      "introspection_logical_lines": 37,
+      "introspection_physical_newlines": 36,
+      "introspection_bytes": 3582,
+      "lived_state_witness_id": "lsw_cb647be4d9180ef8a89a79e0f59a6605ab62cda4a416684dabc1743787fbdcde",
+      "source_path": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "source_sha256": "4a881317fe978fdadb4e6df66044d90a91103e0aae635f7572246ec2df547f73",
+      "source_lines": 1120,
+      "source_bytes": 64841,
+      "report_included_intervals": ["1-400"],
+      "report_uncovered_intervals": ["401-1120"],
+      "steward_reviewed_intervals": ["1-400", "401-800", "801-1120"],
+      "full_canonical_read": true,
+      "full_bound_source_read": true,
+      "implementation_reviews": [
+        {
+          "path": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+          "sha256_after_change": "a963e900f1b82e78bf71acb8176c1cf34363b6e4718a1ca60ba59f2962ad530a",
+          "reviewed_intervals": ["2020-2125", "3380-3525", "5420-5955", "5982-6236", "8067-8460", "8800-8950", "9540-9635", "9740-9825"],
+          "full_read": false
+        }
+      ],
+      "exact_prior_response": {
+        "introspection_id": "introspection_proposal_bidirectional_contact_1785555433",
+        "packet": "docs/steward-notes/codex_1785555552_round58_reads/",
+        "source_sha256_match": true,
+        "note": "The read-only and stale-timing claims are exact continuations; the held/needs_time resurfacing claim exposed a new implementation gap."
+      }
+    }
+  ]
+}

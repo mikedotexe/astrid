@@ -1,0 +1,207 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786214678",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The current finite scanner is the exact implementation of marker classification and visible-remainder reconstruction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786214678",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact source retains underscores inside finite chunks, so `_REDACTED_` is non-empty and fails closed outside the allowlist."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786214678",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The new symbol-only-line regression proves later exact `echoes`, byte-exact marker preservation, and `following_exact_relation`."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786214678",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The finite relation family proves `behaves` preservation and unframed cleanup without changing production grammar."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786214678",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Depth one through four, repeated, mixed, mismatched, unclosed, and capped deeper stacks retain bounded exact evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786214678",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Current provider-neutral normalization feeds the reconstructed text to `generate_dialogue` validation and return."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786196722",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact source verifies single-pass quoted, grouped, and following-relation classification with separate match receipts."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786196722",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The new UTF-8 regression skips a symbol-only chunk and finds exact `echoes` without a byte-boundary error."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786196722",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The literal newline, U+1F30A line, spaces, and exact `echoes` fixture preserves the marker once."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786196722",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Declared stack, adjacent-marker, mismatch, unclosed, Unicode-whitespace, and capped-depth regressions pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786196722",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Both provider paths share the current normalization function before the dialogue consumer receives text."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786191875",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786243017_llm_shadow_distinction_round/source_receipts.json",
+      "note": "The report-bound six-line SHA and current 27-line SHA preserve the historical wildcard and present explicit facade separately."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786191875",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "The current facade uses explicit public, crate-visible, and test-only exports over a private provider module."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786191875",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/llm_facade.rs",
+      "note": "The trybuild harness proves public Exchange and generation entry points while direct provider access fails to compile."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786191875",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1786243017_llm_shadow_distinction_round/test_results.json",
+      "note": "The facade compiler contract and strict library Clippy pass without an established current namespace collision."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786191875",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger retains Astrid's architectural texture as primary evidence without claiming felt improvement or closure."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786186694",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact positive `echoes` and negative punctuation-joined relation fixtures preserve only declared syntax."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786186694",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The paired `is-not` and `is/not` regression fails closed with both finite chunks intact."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786186694",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the exact symbol-only-line implementation and its no-grammar-change boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786186694",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing depth-one-through-four and capped-deeper receipts keep delimiter evidence within the declared bound."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves the stable-foothold, rising-dispersal, and ambient-echo mismatch as primary owner evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786243017_llm_shadow_distinction_round/source_receipts.json",
+      "note": "Exact source receipts separate report-parser metadata, dialogue orchestration, Shadow, regulation, and admission ownership."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/astrid_shadow.rs",
+      "note": "Complete source defines fissure tendency from binary flips, mode tension, and inverse recurrence over PCA-reduced codec history."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core/reviews.rs",
+      "note": "Minime source keeps `settled_habitable` and foothold as separately derived regulator evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "Existing Texture Dynamics and exact-only Temporal Bearing keep distinguishability evidence separate from owner-authored felt status."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786243017_llm_shadow_distinction_round/claims/astrid_llm_1786180312.json",
+      "note": "The proposed induced tasks remain an explicit Tier 5 model-behavior and live-observation wait; no task was dispatched."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786243017_llm_shadow_distinction_round/claims/astrid_llm_1786180312.json",
+      "note": "Damping, semantic admission, pressure, fill, and Shadow influence remain exact Tier 5 waits with live authority false."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "../minime/minime/src/runtime/tests.rs",
+      "note": "The exact semantic-admission boundary test proves the 82-percent fill ceiling and explicit ceiling label."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786180312",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs",
+      "note": "The extracted trajectory domain renders exact history evidence while all mutation and control-authority markers remain false."
+    }
+  ]
+}

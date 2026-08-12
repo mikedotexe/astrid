@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786218334",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans known markers and rebuilds a visible remainder according to exact syntactic context.",
+      "disposition": "Verified from complete current source and the marker-family tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Unicode or punctuation compounds may blur the relation allowlist boundary.",
+      "disposition": "Implemented and verified by the compact scanner plus exact punctuation-joined and multi-byte-symbol regressions.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker followed by `behaves` should remain visible.",
+      "disposition": "Verified by existing relation coverage and the new leading-symbol `behaves` fixture.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested and Unicode delimiter pairs should be recognized only within the declared bounded syntax.",
+      "disposition": "Verified by existing nested, fullwidth, CJK, Unicode-whitespace, depth-bound, and mismatch regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The scanner remainder should be followed through `generate_dialogue` consumption and return.",
+      "disposition": "Verified from complete current source and provider-normalization tests; no surrounding non-marker rewrite is introduced.",
+      "classification": "verified_existing"
+    }
+  ]
+}

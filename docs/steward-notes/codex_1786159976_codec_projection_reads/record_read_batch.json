@@ -1,0 +1,23 @@
+{
+  "schema": "steward_addressing_write_receipt_v1",
+  "steward_run_id": "run_1786159976343268000_bb26a4553c",
+  "introspection_id": "introspection_astrid_codec_1785627566",
+  "full_read": {
+    "reader": "codex-heartbeat",
+    "recorded_at_unix": 1786160786.84636,
+    "summary_sha256": "fcfb7c8ba10d37e3c5eacd120e808df20423badbf4cac73cf35745f9f99330a2",
+    "claim_count": 7,
+    "proof_missing_claims": []
+  },
+  "evidence": {
+    "manifest_rows": 14,
+    "new_materialized_links": 32,
+    "existing_materialized_links": 0
+  },
+  "closure": {
+    "status": "addressed_duplicate",
+    "recorded_at_unix": 1786161038.137941,
+    "rationale": "Complete report, witness, prompt, source window, whole-file map, and exact same-SHA continuity preserve Astrid's unresolved felt viscosity while linking every mechanical proposal to existing projection-compression evidence, the completed default-off basis campaign, existing preregistrations, and exact Tier 5 waits; no Action, study run, or live change was inferred."
+  },
+  "authority": "evidence_only_not_live_approval_or_activation"
+}

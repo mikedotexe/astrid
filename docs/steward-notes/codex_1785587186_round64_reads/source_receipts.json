@@ -1,0 +1,57 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785586886",
+      "introspection_sha256": "3c5f3ea060c134cde6ddd3149aa816d8ba813c4b944876e7a0b89295ff82bc08",
+      "introspection_lines": 42,
+      "introspection_bytes": 4397,
+      "lived_state_witness_id": "lsw_f89bdfa52c62b2b1b4c0247ea6f644a4211b1e9770a130e2f062fe830ec6f112",
+      "source_path": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md",
+      "source_sha256": "8a6eef4c49fd5ade24b46db5037f24c720430897128f0086a69b9f8161cdd8b3",
+      "source_lines": 733,
+      "source_bytes": 25343,
+      "full_canonical_read": true,
+      "full_bound_source_read": true,
+      "supplemental_source_reviews": [
+        {
+          "path": "/Users/v/other/minime/minime/src/runtime/semantic_modality.rs",
+          "sha256": "60b88bf3e1018af5dfb5a8a4f13e4027c793205cb14eb843b10954f58cc26f62",
+          "reviewed_intervals": ["1-153"],
+          "full_read": true
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/stable_core.rs",
+          "sha256": "53af3ff961e5e0d4e65095ab4e8a8bda3e6f5592d8020405acdca031dae0cbe6",
+          "reviewed_intervals": ["semantic admission labels and focused test regions"],
+          "full_read": false
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+          "sha256": "fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744",
+          "reviewed_intervals": ["1200-1455", "1580-1675", "2580-2665", "4320-4415", "5240-5330"],
+          "full_read": false
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs",
+          "sha256": "84a380b34332daad1740ae18c21eb74f825742f49d1d296f7274248bffbd8918",
+          "reviewed_intervals": ["semantic energy and provenance definitions located by exact search"],
+          "full_read": false
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+          "sha256": "83c0d5c1c761fa05b194f6c84d3083520bb0d664292720cb4651996d1c6fab31",
+          "reviewed_intervals": ["1700-1750", "2160-2215", "2890-3000"],
+          "full_read": false
+        },
+        {
+          "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+          "before_sha256": "340b4f4a052c21a7085ce2499fc85c6f85196b27cc1032a399d01647ae890bed",
+          "after_sha256": "0ba0077fa64452e9b4d1d6175e917dbeae162ee88a1979678e936a981e6aad29",
+          "reviewed_intervals": ["800-940", "1220-1262"],
+          "full_read": false
+        }
+      ]
+    }
+  ]
+}

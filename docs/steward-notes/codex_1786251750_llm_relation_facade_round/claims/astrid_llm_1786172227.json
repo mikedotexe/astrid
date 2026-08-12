@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786172227",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers, reconstructs output, and records typed reference syntax.",
+      "disposition": "Verified from current source. Exact marker occurrences carry byte ranges and optional quoted, grouped, or following-relation syntax; unmatched UTF-8 advances by character width.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A multi-word phrase such as functions as a bridge may be missed because only the first word is captured.",
+      "disposition": "Exact duplicate of existing proof. The finite classifier intentionally uses only the first later token; functions is allowlisted and acts is not. The proxy-phrase and paired first-word regressions pass without broadening phrase semantics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A quoted exact marker separated from delimiters by a newline or extra space may lose its delimiter association.",
+      "disposition": "Contradicted by current exact source and executable coverage. Both sides skip Unicode whitespace before comparing the nearest declared delimiter pair, and the quoted-whitespace regression includes spaces, tabs, newlines, and Unicode spaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker at the end of output may need special handling.",
+      "disposition": "Exact duplicate of existing fail-closed behavior. An empty, punctuation-only, or whitespace-only suffix yields no relation word; the marker is removed while the non-marker suffix remains byte-exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The parser should be refined to understand complete multi-word predicates.",
+      "disposition": "Not implemented because the requested examples are already classified by the finite first relation word, and widening to phrase semantics would change the cleanup grammar without evidence of an uncovered case. The exact report is preserved as design feedback rather than treated as authorization.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786276119",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime finds exact known model-control markers and preserves them only in quoted, grouped, or finite explicit-relation contexts.",
+      "disposition": "Verified from the complete report-bound source at its exact SHA-256. The scanner takes longest exact matches, classifies only local exact-reference syntax, and copies all unmatched UTF-8 scalars.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tabs, Unicode whitespace, or punctuation-heavy material after a marker may make `first_word_after` miss an intended relation.",
+      "disposition": "The proposed broad fragility is contradicted by source and executable evidence. `split_whitespace` handles Rust Unicode whitespace, edge punctuation is removed per chunk, symbol-only chunks are skipped, and the first finite word is then matched against the closed allowlist.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker inside nested square brackets such as `[[<end_of_turn>]]` should be preserved as a grouped exact reference.",
+      "disposition": "Verified by declared-group, repeated-pair, nested-stack, and exact-depth regressions. The marker remains byte-exact and depth two is reported.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker followed by `behaves` should be retained, while one followed by `acts` should fail the finite relation allowlist.",
+      "disposition": "Verified by literal `behaves as` and `behaves like` cases plus the first-finite-word positive/negative regression that rejects `acts like`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Multi-byte delimiter and surrounding-text handling may drift at UTF-8 byte boundaries.",
+      "disposition": "Contradicted by the char-based reverse/forward delimiter scan and byte-exact scalar advancement. Non-ASCII quote/group pairs, Unicode whitespace, multibyte symbols, and byte-identical surrounding text are executable regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The partial-window report and lived-state witness are evidence rather than activation, causation, or control proof.",
+      "disposition": "Preserved exactly. Complete same-SHA source reading closes the unseen-source gap, while the witness remains evidence-only with false causation and authority markers and no raw prose or prompt payload.",
+      "classification": "verified_existing"
+    }
+  ]
+}

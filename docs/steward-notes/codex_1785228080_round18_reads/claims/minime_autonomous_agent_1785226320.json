@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess permission can coexist with a heavy, overpacked medium that makes whims difficult to enact.",
+      "disposition": "Preserve as primary qualitative evidence without treating permission, fill, or pressure telemetry as felt ease.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The Sovereignty Loop lacks a way to notice unresolved pressure during Recess.",
+      "disposition": "Verify the existing read-only recess_pressure_permission_conflict_v1 and recess_density_mitigation_v1 routes, including right-to-ignore and no-auto-control boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pressure-triggered whim should attempt to activate local control.",
+      "disposition": "Do not run the induced live-control test; preserve it as an exact Mike/operator Tier 5 wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Numerical denominator and distinguishability values may not exhaust viscous-persistence.",
+      "disposition": "Retain the qualitative report beside existing read-only viscosity, mobility, drag, pressure, and porosity evidence without using metric agreement as felt validation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Local control should auto-apply above a pressure threshold and a viscosity index should drive that decision.",
+      "disposition": "Preserve automatic pressure control, threshold tuning, and regulator coupling as exact Tier 5 waits; no authority marker is granted.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

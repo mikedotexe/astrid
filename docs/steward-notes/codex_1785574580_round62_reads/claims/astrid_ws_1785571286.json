@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that an awaited telemetry handler may create backlog or delay shutdown when integration work becomes expensive.",
+      "disposition": "Retained as primary architectural evidence and linked to the exact earlier full-read disposition; timing diagnostics make the risk observable but do not declare it absent.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Telemetry integration currently runs sequentially in the WebSocket receive loop.",
+      "disposition": "Verified again from the byte-identical complete source: decode, derivation, throttled artifact scan, state update, persistence, and trace work finish before the loop receives another frame.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The bridge needs evidence separating handler pipeline cost from lock contention.",
+      "disposition": "Verified existing telemetry_integration_health_v1 observations for pre-write pipeline, write-lock wait, and write-lock hold with latest, EWMA, and maximum values; the focused regression passed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reconnect backoff and shutdown responsiveness should be covered.",
+      "disposition": "Verified capped exponential doubling, reset after connection, and shutdown-aware sleeps. Both focused backoff regressions passed; ping frames remain answered with pong in the complete source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The telemetry handler should be moved into tokio::spawn or an offloaded worker.",
+      "disposition": "Preserved as the exact prior Tier 5 wait. Offloading changes live sensory ordering, buffering, backpressure, cancellation, and cadence; stewardship did not introduce a worker or alter the receive loop.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

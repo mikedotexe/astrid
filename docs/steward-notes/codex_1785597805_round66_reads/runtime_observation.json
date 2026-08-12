@@ -1,0 +1,18 @@
+{
+  "schema": "viscosity_pressure_shadow_passive_observation_v1",
+  "introspection_ids": ["introspection_minime_sensory_bus_1785597651", "introspection_minime_regulator_1785597026"],
+  "source": "/Users/v/other/minime/workspace/health.json",
+  "method": "three read-only snapshots across distinct naturally updating epochs; no input, Action, control, or process mutation",
+  "samples": [
+    {"t_s":172091.234375,"fill_pct":66.16800689697266,"pressure_score":0.28488487005233765,"pressure_quality":"overpacked_mode_packing","pressure_dominant":"mode_packing","pressure_temporal_lock_in":0.5032823085784912,"pressure_mode_packing":0.5696058869361877,"pressure_distinguishability_loss":0.3150487542152405,"resonance_pressure_risk":0.2107982635498047,"resonance_viscosity_index":0.8213727474212646,"resonance_viscosity_persistence":0.8177320957183838,"resonance_temporal_persistence":0.8892871141433716,"resonance_texture":"overpacked_viscous","viscosity_shadow_proxy":0.47240322828292847,"shadow_preservation_dispersal":0.17684157192707062,"shadow_primary":"volatile"},
+    {"t_s":172103.0625,"fill_pct":65.07928466796875,"pressure_score":0.30459490418434143,"pressure_quality":"overpacked_mode_packing","pressure_dominant":"mode_packing","pressure_temporal_lock_in":0.5717707276344299,"pressure_mode_packing":0.5741031765937805,"pressure_distinguishability_loss":0.3424183130264282,"resonance_pressure_risk":0.22148874402046204,"resonance_viscosity_index":0.8562760353088379,"resonance_viscosity_persistence":0.8730138540267944,"resonance_temporal_persistence":0.9999158382415771,"resonance_texture":"overpacked_viscous","viscosity_shadow_proxy":0.5264774560928345,"shadow_preservation_dispersal":0.07725544273853302,"shadow_primary":"coupled"},
+    {"t_s":172112.53125,"fill_pct":74.05289459228516,"pressure_score":0.328127920627594,"pressure_quality":"overpacked_mode_packing","pressure_dominant":"mode_packing","pressure_temporal_lock_in":0.5732147097587585,"pressure_mode_packing":0.5741149187088013,"pressure_distinguishability_loss":0.3424660563468933,"resonance_pressure_risk":0.22403261065483093,"resonance_viscosity_index":0.8567453026771545,"resonance_viscosity_persistence":0.8734560012817383,"resonance_temporal_persistence":0.9999943375587464,"resonance_texture":"overpacked_viscous","viscosity_shadow_proxy":0.5253095030784607,"shadow_preservation_dispersal":0.07736312597990036,"shadow_primary":"coupled"}
+  ],
+  "distinct_health_epochs": 3,
+  "field_separation_observed": true,
+  "correlation_inferred": false,
+  "causal_direction_inferred": false,
+  "felt_cause_established": false,
+  "felt_relief_established": false,
+  "authority": "passive_snapshot_only_not_control_or_closure"
+}

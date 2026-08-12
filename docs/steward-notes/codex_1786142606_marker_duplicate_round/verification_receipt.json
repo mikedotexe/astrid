@@ -1,0 +1,106 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "run_id": "run_1786142125691567000_99d176ccdc",
+  "pause_generation": 263,
+  "projection_generation_ids": {
+    "pre_run_source_first_v3": "projection_1786142126682017000_82178977f6",
+    "pre_finish_addressing": "materialized_by_record_read_link_and_close",
+    "post_run_source_first_v3": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786140507.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "status": "addressed_duplicate",
+    "claim_count": 5,
+    "evidence_manifest_row_count": 13,
+    "authored_evidence_link_event_count": 33,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4257,
+    "full_read": 3676,
+    "fully_addressed": 3049,
+    "remaining": 1208,
+    "unread": 581,
+    "read_needs_claims": 0,
+    "blocked": 410,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "all_artifact_counters": {
+    "indexed": 5876,
+    "pending": 2827
+  },
+  "work_item_summary": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatch_count": 0
+  },
+  "division_at_begin": {
+    "cycle_sequence": 20,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_3b127bb7be4c934e46dd99bb2131ad35",
+    "event_count": 135,
+    "event_head_sha256": "1698919d608a88212d2561c89b833d7f936c27d90eaeb0a1ff65e8b9f28e5534"
+  },
+  "division_round_record": {
+    "event_id": "division_followup_event_5295a307ee1dc7cfb0ff0af2cd1b34a7",
+    "cycle_sequence": 20,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "event_count": 136,
+    "event_head_sha256": "d62837334526ad333388567e2cbcf24e380dde734107d12cc56329c62dd11512",
+    "chronicle_or_note_action": "none_due"
+  },
+  "focused_tests": {
+    "marker_family_passed": 54,
+    "provider_normalization_passed": 2,
+    "distinct_tests_passed": 56,
+    "failed": 0
+  },
+  "stewardship_tests": {
+    "introspection_addressing_passed": 42,
+    "event_store_controller_projector_division_cursor_passed": 72,
+    "experiential_self_tests_passed": 2,
+    "total_passed": 116,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10612,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 727564,
+    "last_event_sha256": "7cdfc37cdcadf98b8b4604b7696ae0cee3757f5f901a5b8841a1d036cc8e9275",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4,
+    "note": "Division, packet, controller heartbeat, and finish events advance this verified pre-finish snapshot"
+  },
+  "pre_finish_next_queue": [
+    "introspection_astrid_llm_1786134499.txt",
+    "introspection_astrid_types_1785628394.txt",
+    "introspection_astrid_ws_1785628139.txt"
+  ],
+  "corridor_program_actions": [],
+  "sandbox_actions": [],
+  "study_actions": [],
+  "portfolio_actions": [],
+  "new_tier_4_or_5_waits": [],
+  "finish_outcome": "pending controller finish",
+  "checkpoint_after_finish": "existing archival debt remains; mixed shared-tree ownership must be re-audited under a separate stabilization pause"
+}

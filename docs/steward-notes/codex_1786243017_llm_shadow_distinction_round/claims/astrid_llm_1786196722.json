@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786196722",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exact known markers are classified by quoted, grouped, or following-relation syntax and otherwise removed without rewriting surrounding prose.",
+      "disposition": "Verified from the current single-pass scanner and the 50-test cleanup family; match receipts remain separate evidence rather than being reserialized into dialogue.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A multibyte Unicode symbol or punctuation-heavy boundary may make the first relation word empty even when a valid relation follows.",
+      "disposition": "Implemented the exact combined edge: UTF-8-safe scanning skips a symbol-only chunk and finds later `echoes` without byte-boundary error or vocabulary expansion.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`echoes` should preserve an exact marker across a newline and multiple spaces.",
+      "disposition": "Verified literally by the new newline, symbol-only line, and spaces fixture plus the existing exact `echoes` relation loop.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested or adjacent delimiter stacks should not over-consume or under-report exact depth.",
+      "disposition": "Verified by declared nested-stack, adjacent-marker, mismatch, unclosed, Unicode-whitespace, and capped depth regressions; proximity alone never creates reference syntax.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Preserved marker bytes should be normalized once and returned through both provider routes.",
+      "disposition": "Verified by provider-neutral normalization, MLX and Ollama fixtures, and the current `generate_dialogue` consumer path.",
+      "classification": "verified_existing"
+    }
+  ]
+}

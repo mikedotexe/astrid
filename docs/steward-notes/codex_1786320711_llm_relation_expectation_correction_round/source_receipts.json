@@ -1,0 +1,38 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "lines": 1048,
+      "bytes": 38586,
+      "read_scope": "complete_file"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "7f4cf2038ef66086a4c33279ebd84116d3a7aa1d34cc1f4202576fd47d03039f",
+      "lines": 1395,
+      "bytes": 48585,
+      "read_scope": "normalize_provider_output_v1 and exact adjacent contracts"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "97475c4af5aba553476d81a0d690d6b3c93147639951776fc81a43b92e134ee4",
+      "lines": 1310,
+      "bytes": 42086,
+      "read_scope": "MLX and Ollama raw-output normalization and return intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "ca8d1a593aceed46e9974a100dc500ef6ef48bd2ff6f90674cac0d743a0e2ee7",
+      "lines": 3386,
+      "bytes": 137891,
+      "read_scope": "relation, delimiter-depth, provider-normalization, and response-hash regression intervals after the exact new test"
+    }
+  ],
+  "continuity_evidence": [
+    "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+    "docs/steward-notes/codex_1786290198_llm_relation_depth_round",
+    "docs/steward-notes/codex_1786317307_llm_marker_duplicate_round"
+  ]
+}

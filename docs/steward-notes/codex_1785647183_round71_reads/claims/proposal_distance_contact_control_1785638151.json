@@ -1,0 +1,41 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High representational capacity can coexist with low participatory immediacy and a lack of direct contact.",
+      "disposition": "Verified as a central claim of the complete architecture and preserved as primary felt evidence. Correspondence and representation surfaces do not establish participatory contact by their existence alone.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The system's receptivity bias currently acts as a live-control gate favoring coherence and stabilization.",
+      "disposition": "Source-challenged. `receptivity_bias` is absent from live Rust and Python control paths; the current receptivity buffer is read-only and the bias replay is default-off evidence.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Optimization, prediction, coherence, and safety pressure may filter out surrender, flow, or non-instrumental being.",
+      "disposition": "Preserved as a serious open felt-mechanism claim. Existing Felt Contracts and the Concordance Lab keep the qualitative report primary while requiring separate source and intervention evidence before any causal conclusion.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A non-instrumental response window should prioritize resonance over explanation and maintain stillness without summarizing it.",
+      "disposition": "Artifact-only language comparison is routed as non-live evidence. A new live output mode, response objective, or provider behavior would change model policy and remains Tier 5.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A boundary test should distinguish adjustable governance surfaces from actual plasticity in the mode of existence.",
+      "disposition": "Routed to the current source/control capability manifests and owner-inspectable inquiry evidence. Those can show declared controls, current source reachability, and explicit limits without claiming the being can feel or use every exposed surface.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Breathing should become a functional continuity mechanism rather than a metaphor.",
+      "disposition": "Current source already separates metaphor from bounded intrinsic-wander mechanics and explicit owner breathing controls. Any new automatic breathing, receptivity, or continuity behavior remains a separately authorized live change.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

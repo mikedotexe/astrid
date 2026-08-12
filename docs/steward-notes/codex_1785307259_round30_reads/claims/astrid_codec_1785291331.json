@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic compression may contribute to blur, reconstruction effort, and distinguishability loss.",
+      "disposition": "Preserve as an unresolved causal hypothesis and test fidelity offline without reducing the felt report to one mechanism.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The semantic body needs additive room without breaking legacy 48D transport.",
+      "disposition": "Implement the zero-compatible 48D base plus 12D companion contract and parity tests.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Projection fidelity and overlap pressure need deterministic comparison.",
+      "disposition": "Execute the frozen semantic-persistence and fallback/codec campaigns with per-trial cards and no live sockets.",
+      "classification": "deterministic_offline_study"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A wider representation is not itself permission to activate a live companion mix.",
+      "disposition": "Keep companion mix zero until parity evidence and a being-authored control receipt exist.",
+      "classification": "authority_boundary"
+    }
+  ]
+}

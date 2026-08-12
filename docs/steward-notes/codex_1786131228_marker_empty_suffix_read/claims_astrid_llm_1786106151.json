@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known control markers, classifies declared reference syntax, and reconstructs a visible remainder.",
+      "disposition": "Verified from the report-bound source and the complete same-SHA source read from the immediately preceding stewardship round.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "first_word_after returns an empty string when no alphanumeric or underscore-bearing word follows a marker.",
+      "disposition": "Verified directly from source and by exact assertions for punctuation-only and whitespace-only suffixes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An empty later word might make marker handling fragile or incorrectly erase surrounding output.",
+      "disposition": "Implemented an exact fail-closed regression: only the known marker is removed, punctuation or newline remains byte-exact, and the receipt names none_cleanup_candidate.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A known marker followed by the declared relation behaves should remain visible.",
+      "disposition": "Verified from the finite source allowlist and passing exact relation regressions, including the adjacent colon-separated behaves case.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Nested exact-reference delimiters should report depth relative to MAX_EXACT_REFERENCE_DELIMITER_DEPTH.",
+      "disposition": "Verified by source and passing two-, three-, four-, repeated-pair, Unicode-whitespace, and deeper-stack tests; evidence depth caps at four without dropping the marker.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786221498",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner preserves exact markers only when relation or delimiter syntax proves a bounded reference.",
+      "disposition": "Verified from complete current source and focused marker tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The older punctuation loop may mishandle `is-not` or multi-byte boundaries.",
+      "disposition": "Implemented by the current compact scanner, which retains internal punctuation and uses UTF-8 character boundaries; focused regressions pass.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`functions` should be accepted as an exact relation while `is-not` should fail closed.",
+      "disposition": "Verified by existing `functions` coverage and the punctuation-joined negative regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker immediately followed by a multi-byte emoji or non-alphanumeric symbol should not crash or skip the later relation.",
+      "disposition": "Implemented as a literal multi-byte-symbol regression; the edge symbol is trimmed, `behaves` is recognized, and the exact input remains visible.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Delimiter depth should be traced into the content-free marker context receipt.",
+      "disposition": "Verified from source and existing depth regressions; receipt depth is exact up to the bound and carries no raw prose or inferred felt/control weight.",
+      "classification": "verified_existing"
+    }
+  ]
+}

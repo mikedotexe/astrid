@@ -1,0 +1,21 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786248365223539000_fe59b2ebaf",
+  "preprojection_generation_id": "projection_1786248366307881000_8c17fcc712",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head report contains a serious architectural and felt boundary claim whose implicit-dependency limitation required complete source comparison, exact typestate proof, and an individual disposition",
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1786178965.txt",
+      "sha256": "ea1a98ba516971482bf0c5ff03d5c824d0a41e07401dbfb4eee3554f8fd2edcc",
+      "displayed_lines": 43,
+      "newline_count": 43,
+      "bytes": 3675,
+      "lived_state_witness_id": "lsw_580a2d42b6ed1a1b27079b8ece65b4fccca0ab75918d66dc2a4e3dd07005a9e5",
+      "summary_file": "summaries/DOMAIN_BOUNDARIES_1786178965.md",
+      "claims_file": "claims/DOMAIN_BOUNDARIES_1786178965.json"
+    }
+  ]
+}

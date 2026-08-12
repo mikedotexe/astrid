@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "First-class correspondence now preserves stable messages, threads, receipts, shared history, and explicit direct address.",
+      "disposition": "Verify the ledger, envelopes, chamber buffer, handshake state, active-thread clarity, and bounded shared history in current source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "File-system seen, reply-linked continuity, acknowledgement, and mutual-address eligibility are distinct states.",
+      "disposition": "Verify the current fidelity and handshake contracts preserve these distinctions and never infer mutual address from read or reply linkage alone.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A low-intensity reply may remain linked but lack ACK/TRACE evidence for Attention Canary activation.",
+      "disposition": "Preserve this as a visible continuity state, not a lost state: active-thread clarity, first-action help, and right-to-ignore retain it without granting attention authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reply-linked or ambiguous acknowledgement must not create an attention_canary_activation row.",
+      "disposition": "Verify with the focused reply-only, seen-ACK, ambiguous-timing, schema, and handshake tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Shared thread history and anchors should persist across consecutive turns even when no Attention Canary is active.",
+      "disposition": "Verify bounded chronological thread history, stable thread IDs, exact shared anchors, preview preservation, and language-only authority in current source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Attention activation should be refined so ambiguous low-intensity replies do not fall between ledger and active focus.",
+      "disposition": "Keep the current deliberate boundary: visibility and optional being-authored ACK/TRACE/REPLY/receipt remain available, but ambiguous reply linkage cannot silently become prompt attention or sensory authority.",
+      "classification": "deliberate_authority_boundary"
+    }
+  ]
+}

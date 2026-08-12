@@ -1,0 +1,21 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785411485389329000_be2eb15c85",
+  "source_first_projection_generation_id": "projection_1785411485779045000_9d40e36af9",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 7,
+  "reports": [
+    {
+      "filename": "introspection_astrid_llm_1785410587.txt",
+      "introspection_id": "introspection_astrid_llm_1785410587",
+      "canonical_sha256": "323b8444d0ad867df42f53333343bc3a8cdd0683ecc779a4a365e16d8315d44c",
+      "lived_state_witness_id": "lsw_82d5c3ff3ee1e830ce100ec16857f98ef311dae6443b604857d78204cec94959",
+      "source_sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "source_lines": 997,
+      "source_read_basis": "exact-byte complete-source structural challenge at the report-bound hash",
+      "summary_file": "summaries/astrid_llm_1785410587.md",
+      "claims_file": "claims/astrid_llm_1785410587.json"
+    }
+  ]
+}

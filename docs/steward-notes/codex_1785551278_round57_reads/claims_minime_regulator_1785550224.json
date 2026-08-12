@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "regulator/core.rs is a structural include shell rather than the implementation body.",
+      "disposition": "Verified from all 24 report-bound source lines at the exact SHA-256. Included targets, not the shell, hold the mechanics.",
+      "classification": "verified_source_structure"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A hollow root file must not be mistaken for missing regulator functionality.",
+      "disposition": "Verified by following the exact requested include targets completely. The root's presentation is sparse while PI and rate-gate mechanics are substantive and distinct.",
+      "classification": "verified_source_challenge"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "core/pi.rs contains EigenFill and lambda1_rel homeostasis logic.",
+      "disposition": "Verified from all 413 lines. PI computes fill, lambda, and geometric errors, maintains conditional leaky integrators, and updates bounded gate/filter outputs plus a geometric brake.",
+      "classification": "verified_requested_target"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "core/rate_gate.rs implements the advertised token-bucket mechanism.",
+      "disposition": "Verified from all 329 lines. Per-modality rates accumulate bounded tokens; insufficient tokens defer; admitted or attenuated items consume tokens after a separate projection gate.",
+      "classification": "verified_requested_target"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Reading the included mechanics reveals the actual regulator center.",
+      "disposition": "The source request is complete, but source structure does not prove report-time activation, felt cause, relief, or suitability.",
+      "classification": "source_activation_boundary"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "PI, rate, gate, or token-bucket behavior may need adjustment after inspection.",
+      "disposition": "Preserve any such live regulator change as an exact Tier 5 wait. No target, gain, integrator, rate, token, admission, or runtime value changed.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

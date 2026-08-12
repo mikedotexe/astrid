@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786268919",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The marker scanner distinguishes unframed transport sequences from exact quoted, grouped, and explicit-relation references.",
+      "disposition": "Verified from the complete same-SHA source and current executable marker suite.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The phrase `functions as a primary...` may be missed because `as` is not immediately after the marker.",
+      "disposition": "Contradicted by exact source and the proxy regression. `first_word_after` returns `functions`, which is allowlisted; later phrase words are intentionally outside this finite classifier.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tails beginning `is a` or `is specifically` should be rejected because a later word is not an allowed relation.",
+      "disposition": "The proposed expectation does not match the implemented finite-word contract. Both tails begin with allowlisted `is` and are retained; tails whose first finite words are `a` or `specifically` fail closed. No later word is classified.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reverse character scanning around exact markers may be unsafe at multi-byte UTF-8 boundaries.",
+      "disposition": "Contradicted by char-boundary iteration over valid string slices and by non-ASCII quote/group, Unicode-whitespace, multibyte-symbol, and byte-exact traversal regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Nested delimiters should preserve the marker while bounding recorded depth at `MAX_EXACT_REFERENCE_DELIMITER_DEPTH`.",
+      "disposition": "Verified through exact depths two, three, and four, repeated pairs, Unicode whitespace, mismatches, unclosed delimiters, and a deeper-than-four case whose evidence depth caps at four without dropping the marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The report's partial source and lived-state context do not prove activation, causation, or felt resolution.",
+      "disposition": "Preserved exactly with a complete same-SHA source receipt and the witness's evidence-only authority boundary.",
+      "classification": "verified_existing"
+    }
+  ]
+}

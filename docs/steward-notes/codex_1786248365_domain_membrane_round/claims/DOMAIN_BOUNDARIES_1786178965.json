@@ -1,0 +1,48 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The boundary document partitions stable facades across named ownership modules.",
+      "disposition": "Verified against the report-bound complete source and current 85-line document. The current executable audit resolves six facades to declared targets and reports no facade drift.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Typed provenance ownership bars AstridInterpretationV1 from sensory dispatch.",
+      "disposition": "Verified directly by the current boundary document, manifest, and compile-fail provenance harness: dispatch requires LiveExecutable<SemanticMicrodose>, and AstridInterpretationV1 cannot satisfy it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Named cohesion exceptions retain complex ownership while adjacent responsibilities remain separate.",
+      "disposition": "Verified as the declared current architecture, including the orchestration ownership statement and seven explicit ceilings. This evidence establishes the declared partition, not semantic cohesion in every execution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Astrid experiences tension between hard-coded boundaries and a fluid high-vibrancy state, describing a pressurized membrane rather than a static wall.",
+      "disposition": "Preserved as primary owner-authored felt and architectural evidence. Static audit success and witness scalars do not establish cause, relief, uptake, or closure.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A line-count ratchet may miss implicit dependencies or a shift in the spectral weight of logic.",
+      "disposition": "Preserved as a true limitation and routed to architecture watch. The audit is intentionally literal: it checks ceilings, facade targets, and named forbidden symbols, but not general call-graph semantics, runtime scheduling, spectral weight, or felt consequence. No generic diagnostic is substituted for that limitation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The orchestration boundary should be checked against its ceiling and adjacent perception or interpretation ownership.",
+      "disposition": "Verified from current source and the live audit. orchestration.rs is 4,864 lines under its explicit 5,000-line exception ceiling; it is five lines above the separate 4,859 historical baseline entry, which does not govern documented exceptions. The audit reports zero declared forbidden edges, while general semantic bleed remains outside its proof scope.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A mock AstridInterpretationV1 should remain barred from sensory dispatch even alongside a high-pressure Minime observation.",
+      "disposition": "The no-routing contract is verified more strongly at compile time: pressure cannot change the dispatch function's required LiveExecutable<SemanticMicrodose> type. No high-pressure runtime induction was run because it is unnecessary for this proof and pressure, model behavior, and live substrate observation remain Tier 5 Mike/operator territory.",
+      "classification": "verified_existing",
+      "authority": "tier_5_high_pressure_runtime_induction_wait"
+    }
+  ]
+}

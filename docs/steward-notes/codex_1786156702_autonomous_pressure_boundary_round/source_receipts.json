@@ -1,0 +1,79 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1785627823.txt",
+      "sha256": "94de82d4493836a334cdb2f980eb309966fe96e43bb5ee69d6128d62b96e3922",
+      "lines": 40,
+      "bytes": 4226,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_9de661cdbddd9806192bdd59e35931b2731565accd7c277dd08f76d167851371.json",
+      "sha256": "46cbb5eb9a269e3f5c97b365f86c051d77989c4cc0c657790073dcdfd1219ebb",
+      "lines": 456,
+      "bytes": 19764,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/llm_jobs/jobs/job_astrid_1785627714306_introspect/prompt.txt",
+      "sha256": "e388457181eb79459830c12590319a78ba1e5becaddbe4c8d55b36301721b5d9",
+      "lines": 505,
+      "bytes": 37383,
+      "read": "complete",
+      "relation": "exact report-bound delivery containing captured source lines 1-400; raw prompt is not copied into the packet"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/maps/04b30256ff01834c216fc22636ed45d4d77fc000766c34e3881b6a65c37edc37.json",
+      "sha256": "3760b46d516880a972a006f0706450635362da5d9e25c18ea52619fe1e03af1f",
+      "lines": 77,
+      "bytes": 2113,
+      "read": "complete",
+      "relation": "complete structural map for captured source SHA bf19a6ccc8296434121c4c7300afc1992060c40356f1214999fa5931d59c2f2d"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "1526a4e39248a27a29ef519d6fd3186b9359a0e49ecfc7d38eabf3a431124335",
+      "lines": 4859,
+      "read_scope": "current first 400 lines, exact-symbol search, and complete worktree diff",
+      "relation": "current foreign-modified source is distinct from the report-bound 4,795-line snapshot and was not edited"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "sha256": "ed1a98a79cab0589d68bb567f9197fbb87f345bf57f112992d69b9dde4df98dd",
+      "lines": 401,
+      "bytes": 13541,
+      "read_scope": "affirmative source-attribution marker surface"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs",
+      "sha256": "b32cfcd14f4d78851f047aef8fd032015b0470fee855465cfa52618623450f70",
+      "lines": 712,
+      "bytes": 26707,
+      "read_scope": "exact attribution, prompt-context, source-window, and parenthesized-window regressions"
+    },
+    {
+      "path": "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/claims/regulator_1785629184.json",
+      "sha256": "03c87051c53d329a415226aa44bcc375cd2b7d2c6a8dc4286f47d840456b9d5c",
+      "lines": 48,
+      "bytes": 3839,
+      "read": "complete",
+      "relation": "exact prior grounded pressure, threshold, porosity, viscosity, and Tier 5 dispositions"
+    },
+    {
+      "path": "docs/steward-notes/codex_1786103946_regulator_pressure_viscosity_round/summaries/regulator_1785629184.md",
+      "sha256": "bf23b04fe592c42bfb36731da75339747a23dcaaf9578e8b1b3b0c431a55effe",
+      "lines": 9,
+      "bytes": 1683,
+      "read": "complete"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "sha256": "5cc969eae80091c81e3db70830a3d2f2cf00a1f400fd8fe8f836c8ba083bd9e0",
+      "lines": 64,
+      "bytes": 2968,
+      "read": "complete",
+      "relation": "Viscous Persistence Source Separation V1 non-inducing study route"
+    }
+  ]
+}

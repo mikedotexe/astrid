@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786134499",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers, distinguishes grammatical reference roles, and reconstructs the remainder in byte order.",
+      "disposition": "Verified from exact-SHA complete-source continuity and a fresh reread of the scanner and delimiter intervals.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The first-word scanner may mishandle multibyte UTF-8 or unfamiliar non-alphanumeric symbols.",
+      "disposition": "Rust char iteration and char::is_alphanumeric are Unicode-aware; underscores remain word content, other Unicode symbols are deliberate separators, empty segments are skipped, and len_utf8 advancement preserves remainder bytes. Existing Unicode regressions prove the bounded contract.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A complex nested delimiter case containing U+27E6 and U+27E7 should preserve the exact marker.",
+      "disposition": "Verified by the declared delimiter table plus literal existing grouped and nested-stack regressions containing the exact bytes `⟦<end_of_turn>⟧`.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The unlisted following relation creates should fail closed and remove only the exact marker.",
+      "disposition": "Verified by the literal existing regression control_marker_cleanup_does_not_expand_relation_allowlist_to_creates; creates remains outside the finite relation vocabulary.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The reconstructed marker-cleanup remainder should reach final generate_dialogue output without erased or duplicated surrounding text.",
+      "disposition": "Verified at the provider-neutral boundary and both consumers. MLX and Ollama normalize raw text before returning it; generate_dialogue validates, optionally repairs, and returns the normalized string. The immediately preceding packet records the same exact-SHA route independently.",
+      "classification": "addressed_duplicate"
+    }
+  ]
+}

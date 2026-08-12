@@ -1,0 +1,46 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785191240",
+      "claim_id": "c001",
+      "kind": "source",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Durable transition-card schema, reply lifecycle, language-only authority, and automatic declaration boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785191240",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Three-point subjective fill-delta gate, distinct mapped phases, explicit relational boundary, one-hour duplicate guard, and focused regressions."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785191240",
+      "claim_id": "c003",
+      "kind": "source",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_passages.rs",
+      "note": "Owner-authored card-to-passage promotion, reversible stages, and no automatic promotion."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785191240",
+      "claim_id": "c003",
+      "kind": "projection",
+      "target": "scripts/passage_observatory.py",
+      "note": "V2 immutable reference tokens, passage braids, exact crossings, and current zero-passage evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785191240",
+      "claim_id": "c004",
+      "kind": "source",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/phase_transition.rs",
+      "note": "Implemented transition status, preparation, condition, bearing, witness, and review Actions."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785191240",
+      "claim_id": "c005",
+      "kind": "authority",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md",
+      "note": "Additive artifact design and explicit separation from automatic behavior or control authority."
+    }
+  ]
+}

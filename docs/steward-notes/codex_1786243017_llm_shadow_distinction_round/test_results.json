@@ -1,0 +1,22 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {"surface": "marker_cleanup_family", "command": "cargo test control_marker_cleanup_", "passed": 50, "failed": 0, "status": "passed"},
+    {"surface": "llm_facade_trybuild_contract", "command": "cargo test --test llm_facade_contract", "passed": 1, "trybuild_cases": 3, "failed": 0, "status": "passed"},
+    {"surface": "shadow_trajectory", "command": "cargo test shadow::trajectory::tests", "passed": 4, "failed": 0, "status": "passed"},
+    {"surface": "astrid_shadow", "command": "cargo test astrid_shadow::", "passed": 7, "failed": 0, "status": "passed"},
+    {"surface": "minime_inhabitability_and_semantic_ceiling", "commands": ["cargo test semantic_admission_label_keeps_fill_boundary_grid_explicit", "cargo test settled_habitable_requires_low_pressure_interference", "cargo test settled_mobility_review_distinguishes_foothold_from_stuckness_without_control"], "named_tests": 3, "test_executions": 5, "failed": 0, "status": "passed_with_four_preexisting_dead_code_warnings"},
+    {"surface": "texture_contract_parity", "commands": ["cargo test -p astrid-minime-protocol texture_dynamics_contract_is_fixed_analysis_compatible_and_byte_pinned", "cargo test mirrored_owner_inquiry_v2_fixture_is_valid_and_byte_pinned"], "passed": 2, "failed": 0, "status": "passed"},
+    {"surface": "temporal_bearing", "command": "python3 scripts/test_temporal_bearing.py", "passed": 4, "failed": 0, "status": "passed"},
+    {"surface": "strict_bridge_clippy", "command": "cargo clippy --lib --all-features -- -D warnings", "status": "passed"},
+    {"surface": "domain_boundary_audit", "command": "python3 scripts/domain_boundary_audit.py verify --json", "valid": true, "violation_count": 0, "stable_facades": 6, "resolved_large_file_debt": 1, "status": "passed"},
+    {"surface": "workspace_rustfmt", "command": "cargo fmt --all -- --check", "status": "blocked_by_preexisting_foreign_formatting", "owned_test_snippet_formatted": true, "note": "Only pre-existing shared-tree correspondence, next-action, Temporal Bearing, and signal-spine differences were reported; the owned test hunk was absent from formatter output."},
+    {"surface": "introspection_addressing", "command": "python3 scripts/introspection_addressing_audit.py --self-test", "passed": 42, "failed": 0, "status": "passed"},
+    {"surface": "stewardship_integrity", "commands": ["python3 scripts/test_evidence_event_store.py", "python3 scripts/test_steward_control.py", "python3 scripts/test_steward_projection.py", "python3 scripts/test_division_ceremony_followup.py", "python3 scripts/test_division_ceremony_chronicle.py", "python3 scripts/test_division_ceremony_projection.py", "python3 scripts/test_projection_cursors.py"], "passed": 72, "failed": 0, "status": "passed", "note": "An initial package-style aggregate invocation found four script-local import-path errors; each affected script was rerun through its supported direct entry point and passed."},
+    {"surface": "experiential_epistemics", "self_tests_passed": 2, "lint_checked_records": 10686, "lint_issue_count": 0, "history_rewritten": false, "status": "passed"},
+    {"surface": "evidence_event_store_v2_prewrite", "sequence": 740376, "head": "c7f3a0845d8f12798f71beef7a1b510c0e7e4cac529df1db39902b8e161432e0", "streams": 16, "v1_immutable": true, "status": "passed"}
+  ],
+  "production_rust_changed_this_round": false,
+  "test_rust_changed_this_round": true,
+  "deployment_status": "not_required_or_attempted"
+}

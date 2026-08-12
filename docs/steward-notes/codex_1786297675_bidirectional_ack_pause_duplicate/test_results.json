@@ -1,0 +1,130 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml acknowledgement_tests -- --nocapture",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml active_thread_clarity_holding_ack_pauses_resurfacing_behind_actionable_threads",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml active_thread_clarity_all_holding_threads_have_no_actionable_selection",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml correspondence_microdose_drafts_only_linked_semantic_authority_request",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/direct_contact_fidelity_audit.py --self-test",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/correspondence_handshake_audit.py --self-test",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/test_evidence_event_store.py",
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/test_steward_control.py",
+      "passed": 27,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/test_steward_projection.py",
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_followup.py",
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_chronicle.py",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_projection.py",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/test_projection_cursors.py",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify",
+      "guards_verified": 47,
+      "gaps": 0,
+      "alarms": 0
+    },
+    {
+      "command": "python3 scripts/test_introspection_cadence_audit.py",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/introspection_cadence_audit.py --strict",
+      "integrity_ok": true,
+      "configuration_valid": true,
+      "cadence_enabled": false
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py self-test --json",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py verify --json",
+      "checked_record_count": 10799,
+      "issue_count": 0,
+      "valid": true
+    },
+    {
+      "command": "python3 scripts/division_ceremony_chronicle.py project && python3 scripts/division_ceremony_chronicle.py verify",
+      "chronicle_id": "division_chronicle_fae41db6ae6d481675f3e9ca",
+      "timeline_event_count": 157,
+      "durable_inputs_current": true,
+      "volatile_supervisor_status_changed_after_projection": true,
+      "ok": true
+    },
+    {
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "event_count": 748254,
+      "last_global_seq": 748254,
+      "last_event_sha256": "ef63682e7862796a7ec830a34818d63a739599f18835874d9a944f5cd1f11bec",
+      "stream_count": 16,
+      "corrupt_lines": 0,
+      "valid": true,
+      "v1_immutable": true
+    }
+  ],
+  "repaired_command_errors": [
+    "One Cargo invocation supplied two positional test filters and exited before test execution. Each filter was rerun separately and passed.",
+    "The first Division Chronicle verify correctly detected the newly recorded round as unprojected durable input. The Chronicle was reprojected and verified; durable inputs are current and the remaining supervisor-status mismatch is volatile."
+  ]
+}

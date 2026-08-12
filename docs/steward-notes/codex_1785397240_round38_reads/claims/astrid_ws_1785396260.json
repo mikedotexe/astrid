@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Shared telemetry state locks may create contention that is not visible from ordinary freshness metrics.",
+      "disposition": "Complete source and tests verify scoped locks plus separate pipeline, write-wait, and hold timing. The impact remains observable rather than causally established.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The subscriber lacks an explicit missing-pong timeout.",
+      "disposition": "Verified absent from the complete source. Adding one would change reconnect behavior and remains an exact Tier 5 wait with restart and rollback proof required.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Direct integration on the socket read path may create backpressure.",
+      "disposition": "Source challenge verifies sequential unbuffered integration, pre-lock artifact work, and post-lock persistence. Actual pressure impact remains unproven.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Connection lifecycle evidence should count telemetry messages and ping/pong frames.",
+      "disposition": "Verified as already covered by the connection lifecycle test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Reconnect backoff should double and reset after a healthy connection.",
+      "disposition": "Verified as already covered by focused backoff tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A bounded worker buffer could decouple socket receipt from telemetry integration.",
+      "disposition": "Preserve as an exact Tier 5 ordering and cadence change. It requires explicit authority plus no-drop, order, restart, saturation, and rollback evidence.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

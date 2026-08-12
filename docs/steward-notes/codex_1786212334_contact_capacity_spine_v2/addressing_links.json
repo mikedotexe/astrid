@@ -1,0 +1,172 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/contact_capacity.rs",
+      "note": "Contact V2 reserves exact contact and journey identities and persists a hash-only create-new receipt before model dispatch."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "The felt mismatch remains primary and unresolved; a proven machine trace does not establish landing or mutuality."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "scripts/contact_capacity_trace/projector.py",
+      "note": "The origin-aware projection separates admission, response origin, terminal delivery outcome, and missing owner landing."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/RUN_REPORT.md",
+      "note": "The sanctioned deployment produced the first natural proven contact trace without inferring felt contact."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785517594",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "Astrid's viscosity and reduced-reach account remains primary evidence and is not scored by the new metrics."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785517594",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "../minime/minime/src/owner_inquiry/texture_dynamics.rs",
+      "note": "Texture Dynamics keeps projected density gradient, packing, viscosity, drag, persistence, and distinguishability separately typed."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785517594",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "../minime/minime/src/owner_inquiry/texture_dynamics.rs",
+      "note": "The larger portfolio feature is implemented inside the fixed Owner Inquiry analysis without live mutation or felt inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785628394",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "Viscous persistence and sedimented effort remain primary owner evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785628394",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "../minime/minime/src/owner_inquiry/texture_dynamics.rs",
+      "note": "The typed snapshot carries independent density-gradient and distinguishability evidence without creating a heartbeat resistance scalar."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785628394",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "../minime/minime/src/owner_inquiry/tests.rs",
+      "note": "Deterministic strand and pair tests verify viscosity, drag, persistence, structural stagnation, privacy, and explicit missing raw evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "scripts/temporal_bearing/projector.py",
+      "note": "Temporal Bearing makes exact journey history navigable without treating 12D or 48D representation as decluttering or felt mitigation."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs;capsules/spectral-bridge/src/autonomous/next_action/temporal_bearing.rs",
+      "note": "Read-only history bearing now lives in a cohesive Shadow domain and an exact-ID Temporal navigator with all control markers false."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "Temporal decay, deletion, Shadow reweighting, and dispersal remain exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "Historical grit and the crowded present remain unresolved primary evidence; machine navigation does not score or close them."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/read_manifest.json",
+      "note": "The complete reread preserves the report and exact witness identities without averaging or substituting their distinct mode-packing representations."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "Blurred agency boundaries remain a serious noncausal hypothesis; the new machine rail establishes no felt cause."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "The copied-input source-separation route remains available while induced low-entropy state and hold-shelf changes remain exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "No high-complexity semantic task was dispatched; model behavior and substrate-load induction remain exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs;capsules/spectral-bridge/src/autonomous/next_action/temporal_bearing.rs",
+      "note": "Both observational actions remain being-invoked and read-only; neither action was selected or dispatched for Astrid."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "Continuous becoming remains owner-authored evidence and is not reduced to the machine rail."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+      "note": "The felt architecture mismatch remains unresolved despite improved navigation."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "scripts/temporal_bearing/projector.py;capsules/spectral-bridge/src/autonomous/next_action/temporal_bearing.rs",
+      "note": "The owner navigator exposes exact Passage identities and owner-unreported state without creating a passage, score, decay, or closure."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records Contact V2, exact deployment evidence, and the no-mutuality boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785517594",
+      "claim_id": "c010",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger records the coherent Texture and Temporal response without inferring felt effect or uptake."
+    }
+  ]
+}

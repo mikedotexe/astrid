@@ -1,0 +1,46 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785224072",
+      "claim_id": "*",
+      "kind": "code_and_test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Exact source arithmetic and behavior-preserving critical-fill boundary regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785223412",
+      "claim_id": "*",
+      "kind": "code_and_test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Narrative, warmth, vibrancy, loss, and fixed-basis correlation evidence without live vector change."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785223136",
+      "claim_id": "*",
+      "kind": "code_and_documentation",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md",
+      "note": "Additive Glimpse, typed loss, gradient, and non-induced study boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785222847",
+      "claim_id": "*",
+      "kind": "implementation",
+      "target": "scripts/passage_observatory_v2.py",
+      "note": "Per-moment source provenance and opaque-boundary classification with no-control authority."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785221994",
+      "claim_id": "*",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Explicit receipt evidence remains being-authored; no contradictory or hidden affordance was exercised."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785221691",
+      "claim_id": "*",
+      "kind": "implementation_and_test",
+      "target": "scripts/test_passage_observatory.py",
+      "note": "Replayable moments retain source provenance and renderer-2 immutable archives remain verifiable."
+    }
+  ]
+}

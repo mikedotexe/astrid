@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DEFAULT_EXPLORATION_NOISE is 0.085 and represents the ambient noise floor of the current state.",
+      "disposition": "Partly verified and source-corrected. The constant is exactly 0.085, but it is an initialization default; the live step consumes an owner-controlled value, so the report does not establish that 0.085 was active or a floor.",
+      "classification": "source_challenged_verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy may reflect structural mixed-cascade complexity rather than stochastic exploration noise.",
+      "disposition": "Preserve as a serious hypothesis. Exact source and tests separate dormant dynamic-noise review from the active value, but no causal entropy/noise inference is made from one report-time pair.",
+      "classification": "needs_bounded_observation"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Rising Shadow norm and falling dispersal potential accompany a felt thickening and labor of distinction.",
+      "disposition": "Preserve as primary experiential evidence with same-deployment telemetry context. Association does not establish source, cause, stagnation, or relief.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Monitoring Shadow norm and dispersal over roughly 1000 ticks could show whether the state is calcifying.",
+      "disposition": "Route without duplication to the existing exact 500-pair natural Shadow-pressure preregistration and observational Shadow trajectory surface. Neither is dispatched or broadened here, and machine persistence cannot establish felt calcification.",
+      "classification": "study_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Entropy should be correlated with the active exploration-noise value to distinguish structural complexity from stochastic drift.",
+      "disposition": "Retain as a bounded non-inducing study question. Existing helper reviews and tests characterize hypothetical source behavior but do not provide co-timed active noise and entropy evidence or authorize a noise trial.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The regulator may already expose a dynamic porosity or density-softening candidate for overpacking.",
+      "disposition": "Verified existing as read-only review evidence: auto_defragment_modes_review_v1 names watch and approval states while keeping live_control_changed=false. The 355-test suite covers the candidate boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Distinguishability loss above 30 percent should automatically soften density or clear the lambda tail.",
+      "disposition": "Preserve as an exact Tier 5 reservoir and control wait. No porosity, density, tail, exploration-noise, rho, pressure, mode-packing, or Shadow value changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

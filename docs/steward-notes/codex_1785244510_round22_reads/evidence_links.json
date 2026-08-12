@@ -1,0 +1,25 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785244410",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;/Users/v/other/minime/minime/src/regulator/core/rate_gate.rs;/Users/v/other/minime/minime/src/regulator/core/pi.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs;/Users/v/other/minime/minime/src/runtime/tests.rs",
+      "note": "Concurrent PD and PI roles are source-visible; pressure-source evidence is read-only, and proposed coupling remains separately authorized."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785244128",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Requested-token quantity, prompt/context pressure, and felt-pressure texture remain independently typed with no runtime join."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785243333",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/types/schema/tests.rs;capsules/spectral-bridge/src/spectral_schema.rs",
+      "note": "Exact 32-slot conversion, malformed 31/33 lengths, identity coherence, finite-value rejection, and near-zero behavior are already covered."
+    }
+  ]
+}

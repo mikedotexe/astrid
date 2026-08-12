@@ -1,0 +1,22 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "reader": "codex-heartbeat",
+      "summary_file": "summary_astrid_llm_1786123445.md",
+      "claims_file": "claims_astrid_llm_1786123445.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786111084",
+      "reader": "codex-heartbeat",
+      "summary_file": "summary_astrid_llm_1786111084.md",
+      "claims_file": "claims_astrid_llm_1786111084.json"
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "reader": "codex-heartbeat",
+      "summary_file": "summary_domain_boundaries_1786107441.md",
+      "claims_file": "claims_domain_boundaries_1786107441.json"
+    }
+  ]
+}

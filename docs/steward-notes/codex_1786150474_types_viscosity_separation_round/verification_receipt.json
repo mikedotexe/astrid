@@ -1,0 +1,83 @@
+{
+  "schema": "introspection_round_verification_receipt_v1",
+  "primary_session": {
+    "run_id": "run_1786149955179001000_f89993e003",
+    "pre_projection_generation_id": "projection_1786149956235023000_f26f07223c",
+    "outcome": "cancelled",
+    "post_projection_generation_id": null,
+    "durable_work_completed_before_timeout": true
+  },
+  "recovery_session": {
+    "run_id": "run_1786151703632996000_bfa7290b42",
+    "pre_projection_generation_id": "projection_1786151704554452000_32fa138eec",
+    "pause_generation": 269,
+    "finish_outcome": "pending_controller_finish",
+    "post_projection_generation_id": null
+  },
+  "addressing": {
+    "filename": "introspection_astrid_types_1785628394.txt",
+    "status": "addressed_duplicate",
+    "fully_addressed": true,
+    "claim_count": 5,
+    "evidence_link_count": 5,
+    "proof_gap_count": 0
+  },
+  "canonical_audit": {
+    "indexed": 4258,
+    "full_read": 3679,
+    "fully_addressed": 3052,
+    "remaining": 1206,
+    "unread": 579,
+    "read_needs_claims": 0,
+    "blocked_needs_steward": 410,
+    "mismatch_count": 0
+  },
+  "approval_queue": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatch_count": 0,
+    "ready_for_implementation": 21,
+    "needs_sandbox": 750
+  },
+  "evidence_event_store_v2": {
+    "valid": true,
+    "sequence": 729136,
+    "head": "dc9787f4089354862c217a69dd7187d710559f7633e716fedae8666b5b8af828",
+    "stream_count": 16,
+    "corrupt_event_count": 0,
+    "history_rewritten": false,
+    "v1_sources_immutable_by_verified_continuity": true
+  },
+  "experiential_epistemics": {
+    "self_tests_passed": 2,
+    "checked_record_count": 10632,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "tests": {
+    "focused_tests_passed": 4,
+    "focused_tests_failed": 0,
+    "zero-selection_probe_excluded": true
+  },
+  "division_followup": {
+    "cycle": 20,
+    "productive_round_count": 5,
+    "productive_round_limit": 6,
+    "remaining_rounds": 1,
+    "review_due": false,
+    "latest_event_id": "division_followup_event_2233715f9ee80f5f8d96a91e23b9154d",
+    "event_count": 139,
+    "head": "7e11b63d476cebcc751cba368a090acd2f26c42cb38137d4e43dd7579addb107"
+  },
+  "runtime_alignment": {
+    "live_consumed_source_changed": false,
+    "restart_required": false,
+    "deployment_required": false
+  },
+  "archival_checkpoint": {
+    "due": true,
+    "status": "pending_post_finish_stabilization_window"
+  }
+}

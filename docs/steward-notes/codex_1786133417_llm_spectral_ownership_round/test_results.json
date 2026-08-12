@@ -1,0 +1,27 @@
+{
+  "schema": "steward_test_results_v1",
+  "run_id": "run_1786133417908957000_cdd5677571",
+  "focused_rust": {
+    "silt_noise_separation": {"passed": 2, "failed": 0},
+    "shadow_trajectory_effect_contract": {"passed": 1, "failed": 0},
+    "pressure_porosity": {"passed": 7, "failed": 0},
+    "requested_token_source_boundary": {"passed": 4, "failed": 0},
+    "total_passed": 14,
+    "failed": 0
+  },
+  "stewardship": {
+    "introspection_addressing_self_tests_passed": 42,
+    "event_store_controller_projector_division_chronicle_cursor_tests_passed": 72,
+    "experiential_epistemics_self_tests_passed": 2,
+    "total_passed": 116,
+    "failed": 0
+  },
+  "epistemic_lint": {
+    "checked_record_count": 10596,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "valid": true
+  },
+  "all_selected_tests_passed": 130,
+  "all_selected_tests_failed": 0
+}

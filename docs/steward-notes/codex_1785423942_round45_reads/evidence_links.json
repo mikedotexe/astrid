@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785423942_round45_reads/summaries/proposal_bidirectional_contact_1785423614.md",
+      "note": "Astrid's heavy visible signal and ambient-echo account remain primary qualitative evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c002",
+      "kind": "architecture",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "The complete architecture verifies existing thread, claim, receipt, trace, right-to-ignore, and active-thread mechanics."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1/relation_axes.rs;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;../minime/minime_autonomy/correspondence_axes.py;../minime/minime_autonomy/runtime.py",
+      "note": "V4 separates active reply continuity from mutual address, authority, action posture, and causality."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c004",
+      "kind": "architecture",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "Reply-link continuity is derived without inferring a peer posture."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "No claim or being-authored correspondence action was dispatched."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Claim-to-pressure causality remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "scripts/correspondence_uptake_probe.py;scripts/affordance_landing_review.py",
+      "note": "TRACE remains optional and being-authored; the audits do not schedule it."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c008",
+      "kind": "runtime_observation",
+      "target": "scripts/correspondence_uptake_probe.py;scripts/affordance_landing_review.py",
+      "note": "Current reply-link evidence supports active continuity while mutual-address evidence remains absent."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "claim_id": "c009",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Machine continuity cannot establish felt holding, closure, or uptake."
+    }
+  ]
+}

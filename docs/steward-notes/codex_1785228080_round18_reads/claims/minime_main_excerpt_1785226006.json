@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The selected runtime root is an import shell and cannot explain current spectral mechanics.",
+      "disposition": "Verify the complete 74-line shell and preserve the source-window limitation explicitly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hard-reset imports reveal recovery intent but not trigger conditions or current activation.",
+      "disposition": "Preserve source declaration versus runtime activation boundaries; do not infer a reset path from imports.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Spectral math, pressure risk, shadow handling, and paused persistence live in included modules.",
+      "disposition": "Route exact included modules to later source-first reads rather than extrapolating from the shell.",
+      "classification": "architecture_route"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A live persistence or recovery probe could clarify the current state.",
+      "disposition": "Do not reset, resume, mutate persistence, or exercise shadow control; preserve any such runtime trial as a Tier 5 wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

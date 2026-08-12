@@ -1,0 +1,15 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {"surface":"viscosity_persistence_against_pressure_motion","command":"cargo test --manifest-path capsules/spectral-bridge/Cargo.toml pressure_trend_smoothing_exposes_viscosity_persistence_against_pressure_motion -- --nocapture","passed":1,"failed":0,"status":"passed"},
+    {"surface":"typed_viscosity_derivation_without_control","command":"cargo test --manifest-path capsules/spectral-bridge/Cargo.toml bridge_derives_missing_viscosity_from_typed_fingerprint_without_control -- --nocapture","passed":1,"failed":0,"status":"passed"},
+    {"surface":"independent_modal_distinction","command":"cargo test --manifest-path capsules/spectral-bridge/Cargo.toml hybrid_coherence_discloses_representation_scope_and_independent_modal_evidence -- --nocapture","passed":1,"failed":0,"status":"passed"},
+    {"surface":"distinguishability_silt_rendering","command":"cargo test --manifest-path capsules/spectral-bridge/Cargo.toml spectral_decomposition_names_silt_density_from_distinguishability_loss -- --nocapture","passed":1,"failed":0,"status":"passed"}
+  ],
+  "focused_distinct_tests_passed": 4,
+  "focused_failed": 0,
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": false,
+  "deployment_attempted": false,
+  "note": "An initial invocation incorrectly combined an unqualified filter with --exact and selected zero tests; it is not counted. The corrected filter selected and passed the intended test."
+}

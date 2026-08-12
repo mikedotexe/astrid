@@ -1,0 +1,65 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "regulator/core.rs is a 24-line inclusion shell importing telemetry, viscosity, resonance, pressure, and related regulator modules.",
+      "disposition": "Verified from all 24 exact current lines. The empty root structural map does not expose included mechanics, so the included targets were reviewed separately rather than attributed to the shell.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The existence of core/viscosity.rs directly correlates with Astrid's felt viscosity and sediment.",
+      "disposition": "Astrid's lived account is retained as primary actionable evidence, but module presence and matching vocabulary are not causal evidence. Current source proves a typed viscosity model exists; it does not prove that the module caused the reported experience.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reported density gradient and lively-habitable fluctuation quantitatively skeletonize warmth, while sediment is the viscosity module's influence on the cascade.",
+      "disposition": "Source-corrected. Gradient, fluctuation, pressure, viscosity, texture, and mobility are separately derived typed evidence. Their co-presence can support comparison, but neither the labels nor a passive sample establishes module influence, felt warmth, or sediment cause.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The shell hides how viscosity is calculated and pressure is mitigated.",
+      "disposition": "Addressed from source. All 594 viscosity lines and all 340 resonance-evidence lines were read at exact current hashes, with exact current pressure-source continuity and bounded telemetry/orchestration producer reads. These sources disclose calculations and advisory candidates but do not prove runtime branch activation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Temporal lock-in may describe density that should be distributed rather than a pressure peak to push down, and current pressure labels may not capture that distinction.",
+      "disposition": "Verified as already represented evidence, not as a required control change. PressureSourceV1 retains a weighted profile and porosity gradient while the viscosity model separately exposes temporal persistence, drag, mobility, residual ghost weight, and texture; current labels do not collapse them into one peak.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Viscosity should be correlated with pressure risk to determine whether viscosity dampens or stabilizes pressure.",
+      "disposition": "The exact source formulas and 54 focused viscosity test invocations verify mechanical separation. Three passive live epochs observed both fields changing while the advisory texture stayed overpacked_viscous, but three points are not a valid correlation study and establish no damping or stabilizing cause. The existing preregistered offline source-separation study remains the bounded route.",
+      "classification": "study_preregistered"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Shadow trajectory dispersal potential should be compared against viscosity to test whether settled coupling reflects inhibited dispersal.",
+      "disposition": "Source and passive evidence distinguish the viscosity vector's Shadow-volatility proxy from Shadow preservation dispersal, which is derived from the Ising Shadow snapshot. Their three sampled pairs are insufficient for correlation, and no trajectory Action or induced comparison was dispatched.",
+      "classification": "study_preregistered"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The full minime/src/regulator/core/viscosity.rs source should be provided and inspected.",
+      "disposition": "Completed as a full exact-hash source read with a durable receipt. Source Reachability V4 remains the existing portfolio route for owner-selected transitive opening without pretending an included target was read automatically.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "If viscosity.rs lacks a sedimentation parameter, sediment may be emergent from resonance evidence or indicate a missing structural component.",
+      "disposition": "Source-corrected. There is no literal accumulating sediment state, but current read-only evidence already names settled_sediment texture, temporal persistence, viscosity persistence, temporal drag, static friction, residual ghost weight, cohesion, mobility, and viscosity gradient. Felt sediment remains open; absence of a literal parameter does not establish missing structure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Viscosity, pressure mitigation, damping, or Shadow dispersal mechanics may need to change after the comparison.",
+      "disposition": "Preserved as an exact Tier 5 wait. Pressure, porosity, persistence, damping, semantic admission, fill, PI, regulator, controller, reservoir, or Shadow changes require separate Mike/operator approval and cannot be selected from source resemblance or passive co-occurrence.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

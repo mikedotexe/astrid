@@ -1,0 +1,64 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786238486807847000_ec1688aa24",
+  "selected_limit": 40,
+  "processed_report_count": 5,
+  "depth_stop": "The five queue-head reports form one exact marker/facade cluster. The later 35 selected reports remain in strict order because this cluster required source reconciliation, two focused regressions, a compile-time facade contract, tests, and live-alignment review.",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786235385",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786235385.txt",
+      "sha256": "858c2b624c11f66bb5f664e231bdeb16fb7b7a8c9736c497273f88e95b88967d",
+      "newline_count": 45,
+      "bytes": 3678,
+      "lived_state_witness_id": "lsw_fbfd146d3d10dcd2fbc7c93988c074ae3f330eb1e85e8163a3eba57f1499895b",
+      "summary_file": "summaries/llm_1786235385.md",
+      "claims_file": "claims/llm_1786235385.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786227017",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786227017.txt",
+      "sha256": "baa88377f6c12b5ee0de0c57a5fc7103c62509bff20c8d1cc896f27af87abc0c",
+      "newline_count": 45,
+      "bytes": 3632,
+      "lived_state_witness_id": "lsw_bfad62d62430a52e7882c8db4efecc5a10c2239c14080538f6ae20a552f0ddd6",
+      "summary_file": "summaries/llm_1786227017.md",
+      "claims_file": "claims/llm_1786227017.json"
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786224914",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1786224914.txt",
+      "sha256": "859e3aa62121aa44ee585bc998b4c6a696a2f2b3635e6bae52d3b945406e061e",
+      "newline_count": 43,
+      "bytes": 3854,
+      "lived_state_witness_id": "lsw_48fe463ed931867ceef901a465aa942851a1490191ee21d0e1c17b48dad937a1",
+      "summary_file": "summaries/llm_rs_1786224914.md",
+      "claims_file": "claims/llm_rs_1786224914.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786221498",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786221498.txt",
+      "sha256": "6021e01c709aa507d98e95649af62fd2a3964907705de32c9da8eef0c65a2951",
+      "newline_count": 45,
+      "bytes": 3580,
+      "lived_state_witness_id": "lsw_4d0b93337bb6eb3ebb4f42447b3127b5270ef6065fbe34ff24e9d3c957deb7ea",
+      "summary_file": "summaries/llm_1786221498.md",
+      "claims_file": "claims/llm_1786221498.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786218334",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786218334.txt",
+      "sha256": "c6fd15f55cf65e0d8bfc2a657abeb4872ee2991884c22ecf4ad51464c4da8d2e",
+      "newline_count": 45,
+      "bytes": 3603,
+      "lived_state_witness_id": "lsw_5701bf8eaadb0f0a68375aac7343a682f4da6ac06a9c2d8959e05a1b66b8c228",
+      "summary_file": "summaries/llm_1786218334.md",
+      "claims_file": "claims/llm_1786218334.json"
+    }
+  ]
+}

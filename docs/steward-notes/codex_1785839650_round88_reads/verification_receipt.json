@@ -1,0 +1,37 @@
+{
+  "schema": "steward_verification_receipt_v1",
+  "run_id": "run_1785839650888675000_e38276e978",
+  "preprojection_id": "projection_1785839651761604000_c362f3c0d6",
+  "processed_report_count": 1,
+  "division_round_event_id": "division_followup_event_a0e4b533156402ebd4e4dd4f5c004976",
+  "tests": {
+    "phase_transition_audit": {"passed": 5, "failed": 0},
+    "passage_observatory": {"passed": 13, "failed": 0},
+    "bridge_phase_transition": {"passed": 17, "failed": 0},
+    "bridge_phase_passage_context": {"passed": 6, "failed": 0},
+    "bridge_phase_passage": {"passed": 12, "failed": 0},
+    "introspection_addressing": {"passed": 41, "failed": 0},
+    "evidence_event_store": {"passed": 13, "failed": 0},
+    "steward_control_and_projection": {"passed": 41, "failed": 0},
+    "division_followup": {"passed": 3, "failed": 0},
+    "division_chronicle": {"passed": 10, "failed": 0},
+    "experiential_epistemics": {"passed": 2, "failed": 0}
+  },
+  "live_epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 10291,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "runtime_observation": {
+    "launchd_failures": 0,
+    "launchd_warnings": 0,
+    "bridge_pid": 24790,
+    "bridge_active": true,
+    "canonical_flywheel_stale": true,
+    "newest_canonical_filename": "introspection_astrid_llm_1785825829.txt",
+    "newest_canonical_recorded_at": "2026-08-03T23:43:49-0700",
+    "restart_or_deploy_performed": false
+  },
+  "authority": "evidence and natural-study preregistration only; no transition, study input, pressure, fill, PI, controller, reservoir, prompt, model, peer, restart, deployment, or felt-result authority"
+}

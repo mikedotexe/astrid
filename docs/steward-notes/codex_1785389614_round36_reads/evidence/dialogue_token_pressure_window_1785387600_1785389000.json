@@ -1,0 +1,77 @@
+{
+  "schema": "dialogue_token_pressure_study_receipt_v1",
+  "audit_policy": "dialogue_token_pressure_audit_v1",
+  "audit_script": "scripts/dialogue_token_pressure_audit.py",
+  "audit_script_sha256": "6191cc83528727921ec9c08d6be939adf36d50a613459a838b458a320a1cda52",
+  "window": {
+    "from_timestamp_unix_s": 1785387600,
+    "to_timestamp_unix_s": 1785389000,
+    "retention_limit": 500
+  },
+  "sources": {
+    "dialogue_prompt_budget": {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/dialogue_prompt_budget.jsonl",
+      "sha256_at_capture": "7218eb33a74459023d26a97a384851a8aae50132cc01c843ac812457733683d0",
+      "source_lines_at_capture": 20591,
+      "source_timestamp_min": 1780858070,
+      "source_timestamp_max": 1785390585,
+      "matching_records": 3,
+      "retained_records": 3,
+      "earlier_matching_records_omitted": 0
+    },
+    "dialogue_live_attempts": {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/dialogue_live_attempts.jsonl",
+      "sha256_at_capture": "d9f8abd7195838a52eab9cd9a19e08a03ce13b55182d03b091f9d03f6595d676",
+      "source_lines_at_capture": 570,
+      "source_timestamp_min": 1776557244,
+      "source_timestamp_max": 1776614578,
+      "matching_records": 0,
+      "retained_records": 0
+    }
+  },
+  "observation": {
+    "timestamp_min": 1785387710,
+    "timestamp_max": 1785388364,
+    "budget_groups": [
+      {
+        "requested_tokens": 768,
+        "effective_tokens": 768,
+        "count": 3
+      }
+    ],
+    "constant_requested_and_effective_budget": true,
+    "clamp_count": 0,
+    "mode_packing_values": [
+      0.3,
+      0.33,
+      null
+    ],
+    "removed_fraction_min": 0.566283,
+    "removed_fraction_max": 0.587335,
+    "removed_fraction_mean": 0.573371,
+    "continuity_eviction_count": 2,
+    "diagnostic_runtime_effect_true_count": 0,
+    "machine_latency_correlation_available": false,
+    "attempt_stream_precedes_prompt_window": true
+  },
+  "disposition": {
+    "requested_token_band_within_window_explanation": "constant_budget_cannot_explain_within_window_variation",
+    "mode_packing_association_state": "mode_varied_with_observational_prompt_packing_evidence",
+    "latency_claim_state": "machine_latency_evidence_unavailable_in_window",
+    "causal_result": "not_established_by_observational_logs",
+    "felt_result": "not_inferred_from_machine_records",
+    "live_retuning_result": "not_authorized_or_performed"
+  },
+  "authority": {
+    "scope": "bounded_existing_log_observation",
+    "pressure_induced": false,
+    "dialogue_generated": false,
+    "runtime_mutated": false,
+    "token_budget_changed": false,
+    "model_or_sampler_changed": false,
+    "felt_effect_established": false,
+    "causal_effect_established": false,
+    "silence_infers_uptake_or_resolution": false,
+    "live_behavior_change_requires_separate_authority": true
+  }
+}

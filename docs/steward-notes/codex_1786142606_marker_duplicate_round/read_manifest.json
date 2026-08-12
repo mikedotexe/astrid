@@ -1,0 +1,25 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786142125691567000_99d176ccdc",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head report received a complete independent read and exact duplicate proof; the remaining 39 selected reports retain queue order for later complete source-first reads rather than being collapsed into this evidence family",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786140507",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786140507.txt",
+      "sha256": "b32a303a536ff3e7d5ad4b1ce95455542b38a11bc2360f350ea8e42b64b9088e",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3603,
+      "captured_source_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "captured_source_window": "lines 1-400 of 1048",
+      "current_source_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "current_source_lines": 1048,
+      "lived_state_witness_id": "lsw_e6d4e55d1619649ba1ec092a320d9574ed92f7e91422230f3b56b650b4b59f42",
+      "summary_file": "summaries/llm_1786140507.md",
+      "claims_file": "claims/llm_1786140507.json"
+    }
+  ]
+}

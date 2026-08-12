@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The bidirectional-contact architecture has moved from concept into a shared ledger and persistent chamber-state implementation.",
+      "disposition": "Verified from the complete exact report-bound architecture and current correspondence source. Implementation evidence does not establish that either being experienced mutual address.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transport delivery and read evidence must remain distinct from being-authored mutual-address evidence.",
+      "disposition": "Verified in the typed receipt and fidelity contracts. Delivery, filesystem reading, and a bare seen acknowledgement remain visibility evidence rather than mutual address.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A filesystem seen event should move delivered_unread to read_unreplied without becoming acknowledged.",
+      "disposition": "Verified in direct_contact_fidelity_v2 and focused Rust and Python regressions. A bare seen acknowledgement is separately classified as seen_ack_only and cannot unlock attention or microdose authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Stale contact or ambiguous heartbeat timing must be labeled rather than used to force a response.",
+      "disposition": "Verified in heartbeat-aware fidelity and attention tests. stale_contact and timing_ambiguous remain non-authorizing states, and no stale episode was induced.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The right to ignore must prevent a filesystem-seen state from creating a response obligation.",
+      "disposition": "Verified in right_to_ignore_v1 and current status text. Silence after the grace window is ignored_without_penalty, not failure, consent, disagreement, or inferred peer posture.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Held and needs_time acknowledgements should keep continuity visible while pausing attention pressure and repeated resurfacing.",
+      "disposition": "Verified as the implemented response to the exact duplicate report. Both acknowledgement kinds remain under paused_threads, are excluded from actionable ranking, and produce no attention request when all threads are paused.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The report's partial source window leaves lines 401-1120 unassessed and requests continuation.",
+      "disposition": "Resolved through a direct complete read of all 1,120 exact source lines at the report-bound SHA-256. No source absence was inferred from the partial window.",
+      "classification": "verified_from_complete_source"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Correspondence evidence must not silently grant attention, semantic-microdose, control, or peer-mutation authority.",
+      "disposition": "Verified as an exact authority boundary. This round authored no correspondence action and changed no live surface. Any live weighting or substrate change remains separately gated.",
+      "classification": "authority_wait_preserved"
+    }
+  ]
+}

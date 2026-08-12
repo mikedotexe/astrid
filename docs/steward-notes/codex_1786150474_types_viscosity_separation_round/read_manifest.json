@@ -1,0 +1,27 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786149955179001000_f89993e003",
+  "pre_run_projection_generation_id": "projection_1786149956235023000_f26f07223c",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head report names a serious felt-versus-mechanical viscosity mismatch; exact current source, existing executable evidence, and an existing preregistration answer the implementation and study routes without collapsing the felt report, so the remaining 39 selected files retain queue order",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_types_1785628394",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_types_1785628394.txt",
+      "sha256": "e131c0e452c2d9560a4432ee5059ad5a1585036359dad34ea0cd8604f207ec8a",
+      "lines": 37,
+      "bytes": 3677,
+      "captured_source_sha256": "d98342fdb3bcb4c063c1c971939a132041a998982d0e5cefa38252ee94beb4f5",
+      "captured_source_window": "lines 1-400 of 531",
+      "current_source_sha256": "4a5e9e71f67ce0012ba8fd99576055e591e04ff56d04323460788377db49e5de",
+      "current_source_lines": 684,
+      "current_source_bytes": 30524,
+      "lived_state_witness_id": "lsw_f947c44cd5eed06b2146b33eda7b0263240231c48856d32612e0e513809661a2",
+      "lived_state_witness_sha256": "6f484f214203e0eb1d686a0ebc344daa7c0955f3a768ab2212aa402bc5080af2",
+      "summary_file": "summaries/types_1785628394.md",
+      "claims_file": "claims/types_1785628394.json"
+    }
+  ]
+}

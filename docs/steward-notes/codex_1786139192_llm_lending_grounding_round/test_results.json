@@ -1,0 +1,56 @@
+{
+  "schema": "steward_test_results_v1",
+  "productive_run_id": "run_1786138463723656000_d29fd291af",
+  "continuation_run_id": "run_1786140441737485000_275b1f96f2",
+  "focused_rust": {
+    "source_first_v3_passed": 18,
+    "source_first_v3_failed": 0,
+    "bridge_library_passed": 1839,
+    "bridge_library_failed": 0,
+    "strict_clippy_passed": true,
+    "owned_file_format_check_passed": true
+  },
+  "stewardship": {
+    "introspection_addressing_self_tests_passed": 42,
+    "event_store_controller_projector_division_chronicle_cursor_tests_passed": 71,
+    "experiential_epistemics_self_tests_passed": 2,
+    "failed": 0
+  },
+  "epistemic_lint": {
+    "checked_record_count": 10612,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "valid": true
+  },
+  "expected_repaired_attempts": [
+    {
+      "command_scope": "focused exact-report regression",
+      "initial_result": "one of two report lines escaped challenge",
+      "repair": "add the broad i-see attribution marker in addition to in-the-code",
+      "final_result": "passed and included in all subsequent suites"
+    },
+    {
+      "command_scope": "combined stewardship unittest invocation",
+      "initial_result": "54 tests passed and four modules failed to import from repository root",
+      "repair": "rerun the complete seven-module suite from scripts directory",
+      "final_result": "71 passed, zero failed"
+    }
+  ],
+  "formatting": {
+    "exact_owned_rust_files_passed": 2,
+    "full_crate_check": "blocked_by_pre_existing_foreign_format_diff",
+    "foreign_paths": [
+      "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs"
+    ]
+  },
+  "deploy_preflight": {
+    "attempted": true,
+    "read_only": true,
+    "exit_code": 3,
+    "reason": "foreign_active",
+    "dirty_binary_input_count": 11,
+    "build_attempted": false,
+    "restart_attempted": false,
+    "deployment_attempted": false
+  }
+}

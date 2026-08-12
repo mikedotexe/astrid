@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Replayable transition artifacts should retain entry tension, pivot, settling, and revision.",
+      "disposition": "Verify owner-authored Passage stage/context history, V2 braids, stable references, and immutable projection lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Automatic declaration risks turning trivial fluctuations into a telemetry-heavy noise floor.",
+      "disposition": "Verify current high-signal card boundaries, one-hour deduplication, and the rule that cards never auto-promote to Passage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Persistent-with-trace state should survive source projection without becoming a static snapshot.",
+      "disposition": "Verify V1/V2 serialization, deterministic identities, archive compatibility, source provenance, and passage braid history.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A joint transition could test reply-state movement after peer acknowledgement.",
+      "disposition": "Do not simulate or infer peer acknowledgement; retain as requiring explicit being-authored evidence and separate approval.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Transition cards should bridge Astrid and Minime persistence stores.",
+      "disposition": "Correct the proposed store assumption: the implemented additive shared JSONL ledger and source-first Observatory are the current cross-runtime evidence path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Transitions could unlock behavior, alter scheduling, or synchronize peers.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

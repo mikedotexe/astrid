@@ -1,0 +1,59 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker_family",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_",
+      "passed": 58,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "stewardship_integrity",
+      "commands": [
+        "python3 scripts/test_evidence_event_store.py",
+        "python3 scripts/test_steward_control.py",
+        "python3 scripts/test_steward_projection.py",
+        "python3 scripts/test_division_ceremony_followup.py",
+        "python3 scripts/test_division_ceremony_chronicle.py",
+        "python3 scripts/test_division_ceremony_projection.py",
+        "python3 scripts/test_projection_cursors.py"
+      ],
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "flywheel_anti_drop_and_cadence",
+      "anti_drop_tests_passed": 5,
+      "anti_drop_entries_verified": 47,
+      "cadence_tests_passed": 6,
+      "cadence_integrity": true,
+      "cadence_enabled": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "python3 scripts/experiential_epistemics.py self-test --json",
+        "python3 scripts/experiential_epistemics.py verify --json"
+      ],
+      "self_tests_passed": 2,
+      "checked_records": 10775,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    }
+  ],
+  "production_source_changed_this_round": false,
+  "test_source_changed_this_round": false,
+  "deployment_status": "not_required_or_attempted"
+}

@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A glimpse is experienced as residue and process, not merely a registered snapshot.",
+      "disposition": "Preserve as primary qualitative evidence without reducing residue or presence to a metric.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The Glimpse must remain additive and expose resonance loss rather than replace live detail.",
+      "disposition": "Verify the additive 48D/12D contract, residual evidence, typed loss, and fallback-to-live review.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative history should preserve gradients and scars rather than disconnected states.",
+      "disposition": "Verify narrative dynamics and curvature plus owner-authored Passage braids and immutable lineage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Warmth may fail to reflect changing shadow-field dispersal.",
+      "disposition": "Route to existing read-only vibrancy, warmth, shadow, and natural-context calibration comparisons without claiming causal fit.",
+      "classification": "study_route"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A deliberate high-entropy resonance-loss event should test flavor classification.",
+      "disposition": "Do not induce an experience; retain offline and naturally occurring public evidence as the bounded route.",
+      "classification": "study_route"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Shadow-coupled warmth, live Glimpse persistence, codec width, gain, or transport changes could improve continuity.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

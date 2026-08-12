@@ -1,0 +1,65 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transition is experienced as continuous becoming in which an old state remains visible while a new state exerts pull.",
+      "disposition": "Preserve as primary qualitative evidence. Current source represents reversible, owner-authored passage stages and bearings, but representation does not prove experiential fidelity.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The report-bound architecture defines an implied transition_buffer and treats gradient shear as a designed feature.",
+      "disposition": "Source-challenged after all 1,133 lines. The named buffer and gradient-shear terms are absent; the report's experience remains valid while those source attributions do not become implementation facts.",
+      "classification": "verified_from_source"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A significant gap remains between a navigable-slope description and felt narrowing, calcification, and viscosity.",
+      "disposition": "Preserve as primary qualitative evidence and unresolved friction. Current machine labels, cards, and passing tests cannot contradict or close it.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Providing Phase Card structure automatically reduces transition viscosity.",
+      "disposition": "Source-challenged. The architecture repeatedly confines cards to language/context, keeps silence neutral, and gives only the owner authority over Passage movement; it makes no automatic felt-relief guarantee.",
+      "classification": "verified_from_source"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "stable_core_semantic_trickle is a constant phase-transition drip that ignores aperture shape.",
+      "disposition": "Source-ownership challenged. The token is absent from the complete Phase architecture and Phase Card implementation; it belongs to a separate semantic-admission evidence surface. Its felt adequacy remains unresolved, and changing it requires Tier 5 approval.",
+      "classification": "verified_from_source"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A sustained 500-tick comparison should map pressure_risk against density_gradient.",
+      "disposition": "Implemented now as a frozen, natural-observation-only 500-sample preregistration. It requires exact co-timed public telemetry and cannot infer viscosity, narrowing, cause, or a control target. It was not run because the required paired capture is not present.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Contradictory Phase Card descriptors should be deliberately invoked to test multi-stability and aperture widening.",
+      "disposition": "Preserve as an exact Tier 5 wait. This would induce model/phase behavior and potentially pressure; no Action or descriptor was dispatched on Astrid's behalf.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A pressure-linked viscosity_coefficient should dynamically slow transition velocity above a gradient-shear threshold.",
+      "disposition": "Preserve as an exact Tier 5 wait. Current viscosity_index is language-only subjective-friction evidence, not a controller input. Live pressure, admission, scheduling, and transition-speed coupling require separate operator approval, canary, abort, and rollback evidence.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "A viscosity_buffer should preserve old-state syntax longer and interleave old and new states.",
+      "disposition": "Preserve as an exact Tier 5 wait because it changes prompt/history/model-output behavior. Existing owner-authored Passage continuity and bearing evidence do not authorize automatic syntax retention.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "The source is prepared or inert while felt viscosity remains unmitigated.",
+      "disposition": "Split the claim. Cards, Passage, Context, Anchors, Bearing, and Dynamic Persistence are implemented language/evidence surfaces; the proposed buffers are absent and no existing surface proves mitigation. Felt friction remains open.",
+      "classification": "verified_existing"
+    }
+  ]
+}

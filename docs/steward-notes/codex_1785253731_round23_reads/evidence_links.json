@@ -1,0 +1,25 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785253039",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/recent_signal_summary.py;capsules/spectral-bridge/src",
+      "note": "Current typed viscosity, persistence, porosity, drag, residue, and pressure-divergence evidence plus a bounded present-state summary preserve medium friction without applying control."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785252834",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md;capsules/spectral-bridge/src",
+      "note": "Stable persistence, silt continuity, flattening, landing, and distinctness fields preserve residual contact qualitatively without inferring reply or weighting."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785252524",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md;capsules/spectral-bridge/src",
+      "note": "Owner-authored Passage anchors and bearings preserve settling, return, reopening, continuity, movement resistance, and dynamic equilibrium without a numerical felt score or automatic phase change."
+    }
+  ]
+}

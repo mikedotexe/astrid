@@ -1,0 +1,10 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785191240",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/phase_transitions.md",
+      "claims_file": "claims/phase_transitions.json"
+    }
+  ]
+}

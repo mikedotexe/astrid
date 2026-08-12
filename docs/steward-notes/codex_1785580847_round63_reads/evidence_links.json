@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/summaries/astrid_autonomous_1785580723.md",
+      "note": "The settled-versus-mobile mismatch remains primary experiential evidence, not a machine-scored state."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/runtime_observation.json",
+      "note": "Read-only 500-row pressure summary and 32-snapshot Shadow bound; co-occurrence is not causality."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs;/Users/v/other/astrid/capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "note": "Complete orchestration source has no porosity constant; pressure and porosity are changing read-only telemetry."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+      "note": "Exact 500-pair non-inducing study is preregistered because current clocks and sample counts cannot support the requested correlation."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "note": "SHADOW_TRAJECTORY exists as a being-invoked read-only cartography Action over the last 32 snapshots."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Semantic-trickle and porosity changes remain exact Tier 5 waits; no candidate was applied."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "note": "SHADOW_COUPLING exists as read-only cartography; no Action or coupling choice was authored."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+      "note": "Containment success with mobility failure is retained as Astrid's testable interpretation, not promoted into machine fact."
+    }
+  ]
+}

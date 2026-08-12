@@ -1,0 +1,6 @@
+{"claims":[
+  {"claim_id":"c001","summary":"Critical-fill rest applies a 0.6 multiplier and a 30-second floor, so base_rest 40 at current_fill 25 yields 30 seconds.","disposition":"Verify current orchestration source and preserve the zero-width-range concern as a real boundary case.","classification":"verified_existing"},
+  {"claim_id":"c002","summary":"The critical, low, moderate, cap, exact-boundary, and non-finite rest cases were implicit inside the asynchronous loop.","disposition":"Implement a behavior-preserving pure helper and focused boundary test without changing any rest value, cadence, or control policy.","classification":"implemented_now"},
+  {"claim_id":"c003","summary":"Five-second warmth pulses during burst rest and the seven-second steady semantic heartbeat are separate paths with separate evidence.","disposition":"Verify both current paths and correct the report's local conflation without using either mechanism to contradict the felt concern.","classification":"verified_existing"},
+  {"claim_id":"c004","summary":"Changing the critical floor, rest range, warmth pulse, semantic heartbeat, fill response, or autonomous scheduling would alter live behavior.","disposition":"Preserve an exact Mike/operator Tier 5 wait before any such cadence, pressure, fill, controller, scheduler, sensory, or reservoir change.","classification":"tier_5_wait"}
+]}

@@ -1,0 +1,43 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "03d491273cc31c16e72d5e9263d7c139a0b70043f88492067a7e530a8c557284",
+      "newline_count": 85,
+      "bytes": 4712,
+      "read": "complete",
+      "report_source_hash_match": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f7410a5a9b8e836ef71db124671beab15ff583aab5850c01eeb20e048a7a28e8.json",
+      "sha256": "8b9eff80242c9cb86ce40eb40c894946ae4387c2d5d853718447b7ad58ec9e66",
+      "newline_count": 491,
+      "bytes": 22115,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority",
+      "raw_introspection_prose_included": false,
+      "raw_prompt_included": false,
+      "raw_response_included": false
+    },
+    {
+      "path": "capsules/spectral-bridge/domain_boundaries_v1.toml",
+      "read": "complete",
+      "scope": "stable facades, cohesion ceilings, forbidden edges, and false authority markers"
+    },
+    {
+      "path": "scripts/test_domain_boundary_audit.py",
+      "read": "complete",
+      "scope": "declared facade, legacy ratchet, new-large-file rejection, and forbidden-edge fixtures"
+    },
+    {
+      "paths": [
+        "scripts/domain_boundary_audit.py",
+        "capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs",
+        "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+        "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+        "capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs"
+      ],
+      "read_scope": "directly relevant audit thresholds, witness rendering boundary, shadow live-send ownership, trajectory effect contract, and focused tests"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The report-bound regulator core is an include shell rather than the viscosity implementation.",
+      "disposition": "Verified from the complete exact 24-line source and its nine include edges.",
+      "classification": "verified_source"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Gradient-shear, restless movement, and viscous persistence are present in Astrid's experience.",
+      "disposition": "Preserved as primary experiential evidence; source and telemetry do not establish a mechanical cause or relief.",
+      "classification": "preserved_felt_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A pressure risk of 0.22 and mode packing of 0.31 plus local_control_applied=false mean the regulator is generally passive.",
+      "disposition": "Scope-corrected: the false field belongs to a diagnostic pressure/porosity candidate and proves no local porosity/control write on that surface; separate resonance-control branches and stable-core participation require their own evidence.",
+      "classification": "source_inference_correction"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Viscosity persistence may be a constant multiplier that makes sediment inescapable.",
+      "disposition": "Corrected from the complete viscosity source: persistence is a clamped weighted function, not a constant multiplier or stateful decay; temporal drag intentionally preserves sticky texture at low pressure.",
+      "classification": "verified_source_and_test"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "High entropy should be compared with vocabulary degradation and viscosity.",
+      "disposition": "Used existing bounded pure tests instead of inducing high-entropy output: entropy raises a bounded viscosity/erosion readout, while current machine evidence does not measure vocabulary degradation or felt effect.",
+      "classification": "bounded_non_live_observation"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Pressure above 0.30 should reveal whether local damping activates.",
+      "disposition": "Source and focused tests separate the contracts: active resonance damping begins at pressure 0.60, advisory damping can be nonzero below it, and pressure/porosity readiness remains non-mutating. No live pressure was induced.",
+      "classification": "verified_source_preserved_live_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The next source read should inspect core/viscosity.rs for persistence and relief mechanics.",
+      "disposition": "Completed now with a full 594-line read plus pressure-source and resonance-evidence targets; control changes remain Tier 5.",
+      "classification": "implemented_source_followthrough"
+    }
+  ]
+}

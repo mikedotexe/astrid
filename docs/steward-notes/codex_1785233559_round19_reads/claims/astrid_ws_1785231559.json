@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber reconnects with bounded backoff and handles binary, text, ping, pong, close, and error frames.",
+      "disposition": "Verify current source and existing lifecycle, capped-backoff, reconnect, and ping/pong trace tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The partial source window leaves decode failure handling apparently incomplete and potentially crash-prone.",
+      "disposition": "Correct from the unseen continuation: malformed payloads are bounded, hashed, counted, and return false without panic or relay.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Decode failures should not overwrite last-valid telemetry or improperly update BridgeDb.",
+      "disposition": "Verify malformed input yields zero relays and protocol mismatches retain the last valid sample; keep raw malformed payloads out of message storage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Complex processing may hold the BridgeState write lock long enough to create contention.",
+      "disposition": "Verify existing prewrite and lock-hold timing evidence; no contention or crash is established by the report and no lock behavior changes.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786272290",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner reconstructs output by retaining exact references and removing unframed exact transport markers without rewriting other text.",
+      "disposition": "Verified from complete source and byte-exact regressions. Each known occurrence is classified once, referenced marker bytes are retained, unframed marker bytes are omitted, and every other UTF-8 scalar is copied.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A transition such as `[marker] -- behaves like` may make relation detection select the wrong token or strip the marker.",
+      "disposition": "Contradicted by the current parser and tests. Matching brackets independently establish a grouped reference; without delimiters, symbol-only chunks are skipped and `behaves` is the first finite allowlisted word.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A quoted exact marker should remain visible in sanitized output.",
+      "disposition": "Verified by exact ASCII, non-ASCII, backtick, whitespace-separated, and nested quoted-reference regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker followed by `behaves as` should be retained as an explicit exact-token relation.",
+      "disposition": "Verified literally by the poetic-attribution regression and by the 58-test marker-family run.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The reconstructed remainder should be traced into the provider output path rather than assumed to be final response behavior from the partial window.",
+      "disposition": "Verified from the shared provider normalization contract and both transport call sites. The sanitizer feeds normalized provider text and a cleanup report; this source proof does not itself establish deployment or a particular live response.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The report and witness do not grant live authority or prove experiential effect.",
+      "disposition": "Preserved exactly. The witness binds the artifact and technical route while explicitly excluding felt causation, identity continuity, approval, and live eligibility.",
+      "classification": "verified_existing"
+    }
+  ]
+}

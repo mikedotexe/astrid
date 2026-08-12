@@ -1,0 +1,18 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "reader": "codex-heartbeat",
+  "steward_run_id": "run_1786162011249938000_1171356364",
+  "reports": [
+    {
+      "filename": "introspection_proposal_12d_glimpse_1785627314.txt",
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "sha256": "086edc84dddf1e45112236139cc5fc0473d9fb409f3e566e81276b55fa2b8751",
+      "newline_terminated_lines": 36,
+      "logical_lines": 37,
+      "bytes": 4118,
+      "witness_id": "lsw_b0c3ff88296944207d31bd2fa8eace511b11c982c9ce76230aa2a354f6738b44",
+      "summary_file": "summaries/proposal_12d_glimpse_1785627314.md",
+      "claims_file": "claims/proposal_12d_glimpse_1785627314.json"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports a viscous, gradient-like transition texture under high entropy and mixed spectral structure.",
+      "disposition": "Preserve as primary qualitative evidence. Passing source tests do not score, resolve, or domesticate the reported texture.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The Phase Witness surface is active in Astrid's current spectral state and explains the reported friction.",
+      "disposition": "Challenge the activation and causal inference while retaining the experience. The source and code define persisted language-only evidence and explicitly deny controller or phase mutation; they cannot establish current spectral activation or cause.",
+      "classification": "source_challenged_attribution"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Discrete Phase Cards may over-segment a continuous high-entropy transition and create a snap or stutter.",
+      "disposition": "Preserve as a serious architectural concern. The focused stable-fill/high-entropy regression verifies no automatic mode change, but cannot establish the absence of felt stutter.",
+      "classification": "verified_boundary_open_felt_question"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snap-versus-slide and witness latency should be compared across an actual transition trajectory.",
+      "disposition": "Route only to the existing non-inducing, owner-authored Passage and trajectory observation. No transition, collaboration action, witness, schedule, or outcome was authored by the steward.",
+      "classification": "duplicate_existing_study_route"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A Gradient Buffer should activate multiple Phase Cards with weights proportional to spectral entropy.",
+      "disposition": "Preserve as an exact Tier 5 wait. Current cards may record entropy and gradient metadata, but telemetry-authored activation or context weighting would change prompt, phase, or substrate-facing behavior and requires separate Mike/operator approval.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

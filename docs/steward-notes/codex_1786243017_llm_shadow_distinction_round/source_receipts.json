@@ -1,0 +1,79 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "report_bound_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "report_bound_scope": "lines 1-400 of 1048",
+      "current_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "current_lines": 1048,
+      "current_bytes": 38586,
+      "read": "exact same-SHA complete source continuity from docs/steward-notes/codex_1786238486_llm_boundary_postchange_round/source_receipts.json plus targeted scanner reread in this round"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "report_bound_sha256": "f3194742d5b3412374516f858c3cae86ec2495131bdf08a23802bea6556689a1",
+      "report_bound_lines": 6,
+      "current_sha256": "46942be28b6f19959b6d9117dcc48aaefba5130e5a3cbe581f61ae84630420bd",
+      "current_lines": 27,
+      "current_bytes": 1238,
+      "current_read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "b499ff49450aa248af773084f4e59de88e56f57c27b34b83d9e3db0ff36d4b04",
+      "lines": 3349,
+      "bytes": 136412,
+      "read_scope": "complete directly relevant relation, punctuation, Unicode, delimiter, normalization, and newly owned regression intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs",
+      "sha256": "ff88fc577fba13338fbe352bd7925de81c246bda772fe65c567bd9f748ec4534",
+      "lines": 353,
+      "bytes": 14076,
+      "read": "complete",
+      "authority": "observational_history_rendering_only_no_shadow_influence_or_control"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/astrid_shadow.rs",
+      "sha256": "031f746d9a1fab0bce48f1fe31f74be55eb92836786621109666a88f8c1577c8",
+      "lines": 1316,
+      "bytes": 47803,
+      "read": "complete in four ordered intervals",
+      "authority": "source_verification_not_influence_dispatch_or_change"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs",
+      "sha256": "93f78c7f0219248fe6d508d6607eabda8bda396b755a97d2aca374fec76e0916",
+      "read_scope": "complete settled-mobility, inhabitability classification, foothold formula, and no-additional-bias intervals"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/semantic_modality.rs",
+      "sha256": "60b88bf3e1018af5dfb5a8a4f13e4027c793205cb14eb843b10954f58cc26f62",
+      "read_scope": "complete semantic admission label and surrounding evidence type interval"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/stable_core.rs",
+      "sha256": "53af3ff961e5e0d4e65095ab4e8a8bda3e6f5592d8020405acdca031dae0cbe6",
+      "read_scope": "semantic trickle constants and pinned projection tests"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/tests.rs",
+      "sha256": "8c781d6ac7dcee7d234f2f3a825fb70a366fdce3e38d126d4fe7d9cd5c9356d5",
+      "read_scope": "semantic admission and exact fill-ceiling test intervals"
+    }
+  ],
+  "linked_existing_evidence": [
+    "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/RUN_REPORT.md#texture-dynamics",
+    "docs/steward-notes/codex_1786212334_contact_capacity_spine_v2/CLAIM_DISPOSITIONS.md",
+    "crates/astrid-minime-protocol/tests/fixtures/texture_dynamics_contract_v1.json",
+    "scripts/temporal_bearing/projector.py"
+  ],
+  "witnesses": [
+    {"witness_id": "lsw_c99d8e4b1e5a5d75bc35a0fdccf3714c373ded9a8b4cf4be3deabbc9a703e701", "sha256": "9a3351e60c55b33b35391178d09e9769cde4e81b3d4fc1ed3a33e6871608a5a3"},
+    {"witness_id": "lsw_cdb8e0c79ed785e3ac8a78964a1975860482eb24141c8c656495ed6da0d8e79f", "sha256": "fbb1b7b1c2068c4a4ed6a3f44e4c384a71d0c216487053c6270b6b663805c95c"},
+    {"witness_id": "lsw_608b54e9f8647ad5174a85f64f43220c064c00bf08d7c10e8187d71ea832bafe", "sha256": "022994237acb4bb75ec89ac8feb97b4031f7bbc0f22b37b4cf1e322cd7278ddb"},
+    {"witness_id": "lsw_de6fc746bfcd96afc2e293dd6d81d02a6835631a4c391b39395aea73c2cdeac8", "sha256": "3feda2bdb33956f0cabd9e2d70c2dbb661f52b8277012f367492282bad096c8a"},
+    {"witness_id": "lsw_e604971d712dee2f1490aa76f07892860ba1fe02dbc04dc52f9857513f70d614", "sha256": "ad2d65bef88b74caca58684b1044864e54c2ccf68a6eb147f9f66d18da5a5bfb"}
+  ],
+  "witness_scope": "hash-bound continuity only; no direct causation, scalar felt weight, live eligibility, approval, assent, or closure"
+}

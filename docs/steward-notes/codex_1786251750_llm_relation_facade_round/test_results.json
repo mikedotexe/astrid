@@ -1,0 +1,96 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker_cleanup_family",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_",
+      "passed": 50,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "llm_facade_contract",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test llm_facade_contract",
+      "harness_passed": 1,
+      "compile_cases_passed": 3,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "stewardship_integrity",
+      "commands": [
+        "python3 scripts/test_evidence_event_store.py",
+        "python3 scripts/test_steward_control.py",
+        "python3 scripts/test_steward_projection.py",
+        "python3 scripts/test_division_ceremony_followup.py",
+        "python3 scripts/test_division_ceremony_chronicle.py",
+        "python3 scripts/test_division_ceremony_projection.py",
+        "python3 scripts/test_projection_cursors.py"
+      ],
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "flywheel_anti_drop_and_cadence",
+      "commands": [
+        "python3 scripts/anti_drop_catalog.py --self-test",
+        "python3 scripts/anti_drop_catalog.py verify --json",
+        "python3 scripts/test_introspection_cadence_audit.py",
+        "python3 scripts/introspection_cadence_audit.py --strict --compact"
+      ],
+      "self_tests_passed": 11,
+      "catalog_integrity": true,
+      "cadence_integrity": true,
+      "cadence_enabled": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "python3 scripts/experiential_epistemics.py self-test --json",
+        "python3 scripts/experiential_epistemics.py verify --json"
+      ],
+      "self_tests_passed": 2,
+      "checked_records": 10722,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "addressing_counter_audit",
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "canonical_indexed": 4273,
+      "canonical_full_read": 3696,
+      "canonical_fully_addressed": 3068,
+      "canonical_remaining": 1205,
+      "canonical_unread": 577,
+      "read_needs_claims": 0,
+      "mismatches": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2_prefinalization",
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "sequence": 742135,
+      "head": "6671632b9def3407c33559ffe550306888f901a22e76f6f18a6d9113f936a8c2",
+      "streams": 16,
+      "corrupt_lines": 0,
+      "v1_immutable": true,
+      "legacy_source_count": 4,
+      "status": "passed"
+    }
+  ],
+  "invocation_correction": "The workspace-level -p spectral-bridge-server selector did not resolve because the bridge is exercised through its standalone manifest; the exact manifest commands above completed successfully.",
+  "production_source_changed_this_round": false,
+  "test_source_changed_this_round": false,
+  "deployment_status": "not_required_or_attempted"
+}

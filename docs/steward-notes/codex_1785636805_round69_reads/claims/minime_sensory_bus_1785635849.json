@@ -1,0 +1,41 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "semantic_stale_shaped_ms uses a fill-centered sigmoid and dynamic_surge_target_weight uses smoothstep tapering.",
+      "disposition": "Verified from exact current source at the unchanged hash. The sigmoid center is 0.4 and the surge taper spans fill 0.70-0.80.",
+      "classification": "verified_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A fixed sigmoid steepness of 6.0 could become too abrupt or sluggish if stale-window endpoints change substantially.",
+      "disposition": "Source-grounded as a future regression risk, not a current failure. Endpoint changes scale the absolute millisecond slope; the current endpoints, midpoint, monotonic handover, and bounds are covered by existing tests.",
+      "classification": "verified_existing_test_boundary"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The semantic stale curve should remain bounded across fill 0.0-1.0 without a cliff around 0.35-0.45.",
+      "disposition": "Verified by exact existing source and passing tests for bounds, midpoint, one-percent monotonic sweep, recovery handover, and the 0.35-0.45 release region.",
+      "classification": "verified_duplicate_test"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The surge target at fill 0.75 should lie strictly between 0.90 and 0.72.",
+      "disposition": "Verified exactly. Smoothstep is 0.5 at the midpoint, yielding 0.81; the midpoint ordering and soft-knee regressions pass.",
+      "classification": "verified_duplicate_test"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "High-entropy persistence may interact with the low-fill recovery hold and prematurely prune dense thought.",
+      "disposition": "Source-corrected for the current policy. Entropy fill support starts at 0.55, so the multiplier is exactly 1.0 throughout the <=0.25 recovery hold; it neither shortens nor extends that 45-second hold. Higher-fill retention remains separately bounded and tested.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The sigmoid steepness, stale-window endpoints, surge weights, or entropy-persistence policy may need adjustment.",
+      "disposition": "Preserve as an exact Tier 5 sensory persistence and admission wait. No constant, curve, cadence, gate, pressure, or live value changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

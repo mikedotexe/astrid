@@ -1,0 +1,8 @@
+{
+  "schema": "remaining_read_batch_manifest_v1",
+  "selected_count": 40,
+  "processed_count": 1,
+  "unprocessed_count": 39,
+  "next_filename": "introspection_proposal_phase_transitions_1785625853.txt",
+  "unprocessed_manifest": "unprocessed_selected.json"
+}

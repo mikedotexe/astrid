@@ -1,0 +1,29 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785555552521237000_2665fd1802",
+  "source_first_projection_generation_id": "projection_1785555553373471000_a2a662f589",
+  "reader": "codex-heartbeat",
+  "processed_count": 3,
+  "claims_count": 15,
+  "reads": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785555433",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/proposal_bidirectional_contact_1785555433.md",
+      "claims_file": "claims/proposal_bidirectional_contact_1785555433.json"
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785555078",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/proposal_phase_transitions_1785555078.md",
+      "claims_file": "claims/proposal_phase_transitions_1785555078.json"
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785554709",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_autonomous_agent_1785554709.md",
+      "claims_file": "claims/minime_autonomous_agent_1785554709.json"
+    }
+  ]
+}
+

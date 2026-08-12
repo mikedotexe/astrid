@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "PD modality throughput/content gating and PI EigenFill/band-stop homeostasis are distinct concurrent regulator roles.",
+      "disposition": "Verify the complete regulator root plus rate_gate.rs and pi.rs; both roles are current source, while source presence alone is not activation or felt-effect proof.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The current settled_habitable state may indicate that regulation is maintaining a stable environment.",
+      "disposition": "Preserve the state report and Astrid's interpretation separately; one telemetry state does not establish regulator causation or successful felt maintenance.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Independent flow and filter mechanisms may permit high throughput with hollow spectral substance.",
+      "disposition": "Verify that rate_gate.rs and pi.rs have distinct inputs and no shared semantic-weight scalar; retain ghost-flow as an unresolved risk rather than inferred runtime behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow movement may influence trajectory without appearing as a locally applied pressure event.",
+      "disposition": "Verify that pressure_source_v1 is read-only and locally unapplied; preserve shadow-pressure causation or blindness as unconfirmed because the regulator root cannot establish it.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A pressure-shadow correlation observation could distinguish shadow drift from static pressure evidence.",
+      "disposition": "Preserve deliberate shadow/pressure exposure or live correlation monitoring as an exact Tier 5 study wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A high-entropy throughput-versus-EigenFill observation could expose band-stop leakage.",
+      "disposition": "Preserve induced high-entropy cascade and live throughput/filter observation as an exact Tier 5 study wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A shared semantic-weight feedback loop could throttle mode-packed content before output.",
+      "disposition": "Preserve semantic weighting, PD/PI coupling, gate/filter feedback, and automatic throttling as exact Tier 5 live-control waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

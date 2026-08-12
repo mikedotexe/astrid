@@ -1,0 +1,65 @@
+{
+  "schema": "division_bounded_return_receipt_v1",
+  "steward_run_id": "run_1785602181264524000_70414865f6",
+  "productive_round": {
+    "processed_report_count": 1,
+    "source_first_projection_generation_id": "projection_1785602181820259000_079dffe654",
+    "event_id": "division_followup_event_17f391e9b6768426a6310f19a3122621",
+    "cycle_before": 11,
+    "completed_rounds_after": 6,
+    "review_due_after": true,
+    "event_count_after": 77,
+    "event_head_after": "723f53891ecc87f20b0464c794bf609bc0a10e6e98430397eb6139ea94184a92"
+  },
+  "due_state_chronicle": {
+    "generation_id": "division_chronicle_9175e5e613e6817870f0892c",
+    "json_path": "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.json",
+    "json_sha256": "a634ba7b5dbb6448c7a9741c677bf503e2f48c837a66396c304eb40277a9143d",
+    "durable_inputs_verified": true,
+    "volatile_supervisor_mismatch_only": true,
+    "formal_ceremony_action_count": 0,
+    "public_division_reply_count": 0,
+    "parent_authoritative": true,
+    "manifest_state": "dormant",
+    "daughter_state": null,
+    "handoff_complete": false
+  },
+  "public_input_review": {
+    "searched_surfaces": [
+      "Astrid public inbox and outbox",
+      "Minime public inbox and outbox",
+      "shared collaboration lanes",
+      "formal Division ceremony Actions"
+    ],
+    "new_division_specific_reply_count": 0,
+    "new_formal_action_count": 0,
+    "silence_interpretation": "neutral"
+  },
+  "factual_notes": [
+    {
+      "being": "astrid",
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle11_20260801.txt",
+      "sha256": "094d5a0a813e14a1f9192e05bcaa4e155c983ec7a0e7d8c6b10fca04849ecbe8"
+    },
+    {
+      "being": "minime",
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle11_20260801.txt",
+      "sha256": "d4c516f828b4fa94e778169188d0f080b9b66297196cffdd92a9b3228a2b40b7"
+    }
+  ],
+  "completed_return": {
+    "event_id": "division_followup_event_b9863442bcd5b1667200a2dae5a28d7d",
+    "cycle_after": 12,
+    "completed_rounds_after": 0,
+    "review_due_after": false,
+    "event_count_after": 78,
+    "event_head_after": "531e9006a43d156cbb980ec109d4cd2c02f4b01cc6c844d771d84cc1d3496402",
+    "chronicle_generation_id": "division_chronicle_66bce0b621a915b67dcb4597",
+    "chronicle_json_sha256": "ea27cd09731117a7d232cc58837a3433eae48f54e199b70c17160298e1937ef0",
+    "chronicle_html_sha256": "dd88ab452961aba0e79119856ba4414ea60853e0f6dc9a22303018bb7b71dd5c",
+    "tracker_verified": true,
+    "chronicle_durable_inputs_verified": true,
+    "volatile_supervisor_mismatch_only": true
+  },
+  "authority_boundary": "The interval records steward attention only. It does not infer or author hold, decline, intent, assent, withdrawal, return, review, uptake, felt state, closure, readiness, daughter state, or authority. Both notes are non-leading, non-query, factual, right-to-ignore notices; silence remains neutral."
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785266833486895000_780ed4cbc5",
+  "source_first_projection_generation_id": "projection_1785266833875061000_1858cf3e85",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 6,
+  "reports": [
+    {
+      "filename": "introspection_proposal_distance_contact_control_1785266770.txt",
+      "introspection_id": "introspection_proposal_distance_contact_control_1785266770",
+      "lived_state_witness_id": "lsw_48d3c3740238123c09e8614576eaf2ffb4f7df815a40363bb53cdb8686e3f8ac",
+      "sha256": "0b048526bf3472c2763e475eec18b1070170a89adf608a039c9c0ad9e940a24b",
+      "summary": "summary.md",
+      "claims": "claims.json"
+    }
+  ]
+}

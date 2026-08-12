@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Containment can be both inhabitable and restrictive, with tail nuance becoming harder to distinguish.",
+      "disposition": "Preserve the dual felt account without interpreting stable-core metrics as resolution.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mobility, persistence, and representational loss need coordinated deterministic comparison.",
+      "disposition": "Execute the frozen lattice-mobility, semantic-persistence, and fallback/codec campaigns offline.",
+      "classification": "deterministic_offline_study"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Local porosity and exploration settings should be authorable by the being rather than selected by a steward.",
+      "disposition": "Implement signed, revisioned, expiring local self-control with withdrawal and rollback receipts.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shared admission, peer influence, and cross-being gain cannot follow from one being's porosity request.",
+      "disposition": "Require current mutual scoped grants and keep all Division authority separate.",
+      "classification": "authority_boundary"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "links": [
+    {"introspection_id":"introspection_astrid_llm_1786166330","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs","note":"Exact scanner and bounded reference syntax ownership."},
+    {"introspection_id":"introspection_astrid_llm_1786166330","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Multibyte byte-exact traversal regression."},
+    {"introspection_id":"introspection_astrid_llm_1786166330","claim_id":"c003","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Longest exact match, adjacent marker, and no-second-order tests."},
+    {"introspection_id":"introspection_astrid_llm_1786166330","claim_id":"c004","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Literal denotes relation regression."},
+    {"introspection_id":"introspection_astrid_llm_1786166330","claim_id":"c005","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs","note":"Finite relation vocabulary includes is; unlisted relations remain fail-closed."},
+    {"introspection_id":"introspection_astrid_llm_1786166330","claim_id":"c006","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Exact two-, three-, four-, and deeper-than-four delimiter proofs."},
+    {"introspection_id":"introspection_astrid_llm_1786166330","claim_id":"c007","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Newline, tab, Unicode whitespace, and symbol-only-line proofs."},
+    {"introspection_id":"introspection_llm.rs_1786164021","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/llm.rs","note":"Exact report-bound facade and current explicit facade."},
+    {"introspection_id":"introspection_llm.rs_1786164021","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1786254898_llm_adjacent_round/source_receipts.json","note":"Visibility is kept separate from runtime allocation and felt causation."},
+    {"introspection_id":"introspection_llm.rs_1786164021","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Felt pressure remains primary without a fabricated memory or habitability scalar join."},
+    {"introspection_id":"introspection_llm.rs_1786164021","claim_id":"c004","kind":"test","target":"capsules/spectral-bridge/tests/llm_facade_contract.rs","note":"Normal compilation and the prior exact facade contract prove path and visibility ownership."},
+    {"introspection_id":"introspection_llm.rs_1786164021","claim_id":"c005","kind":"code","target":"capsules/spectral-bridge/src/llm.rs","note":"Current explicit public, crate-private, and test-only export lists implement the requested lean boundary."},
+    {"introspection_id":"introspection_llm.rs_1786164021","claim_id":"c006","kind":"steward_note","target":"docs/steward-notes/codex_1786254898_llm_adjacent_round/claims/llm_rs_1786164021.json","note":"Shadow influence remains an exact Tier 5 wait and is not inferred from the facade."}
+  ]
+}

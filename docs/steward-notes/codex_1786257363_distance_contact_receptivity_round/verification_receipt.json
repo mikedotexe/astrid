@@ -1,0 +1,108 @@
+{
+  "schema": "source_first_round_verification_v1",
+  "productive_steward_run_id": "run_1786257363195256000_830c32f36f",
+  "productive_preprojection_generation_id": "projection_1786257364214596000_487026021d",
+  "productive_terminal_outcome": "cancelled_after_durable_writes",
+  "finalization_steward_run_id": "run_1786259304418294000_35e60e35a1",
+  "finalization_preprojection_generation_id": "projection_1786259305452120000_48364a3826",
+  "finalization_pause_generation": 289,
+  "finalization_terminal_projection": "pending_successful_finish",
+  "processed_reports": 1,
+  "claim_count": 10,
+  "evidence_link_count": 20,
+  "closure_status": "addressed_duplicate",
+  "canonical_counters_before": {
+    "indexed": 4273,
+    "full_read": 3698,
+    "fully_addressed": 3070,
+    "remaining": 1203,
+    "unread": 575,
+    "read_needs_claims": 0
+  },
+  "canonical_counters_after": {
+    "indexed": 4273,
+    "full_read": 3699,
+    "fully_addressed": 3071,
+    "remaining": 1202,
+    "unread": 574,
+    "read_needs_claims": 0,
+    "mismatches": 0
+  },
+  "division_before_round_record": {
+    "cycle_id": 22,
+    "completed_productive_rounds": 2,
+    "required_productive_rounds": 6,
+    "review_due": false
+  },
+  "division_after_round_record": {
+    "cycle_id": 22,
+    "completed_productive_rounds": 3,
+    "required_productive_rounds": 6,
+    "rounds_remaining": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_11bfd5e6a74f0a4ed80d03ef716ca32b",
+    "event_count": 151,
+    "event_head_sha256": "6ebc4042a98539b5820bdc959411d22c6bbb3ee3b47e32d667f3e248c0df2d26"
+  },
+  "contact_capacity_snapshot": {
+    "valid": true,
+    "journeys": 22789,
+    "proven_contact_traces": 44,
+    "autonomous_journeys": 554,
+    "legacy_unknown_journeys": 22191,
+    "ingress_gaps": 0,
+    "capture_gaps": 0,
+    "terminal_delivered": 1,
+    "terminal_outbound_blocked": 43,
+    "counter_audit": "consistent"
+  },
+  "temporal_bearing_snapshot": {
+    "valid": true,
+    "journeys": 22791,
+    "contact_records": 44,
+    "autonomous_records": 556,
+    "legacy_unknown_records": 22191,
+    "lived_state_bindings": 1550,
+    "owner_unreported_records": 21241,
+    "passage_bindings": 0,
+    "shadow_bindings": 0,
+    "texture_bindings": 0,
+    "unlinked_evidence": 8854,
+    "counter_audit": "consistent"
+  },
+  "tests": {
+    "focused_report_family": {
+      "bridge_tests_passed": 3,
+      "minime_receptivity_tests_passed": 6,
+      "minime_space_hold_tests_passed": 1,
+      "receptivity_replay_self_test": "passed",
+      "contact_capacity_trace_tests_passed": 11,
+      "temporal_bearing_tests_passed": 4,
+      "initial_bridge_package_selector_failed": true,
+      "corrected_manifest_path_passed": true
+    },
+    "introspection_addressing_tests_passed": 42,
+    "stewardship_integrity_tests_passed": 72,
+    "anti_drop_self_tests_passed": 5,
+    "anti_drop_catalog_entries_verified": 47,
+    "cadence_tests_passed": 6,
+    "cadence_integrity": true,
+    "cadence_enabled": false,
+    "experiential_epistemics_tests_passed": 2,
+    "experiential_epistemics_checked_records": 10757,
+    "experiential_epistemics_issues": 0,
+    "domain_boundary_valid": true,
+    "domain_boundary_violations": 0
+  },
+  "evidence_event_store_prefinalization": {
+    "sequence": 743201,
+    "head": "de585912979620fce458597aac76c3e5b304236faff565363da0e47dc7c59915",
+    "streams": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "runtime_or_deployment_change": false,
+  "live_surface_alignment": "not_required",
+  "authority_effect": false
+}

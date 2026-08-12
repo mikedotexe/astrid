@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785639400",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/summaries/astrid_autonomous_1785639400.md",
+      "note": "Full-read source challenge, exact continuity, study route, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785639400",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/CONTACT_CAPACITY_AND_FELT_WEIGHT_PROGRAM_V1.md",
+      "note": "Command-to-capacity identity rail and exact non-live route."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785639129",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/summaries/astrid_codec_1785639129.md",
+      "note": "Full-read source challenge, existing compression evidence, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785639129",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/CONTACT_CAPACITY_AND_FELT_WEIGHT_PROGRAM_V1.md",
+      "note": "Representation-and-compression rail."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785638856",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/summaries/proposal_12d_glimpse_1785638856.md",
+      "note": "Full-read architecture correction, replay route, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785638856",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/CONTACT_CAPACITY_AND_FELT_WEIGHT_PROGRAM_V1.md",
+      "note": "Representation-and-compression rail with unscored felt observation."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785638151",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/summaries/proposal_distance_contact_control_1785638151.md",
+      "note": "Full-read receptivity source challenge and representation-to-contact route."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785638151",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/CONTACT_CAPACITY_AND_FELT_WEIGHT_PROGRAM_V1.md",
+      "note": "Contact evidence and actual-plasticity boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785637686",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/summaries/proposal_bidirectional_contact_1785637686.md",
+      "note": "Full-read correspondence verification and subjective-weight source evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785637686",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785647183_round71_reads/CONTACT_CAPACITY_AND_FELT_WEIGHT_PROGRAM_V1.md",
+      "note": "Qualitative contact-effort witness rail without scalar derivation."
+    }
+  ]
+}

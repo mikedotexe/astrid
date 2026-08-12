@@ -1,0 +1,86 @@
+{
+  "schema": "pressure_control_field_lineage_study_v1",
+  "source_introspection_id": "introspection_astrid_ws_1785517975",
+  "study_kind": "deterministic_copied_input_source_contract",
+  "network_used": false,
+  "socket_created": false,
+  "live_input_used": false,
+  "live_control_changed": false,
+  "felt_status": "not_measured",
+  "rows": [
+    {
+      "surface": "resonance_density_v1.pressure_risk",
+      "observed_value": 0.22869306802749634,
+      "role": "diagnostic scalar",
+      "runtime_effect_established": false
+    },
+    {
+      "surface": "resonance_density_v1.components.mode_packing",
+      "observed_value": 1.0,
+      "role": "raw component",
+      "runtime_effect_established": false
+    },
+    {
+      "surface": "pressure_source_v1.pressure_score",
+      "observed_value_rounded_in_prompt": 0.33,
+      "role": "weighted aggregate adjacent to quality label",
+      "runtime_effect_established": false
+    },
+    {
+      "surface": "pressure_source_v1.quality",
+      "observed_value": "overpacked_mode_packing",
+      "role": "diagnostic label selected from dominant raw source",
+      "runtime_effect_established": false
+    },
+    {
+      "surface": "pressure_source_v1.control.applied_locally",
+      "observed_value": false,
+      "role": "diagnostic descriptor contract, not PI input",
+      "runtime_effect_established": false
+    },
+    {
+      "surface": "resonance_density_v1.control",
+      "role": "legacy-PI candidate; active downward bias begins only at pressure_risk >= 0.60 in inspected source",
+      "runtime_effect_established": false
+    },
+    {
+      "surface": "inhabitable_fluctuation_v1.control",
+      "role": "separate legacy-PI candidate; settled state can declare local with neutral numeric values",
+      "runtime_effect_established": false
+    },
+    {
+      "surface": "regulator_participation_readout_v1",
+      "role": "bridge-derived distinction receipt",
+      "machine_effect_established": false,
+      "felt_effect_established": false
+    }
+  ],
+  "source_contracts": [
+    {
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+      "complete_read": true
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+      "complete_read": true
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs",
+      "sha256": "93f78c7f0219248fe6d508d6607eabda8bda396b755a97d2aca374fec76e0916",
+      "complete_read": true
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs",
+      "sha256": "b755633327fe94e0565b739885e0f9f1bd8bd7394900969879a01c62fae0bc83",
+      "complete_read": true
+    },
+    {
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "sha256": "1e4b85b76120cd78172b8928c28c0cb1b957a877c1dc7c1b7461b3070d6b571e",
+      "complete_read": true
+    }
+  ],
+  "authority": "copied_input_evidence_only_not_pressure_shadow_pi_codec_or_live_control"
+}

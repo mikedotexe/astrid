@@ -1,0 +1,47 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "lines": 1048,
+      "bytes": 38557,
+      "read": "complete_exact_sha_continuity_from_preceding_rounds_with_fresh_scanner_delimiter_and_generate_dialogue_intervals",
+      "temporal_note": "current source is byte-identical to the report-bound source and the complete reads in the immediately preceding marker rounds"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "7f4cf2038ef66086a4c33279ebd84116d3a7aa1d34cc1f4202576fd47d03039f",
+      "lines": 1395,
+      "bytes": 48585,
+      "read_scope": "normalize_provider_output_v1 and exact-marker cleanup boundary"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "97475c4af5aba553476d81a0d690d6b3c93147639951776fc81a43b92e134ee4",
+      "lines": 1310,
+      "bytes": 42086,
+      "read_scope": "MLX and Ollama normalization-to-return intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "pre_change_sha256": "08138f9f9e5c82e0c2a2c0a424a035dcdfbf3c9ff39854f5e8e6d9c90fe4a432",
+      "post_change_sha256": "cff751eaff8f10ef5d924c17058eb426a474a3d330aec5f72e5fb459e4b6ff67",
+      "post_change_lines": 3278,
+      "post_change_bytes": 133512,
+      "read_scope": "finite following-relation, deeper-than-four delimiter, and provider-normalization regressions",
+      "owned_change": "one paired first-finite-relation-word regression only"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d049c89e6321467e42783a5dfe992489d8492994a1dbb459abea3746c53296ce.json",
+      "sha256": "8b20557cc637fe99f202121ceaaccadccb8b04a90adbc5ce88f432efe78d6388",
+      "lines": 491,
+      "bytes": 22172,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "docs/steward-notes/codex_1786144598_unicode_creates_duplicate_round/RUN_REPORT.md",
+      "read_scope": "immediately preceding exact-source scanner and downstream-normalization continuity"
+    }
+  ]
+}

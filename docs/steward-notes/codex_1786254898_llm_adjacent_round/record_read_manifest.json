@@ -1,0 +1,16 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786166330",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1786166330.md",
+      "claims_file": "claims/astrid_llm_1786166330.json"
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786164021",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/llm_rs_1786164021.md",
+      "claims_file": "claims/llm_rs_1786164021.json"
+    }
+  ]
+}

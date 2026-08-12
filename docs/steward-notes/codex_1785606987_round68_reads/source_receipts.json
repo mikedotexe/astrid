@@ -1,0 +1,88 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785606939",
+      "introspection_sha256": "8150c28b1199dafbca554141adef71cdc54acbf561b27dbae89c5d90c72cfa21",
+      "introspection_physical_newlines": 37,
+      "introspection_logical_lines": 38,
+      "introspection_bytes": 3337,
+      "lived_state_witness_id": "lsw_f8296da4bfd3036a269e369295b2c344972dd8e3d1d87c8ff76b56c1e52b26ec",
+      "source_path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "source_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "source_lines": 24,
+      "source_bytes": 940,
+      "full_canonical_read": true,
+      "full_bound_source_read": true,
+      "supplemental_source_reviews": [
+        {
+          "path": "/Users/v/other/minime/minime/src/regulator/core/viscosity.rs",
+          "sha256": "e2300cefb5ef47f3f3bf3e13282392d0c33f98c8cba34c6f046cc6c7208be922",
+          "reviewed_intervals": ["1-594"],
+          "full_read": true,
+          "basis": "exact current hash matches the complete round-66 receipt"
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs",
+          "sha256": "b755633327fe94e0565b739885e0f9f1bd8bd7394900969879a01c62fae0bc83",
+          "reviewed_intervals": ["1-340"],
+          "full_read": true,
+          "basis": "exact current hash matches the complete round-66 receipt"
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+          "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+          "reviewed_intervals": ["1-440"],
+          "full_read": true,
+          "basis": "exact current hash matches the complete round-66 receipt"
+        }
+      ],
+      "exact_prior_response": {
+        "introspection_id": "introspection_minime_regulator_1785597026",
+        "packet": "docs/steward-notes/codex_1785597805_round66_reads/",
+        "all_bound_and_supplemental_source_hashes_match": true
+      }
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785606644",
+      "introspection_sha256": "2c6409615704b5d88c8ac550e065439df1d1fbd4f42df5fe7acb6044b0b58c57",
+      "introspection_physical_newlines": 42,
+      "introspection_logical_lines": 43,
+      "introspection_bytes": 4507,
+      "lived_state_witness_id": "lsw_226816dadcf8da8cfa3ef38196a5eff89e6194c2e0f5070c3b18f5955387cd00",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "source_lines": 997,
+      "source_bytes": 36801,
+      "full_canonical_read": true,
+      "full_bound_source_read": true,
+      "full_source_read_basis": "all 997 exact current lines read directly; the report-uncovered 401-997 interval was assessed in full",
+      "supplemental_source_reviews": [
+        {
+          "path": "capsules/spectral-bridge/src/spectral_schema.rs",
+          "reviewed_intervals": ["1-105"],
+          "full_read": false,
+          "note": "typed denominator and semantic-energy field semantics"
+        },
+        {
+          "path": "capsules/spectral-bridge/src/spectral_explorer.rs",
+          "reviewed_intervals": ["150-215", "620-680", "880-915", "1120-1175"],
+          "full_read": false,
+          "note": "lambda1 energy-share rendering and semantic-energy interpretation"
+        },
+        {
+          "path": "scripts/attested_expression_pressure_study.py",
+          "reviewed_intervals": ["1-762"],
+          "full_read": true,
+          "note": "existing exact-response privacy and pressure-study contract"
+        }
+      ],
+      "exact_prior_response": {
+        "introspection_id": "introspection_astrid_llm_1785566694",
+        "packet": "docs/steward-notes/codex_1785568169_round61_reads/",
+        "source_sha256_match": true,
+        "note": "same source-attribution family; the new output/spectral association proposal is handled separately"
+      }
+    }
+  ]
+}

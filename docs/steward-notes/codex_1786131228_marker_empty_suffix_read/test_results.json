@@ -1,0 +1,39 @@
+{
+  "schema": "steward_test_results_v1",
+  "tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup",
+      "result": "passed",
+      "passed": 46
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "result": "passed",
+      "passed": 42
+    },
+    {
+      "command": "PYTHONPATH=.:scripts python3 -m unittest Evidence Store, steward-control, projector, Division tracker, Division Chronicle modules",
+      "result": "passed",
+      "passed": 67
+    },
+    {
+      "command": "PYTHONPATH=.:scripts python3 -m unittest scripts.test_projection_cursors",
+      "result": "passed",
+      "passed": 4
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py self-test and verify",
+      "result": "passed_zero_issues_no_history_rewrite",
+      "self_tests_passed": 2,
+      "verified_records": 10591
+    },
+    {
+      "command": "git diff --check -- capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "result": "passed"
+    },
+    {
+      "command": "rustfmt --edition 2024 --check capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "result": "blocked_by_preexisting_unrelated_format_drift_in_same_shared_file"
+    }
+  ]
+}

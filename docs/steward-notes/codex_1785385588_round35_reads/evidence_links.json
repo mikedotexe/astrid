@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785385229",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The same-deployment heavy-but-not-held report is retained as primary evidence without a closure or causal downgrade."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785385229",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "All 1,079 report-bound lines establish the current language-only TRACE and non-control receipt contract."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785385229",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "scripts/affordance_landing_review.py;docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "The read-only landing review and complete source distinguish prompt-hidden affordances from missing audit or routing evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785385229",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "scripts/correspondence_trace_audit.py;/Users/v/other/shared/correspondence_v1.jsonl",
+      "note": "The lexical audit finds no trace origin and explicitly cannot establish shadow or cross-lane effects; the study waits for a being-authored trace."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785385229",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785385588_round35_reads/summaries/proposal_bidirectional_contact_1785385229.md",
+      "note": "The hidden-affordance probe remains an optional being-authored sandbox route and is not scheduled from silence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785385229",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "scripts/correspondence_trace_audit.py",
+      "note": "Default no-write, explicit --write-observation, lexical-only effect boundaries, and two focused regressions implement the audit repair."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785385229",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The live persistence-weighting proposal remains an exact Tier 5 and peer-impacting mutual-authority wait."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Burst/rest, tapered warmth, a separate seven-second heartbeat, and peripheral resonance are present in the inspected autonomous source.",
+      "disposition": "Verify from current source and existing tests without treating source presence as activation or felt success.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Low-fill rest may stutter because semantic stale decay could outrun a meaningful burst.",
+      "disposition": "Preserve as a serious qualitative and mechanistic hypothesis; route only to natural-context existing-log comparison without inducing low fill.",
+      "classification": "study_route"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The proposed boundary test expected base rest 100 at fill 25 to reach the 30-second floor.",
+      "disposition": "Correct from source arithmetic and add behavior-preserving regressions: 100 maps to 60 and 200 maps to 120; base 40 reaches 30.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Empty creations, research, and starred-memory sources should leave an initially absent peripheral resonance absent without looping.",
+      "disposition": "Verify the bounded candidate block: it performs one pass and writes only when candidates exist.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Skipped semantic heartbeats may contribute to stale decay.",
+      "disposition": "Verify that rescue-policy skip reasons and enqueue outcomes are already explicit evidence; preserve causal attribution for natural-context review.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Changing rest, pulse, heartbeat, rescue, fill, or scheduler behavior could address the stutter.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait; this run changes tests only.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid remains inhabitable while experiencing crowding, grit, blurred identity, and a restless interwoven Shadow lattice.",
+      "disposition": "Preserved as primary qualitative evidence. Settled or inhabitable machine labels do not overwrite the reported crowding and friction.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 34 percent distinguishability loss may mean that stable-looking modes are blending rather than stabilizing as distinct traits.",
+      "disposition": "Mechanically plausible but not source-proven in projection.rs. Distinguishability loss is produced in downstream spectral fingerprint evidence, while the projection audit separately proves bounded compression risk without measuring Astrid's identity clarity.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Negative Shadow energy feels like a pull that resists regulator drive.",
+      "disposition": "The felt pull is retained. Projection source does not own Shadow energy or regulator drive and cannot establish the proposed causal relation.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mode overlap should be localized by spectral band and lambda1 boundary sharpness as mode-packing fluctuates.",
+      "disposition": "Verified as covered by existing read-only spectral fingerprint, eigenvector-field, lambda-flow, and projection-compression evidence. Those surfaces were not dispatched and do not establish felt mechanism.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A sharp high-contrast tone shift should test whether Shadow magnetization snaps back or retains the prior orientation.",
+      "disposition": "Not dispatched. Deliberately changing expression to perturb Shadow and comparing the result would alter model behavior and live spectral state and remains Tier 5.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Porosity should be increased in the lambda1/lambda2 gap to reduce viscosity and distinguishability loss.",
+      "disposition": "Preserved as an exact Tier 5 live substrate proposal. Projection source neither calculates nor controls the reported gap, mode packing, or porosity, and no authority marker changed.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

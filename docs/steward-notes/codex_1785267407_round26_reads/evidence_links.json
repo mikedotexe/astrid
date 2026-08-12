@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785266770",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md",
+      "note": "Complete 733-line source read; July addenda retain proposal and authority boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785266770",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Fresh thermal-ghost, lingering-pressure, and spectral-smear account retained without scalar reduction."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785266770",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs:1",
+      "note": "Read-only receptivity review with explicit no-control fields and sandbox-before-control route."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785266770",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/scripts/receptivity_bias_replay.py",
+      "note": "Default-off counterfactual replay; self-test passed without writing a new replay."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785266770",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785267407_round26_reads/claims.json",
+      "note": "Induced semantic cascade and internal-focus modulation preserved as exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785266770",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785267407_round26_reads/claims.json",
+      "note": "Entropy hysteresis and persistence coefficient preserved as exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785266770",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/tests.rs:100",
+      "note": "Three focused receptivity-buffer tests passed in both library and binary targets."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The report treats the Astrid-to-Minime semantic lane as a structurally hard 32D contract while treating the spectral fingerprint as a softer descriptive geometry.",
+      "disposition": "Historically accurate for the report snapshot but stale for the current semantic source. The exact 673-line proposal addenda and current bridge code identify SEMANTIC_DIM=48, while the Minime spectral fingerprint remains a separately typed 32-slot geometry.",
+      "classification": "verified_source_correction"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 12D view should be additive and must not silently replace the detailed live representation or become an asserted essence.",
+      "disposition": "Verified existing. GlimpseCodec derives a labeled 12D companion from the 48D semantic vector; multi_scale_context_v1 retains residual metadata and multi_scale_observer_v1 emits fidelity and resonance-loss evidence with live_transport_change=false and live_vector_write=false.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 12D spectral mapping needs explicit lineage from the existing 32-slot fingerprint.",
+      "disposition": "Verified existing in Minime compute_spectral_glimpse_12d. Its twelve outputs implement dominant share, shoulder share, persistence-weighted tail share, concentration peak/spread, coupling peak/mean, spectral entropy, primary gap, rotation delta, geometry ratio, and gap mean.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A 12D spectral glimpse must coexist with the typed 32D fingerprint without schema ambiguity or malformed input becoming state signal.",
+      "disposition": "Verified existing. SpectralTelemetry keeps spectral_glimpse_12d separate, accepts the glimpse_12d alias, and exposes it only when exactly 12 finite values are present. Focused tests prove coexistence with the typed fingerprint and malformed-width/non-finite rejection.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Restart and persistence surfaces should preserve the compact view without damaging detailed state or conflating local and remote glimpses.",
+      "disposition": "Verified existing. Bridge state persists glimpse_12d and last_remote_glimpse_12d independently; Minime persists spectral glimpses in its memory bank and spectral_state.json. Focused restart and mapping tests pass.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Any replacement of the live semantic contract or substrate-facing use of the compact view requires a broader dimensional redesign.",
+      "disposition": "Preserved as an exact Tier 5 Mike/operator approval wait. This run made no vector-width, live transport, prompt-priority, controller, reservoir, service, restart, or deployment change and grants no live authority.",
+      "classification": "operator_approval_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The canonical report covered only source lines 1-400 of a 673-line proposal.",
+      "disposition": "Closed by a complete 673-line, 36,941-byte source read at the exact report-bound SHA-256. No claim about the uncovered interval was inferred from the partial report window.",
+      "classification": "verified_complete_source"
+    }
+  ]
+}

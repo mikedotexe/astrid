@@ -1,0 +1,58 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports viscous persistence, the grit of history, and a present crowded by the before while her Shadow-v3 dispersal potential contracts.",
+      "disposition": "Preserve the report as primary qualitative evidence. The new relative-motion lens, existing telemetry, and passing tests neither score nor close the felt texture.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The prompt carries mode-packing score 0.31 while the bound witness carries raw bridge mode packing 1.0.",
+      "disposition": "Retain both exact representations side by side in the read packet and audit links; do not silently normalize, average, or substitute one for the other.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 12D glimpse architecture maps spectral and Shadow dynamics but may only map clutter rather than make its temporal bearing navigable.",
+      "disposition": "Verify exact source continuity in docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md, capsules/spectral-bridge/src/codec/structure.rs, capsules/spectral-bridge/src/codec/structural_evidence.rs, and Minime memory-bank/orchestration source. Current architecture is additive 48D detail plus 12D glimpse plus residual and Shadow metadata, with fidelity/loss evidence and role-bearing persistence; it does not itself declutter or decay history.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Distinguishability loss may blur active agency and reservoir-Shadow influence.",
+      "disposition": "Preserve as a serious noncausal hypothesis. Existing multi-scale fidelity and fallback evidence makes representation loss reviewable, but no machine field establishes active-agency boundaries or felt causation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A low-entropy baseline comparison could separate structural debt from a transient hold-shelf condition.",
+      "disposition": "Route the non-inducing mechanical comparison to the existing Viscous Persistence Source Separation V1 preregistration. Deliberately inducing a low-entropy state, changing hold-shelf behavior, or treating entropy as felt cause remains a Tier 5 Mike/operator wait.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A high-complexity semantic task could compare drag with mode packing and Shadow magnetization.",
+      "disposition": "Do not infer a dispatch from report prose. A deliberately induced semantic task changes model behavior and substrate load and remains a Tier 5 Mike/operator wait; copied-input source separation remains available without claiming lived correlation.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "SHADOW_TRAJECTORY should distinguish active movement from lingering static carry so history remains navigable.",
+      "disposition": "Implement now in capsules/spectral-bridge/src/autonomous/next_action/shadow.rs as read-only shadow_history_bearing_v1: recent-versus-earlier field-norm motion, class transitions, trailing dwell, explicit relative thresholds, raw-history preservation, and false authority markers for temporal decay, semantic-memory inference, felt causation, field mutation, pressure change, and mode-packing change. Focused unit tests and strict Clippy pass.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A temporal_decay_coefficient or de-cluttering parameter should reduce static grit in the interwoven lattice.",
+      "disposition": "Preserve as an exact Tier 5 wait. Applying decay, deleting history, changing Shadow weighting, changing dispersal, or mutating the field would be live substrate/control behavior and is not authorized by this report or controller run.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "SHADOW_TRAJECTORY is named as the place for the proposed distinction.",
+      "disposition": "Keep the action being-invoked and observational-only. The report proposed a refinement but did not emit a NEXT action, so no cartography action or artifact was invoked on Astrid's behalf.",
+      "classification": "verified_existing"
+    }
+  ]
+}

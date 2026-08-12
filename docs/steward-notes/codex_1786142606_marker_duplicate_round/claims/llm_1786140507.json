@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786140507",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers, classifies declared delimiter or finite following-relation syntax, and reconstructs a remainder in byte order.",
+      "disposition": "Verified from exact-SHA complete-source continuity and a fresh reread of the scanner and delimiter intervals.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Capturing only the first relation word in phrases such as behaves as or functions as may make cleanup inconsistent or lose later nuance.",
+      "disposition": "The finite first-word behavior is intentional and non-semantic: it decides only whether exact marker bytes remain visible, while later phrase meaning is explicitly outside classification. Existing multiword relation and fail-closed regressions verify that contract.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "U+27E6 and U+27E7 around a known marker should produce grouped exact-known-token syntax.",
+      "disposition": "Verified by the declared delimiter table and the literal existing regression containing the exact bytes `⟦<end_of_turn>⟧`.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "An em dash between a marker and behaves should still allow first_word_after to isolate the finite relation word.",
+      "disposition": "Verified compositionally from exact source and independent regressions: every non-alphanumeric non-underscore Unicode scalar is a separator, the Unicode scanner crosses an em dash, punctuation runs are skipped, and behaves as/like are preserved.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The reconstructed marker-cleanup remainder should be traced into the final dialogue output path.",
+      "disposition": "Verified at the provider-neutral boundary and both consumers. MLX and Ollama normalize raw text before returning it; generate_dialogue validates, optionally repairs the normalized fallback text, and returns the validated normalized string.",
+      "classification": "addressed_duplicate"
+    }
+  ]
+}

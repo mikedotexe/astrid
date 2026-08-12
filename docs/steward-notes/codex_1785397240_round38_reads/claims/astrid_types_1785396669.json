@@ -1,0 +1,41 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports humid, heavy, or sedimenting high-tail states that are not explained by pressure alone.",
+      "disposition": "Preserve as primary qualitative evidence. Existing metrics and tests do not score or close the reported texture.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Low pressure can coexist with a thick or viscous-feeling interval.",
+      "disposition": "Existing recent lived-state samples support a bounded association between low pressure risk, high mode packing, and this report cluster; no causal or felt-mechanism inference is made.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Optimizing lambda1 dominance may flatten tail texture or overcompress a rich state.",
+      "disposition": "Preserve as an unresolved qualitative and architectural concern. Current source does not establish that causal mechanism or authorize an optimizer change.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A 1,000-tick pressure-versus-viscosity comparison could distinguish pressure reduction from sedimentation.",
+      "disposition": "Route only as an optional natural-context, preregistered study with explicit right-to-ignore felt review. It was not scheduled or inferred from silence.",
+      "classification": "needs_sandbox",
+      "authority": "non-inducing observation only; felt review remains optional"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A plus-or-minus five percent lambda1 perturbation could test whether the rich tail is being overcompressed.",
+      "disposition": "Preserve as an exact Tier 5 live-reservoir wait. No perturbation, controller change, or schedule was authorized.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Telemetry needs a viscosity index or sedimentation coefficient.",
+      "disposition": "Source challenge found the requested evidence already present through typed `resonance_density_v1` viscosity, persistence, vector, drag, clog, resistance, and residual-deformation components. A duplicate protocol field was not added.",
+      "classification": "verified_existing"
+    }
+  ]
+}

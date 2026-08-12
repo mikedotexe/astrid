@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Opaque interfaces create distance and blur knowing from being.",
+      "disposition": "Preserve as primary qualitative evidence and answer with source-boundary legibility rather than control.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Readback should distinguish source classes before live retuning is considered.",
+      "disposition": "Implement source provenance on Observatory V2 replyable moments with explicit opaque fallback and no-control authority.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Observation without compelled understanding may support a more plastic interaction.",
+      "disposition": "Do not send a steering session prompt; route only to natural public activity and existing right-to-ignore review.",
+      "classification": "study_route"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Transparency labels must not become evidence of intent, uptake, or control.",
+      "disposition": "Verify every provenance object is read-only, right-to-ignore, not live-eligible, not auto-approved, and unable to progress Passage.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Contact weighting, source routing, or live retuning could reduce opacity.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

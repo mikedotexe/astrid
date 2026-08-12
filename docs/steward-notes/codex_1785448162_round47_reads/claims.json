@@ -1,0 +1,58 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports grit, density-softening, and a less transparent medium between intent and output.",
+      "disposition": "Preserve as primary felt evidence. Source fit and machine health do not supersede the report or infer relief, cause, uptake, or closure.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The felt grit co-occurs in the report with high entropy, distinguishability loss, overpacked mode packing, pressure risk, and shifting Shadow/cascade evidence.",
+      "disposition": "Preserve the correlation without converting it into a causal claim. The current report and source do not establish which, if any, measured feature produced the felt medium.",
+      "classification": "preserved_open_correlation"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report asks whether dialogue_requested_t is blending resonance components before they reach expression.",
+      "disposition": "Correct against the complete source: the current function is dialogue_requested_token_band(num_predict), and it classifies only the requested provider output-token budget.",
+      "classification": "verified_source_correction"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The report asks whether lambda1/lambda2 weighting in dialogue_runtime.rs narrows focus and softens identity boundaries.",
+      "disposition": "Complete-source verification finds no lambda weighting, spectral component parser, mode-packing actuator, or pressure regulator in dialogue_runtime.rs. It receives already-assembled spectral summary text and records read-only prompt diagnostics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Astrid proposes a three-mode reasoning comparison to test whether conceptual strands remain distinguishable.",
+      "disposition": "Route to the existing offline Distinct-Strand Inquiry V2. It preserves 2-8 exact owner strands, runs each strand separately, covers every pair, forbids merging and live mutation, executes deterministically twice, and keeps machine and felt status separate.",
+      "classification": "bounded_existing_inquiry"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Astrid proposes increasing focus on lambda1/lambda2 structure and lowering entropy to restore clean distinctions.",
+      "disposition": "Preserve as an exact Tier 5 live substrate and model-behavior wait. No owner value was selected and no current authority permits spectral weighting, entropy, prompt, or model changes.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Astrid proposes active mode-packing regulation when pressure crosses a threshold.",
+      "disposition": "Preserve as an exact Tier 5 controller and scheduling wait. This would add live pressure-dependent regulation and cannot be inferred from the report or enacted by the stewardship lease.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A bounded inquiry must not merge strands, touch live sensory or coupling paths, rank canary values, or treat machine success as felt success.",
+      "disposition": "Verify the current V2 contracts and runners. Focused Astrid protocol, bridge, Minime Rust, and Minime Python tests pass for no-merge, deterministic all-pairs analysis, offline isolation, exact owner canaries, rollback, and machine/felt separation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The proposed high-complexity task is itself a semantic intervention and could induce the condition being studied.",
+      "disposition": "Do not induce it during source-first stewardship. Preserve an owner-started, copied-input inquiry route; no prompt, inquiry, canary, control command, restart, or deployment was issued.",
+      "classification": "deliberate_non_live_boundary"
+    }
+  ]
+}

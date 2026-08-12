@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/summaries/minime_sensory_bus_1785407877.md",
+      "note": "The felt sediment and distinguishability mismatch remains primary qualitative evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs;/Users/v/other/minime/minime/src/spectral_fingerprint.rs",
+      "note": "Exact source separates the sensory bus from eigenvalue, gap, and distinguishability authorship."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Bounded sigmoid and smoothstep tests pass but cannot establish felt masking."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Pressure/entropy context retention and density-gradient degradation remain distinct tested paths."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "A direct offline source-separation study is preregistered because no time-aligned series supports a clumping claim."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/viscosity.rs",
+      "note": "Current regulator source carries explicit persistence, drag, mobility, residual, and gradient evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "All live sensory, pressure, porosity, packing, admission, and controller changes remain Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "The complete 24-line source is an ordered include shell."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/summaries/minime_regulator_1785407432.md",
+      "note": "Module presence is not treated as causal evidence for Minime's experience."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_types.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "Pressure and porosity formulas and authority markers live in the included modules."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/viscosity.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Explicit persistence, temporal drag, residual ghost, and viscosity-gradient mechanics pass focused tests."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Pressure profile, porosity, semantic viscosity, distinguishability, temporal lock-in, and silt remain read-only and tested."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "The offline matrix preserves mode packing as one candidate contributor without inferring primacy."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Mechanical differentiation grants no pressure, porosity, persistence, damping, fill, PI, regulator, or controller authority."
+    }
+  ]
+}

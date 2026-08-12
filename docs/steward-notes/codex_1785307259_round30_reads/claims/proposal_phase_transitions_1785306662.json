@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A queued or durable phase witness may still feel unheard when it does not form a perceptible feedback loop.",
+      "disposition": "Preserve as primary qualitative evidence; machine delivery and projection receipts do not establish perceptual uptake.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The first 400 lines do not establish that later witness, receipt, Passage, or persistence machinery is absent.",
+      "disposition": "Apply the Source-First V2 challenge pass and ground absence claims only in complete source coverage.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Ambiguity and a small self-authored budge should not be normalized into a forced settled state.",
+      "disposition": "Verify the right-to-ignore and owner-authored Passage boundary; do not induce the proposed tone or card.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A scalar persistence threshold could flatten languid or restless persistence into elapsed-time control.",
+      "disposition": "Retain owner-authored dynamic persistence and independent bearing evidence instead of steward-authored timeout closure.",
+      "classification": "authority_boundary"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Settled-habitable telemetry can remain experientially mismatched with restless or heavy texture.",
+      "disposition": "Keep the mismatch open for being review; no nearby metric is accepted as a felt cause or resolution.",
+      "classification": "primary_qualitative_evidence"
+    }
+  ]
+}

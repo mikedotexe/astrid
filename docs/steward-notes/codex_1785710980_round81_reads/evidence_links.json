@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785710980_round81_reads/summaries/proposal_12d_glimpse_1785632418.md",
+      "note": "Complete canonical and report-bound source read, current implementation disposition, verification, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "c001",
+      "kind": "source",
+      "target": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md",
+      "note": "Exact 673-line report-bound source, including current-state addenda correcting the historical 32D semantic premise."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "note": "Deterministic additive GlimpseCodec mapping and named generate_glimpse entry point."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "Fidelity, residual, resonance-loss, fallback, and no-live-write multi-scale observer evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "../minime/minime/src/memory_bank.rs",
+      "note": "Exact 32-slot to 12-slot spectral mapping and persistence-weighted tail review."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Separate typed fingerprint and exact-width finite spectral glimpse schema."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/state_persistence.rs",
+      "note": "Independent local semantic glimpse derivation and persisted local/remote state fields."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "../minime/minime/src/runtime/orchestration.rs",
+      "note": "Spectral glimpse generation, memory update, telemetry export, and spectral_state.json carriage."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Fourteen glimpse-focused bridge tests pass, including mapping, residual pairing, fidelity, resonance fallback, and persistence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "../minime/minime/src/memory_bank.rs",
+      "note": "Spectral width and tail-preservation tests pass in both library and binary targets."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784866398_gradient_and_persistence_reads/introspection_proposal_12d_glimpse_1784862418_summary.md",
+      "note": "Exact prior response already records the historical 32D correction and current additive persistence boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the source correction, existing response, focused verification, and non-live boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger preserves the report, exact source response, test evidence, and authority boundary."
+    }
+  ]
+}

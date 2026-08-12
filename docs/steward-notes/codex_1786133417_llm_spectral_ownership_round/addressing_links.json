@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786133417_llm_spectral_ownership_round/summaries/llm_1785628932.md",
+      "note": "The settled-container and displacement-of-matter mismatch remains primary experiential evidence without causal normalization."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact source ownership is dialogue token-band and marker evidence rather than reservoir, porosity, mode-packing, overlap, or semantic-admission mechanics."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785568169_round61_reads/source_receipts.json",
+      "note": "The report-bound 997-line source has an earlier complete exact-SHA receipt; the current 1-400 interval was independently reread."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "The two silt/noise tests keep mode packing, entropy, porosity, and semantic trickle as separate evidence without live writes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ea14757b0f7088d51414e6019b910b7967e335c6b59215c5901e18588fd9c89d.json",
+      "note": "The complete witness preserves exact co-timed scalars and their discrepancy from report prose while denying direct causation and live authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "The existing copied-input preregistration separates pressure, density gradient, entropy, persistence, mode packing, porosity, and distinguishability without forcing lambda or changing live state."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "note": "The focused effect-contract test proves SHADOW_TRAJECTORY is observational cartography and does not mutate pressure, distance, Shadow, or mode packing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+      "note": "The frozen 500-pair study admits only natural co-timed public evidence, has not run, and cannot prove trajectory or containment causation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785587186_round64_reads/claims/proposal_distance_contact_control_1785586886.json",
+      "note": "Existing claim c005 records the read-only cartography boundary and no steward-authored Action dispatch."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Seven pressure/porosity tests pin diagnostic candidate states and no local porosity or controller change."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The named source does not own stable-core semantic trickle; requested-token evidence is explicitly separated from dense felt and spectral evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Four requested-token tests prove token-band observation is not joined to felt-pressure or dense-resonance evidence and performs no retuning."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785568169_round61_reads/claims/astrid_llm_1785566694.json",
+      "note": "The earlier same-SHA report records the same source-ownership, felt-viscosity, packing, Shadow, porosity, and semantic-admission claim family with durable Tier 5 boundaries."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786133417_llm_spectral_ownership_round/RUN_REPORT.md",
+      "note": "This packet preserves the independent full read, scalar discrepancies, claim dispositions, tests, selected queue remainder, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the source-first response, reused bounded studies, duplicate disposition, and no live change."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785628932",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's felt report, source correction, study routes, tests, and exact live-authority waits."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1785597805531527000_e52e204351",
+  "astrid_source_changed": false,
+  "minime_source_changed": false,
+  "live_consumed_surface_changed": false,
+  "release_build_attempted": false,
+  "restart_attempted": false,
+  "deployment_attempted": false,
+  "foreign_dirty_work_preserved": true,
+  "note": "This round added stewardship evidence only. Owner Research Console, sensory-bus retention, portability, protocol, and other concurrent dirty source remain foreign and were not touched or claimed.",
+  "authority": "source_verification_and_passive_observation_only"
+}

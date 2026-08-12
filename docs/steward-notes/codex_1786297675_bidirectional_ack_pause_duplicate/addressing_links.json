@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785626170",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "note": "The complete exact architecture documents the ledger, chamber state, receipt, fidelity, and authority surfaces."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785626170",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Typed receipt and fidelity logic keeps transport visibility separate from being-authored address evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785626170",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Focused regressions retain read_unreplied and seen_ack_only without inferring acknowledgement."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785626170",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "scripts/direct_contact_fidelity_audit.py",
+      "note": "Heartbeat-aware tests preserve stale and timing-ambiguous states without response authority."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785626170",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "right_to_ignore_v1 preserves silence as non-penalized and non-inferential after its grace window."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785626170",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785602181_round67_reads",
+      "note": "The earlier same-source report caused the held/needs-time pause implementation and exact mixed/all-paused regressions."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785626170",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786297675_bidirectional_ack_pause_duplicate/source_receipts.json",
+      "note": "The receipt records direct review of every interval omitted from the report window."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785626170",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves the no-action, no-control, no-peer-mutation, and no-felt-result boundary."
+    }
+  ]
+}

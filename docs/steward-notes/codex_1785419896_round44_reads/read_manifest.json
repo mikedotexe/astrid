@@ -1,0 +1,21 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785419896326747000_dea388ce4a",
+  "source_first_projection_generation_id": "projection_1785419897257205000_468dcf795e",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 11,
+  "reports": [
+    {
+      "filename": "introspection_minime_regulator_1785419612.txt",
+      "introspection_id": "introspection_minime_regulator_1785419612",
+      "canonical_sha256": "0b297441cb2be0a66125d96c590c8b08957e0590a6f4c8928db411315cb57762",
+      "lived_state_witness_id": "lsw_9208c1335f31c011358c9ec4cbe6fcbaafe5202b8a8743ec8f856ea640acd8b3",
+      "source_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "source_lines": 24,
+      "source_read_basis": "complete report-bound file plus complete distributed-regulator and exact runtime-orchestration challenge",
+      "summary_file": "summaries/minime_regulator_1785419612.md",
+      "claims_file": "claims/minime_regulator_1785419612.json"
+    }
+  ]
+}

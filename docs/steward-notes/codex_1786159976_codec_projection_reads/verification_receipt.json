@@ -1,0 +1,66 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "steward_run_id": "run_1786159976343268000_bb26a4553c",
+  "pre_run_projection_generation_id": "projection_1786159976815934000_7f7f814402",
+  "pause_generation": 273,
+  "canonical_counters": {
+    "indexed": 4258,
+    "fully_addressed": 3055,
+    "full_read": 3682,
+    "remaining": 1203,
+    "unread": 576,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "blocked_needs_steward": 410,
+    "read_needs_claims": 0,
+    "counter_audit_consistent": true,
+    "mismatches": []
+  },
+  "all_artifact_counters": {
+    "indexed": 5877,
+    "fully_addressed": 3055,
+    "pending": 2822
+  },
+  "evidence_event_store_v2": {
+    "valid": true,
+    "last_global_seq": 730548,
+    "last_event_sha256": "a5c89ffc9f3d52627922647768cdafb97162b638f0f9e840ae423e8cac023872",
+    "corrupt_lines": 0,
+    "stream_counts": {
+      "addressing": 56696,
+      "agency_commons": 3904,
+      "attention_portfolio": 3,
+      "claim_families": 236246,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 193865,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 8358,
+      "model_qos": 117745,
+      "reciprocal_uptake": 52412,
+      "representation_contracts": 24602,
+      "sandbox": 2959,
+      "signal_spine": 21619,
+      "steward_control": 11546,
+      "steward_work_selection": 396
+    },
+    "v1_immutable_import_through_legacy_sequence": 32278
+  },
+  "division_followup": {
+    "cycle_sequence": 21,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_6882c1612d4ca980846ccfcb0cfa532b",
+    "event_count": 143,
+    "event_head_sha256": "7cc664317b285e47a9ca6f00da0e4fc516ca0aad1962660cbc585b708f386cab",
+    "note_or_chronicle_action": false
+  },
+  "archive": {
+    "checkpoint_due": false,
+    "latest_archive_commit": "1d2bab9e751f4fe2eae942cc37cef8078f8a8103",
+    "productive_rounds_since_archive": 2,
+    "git_mutation_during_lease": false
+  },
+  "terminal_note": "The controller run record is authoritative for finish outcome and post-run V3 projection generation because finish occurs after this packet is finalized."
+}

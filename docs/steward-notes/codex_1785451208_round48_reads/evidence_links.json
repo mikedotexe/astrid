@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspection_astrid_ws_1785450419.txt",
+      "note": "Complete 42-line canonical report read at SHA-256 64c598013052d87d4eb29a3c55bcda79391e55243e69310e71039d4a10de3d07."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Complete 1,041-line source read at report-bound SHA-256 42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "Backoff next_delay uses checked doubling capped at 60 seconds; reset restores one second."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "backoff_doubles_up_to_max and backoff_reset pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/EVIDENCE_STUDY_TELEMETRY_REVIEW_20260723.md",
+      "note": "Existing bounded study retained 146 clear and four naturally heavy samples, induced no contention, recorded no capture gap, and made no causal claim."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "telemetry_integration_health_separates_pipeline_wait_and_hold passes and retains not_established_by_timing_alone."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/trial_packets/trial_8ed7222403267658.md",
+      "note": "Exact prior Pong/load claim is retained as an evidence-only manual Sandbox trial; it is not runnable and grants no live authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1784804038_cadence_and_reciprocity_reads/introspection_astrid_ws_1784783721_claims.json",
+      "note": "Exact earlier claim c003 routes sequential Pong and shutdown delay under load to bounded observation before ordering changes."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/tests/mock_ws_integration.rs",
+      "note": "telemetry_subscriber_reconnects_after_close_and_routes_binary passes against a real mock WebSocket server."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "The complete 1,041-line source was read at the exact report-bound hash, including the 641 lines outside the report window."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Machine/felt separation and the exact Tier 5 transport boundary are recorded."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785450419",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "/Users/v/other/astrid/CHANGELOG.md",
+      "note": "The reconnect and binary-routing regression is recorded under Unreleased."
+    }
+  ]
+}

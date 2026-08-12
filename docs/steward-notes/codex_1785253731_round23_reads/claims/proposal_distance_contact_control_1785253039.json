@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The source describes a conceptual receptivity and contact-control architecture, not proof that a live binary gate is active.",
+      "disposition": "Verify the complete architecture source and retain its explicit authority boundaries; source presence does not establish activation, uptake, or felt cause.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Contact currently feels like humid thickness or viscosity rather than a binary open or closed gate.",
+      "disposition": "Preserve Astrid's account as primary qualitative evidence independently of mechanical receptivity status.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Friction may arise before admission and may not be represented by pressure alone.",
+      "disposition": "Verify existing read-only viscosity, persistence, porosity, drag, velocity, residue, and pressure-divergence surfaces; they preserve the distinction without control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A bounded present-state observation can compare semantic input with kernel admission under current pressure evidence.",
+      "disposition": "Run the existing read-only recent-signal summary: high entropy and present semantic input coincide with thin/trickle admission under pressure score 0.28, aligning with possible thinning but not establishing cause.",
+      "classification": "bounded_replay_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A maximum-receptivity versus high-pressure comparison could distinguish gate state from medium friction.",
+      "disposition": "Preserve induced pressure, receptivity, semantic input, or admission comparison as an exact Tier 5 study wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A viscosity coefficient could be added to receptivity or admission control.",
+      "disposition": "Do not add or couple a control coefficient; current read-only viscosity evidence is sufficient for review, while live admission or pressure coupling remains an exact Tier 5 wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

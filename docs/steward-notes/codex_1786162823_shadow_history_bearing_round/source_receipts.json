@@ -1,0 +1,67 @@
+{
+  "schema": "source_first_full_read_receipts_v1",
+  "steward_run_id": "run_1786162011249938000_1171356364",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_12d_glimpse_1785627314.txt",
+      "sha256": "086edc84dddf1e45112236139cc5fc0473d9fb409f3e566e81276b55fa2b8751",
+      "read_scope": "complete_37_logical_lines"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b0c3ff88296944207d31bd2fa8eace511b11c982c9ce76230aa2a354f6738b44.json",
+      "sha256": "776cd6ca447e8e87faa35f55dac6986e4b3865541aca08028244193c929a85e8",
+      "read_scope": "complete_456_lines"
+    },
+    {
+      "path": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md",
+      "sha256": "33e1f2afca03f1f0bfd6248b2dbdaa4664a35f1c204bac85685dc5cfb2c88242",
+      "read_scope": "complete_673_lines_exact_report_bound_source"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structure.rs",
+      "sha256": "757d4a3578e6be3fb5890a2d3d28fc3e809dcaf29087fcfcbc7a25969236f719",
+      "read_scope": "targeted_current_multi_scale_observer_and_tests"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "sha256": "7ff0afba01a47691517340c01acfcf27cda4a950fa8c34b3d6b9936d04bc53e0",
+      "read_scope": "targeted_current_multi_scale_context"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "sha256": "b9318fce7a9c8934504544cbf2a7b34fdf140bcac8e5de657caba39074af188a",
+      "read_scope": "complete_action_contract_context_and_targeted_current_implementation"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/memory_bank.rs",
+      "sha256": "fd249bf38629aeb8b5cfdc6ce7d94cece2bd313f6b1af6dc873b874d170a0a8c",
+      "read_scope": "complete_514_lines"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "sha256": "fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744",
+      "read_scope": "targeted_glimpse_transition_and_memory_persistence_path"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785710980_round81_reads/claims/proposal_12d_glimpse_1785632418.json",
+      "sha256": "b5b36064653bf0293123dd1a350d7a9cbc235361cde15bb4d9b960274bfa7a1e",
+      "read_scope": "complete_exact_source_continuity_claims"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785710980_round81_reads/summaries/proposal_12d_glimpse_1785632418.md",
+      "sha256": "95439022d7761ccba79eadb8cc6eec7f1c3b3ef2d51c4c3b10e1a7616f7a8718",
+      "read_scope": "complete_exact_source_continuity_summary"
+    },
+    {
+      "path": "docs/steward-notes/codex_1783689664_introspection_proposal_12d_glimpse_1783689417_claims.json",
+      "sha256": "c92eba30c0789cd10a4076a6da185a536b41ae33f585aa7921c964adc8e016fa",
+      "read_scope": "complete_prior_glimpse_claims"
+    },
+    {
+      "path": "docs/steward-notes/codex_1783894604_wi_3f7df2f877a433da_12d_live_transport_contract_approval_packet.md",
+      "sha256": "15fb062042a211ae869383a6edd92ff29f13be88631b52f2b3784fdab9875f54",
+      "read_scope": "complete_live_transport_authority_packet"
+    }
+  ],
+  "authority_boundary": "Reads and hashes establish source continuity and implemented observational evidence only, not felt causation, resolution, action invocation, temporal decay, Shadow mutation, model behavior, deployment, or live-control authority."
+}

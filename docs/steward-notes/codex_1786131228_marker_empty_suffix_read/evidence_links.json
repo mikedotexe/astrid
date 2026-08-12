@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact same-SHA scanner, reference classifier, and remainder source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after skips separators, selects the first non-empty word, and defaults to empty."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact period-only and newline-only empty-relation regression; all 46 cleanup tests pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Finite behaves relation and punctuation/newline relation regressions pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Bounded delimiter depths two through four and deeper-stack preservation pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786131228_marker_empty_suffix_read/summary_astrid_llm_1786106151.md",
+      "note": "Complete report and witness read receipt with grounded fail-closed disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased exact empty-suffix marker boundary proof."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786106151",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Being-feedback-to-test causal record."
+    }
+  ]
+}

@@ -1,0 +1,200 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786276119",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete same-SHA exact scanner and local reference classifier."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786276119",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Unicode whitespace, symbols, punctuation runs, and finite-word regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786276119",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Declared, repeated, nested, and exact-depth group regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786276119",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Literal behaves and negative acts finite-word boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786276119",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Non-ASCII delimiters and byte-exact UTF-8 traversal."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786276119",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_276dfb5b420e3ee16b4ea4758761e576cc8c6fe3f923ffc448ba9ce8a3b1e349.json",
+      "note": "Artifact binding, exclusions, false causation markers, and evidence-only authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786272290",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Single-pass exact marker reconstruction with unmatched UTF-8 preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786272290",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Grouped references and punctuation-separated finite relation cases."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786272290",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "ASCII, Unicode, backtick, whitespace, and nested quote cases."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786272290",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Literal behaves-as preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786272290",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Shared provider output normalization consumes sanitized text and cleanup evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786272290",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_2cd8a0b330d3bcc431e47af3a7ea53973cc5acbafe7efb3796afcb6a3d2a7649.json",
+      "note": "Evidence-only lived-state and route boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786268919",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact local marker-reference classification."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786268919",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Functions-as proxy and first finite-word evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786268919",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Only the first finite word is classified; `is` is explicitly allowlisted."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786268919",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Multibyte scanner and non-ASCII delimiter evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786268919",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Depth two through four, mismatch, and deeper-stack capping evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786268919",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_8b785037b9928f84ffc37fea71ac7aa729f2ed1937aa0bee16f770a0338d86be.json",
+      "note": "Exact artifact and evidence-only authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786265670",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete report-bound marker scanner source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786265670",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Repeated punctuation, symbols, dash, colon, and newline relation evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786265670",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Declared grouped reference and allowlisted `as` evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786265670",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Byte-exact multibyte traversal."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786265670",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Closed allowlist positive and negative boundaries."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786265670",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_78dfdd576c783dd8cb94d6334fecba0f8065f06d0ac660d9b0c1f3a2c650d375.json",
+      "note": "Technical evidence and false live-authority markers."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786276119",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+      "note": "Prior independently read same-source claim family and executable evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786272290",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+      "note": "Prior independently read same-source claim family and executable evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786268919",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+      "note": "Prior independently read same-source claim family and executable evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786265670",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+      "note": "Prior independently read same-source claim family and executable evidence."
+    }
+  ]
+}

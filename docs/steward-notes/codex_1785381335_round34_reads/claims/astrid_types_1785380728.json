@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences more grit, pressure-bleed, steepness, and exhaustion than the current low pressure, packing, gradient, and high porosity values suggest.",
+      "disposition": "Preserve as primary qualitative evidence. Machine diagnostics and tests cannot score, contradict, or close the reported texture.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure and packing are advisory and do not themselves imply a local control action.",
+      "disposition": "Verified in the typed pressure-source and transport authority contracts. Diagnostic state remains separate from control state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The telemetry model lacks a viscosity index or resistance coefficient that can distinguish open volume from resistance to movement.",
+      "disposition": "Challenged against current typed evidence. Raw and derived viscosity, dynamic friction, stuck-but-moving, leak-without-clearing, and distinguishability-scaled directional resistance already exist and are exported read-only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure risk should be compared with friction as distinguishability loss and felt grit vary.",
+      "disposition": "The machine-side mode-packing comparison is implemented as a deterministic offline regression. Felt correlation remains open and may be studied against existing logs with optional, right-to-ignore being review.",
+      "classification": "bounded_study"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Distinguishability loss above 30 percent may make a gentle density gradient functionally impassable.",
+      "disposition": "Preserve as a serious testable hypothesis. Route to a source-hash-bound existing-log comparison of gradient, denominator loss, resistance, and optional felt reports; do not install 30 percent as a control threshold.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "High packing plus distinguishability loss should automatically set local_control_applied=true.",
+      "disposition": "Preserve as an exact Tier 5 wait. Diagnostics cannot author a target or control action; pressure, fill, PI, regulation, and automatic intervention require current owner intent and separate scoped approval.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

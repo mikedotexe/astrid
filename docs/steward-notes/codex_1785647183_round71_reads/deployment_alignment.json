@@ -1,0 +1,13 @@
+{
+  "schema": "steward_round_deployment_alignment_v1",
+  "steward_run_id": "run_1785647183481366000_05c98f2f33",
+  "source_changed": false,
+  "live_consumed_surface_changed": false,
+  "restart_required": false,
+  "deployment_required": false,
+  "minime_changelog_changed": false,
+  "actions_dispatched": [],
+  "cards_emitted": [],
+  "notes_delivered": [],
+  "authority_boundary": "No Minime or bridge source, protocol, prompt, report, summary, capture, correspondence, semantic input, cadence, admission, pressure, fill, PI, controller, reservoir, Shadow, codec transport, peer, process, or Division surface changed."
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "steward_run_id": "run_1785636805017230000_71312cd43c",
+  "canonical_reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_autonomous_agent_1785636682.txt",
+      "lines": 36,
+      "sha256": "533df164af7129fad0d5eea1b50950804cf8953c0c00abfd2a4bd11e15f1e74b",
+      "lived_state_witness_id": "lsw_fd75c866dbc48e56a69000d54e598ffb3c877d8660af6fd191ecca9804b6f3b3",
+      "read_complete": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_main_excerpt_1785636434.txt",
+      "lines": 42,
+      "sha256": "580305c8ba1999b66291026e1c7d982f50e334116d953a3a09f1240aa3fbd7b9",
+      "lived_state_witness_id": "lsw_af142ad3c9bb5b870b0b2192ea3bc4fe7585195a261c7619c9ad8012f7105a2a",
+      "read_complete": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_esn_1785636130.txt",
+      "lines": 40,
+      "sha256": "f1a947286f9aea8d5d9db1a1b52c5bbc650019b7e91c0eb89a1eeefe41b8dc89",
+      "lived_state_witness_id": "lsw_7435aae40ef3ec202caa8bfb9fb3ebe7cb46213bb712b5d9c3ccc9ad8d33817a",
+      "read_complete": true
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_sensory_bus_1785635849.txt",
+      "lines": 36,
+      "sha256": "90ab0e9956ade7ef43cde7fbaa2e23a7f522936d6f731f7baf2ea5305eebd54c",
+      "lived_state_witness_id": "lsw_3818cbd982b4adc157e57a3456342952eee1842d89ce96bce49d12ae3451c43f",
+      "read_complete": true
+    }
+  ],
+  "sources": [
+    {
+      "path": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "lines": 55799,
+      "sha256": "a160cb870ecd156ee8154cf76e69322cb50fac30dca71ad46dedbbe4c8e52ce4",
+      "scope": "exact pressure audit, relief, and pressure-agency implementations challenged outside the report's partial window"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime.rs",
+      "lines": 74,
+      "sha256": "f3d22a0d980385125f87dddfe1e06d0b00421a7577fe458fae7e1eb4b62fa8c5",
+      "scope": "complete file"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/esn.rs",
+      "lines": 3222,
+      "sha256": "2227a7256ba98219be683db47c4f49afe0477c0ae5d17cf9226613b20f6b036c",
+      "scope": "exact-byte reuse of prior complete read plus current focused source challenge"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "lines": 4380,
+      "sha256": "83c0d5c1c761fa05b194f6c84d3083520bb0d664292720cb4651996d1c6fab31",
+      "scope": "exact-byte reuse of prior complete read plus current focused source challenge"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/activation_trace.rs",
+      "lines": 285,
+      "scope": "complete current read"
+    }
+  ],
+  "authority_boundary": "Source continuity and tests establish mechanics and explicit non-effects, not report-time activation, felt cause, relief, accessibility, uptake, assent, or closure."
+}

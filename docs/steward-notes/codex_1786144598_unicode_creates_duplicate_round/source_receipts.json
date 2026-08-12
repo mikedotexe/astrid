@@ -1,0 +1,46 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "lines": 1048,
+      "bytes": 38557,
+      "read": "complete_exact_sha_continuity_from_immediately_preceding_round_with_relevant_intervals_reread",
+      "temporal_note": "current source is byte-identical to the report-bound complete-source SHA and the complete read in the immediately preceding round"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "7f4cf2038ef66086a4c33279ebd84116d3a7aa1d34cc1f4202576fd47d03039f",
+      "lines": 1395,
+      "bytes": 48585,
+      "read_scope": "normalize_provider_output_v1 and exact-marker cleanup boundary"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "97475c4af5aba553476d81a0d690d6b3c93147639951776fc81a43b92e134ee4",
+      "lines": 1310,
+      "bytes": 42086,
+      "read_scope": "MLX and Ollama normalization-to-return intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "08138f9f9e5c82e0c2a2c0a424a035dcdfbf3c9ff39854f5e8e6d9c90fe4a432",
+      "lines": 3248,
+      "bytes": 132259,
+      "read_scope": "literal Unicode alphanumeric, U+27E6/U+27E7 nesting, creates fail-closed, and provider-normalization regressions",
+      "owned_change": false
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_9f2b6f5ebe420d8e335d55de01705feff574ad5490345a0ecb1cebc0dc5a3e6f.json",
+      "sha256": "42b090005c86a97154300718b57aaff910d44fcd88920d4a197222db26dfac69",
+      "lines": 491,
+      "bytes": 22161,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "docs/steward-notes/codex_1786142606_marker_duplicate_round/RUN_REPORT.md",
+      "read_scope": "immediately preceding exact-source downstream-normalization continuity"
+    }
+  ]
+}

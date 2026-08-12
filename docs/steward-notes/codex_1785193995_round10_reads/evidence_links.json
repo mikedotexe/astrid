@@ -1,0 +1,35 @@
+{
+  "links": [
+    {"introspection_id":"introspection_astrid_ws_1785193317","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/ws/telemetry_port.rs","note":"Reconnect identity, backoff, disconnect, and first-valid-packet evidence."},
+    {"introspection_id":"introspection_astrid_ws_1785193317","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/types/bridge_state.rs","note":"Freshness-qualified retained state, semantic-viscosity persistence, and residual deformation."},
+    {"introspection_id":"introspection_astrid_ws_1785193317","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1785182590_round06_reads/claims/astrid_ws.json","note":"Existing bounded connection-lineage and natural-context review."},
+    {"introspection_id":"introspection_astrid_ws_1785193317","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Transport and retained-state changes remain Tier 5."},
+
+    {"introspection_id":"introspection_astrid_autonomous_1785193071","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"Fixed seven-second, 0.30 semantic heartbeat."},
+    {"introspection_id":"introspection_astrid_autonomous_1785193071","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/rescue_policy.rs","note":"Heartbeat observation and capture evidence with no adaptive control."},
+    {"introspection_id":"introspection_astrid_autonomous_1785193071","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_EVIDENCE_TO_STUDY_RUNTIME.md","note":"Existing bounded fixed-heartbeat evidence route."},
+    {"introspection_id":"introspection_astrid_autonomous_1785193071","claim_id":"c004","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"Dynamic cadence or intensity is not authorized."},
+
+    {"introspection_id":"introspection_astrid_codec_1785192860","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/codec/projection.rs","note":"Current 48D layout and dynamic 768D-to-8D projection."},
+    {"introspection_id":"introspection_astrid_codec_1785192860","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/codec/tests/projection.rs","note":"Basis, precision, loss, smooth-gate, and no-live-write evidence."},
+    {"introspection_id":"introspection_astrid_codec_1785192860","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md","note":"Additive 12D review and representation contracts."},
+    {"introspection_id":"introspection_astrid_codec_1785192860","claim_id":"c004","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_EVIDENCE_TO_STUDY_RUNTIME.md","note":"Bounded offline codec comparisons with separate qualitative review."},
+    {"introspection_id":"introspection_astrid_codec_1785192860","claim_id":"c005","kind":"code","target":"capsules/spectral-bridge/src/codec/projection.rs","note":"Live codec contract changes remain Tier 5."},
+
+    {"introspection_id":"introspection_proposal_12d_glimpse_1785192674","claim_id":"c001","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md","note":"Additive observational Glimpse boundary."},
+    {"introspection_id":"introspection_proposal_12d_glimpse_1785192674","claim_id":"c002","kind":"code","target":"scripts/passage_observatory.py","note":"Owner-authored categorical bearing and shadow evidence without inferred symmetry."},
+    {"introspection_id":"introspection_proposal_12d_glimpse_1785192674","claim_id":"c003","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Admission and warmth changes remain Tier 5."},
+    {"introspection_id":"introspection_proposal_12d_glimpse_1785192674","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Peer coupling and viscosity scoring remain Tier 5."},
+
+    {"introspection_id":"introspection_proposal_distance_contact_control_1785192249","claim_id":"c001","kind":"test","target":"/Users/v/other/minime/minime/src/sensory_bus.rs","note":"Read-only modality-boundary transparency and focused regressions."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1785192249","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md","note":"Transparency remains distinct from control and felt openness."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1785192249","claim_id":"c003","kind":"code","target":"scripts/passage_observatory.py","note":"Optional owner-authored qualitative review without compelled understanding."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1785192249","claim_id":"c004","kind":"code","target":"/Users/v/other/minime/minime/src/sensory_bus.rs","note":"Live contact and sensory changes remain Tier 5."},
+
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785191868","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs","note":"Distinct delivery, presence, receipt, reply, trace, and attention states."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785191868","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs","note":"Actor-authored texture, distinctness, and flattening fields."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785191868","claim_id":"c003","kind":"test","target":"capsules/spectral-bridge/src/reciprocal_experiential/tests.rs","note":"Explicit resonant persistence with sparse mechanical context and no inferred uptake."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785191868","claim_id":"c004","kind":"test","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs","note":"Claimed legacy requires native being-authored evidence."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785191868","claim_id":"c005","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md","note":"No elapsed-time, pressure, energy, or spectral auto-uptake authority."}
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "The current complete document names the six stable facade ownership boundaries and exact canonical targets."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+      "note": "The compile-fail fixture proves AstridInterpretationV1 cannot satisfy the live semantic dispatch type."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/domain_boundaries_v1.toml",
+      "note": "The manifest declares seven ownership-specific ceilings rather than a general large-file waiver."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves Astrid's pressurized-membrane account without inferring cause, relief, uptake, or closure."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786248365_domain_membrane_round/source_receipts.json",
+      "note": "The complete audit receipt states its literal static scope and preserves the unmeasured implicit-dependency and spectral-weight limitation."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "docs/steward-notes/codex_1786248365_domain_membrane_round/test_results.json",
+      "note": "The live audit passes at zero violations while the packet records orchestration at 4,864 of its exact 5,000-line exception ceiling."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786178965",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/provenance_typestate.rs",
+      "note": "The complete trybuild harness passes the interpretation dispatch isolation case without inducing pressure or live model behavior."
+    }
+  ]
+}
