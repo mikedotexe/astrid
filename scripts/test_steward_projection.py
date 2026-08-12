@@ -229,25 +229,47 @@ class StewardProjectionTests(unittest.TestCase):
                 "sandbox",
                 "corridor",
                 "signal_spine",
+                "contact_capacity_trace",
                 "lived_state_witness",
+                "grounded_introspection",
                 "reciprocal_uptake",
                 "representation_contracts",
+                "domain_boundary_audit",
                 "claim_families",
                 "experiment_dossiers",
                 "authority_temporal",
                 "model_qos",
                 "evidence_study_runtime",
+                "counterfactual_change_lab",
                 "felt_mechanism_concordance",
                 "agency_commons",
                 "division_chronicle",
                 "passage_observatory",
+                "temporal_bearing",
                 "felt_contracts",
                 "steward_work_selection",
                 "living_problem_registry",
+                "felt_constellation",
                 "experiential_epistemics",
             ],
         )
         steps = {step.step_id: step for step in source_first_steps()}
+        self.assertEqual(
+            steps["contact_capacity_trace"].dependencies,
+            ("signal_spine",),
+        )
+        self.assertEqual(
+            steps["grounded_introspection"].dependencies,
+            ("addressing", "lived_state_witness"),
+        )
+        self.assertEqual(
+            steps["domain_boundary_audit"].dependencies,
+            ("representation_contracts",),
+        )
+        self.assertEqual(
+            steps["counterfactual_change_lab"].dependencies,
+            ("evidence_study_runtime", "representation_contracts"),
+        )
         self.assertEqual(
             steps["lived_state_witness"].dependencies,
             ("signal_spine",),
@@ -327,6 +349,22 @@ class StewardProjectionTests(unittest.TestCase):
             steps["passage_observatory"].source_globs,
         )
         self.assertEqual(
+            steps["temporal_bearing"].dependencies,
+            (
+                "contact_capacity_trace",
+                "lived_state_witness",
+                "passage_observatory",
+            ),
+        )
+        self.assertIn(
+            "diagnostics/temporal_bearing_v1/latest.json",
+            steps["temporal_bearing"].outputs,
+        )
+        self.assertIn(
+            "shadow_cartography/trajectory_*.json",
+            steps["temporal_bearing"].source_globs,
+        )
+        self.assertEqual(
             steps["felt_contracts"].dependencies,
             (
                 "experiment_dossiers",
@@ -358,13 +396,23 @@ class StewardProjectionTests(unittest.TestCase):
             steps["living_problem_registry"].outputs,
         )
         self.assertEqual(
+            steps["felt_constellation"].dependencies,
+            ("claim_families", "felt_contracts", "living_problem_registry"),
+        )
+        self.assertEqual(
             steps["experiential_epistemics"].dependencies,
             (
+                "contact_capacity_trace",
+                "counterfactual_change_lab",
+                "domain_boundary_audit",
                 "felt_contracts",
+                "felt_constellation",
                 "evidence_study_runtime",
+                "grounded_introspection",
                 "living_problem_registry",
                 "passage_observatory",
                 "steward_work_selection",
+                "temporal_bearing",
             ),
         )
 

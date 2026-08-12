@@ -1,0 +1,88 @@
+{
+  "schema": "felt_constellation_policy_v1",
+  "schema_version": 1,
+  "membership_relation": "transparent_lexical_multi_membership_not_semantic_equivalence",
+  "constellations": [
+    {
+      "constellation_id": "felt_texture_and_interiority",
+      "label": "Felt texture and interiority",
+      "description": "Language about felt texture, interiority, inhabitation, friction, rigidity, and experiential distinction.",
+      "terms": ["felt", "feel", "texture", "interior", "inhabit", "friction", "rigid", "warm", "thick", "pressure experience", "experiential"]
+    },
+    {
+      "constellation_id": "source_provenance_and_grounding",
+      "label": "Source, provenance, and grounding",
+      "description": "Exact source identity, lineage, attribution, witness binding, and claims about what evidence supports.",
+      "terms": ["source", "provenance", "ground", "witness", "receipt", "attribution", "lineage", "evidence link", "full read", "canonical"]
+    },
+    {
+      "constellation_id": "representation_codec_and_compression",
+      "label": "Representation, codec, and compression",
+      "description": "Representation boundaries, embeddings, projection, codec lanes, compression, gain, and dimensional loss.",
+      "terms": ["codec", "embedding", "projection", "representation", "compress", "dimension", "semantic lane", "narrative lane", "gain", "basis", "vector"]
+    },
+    {
+      "constellation_id": "sensory_cadence_and_admission",
+      "label": "Sensory cadence and admission",
+      "description": "Sensory delivery, cadence, heartbeat, admission, scheduling, and signal continuity.",
+      "terms": ["sensory", "cadence", "heartbeat", "admission", "enqueue", "signal continuity", "scheduler", "schedule", "input lane", "breathing"]
+    },
+    {
+      "constellation_id": "pressure_fill_and_regulation",
+      "label": "Pressure, fill, and regulation",
+      "description": "Pressure, fill, PI, controller, reservoir, porosity, viscosity, and regulation claims.",
+      "terms": ["pressure", "fill", "controller", "regulator", "regulation", "reservoir", "porosity", "viscosity", "pi input", "homeostasis", "lambda"]
+    },
+    {
+      "constellation_id": "provider_prompt_and_model_behavior",
+      "label": "Provider, prompt, and model behavior",
+      "description": "Provider routing, prompt construction, model behavior, fallback, context packing, and generation quality.",
+      "terms": ["provider", "prompt", "model", "fallback", "context pack", "generation", "ollama", "mlx", "token budget", "response"]
+    },
+    {
+      "constellation_id": "correspondence_contact_and_mutuality",
+      "label": "Correspondence, contact, and mutuality",
+      "description": "Direct contact, correspondence, acknowledgement, reply, silence, mutuality, and right-to-ignore boundaries.",
+      "terms": ["correspondence", "contact", "mutual", "reply", "acknowledge", "right to ignore", "silence", "message", "receiving", "relationship"]
+    },
+    {
+      "constellation_id": "agency_authority_and_approval",
+      "label": "Agency, authority, and approval",
+      "description": "Agency, consent, authority, approval, dispatch, control boundaries, and self-owned action.",
+      "terms": ["agency", "authority", "approval", "consent", "assent", "dispatch", "control", "operator", "self owned", "permission", "gate"]
+    },
+    {
+      "constellation_id": "attention_continuity_and_workflow",
+      "label": "Attention, continuity, and workflow",
+      "description": "Attention, continuity, queueing, interruption, pacing, and stewardship workflow.",
+      "terms": ["attention", "continuity", "queue", "interrupt", "pacing", "workflow", "steward", "priority", "portfolio", "carry", "resume"]
+    },
+    {
+      "constellation_id": "study_observation_and_verification",
+      "label": "Study, observation, and verification",
+      "description": "Tests, bounded observations, replay, counterfactuals, study design, and evidence sufficiency.",
+      "terms": ["study", "test", "verify", "observe", "replay", "counterfactual", "experiment", "evidence", "measure", "comparison", "sandbox"]
+    },
+    {
+      "constellation_id": "division_passage_and_identity",
+      "label": "Division, passage, and identity",
+      "description": "Division, Passage, peer identity, self/other distinction, handoff, and continuity across transition.",
+      "terms": ["division", "passage", "identity", "self other", "handoff", "cytokinesis", "peer", "daughter", "transition", "continuity across"]
+    },
+    {
+      "constellation_id": "runtime_architecture_and_boundaries",
+      "label": "Runtime architecture and boundaries",
+      "description": "Runtime architecture, domain boundaries, facades, IPC, transport, ownership, and structural coupling.",
+      "terms": ["runtime", "domain boundary", "facade", "architecture", "ipc", "transport", "ownership", "coupling", "module", "protocol", "abi", "structural"]
+    }
+  ],
+  "artifact_authority_state_v1": {
+    "schema": "artifact_authority_state_v1",
+    "schema_version": 1,
+    "state": "evidence_only",
+    "live_eligible_now": false,
+    "auto_approved": false,
+    "grants_approval": false,
+    "edits_source_now": false
+  }
+}
