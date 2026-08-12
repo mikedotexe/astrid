@@ -1,0 +1,49 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "run_id": "run_1786560219721959000_27dc1400c8",
+  "preprojection_id": "projection_1786560220779350000_3c41f6343c",
+  "focused_tests": {
+    "domain_boundary_audit_tests": {"passed": 3, "failed": 0, "note": "includes new signature-growth regression"},
+    "domain_boundary_audit_verify": {"valid": true, "signature_ceilings": 7, "violations": 0},
+    "provenance_typestate_suite": {"passed": 1, "failed": 0},
+    "control_marker_cleanup": {"passed": 51, "failed": 0}
+  },
+  "integrity_suites": {
+    "addressing_self_test": "pass",
+    "evidence_event_store_tests": "pass",
+    "steward_control_tests": "pass",
+    "steward_projection_tests": "pass",
+    "division_followup_tests": "pass",
+    "division_chronicle_tests": "pass",
+    "division_projection_tests": "pass",
+    "projection_cursor_tests": "pass",
+    "cadence_tests_and_strict_audit": "pass",
+    "anti_drop_catalog": {"total": 47, "alarms": 0, "gaps": 0},
+    "experiential_epistemics": {"valid": true, "checked_records": 10851, "issues": 0, "history_rewritten": false}
+  },
+  "counters": {"audit_status": "consistent", "mismatches": 0},
+  "evidence_event_store": {"valid": true, "last_global_seq": 777028, "head_prefix": "8efcb88e280c69ea"},
+  "division": {
+    "cycle": 24,
+    "completed_rounds_since_followup": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_02974b405853828526979fd7a51fd7e1"
+  },
+  "closures": [
+    {"introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262", "status": "addressed_change", "fully_addressed": true, "proof_missing_claims": []},
+    {"introspection_id": "introspection_astrid_llm_1786556496", "status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []}
+  ],
+  "evidence_links": 13,
+  "changed_paths": [
+    "scripts/domain_boundary_audit.py",
+    "scripts/test_domain_boundary_audit.py",
+    "capsules/spectral-bridge/domain_boundaries_v1.toml",
+    "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+    "CHANGELOG.md",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+  ],
+  "fmt_check": "cargo fmt --check dirty from pre-existing foreign Rust WIP only; this round changed no Rust source",
+  "restart_deploy_alignment": "no restart or deployment required or attempted; audit changes act in steward/CI evidence flows only",
+  "index_state": "git index untouched during the controller-held run; foreign WIP preserved",
+  "session_notes": "one command timeout during the first link-evidence attempt (CLI full-chain verification latency); the idempotent re-run succeeded with existing 0 / new 13 links"
+}

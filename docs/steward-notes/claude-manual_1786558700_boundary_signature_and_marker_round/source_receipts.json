@@ -1,0 +1,37 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "03d491273cc31c16e72d5e9263d7c139a0b70043f88492067a7e530a8c557284",
+      "total_lines": 85,
+      "read_scope": "complete_file",
+      "report_binding": "working copy matches the report-bound SHA exactly (this is the version committed in fec89a8571); the file is edited this round by the signature-ratchet documentation update, so its post-round SHA deliberately differs"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "read_scope": "complete_file_receipt_carried_from_claude-manual_1786552591_round_same_file_and_window_sha_reconfirmed_by_rehash",
+      "report_binding": "file SHA and window SHA identical to the round-one report binding; working copy unchanged between rounds"
+    },
+    {
+      "path": "scripts/domain_boundary_audit.py",
+      "read_scope": "complete_file_273_lines_before_edit; edited this round to add the exception_signature_growth ratchet",
+      "note": "pre-edit read was complete; post-edit state verified by test_domain_boundary_audit.py"
+    },
+    {
+      "path": "scripts/test_domain_boundary_audit.py",
+      "read_scope": "complete_file_88_lines_before_edit; extended this round with the signature-growth regression"
+    },
+    {
+      "path": "capsules/spectral-bridge/domain_boundaries_v1.toml",
+      "read_scope": "cohesion_exceptions_section_complete; edited this round to seed seven maximum_unique_fn_signatures ceilings"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/provenance_typestate.rs",
+      "read_scope": "scoped_interval: compile-fail case registration (interpretation_cannot_dispatch wiring)",
+      "note": "scoped read for claim c004 of the DOMAIN_BOUNDARIES report; file carries foreign WIP edits that were not claimed or modified"
+    }
+  ]
+}

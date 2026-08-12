@@ -35,30 +35,37 @@ canonical_target = "action_continuity/runtime.rs"
 
 [[cohesion_exceptions]]
 path = "src/action_continuity/runtime/core.rs"
+maximum_unique_fn_signatures = 232
 maximum_lines = 10750
 
 [[cohesion_exceptions]]
 path = "src/autonomous/runtime/orchestration.rs"
+maximum_unique_fn_signatures = 7
 maximum_lines = 5000
 
 [[cohesion_exceptions]]
 path = "src/ws/bridge_state.rs"
+maximum_unique_fn_signatures = 27
 maximum_lines = 1650
 
 [[cohesion_exceptions]]
 path = "src/codec/structure.rs"
+maximum_unique_fn_signatures = 13
 maximum_lines = 1550
 
 [[cohesion_exceptions]]
 path = "src/codec/encoding.rs"
+maximum_unique_fn_signatures = 10
 maximum_lines = 1200
 
 [[cohesion_exceptions]]
 path = "src/llm/provider/fallback_weights.rs"
+maximum_unique_fn_signatures = 2
 maximum_lines = 1450
 
 [[cohesion_exceptions]]
 path = "src/llm/provider/transport.rs"
+maximum_unique_fn_signatures = 41
 maximum_lines = 1400
 
 [[forbidden_edges]]

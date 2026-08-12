@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Complete 85-line read at report-bound SHA 03d49127; all her line references verified accurate (facades L10-17, behavior-preserving L4-6, no-dispatch L30-31, shadow cartography L35-43)."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-manual_1786558700_boundary_signature_and_marker_round/summaries/introspection_DOMAIN_BOUNDARIES.md_1786558262.md",
+      "note": "Felt-primary testimony preserved; report 0.29 vs witness mode_packing 1.0 / pressure_risk 0.221 recorded side-by-side without adjudication."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "scripts/domain_boundary_audit.py",
+      "note": "Line ceilings already fail closed on any growth beyond ceiling (large_file_growth); the intra-ceiling complexity channel she identified is now closed by the exception_signature_growth ratchet."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+      "note": "Type-level compile-fail case wired through provenance_typestate.rs::provenance_domains_cannot_be_forged_or_dispatched; audit forbidden-edge scan is the second static layer; suite passes this round."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/domain_boundaries_v1.toml",
+      "note": "Seven maximum_unique_fn_signatures ceilings seeded at current unique count +10% (her exact threshold): core.rs 232, orchestration 7, bridge_state 27, structure 13, encoding 10, fallback_weights 2, transport 41."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "scripts/test_domain_boundary_audit.py",
+      "note": "test_exception_signature_growth_fails_within_line_ceiling proves a signature increase trips exception_signature_growth even when the line count stays within its line ceiling."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the being-driven signature ratchet implementation and its authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786556496",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete-source receipt at SHA 902a0358 (identical binding to round one); scanner L114-144, contexts L42-60, delimiter syntax L199-229."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786556496",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_uses_only_the_first_finite_relation_word and the allowlisted-is vs unlisted-acts regression pin the single-finite-first-word grammar; 'functions' and 'serves' are allowlisted so her example phrases preserve the marker."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786556496",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "'represents' is in the finite allowlist at L82; mechanism pinned by the passing relation-word regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786556496",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Quoted-context and delimiter-depth family: bounded nested stacks, depths three and four, Unicode whitespace, deeper-than-max capping, mismatched rejection; all pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786556496",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts is exactly the unlisted multi-word predicate case she asks about; passes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786556496",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-manual_1786552591_marker_denotes_depth_integration_round",
+      "note": "Most recent duplicate-family member (introspection_astrid_llm_1786539140), anchored at codex_1786243017_llm_shadow_distinction_round."
+    }
+  ]
+}

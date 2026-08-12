@@ -62,7 +62,10 @@ have documented cohesion exceptions:
 
 Large test registries and snapshots are test-data exceptions. New production
 growth belongs in the named ownership modules; the exceptions above are not a
-general waiver.
+general waiver. Each exception also carries a unique-fn-signature ceiling
+(current count plus 10% headroom) so complexity growth inside an unchanged
+line ceiling still trips `exception_signature_growth` in the audit and forces
+a manual review before the ceiling is deliberately re-captured.
 
 Other pre-existing production files above the review signal remain explicit
 review debt in `domain_boundaries_legacy_large_files_v1.json`. That baseline is
@@ -80,6 +83,7 @@ captured boundary fails `scripts/domain_boundary_audit.py verify`.
 - Prompt tests pin the final read-only distinction line and its no-routing,
   no-ranking, no-dispatch, no-gain, and no-control contract.
 - `python3 scripts/domain_boundary_audit.py verify` pins stable facade targets,
-  documented exception ceilings, the legacy large-file ratchet, and forbidden
-  interpretation/witness-to-dispatch dependency edges.
+  documented exception ceilings (lines and unique fn signatures), the legacy
+  large-file ratchet, and forbidden interpretation/witness-to-dispatch
+  dependency edges.
 - The complete bridge suite is the structural parity gate.
