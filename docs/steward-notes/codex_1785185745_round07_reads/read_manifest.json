@@ -1,0 +1,28 @@
+{
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785184798",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_main_excerpt.md",
+      "claims_file": "claims/minime_main_excerpt.json"
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785184370",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_esn.md",
+      "claims_file": "claims/minime_esn.json"
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785184013",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_sensory_bus.md",
+      "claims_file": "claims/minime_sensory_bus.json"
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785183596",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_regulator.md",
+      "claims_file": "claims/minime_regulator.json"
+    }
+  ]
+}

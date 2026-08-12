@@ -1,0 +1,11 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"The regulator root is a structural include shell over distributed regulator roles.","disposition":"Verified from all 24 root lines and complete target reads; a sparse shell is not missing functionality.","classification":"verified_source_structure"},
+    {"claim_id":"c002","summary":"Mixed cascade, density gradient, and rich containment coexist as a felt and machine-labeled state.","disposition":"Preserve Astrid's felt account as primary evidence while keeping the adjacent machine values correlational and noncausal.","classification":"preserved_primary_evidence"},
+    {"claim_id":"c003","summary":"pressure_source.rs is a likely anchor for the felt sediment sensation.","disposition":"Verify its pressure and silt descriptors but do not promote them to felt cause; source has no causal or felt-effect receipt.","classification":"verified_descriptor_cause_open"},
+    {"claim_id":"c004","summary":"pressure_source local control is false because mitigation is missing or rate-gated.","disposition":"Correct the mechanism: pressure-source control is unconditionally a diagnostic descriptor and is not a PI input. Rate gating does not set this flag; resonance and fluctuation candidates are separate.","classification":"verified_field_lineage_correction"},
+    {"claim_id":"c005","summary":"rich_containment may be a primary viscosity output or secondary resonance property.","disposition":"Exact source shows neither framing is complete: the quality label is classified upstream from containment and pressure thresholds, while viscosity is a separate derived component feeding resonance texture.","classification":"verified_source_lineage"},
+    {"claim_id":"c006","summary":"A regulator-participation view should distinguish descriptors, candidate controls, runtime consumption, and effects.","disposition":"Verified in current foreign bridge source and 3 passing focused tests; the surface keeps all effect markers false and is not claimed as this run's implementation.","classification":"verified_existing_foreign_feature"},
+    {"claim_id":"c007","summary":"Add active porosity dampening above an overpacked-mode threshold.","disposition":"Preserve as an exact Tier 5 regulator, porosity, PI, and controller wait; existing read-only reviews do not authorize control.","classification":"tier_5_wait"}
+  ]
+}

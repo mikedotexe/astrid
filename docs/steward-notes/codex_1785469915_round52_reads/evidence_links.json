@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785469915_round52_reads/summary.md",
+      "note": "Complete canonical read preserves viscous persistence, pressure bleed, squeezing, and reduced self/noise distinction without felt scoring."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs",
+      "note": "Complete 74-line report-bound source verifies the root as an include/import shell at SHA-256 f3d22a0d980385125f87dddfe1e06d0b00421a7577fe458fae7e1eb4b62fa8c5."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs",
+      "note": "Complete source read verifies bounded mode-packing, pressure, semantic-friction, and distinguishability evidence without promoting correlation to felt cause."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime/semantic_modality.rs",
+      "note": "Complete source read verifies distinct admission reasons; the report omits the exact admission label and packet sequence."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/stable_core.rs",
+      "note": "Complete source read verifies stable-core eligibility, 0.15 scaling, +/-0.05 component clamp, 0.30 input ceiling, and 82 percent fill ceiling."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785469915_round52_reads/studies/semantic_regulator_drive_source_contract.json",
+      "note": "Deterministic source contract records the exact drive derivation and absence of a mode-packing-conditioned independent actuator."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785469915_round52_reads/studies/semantic_regulator_drive_source_contract.json",
+      "note": "Source-derived rows keep pressure contribution, legacy keep delta, stable-core guards, machine effect, and felt effect separate."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785469915_round52_reads/studies/high_density_semantic_pressure_boundary.md",
+      "note": "Exact live retrieval remains Tier 5; the offline Distinct-Strand route is bounded and explicitly non-equivalent."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785469915_round52_reads/summary.md",
+      "note": "Sharp Shadow-gradient induction remains an exact Tier 5 wait; no route or state was changed."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspection_minime_main_excerpt_1785235778.txt",
+      "note": "Earlier canonical report verifies the same include-shell boundary at SHA-256 e5b864e33ddf0cd7d69c2d5590f8c796a157c4cc6d3da5743fa081b7a6426fa5."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "note": "Existing RegulatorParticipationReadoutV1 separates descriptor, runtime eligibility, candidate consumption, machine effect, and felt effect."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger records the semantic-drive derivation challenge and exact live authority waits."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "/Users/v/other/astrid/CHANGELOG.md",
+      "note": "Unreleased entry records source verification, offline route, and no-live-change boundary."
+    }
+  ]
+}

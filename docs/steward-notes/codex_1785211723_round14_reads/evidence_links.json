@@ -1,0 +1,39 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785210099",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785211723_round14_reads/summaries/astrid_llm.md",
+      "note": "Full-read summary preserves the reported viscous persistence without reducing it to token quantity or marker bytes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785210099",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Source-local contract names count-only token bands and separate V3 texture observations in the opening source window."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785210099",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Requested-token boundary and felt-pressure tests prove separate evidence channels with no runtime effect."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785210099",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1784889191_mechanism_boundary_and_retryability_reads/verification.md",
+      "note": "Existing natural comparison route and exact marker receipts avoid induced high-token output or marker injection."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785210099",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Marker-specific spectral weighting and all live provider, prompt, cleanup, or model changes remain exact Tier 5 waits."
+    }
+  ]
+}

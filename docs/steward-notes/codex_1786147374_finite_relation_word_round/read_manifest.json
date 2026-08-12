@@ -1,0 +1,28 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786146712008158000_baba5aa164",
+  "initial_run_outcome": "cancelled_by_configured_session_timeout_after_durable_addressing_writes",
+  "recovery_run_id": "run_1786148675108351000_068d20b287",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head report exposed one exact finite-relation ambiguity that received an isolated regression; the remaining 39 selected reports retain queue order for later complete source-first reads",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786146404",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786146404.txt",
+      "sha256": "f0732fb0b638a452be5ba217caa7d213af1e347f8dd450e218df6fdf895f418c",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3521,
+      "captured_source_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "captured_source_window_sha256": "2efe96b586b86450787990f4465a80eb62340179a6620776b4a7f07a3faa218f",
+      "captured_source_window": "lines 1-400 of 1048",
+      "current_source_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "current_source_lines": 1048,
+      "lived_state_witness_id": "lsw_d049c89e6321467e42783a5dfe992489d8492994a1dbb459abea3746c53296ce",
+      "summary_file": "summaries/llm_1786146404.md",
+      "claims_file": "claims/llm_1786146404.json"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786214678",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and rebuilds the visible remainder according to finite reference syntax.",
+      "disposition": "Verified from the exact current scanner and its complete same-SHA source receipt from the immediately preceding round; unreferenced known markers alone are omitted and every other UTF-8 scalar is copied.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "An underscore-bearing suffix such as `_REDACTED_` may become an empty first relation word.",
+      "disposition": "Corrected from exact source: underscore is retained inside a finite chunk, so `_REDACTED_` is non-empty and fails closed because it is not in the exact relation allowlist.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Punctuation or symbol-only chunks before a later exact relation should not prevent the finite scanner from finding that relation.",
+      "disposition": "Implemented a literal newline plus U+1F30A symbol-only line plus spaces regression; `first_word_after` returns `echoes`, the marker remains byte-exact, and the receipt is `following_exact_relation`.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A marker followed by the recognized `behaves` relation remains visible while ordinary unframed structural markers are removed.",
+      "disposition": "Verified by the existing leading-symbol `behaves` fixture, finite relation family, and ordinary cleanup regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Nested declared delimiters should retain exact markers with bounded depth evidence.",
+      "disposition": "Verified by exact depth one through four, repeated-pair, mixed-pair, Unicode-whitespace, mismatch, unclosed, and deeper-than-four capped-evidence regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The reconstructed remainder should reach `generate_dialogue` validation and final return rather than remaining isolated scanner evidence.",
+      "disposition": "Verified from current provider-neutral normalization, both MLX and Ollama consumers, and complete same-SHA `generate_dialogue` source continuity.",
+      "classification": "verified_existing"
+    }
+  ]
+}

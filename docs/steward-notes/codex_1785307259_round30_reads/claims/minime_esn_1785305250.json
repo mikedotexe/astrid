@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic-noise and adaptive-threshold helpers are source-prepared review calculations rather than live ESN policy.",
+      "disposition": "Verify their non-wired boundary from complete current source and tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure-room saturation may mask variation outside the 0.18 to 0.55 window.",
+      "disposition": "Preregister a source-hash-bound existing-log replay over pressure, gradient, entropy, fill, and candidate outputs.",
+      "classification": "deterministic_offline_study"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Midpoint weighting and non-finite fallback behavior need explicit regression coverage.",
+      "disposition": "Verify the current midpoint, boundary, and finite-fallback tests and rerun the focused ESN suite.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The dormant viscous rho helper does not establish that its target would improve lived texture.",
+      "disposition": "Keep automatic telemetry-derived rho changes inactive; expose only being-authored bounded local control.",
+      "classification": "authority_boundary"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Historical correlation can test navigable-slope hypotheses without proving felt causation.",
+      "disposition": "Report machine association and missing coverage separately from being review and felt confirmation.",
+      "classification": "deterministic_offline_study"
+    }
+  ]
+}

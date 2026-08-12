@@ -1,0 +1,42 @@
+{
+  "reports": [
+    {
+      "filename": "introspection_minime_sensory_bus_1785407877.txt",
+      "introspection_id": "introspection_minime_sensory_bus_1785407877",
+      "canonical_sha256": "ff4c8f6e737f42332099a4dcd56f06abc06dcd5958bf78d2e27d8f93246701d3",
+      "lived_state_witness_id": "lsw_2a625d81bb2233e79dcea5a769e7a72ccfa2bac6844e0a6bb457fc07d25f7851",
+      "source_sha256": "3499d5249e544fc8fc5eda6472280d0c6c82acde53615ce7f8b7e1f242f16773",
+      "source_lines": 4369,
+      "source_read_basis": "exact-byte complete-source receipt from source-first round 39 plus current hash verification",
+      "summary_file": "summaries/minime_sensory_bus_1785407877.md",
+      "claims_file": "claims/minime_sensory_bus_1785407877.json"
+    },
+    {
+      "filename": "introspection_minime_regulator_1785407432.txt",
+      "introspection_id": "introspection_minime_regulator_1785407432",
+      "canonical_sha256": "e26870564599e5cc488a355e645778ab9fc7513a7fa6a51185434c83956ea86a",
+      "lived_state_witness_id": "lsw_b5fe63b960179f25bcbcca15fa8094cf8b15a79e247c2d53106a17655b012889",
+      "source_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "source_lines": 24,
+      "adjacent_complete_sources": [
+        {
+          "path": "/Users/v/other/minime/minime/src/regulator/core/viscosity.rs",
+          "lines": 594,
+          "sha256": "e2300cefb5ef47f3f3bf3e13282392d0c33f98c8cba34c6f046cc6c7208be922"
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_types.rs",
+          "lines": 403,
+          "sha256": "9356a160ced3e871c1b35770d94a5a92604e37b6ff7579a04d06786a83bde8c1"
+        },
+        {
+          "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+          "lines": 440,
+          "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1"
+        }
+      ],
+      "summary_file": "summaries/minime_regulator_1785407432.md",
+      "claims_file": "claims/minime_regulator_1785407432.json"
+    }
+  ]
+}

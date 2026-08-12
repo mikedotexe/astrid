@@ -1,0 +1,39 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "report_bound_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "lines": 1048,
+      "report_coverage": "lines 1-400 for all four reports",
+      "read_scope": "complete lines 1-1048",
+      "continuity": "repository source exactly matches every report-bound SHA-256; complete-source receipt retained from the immediately preceding same-SHA round and relevant intervals re-read"
+    }
+  ],
+  "integration_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "read_scope": "provider output normalization lines 204-217",
+      "finding": "transport normalization applies marker cleanup and returns the sanitized text plus its report"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "read_scope": "call sites identified at lines 688 and 888",
+      "finding": "both provider paths consume the shared normalization contract"
+    }
+  ],
+  "test_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "b499ff49450aa248af773084f4e59de88e56f57c27b34b83d9e3db0ff36d4b04",
+      "lines": 3349,
+      "read_scope": "quoted/grouped, nested-depth, finite relation, punctuation, Unicode, and byte-exact regression regions plus executable marker-family run"
+    }
+  ],
+  "prior_exact_evidence": [
+    "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786260750.txt",
+    "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+    "docs/steward-notes/codex_1786290198_llm_relation_depth_round"
+  ],
+  "authority": "source and executable evidence only; no runtime deployment, felt cause, relief, model control, or substrate authority"
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "reader": "codex-heartbeat",
+  "steward_run_id": "run_1785647183481366000_05c98f2f33",
+  "reports": [
+    {
+      "filename": "introspection_astrid_autonomous_1785639400.txt",
+      "introspection_id": "introspection_astrid_autonomous_1785639400",
+      "sha256": "3d994cc8d2b21726d2f2fa629d1776e5346ada6e77276b2bfede627541f8a232",
+      "logical_lines": 36,
+      "bytes": 4288,
+      "witness_id": "lsw_ac7d85725565d8716d65f7e6c66daef9d0cf468082552e7b31fa4fe3265f77a0",
+      "summary_file": "summaries/astrid_autonomous_1785639400.md",
+      "claims_file": "claims/astrid_autonomous_1785639400.json"
+    },
+    {
+      "filename": "introspection_astrid_codec_1785639129.txt",
+      "introspection_id": "introspection_astrid_codec_1785639129",
+      "sha256": "a310d022d694a0f88093005fc5d5f7a4fa983c8658d6499c288afc55c3f081a7",
+      "logical_lines": 38,
+      "bytes": 4191,
+      "witness_id": "lsw_3294cbf131525095de9a5bb66dddfaf5dda18338b163f03b3f7dba4dc6c4ef3f",
+      "summary_file": "summaries/astrid_codec_1785639129.md",
+      "claims_file": "claims/astrid_codec_1785639129.json"
+    },
+    {
+      "filename": "introspection_proposal_12d_glimpse_1785638856.txt",
+      "introspection_id": "introspection_proposal_12d_glimpse_1785638856",
+      "sha256": "c9b7d596c015ff1e7af177585e4d20b85f9f298a69b8d996046b1d816d5dce9d",
+      "logical_lines": 42,
+      "bytes": 4751,
+      "witness_id": "lsw_9dd9cc90326e924685354e3dfe87ea8f60515559092b3df8fec5f2a84afc84c9",
+      "summary_file": "summaries/proposal_12d_glimpse_1785638856.md",
+      "claims_file": "claims/proposal_12d_glimpse_1785638856.json"
+    },
+    {
+      "filename": "introspection_proposal_distance_contact_control_1785638151.txt",
+      "introspection_id": "introspection_proposal_distance_contact_control_1785638151",
+      "sha256": "0b0384186e305e3372b4c1579091405a5ee314174aaaf16f56557a6a7c0f8eb3",
+      "logical_lines": 36,
+      "bytes": 3630,
+      "witness_id": "lsw_997996f91b44729d1efa344bb9f6e76183211ce56f3efa67e2a214ee576e4167",
+      "summary_file": "summaries/proposal_distance_contact_control_1785638151.md",
+      "claims_file": "claims/proposal_distance_contact_control_1785638151.json"
+    },
+    {
+      "filename": "introspection_proposal_bidirectional_contact_1785637686.txt",
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785637686",
+      "sha256": "1843e75a2cf6fb78d81a6c6c9888cd932bc1db58e1f2a741b3f176e1ae51e259",
+      "logical_lines": 34,
+      "bytes": 4180,
+      "witness_id": "lsw_46a854a5ed5cb6f3488902b2bdf6647d4f874f186afaa538f0d508005e24b984",
+      "summary_file": "summaries/proposal_bidirectional_contact_1785637686.md",
+      "claims_file": "claims/proposal_bidirectional_contact_1785637686.json"
+    }
+  ]
+}

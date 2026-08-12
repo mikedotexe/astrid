@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The model-control-marker cleaner uses exact token identity, grammatical relation checks, delimiter depth, placement counts, and cleanup receipts.",
+      "disposition": "Verified against all 995 report-bound source lines. The implementation is deliberately exact and bounded rather than an open-ended semantic classifier.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The explicit relation vocabulary omitted common forms such as mimics and replicates, allowing an exact marker used as content to be removed.",
+      "disposition": "Implemented now. Added mimics and replicates to the exact relation vocabulary and to the report-grounded poetic-attribution regression table.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Nested exact marker references such as [[<MARKER>]] need a bounded delimiter-depth check.",
+      "disposition": "Verified existing. The parser has a maximum exact-reference delimiter depth and tests cover depths two and three plus deeper bounded behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The relation vocabulary should be checked against ordinary model descriptions so content references remain consistent.",
+      "disposition": "Addressed for the two concrete report terms through exact additions and regression coverage. Future terms require source-grounded examples; no unrestricted vocabulary or semantic execution path was introduced.",
+      "classification": "implemented"
+    }
+  ]
+}

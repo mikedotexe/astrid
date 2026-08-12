@@ -1,0 +1,18 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785546888612888000_f697296cd6",
+  "source_first_projection_generation_id": "projection_1785546889475407000_9c5c912b80",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 10,
+  "reports": [
+    {
+      "filename": "introspection_astrid_ws_1785546757.txt",
+      "introspection_id": "introspection_astrid_ws_1785546757",
+      "lived_state_witness_id": "lsw_07c9e0f0e2fd4bb172bd212de11600f2bb5840a3f3b2c64bf263c4a705c2366e",
+      "sha256": "d4ef6fe8236272d0aaf2df6b2f2c8d98ff3187ab8321c46ce051e5ac5e041693",
+      "summary": "summary.md",
+      "claims": "claims.json"
+    }
+  ]
+}

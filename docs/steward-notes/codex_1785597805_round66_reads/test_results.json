@@ -1,0 +1,13 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785597805531527000_e52e204351",
+  "results": [
+    {"surface":"minime_viscosity","command":"cargo test --manifest-path minime/Cargo.toml viscosity -- --nocapture","library_passed":27,"binary_passed":27,"failed":0,"status":"passed","note":"Pre-existing unused Division fanout/gateway warnings remain unrelated."},
+    {"surface":"minime_pressure_texture","command":"cargo test --manifest-path minime/Cargo.toml texture -- --nocapture","library_passed":14,"binary_passed":11,"failed":0,"status":"passed"},
+    {"surface":"minime_sensory_context","commands":["cargo test --manifest-path minime/Cargo.toml semantic_context_multiplier -- --nocapture","cargo test --manifest-path minime/Cargo.toml semantic_glimpse_12d -- --nocapture"],"library_passed":5,"binary_passed":5,"failed":0,"status":"passed"},
+    {"surface":"introspection_addressing_audit","command":"python3 scripts/introspection_addressing_audit.py --self-test","passed":41,"failed":0,"status":"passed"},
+    {"surface":"evidence_store_control_projection_division_claim_family","command":"env PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection","passed":58,"failed":0,"status":"passed"},
+    {"surface":"experiential_epistemics","commands":["python3 scripts/experiential_epistemics.py self-test --json","python3 scripts/experiential_epistemics.py lint --json"],"self_tests_passed":2,"lint_status":"passed","history_rewritten":false,"status":"passed"}
+  ],
+  "authority_boundary": "tests and passive observations do not establish felt cause, relief, uptake, approval, or live-control suitability"
+}

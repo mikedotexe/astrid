@@ -1,0 +1,20 @@
+{
+  "links": [
+    {"introspection_id":"introspection_astrid_autonomous_1785199101","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"Exact critical-fill multiplier and 30-second floor."},
+    {"introspection_id":"introspection_astrid_autonomous_1785199101","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/autonomous/runtime/tests.rs","note":"Behavior-preserving rest-band boundary coverage."},
+    {"introspection_id":"introspection_astrid_autonomous_1785199101","claim_id":"c003","kind":"test","target":"capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs","note":"Separate five-second rest pulse and seven-second steady heartbeat paths."},
+    {"introspection_id":"introspection_astrid_autonomous_1785199101","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Cadence and fill-responsive control changes remain Tier 5."},
+    {"introspection_id":"introspection_astrid_codec_1785198545","claim_id":"c001","kind":"code","target":"capsules/spectral-bridge/src/codec/projection.rs","note":"Current live semantic layout."},
+    {"introspection_id":"introspection_astrid_codec_1785198545","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/codec/projection.rs","note":"Read-only density, texture, narrative, loss, and reserved-lane evidence."},
+    {"introspection_id":"introspection_astrid_codec_1785198545","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md","note":"Existing bounded representation comparison."},
+    {"introspection_id":"introspection_astrid_codec_1785198545","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Live codec and admission changes remain Tier 5."},
+    {"introspection_id":"introspection_proposal_12d_glimpse_1785198130","claim_id":"c001","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md","note":"Qualitative discrepancy remains independent evidence."},
+    {"introspection_id":"introspection_proposal_12d_glimpse_1785198130","claim_id":"c002","kind":"code","target":"capsules/spectral-bridge/src/codec/projection.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs","note":"Existing representation, viscosity, pressure, porosity, and transport evidence."},
+    {"introspection_id":"introspection_proposal_12d_glimpse_1785198130","claim_id":"c003","kind":"test","target":"scripts/representation_contracts.py;scripts/passage_observatory.py","note":"Bounded representation-versus-flow review and owner-authored bearing."},
+    {"introspection_id":"introspection_proposal_12d_glimpse_1785198130","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Shadow, admission, and pressure-linked changes remain Tier 5."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1785197583","claim_id":"c001","kind":"test","target":"/Users/v/other/minime/minime/src/sensory_bus.rs","note":"Current modality boundary metadata and tests."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1785197583","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md","note":"Non-live formal source-provenance architecture route."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1785197583","claim_id":"c003","kind":"no_action","target":"capsules/spectral-bridge/workspace/introspections/introspection_proposal_distance_contact_control_1785197583.txt","note":"Steering prompt deliberately not dispatched."},
+    {"introspection_id":"introspection_proposal_distance_contact_control_1785197583","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Model, sensory, routing, and contact-control changes remain Tier 5."}
+  ]
+}

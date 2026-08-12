@@ -1,0 +1,78 @@
+{
+  "schema": "exact_source_continuity_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_codec_1785627566.txt",
+      "sha256": "464f671229d53f2617b2b6e2e06107ce73209460a45a5e31686a94487c2f58a5",
+      "newline_terminated_lines": 35,
+      "logical_lines": 36,
+      "complete_bytes": 3967,
+      "receipt_role": "complete_canonical_report"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_28b6d612bde1a51a52bc1160513d0b8774fb03d824d94b31196c30b18c71a6ab.json",
+      "sha256": "d2b8394fb438c71a3b9c5cd6c64d98fcaeb374192122741ccb116b8097fa7c79",
+      "complete_lines": 456,
+      "complete_bytes": 19707,
+      "receipt_role": "complete_lived_state_witness"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "capsules/spectral-bridge/workspace/llm_jobs/jobs/job_astrid_1785627485313_introspect/prompt.txt",
+      "sha256": "844b1f6bf76a49068ed94dd7e71dcb380a46ac14f29ed86ed414112ca63795ac",
+      "complete_lines": 610,
+      "complete_bytes": 43339,
+      "receipt_role": "complete_report_delivery_prompt_and_captured_source_window"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "capsules/spectral-bridge/src/codec/projection.rs",
+      "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+      "complete_lines": 1351,
+      "complete_bytes": 53462,
+      "included_intervals": ["1-400", "1039-1166", "1332-1351"],
+      "receipt_role": "exact_report_bound_current_source_with_captured_and_targeted_reads_plus_same_sha_complete_source_continuity"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/maps/31596342582aca779b0faad946d9d60cdf3f52ed8ade4680d96c75bf82b2712e.json",
+      "sha256": "582eed8a52c1a5a9498de423cdd3c182794f3dfb4d7455349156c485f3ac4e8c",
+      "complete_lines": 651,
+      "complete_bytes": 17622,
+      "structural_map_sha256": "1164a04f70f0c3b470ce80c8bfc478d324436de808f38ab79244acc0b2919b44",
+      "receipt_role": "complete_whole_file_structural_map"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "docs/steward-notes/codex_1785367152_round31_reads/claims/astrid_codec_1785366068.json",
+      "sha256": "0e687a7a567655696e2d924d128177e314963b416c6d740f91479ad26e44eac1",
+      "receipt_role": "complete_exact_same_source_codec_claim_continuity"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "docs/steward-notes/codex_1785672166_round76_reads/CODEC_EXPRESSION_FIDELITY_NATURAL_CONTRAST_PREREGISTRATION.md",
+      "sha256": "b587d7b1607ea202f32b33260612953e8df6e67be92a45034e8b31843efd79b7",
+      "receipt_role": "complete_existing_model_behavior_preregistration"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "sha256": "5cc969eae80091c81e3db70830a3d2f2cf00a1f400fd8fe8f836c8ba083bd9e0",
+      "receipt_role": "complete_existing_viscous_persistence_source_separation_preregistration"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "docs/steward-notes/STRATEGIC_SALIENCY_TRANCHE_V1.md",
+      "sha256": "8025c1da4ce82300a4d792be9a78a3f9cfbfb0b52f890bce618cddff6c3aebc7",
+      "receipt_role": "complete_counterfactual_change_lab_campaign_result"
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785627566",
+      "source": "docs/steward-notes/codex_1783894604_wi_12efbdbe8cef0805_reserved_dim_projection_expansion_approval_packet.md",
+      "sha256": "ed86121c01a368659d8d3f3f6c0f05dfeddea94047127fe6cda3d4e3c3e19090",
+      "receipt_role": "complete_reserved_dimension_and_projection_expansion_approval_packet"
+    }
+  ]
+}

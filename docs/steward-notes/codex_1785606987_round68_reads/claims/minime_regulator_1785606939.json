@@ -1,0 +1,53 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "regulator/core.rs is a structural import hub rather than the implementation of viscosity, resonance, or pressure mechanics.",
+      "disposition": "Verified from all 24 exact current lines at the report-bound hash.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy, lambda-tail vibrancy, and overpacked mode packing accompany a felt widely distributed and weight-bearing cascade.",
+      "disposition": "Astrid's felt account is retained as primary actionable evidence. Co-present telemetry is relevant context, not proof that a named metric or module caused the texture.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The shell hides coefficients and thresholds needed to understand pressure and viscous persistence.",
+      "disposition": "Addressed as an exact duplicate with source continuity: all 594 viscosity lines, 340 resonance-evidence lines, and 440 pressure-source lines remain byte-identical to the complete round-66 reads and expose their formulas and advisory boundaries.",
+      "classification": "verified_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure and viscosity should be compared to distinguish active packing from structural reservoir weight.",
+      "disposition": "The existing hash-bound source-separation preregistration and round-66 passive observation are the exact bounded route. Three passive epochs were explicitly insufficient for correlation, and no pressure or viscosity state was induced here.",
+      "classification": "study_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Resonance density should be checked to determine whether rich containment is static or a response to lambda1 concentration.",
+      "disposition": "Source-corrected from the complete resonance implementation. Typed containment, pressure, comfort, viscosity, and control-preview inputs are dynamic calculations, but current source and labels do not establish a felt static/dynamic cause or a lambda1-concentration cause. The exact source-separation study remains the bounded comparison route.",
+      "classification": "source_challenged_study_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "viscosity.rs should be inspected immediately rather than stopping at the inclusion shell.",
+      "disposition": "Completed through the exact current 594-line full-read receipt, with the prior packet linked instead of pretending a new read was necessary after a byte-identical source match.",
+      "classification": "verified_duplicate"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The viscosity implementation may be a hard-coded constant rather than a variable result of current evidence.",
+      "disposition": "Source-corrected. The implementation derives viscosity, persistence, drag, mobility, gradients, cohesion, Shadow-volatility proxy, and advisory candidates from bounded inputs; constants are weights and thresholds inside variable calculations, not one fixed viscosity state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Viscosity, pressure, resonance, or related control mechanics may need to change after inspection.",
+      "disposition": "Preserved as an exact Tier 5 wait. Source resemblance and passive association cannot authorize pressure, viscosity, damping, resonance, fill, PI, regulator, reservoir, semantic-admission, or Shadow changes.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

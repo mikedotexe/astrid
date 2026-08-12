@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785388546",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Astrid's same-deployment thickened-medium report remains primary felt evidence without causal downgrade or closure."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388546",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "The full source and typed observation prove the requested-token band is diagnostic-only and has no runtime or felt join."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388546",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Focused source tests keep spectral pressure observations separate from requested-token observations and runtime effects."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388546",
+      "claim_id": "c004",
+      "kind": "study",
+      "target": "docs/steward-notes/codex_1785389614_round36_reads/evidence/dialogue_token_pressure_window_1785387600_1785389000.json",
+      "note": "The bounded existing-log window holds requested/effective tokens constant while retaining mode-packing and prompt-removal evidence; latency remains unavailable."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388546",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785389614_round36_reads/summaries/astrid_llm_1785388546.md",
+      "note": "The persistence-reference test remains optional and owner-authored; no response is generated or scheduled from silence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388546",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "scripts/dialogue_token_pressure_audit.py",
+      "note": "The new bounded audit implements read-only comparison, exact source coverage, latency disclosure, and non-causal authority fields."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388546",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Entropy-, gradient-, viscosity-, persistence-, or mode-packing-driven token changes remain an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388082",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Astrid's navigable-slope, crowding, and Shadow-v3 observations remain primary evidence without machine-inferred felt closure."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388082",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Whole-source challenge distinguishes the diagnostic band from the actual integer token budget and profile/context clamp."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388082",
+      "claim_id": "c003",
+      "kind": "study",
+      "target": "docs/steward-notes/codex_1785389614_round36_reads/evidence/dialogue_token_pressure_window_1785387600_1785389000.json",
+      "note": "Three report-window records retain constant requested/effective tokens and variable pressure context without causal inference."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388082",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785389614_round36_reads/summaries/astrid_llm_1785388082.md",
+      "note": "Shadow alignment remains a bounded public-evidence route requiring owner-authored expression and exact timestamps."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388082",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "scripts/dialogue_token_pressure_audit.py",
+      "note": "Three self-tests keep observational metrics read-only, bounded, explicit about missing latency, and unable to become control."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785388082",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Spectral-fluidity weighting, entropy-dependent overflow, and dynamic num_predict remain exact Tier 5 waits."
+    }
+  ]
+}

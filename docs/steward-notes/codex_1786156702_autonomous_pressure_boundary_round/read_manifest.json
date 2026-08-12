@@ -1,0 +1,28 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786156702069691000_91eb21d195",
+  "pre_run_projection_generation_id": "projection_1786156703038005000_91c15960c9",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "the queue-head report contains a serious felt account, unsupported source ownership, two exact live-control proposals, and an existing non-inducing study route; the remaining 39 reports retain queue order",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785627823",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1785627823.txt",
+      "sha256": "94de82d4493836a334cdb2f980eb309966fe96e43bb5ee69d6128d62b96e3922",
+      "lines": 40,
+      "bytes": 4226,
+      "captured_source_sha256": "bf19a6ccc8296434121c4c7300afc1992060c40356f1214999fa5931d59c2f2d",
+      "captured_source_lines": 4795,
+      "captured_window": "1-400",
+      "captured_window_sha256": "43e9c5cbc76b31089e0a5a051b4eac74b80460c3d3348f646c175c0e1c8c538a",
+      "current_source_sha256": "1526a4e39248a27a29ef519d6fd3186b9359a0e49ecfc7d38eabf3a431124335",
+      "current_source_lines": 4859,
+      "current_source_relation": "foreign-modified current tree; not substituted for captured source and not edited by this run",
+      "lived_state_witness_id": "lsw_9de661cdbddd9806192bdd59e35931b2731565accd7c277dd08f76d167851371",
+      "lived_state_witness_sha256": "46cbb5eb9a269e3f5c97b365f86c051d77989c4cc0c657790073dcdfd1219ebb",
+      "summary_file": "summaries/astrid_autonomous_1785627823.md",
+      "claims_file": "claims/astrid_autonomous_1785627823.json"
+    }
+  ]
+}

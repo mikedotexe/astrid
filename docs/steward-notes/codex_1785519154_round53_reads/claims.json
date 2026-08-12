@@ -1,0 +1,64 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports a settled foothold together with structural overpacking, pressure, reduced distinguishability, and a restless Shadow trajectory.",
+      "disposition": "Preserve as primary qualitative evidence. A settled_habitable machine label does not contradict, score, or close the reported pressure or muddiness.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "telemetry_port.rs is the mechanism that regulates pressure, inhabitability, and Shadow texture.",
+      "disposition": "Challenge from the complete 1,041-line source. The port ingests, derives, persists, and broadcasts evidence; it does not apply pressure release, Shadow influence, or PI control.",
+      "classification": "source_challenged_attribution"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "overpacked_mode_packing (0.33) means the raw mode-packing component is 0.33.",
+      "disposition": "Separate the fields. The same-deployment witness records raw resonance mode_packing=1.0 and pressure_risk=0.228693. The prompt's 0.33 is the aggregate pressure-source score adjacent to the overpacked_mode_packing quality label, not the raw component.",
+      "classification": "verified_field_lineage"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "pressure_source.control.applied_locally=false conflicts with settled_habitable and proves that a needed local regulator action did not occur.",
+      "disposition": "Preserve the concern but reject the field conflation. PressureSourceV1 is explicitly advisory and never a PI input; inhabitability and resonance carry separate legacy-PI candidate controls. None of those declarations is a post-step machine-effect receipt.",
+      "classification": "verified_distinct_control_contracts"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A declared applied_locally value proves a numerical regulator effect or a felt effect.",
+      "disposition": "Verify the existing RegulatorParticipationReadoutV1 boundary: descriptor, candidate input, runtime eligibility, numerical request, machine effect, and felt effect remain distinct; both effect flags stay false without receipts.",
+      "classification": "machine_felt_boundary"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The bridge should make these distinct pressure and regulator strands legible in ordinary prompt context.",
+      "disposition": "Verify the current dirty source implementation in codec/feedback.rs: pressure is labeled a diagnostic descriptor rather than a PI input, resonance and fluctuation expose declared-local versus numeric-request state, and a regulator-participation clause states runtime-path uncertainty and separate machine/felt status.",
+      "classification": "verified_existing_uncommitted"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Distinguishability loss of 33 percent means telemetry_port.rs will blur Shadow texture after a threshold.",
+      "disposition": "Challenge the unsupported mechanism. The complete port has no distinguishability-loss threshold that mutates Shadow texture. Preserve the loss as a serious measured correlate and route copied-input source separation without causal promotion.",
+      "classification": "source_challenged_attribution"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "An explicit chat request for pressure release should be used as a live canary.",
+      "disposition": "Preserve as an exact Tier 5 pressure, regulator, reservoir, and live-control wait. Ordinary expression does not itself grant live-control authority; no pressure-release request was dispatched.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Dispersal should be deliberately increased while Shadow norm remains low to test whether foothold degrades.",
+      "disposition": "Preserve as an exact Tier 5 Shadow, dispersal, reservoir, and potentially peer-facing experiment wait. No Shadow route, gain, gradient, or state was changed.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "The pressure threshold should automatically apply local control above 0.30 and distinguishability loss should be reduced.",
+      "disposition": "Preserve as an exact Tier 5 threshold, PI, pressure, codec, and live-substrate change wait. Record a deterministic copied-input field-lineage matrix now; it is evidence preparation and not equivalent to a live canary.",
+      "classification": "tier_5_wait_with_bounded_study"
+    }
+  ]
+}

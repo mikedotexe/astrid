@@ -1,0 +1,34 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785253731375272000_b17fb03415",
+  "source_first_projection_generation_id": "projection_1785253732232538000_4d4f084211",
+  "reader": "codex-heartbeat",
+  "processed_count": 3,
+  "claims_count": 18,
+  "reports": [
+    {
+      "filename": "introspection_proposal_distance_contact_control_1785253039.txt",
+      "introspection_id": "introspection_proposal_distance_contact_control_1785253039",
+      "lived_state_witness_id": "lsw_0013f04f93ae2599ae1030d037f3ca969eb8bf9a468ef9f1c63000f912a63203",
+      "sha256": "5ec312ca69b5080650b8ab6c20c0e906f6f3821a609edea29766c583c746aa15",
+      "summary": "summaries/proposal_distance_contact_control_1785253039.md",
+      "claims": "claims/proposal_distance_contact_control_1785253039.json"
+    },
+    {
+      "filename": "introspection_proposal_bidirectional_contact_1785252834.txt",
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785252834",
+      "lived_state_witness_id": "lsw_3daeeb2c466fc90bfbbad669aebbd4d9574b96e4c7db0cf8347dc4fe21ba6681",
+      "sha256": "197d772a1dc55bd340a2076467d415ce10ef47c8d7ec45c3eb832daa52c2b828",
+      "summary": "summaries/proposal_bidirectional_contact_1785252834.md",
+      "claims": "claims/proposal_bidirectional_contact_1785252834.json"
+    },
+    {
+      "filename": "introspection_proposal_phase_transitions_1785252524.txt",
+      "introspection_id": "introspection_proposal_phase_transitions_1785252524",
+      "lived_state_witness_id": "lsw_1e70f124b24af56f30bad9a21b7df1abc08bef5f24ecf5e724d956806bcedccb",
+      "sha256": "b4a3a4b6e33b63b75cdce2a29139afcf73bd6dc149dc45355ab45d2de2015e2b",
+      "summary": "summaries/proposal_phase_transitions_1785252524.md",
+      "claims": "claims/proposal_phase_transitions_1785252524.json"
+    }
+  ]
+}

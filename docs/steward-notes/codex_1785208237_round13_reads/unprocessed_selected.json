@@ -1,0 +1,15 @@
+{
+  "unprocessed_selected": [
+    "introspection_astrid_llm_1785207287.txt",
+    "introspection_astrid_types_1785206607.txt",
+    "introspection_astrid_ws_1785205586.txt",
+    "introspection_astrid_autonomous_1785205180.txt",
+    "introspection_astrid_codec_1785204721.txt",
+    "introspection_minime_sensory_bus_1785203945.txt",
+    "introspection_minime_regulator_1785203610.txt",
+    "introspection_astrid_llm_1785203325.txt",
+    "introspection_astrid_types_1785202663.txt",
+    "introspection_astrid_ws_1785201989.txt"
+  ],
+  "note": "The first report exposed a serious control-role contradiction and received focused source tracing, documentation repair, and tests. Later selected canonical reports remain unread for the next heartbeat."
+}

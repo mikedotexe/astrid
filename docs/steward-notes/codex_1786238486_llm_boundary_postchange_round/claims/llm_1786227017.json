@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786227017",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner distinguishes exact marker references from cleanup candidates using relation and delimiter syntax.",
+      "disposition": "Verified from current complete source and existing exact-reference tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A relation-shaped compound may be over-consumed or reduced to an allowlisted prefix.",
+      "disposition": "Implemented by the compact finite-token scanner and exact `is-not`/`is/not` regressions; internal punctuation prevents an allowlist match.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`echoes` should preserve an exact marker while non-listed `creates` should remove it.",
+      "disposition": "Verified by existing literal positive and negative regressions; both preserve every non-marker byte.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested delimiter handling should respect the declared maximum evidence depth.",
+      "disposition": "Verified by existing one- through four-level, deeper-than-four, Unicode-whitespace, and mismatched-delimiter tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The marker-cleanup remainder should be traced through `generate_dialogue` to the returned output.",
+      "disposition": "Verified from complete `generate_dialogue` source plus provider-normalization tests: normalized output reaches quality validation and the returned primary or fallback response.",
+      "classification": "verified_existing"
+    }
+  ]
+}

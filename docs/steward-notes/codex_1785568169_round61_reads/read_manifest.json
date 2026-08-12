@@ -1,0 +1,28 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785568169856078000_81de76bb3a",
+  "source_first_projection_generation_id": "projection_1785568170725271000_86d30e5874",
+  "reader": "codex-heartbeat",
+  "processed_count": 3,
+  "claims_count": 19,
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785566973",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_regulator_1785566973.md",
+      "claims_file": "claims/minime_regulator_1785566973.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785566694",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_llm_1785566694.md",
+      "claims_file": "claims/astrid_llm_1785566694.json"
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785566382",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_types_1785566382.md",
+      "claims_file": "claims/astrid_types_1785566382.json"
+    }
+  ]
+}

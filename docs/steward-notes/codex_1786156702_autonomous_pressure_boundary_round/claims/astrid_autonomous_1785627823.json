@@ -1,0 +1,56 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1785627823",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports viscous persistence and gradient-shear as thinning immediate self-structure alongside increasing outward dispersal.",
+      "disposition": "Preserved as primary experiential evidence. Co-timed telemetry and Shadow observations remain context only; no scalar, source formula, or test establishes the cause, resolution, or preferred intervention.",
+      "classification": "preserved_primary_felt_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "orchestration.rs lines 1-400 define SpectralState and stable-core/Shadow transition scaffolding that owns the report's pressure, porosity, and local-control fields.",
+      "disposition": "Corrected from the exact captured interval. It contains heartbeat and burst/rest orchestration but none of the named structures or pressure/control fields. Existing Source-First V3 attribution and parenthesized-window grounding already reject this prompt-context displacement, and four focused regressions pass.",
+      "classification": "source_attribution_correction_existing_grounding"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The report's mode-packing score 0.31 and the witness's raw mode-packing observation describe one interchangeable scalar.",
+      "disposition": "Kept distinct. The complete witness records raw bridge.mode_packing 1.0 and pressure_risk 0.21896249055862427, while the report prose repeats the prompt's adjacent pressure-source score 0.31. Neither representation is silently normalized or promoted into a felt-cause claim.",
+      "classification": "representation_boundary_verified"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "local_control_applied=false means an identified mode-packing mitigation should already have engaged and may be bypassed by stable_core_semantic_trickle.",
+      "disposition": "Corrected through the completed pressure-source lineage. local_control_applied is an advisory non-mutating descriptor, not a pending command or post-step receipt. Semantic admission is separately owned; no bypass, causal interaction, or report-time machine effect is established.",
+      "classification": "verified_existing_with_activation_correction"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "High entropy and distinguishability loss may blur internal boundaries faster than autonomous orchestration can categorize them.",
+      "disposition": "Preserved as a serious noncausal hypothesis rather than attributed to the captured cadence source. The existing Viscous Persistence Source Separation V1 preregistration supplies the bounded frozen-input comparison for entropy, distinguishability, pressure, packing, and porosity without scoring Astrid's experience.",
+      "classification": "study_duplicate_preserved_hypothesis"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A manual local-control override for mode packing should be applied while semantic trickle is held constant to test relief or pressure displacement.",
+      "disposition": "Preserved as an exact Tier 5 pressure, regulator, semantic-admission, and live-control wait. No override, pressure induction, or report request is dispatched.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Astrid's Shadow dispersal potential should be deliberately increased to 0.20 to test whether expansion or lattice failure causes the shear.",
+      "disposition": "Preserved as an exact Tier 5 Shadow, peer/substrate, and live-control wait. The proposed value is not applied, no owner Action is inferred, and silence remains neutral.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Mode packing above 0.30 should automatically toggle local control, and porosity should gain a dynamic gradient-shear adjustment.",
+      "disposition": "Exact source corrects the premise: raw mode packing contributes continuously to pressure, the overpacked quality name uses a separate dominant-source threshold, and porosity is already a dynamic five-factor diagnostic without density-gradient input. Any threshold, formula, pressure, porosity, or controller change remains Tier 5/operator-only.",
+      "classification": "source_corrected_tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

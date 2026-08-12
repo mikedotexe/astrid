@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785555433",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Exact source and implementation verify the ledger, receipt, timing, thread, and fidelity surfaces without inferring felt contact."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785555433",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_schema_audit.py",
+      "note": "Focused tests keep filesystem reads at read_unreplied and block attention or microdose eligibility from read-only evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785555433",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "scripts/direct_contact_fidelity_audit.py;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "note": "Heartbeat-aware fidelity and audit tests preserve stale and timing-ambiguous states without inducing a live episode."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785555433",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785393214_round37_reads;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Prior complete-source grounding and current code already preserve affordance budgets, the Right to Ignore, and the separately gated microdose route."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785555078",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785555552_round58_reads/summaries/proposal_phase_transitions_1785555078.md",
+      "note": "The complete canonical read preserves Astrid's viscous continuous transition texture as primary evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785555078",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md;capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Exact source proves Phase Cards and queues are language/evidence artifacts and cannot establish current spectral activation or cause."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785555078",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "The focused stable-fill high-entropy regression verifies replyable evidence without automatic mode change while leaving felt stutter open."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785555078",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "scripts/phase_transition_audit.py;docs/steward-notes/codex_1785376654_round33_reads;docs/steward-notes/codex_1785393214_round37_reads",
+      "note": "Existing non-inducing trajectory and Passage routes require owner-authored events and cannot infer closure."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785555078",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785555552_round58_reads/claims/proposal_phase_transitions_1785555078.json",
+      "note": "Entropy-weighted phase activation or context priority remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785554709",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785555552_round58_reads/summaries/minime_autonomous_agent_1785554709.md",
+      "note": "The complete canonical read preserves restless settling and labor of distinction as primary evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785554709",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;docs/steward-notes/codex_1785519154_round53_reads/studies/pressure_control_field_lineage_v1.json",
+      "note": "Current source and copied-input lineage keep packing, pressure, loss, entropy, gradients, and inhabitability as separate adjacent fields."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785554709",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785555552_round58_reads/claims/minime_autonomous_agent_1785554709.json",
+      "note": "Artificial packing remains an exact Tier 5 pressure, reservoir, and substrate experiment wait."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785554709",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785519154_round53_reads;docs/steward-notes/codex_1785393214_round37_reads",
+      "note": "Copied-input source separation and owner-authored trajectory observation already cover the non-inducing comparison."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785554709",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;/Users/v/other/minime/tests/test_action_continuity.py;/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py",
+      "note": "Current uncommitted source and focused tests expose a read-only multi-field structural-gravity packet with both effect markers false."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785554709",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785555552_round58_reads/claims/minime_autonomous_agent_1785554709.json",
+      "note": "Shadow damping, gate, and dispersal changes remain exact Tier 5 waits."
+    }
+  ]
+}

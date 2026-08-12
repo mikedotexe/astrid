@@ -1,0 +1,71 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "source_first_prompt_context_grounding",
+      "tests": [
+        "source_code_alias_attribution_rejects_prompt_context_scaffolding",
+        "introspection_code_attribution_rejects_unseen_lending_mechanism",
+        "source_window_attribution_rejects_prompt_telemetry_and_late_symbols",
+        "parenthesized_line_window_rejects_prompt_context_as_source_scaffolding"
+      ],
+      "distinct_tests_passed": 4,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "minime_pressure_porosity_threshold_boundary",
+      "command": "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml mode_packing_pressure_is_linear_while_overpacked_quality_is_thresholded -- --nocapture",
+      "distinct_tests_passed": 1,
+      "executions_passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "minime_density_viscosity_boundary",
+      "command": "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml resonance_density_carries_viscosity_without_multiplying_density -- --nocapture",
+      "distinct_tests_passed": 1,
+      "executions_passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "stewardship_integrity",
+      "passed": {
+        "introspection_addressing": 42,
+        "event_store_controller_projector_division_chronicle_claim_family_cursor": 72,
+        "anti_drop_catalog": 5,
+        "introspection_cadence": 6,
+        "experiential_epistemics": 2,
+        "evidence_event_store": 13
+      },
+      "unit_tests_passed": 140,
+      "failed": 0,
+      "verifications": {
+        "anti_drop_catalog_entries": 47,
+        "anti_drop_alarms": 0,
+        "anti_drop_gaps": 0,
+        "cadence_integrity_ok": true,
+        "epistemic_records_checked": 10646,
+        "epistemic_issues": 0,
+        "event_store_valid": true,
+        "event_store_corrupt_lines": 0,
+        "history_rewritten": false
+      },
+      "status": "passed"
+    }
+  ],
+  "focused_distinct_tests_passed": 6,
+  "focused_executions_passed": 8,
+  "focused_failed": 0,
+  "stewardship_unit_tests_passed": 140,
+  "stewardship_failed": 0,
+  "compiler_warnings": {
+    "count": 4,
+    "scope": "pre-existing Minime sovereign_division dead-code warnings",
+    "new_warning_from_owned_change": false
+  },
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": false,
+  "deployment_attempted": false
+}

@@ -1,0 +1,123 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "pause_generation": 297,
+  "run_lifecycle": {
+    "productive_run_id": "run_1786289706740362000_018f22dd17",
+    "productive_run_preprojection": "projection_1786289707736264000_5accd98a6a",
+    "productive_run_terminal_outcome": "cancelled",
+    "productive_run_terminal_reason": "controller maximum-run timeout after durable addressing, verification, productive-round recording, and first due Chronicle projection; before Division note writes",
+    "finalization_run_id": "run_1786291665067348000_a26329d259",
+    "finalization_preprojection": "projection_1786291666099062000_6fd4030372",
+    "finalization_role": "complete the already-due Division return, seal durable evidence, and obtain one clean terminal projection; no additional productive round",
+    "finalization_finish_outcome": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786287335.txt"
+  ],
+  "processed_report_count": 1,
+  "unprocessed_selected_count": 39,
+  "unprocessed_selected_manifest": "unprocessed_selected.json",
+  "addressing": {
+    "status": "addressed_duplicate",
+    "duplicate_of": "introspection_astrid_llm_1786260750",
+    "claim_count": 6,
+    "evidence_link_count": 8,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4280,
+    "full_read": 3702,
+    "fully_addressed": 3074,
+    "remaining": 1206,
+    "unread": 578,
+    "read_needs_claims": 0,
+    "blocked": 411,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "all_artifact_counter_audit": {
+    "indexed": 5902,
+    "pending": 2828,
+    "noncanonical_pending": 1622
+  },
+  "actions": {
+    "new_corridor_programs": 0,
+    "new_sandbox_trials": 0,
+    "new_studies": 0,
+    "new_portfolio_actions": 0,
+    "new_cards": 0,
+    "report_triggered_notes": 0,
+    "division_return_notes": 2,
+    "new_source_changes": 0,
+    "new_test_source_changes": 0,
+    "tier_4_waits_added": 0,
+    "tier_5_waits_added": 0
+  },
+  "division": {
+    "productive_round_event_id": "division_followup_event_d74bda202b446bb203f987ebc8910200",
+    "completed_followup_event_id": "division_followup_event_d728b8be7e2fb5c99dbf7e4420fc543f",
+    "completed_against_chronicle_id": "division_chronicle_9aeffddf6cfcc54cee0226af",
+    "post_return_chronicle_id": "division_chronicle_dbae7644ae63026652f16d1d",
+    "new_public_division_replies": 0,
+    "new_formal_ceremony_actions": 0,
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle22_20260809.txt",
+    "astrid_note_sha256": "2b1270d75d48ebea2943a3043059f809482f4c53a68db86f87222b10e27c09eb",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle22_20260809.txt",
+    "minime_note_sha256": "c16dc9a5612ddb1df83eb69561f534c63215c4251279fb5d1d7138fe2f941b91",
+    "cycle_sequence_after": 23,
+    "completed_rounds_since_followup_after": 0,
+    "rounds_remaining_before_followup_after": 6,
+    "review_due_after": false,
+    "event_count_after": 155,
+    "event_head_sha256_after": "d93ae3571a15540c1a8fca9ea62d417a3e5fe4b1fd2dc52a87576cb2deaa905c",
+    "durable_chronicle_inputs_current": true,
+    "volatile_chronicle_mismatches": [
+      "supervisor_status_sha256"
+    ]
+  },
+  "tests": {
+    "marker_family_passed": 58,
+    "addressing_passed": 42,
+    "event_store_controller_projector_division_chronicle_cursor_passed": 72,
+    "anti_drop_and_cadence_passed": 11,
+    "anti_drop_entries_verified": 47,
+    "experiential_self_tests_passed": 2,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10775,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 747269,
+    "last_event_sha256": "70e728b40a9d7ef423ee298f0e5dfe4230514c7ee771f257a6020fdab28d6664",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "next_reading_queue": [
+    "introspection_astrid_llm_1786276119.txt",
+    "introspection_astrid_llm_1786272290.txt",
+    "introspection_astrid_llm_1786268919.txt"
+  ],
+  "changelog_updated": true,
+  "feedback_ledger_updated": true,
+  "restart_required_for_this_round": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": {
+    "status": "due_after_successful_finalization_finish",
+    "candidate_packet": "docs/steward-notes/codex_1786290198_llm_relation_depth_round/",
+    "candidate_astrid_note": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle22_20260809.txt",
+    "candidate_minime_note": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle22_20260809.txt",
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ]
+  }
+}

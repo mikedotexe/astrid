@@ -1,0 +1,18 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785469915872066000_4fc92c252f",
+  "source_first_projection_generation_id": "projection_1785469916556754000_f47ab13775",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 9,
+  "reports": [
+    {
+      "filename": "introspection_minime_main_excerpt_1785469800.txt",
+      "introspection_id": "introspection_minime_main_excerpt_1785469800",
+      "lived_state_witness_id": "lsw_b85924115969b1355d161a7ca57db28057aec9484ce71b75b98f0f1057631dee",
+      "sha256": "72b26cf146d52315002a3d5fbab6499ddd2d1b1f1a0e89f434838c4b3f1d9bf8",
+      "summary": "summary.md",
+      "claims": "claims.json"
+    }
+  ]
+}

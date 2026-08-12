@@ -1,0 +1,46 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785574158",
+      "introspection_sha256": "974c502533a4de586004dec1ae07489761ae2c70841f086428a266a26688a148",
+      "introspection_lines": 38,
+      "introspection_bytes": 4151,
+      "lived_state_witness_id": "lsw_f9e2c6fe39b1170b051851693a7e7af574304c4ca844c857409e9e18ef081a28",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "source_lines": 997,
+      "source_bytes": 36801,
+      "full_canonical_read": true,
+      "full_bound_source_read": true
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785573879",
+      "introspection_sha256": "7001a1f782c7ff1abe41ac3eb1ba103ab11d244807dd73e74ef9ef6b53887cb2",
+      "introspection_lines": 34,
+      "introspection_bytes": 3299,
+      "lived_state_witness_id": "lsw_05ae1612ac12893e69f81cf7c7b5ab3b376d496c5eedd2a78d3d330ed6aa0993",
+      "source_path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "source_sha256": "d98342fdb3bcb4c063c1c971939a132041a998982d0e5cefa38252ee94beb4f5",
+      "source_lines": 531,
+      "source_bytes": 24401,
+      "full_canonical_read": true,
+      "full_bound_source_read": true
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785571286",
+      "introspection_sha256": "bbb577772ffc19d8441242a5da97b4a28d85a3a2bdce492a8cb155d73cd558d1",
+      "introspection_lines": 36,
+      "introspection_bytes": 2766,
+      "lived_state_witness_id": "lsw_0f92a17b72c61db7daaed7ea47a900ef3c86d93e835b2540d26a3c52b90c0bac",
+      "source_path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "source_sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+      "source_lines": 1041,
+      "source_bytes": 39749,
+      "full_canonical_read": true,
+      "full_bound_source_read": true,
+      "exact_prior_introspection": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_ws_1785370615.txt",
+      "exact_prior_introspection_sha256": "b87e30ead2d887de8fd96552a98b47a3db915674039fd95d08cf399ed461b16a"
+    }
+  ]
+}

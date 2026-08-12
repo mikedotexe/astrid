@@ -1,0 +1,61 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786300985_phase_silt_porosity_direction/source_receipts.json",
+      "note": "Complete report and witness hashes preserve exact observation provenance and evidence-only authority."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md;capsules/spectral-bridge/src/autonomous/phase_passage_context/tests.rs",
+      "note": "V4/V5 preserve owner-authored resistant, lingering, misattuned, and dynamic bearing without telemetry synthesis or passage mutation; six focused tests pass."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786300985_phase_silt_porosity_direction/ROUND_PACKET.md",
+      "note": "Complete source lines 342-350 concern addressability and memory, not pressure-risk or mode-packing definitions."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785597805_round66_reads/runtime_observation.json;docs/steward-notes/codex_1785998460_overnight_round_reads/DISTINGUISHABILITY_NATURAL_OBSERVATION_SAMPLE_001.json;docs/steward-notes/codex_1786139192_llm_lending_grounding_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_SAMPLE_002.json",
+      "note": "Existing natural observations preserve co-occurring loss and viscosity evidence while explicitly withholding causal and felt-effect conclusions."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/codex_1784979184_catchup_batch17_phase_bearing/claims.json;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The entropy comparison remains a Tier 5 wait; no live or induced comparison was run."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/codex_1784979184_catchup_batch17_phase_bearing/claims.json;docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The directed Shadow trajectory remains a Tier 5 execution wait and was not dispatched."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs;docs/steward-notes/codex_1783779691_dynamic_porosity_control_approval_packet.md",
+      "note": "Current read-only formulas and three focused tests contradict lower-porosity-as-relief while retaining applied_locally=false; all live adjustment remains operator-gated."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785625853",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md;docs/steward-notes/codex_1784979184_catchup_batch17_phase_bearing/current_source_findings.md",
+      "note": "The exact 1,133-line source and prior phase-bearing packet close the report's partial-window gap."
+    }
+  ]
+}
+

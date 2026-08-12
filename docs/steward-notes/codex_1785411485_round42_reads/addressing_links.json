@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785410587",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785411485_round42_reads/summaries/astrid_llm_1785410587.md",
+      "note": "Astrid's weighted narrowing and reduced self/reservoir distinction remain primary qualitative evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785410587",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The complete source receives assembled context but does not author the report's spectral, pressure, local-control, or Shadow mechanics."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785410587",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Textual spectral context and read-only diagnostics pass focused tests but cannot establish felt smoothing or cause."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785410587",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "A diagnostic false marker does not author a corrective target; automatic pressure/controller behavior remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785410587",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "note": "The requested pressure/porosity trace is already covered by the source-separated offline study and was not duplicated or run."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785410587",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Induced high-entropy model and semantic input remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785410587",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Shadow-tail weighting and any peer-facing influence remain exact Tier 5 and scoped-authority waits."
+    }
+  ]
+}

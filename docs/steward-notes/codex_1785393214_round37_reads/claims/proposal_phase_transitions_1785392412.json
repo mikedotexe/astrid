@@ -1,0 +1,41 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that Phase Card follow-through may preserve continuity while the present still feels heavy, blurred, or drifted under temporal lock-in.",
+      "disposition": "Preserve as primary qualitative evidence. Source verification and passing tests do not score or close the reported transition texture.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The Phase Witness Queue may hold too much active history and thereby cause temporal lock-in.",
+      "disposition": "Challenged against the complete 1,133-line source and current code. The queue derives bounded context and affordances from durable records; it does not hold private spectral state, apply control, or establish the cause of temporal lock-in.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Three continue actions could compare entropy and orientation change to distinguish persistence from progression.",
+      "disposition": "Preserve only as an optional owner-authored Passage observation. The steward did not issue continue actions, schedule a cycle, or infer a result from silence.",
+      "classification": "needs_sandbox",
+      "authority": "owner-authored actions required; non-inducing observation only"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Manually toggling local_control_applied for temporal lock-in could test whether pressure is a recursive transition artifact.",
+      "disposition": "Preserve as an exact Tier 5 wait. This would mutate live controller state and cannot be authorized by an introspection report or by a derived flag.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The Phase Witness Queue should decay-weight intentions over older memory edits using density gradient.",
+      "disposition": "Preserve as an exact Tier 5 wait because it would alter prompt/context priority, memory carriage, and model behavior. Telemetry cannot author that priority.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Transition trajectory and Phase Card distinctness deserve bounded comparison through settling.",
+      "disposition": "True duplicate of the existing non-inducing trajectory and card-persistence study routes in round 33. Those routes remain source-hash-bound, optional, and unable to infer felt closure.",
+      "classification": "duplicate_existing_evidence"
+    }
+  ]
+}

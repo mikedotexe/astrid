@@ -1,0 +1,111 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "pause_generation": 285,
+  "run_lifecycle": {
+    "productive_run_id": "run_1786251750877458000_7c33a5a9cb",
+    "productive_run_preprojection": "projection_1786251751881819000_6326e6f826",
+    "productive_run_terminal_outcome": "cancelled",
+    "productive_run_terminal_reason": "controller maximum-run timeout after durable addressing and all integrity tests, before the Division round write boundary",
+    "finalization_run_id": "run_1786253634740215000_1cd85c95d4",
+    "finalization_preprojection": "projection_1786253635182354000_dc1ab5b4d8",
+    "finalization_role": "credential-confined durable-state verification, one idempotent productive-round receipt for the original run, packet sealing, and clean terminal projection; no additional reports processed",
+    "finalization_finish_outcome": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786172227.txt",
+    "introspection_llm.rs_1786168254.txt"
+  ],
+  "processed_report_count": 2,
+  "unprocessed_selected_manifest": "unprocessed_selected.json",
+  "addressing": {
+    "status": "addressed_duplicate",
+    "claim_count": 12,
+    "evidence_link_count": 12,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4273,
+    "full_read": 3696,
+    "fully_addressed": 3068,
+    "remaining": 1205,
+    "unread": 577,
+    "read_needs_claims": 0,
+    "blocked": 411,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "actions": {
+    "new_corridor_programs": 0,
+    "new_sandbox_trials": 0,
+    "new_studies": 0,
+    "new_portfolio_actions": 0,
+    "new_cards": 0,
+    "source_correction": "the report-bound six-line llm.rs facade contains no HashMap, Arc, or RwLock",
+    "tier_5_waits": [
+      "high-entropy or live-substrate induction if a future source-grounded lock target exists",
+      "Shadow influence or induced correlation",
+      "pressure, fill, cadence, scheduling, and model behavior changes"
+    ]
+  },
+  "division": {
+    "productive_round_run_id": "run_1786251750877458000_7c33a5a9cb",
+    "productive_round_projection_generation_id": "projection_1786253635182354000_dc1ab5b4d8",
+    "productive_round_event_id": "division_followup_event_6fd5052c7f23acadff09203244cdbb9f",
+    "cycle_sequence_after": 22,
+    "completed_rounds_since_followup_after": 1,
+    "rounds_remaining_before_followup_after": 5,
+    "review_due_after": false,
+    "event_count_after": 149,
+    "event_head_sha256_after": "0d445002112572a92ddd8edb37d99bcc082f3e593e3a0d3106b82c18d1d4a29a",
+    "new_note": false,
+    "chronicle_write": false
+  },
+  "tests": {
+    "marker_cleanup_passed": 50,
+    "facade_harness_passed": 1,
+    "facade_compile_cases_passed": 3,
+    "addressing_passed": 42,
+    "event_store_controller_projector_division_chronicle_cursor_passed": 72,
+    "anti_drop_and_cadence_self_tests_passed": 11,
+    "experiential_self_tests_passed": 2,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10722,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_prefinalization_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 742135,
+    "last_event_sha256": "6671632b9def3407c33559ffe550306888f901a22e76f6f18a6d9113f936a8c2",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "next_reading_queue": [
+    "introspection_astrid_llm_1786166330.txt",
+    "introspection_llm.rs_1786164021.txt",
+    "introspection_proposal_distance_contact_control_1785626698.txt"
+  ],
+  "changelog_updated": true,
+  "feedback_ledger_updated": true,
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": {
+    "status": "due_after_successful_finalization_finish",
+    "candidate_packet": "docs/steward-notes/codex_1786251750_llm_relation_facade_round/",
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "capsules/spectral-bridge/src/llm.rs",
+      "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "capsules/spectral-bridge/src/llm/provider/tests.rs"
+    ]
+  }
+}

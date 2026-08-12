@@ -1,0 +1,16 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1786159976343268000_bb26a4553c",
+  "live_consumed_surface_changed": false,
+  "source_changed": false,
+  "bridge_changed": false,
+  "minime_changed": false,
+  "protocol_changed": false,
+  "prompt_or_report_renderer_changed": false,
+  "build_attempted": false,
+  "restart_attempted": false,
+  "deployment_attempted": false,
+  "runtime_observation_required": false,
+  "restart_debt": null,
+  "authority_boundary": "No source or live-consumed surface changed; no deployment, restart, PID, port, readiness, telemetry, fill, or control verification was required or authorized."
+}

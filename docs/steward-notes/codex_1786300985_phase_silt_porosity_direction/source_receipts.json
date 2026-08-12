@@ -1,0 +1,28 @@
+{
+  "report": {
+    "path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_phase_transitions_1785625853.txt",
+    "sha256": "dcac02f98a842c7608d392a54139ea81537ea12ed7dc90faeaddc5f4413e7ce3",
+    "complete_read": true,
+    "displayed_lines": 35
+  },
+  "witness": {
+    "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a4a1b4e5298e17d516447fcdc6a07397623ea16b3434decd30f2a15438f8503c.json",
+    "sha256": "c527c64d544187fc42869a0da2264e0c78002413768d8247e2935669524c56a8",
+    "complete_read": true,
+    "lines": 456
+  },
+  "bound_source": {
+    "path": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md",
+    "sha256": "9c3be91d0d803d0f7d244446303ca295e3d6cb690352cfff4797a28cdb2b46cf",
+    "complete_read": true,
+    "lines": 1133,
+    "report_hash_matches": true
+  },
+  "producer_source": {
+    "path": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+    "sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+    "complete_read": true,
+    "lines": 440
+  }
+}
+

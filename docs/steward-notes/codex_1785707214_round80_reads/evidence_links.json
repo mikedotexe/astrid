@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785707214_round80_reads/summaries/astrid_llm_1785683940.md",
+      "note": "Complete canonical read, exact source continuity, duplicate disposition, focused verification, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact marker scanning, declared delimiter pairs, finite following relations, and bounded outward depth calculation at the report hash."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Valid heterogeneous nesting, repeated parentheses, and truly unclosed or mismatched delimiters are independently executable."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785681971_round79_reads/summaries/astrid_llm_1785675592.md",
+      "note": "Immediately preceding response already records the exact repeated-parentheses, mixed-stack, mismatch, and finite-relation evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The cleanup-focused family passes all 34 tests in this run, including exact depth and mismatch boundaries."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The existing poetic-attribution regression includes `mimics` and proves byte-exact marker preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785678318_round78_reads/source_receipts.json",
+      "note": "Complete 997-line, 36,801-byte report-bound source receipt at the identical SHA-256."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the grounded duplicate response, focused verification, and non-live boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785683940",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger preserves the report, exact source correction, existing response, verification, and authority boundary."
+    }
+  ]
+}

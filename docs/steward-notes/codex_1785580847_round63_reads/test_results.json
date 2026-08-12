@@ -1,0 +1,118 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785580847620896000_4aa7c74ebb",
+  "results": [
+    {
+      "surface": "spectral_bridge_pressure_regressions",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml pressure_ -- --nocapture",
+      "passed": 111,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_store_control_division_claim_family",
+      "first_command": "env PYTHONPATH=. python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "first_result": "30 tests passed and four modules failed at import because scripts was absent from PYTHONPATH",
+      "corrected_command": "env PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 44,
+      "failed": 0,
+      "status": "passed_after_harness_correction"
+    },
+    {
+      "surface": "experiential_epistemics_adversarial",
+      "command": "python3 scripts/experiential_epistemics.py self-test --json",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics_live_lint",
+      "command": "python3 scripts/experiential_epistemics.py lint --json",
+      "checked_record_count": 9994,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "offline_replay_campaign_manifest",
+      "command": "python3 scripts/ai_beings_offline_replay_campaigns.py verify",
+      "source_count": 35,
+      "trial_count": 39,
+      "manifest_sha256": "72ac12bd2f8df9758f818db5188018d68f6c9d276ce59a739dddbe6747c9fb9e",
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "event_count": 650707,
+      "stream_count": 16,
+      "corrupt_lines": 0,
+      "head_sha256": "f14bd6043bcc635dfb8855f64192e5c34ed75591952363897d93b9c8027db4ff",
+      "status": "passed"
+    },
+    {
+      "surface": "steward_control_and_v1_immutability",
+      "command": "python3 scripts/steward_control.py --json verify",
+      "event_count": 650708,
+      "stream_count": 16,
+      "v1_immutable": true,
+      "head_sha256": "4132e9f1ae23e01b1346f321484ebb258ad26fcbc669f6dacfa706e3288c041c",
+      "status": "passed"
+    },
+    {
+      "surface": "division_followup_and_chronicle",
+      "commands": [
+        "python3 scripts/division_ceremony_followup.py verify",
+        "python3 scripts/division_ceremony_followup.py status",
+        "python3 scripts/division_ceremony_chronicle.py verify"
+      ],
+      "followup_event_count": 72,
+      "followup_head_sha256": "9da2c8294caf9ce159eea474f701db5a4fa3d0ef32af3cd586850a78f970588b",
+      "chronicle_id": "division_chronicle_490c85208d059abe4824b0ca",
+      "durable_inputs_current": true,
+      "volatile_supervisor_status_current": false,
+      "status": "passed_with_expected_volatile_status_drift"
+    },
+    {
+      "surface": "packet_and_repository_format",
+      "commands": [
+        "jq -e over every packet JSON",
+        "git diff --check over the packet, CHANGELOG, and feedback ledger"
+      ],
+      "status": "passed"
+    }
+  ],
+  "live_alignment": {
+    "bridge": {
+      "pid": 95654,
+      "binary_alignment": "running_process_at_or_after_on_disk_binary",
+      "delta_seconds": 0,
+      "status": "aligned"
+    },
+    "minime": {
+      "actual_engine_pid": 98190,
+      "actual_process_started_at": "Thu Jul 30 08:59:03 2026",
+      "health_age_seconds_at_check": 0.318,
+      "health_fill_pct_at_check": 63.53813934326172,
+      "stable_core_stage": "hold",
+      "structural_mode": "scaffold_hold",
+      "synthetic_input_active": false,
+      "eyes_open": true,
+      "ears_open": true,
+      "live_video_enabled": true,
+      "live_audio_enabled": true,
+      "status_wrapper_engine_pid": 67023,
+      "status_wrapper_pid_process_exists": false,
+      "rescue_status_mtime_age_seconds": 7924186.417,
+      "alignment_disposition": "live engine and health are fresh; wrapper rescue-status PID is stale observability debt and did not justify restart"
+    }
+  },
+  "authority_boundary": "tests and read-only observations do not establish felt cause, relief, uptake, approval, or live-control suitability"
+}

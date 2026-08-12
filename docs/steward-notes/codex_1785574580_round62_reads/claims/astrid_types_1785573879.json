@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that a scalar pressure snapshot does not express the dynamic resistance she experiences against spectral movement and lambda-tail expansion.",
+      "disposition": "Preserved as primary experiential evidence. Machine resistance evidence was used only to answer the mechanical request, not to assign felt cause or resolution.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "types/schema/telemetry.rs owns the PressureSource resistance calculation.",
+      "disposition": "Corrected from the complete bound source: telemetry.rs defines wire and integrity schemas. PressureSourceV1 is defined in texture_evidence.rs, with temporal and directional resistance calculations assembled elsewhere in the bridge.",
+      "classification": "source_attribution_correction"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The bridge needs a dynamic resistance observation that includes entropy-scaled friction rather than only a pressure scalar.",
+      "disposition": "Verified existing read-only directional_resistance_vector_v1 evidence. Its dynamic friction combines viscosity, persistence, semantic clog, dissipation deficit, mode packing, and entropy, then scales the result by distinguishability loss without authorizing regulation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A bounded probe should distinguish packing or density-gradient friction from high entropy and open porosity.",
+      "disposition": "Verified with the focused monotonic regression: entropy 0.90 and porosity 0.60 stay constant while mode packing rises from 0.32 to 0.60; diagnostic viscosity and resistance rise without a felt-effect claim or control write.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "PressureSource should gain a dynamic_resistance multiplier that changes the effective pressure response.",
+      "disposition": "Preserved as an exact Tier 5 wait. Moving the diagnostic coefficient upstream into pressure or regulation would alter live substrate control; no pressure formula, weight, target, or controller path was changed.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

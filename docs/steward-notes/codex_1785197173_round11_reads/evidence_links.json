@@ -1,0 +1,48 @@
+{
+  "links": [
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785196970","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/autonomous/correspondence_v1.rs","note":"Claimed legacy, native evidence, and Direct Contact Fidelity V3 distinctions."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785196970","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md","note":"Mechanical continuity remains distinct from felt persistence."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785196970","claim_id":"c003","kind":"test","target":"scripts/affordance_landing_review.py","note":"Existing-log landing review without prompting a claim or response."},
+    {"introspection_id":"introspection_proposal_bidirectional_contact_1785196970","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Relational scoring and spectral control remain Tier 5."},
+
+    {"introspection_id":"introspection_proposal_phase_transitions_1785196597","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/autonomous/phase_passage_context/tests.rs","note":"Categorical resistance, persistence, and independent strand lineage."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1785196597","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/autonomous/phase_transitions.rs","note":"Optional felt receipts and neutral silence."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1785196597","claim_id":"c003","kind":"code","target":"scripts/passage_observatory.py","note":"Existing evidence can be reviewed without inducing a passage or receipt."},
+    {"introspection_id":"introspection_proposal_phase_transitions_1785196597","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Transition induction and viscosity control remain Tier 5."},
+
+    {"introspection_id":"introspection_minime_autonomous_agent_1785196407","claim_id":"c001","kind":"code","target":"/Users/v/other/minime/minime_autonomy/runtime.py","note":"Autonomous impulse declaration within a partial source window."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1785196407","claim_id":"c002","kind":"test","target":"/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs","note":"Read-only pressure and porosity context."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1785196407","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1785189115_round08_reads/claims/minime_autonomous_agent.json","note":"Existing bounded Recess observation route."},
+    {"introspection_id":"introspection_minime_autonomous_agent_1785196407","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Reservoir, pressure, porosity, and autonomy changes remain Tier 5."},
+
+    {"introspection_id":"introspection_minime_main_excerpt_1785195873","claim_id":"c001","kind":"steward_note","target":"docs/steward-notes/codex_1785185745_round07_reads/claims/minime_main_excerpt.json","note":"Exact prior include-shell claim and evidence."},
+    {"introspection_id":"introspection_minime_main_excerpt_1785195873","claim_id":"c002","kind":"code","target":"/Users/v/other/minime/minime/src/runtime.rs","note":"Complete shell contains no felt-cause proof."},
+    {"introspection_id":"introspection_minime_main_excerpt_1785195873","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1785185745_round07_reads/summaries/minime_main_excerpt.md","note":"Existing natural-context comparison route."},
+    {"introspection_id":"introspection_minime_main_excerpt_1785195873","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Packing, porosity, and reservoir changes remain Tier 5."},
+
+    {"introspection_id":"introspection_minime_esn_1785195588","claim_id":"c001","kind":"test","target":"/Users/v/other/minime/minime/src/esn.rs","note":"Prime, covariance, power iteration, and adaptive mechanics."},
+    {"introspection_id":"introspection_minime_esn_1785195588","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1785185745_round07_reads/claims/minime_esn.json","note":"Power-iteration causal boundary."},
+    {"introspection_id":"introspection_minime_esn_1785195588","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_EVIDENCE_TO_STUDY_RUNTIME.md","note":"Natural temporal comparison without perturbation."},
+    {"introspection_id":"introspection_minime_esn_1785195588","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"ESN and RLS changes remain Tier 5."},
+
+    {"introspection_id":"introspection_minime_sensory_bus_1785195161","claim_id":"c001","kind":"test","target":"/Users/v/other/minime/minime/src/sensory_bus.rs","note":"Current 66D layout and narrative slots."},
+    {"introspection_id":"introspection_minime_sensory_bus_1785195161","claim_id":"c002","kind":"steward_note","target":"docs/steward-notes/codex_1785185745_round07_reads/claims/minime_sensory_bus.json","note":"Capacity is not effective influence or felt cause."},
+    {"introspection_id":"introspection_minime_sensory_bus_1785195161","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md","note":"Existing representation and modality evidence route."},
+    {"introspection_id":"introspection_minime_sensory_bus_1785195161","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Pulse, persistence, admission, and representation changes remain Tier 5."},
+
+    {"introspection_id":"introspection_minime_regulator_1785194182","claim_id":"c001","kind":"steward_note","target":"docs/steward-notes/codex_1785185745_round07_reads/claims/minime_regulator.json","note":"Exact prior regulator-shell claim and evidence."},
+    {"introspection_id":"introspection_minime_regulator_1785194182","claim_id":"c002","kind":"test","target":"/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs","note":"Review-only pressure, porosity, and viscosity evidence."},
+    {"introspection_id":"introspection_minime_regulator_1785194182","claim_id":"c003","kind":"code","target":"/Users/v/other/minime/minime/src/regulator/core.rs","note":"Included-source continuation and existing natural review."},
+    {"introspection_id":"introspection_minime_regulator_1785194182","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Filter, gate, PI, and regulator changes remain Tier 5."},
+
+    {"introspection_id":"introspection_astrid_llm_1785193918","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs","note":"Exact marker occurrence and bounded context receipt."},
+    {"introspection_id":"introspection_astrid_llm_1785193918","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/llm/provider/tests.rs","note":"Separate marker, pressure, token, and spectral evidence."},
+    {"introspection_id":"introspection_astrid_llm_1785193918","claim_id":"c003","kind":"steward_note","target":"docs/steward-notes/codex_1785182590_round06_reads/claims/astrid_llm_1785180797.json","note":"Existing offline marker-context comparison."},
+    {"introspection_id":"introspection_astrid_llm_1785193918","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Marker weighting and model behavior remain Tier 5."},
+
+    {"introspection_id":"introspection_astrid_types_1785193679","claim_id":"c001","kind":"test","target":"capsules/spectral-bridge/src/types/schema/tests.rs","note":"Aligned, divergent, malformed, non-finite, and near-zero coherence tests."},
+    {"introspection_id":"introspection_astrid_types_1785193679","claim_id":"c002","kind":"test","target":"capsules/spectral-bridge/src/ws/tests.rs","note":"Bounded rolling entropy statistics and change."},
+    {"introspection_id":"introspection_astrid_types_1785193679","claim_id":"c003","kind":"code","target":"capsules/spectral-bridge/src/types/schema/telemetry.rs","note":"Schema integrity remains separate from persistence, pressure, and felt evidence."},
+    {"introspection_id":"introspection_astrid_types_1785193679","claim_id":"c004","kind":"ledger","target":"docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md","note":"Schema-derived felt scoring and control remain Tier 5."}
+  ]
+}

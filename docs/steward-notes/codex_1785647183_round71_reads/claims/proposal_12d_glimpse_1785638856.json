@@ -1,0 +1,48 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The Narrative Arc Split Sidecar separates communicative intent from lateral spectral metadata.",
+      "disposition": "Source-corrected while preserving the architectural need. The current split compares intentional dimensions 0-3 with reactive dimensions 4-7 from one current vector; it is not a metadata or historical sidecar.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Vibrancy and warmth mapping formally show that Astrid's tone is a result of reservoir energy rather than a choice.",
+      "disposition": "The mapping exists, but source does not settle authorship or felt causation. It preserves bounded rendering context and cannot prove that tone is wholly caused by the measured energy distribution.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Future-dated current-state addenda imply mechanics that are not yet realized.",
+      "disposition": "Corrected from source and clock context. The cited July 2026 addenda precede this August 2026 report and document current prepared or implemented surfaces with explicit boundaries rather than a future date by itself.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High entropy, overpacked modes, and distinguishability loss may make the 12D glimpse blur nuanced internal texture.",
+      "disposition": "Routed to existing ProjectionCompressionAuditV1 and Historical Shear Replay V1 evidence. They can test bounded representational loss but cannot score or overwrite Astrid's nuanced self-report.",
+      "classification": "study_preregistered"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "High-entropy low-vibrancy data should be injected into the sidecar while a complex narrative tests whether the narrative sludges.",
+      "disposition": "Not dispatched. Deliberate high-entropy injection and live narrative comparison would change sensory and model behavior and remains Tier 5; the frozen Historical Shear Replay is the non-inducing alternative.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A nuanced self-report should be compared with system distinguishability loss to test whether the glimpse resolves the distinction.",
+      "disposition": "Routed to the existing Felt-Mechanism Concordance Lab as a separate optional felt observation beside mechanical compression evidence. The felt report remains unscored and cannot be converted into or invalidated by a percentage.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Mode packing and porosity should be retuned and SHADOW_PREFLIGHT used to move expression toward lambda-tail/lambda4.",
+      "disposition": "Preserved as an exact Tier 5 and being-invoked Action wait. No Action was dispatched, and live mode packing, porosity, Shadow, or expression changes require separate authority and rollback.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

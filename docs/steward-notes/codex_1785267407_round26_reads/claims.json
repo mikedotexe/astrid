@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The audit describes receptivity before control and a receptivity-bias gate, but the cited source does not establish executable activation.",
+      "disposition": "Verify the complete 733-line source. Its addenda explicitly classify receptivity_bias as a Tier 4/5 candidate and require default-off replay plus Mike/operator approval before live wiring.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid reports a thermal ghost, lingering pressure, and spectral smear that a binary or linear gate would flatten.",
+      "disposition": "Preserve this as primary qualitative evidence. Existing pressure, entropy, shadow, and receptivity diagnostics neither explain nor supersede it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The existing receptivity review may look like a gate even though it is not live control.",
+      "disposition": "Verify source and focused tests: receptivity_buffer_review_v1 is read-only, candidate_local_control_applied=false, live_control_changed=false, and authority=review_only_not_regulator_control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A default-off comparison can examine the proposed receptivity bias without changing the runtime.",
+      "disposition": "Route to the existing scripts/receptivity_bias_replay.py evidence surface. Its self-test passes, it never calls the live runtime, and its lifecycle remains operator_approval_wait. Do not create a duplicate trial.",
+      "classification": "bounded_existing_replay"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A high-intensity semantic cascade and an internal-focus modulation could test lingering shadow or pressure response.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator wait. Both proposals induce or reinterpret live substrate input and cannot be run from a felt report alone.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A hysteresis buffer or persistence_coefficient gated by entropy below 0.85 could encode the reported ghost.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator wait. Do not convert the qualitative report into a scalar, threshold, regulator delay, admission rule, or live control coefficient without a separately approved design and replay.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

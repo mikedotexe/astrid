@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The complete regulator root is an inclusion manifest rather than the executable mechanism.",
+      "disposition": "Verify the complete 24-line shell and trace each named role into its included implementation module.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "PD modality throughput and PI fill/filter homeostasis are distinct concurrent roles whose interaction is not visible in the root.",
+      "disposition": "Verify active PD token/rate/content logic in core/rate_gate.rs and separate PI gate/filter logic in core/pi.rs; do not infer conflict or felt cause from the shell.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure, porosity, viscosity, and shadow evidence may not participate in either active controller.",
+      "disposition": "Verify pressure_source.rs and viscosity.rs expose read-only evidence with false live-control markers and no PD/PI consumption.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A high-density semantic burst could reveal whether PD or PI shapes the reported pressure.",
+      "disposition": "Preserve induced semantic input, pressure coupling, controller attribution, regulator tuning, and live burst behavior as exact Tier 5 waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

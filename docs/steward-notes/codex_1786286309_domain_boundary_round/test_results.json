@@ -1,0 +1,129 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "live_domain_boundary_audit",
+      "command": "python3 scripts/domain_boundary_audit.py --workspace capsules/spectral-bridge/workspace --json verify",
+      "valid": true,
+      "violation_count": 0,
+      "stable_facade_count": 6,
+      "documented_cohesion_exception_count": 7,
+      "legacy_large_file_count": 53,
+      "resolved_large_file_debt_count": 1,
+      "forbidden_edge_match_count": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "domain_boundary_audit_unit_tests",
+      "command": "python3 -m unittest scripts.test_domain_boundary_audit",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "bridge_state_exception_ceiling_probe",
+      "method": "temporary repository with src/ws/bridge_state.rs at 13 lines and a declared 12-line cohesion ceiling",
+      "live_tree_mutated": false,
+      "valid": false,
+      "violation_kind": "large_file_growth",
+      "violation_path": "src/ws/bridge_state.rs",
+      "violation_detail": "13>12",
+      "status": "passed_expected_rejection"
+    },
+    {
+      "surface": "witness_distinction_boundary",
+      "initial_command": "cargo test -p spectral-bridge-server dialogue_distinction_line_is_first_and_read_only_when_frame_is_unknown",
+      "initial_status": "package_selector_not_in_root_workspace",
+      "corrected_command": "cargo test dialogue_distinction_line_is_first_and_read_only_when_frame_is_unknown",
+      "corrected_workdir": "capsules/spectral-bridge",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed_after_workdir_correction"
+    },
+    {
+      "surface": "shadow_trajectory_effect_contract",
+      "command": "cargo test effect_contract_is_observational",
+      "workdir": "capsules/spectral-bridge",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "stewardship_integrity",
+      "commands": [
+        "python3 scripts/test_evidence_event_store.py",
+        "python3 scripts/test_steward_control.py",
+        "python3 scripts/test_steward_projection.py",
+        "python3 scripts/test_division_ceremony_followup.py",
+        "python3 scripts/test_division_ceremony_chronicle.py",
+        "python3 scripts/test_division_ceremony_projection.py",
+        "python3 scripts/test_projection_cursors.py"
+      ],
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "flywheel_anti_drop_and_cadence",
+      "commands": [
+        "python3 scripts/anti_drop_catalog.py --self-test",
+        "python3 scripts/anti_drop_catalog.py verify --json",
+        "python3 scripts/test_introspection_cadence_audit.py",
+        "python3 scripts/introspection_cadence_audit.py --strict --compact"
+      ],
+      "self_tests_passed": 11,
+      "catalog_integrity": true,
+      "cadence_integrity": true,
+      "cadence_enabled": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "python3 scripts/experiential_epistemics.py self-test --json",
+        "python3 scripts/experiential_epistemics.py verify --json"
+      ],
+      "self_tests_passed": 2,
+      "checked_records": 10769,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "final_packet_epistemic_verify",
+      "command": "python3 scripts/experiential_epistemics.py verify --json",
+      "checked_records": 10769,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2_prefinalization",
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "sequence": 746749,
+      "head": "9a33e37e7d5d563af6264255386877da19ebedb4d09d9592246a238d44a878e1",
+      "streams": 16,
+      "corrupt_lines": 0,
+      "v1_immutable": true,
+      "legacy_source_count": 4,
+      "status": "passed"
+    },
+    {
+      "surface": "source_first_finalization_preprojection",
+      "generation_id": "projection_1786288176175976000_e0ec4b3369",
+      "run_id": "run_1786288175124179000_57758bdb50",
+      "status": "passed"
+    }
+  ],
+  "production_source_changed_this_round": false,
+  "test_source_changed_this_round": false,
+  "deployment_status": "not_required_or_attempted"
+}

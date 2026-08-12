@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785218319",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785219043_round16_reads/summaries/minime_regulator_1785218319.md",
+      "note": "Full-read summary preserves the felt heavy-medium report without assigning a scalar cause."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785218319",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core.rs;../minime/minime/src/regulator/core/rate_gate.rs;../minime/minime/src/regulator/core/pi.rs;../minime/minime/src/runtime/orchestration.rs",
+      "note": "Current source verifies distinct concurrent PD throughput and PI homeostasis roles."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785218319",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "../minime/minime/src/regulator/core/pressure_source.rs;../minime/minime/src/regulator/core/viscosity.rs",
+      "note": "Existing pressure and viscosity witnesses are read-only and excluded from control."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785217846",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Exact low-release clamp and shaped-curve handover regression."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785217846",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Fill-0.40 sigmoid midpoint regression with explicit floating-point tolerance."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785217846",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Existing narrative, context, hysteresis/salience, and degradation packets retain no-control authority."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785217487",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785219043_round16_reads/summaries/minime_regulator_1785217487.md",
+      "note": "Full-read summary preserves regulatory-interference as a felt hypothesis, not established causation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785217487",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Porosity and all live regulator changes remain exact Tier 5 waits."
+    }
+  ]
+}

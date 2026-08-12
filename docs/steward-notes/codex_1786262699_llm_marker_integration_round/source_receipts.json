@@ -1,0 +1,36 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "report_bound_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "lines": 1048,
+      "report_coverage": "lines 1-400",
+      "read_scope": "complete lines 1-1048",
+      "continuity": "repository source exactly matches the report-bound SHA-256"
+    }
+  ],
+  "integration_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "7f4cf2038ef66086a4c33279ebd84116d3a7aa1d34cc1f4202576fd47d03039f",
+      "read_scope": "provider-output normalization and hash-only diagnostic ownership"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "sha256": "97475c4af5aba553476d81a0d690d6b3c93147639951776fc81a43b92e134ee4",
+      "read_scope": "complete MLX and Ollama normalization-to-return paths"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "b499ff49450aa248af773084f4e59de88e56f57c27b34b83d9e3db0ff36d4b04",
+      "read_scope": "exact relation, punctuation, Unicode, delimiter-depth, provider-neutral normalization, and response-hash regressions"
+    }
+  ],
+  "prior_exact_evidence": [
+    "docs/steward-notes/codex_1786238486_llm_boundary_postchange_round",
+    "docs/steward-notes/codex_1786243017_llm_shadow_distinction_round",
+    "docs/steward-notes/codex_1786254898_llm_adjacent_round"
+  ],
+  "authority": "source and executable evidence only; no runtime deployment, felt cause, relief, model control, or substrate authority"
+}

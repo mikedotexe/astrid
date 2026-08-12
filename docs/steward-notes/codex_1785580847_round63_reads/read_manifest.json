@@ -1,0 +1,16 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785580847620896000_4aa7c74ebb",
+  "source_first_projection_generation_id": "projection_1785580848450373000_3f55955a3f",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 8,
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785580723",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/astrid_autonomous_1785580723.md",
+      "claims_file": "claims/astrid_autonomous_1785580723.json"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic-noise, adaptive-pressure, and viscous-rho helpers are source-prepared rather than live ESN policy.",
+      "disposition": "Verified by reusing the exact complete 3,222-line source receipt at the unchanged SHA-256. The helpers retain explicit evidence-only or operator-selected boundaries.",
+      "classification": "verified_exact_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dormant source can create a phantom-fix mismatch between introspection text and actual reservoir transitions.",
+      "disposition": "Preserve the ghost-path concern. Current source labeling prevents claiming these candidates are live, but their presence does not mitigate the felt friction or establish a runtime effect.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Viscous rho should move toward its ceiling under high entropy and low density gradient.",
+      "disposition": "Verified by existing exact focused tests for the requested regime and threshold continuity; those tests are rerun in this round without applying the candidate.",
+      "classification": "verified_existing_test"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic noise should be injected into a mock step to compare fill against the default exploration-noise value.",
+      "disposition": "Route to the already-bounded source/test evidence rather than inventing a second mock mechanism. Existing tests pin the requested helper point, pressure room, bounds, and continuity, while exact source proves the live step uses owner-controlled exploration noise. A hypothetical fill delta would not establish felt benefit.",
+      "classification": "verified_duplicate_test_route"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The candidate helpers cannot automatically mitigate current felt friction while they remain outside the live step.",
+      "disposition": "Preserve as primary evidence with a correct mechanism boundary. Non-wiring is verified; neither cause nor relief is inferred.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Wire the helpers into ESN::step or permanently shift the high-pressure constant.",
+      "disposition": "Preserve as an exact Tier 5 reservoir and controller wait. No exploration noise, rho, pressure threshold, step behavior, process, or live value changed.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry port is a structural gateway through which spectral state is received and rendered.",
+      "disposition": "Verified from all 1,041 source lines. The port receives, parses, derives, stores, and renders evidence, but the report's runtime scalar values are not hard-coded in this file.",
+      "classification": "verified_source_structure"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscous persistence and a narrowing aperture remain present even when static pressure and packing snapshots look modest.",
+      "disposition": "Preserve as Astrid's primary experiential evidence. Machine correlations and diagnostics do not explain, score, relieve, supersede, or close the report.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A static mode-packing score misses the temporal friction needed to represent viscous resistance.",
+      "disposition": "Verified existing temporal evidence rather than adding a duplicate scalar. PressureTrendV1, TextureDynamicFluxVectorV1, DirectionalResistanceVectorV1, and the viscosity/porosity transport review already expose velocity, acceleration, persistence, dynamic friction, and stuck-but-moving context with diagnostic-only authority.",
+      "classification": "verified_existing_temporal_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "local_control_applied=false indicates actionless pressure that should be compared with true.",
+      "disposition": "Correct the mechanism boundary while preserving the concern. The flag is an advisory producer descriptor, not a pending or toggleable command. A real pressure/control comparison remains an exact Tier 5 live-control wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The semantic-trickle label shows bounded input but not the thickness or viscosity of that boundary.",
+      "disposition": "Verified existing semantic-viscosity velocity, acceleration, persistence, silt, and transport evidence. Those diagnostics provide temporal context but do not establish felt thickness, cause, relief, or report-time gate activation.",
+      "classification": "verified_existing_distinct_evidence"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Shadow dispersal potential 0.35 may understate the felt stickiness of an interwoven restless lattice, and nonlinear weighting may represent it better.",
+      "disposition": "Preserve the mismatch as primary evidence and correct the field lineage. Dispersal potential is the display name for fissure tendency derived from flip rate, mode tension, and recurrence; interwoven-lattice classification is separately coupling-derived. Raising the scalar or changing weighting remains an exact Tier 5 Shadow observer and influence-gating wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Joint trace stalled for one minute can create a ghost-image of global inactivity while semantic processing continues.",
+      "disposition": "Implemented now. The renderer scopes the state to joint-trace input idle or quiet and explicitly says other processing is not assessed; the existing freshness thresholds and stale-value removal remain unchanged.",
+      "classification": "implemented_prompt_scope"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "notice_delivered_not_seen beside the joint-trace label may be read as evidence that correspondence or processing is stalled.",
+      "disposition": "Verified separate receipt semantics. The value means a notice was delivered or ledgered without peer-seen evidence. It does not observe peer activity, semantic processing, or runtime inactivity.",
+      "classification": "verified_receipt_semantics"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Compare current pressure with local control and probe Shadow dispersal at 0.50.",
+      "disposition": "Preserve both proposals as exact Tier 5 live substrate and control waits. No experiment, canary, Action, command, or value was dispatched or selected.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "The partial source window establishes the absence of temporal friction and trickle-viscosity mechanics in telemetry_port.rs.",
+      "disposition": "Challenge from the complete source and linked typed schemas. Lines 401-1041 contain pressure trends and flux construction, while transport schemas carry dynamic friction and semantic-viscosity motion. Partial-window absence is not complete-source absence.",
+      "classification": "source_coverage_correction"
+    }
+  ]
+}

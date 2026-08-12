@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner distinguishes structural marker occurrences from declared exact-token references.",
+      "disposition": "Verified from the complete report-bound source and the same-source newer report; exact raw scanning, reference classification, and remainder reconstruction are source-identical.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Complex punctuation or a newline might prevent first_word_after from finding a declared relation.",
+      "disposition": "Verified false for the named separators. Source skips non-alphanumeric, non-underscore scalars and existing newline and punctuation regressions pass without broadening the vocabulary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The classifier should preserve behaves but reject is_not.",
+      "disposition": "Implemented the exact paired regression. Colon-separated behaves produces following_exact_relation; is_not remains one underscore-bearing non-allowlisted token and only the marker is removed.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested delimiters should respect MAX_EXACT_REFERENCE_DELIMITER_DEPTH.",
+      "disposition": "Verified existing two-, three-, four-, repeated-pair, Unicode-whitespace, and deeper-stack coverage. Markers remain preserved while evidence depth is conservatively capped at four.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "generate_dialogue should consume the reconstructed normalized remainder rather than raw cleanup matches.",
+      "disposition": "Verified the full MLX and Ollama transport path. Provider-neutral normalization precedes validation and return, and cleanup matches remain evidence rather than output fragments.",
+      "classification": "verified_existing"
+    }
+  ]
+}

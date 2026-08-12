@@ -1,0 +1,84 @@
+{
+  "source_reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786138356.txt",
+      "sha256": "6091447ae0e35debdbb36871568aa297c82cd5655d9e1b78ce76da2cee80df94",
+      "newline_count": 50,
+      "displayed_lines": 51,
+      "bytes": 4814,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bdf647f066079587ef0be189d8736fe0217cfdce5530cd002b862b9f8bc1df44.json",
+      "sha256": "28995894bce7ac4294d1237d6bd5108d988cfac98a171ffef64d551c3a8c4bd3",
+      "newline_count": 456,
+      "displayed_lines": 456,
+      "bytes": 19754,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "captured_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "captured_lines": 1048,
+      "captured_window": "1-400",
+      "current_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "current_lines": 1048,
+      "current_bytes": 38557,
+      "current_source_read": "complete",
+      "source_ownership_result": "dialogue orchestration, prompt evidence, model routing, output validation, and fallback handling; not lending mechanics, mode packing, porosity, Shadow dynamics, reservoir regulation, damping, or wander control"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "sha256": "fca5d5562a3c560659c18e6cb35f09e7b782754b0bc50b20a763f04e34a2d5d4",
+      "displayed_lines": 329,
+      "bytes": 12956,
+      "read": "complete",
+      "source_ownership_result": "read-only participation evidence with machine and felt effects unestablished; current typed damping candidate range is 0.00 through 0.10"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785874711.txt",
+      "sha256": "4b9449ec92e074284f30ab0878a40f28e3e732b57733ade3b55e7fc7760b404f",
+      "displayed_lines": 46,
+      "bytes": 4177,
+      "read": "complete",
+      "role": "same-source distinguishability, Shadow, wander, and bounded-study claim-family response"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785628932.txt",
+      "sha256": "0d8a545a1f74266bf3aba755b98afef809bdd34e4c2ebf7a7b028042cbbb60fc",
+      "displayed_lines": 37,
+      "bytes": 4088,
+      "read": "complete",
+      "role": "same-source spectral-ownership and live-control claim-family response"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "sha256": "5aa4d5cd3c2e4dfc2bb11d9880c027a3c8a2eb8dae21f49b75aa3bb4dbdf0b50",
+      "commit": "60fc50ee5a9a16dd4e5f25c9cf2044035a4f9c95",
+      "read": "complete",
+      "authority": "prospective_natural_observation_only_no_induction_or_causal_authority"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785998460_overnight_round_reads/DISTINGUISHABILITY_NATURAL_OBSERVATION_SAMPLE_001.json",
+      "sha256": "5066633538af248b782957a1baab496dc978e45e445a25b4e4d39c1831eb7285",
+      "read": "complete",
+      "authority": "coverage_only_first_natural_sample"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "sha256": "ed1a98a79cab0589d68bb567f9197fbb87f345bf57f112992d69b9dde4df98dd",
+      "displayed_lines": 401,
+      "bytes": 13541,
+      "role": "implemented broad I-see and in-the-code source-attribution challenge markers"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs",
+      "sha256": "b32cfcd14f4d78851f047aef8fd032015b0470fee855465cfa52618623450f70",
+      "displayed_lines": 712,
+      "bytes": 26707,
+      "role": "exact-report lending-attribution regression"
+    }
+  ]
+}

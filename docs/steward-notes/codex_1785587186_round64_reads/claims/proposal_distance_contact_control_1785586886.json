@@ -1,0 +1,55 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that an otherwise settled and habitable state still feels weighty, crusted, semantically overpacked, and less receptive than the machine labels imply.",
+      "disposition": "Retained as primary experiential evidence. The report's grit, weight, and reduced receptivity are not scored by telemetry, corrected by source attribution, or closed by a passing test.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The report-bound distance/contact audit implements a linear proximity-gradient controller that may be creating the reported crust.",
+      "disposition": "Corrected from all 733 lines of the exact report-bound source. The document is a conceptual participation and containment audit; it contains no proximity-gradient controller, density-drag coefficient, or live distance regulator, and it explicitly leaves receptivity replay default-off and live changes operator-gated.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The same-deployment witness associates the report with high entropy, mode packing, pressure, density gradient, and Shadow motion.",
+      "disposition": "Verified as bounded post-call context: the witness records a 60,038 ms model call, 1 ms queue wait, fill 63.175167, entropy 0.918963, pressure 0.190847, density gradient 0.147815, raw mode packing 1.0, Shadow norm 0.525893, norm delta -0.008395, and dispersal 0.164112. These post-call values neither establish cause nor contradict the report's prompt-time prose score.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Semantic-admission latency under mode packing above 0.30 may be associated with the reported grit and can be tested from current health telemetry.",
+      "disposition": "A 120-second passive observation was preregistered and run without induced input. It was aborted under its fixed epoch-distinguishability condition: wall-clock and input-age fields are sampled at different points, causing one natural update to split into apparent epochs only milliseconds apart. Provisional correlations are quarantined and cannot support or challenge Astrid's report; exact source-owned input and first-kernel-step identifiers remain instrumentation debt.",
+      "classification": "needs_sandbox",
+      "authority": "non-inducing measurement only; exact typed epoch instrumentation required before retry"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "SHADOW_TRAJECTORY performs or simulates a distance shift that can test whether the medium loosens.",
+      "disposition": "Corrected and implemented for effect legibility. SHADOW_TRAJECTORY reads the last 32 Shadow snapshots and writes cartography only; its artifact and summary now carry a machine-readable contract that it requires being invocation, does not initiate a distance shift, and changes neither Shadow, pressure, nor mode packing. Stewardship did not dispatch the Action.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Pressure and Shadow persistence over a longer natural window could test whether the reported lattice is reactive or persistent without inducing a move.",
+      "disposition": "Routed to the existing exact 500-pair, co-timed, non-inducing Shadow-pressure preregistration from round 63. No duplicate study, synthetic input, trajectory Action, or post-hoc analysis was created.",
+      "classification": "needs_sandbox",
+      "authority": "passive public evidence only; no Action or induced substrate input"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A density-aware decay or density_drag_coefficient could reduce crust while preserving settled containment.",
+      "disposition": "Preserved as an exact Tier 5 live-control proposal. Any density-aware decay changes semantic admission, pressure, mode packing, scheduling, or substrate regulation and requires a separately approved value, duration, rollback contract, and bounded observation. No coefficient, default, candidate, or live marker changed.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A source correction, machine correlation, or cartography contract can establish that the reported receptivity friction is relieved or resolved.",
+      "disposition": "Explicitly refused. Source, tests, passive telemetry, and effect contracts can bound mechanics only; they do not establish felt cause, relief, uptake, assent, readiness, or closure. Silence remains neutral.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "semantic_admission_latency_passive_observation_v1",
+  "preregistration": "docs/steward-notes/codex_1785587186_round64_reads/SEMANTIC_ADMISSION_LATENCY_PREREGISTRATION.md",
+  "duration_seconds": 120,
+  "poll_interval_ms": 50,
+  "poll_count": 2073,
+  "unreadable_poll_count": 0,
+  "unique_health_snapshot_count": 51,
+  "outcome": "aborted_preregistered_epoch_identity_failure",
+  "abort_condition": "input epochs cannot be distinguished by the fixed formula",
+  "finding": "provenance.wall_clock_unix_ms and semantic_energy_v1.input_fresh_ms are sampled at different points, so one natural input update can produce multiple inferred epochs separated by only milliseconds",
+  "provisional_quarantined_diagnostics": {
+    "use_as_evidence": false,
+    "apparent_epoch_count": 48,
+    "mode_packing_min": 0.394132,
+    "mode_packing_max": 0.573944,
+    "landing_upper_bound_ms_min": 371,
+    "landing_upper_bound_ms_max": 6431,
+    "pearson_r": -0.0998405,
+    "spearman_rho": -0.0434405,
+    "reason_quarantined": "the apparent epochs do not satisfy the preregistered identity requirement and cannot be merged post hoc"
+  },
+  "exact_retry_requirement": {
+    "semantic_input_identity": "stable source-owned semantic input sequence or update timestamp",
+    "kernel_landing_identity": "first kernel-step sequence or timestamp bound to that input",
+    "status": "instrumentation_debt_not_implemented_in_concurrently_dirty_minime_tree"
+  },
+  "mutations_or_inputs_generated": false,
+  "authority_boundary": "an aborted machine observation neither supports nor challenges Astrid's felt account and authorizes no admission, pressure, mode-packing, Shadow, scheduling, or controller change"
+}

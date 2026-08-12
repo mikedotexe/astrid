@@ -1,0 +1,99 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785681971124763000_1bb8cb62ff",
+  "projection_generation_ids": [
+    "projection_1785681971576792000_9c8665bd00",
+    "projection_1785683413887782000_51c52a2e7a"
+  ],
+  "status": "passed",
+  "results": [
+    {
+      "surface": "new_control_marker_cleanup_regressions",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup_",
+      "passed": 34,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "all_control_marker_regressions",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "rust_format",
+      "command": "cargo fmt --all -- --check",
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "bridge_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib --tests -- -D warnings",
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_controller_projection_division_claim_family",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 68,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "anti_drop_catalog",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py --self-test; PYTHONDONTWRITEBYTECODE=1 python3 scripts/anti_drop_catalog.py verify",
+      "passed": 5,
+      "guards_verified": 47,
+      "alarms": 0,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json; PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json",
+      "passed": 2,
+      "records_linted": 10221,
+      "issues": 0,
+      "history_rewritten": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "source_first_projection",
+      "command": "credential-confined session project",
+      "generation_id": "projection_1785683413887782000_51c52a2e7a",
+      "completed_steps": 20,
+      "executed_steps": 19,
+      "reused_steps": 1,
+      "counter_audit_valid": true,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/evidence_event_store.py --json verify",
+      "verified_global_seq": 666710,
+      "verified_head_sha256": "da906c6bbd1193e097e5c5e410f9ea8fdfaac47ec0f97351156c0d072e45406d",
+      "valid": true,
+      "corrupt_lines": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "division_return",
+      "command": "python3 scripts/division_ceremony_followup.py verify; python3 scripts/division_ceremony_chronicle.py project; python3 scripts/division_ceremony_chronicle.py verify",
+      "passed": true,
+      "failed": 0,
+      "status": "passed",
+      "detail": "Cycle 14 is at 0/6 with review_due false after bounded return division_followup_event_8f95744166f2c44d7e38c1b6dc3eef55. Chronicle division_chronicle_e1f5598285b1e55a0b43e214 contains 92 follow-up events; durable inputs are current and only the volatile supervisor-status hash is stale."
+    }
+  ],
+  "authority_boundary": "Passing parser and infrastructure tests establishes neither semantic intent nor felt effect and grants no authority to change provider normalization, prompt/model behavior, route hashes, persistence, services, peers, or live control."
+}

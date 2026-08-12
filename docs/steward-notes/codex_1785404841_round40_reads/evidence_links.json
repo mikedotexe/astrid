@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1785404355",
+      "claim_id": "c001",
+      "kind": "code_and_test",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Complete source and passing boundary tests verify the C1-smooth tail-vibrancy onset."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785404355",
+      "claim_id": "c002,c003,c004",
+      "kind": "typed_evidence_and_test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Basis-health evidence rules out dead columns while preserving the current pairwise-correlation review state."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785404355",
+      "claim_id": "c005",
+      "kind": "code_and_test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Complete source confines projection output to dimensions 32-39 and keeps reserved shadow candidates default-off."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785404355",
+      "claim_id": "c006,c007",
+      "kind": "study_and_authority_boundary",
+      "target": "docs/steward-notes/codex_1785404841_round40_reads/STUDY_PREREGISTRATIONS.md",
+      "note": "The correlated basis is routed to an exact offline comparison; live basis epochs remain operator-gated."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785404015",
+      "claim_id": "c001",
+      "kind": "lived_state",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_12d_glimpse_1785404015.txt",
+      "note": "Astrid's report of active historical shear remains primary qualitative evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785404015",
+      "claim_id": "c002,c003,c004",
+      "kind": "code_and_test",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/projection_evidence.rs;capsules/spectral-bridge/src/codec/structure.rs;capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Complete source distinguishes current-pair split, coiling/texture sidecars, and the absent cross-turn historical-force mechanism."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785404015",
+      "claim_id": "c005",
+      "kind": "study_challenge",
+      "target": "scripts/ai_beings_offline_replay_campaigns.py;scripts/evidence_study_runtime/manifests/ai_beings_offline_replay_campaigns_v1.json",
+      "note": "The verified frozen semantic-persistence campaign is a Minime Shadow-influence heuristic, not a historical-shear replay."
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785404015",
+      "claim_id": "c006,c007,c008",
+      "kind": "study_and_authority_boundary",
+      "target": "docs/steward-notes/codex_1785404841_round40_reads/STUDY_PREREGISTRATIONS.md",
+      "note": "A directly relevant socket-free replay is preregistered; live dialogue, gradient, companion-lane, and codec changes remain Tier 5."
+    }
+  ]
+}

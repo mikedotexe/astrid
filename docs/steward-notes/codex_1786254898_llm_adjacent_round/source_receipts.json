@@ -1,0 +1,47 @@
+{
+  "report_bound_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "lines": 1048,
+      "report_coverage": "lines 1-400",
+      "continuity": "same complete source was read in adjacent source-first rounds"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "sha256": "f3194742d5b3412374516f858c3cae86ec2495131bdf08a23802bea6556689a1",
+      "lines": 6,
+      "read": "complete from exact repository-HEAD blob"
+    }
+  ],
+  "current_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "lines": 1048,
+      "read_scope": "scanner and delimiter ownership lines 1-240 plus exact current test references; complete-source continuity retained from the immediately preceding round"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "exact accounting and no-second-order tests lines 1690-1820; Unicode and delimiter tests lines 2060-2745"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "sha256": "46942be28b6f19959b6d9117dcc48aaefba5130e5a3cbe581f61ae84630420bd",
+      "lines": 27,
+      "read": "complete explicit facade"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider.rs",
+      "sha256": "23999cdab646139ebda119a11333090bf72ca9dabc25a0af659629eae0cedbfa",
+      "lines": 39,
+      "continuity": "complete source read in the immediately preceding round"
+    }
+  ],
+  "prior_exact_evidence": [
+    "docs/steward-notes/codex_1786144598_unicode_creates_duplicate_round",
+    "docs/steward-notes/codex_1786243017_llm_shadow_distinction_round",
+    "docs/steward-notes/codex_1786251750_llm_relation_facade_round"
+  ],
+  "authority": "source and executable evidence only; no felt cause, relief, Shadow influence, or control authority"
+}

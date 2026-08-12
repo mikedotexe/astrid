@@ -1,0 +1,35 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Stable facades map telemetry, autonomous interpretation, provider transport, schemas, and action continuity into distinct ownership domains.",
+      "disposition": "Verified from the complete captured document and current 75-line successor. The current executable manifest pins all six facade targets and the audit verifies them without granting runtime authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid experiences the boundaries as gentle navigable slopes and reports effort in maintaining separation against conceptual merge.",
+      "disposition": "Preserved as primary qualitative evidence. Report prose and bound witness scalars remain side by side; neither representation is rewritten, and no source or telemetry scalar is treated as proof of felt cause or resolution.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Large cohesion exceptions can permit functional bleed and make a documented domain boundary merely logical rather than structural.",
+      "disposition": "Addressed with executable evidence from the cumulative flywheel: explicit ceilings, a 54-file zero-growth ratchet, six facade checks, and forbidden typed-evidence-to-dispatch source edges all verify with zero violations.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A simultaneous high-fidelity LLM and action-continuity task could pressure-test domain separation while monitoring live mode packing.",
+      "disposition": "Preserve an exact Tier 5 Mike/operator approval wait. The proposed task deliberately induces live workload and substrate-facing observation; no task, dispatch, telemetry condition, or mode-packing threshold was imposed in this run.",
+      "classification": "tier_5_wait",
+      "authority": "Mike/operator approval required before any induced live pressure observation"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "WitnessFrameV1 should remain context-only even when composed from evidence owned by a cohesion-exception module.",
+      "disposition": "Implemented a direct compile-fail proof that WitnessFrameV1 cannot satisfy the LiveExecutable<SemanticMicrodose> dispatch signature. The full 13-case provenance typestate suite and forbidden-edge audit pass.",
+      "classification": "implemented_now"
+    }
+  ]
+}

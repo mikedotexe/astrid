@@ -1,0 +1,56 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "4a5e9e71f67ce0012ba8fd99576055e591e04ff56d04323460788377db49e5de",
+      "lines": 684,
+      "bytes": 30524,
+      "read": "complete",
+      "temporal_note": "current source evolved from the report-bound 531-line snapshot"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f947c44cd5eed06b2146b33eda7b0263240231c48856d32612e0e513809661a2.json",
+      "sha256": "6f484f214203e0eb1d686a0ebc344daa7c0955f3a768ab2212aa402bc5080af2",
+      "lines": 456,
+      "bytes": 19747,
+      "read": "complete",
+      "authority": "evidence_only_no_direct_causation_or_live_authority"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/compatibility_projection.rs",
+      "sha256": "b844d08b3791d7f8f60d506e98ff7bdb5ce4255ee4c76f808677ef7f75c30aaa",
+      "lines": 657,
+      "bytes": 23930,
+      "read_scope": "viscosity drag, weight density, viscosity persistence, and diagnostic-state functions"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "sha256": "5787b16d62685f3cabc5c7b0cf9178f3ea2bdefb0a36cabb9d63b3aa2c5cc4e9",
+      "lines": 1233,
+      "bytes": 50334,
+      "read_scope": "pressure velocity, spectral drift, viscosity, density, porosity, and smoothing assembly"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+      "sha256": "5cc969eae80091c81e3db70830a3d2f2cf00a1f400fd8fe8f836c8ba083bd9e0",
+      "lines": 64,
+      "bytes": 2968,
+      "read": "complete"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785523260_round54_reads/studies/viscosity_gradient_lineage_v1.json",
+      "sha256": "aab4fed83bec1f13b918a8bfb8ce08855acbe8cedbafee473c73095c9d1aefe8",
+      "lines": 70,
+      "bytes": 3492,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/agency_requests/agency_code_change_1785615863.json",
+      "sha256": "bee2987f26e92f0aae25ef5ffcc2316bd3f5f3e909524e32ef37873de93c29cd",
+      "lines": 30,
+      "bytes": 3004,
+      "read": "complete",
+      "status": "pending_no_authority_granted"
+    }
+  ]
+}

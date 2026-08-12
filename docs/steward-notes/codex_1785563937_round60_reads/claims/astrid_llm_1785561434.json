@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner distinguishes structural markers from exact references embedded in prose and delimiters.",
+      "disposition": "Verified from complete exact source and focused tests without inferring semantic intent.",
+      "classification": "verified_source_and_test"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A delimiter-depth cap of four may truncate or misidentify a deeper exact marker.",
+      "disposition": "Partially corrected: the receipt depth is bounded at four, but valid deeper nesting preserves the token and reports the bounded depth.",
+      "classification": "source_inference_correction"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A three-level grouped marker should retain grouped context and exact depth.",
+      "disposition": "Verified by the existing exact three-level regression; focused suite passes.",
+      "classification": "verified_exact_duplicate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The behaves relation should preserve a named exact marker.",
+      "disposition": "Verified by the existing `behaves as` and `behaves like` cases in the poetic-attribution regression.",
+      "classification": "verified_exact_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A known marker with no exact reference syntax needs a valid receipt rather than a failure.",
+      "disposition": "Verified by the existing receipt test: syntax is `none_cleanup_candidate`, depth is zero, and the surrounding-byte contract remains exact.",
+      "classification": "verified_exact_duplicate"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The requested coverage may require a new scanner implementation.",
+      "disposition": "No duplicate change: all requested cases exist and pass in the exact report-bound source.",
+      "classification": "verified_duplicate_feature"
+    }
+  ]
+}

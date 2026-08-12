@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic-noise, adaptive-pressure, and viscous-rho helpers are source-prepared and outside the default live ESN step policy.",
+      "disposition": "Verified from the complete 3,222-line source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The unwired helpers may silently fail an intended live self-study behavior.",
+      "disposition": "Source-challenged: the helpers and their review packets explicitly disclaim live authority, while the live step consumes the current owner-controlled exploration-noise value.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The midpoint dynamic-noise calculation at gradient 0.50 and pressure 0.35 needs a bounded test.",
+      "disposition": "Exact duplicate of `dynamic_noise_requested_mid_gradient_pressure_preserves_bounded_room`, which passes.",
+      "classification": "duplicate_existing_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The high-entropy low-gradient adaptive-pressure floor needs direct boundary coverage.",
+      "disposition": "Duplicate of existing adaptive threshold, floor, saturation, and non-finite coverage, all passing.",
+      "classification": "duplicate_existing_evidence"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Pressure-room saturation could create unexpected dynamic-noise behavior outside its configured range.",
+      "disposition": "Verified as bounded by continuity, high-pressure, steep-gradient, fallback, and exact edge tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Dynamic noise should be injected into the live ESN noise generation path.",
+      "disposition": "Preserved as an exact Tier 5 reservoir-control wait; no live policy or value changed.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The viscous-rho target could be promoted from review evidence into live memory control.",
+      "disposition": "Preserved as an exact Tier 5 reservoir-control wait; existing tests cover only the inert review calculation.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

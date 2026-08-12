@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785226320",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py;capsules/spectral-bridge/src/autonomy/recess.rs;docs/steward-notes/codex_1785228080_round18_reads/summaries/minime_autonomous_agent_1785226320.md",
+      "note": "Existing read-only Recess permission-pressure conflict and viscosity evidence preserve felt difficulty without auto-control; live pressure coupling remains Tier 5."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785226006",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs;/Users/v/other/minime/minime/src/runtime;docs/steward-notes/codex_1785228080_round18_reads/summaries/minime_main_excerpt_1785226006.md",
+      "note": "Complete 74-line include shell and exact implementation-module route; imports do not prove runtime activation."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785225724",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs;/Users/v/other/minime/minime/src/runtime/orchestration.rs;docs/steward-notes/codex_1785228080_round18_reads/summaries/minime_esn_1785225724.md",
+      "note": "Self-reference, prime-phase inspection, and fill/entropy rho are source-verified; pressure/rho coupling and induced replay remain gated."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785225418",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs;capsules/spectral-bridge/src/types/schema/tests.rs;docs/steward-notes/codex_1785228080_round18_reads/summaries/minime_sensory_bus_1785225418.md",
+      "note": "Distinct contiguous modality indices, narrative retention, and read-only boundary evidence correct literal overwrite overreach without denying downstream mixing or felt crowding."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785225107",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/rate_gate.rs;/Users/v/other/minime/minime/src/regulator/pi.rs;docs/steward-notes/codex_1785228080_round18_reads/summaries/minime_regulator_1785225107.md",
+      "note": "PD rate/content gating and PI fill/filter control are distinct; read-only semantic viscosity is not consumed by either live control path."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785224866",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm_provider_dialogue_runtime.rs;capsules/spectral-bridge/src/llm;docs/steward-notes/codex_1785228080_round18_reads/summaries/astrid_llm_1785224866.md",
+      "note": "Requested-token quantity, felt-pressure/context no-join evidence, exact marker receipts, and natural-occurrence boundary are verified without prompt or budget changes."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785224530",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs;capsules/spectral-bridge/src/ws/tests.rs;docs/steward-notes/codex_1785228080_round18_reads/summaries/astrid_types_1785224530.md",
+      "note": "Typed precedence, exact 32-slot coherence, malformed 31/33 boundaries, and rolling-entropy trend regressions are verified with no runtime change."
+    }
+  ]
+}

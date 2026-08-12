@@ -1,0 +1,66 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker_cleanup_family",
+      "command": "cargo test control_marker_cleanup_ -- --nocapture",
+      "passed": 49,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "llm_facade_trybuild_contract",
+      "command": "cargo test --test llm_facade_contract",
+      "passed": 1,
+      "failed": 0,
+      "trybuild_cases": 3,
+      "status": "passed"
+    },
+    {
+      "surface": "strict_clippy",
+      "command": "cargo clippy --lib --all-features -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "surface": "domain_boundary_audit",
+      "command": "python3 scripts/domain_boundary_audit.py verify --json",
+      "valid": true,
+      "violation_count": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "workspace_rustfmt",
+      "command": "cargo fmt --all -- --check",
+      "status": "blocked_by_preexisting_foreign_formatting",
+      "owned_snippets_formatted": true,
+      "note": "The check still reports unrelated shared-tree formatting in correspondence, next-action, Temporal Bearing, signal spine, and older provider regions; no foreign formatting was rewritten."
+    },
+    {
+      "surface": "stewardship_integrity",
+      "command": "addressing self-test; Evidence Event Store/steward-control/projector/Division/Chronicle/cursor tests; Source-First V3; experiential epistemics",
+      "addressing_passed": 42,
+      "python_integrity_passed": 74,
+      "source_first_v3_passed": 18,
+      "experiential_epistemics_passed": 2,
+      "experiential_record_count": 10686,
+      "status": "passed"
+    },
+    {
+      "surface": "sanctioned_bridge_rollout",
+      "command": "scripts/build_bridge.sh --ack <bounded reason> --actor codex-heartbeat --restart",
+      "receipt_id": "env_receipt_1786241891436_862000",
+      "old_pid": 97068,
+      "new_pid": 88099,
+      "binary_sha256": "cc6161b47dd077547e4cc4816df18937ea91903a3b9b387c9d943694a7c921da",
+      "protocol_compatible": true,
+      "ports_listening": [7878, 7879, 7880],
+      "telemetry_reconnected": true,
+      "post_restart_exchange": 158398,
+      "post_restart_fill_pct": 70.86149597167969,
+      "status": "passed"
+    }
+  ],
+  "production_rust_changed_in_tranche": true,
+  "test_rust_changed_this_run": true,
+  "deployment_status": "sanctioned_wrapper_deployed_and_verified"
+}

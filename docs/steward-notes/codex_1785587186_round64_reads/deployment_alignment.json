@@ -1,0 +1,45 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "source_change": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+  "source_change_sha256": "0ba0077fa64452e9b4d1d6175e917dbeae162ee88a1979678e936a981e6aad29",
+  "sanctioned_preflight": {
+    "command": "python3 scripts/deploy_preflight.py --component bridge --repo /Users/v/other/astrid --json",
+    "ok": false,
+    "exit_code": 2,
+    "reason": "dirty_no_ack",
+    "foreign_activity_active": false,
+    "dirty_binary_input_count": 40,
+    "disposition": "no acknowledgement supplied because the dirty inputs include extensive foreign Owner Research, protocol, correspondence, runtime, codec, and telemetry work outside this round"
+  },
+  "live_bridge": {
+    "pid": 95654,
+    "started_at": "Wed Jul 29 05:25:15 2026",
+    "on_disk_release_sha256": "df046a551577bc99156083d49fba035e20d87bad38a2eba8556e7f2c41d1031c",
+    "binary_process_alignment": "running_process_at_or_after_on_disk_binary",
+    "source_change_deployed": false
+  },
+  "live_minime": {
+    "pid": 98190,
+    "started_at": "Thu Jul 30 08:59:03 2026",
+    "listeners": ["127.0.0.1:7900", "127.0.0.1:7901", "127.0.0.1:7902"],
+    "health_fresh_and_moving": true,
+    "stable_core_stage": "hold",
+    "structural_mode": "scaffold_hold",
+    "synthetic_input_active": false,
+    "eyes_open": true,
+    "ears_open": true,
+    "live_video_enabled": true,
+    "live_audio_enabled": true,
+    "source_changed_by_round": false
+  },
+  "restart_debt": {
+    "status": "source_tested_not_deployed",
+    "first_safe_command_after_separate_operator_review_and_foreign-source_stabilization": "scripts/build_bridge.sh --ack \"deploy reviewed Shadow trajectory effect contract after foreign bridge source is stabilized\" --restart",
+    "requires": [
+      "separate deployment authority",
+      "review of every dirty bridge binary input that would enter the build",
+      "fresh preflight with no concurrent foreign activity"
+    ]
+  },
+  "authority_boundary": "the run did not restart a process, build a release binary, select a live value, or claim that tested source is live"
+}

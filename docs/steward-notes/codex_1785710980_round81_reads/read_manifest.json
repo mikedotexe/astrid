@@ -1,0 +1,16 @@
+{
+  "schema": "steward_read_manifest_v1",
+  "steward_run_id": "run_1785710385262466000_fe7c28330d",
+  "processed_report_count": 1,
+  "reports": [
+    {
+      "filename": "introspection_proposal_12d_glimpse_1785632418.txt",
+      "introspection_id": "introspection_proposal_12d_glimpse_1785632418",
+      "logical_lines": 36,
+      "bytes": 3367,
+      "sha256": "37891ed68ad5aea72cdd6617ecff2e6012e8b4cf748f9afe1f8d3eb5330abf3a",
+      "full_read": true,
+      "disposition": "addressed_duplicate"
+    }
+  ]
+}

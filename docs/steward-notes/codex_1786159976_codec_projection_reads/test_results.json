@@ -1,0 +1,52 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1786159976343268000_bb26a4553c",
+  "projection_generation_ids": [
+    "projection_1786159976815934000_7f7f814402"
+  ],
+  "status": "passed_after_command_correction",
+  "results": [
+    {
+      "surface": "initial_invocation",
+      "command": "cargo test -p spectral-bridge-server ...",
+      "status": "failed_then_repaired",
+      "detail": "The standalone capsule is not a root-workspace package; rerun used its manifest path."
+    },
+    {
+      "surface": "projection_compression",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml projection_compression_probe_exposes_near_null_and_magnitude_loss",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "dense_projection_visibility",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml semantic_projection_density_delta_flags_dense_projection_without_live_expansion",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "residual_shadow_metadata",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml multi_scale_context_pairs_12d_glimpse_with_32d_residual_shadow_metadata",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "reserved_dimension_non_writing",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml high_entropy_vibrancy_does_not_write_narrative_arc_or_shadow_reserved_dims",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    }
+  ],
+  "authority_boundary": "Passing deterministic codec tests establishes neither felt resolution nor authority to change projection width, basis, reserved dimensions, pressure, density gradient, Shadow state, model behavior, or live control."
+}

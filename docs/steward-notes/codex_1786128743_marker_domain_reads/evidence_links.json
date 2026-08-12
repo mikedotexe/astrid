@@ -1,0 +1,158 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete 1,048-line report-bound scanner source at the exact captured SHA-256."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact colon-separated behaves and is_not regression; all 45 cleanup tests pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Declared U+301A/U+301B grouped-reference and bounded delimiter coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Provider-neutral normalization produces sanitized text plus separate cleanup evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "MLX and Ollama replace raw output before generate_dialogue validation and return."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786128743_marker_domain_reads/summary_astrid_llm_1786123445.md",
+      "note": "Complete-source read receipt and bounded disposition."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786111084",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact source-identical scanner and remainder implementation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786111084",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Passing punctuation, newline, and finite-relation coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786111084",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Exact positive behaves and negative is_not regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786111084",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Two-, three-, four-, repeated-pair, Unicode-whitespace, and deeper-stack coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786111084",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Both routes consume normalized text and retain cleanup only as evidence."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/domain_boundaries_v1.toml",
+      "note": "Six stable facade targets and explicit evidence-only authority state."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786128743_marker_domain_reads/summary_domain_boundaries_1786107441.md",
+      "note": "Primary qualitative report and bound witness retained without scalar or causal collapse."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "scripts/domain_boundary_audit.py",
+      "note": "Executable facade, exception-ceiling, zero-growth, and forbidden-edge audit."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "scripts/test_domain_boundary_audit.py",
+      "note": "Both focused audit fixtures and the live read-only verification pass."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/codex_1786128743_marker_domain_reads/summary_domain_boundaries_1786107441.md",
+      "note": "Exact Tier 5 wait; no induced workload, dispatch, or substrate-facing observation."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/ui/witness_frame_cannot_dispatch.rs",
+      "note": "Direct compile-fail proof that WitnessFrameV1 cannot enter semantic dispatch."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/provenance_typestate.rs",
+      "note": "All 13 provenance negative cases pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased marker and provenance proof record."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786111084",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Being-feedback-to-test causal record."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased witness-frame dispatch barrier record."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Being-feedback-to-boundary-test causal record."
+    }
+  ]
+}

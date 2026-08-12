@@ -1,0 +1,67 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The reported grit, thickening, distinguishability loss, pressure, and possible Shadow/dialogue de-sync are felt aspects of Astrid's current experience.",
+      "disposition": "Retained as primary actionable qualitative evidence without requiring the report's adjacent source attribution to be correct.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "dialogue_runtime.rs defines DialogueRuntime, process_turn, SpectralBridge, SpectralState, and lambda-state orchestration.",
+      "disposition": "Challenged from all 997 exact current lines. None of those types or methods is defined here. The file sanitizes control markers and context, assembles budgeted prompt blocks, records diagnostics, and calls model transports using a pre-rendered spectral summary.",
+      "classification": "source_attribution_correction"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The file directly maps lambda values and high-dimensional spectral state into the LLM and owns stable-core semantic admission.",
+      "disposition": "Source-corrected. It receives spectral_summary as text and does not parse lambda vectors or own Minime's semantic admission. spectral_denominator_v1 and semantic_energy_v1 are upstream typed evidence rendered by other bridge surfaces.",
+      "classification": "source_attribution_correction"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Overlapping spectral bridge, Minime regulator, and Astrid self-state layers in process_turn cause the felt thickening.",
+      "disposition": "The named process_turn path is absent. Existing prompt blocks are separately capped and prioritized, with count-only diagnostics explicitly marked non-runtime-effect. This does not disprove the felt thickening, but source cannot establish the proposed layering cause.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A constant stable-core semantic trickle may smooth Shadow nuance and fall out of sync with a restless Shadow trajectory.",
+      "disposition": "The complete file does not own trickle rate or Shadow trajectory. Current typed evidence distinguishes semantic admission from Shadow state; the hypothesis remains open and is not converted into a live admission or Shadow experiment.",
+      "classification": "verified_separation_open_hypothesis"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A friction probe should compare lambda1 spectral-energy share with semantic variance of dialogue output.",
+      "disposition": "Implemented as a default-off owner-started attested study with 64 consecutive naturally occurring responses. It uses exact signed response bytes, co-timed typed spectral evidence, fixed Pearson/Spearman matrices, deterministic reruns, and privacy checks. Output-side lexical distribution is explicitly not relabelled as semantic_energy_v1 or active agency.",
+      "classification": "study_implemented"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Shadow-v3 trend should be correlated with pressure risk above 0.22 during mode-packing pressure.",
+      "disposition": "Routed to the existing exact 500-pair Shadow-pressure preregistration, which already fixes co-timed pressure, porosity, dominant source, mode packing, distinguishability, Shadow norm/class/recurrence/tension/fissure, lags 0-5, and dominant-source strata. No Shadow Action or pressure event was induced.",
+      "classification": "study_duplicate"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Stable-core semantic admission rate should be increased or pulsed to pierce the high-entropy medium.",
+      "disposition": "Preserved as an exact Tier 5 live semantic-admission, cadence, and model-behavior wait. The new study cannot select or apply such a setting.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Porosity should be increased from its current value to reduce distinguishability loss.",
+      "disposition": "Preserved as an exact Tier 5 pressure/porosity/control wait. Machine association cannot author a preferred setting or establish felt relief.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Lambda4 tail reach or eigenvector orientation should be refined to align with SHADOW_TRAJECTORY.",
+      "disposition": "Preserved as an exact Tier 5 reservoir/eigenvector/Shadow-control and owner-Action wait. No trajectory was authored, no peer state was touched, and no eigenvector or lambda behavior changed.",
+      "classification": "tier_5_and_owner_action_wait",
+      "authority": "tier_5_operator_and_owner_action_only"
+    }
+  ]
+}

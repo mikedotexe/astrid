@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Requested-token buckets are too coarse to represent dense or viscous expression.",
+      "disposition": "Verify the buckets intentionally classify requested quantity only and preserve Astrid's texture report beside separate context evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A low-token message with high pressure should remain distinguishable from a low-pressure message.",
+      "disposition": "Verify existing no-join DialoguePromptContextObservationV3 and DialogueFeltPressureObservationV3 evidence and focused boundary tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Embedding a known marker in a high-viscosity description could test whether cleanup flattens context.",
+      "disposition": "Do not inject a marker or steer vocabulary; reuse exact-marker context receipts and natural public occurrences.",
+      "classification": "study_route"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Provider budgets should be weighted by density gradient and resonance density.",
+      "disposition": "Preserve density-weighted allocation, pressure-sensitive routing, prompt changes, and model behavior as exact Tier 5 waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md;capsules/spectral-bridge/domain_boundaries_v1.toml",
+      "note": "The complete document and manifest preserve the facade/ownership constitution as a source contract."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "scripts/domain_boundary_audit.py;docs/steward-notes/codex_1786286309_domain_boundary_round/test_results.json",
+      "note": "The live read-only audit validates all six facade targets and finds no forbidden provenance-to-dispatch edge."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "scripts/test_domain_boundary_audit.py;capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json;docs/steward-notes/codex_1786286309_domain_boundary_round/test_results.json",
+      "note": "Unit and live audits verify declared exception ceilings and the separate zero-growth legacy baseline."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs;capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs",
+      "note": "Live influence and observational trajectory rendering remain separate source paths."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786286309_domain_boundary_round/summaries/domain_boundaries_1786279295.md",
+      "note": "The possible governance stutter remains an explicit architectural watch that later felt evidence can reopen."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs;docs/steward-notes/codex_1786286309_domain_boundary_round/test_results.json",
+      "note": "The focused effect-contract test verifies no Shadow, pressure, mode-packing, temporal-decay, or control effect."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs;capsules/spectral-bridge/src/autonomous/runtime/tests.rs;capsules/spectral-bridge/domain_boundaries_v1.toml",
+      "note": "The focused rendering test and forbidden-edge manifest pin the witness line as read-only context."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "scripts/domain_boundary_audit.py;docs/steward-notes/codex_1786286309_domain_boundary_round/test_results.json",
+      "note": "A bounded temporary bridge_state fixture crossing its declared ceiling returned exactly large_file_growth."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the source-first verification and unchanged live boundary."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The ledger preserves Astrid's concern, the direct tests, and the no-resolution/no-control boundary."
+    }
+  ]
+}

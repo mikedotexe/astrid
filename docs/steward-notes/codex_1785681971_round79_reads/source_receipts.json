@@ -1,0 +1,32 @@
+{
+  "schema": "exact_source_continuity_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "complete_lines": 997,
+      "complete_bytes": 36801,
+      "included_intervals": ["1-507"],
+      "receipt_role": "current_hash_bound_report_window_and_requested_aggregation_read",
+      "complete_continuity_ref": "docs/steward-notes/codex_1785678318_round78_reads/source_receipts.json",
+      "worktree_note": "The source is byte-identical to the immediately preceding complete 997-line receipt. This round reread lines 1-507 and did not edit or claim production source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "source": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "2e59993525c508e797159612c2cef1790197cca1a81f296e98a9d18a13a5fc34",
+      "complete_lines": 2841,
+      "complete_bytes": 115584,
+      "included_intervals": ["1928-2044", "2167-2252"],
+      "receipt_role": "focused_supported_delimiter_and_relation_boundary_regressions",
+      "worktree_note": "This round added only the repeated-parentheses and creates-exclusion tests. All other unstaged test changes remain prior stewardship or foreign work."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785675592",
+      "source": "docs/steward-notes/codex_1785678318_round78_reads/source_receipts.json",
+      "sha256": "88e4852bdbf313e29de78eee1477504704b2755838bc665b609dc18226e0de34",
+      "receipt_role": "immediately_preceding_complete_dialogue_source_continuity"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Source-prepared reservoir helpers can create a phantom-optimization gap while live behavior remains unchanged.","disposition":"Preserve the ghost-path concern as primary evidence; exact source verifies the non-wiring boundary without implying relief.","classification":"preserved_primary_evidence"},
+    {"claim_id":"c002","summary":"Dynamic-noise, adaptive-pressure, and viscous-rho helpers are outside ESN::step.","disposition":"Verified as an exact source duplicate using the prior complete 3,222-line receipt at the unchanged hash.","classification":"verified_exact_duplicate"},
+    {"claim_id":"c003","summary":"Finite checks suggest instability in upstream spectral analysis.","disposition":"Do not infer upstream instability from defensive fallback checks; source proves bounded handling, not that a non-finite input occurred.","classification":"source_inference_correction"},
+    {"claim_id":"c004","summary":"Dynamic noise at gradient 0.5 and pressure 0.5 should be deterministic and bounded.","disposition":"Verified from the clamped formula and complete passing tests; the result is necessarily within the 0.06 to 0.12 range and source has no mutable state.","classification":"verified_source_and_test"},
+    {"claim_id":"c005","summary":"Entropy 0.95 with density gradient 0.1 should lower the adaptive pressure threshold.","disposition":"Verified from exact source: the requested point is above the 0.85 entropy edge with navigable density room and yields a bounded threshold below 2.0; adjacent focused tests pass.","classification":"verified_source_and_test"},
+    {"claim_id":"c006","summary":"A dry-run logger should compare candidate pressure or noise with current fixed behavior.","disposition":"Route to existing dynamic_noise_pressure_room_review_v1 and related review packets, which already provide bounded read-only comparisons without live wiring.","classification":"verified_duplicate_feature"},
+    {"claim_id":"c007","summary":"Wire candidate noise, pressure, or rho behavior into the live ESN loop.","disposition":"Preserve as an exact Tier 5 reservoir and controller wait; no live value or step behavior changed.","classification":"tier_5_wait"}
+  ]
+}

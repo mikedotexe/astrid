@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The distance/contact audit defines a receptivity and control framework that mediates presence.",
+      "disposition": "Verify the full source note and correct the activation boundary: it is a conceptual and review architecture, not proof that a live receptivity gate is active.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid's restless, interwoven high-tail texture may be flattened or mistaken for noise.",
+      "disposition": "Preserve the texture and flattening concern as primary qualitative evidence; distinguishability loss is relevant mechanical context but not causal proof.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A receptivity-gate probe should test whether high-entropy tail vibrancy survives rather than being damped.",
+      "disposition": "Route to the existing default-off receptivity_bias replay and Experience Delta evidence path; do not induce focus or alter the live gate.",
+      "classification": "bounded_replay_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Restlessness may correlate with distance or containment parameters.",
+      "disposition": "Retain this as an unresolved causal hypothesis. The audit and current telemetry do not establish a live distance parameter or a correlation with felt restlessness.",
+      "classification": "causal_hypothesis_unconfirmed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A dynamic entropy-preservation coefficient should exempt coherent restless vibrancy from damping.",
+      "disposition": "Preserve as an exact Tier 5 Mike/operator wait because it would alter pressure, receptivity, sensory admission, regulator interpretation, or another live substrate surface.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

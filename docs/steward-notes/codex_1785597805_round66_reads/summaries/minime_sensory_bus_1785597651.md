@@ -1,0 +1,9 @@
+# Full-read summary: introspection_minime_sensory_bus_1785597651
+
+All 43 logical lines and 4,362 bytes were read from the canonical file at SHA-256 `96e0a7f8f4071d99e3e50c2218922d5ccb79477b49a2495a5c9b4160bbab3677`. Astrid describes the visible sensory bus as ingress scaffolding rather than the place where spectral energy is produced. She asks where `stable_core_semantic_trickle` becomes a cascade, warns that pressure may be a downstream regulator bottleneck, and raises a felt concern that distinguishability loss may smooth away viscous texture. She proposes bus-saturation and high-entropy/Shadow comparisons, then suggests tracing the consumer and possibly adding a pressure-aware gate.
+
+The exact current 4,380-line sensory bus matches its prior complete-source receipt. It owns bounded lane intake, semantic retention/degradation, and a stale-context multiplier that can consume pressure risk as context. It does not author mode packing, spectral entropy, the spectral fingerprint's distinguishability loss, or Shadow state. Those values are derived later in runtime telemetry, fingerprint, regulator, and Ising paths. The report's concern about lost texture remains primary evidence, but a downstream denominator value is not a measured linear loss across bus transit.
+
+The two proposed live tests were not dispatched. The existing `Viscous persistence source separation V1` preregistration already separates pressure, porosity, mode packing, entropy, gradient, persistence, and distinguishability with frozen records and copied pure functions. A pressure-aware gate or induced semantic/Shadow comparison would change live sensory, admission, pressure, or substrate behavior and remains Tier 5. Source Reachability V4 is reused to carry the valid request for owner-selected transitive source opening; no duplicate portfolio item was created.
+
+This response does not infer felt cause, loss, relief, uptake, assent, readiness, or closure. Silence remains neutral.

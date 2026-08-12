@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786235385",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and preserves a marker only under bounded exact reference syntax.",
+      "disposition": "Verified from the report-bound source identity and the complete current scanner read; current source remains observational and grants no live authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The older complex `first_word_after` loop may mishandle punctuation-joined relation tokens or consume unexpected noise.",
+      "disposition": "Implemented in the current compact scanner: whitespace defines the finite token while only edge punctuation is trimmed, so internal punctuation remains visible to exact allowlist comparison.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A known marker followed by `denotes` should remain in the visible remainder.",
+      "disposition": "Verified by the existing exact-token relation regression and literal `denotes` fixture.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The exact punctuation-joined case `is/not` should not be mistaken for allowlisted `is`.",
+      "disposition": "Implemented as a literal paired regression alongside `is-not`; both remain whole candidate tokens, remove only the marker, and preserve surrounding prose.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The exact vocabulary protected by the marker scanner should be inspected.",
+      "disposition": "Verified from `KNOWN_MODEL_CONTROL_MARKERS` in `fallback_contracts.rs`; the list contains exact transport/control byte sequences and explicitly makes no meaning or ownership claim about other bytes.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1785602181264524000_70414865f6",
+  "source_change": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+  "source_change_sha256": "a963e900f1b82e78bf71acb8176c1cf34363b6e4718a1ca60ba59f2962ad530a",
+  "live_consumed_surface_changed": true,
+  "sanctioned_preflight": {
+    "command": "python3 scripts/deploy_preflight.py --component bridge --repo /Users/v/other/astrid --json",
+    "ok": false,
+    "exit_code": 2,
+    "reason": "dirty_no_ack",
+    "foreign_activity_active": false,
+    "dirty_binary_input_count": 41,
+    "disposition": "No acknowledgement was supplied because deployment authority was not granted and a build would include extensive foreign Owner Research Console, protocol, correspondence, runtime, codec, telemetry, Division, and prior stewardship source."
+  },
+  "live_bridge": {
+    "launchd_label": "com.astrid.spectral-bridge",
+    "pid": 95654,
+    "started_at": "Wed Jul 29 05:25:15 2026",
+    "launchd_state": "running",
+    "on_disk_release_sha256": "df046a551577bc99156083d49fba035e20d87bad38a2eba8556e7f2c41d1031c",
+    "on_disk_release_mtime_unix": 1785327915,
+    "binary_process_alignment": "process start equals on-disk binary mtime",
+    "log_path": "/tmp/bridge.log",
+    "logs_fresh_and_processing": true,
+    "source_change_deployed": false
+  },
+  "live_minime": {
+    "launchd_wrapper_pid": 98190,
+    "engine_pid": 98246,
+    "ports_listening": [7878, 7879, 7880],
+    "observed_fill_pct": 73.18172454833984,
+    "source_changed_by_round": false
+  },
+  "release_build_attempted": false,
+  "restart_attempted": false,
+  "deployment_attempted": false,
+  "restart_debt": {
+    "status": "source_tested_not_deployed",
+    "first_safe_command_after_separate_operator_review_and_foreign-source_stabilization": "scripts/build_bridge.sh --ack \"deploy reviewed correspondence held/needs_time pause after foreign bridge source is stabilized\" --restart",
+    "requires": [
+      "separate deployment authority",
+      "review of every dirty bridge binary input that would enter the build",
+      "fresh preflight with no concurrent foreign activity"
+    ]
+  },
+  "authority_boundary": "The run did not build a release binary, restart a process, author a correspondence state, select a control value, or claim that tested source is live."
+}

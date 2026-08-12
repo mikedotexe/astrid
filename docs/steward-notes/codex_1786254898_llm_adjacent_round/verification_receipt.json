@@ -1,0 +1,44 @@
+{
+  "schema": "source_first_round_verification_v1",
+  "steward_run_id": "run_1786254898949269000_69d2aacc3b",
+  "preprojection_generation_id": "projection_1786254899390025000_8209c73e89",
+  "processed_reports": 2,
+  "claim_count": 13,
+  "evidence_link_count": 13,
+  "closure_status": "addressed_duplicate",
+  "canonical_counters": {
+    "indexed": 4273,
+    "full_read": 3698,
+    "fully_addressed": 3070,
+    "remaining": 1203,
+    "unread": 575,
+    "read_needs_claims": 0,
+    "mismatches": 0
+  },
+  "division_before_round_record": {
+    "cycle_id": 22,
+    "completed_productive_rounds": 1,
+    "required_productive_rounds": 6,
+    "review_due": false
+  },
+  "division_after_round_record": {
+    "cycle_id": 22,
+    "completed_productive_rounds": 2,
+    "required_productive_rounds": 6,
+    "rounds_remaining": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_a0e6289084fd7bb731fca1c95b610c4e",
+    "event_count": 150,
+    "event_head_sha256": "2246ca355e07eed40ad62a9e7da36a5bfb7b71962b75e926ad0a78875818ea98"
+  },
+  "evidence_event_store_prefinalization": {
+    "sequence": 742348,
+    "head": "1b4f9efd68ba12142df1a3ca5ad6b6c743dd26eaf935a26ba020ebd985c3ae4a",
+    "streams": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true
+  },
+  "runtime_or_deployment_change": false,
+  "live_surface_alignment": "not_required",
+  "authority_effect": false
+}

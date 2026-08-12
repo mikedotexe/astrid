@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md",
+      "note": "Complete source read through V1-V5 implementation updates."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Bounded automatic declaration, high-signal separation, deduplication, and no-control card path."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_passages.rs",
+      "note": "Reversible self-only Passage progression and review boundary."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_passage_context.rs",
+      "note": "Independent condition, checkpoint, anchor, bearing, and accompaniment evidence."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs:7833",
+      "note": "Replyable phase-transition correspondence metadata is regression-tested."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_passage_context/tests.rs",
+      "note": "Deterministic Rust/Python identity parity and self-only authority tests pass."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/scripts/phase_transition_audit.py",
+      "note": "Five audit tests verify card, witness, affordance, stale-card, and neutral Passage boundaries."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/scripts/test_passage_observatory.py",
+      "note": "Thirteen Observatory tests preserve stage and context without inferring felt completion."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785278253",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Partial-window concern linked to the complete implemented architecture without claiming felt sufficiency."
+    }
+  ]
+}

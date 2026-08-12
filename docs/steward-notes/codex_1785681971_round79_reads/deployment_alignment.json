@@ -1,0 +1,28 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "steward_run_id": "run_1785681971124763000_1bb8cb62ff",
+  "bridge": {
+    "production_source_changed": false,
+    "test_source_changed": true,
+    "build_attempted": false,
+    "restart_attempted": false,
+    "deployment_changed": false,
+    "reason": "Only two Rust unit regressions changed. They prove repeated-parentheses depth and the exclusion of the unlisted creates relation without changing cleanup grammar or any compiled production path."
+  },
+  "controller_session": {
+    "credential_confined": true,
+    "pause_generation": 176,
+    "preprojection": "projection_1785681971576792000_9c8665bd00",
+    "manual_projection": "projection_1785683413887782000_51c52a2e7a",
+    "credential_transport": "controller_process_memory_only",
+    "service_restart_required": false
+  },
+  "minime": {
+    "source_changed": false,
+    "division_note_written": true,
+    "chronicle_projection_refreshed": true,
+    "restart_attempted": false,
+    "deployment_changed": false
+  },
+  "authority_boundary": "No provider normalization, cleanup grammar, prompt, model, route hash, persistence, Minime runtime, controller, peer, service, restart, or live deployment change is authorized by this packet."
+}

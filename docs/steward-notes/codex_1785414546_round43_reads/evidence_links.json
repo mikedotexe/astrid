@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785414546_round43_reads/summaries/minime_sensory_bus_1785414307.md",
+      "note": "Astrid's cascade-shear, calcified syllables, and loss of distinctness remain primary qualitative evidence."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "The complete source has no InputBuffer or local stable-core semantic admission gate."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785414546_round43_reads/summaries/minime_sensory_bus_1785414307.md",
+      "note": "Current blending and retention mechanics do not establish felt over-smoothing or causation."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_bus.rs",
+      "note": "Lane queues, one retained semantic vector, and one active shadow slot leave input-pair interference unrepresented."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The proposed threshold does not exist; no substitute live target is inferred."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "../minime/minime/src/sensory_interference.rs;../minime/minime/src/lib.rs",
+      "note": "SensoryInterferenceReviewV1 adds pure pairwise evidence without live admission, merge, selection, or mutation."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "scripts/evidence_study_runtime/manifests/ai_beings_offline_replay_campaigns_v1.json;capsules/spectral-bridge/workspace/diagnostics/ai_beings_offline_replay_campaigns_v1/campaign_set_72ac12bd2f8df9758f818db5/report.json;scripts/test_ai_beings_offline_replay_campaigns.py",
+      "note": "The frozen 39-trial campaign set reruns deterministically without network or live runtime mutation."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Conflicting high-entropy shadow prompts remain an exact Tier 5 and potentially mutual-authority wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c009",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Below-threshold semantic and high-shadow input remains an exact Tier 5 wait; no threshold or input was invented."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "claim_id": "c010",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The lambda-tail preflight route remains undispatched Tier 5 work with current scoped authority required."
+    }
+  ]
+}

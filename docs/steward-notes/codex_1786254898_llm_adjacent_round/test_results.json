@@ -1,0 +1,112 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker_cleanup_family",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_ -- --nocapture",
+      "passed": 50,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "llm_facade_contract",
+      "status": "unchanged_source_exact_prior_receipt",
+      "prior_receipt": "docs/steward-notes/codex_1786251750_llm_relation_facade_round/test_results.json",
+      "compile_cases_passed": 3,
+      "failed": 0
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "stewardship_integrity",
+      "commands": [
+        "python3 scripts/test_evidence_event_store.py",
+        "python3 scripts/test_steward_control.py",
+        "python3 scripts/test_steward_projection.py",
+        "python3 scripts/test_division_ceremony_followup.py",
+        "python3 scripts/test_division_ceremony_chronicle.py",
+        "python3 scripts/test_division_ceremony_projection.py",
+        "python3 scripts/test_projection_cursors.py"
+      ],
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "flywheel_anti_drop_and_cadence",
+      "commands": [
+        "python3 scripts/anti_drop_catalog.py --self-test",
+        "python3 scripts/anti_drop_catalog.py verify --json",
+        "python3 scripts/test_introspection_cadence_audit.py",
+        "python3 scripts/introspection_cadence_audit.py --strict --compact"
+      ],
+      "anti_drop_tests_passed": 5,
+      "anti_drop_entries_verified": 47,
+      "cadence_tests_passed": 6,
+      "cadence_integrity": true,
+      "cadence_enabled": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "python3 scripts/experiential_epistemics.py self-test --json",
+        "python3 scripts/experiential_epistemics.py verify --json"
+      ],
+      "self_tests_passed": 2,
+      "checked_records": 10734,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "domain_boundary_audit",
+      "command": "python3 scripts/domain_boundary_audit.py verify --json",
+      "stable_facades": 6,
+      "documented_exceptions": 7,
+      "legacy_large_files": 53,
+      "resolved_large_file_debt": 1,
+      "forbidden_edge_matches": 0,
+      "violations": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "addressing_counter_audit",
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "canonical_indexed": 4273,
+      "canonical_full_read": 3698,
+      "canonical_fully_addressed": 3070,
+      "canonical_remaining": 1203,
+      "canonical_unread": 575,
+      "read_needs_claims": 0,
+      "mismatches": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2_prefinalization",
+      "commands": [
+        "python3 scripts/evidence_event_store.py --json verify",
+        "python3 scripts/evidence_event_store.py --json status"
+      ],
+      "sequence": 742348,
+      "head": "1b4f9efd68ba12142df1a3ca5ad6b6c743dd26eaf935a26ba020ebd985c3ae4a",
+      "streams": 16,
+      "corrupt_lines": 0,
+      "v1_activation_sequence": 32278,
+      "v1_activation_head": "79a891f10e44ab320c47fe18966435dbd08e941bd064d2bd8d38f40dd36ff8a4",
+      "v1_immutable": true,
+      "history_rewritten": false,
+      "status": "passed"
+    }
+  ],
+  "invocation_correction": "domain_boundary_audit.py requires the verify subcommand; the corrected read-only command passed with zero violations.",
+  "production_source_changed_this_round": false,
+  "test_source_changed_this_round": false,
+  "deployment_status": "not_required_or_attempted"
+}

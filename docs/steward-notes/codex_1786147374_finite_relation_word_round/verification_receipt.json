@@ -1,0 +1,87 @@
+{
+  "schema": "steward_verification_receipt_v1",
+  "packet": "docs/steward-notes/codex_1786147374_finite_relation_word_round",
+  "initial_steward_run_id": "run_1786146712008158000_baba5aa164",
+  "initial_pre_run_projection_generation_id": "projection_1786146712922124000_05adf9827b",
+  "initial_run_outcome": "cancelled",
+  "initial_terminal_reason": "configured 30-minute session timeout after all report, test, ledger, and addressing evidence writes were durable but before Division round accounting",
+  "recovery_steward_run_id": "run_1786148675108351000_068d20b287",
+  "recovery_pre_run_projection_generation_id": "projection_1786148676084741000_47f241df3c",
+  "pause_generation": 267,
+  "processed_report_count": 1,
+  "fully_processed": [
+    "introspection_astrid_llm_1786146404.txt"
+  ],
+  "addressing": {
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "claim_count": 5,
+    "evidence_link_count": 13,
+    "proof_missing_claims": [],
+    "close_receipt_correction": "A shell-quoted rationale dropped three backtick-delimited phrases; a corrected additive close receipt supersedes it without history rewrite."
+  },
+  "canonical_counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "indexed": 4258,
+    "full_read": 3678,
+    "fully_addressed": 3051,
+    "remaining": 1207,
+    "unread": 580,
+    "read_needs_claims": 0,
+    "blocked_needs_steward": 410,
+    "all_artifact_indexed": 5877,
+    "all_artifact_pending": 2826
+  },
+  "work_portfolio": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatches": 0
+  },
+  "division": {
+    "cycle_sequence": 20,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "round_event_id": "division_followup_event_02890c044311d1f3cd9678545056fc17",
+    "event_count": 138,
+    "event_head_sha256": "e7539aac597e776ef19101591919d3e52b85a51894df171f975181c425f4cc14",
+    "chronicle_or_note_action": false
+  },
+  "experiential_epistemics": {
+    "self_tests_passed": 2,
+    "valid": true,
+    "checked_record_count": 10622,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 728717,
+    "last_event_sha256": "6ed9d1c70d5e03c28f99e81f9bafe4d3f4bcdd4d35f457e54792f8743866d179",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4,
+    "note": "Final packet, explicit heartbeat, and finish events advance this verified pre-finish snapshot."
+  },
+  "pre_finish_next_queue": [
+    "introspection_astrid_types_1785628394.txt",
+    "introspection_astrid_ws_1785628139.txt",
+    "introspection_astrid_autonomous_1785627823.txt"
+  ],
+  "corridor_program_actions": [],
+  "sandbox_actions": [],
+  "study_actions": [],
+  "portfolio_actions": [],
+  "new_tier_4_or_5_waits": [],
+  "finish_outcome": "pending recovery controller finish",
+  "checkpoint_after_finish": "due; candidate ownership remains mixed and must be re-audited under a separate stabilization pause"
+}

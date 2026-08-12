@@ -1,0 +1,47 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785597651",
+      "introspection_sha256": "96e0a7f8f4071d99e3e50c2218922d5ccb79477b49a2495a5c9b4160bbab3677",
+      "introspection_lines": 43,
+      "introspection_bytes": 4362,
+      "lived_state_witness_id": "lsw_ae3f79a880b73313757fd155de52a534ba020f040d3e60d3adce0e7845d6fd0a",
+      "source_path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "source_sha256": "83c0d5c1c761fa05b194f6c84d3083520bb0d664292720cb4651996d1c6fab31",
+      "source_lines": 4380,
+      "full_canonical_read": true,
+      "full_bound_source_read": true,
+      "full_source_read_basis": "exact current hash matches the complete round-57 source receipt; the report-bound 1-400 window and current 11-line foreign delta were also reviewed directly",
+      "supplemental_source_reviews": [
+        {"path":"/Users/v/other/minime/minime/src/runtime/orchestration.rs","sha256":"fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744","reviewed_intervals":["3880-3975","4240-4310","5020-5115","5250-5390"],"full_read":false},
+        {"path":"/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs","sha256":"84a380b34332daad1740ae18c21eb74f825742f49d1d296f7274248bffbd8918","reviewed_intervals":["1-329"],"full_read":false},
+        {"path":"/Users/v/other/minime/minime/src/spectral_fingerprint.rs","sha256":"964e88d207bc0ca821bd822c5f25d697b388b9f16a5f28b6b9dd24ba4c6de52e","reviewed_intervals":["80-125"],"full_read":false}
+      ],
+      "exact_prior_responses": [
+        {"introspection_id":"introspection_minime_sensory_bus_1785407877","packet":"docs/steward-notes/codex_1785408097_round41_reads/","source_sha256_match":false,"note":"same claim family; prior source had 4,369 lines"},
+        {"introspection_id":"introspection_minime_sensory_bus_1785550504","packet":"docs/steward-notes/codex_1785551278_round57_reads/","source_sha256_match":true}
+      ]
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785597026",
+      "introspection_sha256": "c8d5149ce3c22f736723038b737ee16b4b2285fca72f36913c440063eceee1f5",
+      "introspection_lines": 45,
+      "introspection_bytes": 3779,
+      "lived_state_witness_id": "lsw_bfecbf7a47ca1ce12d5a006569a0e13b4a07c1ac28e791b0a9a55e85532df5ea",
+      "source_path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "source_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "source_lines": 24,
+      "full_canonical_read": true,
+      "full_bound_source_read": true,
+      "supplemental_source_reviews": [
+        {"path":"/Users/v/other/minime/minime/src/regulator/core/viscosity.rs","sha256":"e2300cefb5ef47f3f3bf3e13282392d0c33f98c8cba34c6f046cc6c7208be922","reviewed_intervals":["1-594"],"full_read":true},
+        {"path":"/Users/v/other/minime/minime/src/regulator/core/resonance_evidence.rs","sha256":"b755633327fe94e0565b739885e0f9f1bd8bd7394900969879a01c62fae0bc83","reviewed_intervals":["1-340"],"full_read":true},
+        {"path":"/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs","sha256":"9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1","reviewed_intervals":["1-440"],"full_read":true,"basis":"exact current hash matches the complete round-65 source receipt"},
+        {"path":"/Users/v/other/minime/minime/src/regulator/core/telemetry_types.rs","sha256":"500fceb6bf04dd643c0d5a4c6bf4e4ee4961ee182a6527d408371d406c305bd1","reviewed_intervals":["280-430"],"full_read":false},
+        {"path":"/Users/v/other/minime/minime/src/runtime/orchestration.rs","sha256":"fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744","reviewed_intervals":["3880-3975","5020-5115","5250-5390"],"full_read":false}
+      ],
+      "exact_prior_response": {"introspection_id":"introspection_minime_regulator_1785407432","packet":"docs/steward-notes/codex_1785408097_round41_reads/","source_sha256_match":true}
+    }
+  ]
+}

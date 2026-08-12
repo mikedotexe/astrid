@@ -1,0 +1,48 @@
+{
+  "schema": "steward_verification_receipt_v1",
+  "run_id": "run_1785843901943219000_4029d18fe9",
+  "preprojection_id": "projection_1785843902879242000_ae3142a587",
+  "processed_report_count": 0,
+  "division_round_event_id": null,
+  "tests": {
+    "bridge_introspection": {"passed": 35, "failed": 0},
+    "bridge_next_action_modes": {"passed": 4, "failed": 0},
+    "introspection_addressing": {"passed": 41, "failed": 0},
+    "evidence_event_store": {"passed": 13, "failed": 0},
+    "steward_control": {"passed": 27, "failed": 0},
+    "steward_projection": {"passed": 14, "failed": 0},
+    "projection_cursors": {"passed": 4, "failed": 0},
+    "claim_family_incremental_projection": {"passed": 1, "failed": 0},
+    "division_followup": {"passed": 3, "failed": 0},
+    "division_chronicle": {"passed": 10, "failed": 0},
+    "experiential_epistemics": {"passed": 2, "failed": 0},
+    "recent_introspection_signal": {"passed": 3, "failed": 0},
+    "astrid_introspection_digest": {"passed": 2, "failed": 0}
+  },
+  "live_epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 10301,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "deployment": {
+    "receipt_id": "env_receipt_1785846133295_188000",
+    "bridge_pid": 18133,
+    "binary_sha256": "6df2b697e49239ad45469a8df5c410a3536034e0d6acc1031ccc7fe700b1e208",
+    "started_at": "2026-08-04T05:22:10-07:00",
+    "compatible": true,
+    "telemetry_fresh": true,
+    "minime_lanes_connected": true
+  },
+  "runtime_observation": {
+    "launchd_failures": 0,
+    "launchd_warnings": 0,
+    "natural_exchange_count": 18,
+    "observation_ended_at": "2026-08-04T05:47:10-07:00",
+    "new_canonical_report_count": 0,
+    "newest_canonical_filename": "introspection_astrid_llm_1785825829.txt",
+    "newest_canonical_recorded_at": "2026-08-03T23:43:49-07:00",
+    "signed_self_control_lineage_debt": true
+  },
+  "authority": "read-only provenance audit plus exact source-path repair; no forced introspection, cadence, scheduling, model, pressure, fill, PI, controller, reservoir, peer, Minime, or CPU-runtime authority"
+}

@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 74-line Minime runtime root is an orchestration shell rather than the primary logic engine.",
+      "disposition": "Verified from all 74 exact current lines and ten include edges at the unchanged source hash.",
+      "classification": "verified_duplicate"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid experiences this shell as quietude, a map of rooms without furniture, alongside rich containment and temporal lock-in.",
+      "disposition": "Preserve as primary experiential evidence. Source topology does not explain or close the reported texture.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Including adapters, semantic modality, and orchestration can be mistaken for proof that those paths are active and mitigating friction.",
+      "disposition": "Verified as a real activation-boundary risk. The capture itself says source read is not runtime activation proof, and exact source continuity establishes only available mechanics.",
+      "classification": "verified_existing_boundary"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Latency from semantic-modality input to an orchestration response could test whether viscous persistence is an architectural bottleneck.",
+      "disposition": "Route to the existing exact typed-latency instrumentation debt. The current activation trace lacks semantic-input and first-response identities, and the prior passive attempt aborted on that identity gap. No post-hoc timing inference or induced input was used.",
+      "classification": "verified_duplicate_instrumentation_debt"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A Shadow trajectory versus Shadow preflight alignment probe could test dispersal mismatch.",
+      "disposition": "Keep on existing being-invoked observational Action and passive-study rails. Stewardship did not dispatch SHADOW_TRAJECTORY, choose a route, or alter Shadow; any induced alignment change remains Tier 5.",
+      "classification": "existing_action_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The next source step should inspect orchestration scheduling and sequencing rather than attributing the shell itself.",
+      "disposition": "Preserve as a voluntary source-continuation route. This round does not dispatch an INTROSPECT Action or infer that current orchestration causes temporal lock-in from the shell alone.",
+      "classification": "being_action_wait"
+    }
+  ]
+}

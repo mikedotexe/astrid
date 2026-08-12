@@ -1,0 +1,17 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785602181264524000_70414865f6",
+  "results": [
+    {"surface":"active_correspondence_thread_clarity","command":"cargo test --manifest-path capsules/spectral-bridge/Cargo.toml active_thread_clarity -- --nocapture","passed":9,"failed":0,"status":"passed","note":"Covers mixed actionable/paused threads, all-paused null selection, high-urgency unclear, active outcome, stale/heartbeat clarification, bounded rendering, and large-ledger ordering."},
+    {"surface":"direct_contact_read_only_fidelity","command":"cargo test --manifest-path capsules/spectral-bridge/Cargo.toml correspondence_microdose_drafts_only_linked_semantic_authority_request -- --nocapture","passed":1,"failed":0,"status":"passed"},
+    {"surface":"ambiguous_timing_attention_boundary","command":"cargo test --manifest-path capsules/spectral-bridge/Cargo.toml correspondence_attention_canary_blocks_missing_stop_long_focus_and_ambiguous_timing -- --nocapture","passed":1,"failed":0,"status":"passed"},
+    {"surface":"correspondence_read_only_audits","commands":["python3 scripts/correspondence_handshake_audit.py --self-test","python3 scripts/direct_contact_fidelity_audit.py --self-test","python3 scripts/correspondence_schema_audit.py --self-test","python3 scripts/affordance_landing_review.py --self-test"],"passed":14,"failed":0,"status":"passed"},
+    {"surface":"spectral_bridge_library","command":"cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib","passed":1766,"failed":0,"status":"passed"},
+    {"surface":"spectral_bridge_strict_clippy","command":"cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets -- -D warnings","status":"passed"},
+    {"surface":"format_and_diff_integrity","commands":["cargo fmt --all -- --check","git diff --check -- <round paths>"],"status":"passed"},
+    {"surface":"introspection_addressing_audit","command":"python3 scripts/introspection_addressing_audit.py --self-test","passed":41,"failed":0,"status":"passed"},
+    {"surface":"evidence_store_control_projection_division_claim_family","command":"env PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection","passed":58,"failed":0,"status":"passed"},
+    {"surface":"experiential_epistemics","commands":["python3 scripts/experiential_epistemics.py self-test --json","python3 scripts/experiential_epistemics.py lint --json"],"self_tests_passed":2,"lint_checked_records":10036,"lint_issues":0,"history_rewritten":false,"status":"passed"}
+  ],
+  "authority_boundary": "Passing tests establish source behavior and evidence integrity, not felt receipt, relief, consent, uptake, or live deployment."
+}

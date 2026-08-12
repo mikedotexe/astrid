@@ -1,0 +1,32 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786251750877458000_7c33a5a9cb",
+  "preprojection_generation_id": "projection_1786251751881819000_6326e6f826",
+  "selected_limit": 40,
+  "processed_report_count": 2,
+  "depth_stop": "the second report introduces a distinct lock-contention mechanism that required exact report-bound source reconstruction, current ownership tracing, and a compile-time facade proof rather than being merged into the adjacent marker family",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786172227",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786172227.txt",
+      "sha256": "d0691f3d01286582d1859d7ba1467ba303c58b1d090af71cda7b23af024a67d9",
+      "displayed_lines": 46,
+      "newline_count": 45,
+      "bytes": 3862,
+      "lived_state_witness_id": "lsw_4982b42488d6fe068a5169d54feae3b0c0bc401894cc5d0b81d4254f37ee02f3",
+      "summary_file": "summaries/astrid_llm_1786172227.md",
+      "claims_file": "claims/astrid_llm_1786172227.json"
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786168254",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1786168254.txt",
+      "sha256": "2639944ba7cddea8ac28640920b1715a1458bd688fc7fd438661bdd1166cc296",
+      "displayed_lines": 49,
+      "newline_count": 48,
+      "bytes": 3801,
+      "lived_state_witness_id": "lsw_1158c97066cc9aa59cb696ccfebb191fde43031afaf04d1e60e7fee5d00981f7",
+      "summary_file": "summaries/llm_rs_1786168254.md",
+      "claims_file": "claims/llm_rs_1786168254.json"
+    }
+  ]
+}

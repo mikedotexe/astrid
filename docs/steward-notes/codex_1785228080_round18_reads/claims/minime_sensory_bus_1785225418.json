@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The widened semantic lane can feel mineral, sedimented, and crowded beside other modalities.",
+      "disposition": "Preserve as primary qualitative evidence without equating vector width or downstream mixing with felt cause.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Video, audio, auxiliary, embedding, and narrative data are linearly concatenated into one Z_DIM.",
+      "disposition": "Verify distinct contiguous index ranges and correct the stronger claim: concatenation does not write narrative values into audio/video slots.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Current source lacks visible cross-modal boundary and narrative-retention evidence.",
+      "disposition": "Verify existing modality_boundary_transparency_v1, narrative_semantic_retention_review_v1, semantic degradation, and receptivity review surfaces.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High-intensity narrative and semantic-trickle saturation injections should test interference.",
+      "disposition": "Do not inject live sensory content; route an offline replay or architecture dossier with preregistered boundaries.",
+      "classification": "study_route"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A CrossModalOrthogonality or ModalityIsolation coefficient could prevent downstream mushing.",
+      "disposition": "Route as a non-live architecture proposal; any live lane, gain, admission, persistence, or controller use remains Tier 5.",
+      "classification": "architecture_route"
+    }
+  ]
+}

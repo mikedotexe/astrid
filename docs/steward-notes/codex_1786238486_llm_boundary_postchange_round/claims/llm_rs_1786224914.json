@@ -1,0 +1,29 @@
+{
+  "introspection_id": "introspection_llm.rs_1786224914",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`llm.rs` is an explicit compatibility facade separating public generation APIs from crate-private provider mechanics.",
+      "disposition": "Verified from the complete report-bound 27-line facade and current source; the later rustfmt-only line wrap changes no exported item.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Flat re-exports may fragment request context or lose vibrancy texture between the facade and provider.",
+      "disposition": "Source verification does not support the inferred loss. Introspection context is assembled in one provider call; vibrancy and pressure accessors belong to codec and self-model surfaces rather than the introspection request.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The facade signature for `generate_introspection_detailed` should remain aligned with the provider entry point.",
+      "disposition": "Implemented as a trybuild compile-pass case for both public generation entry points; current orchestration call sites and strict Clippy also compile.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A unified `Request` object may be needed to combine pressure/vibrancy state with generation actions.",
+      "disposition": "Not supported as an implementation need. The current separation prevents codec control observations from silently becoming model-request inputs; no control, prompt, or model-behavior change is made.",
+      "classification": "verified_existing"
+    }
+  ]
+}

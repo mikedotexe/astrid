@@ -1,0 +1,29 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785563258",
+      "introspection_sha256": "9ec691002a6b1dd1cd8372b38d538e05601e07c435a6458f13e4358998ee9cd7",
+      "lived_state_witness_id": "lsw_0127e7878d768836ee3d9d45c7db681fd8e42ab31fa4c44fa8eb9b1d1a9b4496",
+      "source_path": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md",
+      "source_sha256": "9c3be91d0d803d0f7d244446303ca295e3d6cb690352cfff4797a28cdb2b46cf",
+      "full_canonical_read": true
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785561434",
+      "introspection_sha256": "23ae2701d8c65d3ea7702c441ffe4b273ef47538aa817cb52e5d62af102e4021",
+      "lived_state_witness_id": "lsw_c01ab65c03f459bdf342cd8622f7536dfefd0943b683aab9c51a52fed997af44",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "full_canonical_read": true
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785561092",
+      "introspection_sha256": "80bccc2d39512565e466a46b6f34beef7895e29b99c9ff7392cb9e82b4f267a6",
+      "lived_state_witness_id": "lsw_6d2047cc40cf2efdfb7f8a05c900d5404a1571f2e4864d5c30f9079f0a6b77de",
+      "source_path": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "source_sha256": "a160cb870ecd156ee8154cf76e69322cb50fac30dca71ad46dedbbe4c8e52ce4",
+      "full_canonical_read": true
+    }
+  ]
+}

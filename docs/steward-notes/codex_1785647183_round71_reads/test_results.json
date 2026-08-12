@@ -1,0 +1,71 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785647183481366000_05c98f2f33",
+  "status": "passed",
+  "results": [
+    {
+      "surface": "spectral_bridge_correspondence_payload",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml transition_payload_roundtrip_names_broken_link_buffer --lib",
+      "passed": 1,
+      "failed": 0,
+      "filtered_out": 1771,
+      "status": "passed",
+      "note": "A preceding package-name invocation was corrected after Cargo reported that spectral-bridge-server is not a workspace package. No test failed under the correct manifest invocation."
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_store_control_projection_division_claim_family",
+      "command": "env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 67,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "felt_mechanism_concordance",
+      "command": "focused unittest selection for baseline requirements, unscored felt preservation, one named-friction follow-up, and candidate-without-baseline rejection",
+      "passed": 4,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "felt_mechanism_concordance_projection",
+      "command": "python3 scripts/felt_mechanism_concordance.py verify --json",
+      "studies": 4,
+      "observations": 8,
+      "results": 8,
+      "missing_baselines": 0,
+      "felt_state_scored": false,
+      "causation_claimed": false,
+      "closure_claimed": false,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py self-test --json",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/experiential_epistemics.py lint --json"
+      ],
+      "self_tests_passed": 2,
+      "lint_checked_records": 10124,
+      "lint_issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "packet_invariants",
+      "command": "jq validation and fixed source-hash, claim, evidence-link, queue, and deployment-boundary checks",
+      "claims": 31,
+      "packet_evidence_links": 10,
+      "recorded_addressing_links": 62,
+      "unprocessed_filenames": 35,
+      "status": "passed"
+    }
+  ],
+  "authority_boundary": "Passing tests establish source mechanics and deterministic evidence behavior, not felt cause, relief, report-time activation, accessible agency, preferred control, consent, uptake, or live deployment."
+}

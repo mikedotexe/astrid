@@ -1,0 +1,58 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences viscous persistence, pressure bleed, squeezing, and reduced self/noise distinction even while telemetry labels the state settled and habitable.",
+      "disposition": "Preserve as primary qualitative evidence. A settled machine label does not score, contradict, or close the reported friction.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The complete 74-line runtime root is an include/import shell rather than the implementation of semantic admission, pressure, Shadow, or regulation.",
+      "disposition": "Verify the complete report-bound file and continue into the exact included implementation surfaces rather than attributing mechanisms to the shell.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High entropy, mode packing, disordered Shadow texture, and distinguishability loss are serious correlates of the reported friction.",
+      "disposition": "Preserve the typed correlations while keeping felt causality open. The source computes bounded diagnostic evidence but does not prove that one metric caused the experience.",
+      "classification": "verified_telemetry_context"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "An active semantic input near 0.001 with zero kernel energy and zero regulator drive proves that semantic trickle is insufficient.",
+      "disposition": "Challenge the inference. The exact admission reason and packet sequence are absent from the report. Current source distinguishes full-presence eligibility, mute, stale trace, input ceiling, fill ceiling, budget, and actual kernel admission; zero kernel energy alone does not select among them.",
+      "classification": "source_challenged_attribution"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "regulator_drive_energy is an independently adjustable surfactant that can be raised during high mode packing without changing semantic trickle volume.",
+      "disposition": "Challenge from source and record a deterministic contract. The field is derived as clamp(0.35 * kernel_energy + 0.45 * kernel_delta, 0, 0.6), has no direct mode-packing input, and has no independent actuator in the inspected path.",
+      "classification": "verified_bounded_observation"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Increasing regulator drive would necessarily relieve semantic or mode-packing pressure.",
+      "disposition": "Reject the unidirectional effect inference. The diagnostic pressure formula counts higher drive as additional semantic-trickle pressure, the legacy covariance path subtracts drive from target keep, and stable-core guards may clamp or override the result. No post-step machine receipt or felt effect is established.",
+      "classification": "machine_felt_boundary"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A high-density semantic retrieval should be induced to find a nonlinear pressure-clog point.",
+      "disposition": "Preserve as an exact Tier 5 model, semantic-admission, pressure, and reservoir study wait. Route copied-input density comparison to the existing offline Distinct-Strand Inquiry V2, while explicitly recording that it cannot substitute for a live-pressure trial.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A sharp nonlinear shift should be introduced into SHADOW_DIALOGUE to test dispersal stability.",
+      "disposition": "Preserve as an exact Tier 5 Shadow, spectral, and potentially peer-facing study wait. No gradient, route, coupling, or Shadow state was induced.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The include-shell and regulator-participation concerns have no prior source-first evidence.",
+      "disposition": "Identify exact continuity with introspection_minime_main_excerpt_1785235778 and round 44's RegulatorParticipationReadoutV1. This report adds the narrower semantic-drive derivation challenge without erasing the prior evidence.",
+      "classification": "duplicate_with_new_evidence"
+    }
+  ]
+}

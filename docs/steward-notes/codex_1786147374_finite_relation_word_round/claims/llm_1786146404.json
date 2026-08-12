@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786146404",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime recognizes exact known model-control markers, classifies bounded reference syntax, and reconstructs the visible remainder in byte order.",
+      "disposition": "Verified from the exact report-bound source, complete-source continuity, and fresh scanner and delimiter interval reads.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The requested `functions like` case is described as using a non-listed relation and should retain the exact marker.",
+      "disposition": "Corrected against exact source: `functions` is explicitly allowlisted and only that first finite word decides visibility. A new literal regression proves `functions like` retains the marker as `following_exact_relation`.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A multiword descriptor such as `acts like` may be misidentified because the scanner observes only its first word.",
+      "disposition": "The first-word boundary is intentional finite grammar, not semantic phrase classification. The paired regression proves unlisted `acts` fails closed, removes only the marker, preserves the surrounding phrase, and records `none_cleanup_candidate`.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A delimiter stack deeper than the declared maximum might be over-consumed or miscategorized.",
+      "disposition": "Verified by the existing deeper-than-four regression: the exact marker remains visible, the input remains byte-exact, and receipt depth is bounded at four.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The scanner remainder should reach final `generate_dialogue` output without erased or duplicated surrounding text.",
+      "disposition": "Verified at the provider-neutral boundary and both consumers. MLX and Ollama normalize raw text before returning it; `generate_dialogue` validates, optionally repairs, and returns the normalized string.",
+      "classification": "verified_existing"
+    }
+  ]
+}

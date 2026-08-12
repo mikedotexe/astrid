@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime uses exact marker matching, longest-match priority, nested delimiter handling, and a bounded immediate relation allowlist.",
+      "disposition": "Verified from the complete 997-line source and focused tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "An unlisted relation synonym such as `implies` should not be silently treated as a supported marker relation.",
+      "disposition": "Implemented a focused regression proving that `implies` remains a cleanup candidate and does not report a preserved relation.",
+      "classification": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The supported `functions` relation should preserve its marker phrase.",
+      "disposition": "Verified as already covered by the exact positive relation tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested `[[marker]]` syntax at depth two should be recognized.",
+      "disposition": "Verified as already covered by exact depth-two through depth-four tests.",
+      "classification": "duplicate_existing_evidence"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Overlapping marker names require deterministic priority so a shorter token cannot consume a longer one.",
+      "disposition": "Verified from longest-match source ordering and existing overlap tests.",
+      "classification": "verified_existing"
+    }
+  ]
+}

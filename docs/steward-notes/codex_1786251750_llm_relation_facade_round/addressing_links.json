@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786172227",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Exact marker ranges, finite relation classification, delimiter syntax, and byte-safe reconstruction are directly owned here."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786172227",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing proxy-phrase and paired first-finite-word tests prove functions is retained while acts is not."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786172227",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The exact quoted-whitespace regression includes extra spaces and a newline-separated quote pair."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786172227",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "The punctuation-or-whitespace-only suffix regression proves the end-of-output branch fails closed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786172227",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786251750_llm_relation_facade_round/claims/astrid_llm_1786172227.json",
+      "note": "The finite grammar boundary is preserved without treating the report as change authority."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786168254",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "The report-bound exact blob and current facade contain none of the asserted imports."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786168254",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/llm_facade_contract.rs",
+      "note": "The compile-time contract proves public facade usability and private implementation ownership without a shared lock premise."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786168254",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Astrid's containment and pressure account remains primary evidence without a machine-authored cause or resolution."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786168254",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786251750_llm_relation_facade_round/source_receipts.json",
+      "note": "The exact source search records no production Arc or RwLock in the LLM subtree and does not turn co-timing into causation."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786168254",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786251750_llm_relation_facade_round/claims/llm_rs_1786168254.json",
+      "note": "The high-entropy probe remains an exact Tier 5 wait only if a future source-grounded lock target exists."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786168254",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786251750_llm_relation_facade_round/claims/llm_rs_1786168254.json",
+      "note": "No Shadow action was dispatched and no influence claim was inferred."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1786168254",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "The only production provider HashMap is a function-local prompt-budget lookup, so the proposed shared-state refactor has no source target."
+    }
+  ]
+}

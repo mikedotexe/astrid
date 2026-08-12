@@ -1,0 +1,95 @@
+{
+  "schema": "steward_test_results_v1",
+  "tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup",
+      "result": "passed",
+      "passed": 45
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml provider_output_normalization",
+      "result": "passed",
+      "passed": 2
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml normalized_bytes_feed_repair_and_lived_state_response_hash",
+      "result": "passed",
+      "passed": 1
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test provenance_typestate",
+      "result": "passed_after_expected_snapshot_spacing_repair",
+      "passed": 13
+    },
+    {
+      "command": "python3 -m unittest scripts.test_domain_boundary_audit",
+      "result": "passed",
+      "passed": 2
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "passed_zero_violations"
+    },
+    {
+      "command": "git diff --check -- exact changed test paths",
+      "result": "passed"
+    },
+    {
+      "command": "rustfmt --edition 2024 --check provenance_typestate.rs witness_frame_cannot_dispatch.rs",
+      "result": "passed"
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "blocked_by_unrelated_preexisting_format_drift",
+      "unrelated_path": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs"
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "result": "passed",
+      "passed": 42
+    },
+    {
+      "command": "Evidence Event Store, steward-control, projector, Division tracker/Chronicle, and cursor grouped self-tests",
+      "result": "passed",
+      "passed": 72
+    },
+    {
+      "command": "python3 scripts/proactive_scan.py --self-test",
+      "result": "passed",
+      "passed": 110
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py --self-test and verify",
+      "result": "passed_zero_gaps_zero_alarms",
+      "self_tests_passed": 5,
+      "verified_guards": 47
+    },
+    {
+      "command": "PYTHONPATH=.:scripts cadence unit tests and python3 scripts/introspection_cadence_audit.py --compact --json --strict",
+      "result": "passed_read_only_integrity",
+      "unit_tests_passed": 6
+    },
+    {
+      "command": "epistemic lint self-test and verify",
+      "result": "passed_zero_issues_no_history_rewrite",
+      "self_tests_passed": 2,
+      "verified_records": 10591
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "result": "passed_consistent",
+      "canonical_indexed": 4254,
+      "canonical_fully_addressed": 3045,
+      "canonical_remaining": 1209,
+      "canonical_unread": 582,
+      "canonical_full_reads": 3672,
+      "read_needs_claims": 0
+    }
+  ],
+  "controller_recovery": {
+    "evidence_write_run_outcome": "cancelled_after_heartbeat_timeout_during_store_replay",
+    "durable_events_verified": true,
+    "completion_run_started": true,
+    "liveness_debt": "long replay writes can block lease renewal on the shared Evidence Event Store lock"
+  }
+}

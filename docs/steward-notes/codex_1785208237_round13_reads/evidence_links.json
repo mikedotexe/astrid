@@ -1,0 +1,32 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785208037",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785208237_round13_reads/summaries/minime_regulator.md",
+      "note": "Full-read summary retains the qualitative viscosity and ghost-architecture concern without adopting the proposed source mechanism."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785208037",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "note": "Correct concurrent PD modality-rate and PI fill/filter role documentation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785208037",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/runtime/telemetry_evidence.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "note": "Active-mode-derived mode packing and read-only pressure/porosity classification."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785208037",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "PD removal and Minime regulation changes remain exact Tier 5 waits."
+    }
+  ]
+}

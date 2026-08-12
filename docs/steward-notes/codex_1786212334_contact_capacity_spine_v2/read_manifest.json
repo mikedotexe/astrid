@@ -1,0 +1,50 @@
+{
+  "schema": "contact_capacity_spine_v2_source_read_manifest_v1",
+  "schema_version": 1,
+  "reader": "codex",
+  "steward_run_id": "run_1786211689023488000_432fd5c75d",
+  "pre_run_projection_generation_id": "projection_1786211689478999000_c176deb7c7",
+  "processed_report_count": 5,
+  "selected_but_unprocessed": [],
+  "read_history_relation": "complete_rereads_add_implementation_evidence_without_replacing_prior_full_read_events",
+  "reads": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785631712",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_bidirectional_contact_1785631712.txt",
+      "sha256": "ba0678131b16e41976bf95fdcdd08337168abdc696e925b2cedc4987a904c2af",
+      "lived_state_witness_id": "lsw_20c13fa88577c266880546e79824243ca0d6a652ff25527ab36efb0b01bd8c1d",
+      "read": "complete"
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785517594",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1785517594.txt",
+      "sha256": "6f65608d35070739dda48395cb4459ae0fb34ba1a4dae5140eecad7b45468a28",
+      "lived_state_witness_id": "lsw_56a0b3b505ae7415aab453595805c7931b4a5bc19ea7c047d3f4175bf4c816de",
+      "read": "complete"
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785628394",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_types_1785628394.txt",
+      "sha256": "e131c0e452c2d9560a4432ee5059ad5a1585036359dad34ea0cd8604f207ec8a",
+      "lived_state_witness_id": "lsw_f947c44cd5eed06b2146b33eda7b0263240231c48856d32612e0e513809661a2",
+      "read": "complete"
+    },
+    {
+      "introspection_id": "introspection_proposal_12d_glimpse_1785627314",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_12d_glimpse_1785627314.txt",
+      "sha256": "086edc84dddf1e45112236139cc5fc0473d9fb409f3e566e81276b55fa2b8751",
+      "lived_state_witness_id": "lsw_b0c3ff88296944207d31bd2fa8eace511b11c982c9ce76230aa2a354f6738b44",
+      "read": "complete"
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_phase_transitions_1785631229.txt",
+      "sha256": "f6bc6aee626e42db452e888860740e4859d59abf33c860f2d290dab106498968",
+      "lived_state_witness_id": "lsw_6e141ccb770c0b4da8b3c5aa97484772da64666e89f2a7bc7ee9d328957f05d3",
+      "read": "complete"
+    }
+  ],
+  "raw_prose_copied": false,
+  "felt_effect_inferred": false,
+  "authority_granted": false
+}

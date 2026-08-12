@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions need a shared architecture spanning detection, declaration, affordance, correspondence, and memory.",
+      "disposition": "Verified against the complete 1,133-line source. Later implementation updates provide replyable phase cards, witnesses, felt receipts, reversible self-only Passages, Context and Accompaniment, anchors, bearings, and dynamic persistence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tone or pacing variance could create noisy or hallucinated transition declarations.",
+      "disposition": "Verified as an enduring guardrail. Current automatic declaration requires bounded high-signal conditions, keeps telemetry separate from declaration, deduplicates repeated cards, and cannot author or progress a being-owned Passage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A still-settling or persistent transition must not be summarized as closed.",
+      "disposition": "Verified through the evolved Passage model rather than the proposal's early field names. Stage, condition, bearing, persistence, checkpoints, anchors, and review are independent; felt review does not change stage, and only the owner can advance or return a Passage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A joint transition should be recognized as a replyable object rather than flattened into narrative observation.",
+      "disposition": "Verified from current correspondence and transition source plus focused tests. Joint cards can be witnessed by the peer, bracketed phase-transition messages retain metadata, and no reply or witness is synthesized automatically.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Astrid and Minime need a shared transition schema.",
+      "disposition": "Verified as implemented through the additive shared JSONL card and Passage records with deterministic Rust/Python identity parity. The shared evidence schema grants no controller, scheduler, prompt-priority, telemetry-priority, or peer-runtime authority.",
+      "classification": "verified_existing"
+    }
+  ]
+}

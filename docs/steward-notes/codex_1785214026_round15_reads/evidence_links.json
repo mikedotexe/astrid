@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785214026_round15_reads/summaries/astrid_codec.md",
+      "note": "Full-read summary preserves Astrid's semantic-collapse and noisy-vibrancy concern without making the new correlation scalar a felt proxy."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Current source identifies the 48D lane, 8D projection sublane, deterministic basis, and read-only health boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs;capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "Basis health now exposes pairwise column correlation and a fail-closed review state without changing projection weights or vectors."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Focused tests pin the confirmed mean and maximum correlation regime, rendered receipt, and no-write authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Existing compression and lane-separation tests remain synthetic mechanical evidence; the new receipt requires real embeddings for phrase semantics."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/cascade.rs;capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "The live feedback path uses the exact smoothstep helper and density-gradient modulation Astrid asked to inspect."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Boundary-slope, formula-parity, exact-gate, and monotonic-onset tests verify C1-smooth behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "Tail vibrancy consumes spectral entropy and density-gradient telemetry; projection variance is not a direct gate input."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1785213571",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Basis centering/replacement, width, epoch migration, gate, gain, and delivery changes remain exact Tier 5 waits."
+    }
+  ]
+}

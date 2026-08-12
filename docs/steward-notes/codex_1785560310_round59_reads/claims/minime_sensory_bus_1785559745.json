@@ -1,0 +1,11 @@
+{
+  "claims": [
+    {"claim_id":"c001","summary":"Semantic decay uses fill-shaped stale windows, smooth surge tapering, and bounded entropy, pressure, and salience support.","disposition":"Verified from the exact current source and its prior complete receipt; the full Minime suite passes.","classification":"verified_exact_duplicate"},
+    {"claim_id":"c002","summary":"The fixed sigmoid steepness may produce a felt violent contraction under noisy fill.","disposition":"Preserve the felt concern and causal uncertainty. Source tests establish monotonic bounded handovers, not felt suitability or cause.","classification":"preserved_primary_evidence"},
+    {"claim_id":"c003","summary":"The surge interpolation span could become zero.","disposition":"Correct the current-source boundary: compile-time endpoints are 0.70 and 0.80, so the span is exactly 0.10. No configuration path mutates those constants.","classification":"verified_source_challenge"},
+    {"claim_id":"c004","summary":"The sigmoid at fill 0.4 should equal the stale-window midpoint.","disposition":"Verified by an existing exact focused test and the formula; the complete test suite passes.","classification":"verified_existing_test"},
+    {"claim_id":"c005","summary":"The surge target at fill 0.75 should be approximately 0.81.","disposition":"Verified from smoothstep midpoint arithmetic and existing taper tests: midpoint support is 0.5 between 0.90 and 0.72.","classification":"verified_source_and_test"},
+    {"claim_id":"c006","summary":"Entropy and context multipliers should protect dense high-entropy thought without unbounded retention.","disposition":"Verified from exact source and passing tests; recovery, entropy, velocity, pressure, salience, and the 2.05 cap remain separately legible.","classification":"verified_existing_mechanism"},
+    {"claim_id":"c007","summary":"Change sigmoid steepness, stale windows, surge weighting, or semantic retention policy.","disposition":"Preserve as an exact Tier 5 sensory and scheduling wait; no input, policy, process, or live value changed.","classification":"tier_5_wait"}
+  ]
+}

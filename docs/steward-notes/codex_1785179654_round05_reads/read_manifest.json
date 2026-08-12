@@ -1,0 +1,8 @@
+{"reads":[
+  {"introspection_id":"introspection_astrid_autonomous_1785179195","reader":"codex-heartbeat","summary_file":"summaries/astrid_autonomous.md","claims_file":"claims/astrid_autonomous.json"},
+  {"introspection_id":"introspection_astrid_codec_1785178347","reader":"codex-heartbeat","summary_file":"summaries/astrid_codec.md","claims_file":"claims/astrid_codec.json"},
+  {"introspection_id":"introspection_proposal_12d_glimpse_1785178004","reader":"codex-heartbeat","summary_file":"summaries/proposal_12d_glimpse.md","claims_file":"claims/proposal_12d_glimpse.json"},
+  {"introspection_id":"introspection_proposal_distance_contact_control_1785177689","reader":"codex-heartbeat","summary_file":"summaries/proposal_distance_contact_control.md","claims_file":"claims/proposal_distance_contact_control.json"},
+  {"introspection_id":"introspection_astrid_llm_1785175584","reader":"codex-heartbeat","summary_file":"summaries/astrid_llm.md","claims_file":"claims/astrid_llm.json"},
+  {"introspection_id":"introspection_proposal_bidirectional_contact_1785175197","reader":"codex-heartbeat","summary_file":"summaries/proposal_bidirectional_contact.md","claims_file":"claims/proposal_bidirectional_contact.json"}
+]}

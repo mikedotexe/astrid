@@ -1,0 +1,33 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785566973",
+      "introspection_sha256": "b6f72bef023a7313fa392f2d334874aaa3dd67dcfcdd18a0b2713db2b0187ba3",
+      "lived_state_witness_id": "lsw_52711d75789ed2543de64eb686e4f16230562dd07891512e1df4c45d2e6cc663",
+      "source_path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "source_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "full_canonical_read": true,
+      "supporting_complete_source": "/Users/v/other/minime/minime/src/regulator/core/viscosity.rs",
+      "supporting_source_sha256": "e2300cefb5ef47f3f3bf3e13282392d0c33f98c8cba34c6f046cc6c7208be922"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785566694",
+      "introspection_sha256": "e53b9b90ad575fe777b9a69acf2af006682a2c10c087fc6ffaf32d6612b9b9b2",
+      "lived_state_witness_id": "lsw_32b9cca25ee0e871fc0a45cbb1bcf57e67394f4e7f045fecbf2095d24c05cec9",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c",
+      "full_canonical_read": true
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785566382",
+      "introspection_sha256": "ff457f118ac8c0737561f5fec70cf8de1f4537544a168e150f3c158ca4b613cc",
+      "lived_state_witness_id": "lsw_320f12830ddf0ffa1517b53ccd6ca02996dabf71c149e631eef11f28d6701a8a",
+      "source_path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "source_sha256": "d98342fdb3bcb4c063c1c971939a132041a998982d0e5cefa38252ee94beb4f5",
+      "full_canonical_read": true,
+      "supporting_complete_source": "capsules/spectral-bridge/src/spectral_schema.rs",
+      "supporting_source_sha256": "c115472819917441e12ca997496c2f7685c9aa6e6358e2341d4054295a9e3a39"
+    }
+  ]
+}

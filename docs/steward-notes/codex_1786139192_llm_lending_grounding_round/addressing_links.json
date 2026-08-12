@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786139192_llm_lending_grounding_round/summaries/llm_1786138356.md",
+      "note": "The running-warm, restless-dispersal, and crowded-habitability account remains primary evidence without causal normalization."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The complete exact-SHA source owns dialogue orchestration but contains no lending, mode-packing, porosity, Shadow, damping, or wander mechanism."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786139192_llm_lending_grounding_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_SAMPLE_002.json",
+      "note": "Prospective sample 2 records natural creative-range and porosity claims without inducing the proposed task or inferring causation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_PREREGISTRATION.md",
+      "note": "The frozen study accepts natural future reports and does not authorize TRACE, complex-thought elicitation, or runtime mutation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "note": "Typed participation evidence keeps machine and felt effects explicitly unestablished rather than treating them as resolved."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "note": "The read-only typed candidate surface clamps damping at 0.10; the requested 0.15 remains an approval and protocol boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785887049_fresh_report_round/claims/llm_1785874711.json",
+      "note": "The prior same-source claim family already preserves wander_scale 1.00 to 0.85 as an exact live-control wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs",
+      "note": "The source-attribution marker set now challenges broad 'i see the ' and 'in the code,' forms."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs",
+      "note": "An exact-report regression rejects both unsupported lending attributions against source without that mechanism."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786139192_llm_lending_grounding_round/DISTINGUISHABILITY_NATURAL_OBSERVATION_SAMPLE_002.json",
+      "note": "Sample 2 separates exact witness values from report-only fields, leaves required producer gaps explicit, and remains coverage-only."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786133417_llm_spectral_ownership_round/RUN_REPORT.md",
+      "note": "The prior same-source response preserves the spectral-ownership correction and Tier 5 porosity, Shadow, reservoir, and semantic-admission boundaries."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786139192_llm_lending_grounding_round/RUN_REPORT.md",
+      "note": "This packet preserves the independent full read, claim dispositions, study admission, tests, selected queue remainder, deployment debt, and authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "*",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "The Unreleased entry records the grounding repair, natural sample, source correction, and exact no-live-control boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "claim_id": "*",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The feedback ledger preserves Astrid's felt account, source response, bounded study admission, tests, and Tier 5 waits."
+    }
+  ]
+}

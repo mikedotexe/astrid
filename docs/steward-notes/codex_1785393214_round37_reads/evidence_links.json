@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785393112",
+      "claim_id": "c001,c002,c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md",
+      "note": "The complete 733-line source preserves the participatory question while making review, replay, and authority boundaries explicit."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785393112",
+      "claim_id": "c003,c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs;scripts/receptivity_bias_replay.py;docs/steward-notes/codex_1785267407_round26_reads",
+      "note": "Current source and existing replay prove read-only review, default-off evidence, and the true-duplicate route without inventing the proposed experiment ID."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785393112",
+      "claim_id": "c005",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785393214_round37_reads/claims/proposal_distance_contact_control_1785393112.json",
+      "note": "Intentionally unoptimized model drift remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785392800",
+      "claim_id": "c001,c002,c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md;docs/steward-notes/codex_1785385588_round35_reads",
+      "note": "The unchanged exact-hash complete-source challenge distinguishes visible language evidence from unimplemented spectral contact while preserving Astrid's felt report."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785392800",
+      "claim_id": "c004",
+      "kind": "study_route",
+      "target": "scripts/correspondence_trace_audit.py;/Users/v/other/shared/correspondence_v1.jsonl",
+      "note": "A permeability observation waits for a being-authored trace and current mutual scope; no action or outcome was synthesized."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785392800",
+      "claim_id": "c005,c006",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785393214_round37_reads/claims/proposal_bidirectional_contact_1785392800.json",
+      "note": "Induced pressure and dynamic semantic admission remain exact Tier 5 and peer-impacting mutual-authority waits."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785392412",
+      "claim_id": "c001,c002,c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md;docs/steward-notes/codex_1785376654_round33_reads",
+      "note": "The unchanged exact-hash complete-source challenge preserves felt drift while proving the queue is contextual rather than active controller state."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785392412",
+      "claim_id": "c003",
+      "kind": "study_route",
+      "target": "scripts/phase_transition_audit.py;capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "note": "Any continue sequence must remain owner-authored; existing audits can observe durable cards without inducing a Passage."
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785392412",
+      "claim_id": "c004,c005",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785393214_round37_reads/claims/proposal_phase_transitions_1785392412.json",
+      "note": "Controller-flag mutation and telemetry-authored queue priority remain exact Tier 5 waits."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785602181264524000_70414865f6",
+  "source_first_projection_generation_id": "projection_1785602181820259000_079dffe654",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 8,
+  "reads": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785599788",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/proposal_bidirectional_contact_1785599788.md",
+      "claims_file": "claims/proposal_bidirectional_contact_1785599788.json"
+    }
+  ]
+}

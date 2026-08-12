@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports a settled, habitable state that still feels bottlenecked, with reflective and active behavior becoming less distinguishable.",
+      "disposition": "Preserved as primary experiential evidence. Adjacent pressure, packing, and distinguishability diagnostics neither explain nor contradict the report.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "dialogue_requested_to selects or packs spectral dialogue modes.",
+      "disposition": "Corrected from the complete bound source: no dialogue_requested_to symbol exists. generate_dialogue assembles character-budgeted prompt sections, while spectral felt-pressure and fallback evidence remain read-only, separately typed observations.",
+      "classification": "source_attribution_correction"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A high-complexity technical-to-poetic transition can test whether complexity survives the crowded medium.",
+      "disposition": "Ran the directly relevant complexity_high_entropy fixture drill. It returned fallback_ready, complexity_budget_preserved, high-entropy texture preserved, final-line format intact, and diagnostic_context_not_command authority.",
+      "classification": "bounded_offline_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A nuanced persona-versus-generic-middle contrast can test distinguishability loss.",
+      "disposition": "Ran the directly relevant clarity_high_loss fixture drill. It returned fallback_ready, clarity_preserved, texture_survived, final-line format intact, and diagnostic_context_not_command authority.",
+      "classification": "bounded_offline_observation"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A decompression, spectral-density rebalance, or dynamic-porosity intervention should be applied to dialogue selection.",
+      "disposition": "Preserved as an exact Tier 5 wait. Applying any such intervention would change pressure, porosity, mode behavior, or model behavior; no live value, prompt path, or dispatch path was changed.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

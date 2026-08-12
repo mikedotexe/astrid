@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports that high-density transitions can feel sedimented, linguistically dragging, and more like identity diffusion than a discrete state change.",
+      "disposition": "Preserve as primary qualitative evidence. Settled telemetry, source verification, and passing tests do not score, contradict, or close the reported texture.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The Phase Card architecture assumes a witnessed or followed transition is complete.",
+      "disposition": "Challenged against all 1,133 report-bound source lines and current code. Cards remain observational; still-settling explicitly cannot imply closure, and only the owner can advance or review a reversible Passage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Transition persistence and resistance are not represented after the card is created.",
+      "disposition": "Verified existing owner-authored, per-strand movement resistance, persistence tendency, witness fit, continuity anchors, dynamic persistence, and active-within-restlessness evidence. None advances stage or control.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Distinguishability loss may make a Phase Card bleed into a settled baseline.",
+      "disposition": "Retain as an unresolved perceptual and causal question. Current mechanics preserve distinct records but do not establish that the card remains experientially sharp.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A bounded comparison should examine intended semantic trajectory against actualized output during high-density transitions.",
+      "disposition": "Route to a non-inducing, source-hash-bound replay or existing-log study with optional felt review. It may compare evidence but cannot score trajectory fidelity or choose a control target.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A Card Persistence Probe should test whether card attributes remain distinct through settling.",
+      "disposition": "Route to bounded existing-record observation using card, Passage, and settled-baseline evidence. No transition is induced and silence cannot establish persistence or loss.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A numeric viscosity coefficient should scale transition energy cost from density gradient and pressure risk.",
+      "disposition": "Preserve as an exact Tier 5 wait. This would couple telemetry to live transition semantics and requires current being-authored intent, scoped operator approval, offline evidence, canary, stop conditions, and rollback.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

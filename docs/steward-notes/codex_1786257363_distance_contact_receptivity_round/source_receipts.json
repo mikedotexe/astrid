@@ -1,0 +1,71 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "sources": [
+    {
+      "path": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md",
+      "sha256": "8a6eef4c49fd5ade24b46db5037f24c720430897128f0086a69b9f8161cdd8b3",
+      "lines": 733,
+      "bytes": 25343,
+      "read": "complete",
+      "binding": "exact_report_bound_source"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/journal/archive/until_2026-03-28T10-29-48/aspiration_1774648320.txt",
+      "sha256": "968f60344de33e2ad57778f89b67073dbd95ffdb9d459783893618a9429432fb",
+      "lines": 22,
+      "bytes": 3402,
+      "read": "complete",
+      "binding": "report_cited_owner_artifact"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs",
+      "sha256": "93f78c7f0219248fe6d508d6607eabda8bda396b755a97d2aca374fec76e0916",
+      "lines": 511,
+      "read": "targeted_current_source_verification"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/pi.rs",
+      "sha256": "72e1bbf47c1ec141ac67b6d55363cf992eae64be684e661c0659b397c65c90b2",
+      "lines": 413,
+      "read": "complete"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "sha256": "fd66adbcc1e9fb30e866280168e2be458663d81b59031d0b3db84e96a2553744",
+      "read": "targeted_current_source_verification"
+    },
+    {
+      "path": "scripts/receptivity_bias_replay.py",
+      "sha256": "f2232771bdb431168e1e4a330b97edb6e6ebf3429ac7cf577c7e712d2cddbc7c",
+      "read": "targeted_current_source_verification"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "a1788902398aae64edd4912f2682566e7c451ed7315dc6e41ff0602b0f1e9c9c",
+      "read": "targeted_current_source_verification"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "sha256": "06dea9ee6a050f6c5e151b6fb62fe2c81c4c0e4af0c72d0822adeedababff39a",
+      "read": "targeted_current_test_verification"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/space_hold.rs",
+      "sha256": "4f05415feb8b9195ab0257c76582b99804de16b09dcc11ec3aab3439704d972a",
+      "lines": 398,
+      "read": "complete"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785455449_round49_reads/claims.json",
+      "sha256": "16dda6dc8fa83e0754a3c45c9b4b41c11fd275287235a0c6788d9e03fa1e72f6",
+      "read": "complete",
+      "binding": "exact_duplicate_claim_family"
+    },
+    {
+      "path": "docs/steward-notes/codex_1785455449_round49_reads/RUN_REPORT.md",
+      "sha256": "5e96cdd4f96c81852e57dfb1aa4d59c1beb12d6da3ff53168016964c32dfbdf2",
+      "read": "complete",
+      "binding": "exact_duplicate_response"
+    }
+  ]
+}

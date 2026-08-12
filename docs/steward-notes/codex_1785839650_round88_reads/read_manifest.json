@@ -1,0 +1,25 @@
+{
+  "reader": "codex-heartbeat",
+  "read_at_unix_s": 1785839650,
+  "reports": [
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785631229",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_phase_transitions_1785631229.txt",
+      "sha256": "f6bc6aee626e42db452e888860740e4859d59abf33c860f2d290dab106498968",
+      "logical_lines": 44,
+      "newline_count": 43,
+      "bytes": 4414,
+      "lived_state_witness_id": "lsw_6e141ccb770c0b4da8b3c5aa97484772da64666e89f2a7bc7ee9d328957f05d3",
+      "summary_file": "summaries/proposal_phase_transitions_1785631229.md",
+      "claims_file": "claims/proposal_phase_transitions_1785631229.json"
+    }
+  ],
+  "complete_sources": [
+    {
+      "path": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md",
+      "sha256": "9c3be91d0d803d0f7d244446303ca295e3d6cb690352cfff4797a28cdb2b46cf",
+      "lines": 1133,
+      "bytes": 45342
+    }
+  ]
+}

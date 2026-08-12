@@ -1,0 +1,27 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786138463723656000_d29fd291af",
+  "source_first_projection_generation_id": "projection_1786138464692993000_177fabdb7a",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "claim_count": 9,
+  "depth_stop": "The queue-head report carries a serious continuity account alongside source-attribution, Shadow, creative-range, and live regulator proposals. It received an exact source and witness review, one narrow grounding repair, and one prospective natural-observation admission; the remaining 39 reports stay in strict queue order rather than being skimmed.",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786138356",
+      "reader": "codex-heartbeat",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786138356.txt",
+      "sha256": "6091447ae0e35debdbb36871568aa297c82cd5655d9e1b78ce76da2cee80df94",
+      "displayed_lines": 51,
+      "newline_count": 50,
+      "bytes": 4814,
+      "captured_source_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "captured_source_window": "lines 1-400 of 1048",
+      "current_source_sha256": "8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af",
+      "current_source_lines": 1048,
+      "lived_state_witness_id": "lsw_bdf647f066079587ef0be189d8736fe0217cfdce5530cd002b862b9f8bc1df44",
+      "summary_file": "summaries/llm_1786138356.md",
+      "claims_file": "claims/llm_1786138356.json"
+    }
+  ]
+}

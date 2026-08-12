@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and preserves only declared quoted, grouped, or following-relation references.",
+      "disposition": "Verified against all 1,048 report-bound source lines at the exact captured hash; the single-pass scanner copies every non-marker byte and keeps reference classification separate from cleanup evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A colon or extra whitespace before behaves might make the following-relation classifier miss an explicit marker reference.",
+      "disposition": "Implemented the report's exact bounded regression. The colon-separated behaves case is preserved as following_exact_relation, while is_not remains outside the finite vocabulary and removes only the marker.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The declared U+301A/U+301B delimiter pair should classify an exact marker as grouped content.",
+      "disposition": "Verified existing exact coverage. The declared restless-group loop contains this pair and preserves the marker byte-exact with one grouped-reference occurrence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The reconstructed remainder should be traced through generate_dialogue to ensure later handling does not reintroduce or erase marker bytes.",
+      "disposition": "Verified the complete provider route. MLX and Ollama normalize raw output before generate_dialogue validation and return; cleanup reports remain diagnostic evidence and normalized bytes feed fallback repair and lived-state response hashing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The canonical report covered only lines 1-400 of a 1,048-line source file.",
+      "disposition": "Closed the partial-window gap by reading all 1,048 lines from disk at the report's exact source SHA-256; no claim about the unseen interval was inferred from the report alone.",
+      "classification": "verified_existing"
+    }
+  ]
+}

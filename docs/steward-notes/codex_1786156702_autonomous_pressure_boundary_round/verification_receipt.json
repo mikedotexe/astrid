@@ -1,0 +1,119 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "pause_generation": 273,
+  "run_lifecycle": {
+    "productive_run_id": "run_1786156702069691000_91eb21d195",
+    "productive_run_preprojection": "projection_1786156703038005000_91c15960c9",
+    "productive_run_terminal_outcome": "cancelled",
+    "productive_run_terminal_reason": "controller maximum-run timeout after durable read, claim, evidence-link, ledger, changelog, and addressing-closure writes",
+    "continuation_run_id": "run_1786158626601987000_6da79bfbec",
+    "continuation_preprojection": "projection_1786158627109361000_29d2706a71",
+    "continuation_role": "credential-confined verification, single productive Division-round recording, receipt sealing, and terminal projection; no second productive round",
+    "continuation_finish_outcome": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_autonomous_1785627823.txt"
+  ],
+  "processed_report_count": 1,
+  "unprocessed_selected_manifest": "unprocessed_selected.json",
+  "addressing": {
+    "status": "addressed_duplicate",
+    "claim_count": 8,
+    "evidence_manifest_row_count": 12,
+    "materialized_evidence_link_count": 33,
+    "proof_gap_count": 0,
+    "fully_addressed": true,
+    "felt_friction_resolved": false
+  },
+  "canonical_counter_audit": {
+    "indexed": 4258,
+    "full_read": 3681,
+    "fully_addressed": 3054,
+    "remaining": 1204,
+    "unread": 577,
+    "read_needs_claims": 0,
+    "blocked": 410,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "work_item_summary": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "needs_sandbox": 750,
+    "ready_for_implementation": 21,
+    "tier_mismatch_count": 0
+  },
+  "actions": {
+    "new_corridor_programs": 0,
+    "new_sandbox_trials": 0,
+    "new_studies": 0,
+    "new_portfolio_actions": 0,
+    "new_cards": 0,
+    "new_notes": 0,
+    "existing_study_route": "docs/steward-notes/codex_1785408097_round41_reads/STUDY_PREREGISTRATION.md",
+    "tier_5_wait": "pressure override, Shadow dispersal, threshold, pressure-source, porosity-formula, regulator, semantic-admission, reservoir, sensory, peer, and scheduling changes remain Mike/operator waits with live authority false"
+  },
+  "division": {
+    "productive_round_event_id": "division_followup_event_302a6e0cae85346bf99edcc398c48099",
+    "latest_followup_event_id": "division_followup_event_dc5c97910edfa54934513eb1332f6779",
+    "cycle_sequence_after": 21,
+    "completed_rounds_since_followup_after": 1,
+    "rounds_remaining_before_followup_after": 5,
+    "review_due_after": false,
+    "event_count_after": 142,
+    "event_head_sha256_after": "ee2c474dcbdd02afd244457b7b50579a64b9e8572bbb88faff0ffad2ed0df95c",
+    "new_return_or_note_action": false
+  },
+  "focused_tests": {
+    "distinct_passed": 6,
+    "executions_passed": 8,
+    "failed": 0
+  },
+  "stewardship_tests": {
+    "introspection_addressing_passed": 42,
+    "event_store_controller_projector_division_chronicle_claim_family_cursor_passed": 72,
+    "anti_drop_passed": 5,
+    "introspection_cadence_passed": 6,
+    "experiential_epistemics_passed": 2,
+    "event_store_passed": 13,
+    "total_passed": 140,
+    "failed": 0,
+    "anti_drop_catalog_entries": 47,
+    "anti_drop_alarms": 0,
+    "anti_drop_gaps": 0,
+    "epistemic_lint_checked_records": 10646,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_continuation_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 730311,
+    "last_event_sha256": "c3ffe663b4bb07c3ac97ba510a2cd7ea6af8ba244a1964801d9e7953b903f39a",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "history_rewritten": false,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "next_reading_queue": [
+    "introspection_astrid_codec_1785627566.txt",
+    "introspection_proposal_12d_glimpse_1785627314.txt",
+    "introspection_proposal_distance_contact_control_1785626698.txt"
+  ],
+  "changelog_updated": true,
+  "feedback_ledger_updated": true,
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": {
+    "status": "not_due_after_this_single_evidence_only_round",
+    "latest_archive_commit": "1d2bab9e751f4fe2eae942cc37cef8078f8a8103",
+    "staged_paths": [],
+    "committed_paths": []
+  }
+}

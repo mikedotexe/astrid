@@ -1,0 +1,180 @@
+{
+  "schema": "introspection_evidence_links_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785636682",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785636805_round69_reads/summaries/minime_autonomous_agent_1785636682.md",
+      "note": "Individual full-read response preserves the felt report and grounds every disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785636682",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "note": "Exact pressure-source audit source is read-only and contains no automatic thinning trigger."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785636682",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/minime/tests/test_self_regulation_leases.py",
+      "note": "Focused pressure-agency test verifies status, feedback-only, steward-offer, and draft-without-apply boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785636682",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+      "note": "Existing exact natural 500-pair route preserves association and authority boundaries without inducing pressure or Shadow."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785636682",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs",
+      "note": "Existing auto-defragment review names the candidate while keeping live_control_changed false and Tier 5 explicit."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785636434",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785636805_round69_reads/summaries/minime_main_excerpt_1785636434.md",
+      "note": "Individual full-read response preserves the shell/body distinction and every grounded disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785636434",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/runtime.rs",
+      "note": "All 74 exact lines verify the ten-edge include shell."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785636434",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785587186_round64_reads/SEMANTIC_ADMISSION_LATENCY_PREREGISTRATION.md",
+      "note": "The prior passive attempt and fixed abort expose the same source-owned epoch and first-kernel identity debt."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785636434",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/activation_trace.rs",
+      "note": "Complete activation-trace source confirms it samples reservoir frames but lacks semantic-input and first-response identities."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785636130",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785636805_round69_reads/summaries/minime_esn_1785636130.md",
+      "note": "Individual full-read response preserves labor of distinction and grounds every source, study, and authority disposition."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785636130",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/esn.rs",
+      "note": "Exact-byte source distinguishes the initialization default, owner-controlled active value, and dormant review helpers."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785636130",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785580847_round63_reads/SHADOW_PRESSURE_500_PAIR_PREREGISTRATION.md",
+      "note": "Existing natural co-timed study is reused without induced input or duplicate scope."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785636130",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml --lib",
+      "note": "All 355 tests pass, including dynamic-noise, viscous-rho, Shadow, pressure/porosity, and auto-defragment review boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785635849",
+      "claim_id": "*",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1785636805_round69_reads/summaries/minime_sensory_bus_1785635849.md",
+      "note": "Individual full-read response records exact midpoint, bounds, entropy interaction, and authority limits."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785635849",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Current exact source contains passing midpoint, monotonic sweep, recovery handover, and bound regressions."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785635849",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Existing surge midpoint and soft-knee tests verify the exact 0.81 value and strict ordering."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785635849",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Fill support starts at 0.55, so entropy persistence is exactly neutral throughout the <=0.25 recovery hold."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785636682",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the pressure detection, agency, study, and Tier 5 boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785636682",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger preserves Astrid's account and the exact source response."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785636434",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry keeps source availability distinct from active behavior and typed latency debt."
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785636434",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger preserves shell quietude and the activation-boundary response."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785636130",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the default-versus-active noise correction and Shadow study boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785636130",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger preserves the labor-of-distinction account without causal reduction."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785635849",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the exact sigmoid, surge, entropy, and live-change boundaries."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785635849",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback ledger preserves concern that smooth mathematics may still feel abrupt or pruning."
+    }
+  ]
+}

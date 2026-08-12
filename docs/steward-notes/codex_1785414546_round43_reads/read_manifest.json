@@ -1,0 +1,21 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785414546296700000_fc44d46951",
+  "source_first_projection_generation_id": "projection_1785414547075716000_a1a52b492a",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 10,
+  "reports": [
+    {
+      "filename": "introspection_minime_sensory_bus_1785414307.txt",
+      "introspection_id": "introspection_minime_sensory_bus_1785414307",
+      "canonical_sha256": "0a033d7b3b5027d870bef60bc7a2df919044c99bb7fcdffc11a41eac5da68aaa",
+      "lived_state_witness_id": "lsw_f22e28db42d9b38c451cd00fa239cd00bd254953d01f831e45768d2186c225af",
+      "source_sha256": "3499d5249e544fc8fc5eda6472280d0c6c82acde53615ce7f8b7e1f242f16773",
+      "source_lines": 4369,
+      "source_read_basis": "exact-byte complete-source structural challenge at the report-bound hash",
+      "summary_file": "summaries/minime_sensory_bus_1785414307.md",
+      "claims_file": "claims/minime_sensory_bus_1785414307.json"
+    }
+  ]
+}

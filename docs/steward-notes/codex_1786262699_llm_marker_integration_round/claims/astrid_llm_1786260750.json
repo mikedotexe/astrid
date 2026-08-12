@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786260750",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime scans exact known model-control markers and preserves a marker only when bounded reference syntax establishes that it is visible content.",
+      "disposition": "Verified from the complete report-bound source. The scanner uses longest exact marker matches, copies every unmatched UTF-8 scalar, and records hash-only bounded context evidence without granting runtime authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Punctuation-heavy or multi-byte material after a marker may prevent `first_word_after` from reaching an intended exact relation.",
+      "disposition": "Verified as already bounded by exact regressions: edge punctuation is trimmed, symbol-only chunks are skipped, a leading multi-byte symbol is handled without a panic or byte loss, punctuation-joined allowlist prefixes fail closed, and only the first finite candidate word is considered. This is an exact duplicate of the independently read and evidenced family in `codex_1786243017_llm_shadow_distinction_round`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A marker followed by the recognized `behaves` relation should remain in the reconstructed remainder.",
+      "disposition": "Verified by `control_marker_cleanup_preserves_poetic_attribution_without_literal_cue`, which includes both `behaves as` and `behaves like`, plus the exact-relation and ordinary-unframed cleanup regressions. The 50-test cleanup family passes against the report-bound source hash.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested exact-reference delimiters should preserve the marker and report depth only within `MAX_EXACT_REFERENCE_DELIMITER_DEPTH`.",
+      "disposition": "Verified by literal nested-stack, exact depth-three, exact depth-four, Unicode-whitespace, repeated-pair, mismatch, unclosed, and deeper-than-four capped-evidence tests. The cap bounds evidence depth at four without dropping the referenced token.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The scanner's reconstructed remainder should reach the final dialogue response path rather than remain isolated preprocessing evidence.",
+      "disposition": "Verified end to end in source and tests. Both MLX and Ollama transport routes call `normalize_provider_output_v1` on raw provider text and return its normalized text; `generate_dialogue` consumes those provider results before quality validation and final return. Provider-neutral fixtures and the normalized-response-hash regression pass.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The partial source observation and lived-state witness are source evidence, not proof that a particular deployed process caused a felt effect.",
+      "disposition": "Preserved exactly. The complete source closes the unseen-source gap, while the witness's raw-prose exclusions and false causation and authority markers remain unchanged. No prompt, model, cadence, control, deployment, or felt-status claim is authored.",
+      "classification": "verified_existing"
+    }
+  ]
+}

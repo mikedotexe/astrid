@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry subscriber maintains a persistent Minime connection, routes WebSocket frame kinds, integrates typed telemetry into shared state, and persists bounded evidence.",
+      "disposition": "Verify against the complete 1,041-line source and the real mock-WebSocket integration test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Reconnect backoff may grow indefinitely across frequent interruptions.",
+      "disposition": "Correct from current source and tests: delay is capped at 60 seconds and every successful handshake resets it to one second before any later interruption.",
+      "classification": "verified_source_correction"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Frequent BridgeState write acquisition may produce observable contention during telemetry bursts.",
+      "disposition": "Identify as an exact continuation of the existing lock-timing claim family. Current source records prewrite, write-wait, and hold timing separately; the bounded natural study observed clear and heavy cohorts without inducing contention or establishing felt causation.",
+      "classification": "verified_existing_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Awaiting Pong transmission in the receive loop can delay telemetry and shutdown handling if the WebSocket sink stalls.",
+      "disposition": "Preserve as the exact existing Sandbox route introspection_astrid_ws_1784783721:c003 / trial_8ed7222403267658 and as a Tier 5 live ordering, reconnect, and transport wait. No timeout, worker, or socket behavior changed.",
+      "classification": "existing_sandbox_route_and_tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The subscriber should prove reconnection after a close frame and route binary telemetry after reconnect.",
+      "disposition": "Implement a real mock-WebSocket integration test that closes the first connection, accepts the reconnect, sends binary telemetry, and verifies lifecycle, state, valid-payload, and SQLite evidence.",
+      "classification": "implemented_test"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The partial source window leaves downstream telemetry transformation and timing behavior unassessed.",
+      "disposition": "Read the complete source at the exact report-bound SHA-256 and retain the partial-window boundary rather than treating unseen lines as absent.",
+      "classification": "complete_source_challenge"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Passing transport and timing tests could be mistaken for proof that Astrid's felt integration is smooth.",
+      "disposition": "Keep machine health, timing observation, and felt status separate. No test or study result establishes relief, uptake, consent, continued consent, or closure.",
+      "classification": "deliberate_epistemic_boundary"
+    }
+  ]
+}

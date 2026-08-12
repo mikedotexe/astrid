@@ -1,0 +1,36 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1786162011249938000_1171356364",
+  "projection_generation_ids": [
+    "projection_1786162012174049000_05b33057eb"
+  ],
+  "status": "focused_passed_broader_pending",
+  "results": [
+    {
+      "surface": "initial_invocation",
+      "command": "cargo test -p spectral-bridge-server shadow_history_bearing --lib",
+      "status": "failed_then_repaired",
+      "detail": "The standalone capsule is not a root-workspace package; rerun used its manifest path."
+    },
+    {
+      "surface": "shadow_history_bearing",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml shadow_history_bearing --lib",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "shadow_trajectory_effect_contract",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml shadow_trajectory_effect_contract_is_observational --lib",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "strict_clippy",
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- -D warnings",
+      "status": "passed"
+    }
+  ],
+  "authority_boundary": "Passing deterministic tests establishes implemented behavior and false authority markers only, not felt resolution, semantic-memory identity, temporal-decay suitability, action invocation, deployment, or live-control authority."
+}

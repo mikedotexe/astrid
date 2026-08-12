@@ -1,0 +1,22 @@
+{
+  "schema": "steward_addressing_write_receipt_v1",
+  "steward_run_id": "run_1785678318426831000_826dbc944b",
+  "reads": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785678082",
+      "reader": "codex-heartbeat",
+      "recorded_at_unix": 1785679236.168757,
+      "summary_sha256": "b7ad3771f27036889aabb53c78dc495d2ce2e30066e527b5c1062f6b4a9776ae",
+      "claim_count": 7,
+      "proof_missing_claims": [],
+      "closure_status": "addressed_change",
+      "closure_recorded_at_unix": 1785679674.195254
+    }
+  ],
+  "evidence": {
+    "manifest_rows": 8,
+    "new_materialized_links": 26,
+    "existing_materialized_links": 0
+  },
+  "authority": "evidence_only_not_live_approval_or_activation"
+}

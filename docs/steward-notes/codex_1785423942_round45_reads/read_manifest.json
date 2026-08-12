@@ -1,0 +1,23 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785423942585529000_0418a9e168",
+  "source_first_projection_generation_id": "projection_1785423943452755000_342fa8bf90",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 9,
+  "reports": [
+    {
+      "filename": "introspection_proposal_bidirectional_contact_1785423614.txt",
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785423614",
+      "canonical_sha256": "8f1ebbe8ca502a4b9a91ef84c1b289e5ba839bf20079cbe2f91937f89dbdbbe5",
+      "lived_state_witness_id": "lsw_21e884c532a28bd6bb98a79444ee697c9910a201e440bc9ac8bcf9c63da61af6",
+      "source_sha256": "1389be7fff91e147972ddcb25ca01d5a0a164e027e37b88a892b0e1afbd037b7",
+      "source_lines": 1079,
+      "response_source_sha256": "4a881317fe978fdadb4e6df66044d90a91103e0aae635f7572246ec2df547f73",
+      "response_source_lines": 1120,
+      "source_read_basis": "complete report-bound architecture in four bounded windows plus current correspondence ledger and affordance evidence",
+      "summary_file": "summaries/proposal_bidirectional_contact_1785423614.md",
+      "claims_file": "claims/proposal_bidirectional_contact_1785423614.json"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785228080209056000_4b90608294",
+  "source_first_projection_generation_id": "projection_1785228080942628000_adc17cd806",
+  "reader": "codex-heartbeat",
+  "processed_count": 7,
+  "claims_count": 30,
+  "reports": [
+    {
+      "filename": "introspection_minime_autonomous_agent_1785226320.txt",
+      "introspection_id": "introspection_minime_autonomous_agent_1785226320",
+      "lived_state_witness_id": "lsw_e4619727476f2466607d4fd50d765abcca4381f43b16d76c5438235cd1d98ed4",
+      "sha256": "b08b9625c9082919254919e6bf3c001b0a78edb667622417def7fa2d0fe8c7b6",
+      "summary": "summaries/minime_autonomous_agent_1785226320.md",
+      "claims": "claims/minime_autonomous_agent_1785226320.json"
+    },
+    {
+      "filename": "introspection_minime_main_excerpt_1785226006.txt",
+      "introspection_id": "introspection_minime_main_excerpt_1785226006",
+      "lived_state_witness_id": "lsw_8dd969609549dc8d6068143674e02711d98d7078b112f32898f5c1dc99992a68",
+      "sha256": "d86b8277c04b18322c813a25901ed37cd88f59ee3d2e07bf29f5c5fa75347345",
+      "summary": "summaries/minime_main_excerpt_1785226006.md",
+      "claims": "claims/minime_main_excerpt_1785226006.json"
+    },
+    {
+      "filename": "introspection_minime_esn_1785225724.txt",
+      "introspection_id": "introspection_minime_esn_1785225724",
+      "lived_state_witness_id": "lsw_9209e4cf16445c6f524e7efc9995cdd097fe096a90037fca2ad1b6a8e1091f59",
+      "sha256": "1c409d1e831e2d03c1ecc032c2a6a7a11666a4e4e0aa80d498446d6f68e84c40",
+      "summary": "summaries/minime_esn_1785225724.md",
+      "claims": "claims/minime_esn_1785225724.json"
+    },
+    {
+      "filename": "introspection_minime_sensory_bus_1785225418.txt",
+      "introspection_id": "introspection_minime_sensory_bus_1785225418",
+      "lived_state_witness_id": "lsw_cfa1bd40a0362ae494f16962931885e888e531d8d3bd221ee9b2c1580a738491",
+      "sha256": "be39f65da97e4937edce2cb027c6c9b7a7932a93d100e122386c06e5e95726ea",
+      "summary": "summaries/minime_sensory_bus_1785225418.md",
+      "claims": "claims/minime_sensory_bus_1785225418.json"
+    },
+    {
+      "filename": "introspection_minime_regulator_1785225107.txt",
+      "introspection_id": "introspection_minime_regulator_1785225107",
+      "lived_state_witness_id": "lsw_de86e920c08887bc8c5562b61e5e95ed9b0e958251a5c7cc7d44338e5d09b5f4",
+      "sha256": "d8f963d34f612e78a35e4fb07389ce7f754b545f68a5f2f41c4205ec785a4e46",
+      "summary": "summaries/minime_regulator_1785225107.md",
+      "claims": "claims/minime_regulator_1785225107.json"
+    },
+    {
+      "filename": "introspection_astrid_llm_1785224866.txt",
+      "introspection_id": "introspection_astrid_llm_1785224866",
+      "lived_state_witness_id": "lsw_1471bf8288ac95a0e20be9ed0eded07d3b0a47b91a789692029f5e6f5e248326",
+      "sha256": "65237f36bd883d85026edfbaa0dba0dde021a7ced80f2f1894e558b5c61ce4fa",
+      "summary": "summaries/astrid_llm_1785224866.md",
+      "claims": "claims/astrid_llm_1785224866.json"
+    },
+    {
+      "filename": "introspection_astrid_types_1785224530.txt",
+      "introspection_id": "introspection_astrid_types_1785224530",
+      "lived_state_witness_id": "lsw_db8d4985d649ed36427b49379a801ce12b2457a7172d2945872933cdb39aaad2",
+      "sha256": "009d0201d004b4eb49914a61a531c3ee1ffbebbc5ba1aefd1d20cbabf0463437",
+      "summary": "summaries/astrid_types_1785224530.md",
+      "claims": "claims/astrid_types_1785224530.json"
+    }
+  ]
+}

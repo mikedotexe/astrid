@@ -1,0 +1,120 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "pause_generation": 299,
+  "run_lifecycle": {
+    "productive_run_id": "run_1786293481616062000_1aab143c9b",
+    "productive_run_preprojection": "projection_1786293482663928000_977fdbc178",
+    "productive_run_terminal_outcome": "cancelled",
+    "productive_run_terminal_reason": "controller maximum-run timeout after complete reads, claim extraction, packet creation, addressing closure, changelog and ledger writes, and verification; before Division round recording and terminal projection",
+    "finalization_run_id": "run_1786295385051392000_e883eb0abd",
+    "finalization_preprojection": "projection_1786295386087493000_636a54e546",
+    "finalization_role": "verify the durable four-report batch, record its single productive-round receipt, align the Division Chronicle, seal evidence, and obtain a clean terminal projection; no additional report is claimed",
+    "finalization_finish_outcome": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1786276119.txt",
+    "introspection_astrid_llm_1786272290.txt",
+    "introspection_astrid_llm_1786268919.txt",
+    "introspection_astrid_llm_1786265670.txt"
+  ],
+  "processed_report_count": 4,
+  "unprocessed_selected_count": 36,
+  "unprocessed_selected_manifest": "unprocessed_selected.json",
+  "addressing": {
+    "status": "addressed_duplicate",
+    "duplicate_of": "introspection_astrid_llm_1786260750",
+    "claim_count": 24,
+    "evidence_link_count": 28,
+    "proof_gap_count": 0,
+    "fully_addressed_count": 4
+  },
+  "canonical_counter_audit": {
+    "indexed": 4280,
+    "full_read": 3706,
+    "fully_addressed": 3078,
+    "remaining": 1202,
+    "unread": 574,
+    "read_needs_claims": 0,
+    "blocked": 411,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "all_artifact_counter_audit": {
+    "indexed": 5902,
+    "pending": 2824,
+    "noncanonical_pending": 1622
+  },
+  "actions": {
+    "new_corridor_programs": 0,
+    "new_sandbox_trials": 0,
+    "new_studies": 0,
+    "new_portfolio_actions": 0,
+    "new_cards": 0,
+    "report_triggered_notes": 0,
+    "division_return_notes": 0,
+    "new_source_changes": 0,
+    "new_test_source_changes": 0,
+    "tier_4_waits_added": 0,
+    "tier_5_waits_added": 0
+  },
+  "division": {
+    "productive_round_event_id": "division_followup_event_d7902c905fe4aae23625c6b17deb0b13",
+    "cycle_sequence_after": 23,
+    "completed_rounds_since_followup_after": 1,
+    "rounds_remaining_before_followup_after": 5,
+    "review_due_after": false,
+    "event_count_after": 156,
+    "event_head_sha256_after": "f2ef3b1d7ef3f1bae6f381c825470d5df7f5e285e1146ab342fc016ef5a6de8e",
+    "chronicle_id_after": "division_chronicle_45e38e566958b45c23f8ab33",
+    "chronicle_json_sha256_after": "0d826d4b1fe1dff01a5b8212c2d67eeaec5f9ad5634ed88059c4216b9f22c465",
+    "durable_chronicle_inputs_current": true,
+    "volatile_chronicle_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "notes_written": 0,
+    "followup_performed": false
+  },
+  "tests": {
+    "marker_family_passed": 58,
+    "addressing_passed": 42,
+    "event_store_controller_projector_division_chronicle_cursor_passed": 72,
+    "anti_drop_and_cadence_passed": 11,
+    "anti_drop_entries_verified": 47,
+    "experiential_self_tests_passed": 2,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10799,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 748043,
+    "last_event_sha256": "3a00c37a47cd904f97596fe410d30684c771362e3e746dffe0a8f4630540b5ff",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "next_reading_queue": [
+    "introspection_proposal_bidirectional_contact_1785626170.txt",
+    "introspection_proposal_phase_transitions_1785625853.txt",
+    "introspection_minime_autonomous_agent_1785625272.txt"
+  ],
+  "changelog_updated": true,
+  "feedback_ledger_updated": true,
+  "restart_required_for_this_round": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": {
+    "status": "due_after_successful_finalization_finish",
+    "candidate_packet": "docs/steward-notes/codex_1786293925_llm_marker_punctuation_batch/",
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ],
+    "reason": "both shared files contain inseparable foreign and stewardship edits; defer rather than claim unclear authorship"
+  }
+}

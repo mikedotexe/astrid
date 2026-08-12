@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Typed spectral fingerprints should take precedence while legacy shape remains diagnosable.",
+      "disposition": "Verify typed precedence, hybrid coherence, explicit issue reporting, and no control authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Legacy fingerprint lengths 31 and 33 must fail hybrid coherence cleanly.",
+      "disposition": "Retain the existing 31-element regression and implement the matching 33-element malformed-boundary assertion.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Rolling entropy trend state should respond to changing bounded telemetry samples.",
+      "disposition": "Verify existing rising, falling, and flat trend regressions in ws/tests.rs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High-entropy typed/legacy alignment should remain observable without changing ingest.",
+      "disposition": "Verify source and tests; no telemetry, protocol, cadence, or spectral-control change is needed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

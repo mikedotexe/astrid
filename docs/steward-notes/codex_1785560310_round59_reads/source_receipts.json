@@ -1,0 +1,38 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_minime_esn_1785560246",
+      "introspection_sha256": "6e6024355642d0d4e89bbd5166cd0154b763cf7cf702a869220c695397ca221e",
+      "lived_state_witness_id": "lsw_ff0d9b8a99c7506458ccf986534ee7fd33f8d2751c67c797e0b934ddba59a151",
+      "source_path": "/Users/v/other/minime/minime/src/esn.rs",
+      "source_sha256": "2227a7256ba98219be683db47c4f49afe0477c0ae5d17cf9226613b20f6b036c",
+      "full_canonical_read": true,
+      "complete_source_receipt_reused": true
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785559745",
+      "introspection_sha256": "c30774946554ab0df9061318ea61beff9fce1a29f66e0345c96b3529aaaa5de0",
+      "lived_state_witness_id": "lsw_9b26ad36b4c00e71fadd89a75a5344cc42ff03f484b987c52beae6a81f22b316",
+      "source_path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "source_sha256": "83c0d5c1c761fa05b194f6c84d3083520bb0d664292720cb4651996d1c6fab31",
+      "full_canonical_read": true,
+      "complete_source_receipt_reused": true
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1785559395",
+      "introspection_sha256": "4bb8523ad71c3fe6d09012759be8cc15ac8dc7b1d142a8f34dd0b5a948b062e8",
+      "lived_state_witness_id": "lsw_b60db8519a7ad79645b0b91f0d1d8b0c2733d407b25cfa38d711a1ea82e1c3d1",
+      "source_path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "source_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "supporting_source_sha256": {
+        "pressure_source.rs": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+        "viscosity.rs": "e2300cefb5ef47f3f3bf3e13282392d0c33f98c8cba34c6f046cc6c7208be922",
+        "resonance_evidence.rs": "b755633327fe94e0565b739885e0f9f1bd8bd7394900969879a01c62fae0bc83",
+        "runtime/telemetry_evidence.rs": "84a380b34332daad1740ae18c21eb74f825742f49d1d296f7274248bffbd8918",
+        "bridge/regulator_participation.rs": "1e4b85b76120cd78172b8928c28c0cb1b957a877c1dc7c1b7461b3070d6b571e"
+      },
+      "full_canonical_read": true
+    }
+  ]
+}

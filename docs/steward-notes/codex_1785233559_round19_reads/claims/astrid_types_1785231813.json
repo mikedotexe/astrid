@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Arrival cadence and initial entropy are mechanically observable but may not represent interstitial connective texture.",
+      "disposition": "Preserve the experiential gap and verify that heartbeat evidence makes no felt-state claim.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Stable jitter can coexist with changing semantic viscosity or persistence.",
+      "disposition": "Verify existing bounded semantic-viscosity persistence, velocity, acceleration, drag, residue, and cadence-versus-content tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy and pressure can vary independently and should be compared over time.",
+      "disposition": "Verify rolling entropy, pressure trend, fast/slow edge, and persistence evidence already retain separate trajectories without causal inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "TelemetryHeartbeatDeltaV1 should gain a persistence_weight or connection_texture_index.",
+      "disposition": "Do not duplicate existing adjacent evidence or encode felt texture as a scalar; telemetry ABI, schema, cadence, and any live use remain exact Tier 5 waits.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

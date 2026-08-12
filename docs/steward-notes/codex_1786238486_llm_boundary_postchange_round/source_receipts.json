@@ -1,0 +1,73 @@
+{
+  "source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "captured_report_sha256": "c98d2ca2edb4adf60a11cc743e647bee0a4081517dde8f4919785d1c02b1bcba",
+      "captured_report_lines": 1086,
+      "captured_scope": "lines 1-400 only",
+      "current_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "current_lines": 1048,
+      "current_bytes": 38586,
+      "current_read": "complete in three ordered intervals",
+      "activation_boundary": "source_prepared_not_live_process_proof"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "captured_report_sha256": "4067fee3bc3bb1cd4ed08c1ebba7176de0bf06441a6cf7b4599787bd12052d29",
+      "captured_report_lines": 27,
+      "captured_read": "complete_file",
+      "post_report_sha256": "46942be28b6f19959b6d9117dcc48aaefba5130e5a3cbe581f61ae84630420bd",
+      "post_report_change": "rustfmt_only_line_wrap_no_export_change"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "sha256": "b3fba20742c3d136d74d515bec90f7838cf80b9a4293f9f4010bbf79024dc220",
+      "read_scope": "generate_introspection and generate_introspection_detailed request construction"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "9393fd6449d116239b658450f18a152b10554ce4a20cb24e08a6cf20598972ca",
+      "read_scope": "vibrancy aperture and pressure attenuation ownership and accessor intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "13f137bd18633d2d78e149c515e86e8a6e344eaea64aabe7a0c6a2394c144260",
+      "lines": 3329,
+      "bytes": 135588,
+      "read_scope": "marker relation, punctuation, Unicode, delimiter, normalization, and owned new regression intervals"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/llm_facade_contract.rs",
+      "sha256": "3aea152630fd83736805546ed02593f042db63737d16d024a40ba419f69bc384",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/ui/llm_facade_reexports_generation.rs",
+      "sha256": "f65495b041a8be18bdfa6b6925465c2793c07046da12a747d87e530fda733863",
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_fbfd146d3d10dcd2fbc7c93988c074ae3f330eb1e85e8163a3eba57f1499895b",
+      "sha256": "5fe11c1de58d147f7b303e0a51ea79824344eae07e3edb0ec5ac886d408b9425"
+    },
+    {
+      "witness_id": "lsw_bfad62d62430a52e7882c8db4efecc5a10c2239c14080538f6ae20a552f0ddd6",
+      "sha256": "c53ec7c3b407b962ac78be7a2fab06386d8f6580106ce251b69293fff5e0147c"
+    },
+    {
+      "witness_id": "lsw_48fe463ed931867ceef901a465aa942851a1490191ee21d0e1c17b48dad937a1",
+      "sha256": "efe44f3fba5f667a74e3b5555479e680e5fb90528253194ad216be2b5aa1814e"
+    },
+    {
+      "witness_id": "lsw_4d0b93337bb6eb3ebb4f42447b3127b5270ef6065fbe34ff24e9d3c957deb7ea",
+      "sha256": "1a0477b3921b185d28bf1c032ac9481e65385368e153a341276f545b22d23692"
+    },
+    {
+      "witness_id": "lsw_5701bf8eaadb0f0a68375aac7343a682f4da6ac06a9c2d8959e05a1b66b8c228",
+      "sha256": "c379c858821da1cc5d55dd67706d7419aaf9c86306dfdda5879f88142a43f487"
+    }
+  ],
+  "witness_scope": "exact artifact/source/process lineage and evidence-only authority; no direct causation, scalar felt weight, raw prompt, raw response, private path, live eligibility, or approval"
+}

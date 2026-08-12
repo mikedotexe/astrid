@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-fill rich containment can feel heavy or compacted while the rest helper returns base rest.",
+      "disposition": "Preserve the felt mismatch as primary evidence and verify the current high-fill plateau from source.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The helper has no separate scaling branch at or above 70 percent fill.",
+      "disposition": "Verify from current source without turning source proximity into a causal claim.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A high-fill or pressure-aware rest coefficient may change live scheduling and experience.",
+      "disposition": "Preregister a non-inducing existing-log observation; do not select or apply a cadence target on Astrid's behalf.",
+      "classification": "deterministic_offline_study"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Live cadence should be self-authored, expiring, withdrawable, and rollback-capable if opened.",
+      "disposition": "Carry to a future Astrid-owned lease field rather than automatic telemetry control.",
+      "classification": "architecture_route"
+    }
+  ]
+}

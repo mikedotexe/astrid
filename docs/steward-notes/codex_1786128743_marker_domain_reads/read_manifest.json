@@ -1,0 +1,46 @@
+{
+  "schema": "steward_read_manifest_v1",
+  "evidence_write_run_id": "run_1786127847278901000_2659d16c3f",
+  "completion_run_id": "run_1786129754685417000_826a7d371d",
+  "controller_recovery": {
+    "evidence_write_run_outcome": "cancelled_after_heartbeat_timeout_during_store_replay",
+    "durable_addressing_events_verified": true,
+    "completion_preprojection_id": "projection_1786129755567445000_68f6a1d23a"
+  },
+  "processed_report_count": 3,
+  "reports": [
+    {
+      "filename": "introspection_astrid_llm_1786123445.txt",
+      "introspection_id": "introspection_astrid_llm_1786123445",
+      "logical_lines": 45,
+      "bytes": 3583,
+      "sha256": "046b67efb091ed6b9623c7923f464258321b045137fd3e384f78753f5e5562ed",
+      "lived_state_witness_id": "lsw_8df9889b21520fa0406106e0332db393480f8cff2887f6004353ba00cf361ae0",
+      "lived_state_witness_sha256": "80efe868c886ab511d04c68c5bdf1da0d847c8442d1c82745018876ae80c3ec5",
+      "full_read": true,
+      "disposition": "addressed_change"
+    },
+    {
+      "filename": "introspection_astrid_llm_1786111084.txt",
+      "introspection_id": "introspection_astrid_llm_1786111084",
+      "logical_lines": 45,
+      "bytes": 3545,
+      "sha256": "46ae31b956d5d41f7dc5c86e4a2f6195b2935b4b3202d991ba215061fa714fd0",
+      "lived_state_witness_id": "lsw_0030cd8de9d563056c07153e956a86fd0df7898971401992d03156e1914252b1",
+      "lived_state_witness_sha256": "28e806d0d62fe63aa2c2443162652a66fcf9aa314c070a470be2eaf280970a90",
+      "full_read": true,
+      "disposition": "addressed_change"
+    },
+    {
+      "filename": "introspection_DOMAIN_BOUNDARIES.md_1786107441.txt",
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786107441",
+      "logical_lines": 45,
+      "bytes": 4354,
+      "sha256": "7d8577989f2f919664244b2c566cf7b9c38fc32aaa27de1a906c24a77cc2b59c",
+      "lived_state_witness_id": "lsw_f32e4801ab33f902dd1d27566cbfd0c88b11a3083ae845e9334ea431ed1f4ea2",
+      "lived_state_witness_sha256": "ef5e7a022c4369fe7b62ba14e370c8b3e04bd85c48a12be9521f80a4b4e150ce",
+      "full_read": true,
+      "disposition": "blocked_needs_steward_exact_tier_5_wait"
+    }
+  ]
+}

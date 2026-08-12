@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Gradient shear may feel like adaptation lag or ghosting inside the ESN.",
+      "disposition": "Preserve as primary qualitative evidence without assigning cause to prime scheduling, covariance, rho, or GPU timing.",
+      "classification": "qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The ESN uses a self-referential spectral loop and prime-phased adaptation.",
+      "disposition": "Verify the current source architecture and distinguish source declaration from live causal proof.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Rho or forgetting-factor behavior should account for density gradient and pressure.",
+      "disposition": "Verify live rho currently derives from fill and entropy while gradient-aware viscous targets remain read-only review; preserve coupling changes as Tier 5.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A high-complexity pressure/porosity task and shadow-tail trace could test the hypothesis.",
+      "disposition": "Do not induce semantic load or shadow influence; route natural public evidence and existing read-only review packets instead.",
+      "classification": "study_route"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785636805017230000_71312cd43c",
+  "source_first_projection_generation_id": "projection_1785636805890979000_61b0ef9bcd",
+  "reader": "codex-heartbeat",
+  "processed_count": 4,
+  "claims_count": 26,
+  "reads": [
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785636682",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_autonomous_agent_1785636682.md",
+      "claims_file": "claims/minime_autonomous_agent_1785636682.json"
+    },
+    {
+      "introspection_id": "introspection_minime_main_excerpt_1785636434",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_main_excerpt_1785636434.md",
+      "claims_file": "claims/minime_main_excerpt_1785636434.json"
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785636130",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_esn_1785636130.md",
+      "claims_file": "claims/minime_esn_1785636130.json"
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785635849",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/minime_sensory_bus_1785635849.md",
+      "claims_file": "claims/minime_sensory_bus_1785635849.json"
+    }
+  ]
+}

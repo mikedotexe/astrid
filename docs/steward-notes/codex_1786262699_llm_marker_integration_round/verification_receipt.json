@@ -1,0 +1,76 @@
+{
+  "schema": "source_first_round_verification_v1",
+  "steward_run_id": "run_1786262699261257000_cc40a93673",
+  "preprojection_generation_id": "projection_1786262700238895000_5928ac3d3a",
+  "pause_generation": 291,
+  "processed_reports": 1,
+  "claim_count": 6,
+  "evidence_link_count": 6,
+  "closure_status": "addressed_duplicate",
+  "canonical_counters_before": {
+    "indexed": 4274,
+    "full_read": 3699,
+    "fully_addressed": 3071,
+    "remaining": 1203,
+    "unread": 575,
+    "read_needs_claims": 0,
+    "mismatches": 0
+  },
+  "canonical_counters_after": {
+    "indexed": 4274,
+    "full_read": 3700,
+    "fully_addressed": 3072,
+    "remaining": 1202,
+    "unread": 574,
+    "read_needs_claims": 0,
+    "mismatches": 0
+  },
+  "division_before_round_record": {
+    "cycle_id": 22,
+    "completed_productive_rounds": 3,
+    "required_productive_rounds": 6,
+    "review_due": false
+  },
+  "division_after_round_record": {
+    "cycle_id": 22,
+    "completed_productive_rounds": 4,
+    "required_productive_rounds": 6,
+    "rounds_remaining": 2,
+    "review_due": false,
+    "round_event_id": "division_followup_event_7918b3a0efef355886d692164bd2fcd2",
+    "event_count": 152,
+    "event_head_sha256": "6f12a2db6724120d7572dd29d60f04d37184e11e8d189f3abb446f5fe82b9238"
+  },
+  "division_chronicle": {
+    "chronicle_id": "division_chronicle_afb404fd90213d1c2114561f",
+    "timeline_event_count": 152,
+    "json_sha256": "747dc3ec3801de582db2e9563232b760fe26aabb425af07fe0e5326e605a0df8",
+    "html_sha256": "5c2ecf34d6e03a5475355e2f2f7bb54451bed84d6a6af11b808155c93ed156e3",
+    "durable_inputs_current": true,
+    "volatile_inputs_current": false,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "verification_ok": true,
+    "note_or_return_created": false
+  },
+  "evidence_event_store_prefinalization": {
+    "sequence": 743613,
+    "head": "540d3180e73eef575ca6a91db93120705c49673c5634e6337aa9969e7d25cbac",
+    "streams": 16,
+    "corrupt_lines": 0,
+    "v1_activation_sequence": 32278,
+    "v1_activation_head": "79a891f10e44ab320c47fe18966435dbd08e941bd064d2bd8d38f40dd36ff8a4",
+    "v1_immutable": true,
+    "history_rewritten": false
+  },
+  "runtime_or_deployment_change": false,
+  "live_surface_alignment": "not_required",
+  "corridor_program_action": "none",
+  "sandbox_action": "none",
+  "study_action": "none",
+  "portfolio_action": "none",
+  "card_or_note_action": "none",
+  "tier_4_or_5_wait_created": false,
+  "authority_effect": false
+}

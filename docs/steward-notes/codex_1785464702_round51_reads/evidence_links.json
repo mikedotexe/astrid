@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785464702_round51_reads/summary.md",
+      "note": "Complete canonical read preserves Astrid's natural-pacing and threshold-jitter report without felt scoring."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Complete 4,795-line report-bound source read verifies fill branches, burst/rest mechanics, and warmth taper at SHA-256 155b9eac22efe9d053ca1beb68f3f0a1114c6bd5ce6f4f0db390b3407844c7d5."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "fill_responsive_rest_keeps_critical_floor_and_band_boundaries passes for current representative branch behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785464702_round51_reads/studies/source_boundary_matrix.json",
+      "note": "All reachable default base rests fail the proposed less-than-20-percent 29.9/30.1 boundary property without inducing fill."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785464702_round51_reads/studies/source_boundary_matrix.json",
+      "note": "Exact source arithmetic establishes roll below 0.5 and reachable default base rests of 45 through 67 seconds."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1785179195.txt",
+      "note": "Earlier canonical report names the same low-fill threshold oscillation, roll clustering, and hysteresis concern at SHA-256 da2da71e0485ecda39a0a01e13632196d5831d004a9145246c33a46a9b0d300a."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785464702_round51_reads/studies/low_fill_rest_threshold_observation.md",
+      "note": "Bounded natural observation is routed over already-occurring fill and rest decisions; no low fill is induced."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785464702_round51_reads/summary.md",
+      "note": "Roll correction, hysteresis, thresholds, rest cadence, warmth, fill, PI, controller, and scheduling remain exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Source verifies one retained peripheral-resonance candidate and its bounded later consumers without warmth or mode-selection conflation."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger records the exact discontinuity and unreachable nominal rest range while retaining the live-control wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1785464533",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "/Users/v/other/astrid/CHANGELOG.md",
+      "note": "Unreleased entry records source verification, bounded observation routing, and no-live-change authority boundary."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "source_first_verification_receipt_v1",
+  "steward_run_id": "run_1786297141863832000_ad62f7726e",
+  "pre_run_projection_generation_id": "projection_1786297142886082000_5a6977d4ec",
+  "productive_session_terminal_outcome": "cancelled_timeout_after_completed_evidence_writes",
+  "recovery_steward_run_id": "run_1786299071313038000_f86fcd8e85",
+  "recovery_pre_run_projection_generation_id": "projection_1786299072372923000_422bfb12c5",
+  "processed_count": 1,
+  "claims_count": 8,
+  "evidence_link_count": 8,
+  "duplicate_anchor": "introspection_proposal_bidirectional_contact_1785599788",
+  "duplicate_packet": "docs/steward-notes/codex_1785602181_round67_reads",
+  "source_changed": false,
+  "live_surface_changed": false,
+  "restart_required": false,
+  "canonical_counter_audit_status": "consistent",
+  "canonical_remaining": 1201,
+  "event_store_prefinish_sequence": 748254,
+  "event_store_prefinish_head": "ef63682e7862796a7ec830a34818d63a739599f18835874d9a944f5cd1f11bec",
+  "event_store_v1_immutable": true,
+  "post_finish_projection_pending": true,
+  "finish_outcome_pending": true
+}

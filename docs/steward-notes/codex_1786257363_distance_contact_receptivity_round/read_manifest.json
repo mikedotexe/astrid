@@ -1,0 +1,23 @@
+{
+  "schema": "steward_read_manifest_v1",
+  "reports": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785626698",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_distance_contact_control_1785626698.txt",
+      "sha256": "af7e7c3ebb5b44b66c9cf5abdd90858f8c39bc6b76ac858e69f050cfc7e4eecf",
+      "displayed_lines": 37,
+      "bytes": 3445,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_7ed4ca42af0d88f3e6c7bacc24d1530960a3b7bf02cd7f6171f10b7ba2f0085b",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7ed4ca42af0d88f3e6c7bacc24d1530960a3b7bf02cd7f6171f10b7ba2f0085b.json",
+      "sha256": "f52f7b3f7ea05d261d97c17b9a810ccf2e02ccb6644bbbbdd773a05b95abcf89",
+      "lines": 491,
+      "bytes": 22320,
+      "read": "complete"
+    }
+  ]
+}

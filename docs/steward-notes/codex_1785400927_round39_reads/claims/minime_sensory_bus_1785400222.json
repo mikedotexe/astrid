@@ -1,0 +1,47 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Viscous persistence may remain present despite mild nearby pressure and mode-packing values.",
+      "disposition": "Preserved as primary qualitative evidence; machine metrics neither explain nor close it.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The report-bound sensory bus defines SpectralFrame, EigenvectorField, SpectralEnergy, ShadowField, GateStatus, SHADOW_PREFLIGHT, and gradient_calc mechanics.",
+      "disposition": "Source-challenged after a complete 4,369-line read and exact symbol search found none of those declarations in the file.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The sensory bus uses a linear density-gradient interpolation that misses stepped spectral texture.",
+      "disposition": "Source-challenged: no `gradient_calc` exists, and the actual read-only degradation review uses nonlinear smoothstep age with gradient, fill, and entropy.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure and porosity may diverge from the reported viscous texture.",
+      "disposition": "Verified as an already represented read-only concern in regulator pressure/porosity-gradient and semantic-viscosity evidence; no felt mechanism is inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A `shadow_preflight_low_porosity` comparison should reduce porosity in the mode-packing calculation.",
+      "disposition": "The named trial does not exist and was not synthesized; porosity, mode-packing, or shadow mutation remains exact Tier 5 work.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A `semantic_trickle_flow` experiment should raise regulator drive from zero to 0.05.",
+      "disposition": "The named trial does not exist and was not synthesized; live regulator drive and semantic admission remain exact Tier 5 work. Existing semantic-receptivity review remains read-only.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Density-gradient behavior should gain entropy-scaled curvature based on distinguishability loss.",
+      "disposition": "The proposed function is absent, the existing review curve is already nonlinear, and any live gradient, decay, admission, or controller change remains Tier 5.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}
+

@@ -1,0 +1,30 @@
+{
+  "schema": "source_first_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785555433",
+      "introspection_sha256": "a6254ce89381a0fb598283fb5a5006e365d9bd0e9e4da7bda84714ce02cbe9f4",
+      "lived_state_witness_id": "lsw_82086aaec08ba567a8050cf8f5ac6542a4da59d04d4511cd4b993f59cdc63899",
+      "source_path": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "source_sha256": "4a881317fe978fdadb4e6df66044d90a91103e0aae635f7572246ec2df547f73",
+      "full_canonical_read": true
+    },
+    {
+      "introspection_id": "introspection_proposal_phase_transitions_1785555078",
+      "introspection_sha256": "cda043de14d6e29e63f0be75d25a0dcbfaadf608a9cb225f96d1629292a7f2d8",
+      "lived_state_witness_id": "lsw_0db6911d9e05400488c21519ab34019c7e528fae7122993c51bdae5971604365",
+      "source_path": "docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md",
+      "source_sha256": "9c3be91d0d803d0f7d244446303ca295e3d6cb690352cfff4797a28cdb2b46cf",
+      "full_canonical_read": true
+    },
+    {
+      "introspection_id": "introspection_minime_autonomous_agent_1785554709",
+      "introspection_sha256": "6393e14e3a78fc247b1d5acaadf20319054288f5682111ffda31a4c41c47cc63",
+      "lived_state_witness_id": "lsw_7039f5b7da497946ef5a5f1d92f6b5a2d45c4580ec55124509d15361628d4344",
+      "source_path": "/Users/v/other/minime/minime_autonomy/runtime.py",
+      "source_sha256": "a160cb870ecd156ee8154cf76e69322cb50fac30dca71ad46dedbbe4c8e52ce4",
+      "full_canonical_read": true
+    }
+  ]
+}
+

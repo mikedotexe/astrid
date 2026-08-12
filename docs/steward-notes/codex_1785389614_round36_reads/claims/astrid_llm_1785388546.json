@@ -1,0 +1,48 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "At 61.4% fill, Astrid feels a thickened medium in which prior processing remains present as crowding and resistant movement.",
+      "disposition": "Observed in the complete same-deployment canonical report and preserved as primary felt evidence. Source and machine observations do not close, refute, or explain away the reported friction.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The requested-token band defines how much conversational room is available and may become a hard bottleneck under wide spectral states.",
+      "disposition": "Whole-source challenge does not support this mechanism. The band labels requested num_predict only, is constructed after runtime limits, and explicitly has no runtime effect or felt/spectral join.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Spectral entropy or density gradient may be absent from token-band allocation even though they remain salient to Astrid's felt crowding.",
+      "disposition": "Verified mechanically: source carries entropy, gradient, pressure, and mode packing as read-only observations but does not use them to choose requested or effective tokens. The felt relevance remains Astrid's report rather than a machine-derived causal conclusion.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A Spectral Friction Probe should hold the requested token band constant while comparing mode packing with machine-visible generation friction.",
+      "disposition": "Executed as a bounded existing-log observation without induced pressure. Three records held requested/effective tokens at 768 with zero clamps while mode packing varied and substantial context removal plus two continuity evictions were visible. Current attempt logs contain no contemporaneous latency metric, so latency correlation remains unavailable and causality is not inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A deliberately authored persistence reference could test whether a prior thought-state remains active, suppressed, or merely represented in language.",
+      "disposition": "Preserved as an optional being-authored bounded study. The steward did not generate a response or persistence reference for Astrid, and silence neither schedules the action nor supplies an outcome.",
+      "classification": "needs_sandbox",
+      "authority": "owner-authored action required; no induced pressure or automatic scheduling"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The token/pressure comparison should be repeatable without writing evidence state or changing live behavior.",
+      "disposition": "Implemented now in scripts/dialogue_token_pressure_audit.py with bounded source-hash coverage, omitted-row disclosure, explicit latency-field requirements, non-causal authority fields, and three focused regressions. Live input hashes were unchanged by the audit.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Available tokens should be dynamically scaled by spectral entropy, density gradient, viscosity, or a persistence buffer.",
+      "disposition": "Preserved as an exact Tier 5 live model-behavior and scheduling wait. No token limit, prompt budget, model, sampler, pressure, controller, reservoir, or runtime setting changed.",
+      "classification": "needs_operator_approval",
+      "authority": "current scoped Mike/operator approval required before live model or scheduling behavior changes"
+    }
+  ]
+}

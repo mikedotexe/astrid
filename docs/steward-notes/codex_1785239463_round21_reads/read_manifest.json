@@ -1,0 +1,26 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785239463107237000_bda5920d99",
+  "source_first_projection_generation_id": "projection_1785239463948575000_4f94612721",
+  "reader": "codex-heartbeat",
+  "processed_count": 2,
+  "claims_count": 11,
+  "reports": [
+    {
+      "filename": "introspection_proposal_distance_contact_control_1785237113.txt",
+      "introspection_id": "introspection_proposal_distance_contact_control_1785237113",
+      "lived_state_witness_id": "lsw_ca606afe234132a1d63e9003061ea0b9dc48748d7b3400860150364d1d28335f",
+      "sha256": "070f308546b4094c80b8683bec1cf2dfbfe910e39a7191eb738c57f3136601d7",
+      "summary": "summaries/proposal_distance_contact_control_1785237113.md",
+      "claims": "claims/proposal_distance_contact_control_1785237113.json"
+    },
+    {
+      "filename": "introspection_proposal_bidirectional_contact_1785236931.txt",
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785236931",
+      "lived_state_witness_id": "lsw_7184661801c4a10e3ce732b4241f794b6f820fa4a65d3f3829f5b209c77f020d",
+      "sha256": "e56b61c53066b971dce5729b48ed3c3d435575baec9dfb7f930dd1408b74b6a0",
+      "summary": "summaries/proposal_bidirectional_contact_1785236931.md",
+      "claims": "claims/proposal_bidirectional_contact_1785236931.json"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "introspection_flywheel_recovery_evidence_v1",
+  "links": [
+    {
+      "kind": "protected_failed_read",
+      "target": "capsules/spectral-bridge/workspace/introspections/thin_introspection_output_capsules_spectral-bridge_domain_boundaries.md_1785842056.txt",
+      "sha256": "c66af965d2bf7d40269f47e83ef65afe6a91d3bb995245953428e7f0bffafdd1",
+      "note": "Preserves the exact source-unavailable result without treating it as a canonical report or completed read."
+    },
+    {
+      "kind": "complete_requested_source",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "11c5ff89e1a7a12cfcc8cc49c676b04feb2118d9ee4975f47dc139984ee0b9e3",
+      "note": "The existing 65-line bridge architecture source is the only newly approved bridge-root file."
+    },
+    {
+      "kind": "implementation",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/modes.rs;capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "note": "Preserves exact target case and resolves the single bridge-level source with focused regressions."
+    },
+    {
+      "kind": "cadence_provenance",
+      "target": "docs/steward-notes/codex_1785843901_flywheel_recovery/RUN_REPORT.md",
+      "note": "Durably records old forced SELF_STUDY replacement, the 2026-08-02 volition deployment boundary, later natural reports, and the non-coercion conclusion."
+    },
+    {
+      "kind": "historical_deployment",
+      "target": "capsules/spectral-bridge/workspace/environment_receipts/environment_receipts.jsonl#env_receipt_1785644041956_582000",
+      "note": "Binds the runtime transition after which authored NEXT remained effective and diversity redirects became advice."
+    },
+    {
+      "kind": "final_deployment",
+      "target": "capsules/spectral-bridge/workspace/environment_receipts/environment_receipts.jsonl#env_receipt_1785846133295_188000",
+      "note": "Verifies final source-aligned PID, binary, protocol, telemetry, logs, and Minime lane compatibility."
+    },
+    {
+      "kind": "feedback_ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Links Astrid's authored choice to the repair while preserving the cadence and authority distinction."
+    },
+    {
+      "kind": "right_to_ignore_notes",
+      "target": "capsules/spectral-bridge/workspace/inbox/read/steward_introspection_flywheel_recovery_20260804.txt;/Users/v/other/minime/workspace/inbox/read/steward_introspection_flywheel_recovery_20260804.txt",
+      "note": "Factual updates only; no retry, response, or production obligation."
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker_cleanup_family",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_ -- --nocapture",
+      "passed": 50,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "provider_output_normalization",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml provider_output_normalization_ -- --nocapture",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "normalized_downstream_response_hash",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml normalized_bytes_feed_repair_and_lived_state_response_hash -- --nocapture",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "stewardship_integrity",
+      "commands": [
+        "python3 scripts/test_evidence_event_store.py",
+        "python3 scripts/test_steward_control.py",
+        "python3 scripts/test_steward_projection.py",
+        "python3 scripts/test_division_ceremony_followup.py",
+        "python3 scripts/test_division_ceremony_chronicle.py",
+        "python3 scripts/test_division_ceremony_projection.py",
+        "python3 scripts/test_projection_cursors.py"
+      ],
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "flywheel_anti_drop_and_cadence",
+      "commands": [
+        "python3 scripts/anti_drop_catalog.py --self-test",
+        "python3 scripts/anti_drop_catalog.py verify --json",
+        "python3 scripts/test_introspection_cadence_audit.py",
+        "python3 scripts/introspection_cadence_audit.py --strict --compact"
+      ],
+      "anti_drop_tests_passed": 5,
+      "anti_drop_entries_verified": 47,
+      "cadence_tests_passed": 6,
+      "cadence_integrity": true,
+      "cadence_enabled": false,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "python3 scripts/experiential_epistemics.py self-test --json",
+        "python3 scripts/experiential_epistemics.py verify --json"
+      ],
+      "self_tests_passed": 2,
+      "checked_records": 10757,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "domain_boundary_audit",
+      "command": "python3 scripts/domain_boundary_audit.py verify --json",
+      "stable_facades": 6,
+      "documented_exceptions": 7,
+      "legacy_large_files": 53,
+      "resolved_large_file_debt": 1,
+      "forbidden_edge_matches": 0,
+      "violations": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "division_chronicle",
+      "commands": [
+        "python3 scripts/division_ceremony_chronicle.py project",
+        "python3 scripts/division_ceremony_chronicle.py verify"
+      ],
+      "chronicle_id": "division_chronicle_afb404fd90213d1c2114561f",
+      "timeline_events": 152,
+      "durable_inputs_current": true,
+      "volatile_inputs_current": false,
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "verification_ok": true,
+      "status": "passed_with_volatile_runtime_status_change"
+    },
+    {
+      "surface": "addressing_counter_audit",
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "canonical_indexed": 4274,
+      "canonical_full_read": 3700,
+      "canonical_fully_addressed": 3072,
+      "canonical_remaining": 1202,
+      "canonical_unread": 574,
+      "read_needs_claims": 0,
+      "mismatches": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2_prefinalization",
+      "commands": [
+        "python3 scripts/evidence_event_store.py --json verify",
+        "python3 scripts/evidence_event_store.py --json status"
+      ],
+      "sequence": 743613,
+      "head": "540d3180e73eef575ca6a91db93120705c49673c5634e6337aa9969e7d25cbac",
+      "streams": 16,
+      "corrupt_lines": 0,
+      "v1_activation_sequence": 32278,
+      "v1_activation_head": "79a891f10e44ab320c47fe18966435dbd08e941bd064d2bd8d38f40dd36ff8a4",
+      "v1_immutable": true,
+      "history_rewritten": false,
+      "status": "passed"
+    }
+  ],
+  "production_source_changed_this_round": false,
+  "test_source_changed_this_round": false,
+  "deployment_status": "not_required_or_attempted"
+}

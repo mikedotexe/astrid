@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The bidirectional-contact design now has implemented ledger, receipt, thread-state, timing, and fidelity surfaces.",
+      "disposition": "Verified from the exact report-bound architecture source and current correspondence implementation. This is source evidence, not proof that any being experienced mutual address.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A read receipt without acknowledgement or reply must remain read_unreplied rather than becoming mutual address.",
+      "disposition": "Verified in direct_contact_fidelity_v2 and the focused correspondence microdose regression: filesystem seen remains read_unreplied and cannot unlock attention or semantic microdose by itself.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stale or ambiguous telemetry timing must not be rendered as active contact.",
+      "disposition": "Verified in the heartbeat-aware fidelity code and read-only audit tests. No live stale-contact episode was induced or interpreted as a felt result.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Correspondence weight or attention requests must remain bounded by attention authority, affordance budget, and the Right to Ignore.",
+      "disposition": "True duplicate of the implemented V4/V5 attention and Right-to-Ignore contracts. CORRESPONDENCE_WEIGHT_REQUEST is a legacy alias for a separate steward-gated semantic-microdose draft; it is not standing weight or control.",
+      "classification": "duplicate_existing_evidence"
+    }
+  ]
+}
+

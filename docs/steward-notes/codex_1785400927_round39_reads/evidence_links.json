@@ -1,0 +1,54 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_esn_1785400781",
+      "claim_id": "c001,c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/esn.rs",
+      "note": "Complete source distinguishes evidence-only candidate helpers from the owner-controlled live exploration-noise path."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785400781",
+      "claim_id": "c003,c004,c005",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/esn.rs",
+      "note": "Existing exact midpoint, threshold, continuity, saturation, fallback, and rho tests pass in the 336-test library suite."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1785400781",
+      "claim_id": "c006,c007",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785400927_round39_reads/claims/minime_esn_1785400781.json",
+      "note": "Promoting dynamic noise or viscous rho into the live ESN step remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785400222",
+      "claim_id": "c001",
+      "kind": "lived_state",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_minime_sensory_bus_1785400222.txt",
+      "note": "The reported viscosity remains primary qualitative evidence independently of source-attribution errors."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785400222",
+      "claim_id": "c002,c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Complete source and exact symbol challenge identify telemetry-context conflation and the actual nonlinear read-only degradation curve."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785400222",
+      "claim_id": "c004",
+      "kind": "typed_evidence",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs;/Users/v/other/minime/minime/src/regulator/core/viscosity.rs;/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "note": "Read-only pressure/porosity divergence and semantic viscosity evidence already preserve the mechanical question without inferring felt cause."
+    },
+    {
+      "introspection_id": "introspection_minime_sensory_bus_1785400222",
+      "claim_id": "c005,c006,c007",
+      "kind": "authority_boundary",
+      "target": "docs/steward-notes/codex_1785400927_round39_reads/claims/minime_sensory_bus_1785400222.json",
+      "note": "No named runner trials exist; porosity, regulator drive, semantic admission, decay, and control changes remain Tier 5."
+    }
+  ]
+}
+

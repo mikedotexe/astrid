@@ -1,0 +1,20 @@
+{
+  "reader": "codex-heartbeat",
+  "run_id": "run_1786286309785205000_1fcb72b7e3",
+  "selected_limit": 40,
+  "processed_report_count": 1,
+  "depth_stop": "The queue head raised a specific ownership and zero-growth concern that deserved complete source, witness, audit, and focused-test verification; the remaining 39 reports were left unread rather than skimmed.",
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786279295",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1786279295.txt",
+      "sha256": "d2634a320897f57bfbbc5d5bfdea3398c430dc08cb04d1479dbb948fef84a719",
+      "displayed_lines": 44,
+      "newline_count": 43,
+      "bytes": 3618,
+      "lived_state_witness_id": "lsw_f7410a5a9b8e836ef71db124671beab15ff583aab5850c01eeb20e048a7a28e8",
+      "summary_file": "summaries/domain_boundaries_1786279295.md",
+      "claims_file": "claims/domain_boundaries_1786279295.json"
+    }
+  ]
+}

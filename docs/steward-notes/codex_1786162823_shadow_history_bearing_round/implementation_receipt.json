@@ -1,0 +1,25 @@
+{
+  "schema": "shadow_history_bearing_implementation_receipt_v1",
+  "steward_run_id": "run_1786162011249938000_1171356364",
+  "source": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+  "source_sha256": "b9318fce7a9c8934504544cbf2a7b34fdf140bcac8e5de657caba39074af188a",
+  "surface": "SHADOW_TRAJECTORY being-invoked observational cartography",
+  "implemented": [
+    "relative recent-versus-earlier field_norm motion",
+    "window and recent class-transition counts",
+    "trailing class and dwell sample count",
+    "bounded history-bearing labels",
+    "raw-history preservation",
+    "rendered and machine-readable interpretation boundaries"
+  ],
+  "canonical_authority_markers": {
+    "observational_only": true,
+    "requires_being_invocation": true,
+    "changes_shadow_field": false,
+    "changes_pressure_or_mode_packing": false,
+    "applies_temporal_decay": false,
+    "infers_semantic_memory_role": false,
+    "infers_felt_causation": false
+  },
+  "authority_boundary": "No action was invoked and no history, field, dispersal, pressure, mode packing, semantic admission, model behavior, or live control was changed."
+}

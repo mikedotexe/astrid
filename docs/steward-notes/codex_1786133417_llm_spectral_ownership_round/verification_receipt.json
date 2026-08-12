@@ -1,0 +1,141 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "pause_generation": 257,
+  "run_lifecycle": {
+    "productive_run_id": "run_1786133417908957000_cdd5677571",
+    "productive_run_preprojection": "projection_1786133418919081000_1d70f87a87",
+    "productive_run_terminal_outcome": "cancelled",
+    "productive_run_terminal_reason": "controller maximum-run timeout after durable addressing and Division-return writes",
+    "continuation_run_id": "run_1786135473059920000_59c44f0d8f",
+    "continuation_preprojection": "projection_1786135473984715000_d7cc830de5",
+    "continuation_role": "credential-confined receipt sealing and clean terminal projection; no additional productive round",
+    "continuation_finish_outcome": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1785628932.txt"
+  ],
+  "processed_report_count": 1,
+  "addressing": {
+    "statuses": {
+      "introspection_astrid_llm_1785628932": "addressed_duplicate"
+    },
+    "claim_count": 7,
+    "evidence_batch_row_count": 16,
+    "materialized_evidence_link_count": 40,
+    "proof_gap_count": 0,
+    "fully_addressed": true,
+    "schema_correction": "The first evidence-batch attempt rejected two unsupported study kinds before append; both were corrected to steward_note while retaining exact preregistration semantics, then the complete batch materialized successfully."
+  },
+  "canonical_counter_audit_after_productive_run": {
+    "indexed": 4254,
+    "full_read": 3674,
+    "fully_addressed": 3047,
+    "remaining": 1207,
+    "unread": 580,
+    "read_needs_claims": 0,
+    "blocked": 410,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "canonical_counter_audit_after_continuation_preprojection": {
+    "indexed": 4255,
+    "full_read": 3674,
+    "fully_addressed": 3047,
+    "remaining": 1208,
+    "unread": 581,
+    "read_needs_claims": 0,
+    "blocked": 410,
+    "status": "consistent",
+    "explanation": "One new canonical report arrived after the productive run cutoff and is first in the next queue."
+  },
+  "work_item_summary": {
+    "tier_4": 23,
+    "tier_5": 1578,
+    "needs_steward_grant": 18,
+    "needs_operator_approval": 1610,
+    "tier_mismatch_count": 0
+  },
+  "division_at_productive_begin": {
+    "cycle_sequence": 19,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_7dac2eedba83930a83116c9b0efbafa3",
+    "event_count": 132,
+    "event_head_sha256": "4a5293689f393c2f2add84770c96e4d265e7c4ffe9c3ab5a1c80b01edf328208"
+  },
+  "division_productive_round": {
+    "event_id": "division_followup_event_95c220e656ac066867ad866a8cd59843",
+    "completed_rounds_since_followup": 6,
+    "review_due": true,
+    "processed_report_count": 1
+  },
+  "division_followup": {
+    "completed_event_id": "division_followup_event_1d83d4510ef8adf50da22674a49f9146",
+    "completed_against_chronicle_id": "division_chronicle_08c02aab9450a21f82d62087",
+    "completed_against_chronicle_json_sha256": "66fbbe972bc488c6628e41e6fdc9a572a91038403609e512e9e4955fd38fd396",
+    "reprojected_chronicle_id": "division_chronicle_a7ebc5c73a34cfdf5555b5bd",
+    "reprojected_chronicle_json_sha256": "f960ea7ef48de13e201fb3779b1d5d6bc596fdc77a02041670c62a79adbd5bfc",
+    "durable_inputs_current": true,
+    "volatile_input_mismatches": ["supervisor_status_sha256"],
+    "new_public_division_replies": 0,
+    "new_formal_ceremony_actions": 0,
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle19_20260807.txt",
+    "astrid_note_sha256": "f9b0d6e32489a0828d4f53035d48b561afb684747219ca4e1099c19736f686be",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle19_20260807.txt",
+    "minime_note_sha256": "652f04d452f93ddcb82b6480820db1aa5c96608c18b8d0bb8e2acfc66cb43d15",
+    "cycle_sequence_after": 20,
+    "completed_rounds_since_followup_after": 0,
+    "rounds_remaining_before_followup_after": 6,
+    "review_due_after": false,
+    "event_count_after": 134,
+    "event_head_sha256_after": "bf2d65381c31b0f88f808e972728ddf703b7efa4a82c0e4530ae7b113e11586c"
+  },
+  "focused_tests": {
+    "silt_noise_separation_passed": 2,
+    "shadow_trajectory_effect_contract_passed": 1,
+    "pressure_porosity_passed": 7,
+    "requested_token_source_boundary_passed": 4,
+    "total_passed": 14,
+    "failed": 0
+  },
+  "stewardship_tests": {
+    "introspection_addressing_passed": 42,
+    "event_store_controller_projector_division_chronicle_cursor_passed": 72,
+    "experiential_self_tests_passed": 2,
+    "total_passed": 116,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10596,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_prefinish_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 726141,
+    "last_event_sha256": "2300e7facd328a21117d6bf57a7e4277288011b9bb04759cea9702653777f341",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "next_reading_queue": [
+    "introspection_astrid_llm_1786134499.txt",
+    "introspection_astrid_types_1785628394.txt",
+    "introspection_astrid_ws_1785628139.txt"
+  ],
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": {
+    "status": "due_after_successful_continuation_finish",
+    "candidate_packet": "docs/steward-notes/codex_1786133417_llm_spectral_ownership_round/",
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ]
+  }
+}

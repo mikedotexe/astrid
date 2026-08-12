@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dialogue runtime finds exact known model-control markers, classifies bounded delimiter or following-relation reference syntax, preserves explicitly referenced markers, and removes unframed markers from the scanner remainder.",
+      "disposition": "Verified from the complete report-bound lines 1-400. The scanner uses longest exact matching at byte offsets, Unicode-scalar advancement for non-marker text, and a separate optional reference-syntax receipt.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Complex nesting or multibyte delimiter structures outside the declared matching-pair table may be misclassified.",
+      "disposition": "Narrowed against source rather than dismissed. Unicode text and whitespace are handled character-safely, but non-whitespace delimiters outside the explicit pair table are intentionally not inferred as reference syntax. Existing Unicode quote/group tests and the new repeated-parentheses test verify the supported boundary without widening grammar.",
+      "classification": "verified_bounded_contract"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Nested square brackets or repeated parentheses should preserve an exact marker and report the proven delimiter depth within the configured bound.",
+      "disposition": "Addressed with exact continuity plus one new regression. Round 78 already proves depth two for repeated square brackets across Unicode whitespace; this round adds repeated parentheses and proves depth two in aggregate and context receipts.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The finite following-relation grammar should preserve `mimics` while an unlisted word such as `creates` should not trigger preservation.",
+      "disposition": "Addressed exactly. Existing poetic-attribution coverage proves `mimics`; the new `creates` regression proves marker-only removal, byte-exact surrounding prose, zero preserved references, and a cleanup-candidate receipt.",
+      "classification": "addressed_change"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The match collection and scanner remainder should be traced through `sanitize_model_control_markers_with_report` aggregation.",
+      "disposition": "Verified by reading lines 342-507. Matches feed per-token removed/preserved counts, delimiter statistics, byte totals, hashes, and bounded context receipts; the scanner remainder is returned directly as the sanitized result and matches are not reconstructed into it.",
+      "classification": "verified_from_source"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The canonical source window covered only lines 1-400 of a 997-line file.",
+      "disposition": "Resolved with explicit scope. This run reread lines 1-507 at the current report hash and binds lines 508-997 to the immediately preceding complete 997-line round-78 receipt at the same SHA-256; no unseen-source claim is inferred beyond that continuity.",
+      "classification": "verified_exact_continuity"
+    }
+  ]
+}

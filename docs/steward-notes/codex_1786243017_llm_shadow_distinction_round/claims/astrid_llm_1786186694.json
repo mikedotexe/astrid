@@ -1,0 +1,29 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786186694",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`echoes` is an exact allowed following relation while punctuation-joined `is-not` is not.",
+      "disposition": "Verified by exact source and executable positive and negative fixtures; the negative case removes only the marker and preserves surrounding prose.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The exact slash-joined `is/not` form should fail closed for the same finite-word reason as `is-not`.",
+      "disposition": "Verified by the paired punctuation-joined regression added in the preceding round; both chunks stay intact and remain outside the allowlist.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A newline followed by a non-alphanumeric symbol should still allow a later exact `echoes` relation to be found.",
+      "disposition": "Implemented the report's literal boundary request with a symbol-only line and spaces; the marker is preserved with one explicit relation occurrence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Nested delimiter depth should remain exact within the declared four-pair evidence bound.",
+      "disposition": "Verified by existing depth one through four and deeper capped-receipt tests without widening the delimiter grammar.",
+      "classification": "verified_existing"
+    }
+  ]
+}

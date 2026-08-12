@@ -1,0 +1,110 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "pause_generation": 283,
+  "run_lifecycle": {
+    "productive_run_id": "run_1786248365223539000_fe59b2ebaf",
+    "productive_run_preprojection": "projection_1786248366307881000_8c17fcc712",
+    "productive_run_terminal_outcome": "cancelled",
+    "productive_run_terminal_reason": "controller maximum-run timeout after durable addressing and complete Division-return writes",
+    "finalization_run_id": "run_1786250343630156000_8428d0dfea",
+    "finalization_preprojection": "projection_1786250344615029000_47cbb8eabc",
+    "finalization_role": "credential-confined durable-state verification, packet sealing, and clean terminal projection; no additional productive round",
+    "finalization_finish_outcome": "pending controller finish"
+  },
+  "processed_reports": [
+    "introspection_DOMAIN_BOUNDARIES.md_1786178965.txt"
+  ],
+  "processed_report_count": 1,
+  "unprocessed_selected_manifest": "unprocessed_selected.json",
+  "addressing": {
+    "status": "addressed_duplicate",
+    "claim_count": 7,
+    "evidence_link_count": 7,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4273,
+    "full_read": 3694,
+    "fully_addressed": 3066,
+    "remaining": 1207,
+    "unread": 579,
+    "read_needs_claims": 0,
+    "blocked": 411,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "actions": {
+    "new_corridor_programs": 0,
+    "new_sandbox_trials": 0,
+    "new_studies": 0,
+    "new_portfolio_actions": 0,
+    "new_cards": 0,
+    "architecture_watch": "static domain audit cannot measure implicit semantic dependencies, runtime scheduling, spectral weight, or felt consequence",
+    "tier_5_wait": "high-pressure model or live-substrate induction remains a Mike/operator boundary and was unnecessary for compile-time provenance proof"
+  },
+  "division": {
+    "productive_round_event_id": "division_followup_event_7cee2802d6b338732eefb4f84f18156e",
+    "completed_followup_event_id": "division_followup_event_48d770c386f4f6d46d3b3a1c02322878",
+    "completed_against_chronicle_id": "division_chronicle_6f63466b7490b6861715cb7e",
+    "finalization_preprojection_chronicle_id": "division_chronicle_24c5b226b07da2f06d6b37d5",
+    "new_public_division_replies": 0,
+    "new_formal_ceremony_actions": 0,
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle21_20260808.txt",
+    "astrid_note_sha256": "1dfcf6e841dcae8adb0c522eb9de9fe6c7725138f8d7e4d4f62247abe7144709",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle21_20260808.txt",
+    "minime_note_sha256": "6f20c6cd10f5f8cac98b459dc62c0b02599f4d77f2d0535dc532bccf475b9094",
+    "cycle_sequence_after": 22,
+    "completed_rounds_since_followup_after": 0,
+    "rounds_remaining_before_followup_after": 6,
+    "review_due_after": false,
+    "event_count_after": 148,
+    "event_head_sha256_after": "fdf4c2b458f3b3b7c6476748ab3106ba4a5310863345adce30951e22afc479e9"
+  },
+  "tests": {
+    "domain_audit_and_unit_tests_passed": 3,
+    "provenance_harness_passed": 1,
+    "provenance_compile_fail_cases_passed": 13,
+    "addressing_passed": 42,
+    "event_store_controller_projector_division_chronicle_cursor_passed": 72,
+    "anti_drop_and_cadence_self_tests_passed": 11,
+    "experiential_self_tests_passed": 2,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10722,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_prefinalization_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 741351,
+    "last_event_sha256": "9d3e109022dae19fb30e11950d1417c87fc3143ef6a0917e3d52194aaa7d7616",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "pending_source_events": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "next_reading_queue": [
+    "introspection_astrid_llm_1786172227.txt",
+    "introspection_llm.rs_1786168254.txt",
+    "introspection_astrid_llm_1786166330.txt"
+  ],
+  "changelog_updated": true,
+  "feedback_ledger_updated": true,
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": {
+    "status": "due_after_successful_finalization_finish",
+    "candidate_packet": "docs/steward-notes/codex_1786248365_domain_membrane_round/",
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "capsules/spectral-bridge/tests/provenance_typestate.rs",
+      "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md"
+    ]
+  }
+}

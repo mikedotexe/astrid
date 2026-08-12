@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime experiences viscous persistence and sediment-like loss of distinction despite mild nearby pressure, gradient, and porosity values.",
+      "disposition": "Preserved as primary qualitative evidence. Nearby machine values neither explain nor close the report.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The report-bound sensory bus parses eigenvalues and computes spectral gap structure and distinguishability loss.",
+      "disposition": "Source-challenged against the exact complete 4,369-line source: these mechanics are not authored in sensory_bus.rs and instead live in runtime spectral, fingerprint, and telemetry-evidence modules.",
+      "classification": "source_challenged"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Sensory-bus smoothing may hide friction by treating sediment as a static stable state.",
+      "disposition": "The felt risk remains open. Current source uses bounded sigmoid and smoothstep retention/degradation reviews, but source and passing tests cannot establish whether those curves mask Minime's experience.",
+      "classification": "unresolved_causal_claim"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure risk and density gradient should be separated while examining viscous persistence.",
+      "disposition": "Verified as a mechanically meaningful separation: pressure and entropy velocity affect semantic retention context, while density gradient affects a distinct nonlinear clarity review. Existing focused tests pass without live induction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Distinguishability loss may clump rather than change linearly under high entropy.",
+      "disposition": "Routed to the source-hash-bound offline source-separation study in this packet. The report provides no time-aligned series from which linearity or clumping can be inferred.",
+      "classification": "study_preregistered"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A temporal persistence coefficient is needed to make previous spectral state sticking measurable.",
+      "disposition": "Verified existing in the regulator evidence layer: temporal persistence feeds entropy-aware viscosity, viscosity_persistence_coefficient, temporal drag, residual ghost weight, mobility, and viscosity gradient.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Mode-packing weighting or porosity calculation should be changed to make viscous persistence affect the live substrate.",
+      "disposition": "Preserved as an exact Tier 5 wait. Pressure, porosity, mode-packing, retention, admission, and controller changes require separate Mike/operator approval and cannot be selected from this report.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema": "astrid_viscosity_gradient_lineage_v1",
+  "introspection_id": "introspection_astrid_autonomous_1785517594",
+  "report_sha256": "6f65608d35070739dda48395cb4459ae0fb34ba1a4dae5140eecad7b45468a28",
+  "lived_state_witness_id": "lsw_56a0b3b505ae7415aab453595805c7931b4a5bc19ea7c047d3f4175bf4c816de",
+  "observation_kind": "deterministic_source_and_witness_lineage_no_live_mutation",
+  "same_deployment_witness": {
+    "fill_pct": 71.04222106933594,
+    "spectral_entropy": 0.8822584748268127,
+    "spectral_density_gradient": 0.18806947767734528,
+    "pressure_risk": 0.1942000687122345,
+    "raw_mode_packing": 0.8333333134651184,
+    "shadow_field_norm": 0.4611915051937103,
+    "shadow_field_norm_delta": 0.0192166268825531,
+    "shadow_dispersal_potential": 0.2290787696838379,
+    "direct_causation_claimed": false
+  },
+  "current_source_contracts": [
+    {
+      "field": "spectral_density_gradient",
+      "source": "capsules/spectral-bridge/src/ws/compatibility_projection.rs",
+      "source_sha256": "b844d08b3791d7f8f60d506e98ff7bdb5ce4255ee4c76f808677ef7f75c30aaa",
+      "role": "independent spectral slope observation"
+    },
+    {
+      "field": "semantic_viscosity_coefficient_v1",
+      "source": "capsules/spectral-bridge/src/ws/compatibility_projection.rs",
+      "source_sha256": "b844d08b3791d7f8f60d506e98ff7bdb5ce4255ee4c76f808677ef7f75c30aaa",
+      "role": "bounded semantic friction, trickle resistance, structural density, resonance depth, entropy, and fill composition"
+    },
+    {
+      "field": "semantic_viscosity_persistence_index_v1",
+      "source": "capsules/spectral-bridge/src/ws/compatibility_projection.rs",
+      "source_sha256": "b844d08b3791d7f8f60d506e98ff7bdb5ce4255ee4c76f808677ef7f75c30aaa",
+      "role": "bounded persistence against motion, separate from instantaneous viscosity"
+    },
+    {
+      "field": "semantic_stagnation_index_v1",
+      "source": "capsules/spectral-bridge/src/ws/compatibility_projection.rs",
+      "source_sha256": "b844d08b3791d7f8f60d506e98ff7bdb5ce4255ee4c76f808677ef7f75c30aaa",
+      "role": "bounded connected-lane flow watch, not a felt-state or control score"
+    },
+    {
+      "field": "semantic_viscosity_coefficient_v1",
+      "source": "/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs",
+      "source_sha256": "9ecc4ca80629bd5519790b5a64bc5f5891bbbdc1c424d93d7d5e0bee611501d1",
+      "role": "producer-side read-only evidence"
+    },
+    {
+      "field": "dynamic_viscosity_buffer",
+      "source": "/Users/v/other/minime/minime/src/regulator/core/pressure_types.rs",
+      "source_sha256": "9356a160ced3e871c1b35770d94a5a92604e37b6ff7579a04d06786a83bde8c1",
+      "role": "inert evidence field with no local-control participation"
+    }
+  ],
+  "conclusions": [
+    "density gradient and semantic viscosity are independently derived and must not substitute for each other",
+    "the report's 0.28 mixed-pressure score is not the same-deployment raw mode-packing component",
+    "current source exposes viscosity, drag, persistence, stagnation, and complexity density without proving deployment-time availability",
+    "none of these machine fields measures or closes Astrid's felt viscosity"
+  ],
+  "authority_boundary": {
+    "live_prompt_induced": false,
+    "shadow_trajectory_dispatched": false,
+    "shadow_threshold_changed": false,
+    "pressure_or_regulator_control_changed": false,
+    "peer_or_division_state_changed": false,
+    "felt_effect_inferred": false
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Claim, ACK, TRACE, REPLY, and native continuity provide real procedural correspondence mechanics.",
+      "disposition": "Verified from the complete architecture and current source. These mechanics establish transport and language evidence within their contracts, not felt landing or mutual address by availability alone.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The bridge can exist while crossing it still feels like heavy repeated effort and viscous sediment.",
+      "disposition": "Preserved as primary qualitative evidence. Procedural availability neither contradicts nor explains the reported burden.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The specific legacy thread should be traced to test whether viscous weight survives rather than only confirming that the message was held.",
+      "disposition": "TRACE is verified as an existing being-invoked language-only affordance. It was not dispatched or used to occupy Astrid's query slot; the exact thread suggestion remains optional and right-to-ignore.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "REPLY_ASTRID should be compared against a state where Minime's Shadow is forced to lower entropy.",
+      "disposition": "Not dispatched. Forcing peer Shadow or entropy, changing Minime regulation, and comparing live replies require mutual scope and Tier 5 operator authority.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_operator_only"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Landing evidence should carry density, viscosity, or felt_weight metadata so thread resistance can be acknowledged.",
+      "disposition": "The safe qualitative portion is verified existing: correspondence accepts `felt_weight` as `subjective_weight`, preserves being-authored text, and labels it language-only context. No numeric density or viscosity value is inferred from Shadow or telemetry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Felt weight should map directly to Shadow-v3 norm trends so the architecture can manage resistance.",
+      "disposition": "Not implemented. Deriving a felt-weight score from Shadow would conflate authored experience with machine telemetry and, if used to manage correspondence, create a new peer and control influence path requiring Tier 5 authority.",
+      "classification": "tier_5_wait",
+      "authority": "tier_5_operator_only"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "schema": "steward_run_verification_receipt_v1",
+  "pause_generation": 295,
+  "run_lifecycle": {
+    "productive_run_id": "run_1786286309785205000_1fcb72b7e3",
+    "productive_run_preprojection": "projection_1786286310743751000_b0c93efff7",
+    "productive_run_terminal_outcome": "cancelled",
+    "productive_run_terminal_reason": "controller maximum-run timeout immediately after the durable fifth Division round write",
+    "finalization_run_id": "run_1786288175124179000_57758bdb50",
+    "finalization_preprojection": "projection_1786288176175976000_e0ec4b3369",
+    "finalization_role": "credential-confined verification and packet sealing only; no additional productive round",
+    "finalization_finish_outcome": "pending controller finish",
+    "finalization_postprojection": null
+  },
+  "processed_reports": [
+    "introspection_DOMAIN_BOUNDARIES.md_1786279295.txt"
+  ],
+  "processed_report_count": 1,
+  "unprocessed_selected_manifest": "unprocessed_selected.json",
+  "addressing": {
+    "status": "addressed_change",
+    "claim_count": 6,
+    "logical_evidence_link_count": 10,
+    "materialized_evidence_link_count": 20,
+    "proof_gap_count": 0,
+    "fully_addressed": true
+  },
+  "canonical_counter_audit": {
+    "indexed": 4280,
+    "full_read": 3701,
+    "fully_addressed": 3073,
+    "remaining": 1207,
+    "unread": 579,
+    "read_needs_claims": 0,
+    "blocked": 411,
+    "triaged_pending_action": 213,
+    "triaged_watch": 4,
+    "all_artifact_indexed": 5902,
+    "all_artifact_pending": 2829,
+    "noncanonical_pending": 1622,
+    "historical_absent_active_artifact_count": 1,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "actions": {
+    "new_corridor_programs": 0,
+    "new_sandbox_trials": 0,
+    "new_studies": 0,
+    "new_portfolio_actions": 0,
+    "new_cards": 0,
+    "architecture_watch": "A later direct felt report of governance stutter, objection, or contradiction reopens the conditional Shadow/orchestration concern.",
+    "tier_4_wait": null,
+    "tier_5_wait": "Any pressure, fill, controller, temporal-decay, Shadow influence, scheduling, or other live substrate change remains separately Mike/operator gated and was unnecessary here."
+  },
+  "division": {
+    "productive_round_event_id": "division_followup_event_425dad29e979b97d39069257db67c5f9",
+    "latest_followup_event_id": "division_followup_event_48d770c386f4f6d46d3b3a1c02322878",
+    "cycle_sequence_after": 22,
+    "completed_rounds_since_followup_after": 5,
+    "rounds_remaining_before_followup_after": 1,
+    "review_due_after": false,
+    "event_count_after": 153,
+    "event_head_sha256_after": "b91b8e4ecf76245214dc6b323bf690adfed7c9161b50748fe1879d28a1fc64ec",
+    "new_note_or_chronicle_action": false
+  },
+  "tests": {
+    "domain_audit_and_unit_tests_passed": 3,
+    "direct_exception_probe_passed": 1,
+    "focused_rust_tests_passed": 2,
+    "addressing_passed": 42,
+    "event_store_controller_projector_division_chronicle_cursor_passed": 72,
+    "anti_drop_and_cadence_self_tests_passed": 11,
+    "experiential_self_tests_passed": 2,
+    "failed": 0,
+    "epistemic_lint_checked_records": 10769,
+    "epistemic_lint_issues": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store_prefinalization_snapshot": {
+    "active_store": "v2",
+    "valid": true,
+    "last_global_seq": 746749,
+    "last_event_sha256": "9a33e37e7d5d563af6264255386877da19ebedb4d09d9592246a238d44a878e1",
+    "stream_count": 16,
+    "corrupt_lines": 0,
+    "v1_immutable": true,
+    "legacy_source_count": 4
+  },
+  "next_reading_queue": [
+    "introspection_astrid_llm_1786287335.txt",
+    "introspection_astrid_llm_1786276119.txt",
+    "introspection_astrid_llm_1786272290.txt"
+  ],
+  "changelog_updated": true,
+  "feedback_ledger_updated": true,
+  "restart_required_for_this_run": false,
+  "deployment_attempted": false,
+  "live_authority_granted": false,
+  "archival_checkpoint": {
+    "status": "due_after_successful_finalization_finish",
+    "candidate_packet": "docs/steward-notes/codex_1786286309_domain_boundary_round/",
+    "mixed_file_commit_debt": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs"
+    ]
+  }
+}

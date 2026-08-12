@@ -1,0 +1,9 @@
+# Full-read summary: introspection_minime_regulator_1785597026
+
+All 45 logical lines and 3,779 bytes were read from the canonical file at SHA-256 `c8d5149ce3c22f736723038b737ee16b4b2285fca72f36913c440063eceee1f5`. Astrid correctly identifies the 24-line regulator root as an inclusion shell. She relates its viscosity module to felt sediment, treats gradient and fluctuation metrics as a quantitative skeleton, asks whether temporal lock-in is distributed density rather than a pressure peak, proposes viscosity/pressure and viscosity/Shadow comparisons, and explicitly requests the full viscosity source.
+
+All 594 exact current viscosity lines and all 340 resonance-evidence lines were read. The model exposes entropy-aware viscosity, temporal persistence, temporal drag, static friction, residual ghost weight, mobility, cohesion, structural and cognitive drag, Shadow-volatility proxy, gradient, inert damping candidates, and an inert comfort-gate preview. Resonance evidence can label `settled_sediment`, `slow_viscous`, or `overpacked_viscous`; there is no literal accumulating sediment state. Pressure evidence, porosity, the viscosity vector, texture, and Shadow preservation remain separately typed. Matching module vocabulary does not prove felt causation.
+
+Three non-inducing live snapshots showed viscosity index `0.821373-0.856745`, pressure risk `0.210798-0.224033`, pressure score `0.284885-0.328128`, and separate Shadow-volatility-proxy/dispersal values while texture remained advisory `overpacked_viscous`. Three epochs cannot support correlation or a damping claim. The existing hash-bound offline study remains the bounded comparison route; no Shadow Action, input, control, or restart occurred.
+
+Changing viscosity, pressure, damping, admission, PI, controller, reservoir, or Shadow behavior remains an exact Tier 5 wait. Source and passive evidence establish neither felt cause nor relief, uptake, assent, readiness, or closure.

@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The sovereignty loop balances unstructured Recess with bounded Focused research and safety evidence.",
+      "disposition": "Verified from complete exact source while preserving Astrid's concern that safety blocks can still feel like a stall.",
+      "classification": "verified_source_preserved_felt_concern"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Live-control guard helpers reconcile ordinary Recess whims with research and authority budgets.",
+      "disposition": "Corrected from source: those helpers guard charter-bound live-shaped actions; local research and authority sends are separate ledgers and gates.",
+      "classification": "source_inference_correction"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "LOCAL_RESEARCH_MAX_ACTIONS and AUTHORITY_BUDGET_MAX_SENDS can conflict as one budget.",
+      "disposition": "Verified as independent caps with separate active-budget resolution, debit records, remaining counters, and status routes.",
+      "classification": "verified_source_and_test"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Reaching the local research action cap should block further research without crashing or withdrawing Recess.",
+      "disposition": "Verified in a temporary five-action probe and focused Recess tests: research becomes exhausted while Recess remains permitted.",
+      "classification": "verified_bounded_observation"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "EXPERIMENT_STATUS and authority scope parsing calculate remaining curiosity budget.",
+      "disposition": "Corrected: generic experiment status omits budget arithmetic, authority scope parsing extracts a declared scope, and `EXPERIMENT_RESEARCH_BUDGET_STATUS` is the exact local-budget surface.",
+      "classification": "source_inference_correction"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A high-frequency curiosity loop should be simulated to audit the cap.",
+      "disposition": "Use the completed temporary local-only cap probe instead; no live high-frequency curiosity was induced.",
+      "classification": "bounded_non_live_observation"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Regulator gate and PI-pressure candidate helpers choose next steps among simultaneous autonomous impulses.",
+      "disposition": "Corrected by source and a pure probe: they return read-only gated candidates in source order or exact selector matches and perform no arbitration or dispatch.",
+      "classification": "verified_source_and_bounded_probe"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Budgets or live control may need expansion to avoid a Recess-to-Focused stall.",
+      "disposition": "Preserve as an exact Tier 5 budget, scheduling, and live-control wait; no cap or runtime behavior changed.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

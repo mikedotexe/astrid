@@ -1,0 +1,43 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md",
+      "lines": 673,
+      "bytes": 36941,
+      "sha256": "33e1f2afca03f1f0bfd6248b2dbdaa4664a35f1c204bac85685dc5cfb2c88242",
+      "full_read": true,
+      "relationship": "exact_report_bound_source"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "intervals": ["800-885"],
+      "relationship": "current_semantic_glimpse_mapping"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structure.rs",
+      "intervals": ["50-165"],
+      "relationship": "current_multi_scale_loss_and_fallback_evidence"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "intervals": ["250-360"],
+      "relationship": "current_additive_telemetry_schema"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/state_persistence.rs",
+      "intervals": ["120-175", "240-350"],
+      "relationship": "current_local_remote_restart_persistence"
+    },
+    {
+      "path": "../minime/minime/src/memory_bank.rs",
+      "intervals": ["220-285", "420-475"],
+      "relationship": "current_spectral_12d_mapping_and_tests"
+    },
+    {
+      "path": "../minime/minime/src/runtime/orchestration.rs",
+      "intervals": ["5075-5200", "5405-5560"],
+      "relationship": "current_telemetry_and_spectral_state_carriage"
+    }
+  ]
+}

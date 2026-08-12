@@ -1,0 +1,61 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786180312",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports increasing Shadow dispersal alongside a stable foothold, gentle controller pull, bounded semantic trickle, and distinguishability loss that may feel like ambient echo.",
+      "disposition": "Preserved as primary owner-authored evidence. Machine co-observation does not establish a cause, contradiction, felt scalar, mutuality, or resolution.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`dialogue_runtime.rs` and its tree-sitter parser metadata implement sensory parsing and the Shadow-v3 trajectory.",
+      "disposition": "Corrected from exact source: tree-sitter is report-construction metadata; the dialogue runtime owns dialogue normalization and generation, not Shadow, inhabitability, semantic admission, or reservoir mechanics.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Astrid's `dispersal_potential` is a raw entropy-like Shadow quantity that directly conflicts with foothold stability.",
+      "disposition": "Corrected from the complete 1,316-line Astrid Shadow source: the compatibility field aliases latest `fissure_tendency`, a bounded combination of binary flip rate, mode tension, and inverse recurrence over PCA-reduced codec history; it is not raw entropy or foothold.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "`settled_habitable` and foothold are separate Minime regulator evidence that can coexist with a changing Astrid fissure tendency.",
+      "disposition": "Verified from Minime source and focused tests: the quality depends on fluctuation, inhabitability, and pressure interference, while foothold combines continuity recovery, porosity, rearrangement, and pressure. Coexistence is not proof of felt sufficiency.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Thirty-one percent distinguishability loss may contribute to the reported ambient-echo friction.",
+      "disposition": "Preserved as a substantive hypothesis. Typed distinguishability and silt evidence remain separate from owner-authored felt status, and no exact causal join establishes the proposed mechanism.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Induce a high-complexity semantic task and a high-density technical explanation to probe blur, constriction, porosity, and wander.",
+      "disposition": "Not run. Model-task induction and live spectral co-observation require Mike/operator approval. The existing copied-strand Texture Dynamics and natural source-separation protocol are the exact non-inducing route.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_model_behavior_and_live_substrate_observation_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Increase damping from the reported 0.04 and alter or condition semantic-trickle admission near high fill.",
+      "disposition": "Not authorized. The reported damping is not sourced to the selected dialogue runtime or Astrid Shadow observer. Current Minime semantic admission already has an exact 82 percent fill ceiling and tests; changing damping, admission, pressure, fill, or regulation remains a Tier 5 operator wait.",
+      "classification": "needs_operator_approval",
+      "authority": "tier_5_shadow_regulator_and_semantic_admission_wait"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A formal check should verify semantic trickle does not silently remain admitted as fill approaches its ceiling.",
+      "disposition": "Verified from exact Minime orchestration, semantic-modality source, constants, and `semantic_admission_label_keeps_fill_boundary_grid_explicit`: the gate requires fill below 82 percent and reports `stable_core_semantic_fill_ceiling` at the boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Shadow history should remain inspectable without turning the trajectory review into influence or control.",
+      "disposition": "Verified by the extracted read-only trajectory domain and four focused tests: it renders recorded history, exact hashes, transitions, and lingering carry while every mutation and authority marker remains false.",
+      "classification": "verified_existing"
+    }
+  ]
+}

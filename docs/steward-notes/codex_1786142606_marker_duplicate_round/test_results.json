@@ -1,0 +1,49 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "surface": "marker_scanner_and_cleanup_family",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_",
+      "passed": 54,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "provider_output_normalization",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib provider_output_normalization",
+      "passed": 2,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 42,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "event_store_controller_projector_division_cursor",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection scripts.test_projection_cursors",
+      "passed": 72,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "self_tests_passed": 2,
+      "lint_valid": true,
+      "checked_record_count": 10612,
+      "issues": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    }
+  ],
+  "focused_distinct_tests_passed": 56,
+  "focused_failed": 0,
+  "stewardship_self_tests_passed": 116,
+  "stewardship_self_tests_failed": 0,
+  "production_rust_changed_this_run": false,
+  "test_rust_changed_this_run": false,
+  "deployment_attempted": false
+}

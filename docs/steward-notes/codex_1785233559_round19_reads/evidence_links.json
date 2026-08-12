@@ -1,0 +1,32 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1785233058",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs;/Users/v/other/minime/minime/src/regulator/core/rate_gate.rs;/Users/v/other/minime/minime/src/regulator/core/pi.rs;/Users/v/other/minime/minime/src/regulator/core/pressure_source.rs;/Users/v/other/minime/minime/src/regulator/core/viscosity.rs",
+      "note": "PD throughput and PI homeostasis are concurrent active roles; pressure and viscosity remain read-only evidence not consumed by either controller."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785232285",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs;capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs;capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Requested token quantity and felt/context observations are explicitly non-joined and runtime-inert."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1785231813",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/src/ws/compatibility_projection.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Cadence and entropy coexist with separate bounded viscosity persistence, motion, drag, residue, and texture evidence without felt-state authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1785231559",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs;capsules/spectral-bridge/src/ws/health_trace.rs;capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "Decode failures are bounded and non-panicking; backoff, reconnect, ping/pong, last-valid retention, and lock timing already have focused coverage."
+    }
+  ]
+}

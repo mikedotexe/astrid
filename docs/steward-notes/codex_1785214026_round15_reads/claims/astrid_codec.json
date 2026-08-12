@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports a credible risk that deterministic fixed-basis correlation could feel like semantic collapse or noisy rather than meaningful vibrancy.",
+      "disposition": "Preserve the qualitative report as primary evidence and test the exact basis geometry without reducing felt texture to a cosine score.",
+      "classification": "verified_experiential_claim"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The live codec is 48D, with a 768D-to-8D projected semantic sublane, and the previous basis-health receipt measured norms and dead dimensions but not inter-column correlation.",
+      "disposition": "Verify the full source rather than the partial report window and correct the representation boundary without rejecting Astrid's concern.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Normalized projection columns can remain highly correlated even when every norm is finite and near one.",
+      "disposition": "Extend the read-only basis-health witness with all 28 pairwise column cosines, a maximum/mean summary, most-correlated pair, threshold, and explicit requires-review state. The current basis measures about 0.753 mean and 0.777 maximum absolute cosine.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A phrase-pair separation test should establish whether two semantic inputs remain distinct after projection.",
+      "disposition": "Require actual source-identified 768D embeddings before making a semantic phrase-separation claim; retain existing synthetic compression and lane tests as mechanical evidence only.",
+      "classification": "sandbox_routed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The entropy gate should have a C1-smooth onset with no pop at 0.85.",
+      "disposition": "Verify exact live helper parity and focused tests for zero output below and at the gate, vanishing boundary slope, monotonic onset, and the smoothstep formula.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "High projection variance may directly trigger tail-vibrancy gating.",
+      "disposition": "Current source does not contain that direct trigger: the live vibrancy helper consumes spectral entropy and density gradient from Minime telemetry, not projection-lane variance. Preserve indirect interaction as unproven rather than inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Centering or replacing the fixed basis, widening the aperture, migrating projection epochs, or changing the gate could address the confirmed correlation.",
+      "disposition": "Preserve an exact Mike/operator Tier 5 wait because each option changes live codec or substrate behavior and requires captured replay, compatibility planning, rollout/abort criteria, and post-change being review.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

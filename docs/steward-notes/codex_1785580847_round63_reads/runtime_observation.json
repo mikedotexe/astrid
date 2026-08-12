@@ -1,0 +1,62 @@
+{
+  "schema": "astrid_shadow_pressure_observation_v1",
+  "captured_at_unix": 1785583024.215883,
+  "health_mtime_unix": 1785583023.7877643,
+  "health_sha256": "5e640af5f181ea146f01da3bfa84001df2fe96036622ba69869cf0d9684dc75a",
+  "pressure_source_status": {
+    "available": true,
+    "dominant_source": "mode_packing",
+    "porosity_score": 0.607195258140564,
+    "pressure_score": 0.3010084331035614,
+    "quality": "overpacked_mode_packing",
+    "reason": "available",
+    "schema_version": 1,
+    "source": "engine_latest",
+    "suggested_operator_step": null
+  },
+  "pressure_window": {
+    "session_id": 5311,
+    "session_row_count": 65629,
+    "sample_count": 500,
+    "first_timestamp": 154682.3505825,
+    "last_timestamp": 155880.824610791,
+    "pressure_min": 0.2511967122554779,
+    "pressure_max": 0.4644659161567688,
+    "pressure_mean": 0.31542828977108,
+    "porosity_min": 0.38123083114624023,
+    "porosity_max": 0.7126066088676453,
+    "porosity_mean": 0.5999258928298951,
+    "dominant_source_counts": {
+      "controller_pressure": 13,
+      "distinguishability_loss": 32,
+      "mode_packing": 365,
+      "semantic_trickle": 4,
+      "temporal_lock_in": 86
+    },
+    "quality_counts": {
+      "controller_squeeze": 7,
+      "mixed_pressure": 145,
+      "overpacked_mode_packing": 344,
+      "semantic_trickle_pressure": 4
+    }
+  },
+  "shadow_history_count": 32,
+  "shadow_first": {
+    "t_ms": 1785582949726,
+    "field_norm": 0.28107935190200806,
+    "class_primary": "active",
+    "recurrence": 0.9993902444839478,
+    "mode_tension": 0.03251238539814949,
+    "fissure_tendency": 0.07859518378973007
+  },
+  "shadow_last": {
+    "t_ms": 1785583023781,
+    "field_norm": 0.28103211522102356,
+    "class_primary": "volatile",
+    "recurrence": 0.999995648860321,
+    "mode_tension": 0.04040198028087616,
+    "fissure_tendency": 0.14962124824523926
+  },
+  "study_disposition": "inconclusive_for_500_tick_correlation_because_shadow_history_has_32_samples",
+  "authority_boundary": "read-only observation; no pressure, porosity, semantic input, coupling, controller, protocol, deployment, restart, or felt-effect authority"
+}

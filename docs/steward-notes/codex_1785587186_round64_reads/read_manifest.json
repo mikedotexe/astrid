@@ -1,0 +1,16 @@
+{
+  "schema": "introspection_full_read_manifest_v1",
+  "steward_run_id": "run_1785587186949467000_6254302fef",
+  "source_first_projection_generation_id": "projection_1785587187785555000_90ce54eb53",
+  "reader": "codex-heartbeat",
+  "processed_count": 1,
+  "claims_count": 8,
+  "reads": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785586886",
+      "reader": "codex-heartbeat",
+      "summary_file": "summaries/proposal_distance_contact_control_1785586886.md",
+      "claims_file": "claims/proposal_distance_contact_control_1785586886.json"
+    }
+  ]
+}

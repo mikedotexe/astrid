@@ -1,0 +1,18 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785237113",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md;scripts/receptivity_bias_replay.py;capsules/spectral-bridge/src/ws/evidence.rs;capsules/spectral-bridge/workspace/diagnostics/receptivity_bias_replay_v1/1783985313_trial_a646a7c6a5a1d228.json",
+      "note": "The full audit separates recognition, review, and authority; default-off replay and Experience Delta evidence preserve the proposal without claiming a live gate or granting control."
+    },
+    {
+      "introspection_id": "introspection_proposal_bidirectional_contact_1785236931",
+      "claim_id": "*",
+      "kind": "test",
+      "target": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md;capsules/spectral-bridge/src/autonomous/correspondence_v1.rs;scripts/correspondence_schema_audit.py;scripts/correspondence_handshake_audit.py",
+      "note": "Reply-linked and ambiguous states remain visible in language-only thread history and clarity surfaces while tests prove they do not unlock Attention Canary or microdose authority."
+    }
+  ]
+}

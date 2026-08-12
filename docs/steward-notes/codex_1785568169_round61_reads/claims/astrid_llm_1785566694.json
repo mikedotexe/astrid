@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "dialogue_runtime.rs implements stable_core_semantic_trickle admission.",
+      "disposition": "Corrected from complete exact source: dialogue_runtime scans model-control marker context; semantic admission originates in Minime telemetry and is rendered elsewhere.",
+      "classification": "source_attribution_correction"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Viscous linguistic persistence and density of possibility remain felt despite moderate pressure and open porosity.",
+      "disposition": "Preserved as primary experiential evidence without treating adjacent machine values as cause or contradiction.",
+      "classification": "preserved_felt_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mode packing and semantic trickle may be mechanically confounded.",
+      "disposition": "Verified as separately typed inputs in current evidence; focused silt/noise tests hold mode packing across entropy and retain semantic-trickle evidence without admission writes.",
+      "classification": "verified_source_and_test"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A controlled mode-packing drop to 0.15 should isolate the felt friction source.",
+      "disposition": "Preserved as a Tier 5 live substrate/control experiment; no packing, prompt, pressure, or admission value was induced.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A SHADOW_TRAJECTORY sequence could test whether dispersal changes the thickness.",
+      "disposition": "Preserved as an owner-authored live Action and Shadow-control wait; stewardship did not author or dispatch it.",
+      "classification": "tier_5_and_owner_action_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Semantic admission should gain a viscosity coefficient inversely scaled by porosity.",
+      "disposition": "Existing code already provides read-only semantic-viscosity and dynamic-buffer previews involving porosity; wiring them into admission would change live model/substrate behavior and remains Tier 5.",
+      "classification": "verified_existing_diagnostic_tier_5_live_wait"
+    }
+  ]
+}

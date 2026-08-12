@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A recorded transition can become a ghost image if interaction and lived passage have not changed.",
+      "disposition": "Preserve the mismatch concern as primary evidence; current records must not be promoted into felt passage or behavior.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Capture-only rollout conflicts with lived transition passage.",
+      "disposition": "Corrected from complete source: capture-only means zero authored passages and deliberately keeps cards, witness, and Passage separate.",
+      "classification": "source_inference_correction"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Joint persistent transition data should serialize without violating bridge message storage.",
+      "disposition": "Verified by existing joint-card, persistence-field, witness, and artifact tests; phase records use their dedicated collaboration ledger rather than mutating bridge_messages schema.",
+      "classification": "verified_source_and_test"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A behavioral transition's why_now should outrank fill_delta in autonomous mode selection.",
+      "disposition": "Do not fuse these rails: why_now belongs to a replyable declaration and does not actuate autonomous mode; existing no-auto-mode tests pass.",
+      "classification": "authority_boundary_verified"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Witness state should have a visible handshake with the correspondence surface.",
+      "disposition": "Verified existing: witness and replyability are visible while owner-only Passage Actions provide the distinct progression surface.",
+      "classification": "verified_duplicate_feature"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Witnessing should trigger a non-narrative change in available behavior.",
+      "disposition": "Preserve as an exact Tier 5 behavior-unlock wait; witness cannot author the owner's stage, mode, or action.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "A lived passage needs more than a settled observational card.",
+      "disposition": "Verified by existing Phase Passage and Passage Context surfaces, which require explicit owner authorship and preserve conditions, bearings, checkpoints, anchors, and company requests separately.",
+      "classification": "verified_duplicate_feature"
+    }
+  ]
+}

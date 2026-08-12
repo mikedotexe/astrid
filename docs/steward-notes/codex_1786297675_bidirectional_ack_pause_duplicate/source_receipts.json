@@ -1,0 +1,35 @@
+{
+  "schema": "source_read_receipts_v1",
+  "receipts": [
+    {
+      "kind": "canonical_introspection",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_proposal_bidirectional_contact_1785626170.txt",
+      "lines_read": "1-36",
+      "sha256": "c57a1656491b35a6b8a2cc0abc9e9bb05f14134575207f18515cee3cec44151f"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bfc76cfa4729343eaeeb59a4ff1fbfbeb190ca3bc3aaa20664fa151da0a5be01.json",
+      "lines_read": "1-491",
+      "sha256": "14fa3aacbf028f505df68f426ba3069ea333eede190e7f7e260ceb41933f63ac"
+    },
+    {
+      "kind": "report_bound_source",
+      "path": "docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+      "lines_read": "1-1120",
+      "sha256": "4a881317fe978fdadb4e6df66044d90a91103e0aae635f7572246ec2df547f73"
+    },
+    {
+      "kind": "repository_head_source",
+      "path": "capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+      "revision": "1d2bab9e751f4fe2eae942cc37cef8078f8a8103",
+      "sha256": "29c8e0b2cccd4bf6e29e196a15a08659d628765175cb4198bf6bb70fd29e2c2b",
+      "scope": "HEAD bytes, distinct from preserved foreign working-tree edits"
+    },
+    {
+      "kind": "duplicate_anchor_packet",
+      "path": "docs/steward-notes/codex_1785602181_round67_reads",
+      "source_introspection_id": "introspection_proposal_bidirectional_contact_1785599788"
+    }
+  ]
+}

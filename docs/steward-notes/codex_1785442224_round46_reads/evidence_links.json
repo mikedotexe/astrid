@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md",
+      "note": "Complete 733-line architecture source read at SHA-256 8a6eef4c49fd5ade24b46db5037f24c720430897128f0086a69b9f8161cdd8b3."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Direct-contact and ghost-like distance remain independent from machine health or source fit."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime_autonomy/self_control_v2.py",
+      "note": "Explicit owner control families are typed; their existence does not prove participatory plasticity."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/pi.rs",
+      "note": "Complete PI source read at SHA-256 72e1bbf47c1ec141ac67b6d55363cf992eae64be684e661c0659b397c65c90b2."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/scripts/receptivity_bias_replay.py",
+      "note": "Default-off replay self-test passed; no replay artifact or live action was written."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs",
+      "note": "Read-only contact-depth and receptivity review at SHA-256 93f78c7f0219248fe6d508d6607eabda8bda396b755a97d2aca374fec76e0916."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/tests.rs:244",
+      "note": "Intrinsic-wander symmetry test passed in library and binary targets."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime_autonomy/runtime.py:30373",
+      "note": "The real drift path writes exploration noise and mode-dispersal input outside its reflective-only guard."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs:4146",
+      "note": "Surrender authority and deterministic mode-dispersal tests passed in both Rust targets."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/reviews.rs:1",
+      "note": "The live review exposes explicit false control markers; receptivity_bias is not a live field."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785442224_round46_reads/summary.md",
+      "note": "Current regulator source tracing and exact authority disposition."
+    },
+    {
+      "introspection_id": "introspection_proposal_distance_contact_control_1785441366",
+      "claim_id": "c009",
+      "kind": "changelog",
+      "target": "/Users/v/other/astrid/CHANGELOG.md",
+      "note": "Verification and deliberate no-live-change boundary recorded under Unreleased."
+    }
+  ]
+}

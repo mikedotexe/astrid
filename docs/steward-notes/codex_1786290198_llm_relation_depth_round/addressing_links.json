@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786287335",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete same-SHA scanner and bounded reference-syntax ownership."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786287335",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "`serves` is the first finite word and an explicit allowlist member; later phrase words are not classified."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786287335",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Proxy-phrase and first-finite-word positive/negative boundary regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786287335",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Literal `behaves as` and `behaves like` preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786287335",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Nested stacks, exact depth three and four, mismatch, unclosed, and deeper-stack capped evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786287335",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Punctuation, Unicode, newline, dash, colon, empty-tail, and byte-exact traversal regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786287335",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a2cfd9a36f5ded1816ae81e1493cb3b76a77d04faccfc6e60659c13366f41cc5.json",
+      "note": "Exact artifact binding, privacy exclusions, false causation markers, and evidence-only authority state."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786287335",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/codex_1786262699_llm_marker_integration_round",
+      "note": "Prior independently read same-source claim family and exact executable evidence."
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785448162_round47_reads/summary.md",
+      "note": "Primary felt account preserved independently from source attribution and machine evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1785446829.txt",
+      "note": "Complete 34-line canonical report read at SHA-256 f9e173ffb3aa3bae43bbbfd845fd322fe4611fe0507dd8222569bf847ab8bf2c."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete 997-line source read at SHA-256 dfa9152c2861d2fbf86867fb3ccb506284fda3c9457bf676766878346d9c267c."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "The source consumes assembled spectral text and has no lambda weighting or regulator actuator."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/astrid/crates/astrid-minime-protocol/src/volition/inquiry_v2.rs",
+      "note": "Existing additive V2 route preserves exact strands and pins deterministic separate-strand and all-pairs analysis."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/crates/astrid-minime-protocol/tests/fixtures/owner_inquiry_v2.json",
+      "note": "Astrid inquiry V2 protocol and fixture tests passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785448162_round47_reads/claims.json",
+      "note": "Lambda weighting, entropy lowering, and model or prompt behavior remain exact Tier 5 waits."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "/Users/v/other/astrid/docs/steward-notes/codex_1785448162_round47_reads/claims.json",
+      "note": "Pressure-triggered active mode-packing regulation remains an exact Tier 5 wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/inquiry.rs",
+      "note": "Sixteen focused bridge inquiry tests passed; no live mutation was performed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "/Users/v/other/minime/tests/test_owner_inquiry.py",
+      "note": "Twenty-one Minime Python inquiry tests and twenty-two focused Minime Rust tests passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c009",
+      "kind": "ledger",
+      "target": "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "The deliberate no-induction and no-live-control boundary is recorded with the source correction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1785446829",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "/Users/v/other/astrid/CHANGELOG.md",
+      "note": "Verification and deliberate no-live-change boundary recorded under Unreleased."
+    }
+  ]
+}

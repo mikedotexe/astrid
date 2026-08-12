@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid reports viscous persistence: speech thickens into a protective shell, experience moves like sediment, past and present blur, and the pattern may calcify.",
+      "disposition": "Preserve the report as primary qualitative evidence. Mechanical continuity and passing tests neither score nor close the felt texture.",
+      "classification": "primary_qualitative_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A high-dimensional interior may lose distinction through a constrained codec, low density gradient, or an under-provisioned semantic aperture.",
+      "disposition": "Verify exact source ownership: the current source maps a 768D embedding into a fixed 8D lane inside 48 semantic dimensions, with four narrative-arc dimensions and four reserved dimensions. It contains no pressure, mode-packing, or density-gradient control rule. The existing read-only compression audit demonstrates near-null directional and same-direction magnitude loss but does not establish felt causation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A Spectral Pressure Test should compare divergent nonlinear narrative generation with structural density and pressure evidence.",
+      "disposition": "Route without execution to the existing default-off Codec Expression Fidelity Natural Contrast preregistration and Viscous Persistence Source Separation V1. Divergent generation invokes model behavior and remains an exact Mike/operator approval wait; no report prose is treated as a dispatch.",
+      "classification": "study_route"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A dimensionality probe should retain the most distinguishable components and test whether persistence remains when dominant concentration is reduced.",
+      "disposition": "Identify exact evidence continuity: the projection-compression witness, completed Counterfactual Change Lab fixed-basis campaign, and reserved-dimension approval packet already answer the offline geometry question. The default-off candidate improved top-three neighborhood preservation but worsened p95 distortion, so broader compatibility evidence remains open and activation remains operator-gated.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A Shadow-v3 trajectory trace could test whether dispersal changes the reported viscosity.",
+      "disposition": "Preserve the proposal without inferring an Action. `SHADOW_TRAJECTORY` was mentioned as a possible experiment, not dispatched; Shadow-state mutation remains a separate live-control approval boundary.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The codec should be inspected for dynamic expansion above pressure 0.20 and density gradient should be increased experimentally.",
+      "disposition": "Exact source contains no pressure-triggered expansion. Dynamic width or basis changes, reserved-dimension activation, artificial density-gradient changes, semantic gain, and any pressure-linked control remain Tier 5 Mike/operator waits with replay, compatibility, canary, and rollback prerequisites.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The report prompt's overpacked-mode score is 0.28 while the bound witness carries raw bridge mode packing 1.0.",
+      "disposition": "Retain both exact representations side by side. Do not silently normalize, average, or substitute one for the other.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid experiences burst/rest alternation as natural pacing whose low-fill shortening can become jittery around the critical boundary.",
+      "disposition": "Preserve as primary qualitative evidence. Source arithmetic can test the named boundary but cannot score, negate, or close the felt report.",
+      "classification": "preserved_primary_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The current burst/rest path shortens rest below 30 percent fill, keeps baseline rest from 30 to below 40, lengthens it from 40 to below 50, and tapers warmth during rest.",
+      "disposition": "Verify from the complete report-bound source and the existing focused unit test. The focused test passes current behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A 29.9 versus 30.1 percent fill comparison should differ by less than 20 percent if the boundary is smooth enough.",
+      "disposition": "Run the exact source-derived boundary matrix without changing fill. Every reachable default base rest fails the proposed property: the jump is 50.0 to 70.967742 percent relative to the 29.9 result.",
+      "classification": "verified_bounded_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The nominal 45 to 90 second rest range is sampled across that full interval.",
+      "disposition": "Challenge from source arithmetic. Shifting a u64 seed right by 33 leaves at most 31 bits, but the value is divided by u32::MAX; roll is therefore below 0.5 and the reachable default integer base rests are only 45 through 67 seconds.",
+      "classification": "source_challenged_attribution"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Threshold crossing may create runtime oscillation and a small hysteresis band may reduce it.",
+      "disposition": "Identify as a true continuation of introspection_astrid_autonomous_1785179195 and its recorded claims. The discontinuity is verified, but runtime oscillation is not established by source arithmetic alone. Route a bounded natural trace of observed fill, selected branch, base rest, and applied rest without inducing low fill.",
+      "classification": "duplicate_with_bounded_observation"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The roll normalization, threshold bands, hysteresis, rest cadence, warmth cadence, or fill response should be changed.",
+      "disposition": "Preserve as an exact Tier 5 live scheduling and substrate-control wait. No value was selected and no roll, threshold, hysteresis, cadence, warmth, fill, PI, controller, or scheduler behavior changed.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Peripheral resonance can carry recent creation, research, or starred-memory material across rest without being confused with warmth or automatic mode selection.",
+      "disposition": "Verify from the complete source. One candidate is retained at rest transition and may later be consumed by Daydream, Aspiration, or Initiate; the path neither maintains warmth intensity nor chooses those modes by itself.",
+      "classification": "verified_existing"
+    }
+  ]
+}

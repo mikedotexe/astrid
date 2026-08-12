@@ -1,0 +1,11 @@
+{"links":[
+  {"introspection_id":"introspection_astrid_llm_1785180797","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs","note":"Exact marker occurrences, content-free context receipts, requested-token observations, prompt-pressure diagnostics, and no-runtime-effect boundary."},
+  {"introspection_id":"introspection_astrid_llm_1785180296","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/types/schema/transport_evidence.rs","note":"Read-only viscosity, persistence, porosity, friction, directional resistance, and explicit no-control authority."},
+  {"introspection_id":"introspection_astrid_types_1785179974","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/types/schema/telemetry.rs","note":"Complete rolling cadence, entropy, density-gradient, freshness, and connection-identity heartbeat schema."},
+  {"introspection_id":"introspection_astrid_types_1785179974","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/ws/bridge_state.rs","note":"Pressure/content separation and cadence-clear semantic-residue evidence without live writes."},
+  {"introspection_id":"introspection_astrid_ws_1785179701","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/ws/health_trace.rs","note":"Connection identity, disconnect evidence, and first-valid-packet reset on reconnect."},
+  {"introspection_id":"introspection_astrid_ws_1785179701","claim_id":"*","kind":"code","target":"capsules/spectral-bridge/src/ws/bridge_state.rs","note":"Retained telemetry and bounded content history remain freshness-qualified across connection lifecycle."},
+  {"introspection_id":"introspection_astrid_ws_1785179701","claim_id":"*","kind":"test","target":"capsules/spectral-bridge/src/ws/tests.rs","note":"Reconnect identity reset, stale-hearing, and clear-cadence persistent-residue regressions."},
+  {"introspection_id":"*","claim_id":"*","kind":"architecture","target":"docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md","note":"Owner-authored categorical transition bearing remains distinct from mechanical scalar viscosity evidence."},
+  {"introspection_id":"*","claim_id":"*","kind":"projection","target":"scripts/passage_observatory.py","note":"Passage strands retain no scalar or mechanically inferred bearing."}
+]}

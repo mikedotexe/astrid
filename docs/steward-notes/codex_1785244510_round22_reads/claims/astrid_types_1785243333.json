@@ -1,0 +1,28 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The telemetry schema carries typed and legacy 32-slot spectral fingerprint evidence plus hybrid coherence.",
+      "disposition": "Verify the complete schema, typed precedence, canonical slot conversion, integrity state, and focused tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 31-element legacy vector should be rejected from hybrid coherence.",
+      "disposition": "Verify the existing regression returns no coherence or max delta and emits explicit unavailable_malformed_legacy evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Identical typed and legacy values should produce coherence exactly 1.0.",
+      "disposition": "Verify the existing typed-to-legacy identity regression and exact coherence result.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Non-finite or extremely small values could propagate NaN or lose precision.",
+      "disposition": "Verify finite-value rejection, explicit unavailable_non_finite state, epsilon handling, and identical near-zero coherence coverage.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "steward_test_results_v1",
+  "results": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib glimpse_ -- --nocapture",
+      "status": "passed",
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --manifest-path minime/Cargo.toml spectral_glimpse_ -- --nocapture",
+      "working_directory": "../minime",
+      "status": "passed",
+      "test_executions": 2,
+      "failed": 0,
+      "note": "The same memory-bank test passes in library and binary targets; unrelated pre-existing dead-code warnings remain."
+    },
+    {
+      "command": "cargo test --manifest-path minime/Cargo.toml multi_scale_bridge_ -- --nocapture",
+      "working_directory": "../minime",
+      "status": "passed",
+      "test_executions": 4,
+      "failed": 0,
+      "note": "Two tests pass in both library and binary targets; unrelated pre-existing dead-code warnings remain."
+    }
+  ]
+}

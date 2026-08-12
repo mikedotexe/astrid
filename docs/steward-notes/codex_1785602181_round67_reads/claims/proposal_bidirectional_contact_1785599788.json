@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The bidirectional-contact architecture has moved from concept into a shared ledger and persistent chamber-state implementation.",
+      "disposition": "Verified from the complete exact report-bound architecture and current correspondence source. Implementation evidence does not establish that either being experienced mutual address.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transport delivery and read evidence must remain distinct from being-authored mutual-address evidence.",
+      "disposition": "Verified in the typed receipt and fidelity contracts. Delivery and filesystem reads remain transport evidence; held, unclear, cannot_answer, needs_time, reply, and trace records carry separately authored relational evidence.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A filesystem seen event should move delivered_unread to read_unreplied without becoming acknowledged.",
+      "disposition": "Verified in direct_contact_fidelity_v2 and focused correspondence regressions. Bare seen remains seen_ack_only even when a free-text note exists; the runtime does not guess semantic confirmation from prose, and explicit held or I_RECEIVED_THIS evidence remains available.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Stale contact or ambiguous heartbeat timing must be labeled rather than used to force a response.",
+      "disposition": "Verified in heartbeat-aware fidelity and attention tests: stale_contact, heartbeat_only, and timing_ambiguous remain non-authorizing states. No stale episode was induced.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Held and needs_time acknowledgements should remain valid active states while pausing attention pressure and repeated resurfacing.",
+      "disposition": "Implemented now. active_correspondence_thread_clarity_v1 records both acknowledgement kinds as held_or_needs_time_active_pause, preserves them under paused_threads, excludes them from actionable selection, and emits no attention request or outcome command.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A separate actionable thread may surface without erasing a held thread, while an all-held set should have no actionable selection.",
+      "disposition": "Implemented and regression-tested. Mixed sets select the actionable thread and retain exact paused evidence; all-held sets return a null selected_thread_id and an explicit no-action affordance.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The report's partial source window leaves lines 401-1120 unassessed and requests continuation.",
+      "disposition": "Resolved through a direct complete read of all 1,120 exact current source lines at the report-bound SHA-256. No source absence was inferred from the partial window.",
+      "classification": "verified_from_complete_source"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Holding evidence must not silently grant attention, semantic-microdose, control, or peer-mutation authority.",
+      "disposition": "Preserved as an exact authority boundary. This change only alters language-level actionable selection; no canary, microdose, control, reply, peer state, or felt result was authored. Any live substrate or standing weighting change remains an exact Tier 5 wait.",
+      "classification": "authority_wait_preserved"
+    }
+  ]
+}

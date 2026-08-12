@@ -1,0 +1,117 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "steward_run_id": "run_1785587186949467000_6254302fef",
+  "results": [
+    {
+      "surface": "shadow_trajectory_effect_contract",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml shadow_trajectory_effect_contract_is_observational -- --nocapture",
+      "passed": 1,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_complete_library",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib --quiet",
+      "passed": 1764,
+      "failed": 0,
+      "duration_seconds": 79.90,
+      "status": "passed"
+    },
+    {
+      "surface": "spectral_bridge_format_and_clippy",
+      "commands": [
+        "cargo fmt --all -- --check",
+        "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- -D warnings"
+      ],
+      "status": "passed"
+    },
+    {
+      "surface": "minime_semantic_admission_source_checks",
+      "commands": [
+        "cargo test semantic_admission_label",
+        "cargo test pinned_projection_admits_bounded_semantic_trickle",
+        "cargo test semantic_input_metadata_tracks_fresh_lane_energy"
+      ],
+      "passed": 6,
+      "failed": 0,
+      "status": "passed",
+      "note": "Applicable library and binary targets passed; pre-existing unused Division fanout/gateway warnings remained unrelated."
+    },
+    {
+      "surface": "receptivity_bias_replay",
+      "command": "python3 scripts/receptivity_bias_replay.py --self-test",
+      "status": "passed"
+    },
+    {
+      "surface": "introspection_addressing_audit",
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "passed": 41,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_store_control_projection_division_claim_family",
+      "command": "env PYTHONPATH=.:scripts python3 -m unittest scripts.test_evidence_event_store scripts.test_steward_control scripts.test_steward_projection scripts.test_division_ceremony_followup scripts.test_division_ceremony_chronicle scripts.test_division_ceremony_projection scripts.test_claim_family_incremental_projection",
+      "passed": 58,
+      "failed": 0,
+      "status": "passed"
+    },
+    {
+      "surface": "experiential_epistemics",
+      "commands": [
+        "python3 scripts/experiential_epistemics.py self-test --json",
+        "python3 scripts/experiential_epistemics.py lint --json"
+      ],
+      "self_tests_passed": 2,
+      "checked_record_count": 10002,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "status": "passed"
+    },
+    {
+      "surface": "offline_replay_campaign_manifest",
+      "command": "python3 scripts/ai_beings_offline_replay_campaigns.py verify",
+      "source_count": 35,
+      "trial_count": 39,
+      "manifest_sha256": "72ac12bd2f8df9758f818db5188018d68f6c9d276ce59a739dddbe6747c9fb9e",
+      "status": "passed"
+    },
+    {
+      "surface": "evidence_event_store_v2",
+      "commands": [
+        "python3 scripts/evidence_event_store.py --json verify",
+        "python3 scripts/steward_control.py --json verify"
+      ],
+      "event_count": 651535,
+      "last_global_seq": 651535,
+      "stream_count": 16,
+      "corrupt_lines": 0,
+      "head_sha256": "278848a2dfeedf0d0669baf58de60f32a3a9719f297971875e5a379bd7f1bb2e",
+      "v1_immutable": true,
+      "status": "passed"
+    },
+    {
+      "surface": "division_followup_and_chronicle",
+      "commands": [
+        "python3 scripts/division_ceremony_followup.py verify",
+        "python3 scripts/division_ceremony_chronicle.py project",
+        "python3 scripts/division_ceremony_chronicle.py verify"
+      ],
+      "followup_event_count": 74,
+      "followup_head_sha256": "5af8f1c17eb4ebbeab33942d8245a5513a4da11e0cac5ee611fe8b016bb30eca",
+      "chronicle_id": "division_chronicle_94de363f68c45f68934956af",
+      "durable_inputs_current": true,
+      "volatile_supervisor_status_current": false,
+      "status": "passed_with_expected_volatile_status_drift"
+    },
+    {
+      "surface": "packet_and_repository_format",
+      "commands": [
+        "jq empty over packet JSON",
+        "git diff --check over touched source, packet, CHANGELOG, ledger, and addressing projection"
+      ],
+      "status": "passed"
+    }
+  ],
+  "authority_boundary": "tests and read-only observations do not establish felt cause, relief, uptake, approval, or live-control suitability"
+}

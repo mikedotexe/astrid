@@ -1,0 +1,11 @@
+{
+  "schema": "steward_deployment_alignment_v1",
+  "live_consumed_surface_changed": false,
+  "astrid_source_changed": false,
+  "minime_source_changed": false,
+  "build_required": false,
+  "restart_required": false,
+  "deployment_required": false,
+  "alignment": "verification_only_no_live_alignment_needed",
+  "authority": "no_live_transport_vector_width_prompt_control_service_or_peer_change"
+}

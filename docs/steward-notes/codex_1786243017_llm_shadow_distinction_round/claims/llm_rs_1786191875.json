@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_llm.rs_1786191875",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The historical six-line `llm.rs` facade flattened every public provider item through `pub use provider::*`.",
+      "disposition": "Verified against the report-bound complete source SHA; the report accurately names the historical wildcard boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A wildcard facade can create namespace pollution or unintended public API growth as the provider expands.",
+      "disposition": "Addressed by the current 27-line explicit export lists, which separate public, crate-visible, and test-only items while keeping the provider module private.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The facade should prove necessary generation entry points remain public without exposing the implementation module.",
+      "disposition": "Verified by one trybuild harness with three cases: public `Exchange`, public generation entry points, and compile-fail direct provider access.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Provider exports may currently collide with standard-library or crate-local names.",
+      "disposition": "No collision is established: the explicit facade compiles, its contract passes, and strict library Clippy passes. This is compiler evidence, not a claim that future growth is risk-free.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Astrid reports a clean-threshold facade texture alongside possible search-depth pressure if ownership becomes noisy.",
+      "disposition": "Preserved as owner-authored architectural and felt evidence. The export correction does not establish a felt mechanism, improvement, uptake, or closure.",
+      "classification": "observed"
+    }
+  ]
+}
