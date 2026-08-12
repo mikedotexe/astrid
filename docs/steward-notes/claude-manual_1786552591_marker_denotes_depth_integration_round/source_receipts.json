@@ -1,0 +1,22 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "read_scope": "complete_file_lines_1_to_1048_in_sequential_ranges_1-400_401-730_731-1048",
+      "report_binding": "working copy hash matches the report-bound source SHA exactly; the report-time snapshot IS the current working copy (which carries uncommitted foreign edits relative to HEAD 8f3c16091b532cba5879726de058ba16af2469f3cea8698d4ece1016fc04f2af); no separate report-time reconstruction was needed"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "scoped_intervals_for_claim_verification: marker-family test names and bodies (denotes retention region ~L2480; delimiter depth family L2129-2362; normalization tests L1855-1926); full added-diff (183 lines) reviewed during the same session's archival commit",
+      "note": "scoped read, not a complete-file receipt"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "read_scope": "scoped_intervals_for_claim_verification: MLX normalization call site L670-709; Ollama fallback normalization call site L875-904",
+      "note": "scoped read, not a complete-file receipt"
+    }
+  ]
+}

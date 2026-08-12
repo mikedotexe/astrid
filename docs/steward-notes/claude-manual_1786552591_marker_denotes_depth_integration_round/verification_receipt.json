@@ -1,0 +1,43 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "run_id": "run_1786552591645067000_095aa1c00d",
+  "preprojection_id": "projection_1786552592637273000_c59e5b912e",
+  "pause_generation": 313,
+  "focused_tests": {
+    "control_marker_cleanup": {"passed": 51, "failed": 0},
+    "provider_output_normalization": {"passed": 2, "failed": 0},
+    "normalized_bytes_feed_repair": {"passed": 1, "failed": 0}
+  },
+  "integrity_suites": {
+    "addressing_self_test": "pass",
+    "evidence_event_store_tests": "pass",
+    "steward_control_tests": "pass",
+    "steward_projection_tests": "pass",
+    "division_followup_tests": "pass",
+    "division_chronicle_tests": "pass",
+    "division_projection_tests": "pass",
+    "projection_cursor_tests": "pass",
+    "cadence_tests_and_strict_audit": "pass",
+    "anti_drop_catalog": {"self_test": "pass", "verify": {"total": 47, "alarms": 0, "gaps": 0}},
+    "experiential_epistemics": {"self_test": "pass", "verify": {"checked_records": 10845, "issues": 0, "history_rewritten": false, "valid": true}}
+  },
+  "counters": {"audit_status": "consistent", "mismatches": 0},
+  "evidence_event_store": {"valid": true, "last_global_seq": 776176, "corrupt_lines": 0, "active_store": "v2"},
+  "division": {
+    "cycle": 24,
+    "completed_rounds_since_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_0c6eceef51adda2b904593718edb867e",
+    "event_head_sha256": "63c479094af684a4c4683c96602064e2fc1da516a7407a4e1196f02a9a83ad0d"
+  },
+  "chronicle": {"json_sha256": "9c13b97b47a44d1bbdb158e6e584aca77a387aeb5da4694382039825e06fc25a"},
+  "addressing_closure": {
+    "introspection_id": "introspection_astrid_llm_1786539140",
+    "status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "evidence_links": 9
+  },
+  "restart_deploy_alignment": "no restart or deployment was required or attempted; no live surface changed",
+  "index_state": "git index untouched during the controller-held run; foreign WIP preserved"
+}
