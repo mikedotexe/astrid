@@ -1,0 +1,31 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "results": [
+    {
+      "command": "python3 scripts/test_domain_boundary_audit.py",
+      "outcome": "ok",
+      "passed": 3,
+      "failed": 0,
+      "note": "includes the new test_exception_signature_growth_fails_within_line_ceiling regression"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "outcome": "ok",
+      "note": "valid=true, 7 signature ceilings active, documented_exception_signature_ceilings_hold=true, 0 violations, core.rs at 210/232 unique fn signatures"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test provenance_typestate",
+      "outcome": "ok",
+      "passed": 1,
+      "failed": 0,
+      "note": "provenance_domains_cannot_be_forged_or_dispatched compile-fail suite, including interpretation_cannot_dispatch.rs"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup",
+      "outcome": "ok",
+      "passed": 51,
+      "failed": 0
+    }
+  ],
+  "note": "Stewardship integrity suites recorded separately in verification_receipt.json before finish."
+}

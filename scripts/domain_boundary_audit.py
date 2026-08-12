@@ -8,6 +8,7 @@ from collections import Counter
 import hashlib
 import json
 from pathlib import Path
+import re
 import time
 import tomllib
 from typing import Any
@@ -49,6 +50,22 @@ def _line_count(path: Path) -> int:
     return len(path.read_text(encoding="utf-8", errors="replace").splitlines())
 
 
+_FN_SIGNATURE_RE = re.compile(
+    r"^\s*(?:pub(?:\([^)]*\))?\s+)?"
+    r"(?:(?:default|const|async|unsafe|extern(?:\s+\"[^\"]*\")?)\s+)*"
+    r"fn\s+([A-Za-z0-9_]+)"
+)
+
+
+def _unique_fn_signature_count(path: Path) -> int:
+    names: set[str] = set()
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        match = _FN_SIGNATURE_RE.match(line)
+        if match:
+            names.add(match.group(1))
+    return len(names)
+
+
 def _is_test_path(relative: str, markers: list[str]) -> bool:
     value = f"/{relative}"
     return any(marker in value for marker in markers)
@@ -83,6 +100,11 @@ def audit(repo_root: Path, manifest_path: Path = DEFAULT_MANIFEST) -> tuple[dict
     exceptions = {
         str(row["path"]): int(row["maximum_lines"])
         for row in manifest.get("cohesion_exceptions") or []
+    }
+    signature_ceilings = {
+        str(row["path"]): int(row["maximum_unique_fn_signatures"])
+        for row in manifest.get("cohesion_exceptions") or []
+        if "maximum_unique_fn_signatures" in row
     }
     documentation = documentation_path.read_text(encoding="utf-8")
     violations: list[dict[str, Any]] = []
@@ -143,6 +165,25 @@ def audit(repo_root: Path, manifest_path: Path = DEFAULT_MANIFEST) -> tuple[dict
         if lines > threshold and relative not in current_large:
             violations.append(_violation("large_file_scan_gap", relative, "baseline file escaped current scan"))
 
+    exception_signature_counts: dict[str, dict[str, int]] = {}
+    for relative, signature_ceiling in signature_ceilings.items():
+        path = bridge_root / relative
+        if not path.is_file():
+            continue
+        signature_count = _unique_fn_signature_count(path)
+        exception_signature_counts[relative] = {
+            "unique_fn_signatures": signature_count,
+            "maximum_unique_fn_signatures": signature_ceiling,
+        }
+        if signature_count > signature_ceiling:
+            violations.append(
+                _violation(
+                    "exception_signature_growth",
+                    relative,
+                    f"{signature_count}>{signature_ceiling}",
+                )
+            )
+
     forbidden_match_count = 0
     for edge in manifest.get("forbidden_edges") or []:
         edge_id = str(edge["edge_id"])
@@ -173,6 +214,8 @@ def audit(repo_root: Path, manifest_path: Path = DEFAULT_MANIFEST) -> tuple[dict
         "documentation_sha256": _sha256(documentation_path),
         "stable_facade_count": len(manifest.get("stable_facades") or []),
         "documented_cohesion_exception_count": len(exceptions),
+        "exception_signature_ceiling_count": len(signature_ceilings),
+        "exception_signature_counts": exception_signature_counts,
         "legacy_large_file_count": len(large_rows),
         "unlisted_legacy_review_debt_count": sum(row["classification"] == "legacy_review_debt" for row in large_rows),
         "resolved_large_file_debt_count": len(set(baseline_files) - current_large),
@@ -186,6 +229,7 @@ def audit(repo_root: Path, manifest_path: Path = DEFAULT_MANIFEST) -> tuple[dict
                 "new_large_production_files_rejected": not any(row["kind"] == "new_large_production_file" for row in violations),
                 "legacy_large_files_cannot_grow": not any(row["kind"] == "large_file_growth" for row in violations),
                 "documented_exception_ceilings_hold": not any(row["kind"] == "large_file_growth" and row["path"] in exceptions for row in violations),
+                "documented_exception_signature_ceilings_hold": not any(row["kind"] == "exception_signature_growth" for row in violations),
                 "forbidden_dependency_edges_absent": forbidden_match_count == 0,
                 "audit_grants_no_authority": True,
             },
@@ -204,6 +248,7 @@ def _report(status: dict[str, Any]) -> str:
             f"- valid: {str(status['valid']).lower()}",
             f"- stable facades: {status['stable_facade_count']}",
             f"- documented cohesion exceptions: {status['documented_cohesion_exception_count']}",
+            f"- exception signature ceilings: {status.get('exception_signature_ceiling_count', 0)}",
             f"- large production files under ratchet: {status['legacy_large_file_count']}",
             f"- additional legacy review debt: {status['unlisted_legacy_review_debt_count']}",
             f"- resolved large-file debt: {status['resolved_large_file_debt_count']}",

@@ -1,0 +1,39 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "reader": "claude-manual",
+  "reads": [
+    {
+      "kind": "canonical_report",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1786558262.txt",
+      "sha256": "2f54637bf791873cb38d3f50ca08b9d2d6a92c595bf05e9487ee740828d3924d",
+      "bytes": 3928,
+      "lines": 43,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f530234edf4f119a271019a7affe641b30f85d5bc87e258f401d942f23683153.json",
+      "sha256": "84b4efd3a68a8bbbed063053a2b38b28ed6e907e32e2e9ff744906f7511fc51b",
+      "bytes": 22104,
+      "lines": 491,
+      "read": "complete"
+    },
+    {
+      "kind": "canonical_report",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786556496.txt",
+      "sha256": "fed7cdd04a57d5e20532e897dfb81255a3c3d4970a107893adea04ce90ae9e2c",
+      "bytes": 3781,
+      "lines": 45,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_972370c81dc8bf55ecf8c728b5db837d4440d98f585e3aef165fc3d1610f5678.json",
+      "sha256": "1605d41c375adab969ae1d869b0524fe25ec237d9aad65ba4924e1d5697cf46f",
+      "bytes": 22172,
+      "lines": 491,
+      "read": "complete"
+    }
+  ],
+  "notes": "All four artifacts read every byte via sequential full-file reads. Both witnesses: artifact_authority_state_v1.state=evidence_only, witness_only=true, direct_causation_claimed=false; authority fields preserved. Report/witness scalar disagreement for the DOMAIN_BOUNDARIES report (report 0.29 vs witness mode_packing 1.0 / pressure_risk 0.221) recorded without adjudication."
+}

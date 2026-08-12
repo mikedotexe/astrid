@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786556496",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The marker system distinguishes raw content from known control markers via scan_known_model_control_markers (L114), preserving markers only in quoted, grouped, or explicit-relation contexts, with multi-layered delimiter checks (L199).",
+      "disposition": "Verified from the complete 1,048-line report-bound source at SHA 902a0358 (identical file SHA and window SHA to the round-one report; the complete-source read receipt from claude-manual_1786552591 applies and was re-confirmed). Her description is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: for compound relational phrases like 'functions as a bridge' or 'serves as a primary input', first_word_after (L89) captures only the first verb and ignores the subsequent words, potentially causing inconsistent preservation of markers in compound phrases.",
+      "disposition": "Contradicted in mechanism, with the design boundary stated plainly. The grammar is deliberately single-finite-first-word: 'functions' and 'serves' are both allowlisted (L74/L83), so both example phrases PRESERVE the marker; subsequent words are never inspected, so they can neither broaden nor narrow the outcome - inconsistency across a compound phrase cannot arise by construction. The only fail-closed case is an unlisted FIRST word, which is the documented boundary pinned by control_marker_cleanup_uses_only_the_first_finite_relation_word and the allowlisted-is vs unlisted-acts regression. Prior family rounds established the same distinction; her underlying concern about compound-phrase intent remains preserved as the standing closed-grammar boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Proposed Contextual Preservation Test: marker followed by 'represents' should be preserved in the remainder.",
+      "disposition": "Covered by exact source plus the existing mechanism regressions: 'represents' is in the finite allowlist at L82 of the report-bound source, and the identical preservation mechanism is pinned by the passing relation-word regressions (denotes, behaves, is, mimics families). All 51 control_marker_cleanup regressions pass at verification time.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Delimiter Depth Test: nested quoted marker should identify QuotedExactKnownToken and respect MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "Existing regressions cover quoted contexts and depth bounding: quoted preservation and whitespace cases, bounded nested delimiter stacks, exact depths three and four, depth across Unicode whitespace, deeper-than-max capping without dropping the token, and mismatched-delimiter rejection. All pass in the current run.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested next: verify scan behavior when a marker is followed by a multi-word predicate not in the L64-L85 list.",
+      "disposition": "The exact regression exists from the previous flywheel round: control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts contrasts retained 'is a substitute for' (allowlisted first word) with 'acts as a proxy for' (unlisted first word), which removes only the known marker and preserves every surrounding byte. This is precisely the unlisted-multi-word-predicate case; it passes in the current run.",
+      "classification": "verified_existing"
+    }
+  ]
+}

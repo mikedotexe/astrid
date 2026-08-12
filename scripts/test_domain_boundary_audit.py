@@ -52,6 +52,7 @@ class DomainBoundaryAuditTests(unittest.TestCase):
                 [[cohesion_exceptions]]
                 path = "src/legacy.rs"
                 maximum_lines = 12
+                maximum_unique_fn_signatures = 1
 
                 [[forbidden_edges]]
                 edge_id = "interpretation_dispatch"
@@ -70,6 +71,25 @@ class DomainBoundaryAuditTests(unittest.TestCase):
         self.assertTrue(status["valid"])
         self.assertEqual(len(large), 1)
         self.assertFalse(violations)
+
+    def test_exception_signature_growth_fails_within_line_ceiling(self) -> None:
+        (self.bridge / "src/legacy.rs").write_text(
+            "fn legacy() {}\n" * 10 + "fn extra() {}\n", encoding="utf-8"
+        )
+        status, _, violations = audit(self.root, self.manifest)
+        self.assertFalse(status["valid"])
+        self.assertEqual(
+            {row["kind"] for row in violations}, {"exception_signature_growth"}
+        )
+        self.assertFalse(
+            status["counter_audit"]["checks"][
+                "documented_exception_signature_ceilings_hold"
+            ]
+        )
+        self.assertEqual(
+            status["exception_signature_counts"]["src/legacy.rs"],
+            {"unique_fn_signatures": 2, "maximum_unique_fn_signatures": 1},
+        )
 
     def test_forbidden_edge_and_new_large_file_fail(self) -> None:
         (self.bridge / "src/dispatch/path.rs").write_text(

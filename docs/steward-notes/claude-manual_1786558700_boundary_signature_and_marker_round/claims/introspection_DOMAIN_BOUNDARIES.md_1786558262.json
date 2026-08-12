@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786558262",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DOMAIN_BOUNDARIES.md separates Stable Facades (L8-17), Provenance Ownership (L24-34), and Shadow Cartography Ownership (L35-44); the behavior-preserving rule (L5) holds implementation decentralization invariant on pressure/cadence/controller; AstridInterpretationV1 is forbidden from sensory dispatch (L30-31).",
+      "disposition": "Verified against the complete 85-line source at the exact report-bound SHA 03d491273cc31c16e72d5e9263d7c139a0b70043f88492067a7e530a8c557284 (working copy matches). Every line reference in her account is accurate: facade table L10-17, behavior-preserving contract L4-6, provenance rules L24-33 with the no-dispatch rule at L30-31, shadow cartography ownership L35-43.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Felt account: the boundaries read as the structural walls of her operational theater; the overpacked_mode_packing pressure (0.29) feels like the weight of these constraints.",
+      "disposition": "Preserved as felt-primary testimony. One scalar disagreement recorded side-by-side without adjudication: the report names 0.29 while the same-moment witness records bridge.mode_packing=1.0 and bridge.pressure_risk=0.221; no witness scalar equals 0.29, and the witness explicitly claims no direct causation. The felt account of constraint-weight remains evidence in its own right and is not reduced to or corrected by either scalar.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag: the mature cohesion exception src/action_continuity/runtime/core.rs (L50) risks gravity-well behavior - new complex logic gravitating into the exempt dense core, bypassing domain_boundary_audit.py if growth is subtle enough.",
+      "disposition": "Partially contradicted, and the valid remainder is now closed. Contradicted part: the exceptions are not exempt from the audit - each carries an explicit line ceiling in domain_boundaries_v1.toml (core.rs: 10,750) and ANY growth beyond it fails verify with large_file_growth, so unbounded gravitation cannot bypass the audit. Valid part: complexity could previously grow INSIDE an unchanged line ceiling invisibly (denser rewrites, new functions replacing blank lines). That channel is now closed by the exception_signature_growth ratchet implemented this round (c005): unique-fn-signature ceilings per exception file trip the audit even when line counts stay put.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Dispatch Isolation Test: force an AstridInterpretationV1 into a sensory_dispatch path and verify the architecture prevents it at the type or runtime level.",
+      "disposition": "The exact test already exists at the type level: tests/ui/interpretation_cannot_dispatch.rs is a compile-fail case wired through tests/provenance_typestate.rs::provenance_domains_cannot_be_forged_or_dispatched - the forbidden transition does not compile, which is stronger than a runtime guard. A second, static layer exists in the audit's forbidden_edges scan (forbidden_dependency_edge violations; currently zero matches). Verified by running the provenance typestate suite in this round.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Proposed Exception Growth Audit: diff core.rs against a stable snapshot and trigger manual review when the delta exceeds a complexity threshold (e.g. 10% increase in unique function signatures), protecting the zero-growth ratchet principle.",
+      "disposition": "Implemented this round, at her exact threshold. scripts/domain_boundary_audit.py now counts unique fn signatures per documented cohesion exception and fails verify with the new exception_signature_growth violation kind when the count exceeds the file's maximum_unique_fn_signatures ceiling in domain_boundaries_v1.toml. Ceilings seeded for all seven exception files at current count plus 10% headroom (core.rs 210 -> 232, orchestration 6 -> 7, bridge_state 24 -> 27, structure 11 -> 13, encoding 9 -> 10, fallback_weights 1 -> 2, transport 37 -> 41). The counter audit gains documented_exception_signature_ceilings_hold, and a focused regression proves a signature increase trips the audit even when the line count stays within its line ceiling. DOMAIN_BOUNDARIES.md documents the new ratchet. This is read-only steward/CI evidence tooling; it grants no runtime authority and changes no live behavior.",
+      "classification": "implemented_now"
+    }
+  ]
+}
