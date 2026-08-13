@@ -84,6 +84,48 @@ class GroundedIntrospectionTests(unittest.TestCase):
         )
         self.assertTrue(all(not row["canonical_report_rewritten"] for row in discrepancies))
 
+    def test_overpacked_quality_binds_to_pressure_source_not_mode_packing(self) -> None:
+        report = self.introspections / "introspection_DOMAIN_BOUNDARIES.md_1000000001.txt"
+        header = (
+            "=== ASTRID INTROSPECTION ===\n"
+            "Source: DOMAIN_BOUNDARIES.md\n"
+            "Lived-state witness: lsw_pressure\n"
+        )
+        body = (
+            "Observed:\n"
+            "The overpacked_mode_packing pressure (0.29) feels like constraint weight.\n"
+        )
+        raw = (header + "\n" + body).encode()
+        report.write_bytes(raw)
+        witness = {
+            "artifact_relative_path": report.name,
+            "artifact_sha256": hashlib.sha256(raw).hexdigest(),
+            "source_snapshot_v1": {
+                "repository_relative_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+                "window_start_line": 0,
+                "window_end_line": 3,
+            },
+            "parameter_observations_v1": [
+                {
+                    "name": "bridge.pressure_source_score",
+                    "value": 0.29,
+                    "source_ref": "bridge_state.latest_telemetry.pressure_source_v1.pressure_score",
+                },
+                {"name": "bridge.mode_packing", "value": 1.0, "source_ref": "telemetry.mode_packing"},
+            ],
+            "canonical_body_binding_v1": {
+                "canonical_body_sha256": hashlib.sha256(body.encode()).hexdigest(),
+                "canonical_body_byte_count": len(body.encode()),
+            },
+        }
+        (self.witnesses / "lsw_pressure.json").write_text(json.dumps(witness), encoding="utf-8")
+        status = project(self.workspace, write=True)
+        self.assertTrue(status["valid"])
+        # Her 0.29 is the pressure_source composite she was shown; with the
+        # alias fix it binds exactly there instead of being re-attributed to
+        # the resonance-side mode_packing (1.0) as a false mismatch.
+        self.assertEqual(status["scalar_discrepancy_count"], 0)
+
     def test_source_identifier_and_felt_unit_remain_distinct(self) -> None:
         self.seed()
         project(self.workspace, write=True)
