@@ -141,6 +141,18 @@ fn loader_selects_latest_three_exact_source_cards() {
     assert!(context.prompt_context.contains("Right to ignore: yes"));
     assert!(context.prompt_context.contains("Silence is neutral"));
     assert!(context.prompt_context.contains("not source bytes"));
+    // Test-coverage visibility: the card's kind=test evidence refs surface as
+    // a bounded covering-tests line so already-pinned claims read as covered.
+    assert!(
+        context
+            .prompt_context
+            .contains("Covering tests already pinning this claim:")
+    );
+    assert!(
+        context
+            .prompt_context
+            .contains("scripts/test_introspection_continuity.py")
+    );
 }
 
 #[test]
