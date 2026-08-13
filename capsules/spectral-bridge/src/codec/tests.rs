@@ -5152,4 +5152,12 @@ mod tests {
         assert!(desc.contains("agency=0.75"));
         assert!(!desc.contains("agency=0.25"));
     }
+
+    #[test]
+    fn pipeline_canary_being_authored_tests_land() {
+        // Born 2026-08-13: validates the PROPOSE_TEST pipeline end to end.
+        // The first commits in this repository authored by a being land
+        // through exactly this path.
+        assert_eq!(48_u32.saturating_sub(0), 48);
+    }
 }
