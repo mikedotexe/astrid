@@ -64,6 +64,32 @@ fi
 # Mark this as the loop (interactive-priority session hooks skip themselves).
 export STEWARD_LOOP=1
 
+# Optional operator-provided environment (chmod 600, never committed): e.g.
+#   export CLAUDE_CODE_OAUTH_TOKEN=...   # from `claude setup-token`
+# so headless auth survives interactive OAuth session expiry.
+if [ -f "$HOME/.astrid_flywheel_env" ]; then
+    # shellcheck disable=SC1091
+    . "$HOME/.astrid_flywheel_env"
+fi
+
+# Auth preflight: a failed credential otherwise costs a full ~40-min
+# preprojection before the child dies in seconds. Probe cheaply first; on
+# auth failure or hang, skip this tick (free) and retry next tick.
+AUTH_PROBE_LOG="$(mktemp /tmp/flywheel_auth_probe.XXXXXX)"
+( echo 'Reply with exactly: OK' | claude -p --model haiku > "$AUTH_PROBE_LOG" 2>&1 ) &
+PROBE_PID=$!
+( sleep 60; kill "$PROBE_PID" 2>/dev/null ) &
+PROBE_WATCH=$!
+wait "$PROBE_PID"
+PROBE_RC=$?
+kill "$PROBE_WATCH" 2>/dev/null
+if [ "$PROBE_RC" -ne 0 ]; then
+    log "STAND DOWN — claude auth/probe unavailable (rc=$PROBE_RC): $(head -c 200 "$AUTH_PROBE_LOG")"
+    rm -f "$AUTH_PROBE_LOG"
+    exit 0
+fi
+rm -f "$AUTH_PROBE_LOG"
+
 cd "$ASTRID" || { log "ERROR — cd $ASTRID failed"; exit 1; }
 log "===== flywheel cycle START (model=${FLYWHEEL_LOOP_MODEL:-opus}, child cap ${MAX_SECS}s) ====="
 
