@@ -1,0 +1,15 @@
+diff --git a/capsules/spectral-bridge/src/autonomous/division_ceremony.rs b/capsules/spectral-bridge/src/autonomous/division_ceremony.rs
+index 0b48c630af..ef0b6d324d 100644
+--- a/capsules/spectral-bridge/src/autonomous/division_ceremony.rs
++++ b/capsules/spectral-bridge/src/autonomous/division_ceremony.rs
+@@ -806,9 +806,7 @@ fn intent_draft(
+     Ok(draft)
+ }
+ 
+-fn pre_intent_posture_draft(
+-    fields: &BTreeMap<String, String>,
+-) -> Result<EventDraftV1, String> {
++fn pre_intent_posture_draft(fields: &BTreeMap<String, String>) -> Result<EventDraftV1, String> {
+     Ok(EventDraftV1::new(candidate_from_fields(fields)?))
+ }
+ 

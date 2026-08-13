@@ -1,0 +1,151 @@
+diff --git a/capsules/spectral-bridge/src/autonomous/runtime/inbox.rs b/capsules/spectral-bridge/src/autonomous/runtime/inbox.rs
+index c4b4d66aa4..8dd216035b 100644
+--- a/capsules/spectral-bridge/src/autonomous/runtime/inbox.rs
++++ b/capsules/spectral-bridge/src/autonomous/runtime/inbox.rs
+@@ -1,19 +1,46 @@
+ /// Reads all `.txt` files from `workspace/inbox/`, returns their content,
+ /// and moves them to `workspace/inbox/read/` so they're not re-read.
+-fn check_inbox() -> Option<String> {
++fn check_inbox(cutoff: std::time::SystemTime) -> Option<contact_capacity::InboxReadBatchV1> {
+     let inbox_dir = bridge_paths().astrid_inbox_dir();
+-    check_inbox_at(inbox_dir.as_path())
++    let trace_root = bridge_paths()
++        .bridge_workspace()
++        .join("diagnostics/contact_capacity_trace_v1");
++    check_inbox_at_cutoff_with_trace(inbox_dir.as_path(), cutoff, &trace_root)
+ }
+ 
+-fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
++#[cfg(test)]
++fn check_inbox_at(inbox_dir: &Path) -> Option<contact_capacity::InboxReadBatchV1> {
++    check_inbox_at_cutoff(inbox_dir, std::time::SystemTime::now())
++}
++
++#[cfg(test)]
++fn check_inbox_at_cutoff(
++    inbox_dir: &Path,
++    cutoff: std::time::SystemTime,
++) -> Option<contact_capacity::InboxReadBatchV1> {
++    let trace_root = contact_capacity::trace_root_for_inbox(inbox_dir);
++    check_inbox_at_cutoff_with_trace(inbox_dir, cutoff, &trace_root)
++}
++
++fn check_inbox_at_cutoff_with_trace(
++    inbox_dir: &Path,
++    cutoff: std::time::SystemTime,
++    trace_root: &Path,
++) -> Option<contact_capacity::InboxReadBatchV1> {
+     let entries: Vec<PathBuf> = std::fs::read_dir(inbox_dir)
+         .ok()?
+         .filter_map(|e| e.ok())
+-        .filter(|e| {
++        .filter_map(|e| {
+             let p = e.path();
+-            p.is_file() && p.extension().is_some_and(|ext| ext == "txt")
++            let before_or_at_cutoff = e
++                .metadata()
++                .and_then(|metadata| metadata.modified())
++                .is_ok_and(|modified| modified <= cutoff);
++            (p.is_file()
++                && p.extension().is_some_and(|ext| ext == "txt")
++                && before_or_at_cutoff)
++                .then_some(p)
+         })
+-        .map(|e| e.path())
+         .collect();
+ 
+     if entries.is_empty() {
+@@ -23,9 +50,10 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+     // Read WITHOUT moving. Messages stay in inbox until retire_inbox()
+     // is called after the exchange succeeds. This prevents lost messages
+     // when dialogue fails (the bug that ate Eugene's hello).
+-    let mut messages = Vec::new();
++    let mut admitted = Vec::new();
+     for path in &entries {
+-        if let Ok(content) = std::fs::read_to_string(path)
++        if let Ok(source_bytes) = std::fs::read(path)
++            && let Ok(content) = std::str::from_utf8(&source_bytes)
+             && !content.trim().is_empty()
+         {
+             // Steward query letters persist as a single-slot open question
+@@ -33,25 +61,39 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+             if let Some(fname) = path.file_name().and_then(|name| name.to_str())
+                 && fname.starts_with("mike_query")
+             {
+-                record_open_steward_query(fname, &content);
++                record_open_steward_query(fname, content);
+             }
+-            let content = if path
++            let identity = correspondence_v1::contact_source_identity_for_inbox_file(path, content);
++            let source_ref_fallback = path
++                .file_name()
++                .map_or_else(|| "unknown_inbox_source".into(), |name| name.to_string_lossy());
++            let source = contact_capacity::InboxSourceMaterialV1::new(
++                source_ref_fallback.into_owned(),
++                &source_bytes,
++                identity,
++            );
++            let prompt_content = if path
+                 .file_name()
+                 .and_then(|name| name.to_str())
+                 .is_some_and(|name| name.starts_with("from_minime_"))
+             {
+-                sanitize_remote_journal_for_astrid_context(&content)
++                sanitize_remote_journal_for_astrid_context(content)
+             } else {
+-                content
++                content.to_string()
+             };
+-            messages.push(content.trim().to_string());
++            admitted.push((prompt_content.trim().to_string(), source));
+         }
+     }
+ 
+-    if messages.is_empty() {
++    if admitted.is_empty() {
+         None
+     } else {
++        let messages = admitted
++            .iter()
++            .map(|(message, _)| message.as_str())
++            .collect::<Vec<_>>();
+         let mut joined = messages.join("\n---\n");
++        let mut admitted_source_count = admitted.len();
+         // Protect context window: truncate large inbox messages.
+         // Full text preserved in inbox/read/ for self-study.
+         const MAX_INBOX_CHARS: usize = 6000;
+@@ -61,6 +103,18 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+             while trunc > 0 && !joined.is_char_boundary(trunc) {
+                 trunc -= 1;
+             }
++            let mut next_start = 0_usize;
++            admitted_source_count = 0;
++            for (index, (message, _)) in admitted.iter().enumerate() {
++                if next_start >= trunc {
++                    break;
++                }
++                admitted_source_count = admitted_source_count.saturating_add(1);
++                next_start = next_start.saturating_add(message.len());
++                if index.saturating_add(1) < admitted.len() {
++                    next_start = next_start.saturating_add("\n---\n".len());
++                }
++            }
+             joined.truncate(trunc);
+             joined.push_str(
+                 "\n\n[... message truncated for context window. \
+@@ -68,7 +122,14 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+                 or NEXT: INTROSPECT inbox/read/latest.txt with a concrete file path.]",
+             );
+         }
+-        Some(joined)
++        let sources = admitted
++            .into_iter()
++            .take(admitted_source_count)
++            .map(|(_, source)| source)
++            .collect();
++        Some(contact_capacity::InboxReadBatchV1::capture(
++            joined, cutoff, sources, trace_root,
++        ))
+     }
+ }
+ 

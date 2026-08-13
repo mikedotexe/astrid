@@ -1,0 +1,36 @@
+{
+  "schema": "read_session_checkpoint_v3",
+  "schema_version": 3,
+  "read_session_id": "e14245121bbeebe3ba8cd2f1145223bf7e10879cab165bd3dc906e36895cf1c7",
+  "source_identity": "astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "structural_map_sha256": "d269f71891c9abf63793be3d6892b04ad5bbc7f68485dd869819443557c33409",
+  "parser": {
+    "parser_kind": "tree_sitter_rust",
+    "parser_version": "0.1.0",
+    "structured_parser": true,
+    "fallback_used": false,
+    "fallback_reason": null
+  },
+  "included_intervals": [
+    {
+      "start_line": 1,
+      "end_line": 400
+    }
+  ],
+  "uncovered_intervals": [
+    {
+      "start_line": 401,
+      "end_line": 1048
+    }
+  ],
+  "coverage_state": "partial",
+  "read_count": 48,
+  "persists_across_process_restart": true,
+  "active_for_source_identity": true,
+  "supersedes_session_id": null,
+  "invalidated_by_session_id": null,
+  "source_changed_since_previous": false,
+  "updated_at_unix_ms": 1786629177178,
+  "artifact_authority": "read_evidence_not_control_approval_or_activation"
+}

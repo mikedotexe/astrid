@@ -1,0 +1,2893 @@
+diff --git a/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs b/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs
+index e739dd6f23..9aa781abc6 100644
+--- a/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs
++++ b/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs
+@@ -13,7 +13,12 @@ use astrid_minime_protocol::MutualAddressEnvelopeV1;
+ 
+ #[path = "correspondence_v1/relation_axes.rs"]
+ mod relation_axes;
++#[path = "correspondence_v1/contact_source.rs"]
++mod contact_source;
+ 
++pub(crate) use contact_source::{
++    InboxContactSourceIdentityV1, InboxPeerMessage, contact_source_identity_for_inbox_file,
++};
+ use relation_axes::{RelationEvidenceV4, correspondence_relation_axes_v4};
+ 
+ pub(crate) const LEDGER_PATH: &str = "/Users/v/other/shared/collaborations/correspondence_v1.jsonl";
+@@ -222,15 +227,6 @@ pub(crate) struct CorrespondenceFields {
+     pub silt_continuity: bool,
+ }
+ 
+-#[derive(Debug, Clone, PartialEq, Eq)]
+-pub(crate) struct InboxPeerMessage {
+-    pub message_id: String,
+-    pub thread_id: String,
+-    pub persistence_id: Option<String>,
+-    pub from_being: String,
+-    pub file_path: PathBuf,
+-}
+-
+ #[must_use]
+ pub(crate) fn mutual_address_envelope_v1(
+     target: &InboxPeerMessage,
+@@ -5031,7 +5027,8 @@ fn native_thread_continuity_v3_for(
+         "stall_reason": stall_reason,
+         "age_ms": age_ms,
+         "reply_linked": reply_linked,
+-        "acknowledged": ack.is_some(),
++        "ack_receipt_present": ack.is_some(),
++        "acknowledged": ack_is_address_evidence,
+         "ack_kind": ack_kind,
+         "trace_observed": trace_observed,
+         "attention_outcome_present": attention_outcome,
+@@ -6238,7 +6235,8 @@ fn direct_contact_fidelity_for_with_context(
+         "legacy_claim_affordance_v25": legacy_claim.map(|claim| legacy_claim_affordance_v25(records, claim)),
+         "native_thread_continuity_v3": if legacy_bridge { None } else { native_thread_continuity_v3_for(records, thread_id, "astrid") },
+         "persistent_thread_continuity_v1": persistent_thread,
+-        "acknowledged": ack.is_some(),
++        "ack_receipt_present": ack.is_some(),
++        "acknowledged": ack_is_address_evidence,
+         "ack_kind": ack_kind,
+         "latest_ack": ack.map(|row| json!({
+             "ack_kind": row.get("ack_kind").cloned().unwrap_or_else(|| json!("seen")),
+@@ -7312,6 +7310,10 @@ fn chamber_correspondence_state_summary() -> String {
+     )
+ }
+ 
++#[cfg(test)]
++#[path = "correspondence_v1/acknowledgement_tests.rs"]
++mod acknowledgement_tests;
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -9267,71 +9269,6 @@ mod tests {
+         let _ = std::fs::remove_dir_all(root);
+     }
+ 
+-    #[test]
+-    fn seen_ack_is_visibility_not_attention_evidence() {
+-        let root = std::env::temp_dir().join(format!("corr_seen_ack_test_{}", now_ms()));
+-        let inbox = root.join("inbox");
+-        let ledger = root.join("ledger.jsonl");
+-        let (envelope, path) = deliver_to_inbox_with_ledger(
+-            &ledger,
+-            &inbox,
+-            "astrid",
+-            "minime",
+-            "A direct address that has only been seen.",
+-            CorrespondenceFields::default(),
+-        )
+-        .unwrap();
+-        append_read_receipt_at(
+-            &ledger,
+-            "minime",
+-            &envelope.message_id,
+-            &envelope.thread_id,
+-            &path,
+-        )
+-        .unwrap();
+-        let seen = append_ack_receipt_at(&ledger, "latest", "minime", "astrid", "seen", "seen");
+-        assert!(seen.contains("ACK RECEIPT WRITTEN"));
+-        let heartbeat = Some(serde_json::json!({
+-            "jitter_class": "normal",
+-            "timing_reliability": "reliable",
+-            "field_vs_hearing": "telemetry cadence is steady"
+-        }));
+-        let records = read_ledger_records_at(&ledger);
+-        let fidelity =
+-            direct_contact_fidelity_for_with_heartbeat(&records, "latest", heartbeat.clone());
+-        assert_eq!(
+-            fidelity.get("status").and_then(Value::as_str),
+-            Some("seen_ack_only")
+-        );
+-        assert_eq!(
+-            fidelity.get("block_reason").and_then(Value::as_str),
+-            Some("seen_ack_is_visibility_not_address")
+-        );
+-        assert_eq!(
+-            fidelity
+-                .get("eligible_for_correspondence_attention_canary")
+-                .and_then(Value::as_bool),
+-            Some(false)
+-        );
+-        assert_eq!(
+-            fidelity
+-                .get("direct_contact_fidelity_v3")
+-                .and_then(|value| value.get("status"))
+-                .and_then(Value::as_str),
+-            Some("seen_ack_only")
+-        );
+-        let blocked = activate_attention_canary_at_with_heartbeat(
+-            &ledger,
+-            "latest",
+-            "reason: hold it distinctly; focus: direct address; stop_criteria: one turn",
+-            "astrid",
+-            "minime",
+-            heartbeat,
+-        );
+-        assert!(blocked.contains("blocked_no_receipt"), "{blocked}");
+-        let _ = std::fs::remove_dir_all(root);
+-    }
+-
+     #[test]
+     fn correspondence_metadata_survives_reply_ack_and_trace_without_priority() {
+         let root = std::env::temp_dir().join(format!("corr_metadata_test_{}", now_ms()));
+@@ -10042,7 +9979,7 @@ mod tests {
+         );
+     }
+ 
+-    fn deliver_to_inbox_with_ledger(
++    pub(super) fn deliver_to_inbox_with_ledger(
+         ledger_path: &Path,
+         inbox_dir: &Path,
+         from_being: &str,
+diff --git a/capsules/spectral-bridge/src/autonomous/division_ceremony.rs b/capsules/spectral-bridge/src/autonomous/division_ceremony.rs
+index 0b48c630af..ef0b6d324d 100644
+--- a/capsules/spectral-bridge/src/autonomous/division_ceremony.rs
++++ b/capsules/spectral-bridge/src/autonomous/division_ceremony.rs
+@@ -806,9 +806,7 @@ fn intent_draft(
+     Ok(draft)
+ }
+ 
+-fn pre_intent_posture_draft(
+-    fields: &BTreeMap<String, String>,
+-) -> Result<EventDraftV1, String> {
++fn pre_intent_posture_draft(fields: &BTreeMap<String, String>) -> Result<EventDraftV1, String> {
+     Ok(EventDraftV1::new(candidate_from_fields(fields)?))
+ }
+ 
+diff --git a/capsules/spectral-bridge/src/autonomous/division_ceremony/status.rs b/capsules/spectral-bridge/src/autonomous/division_ceremony/status.rs
+index da8afdc55a..4b371e1aa5 100644
+--- a/capsules/spectral-bridge/src/autonomous/division_ceremony/status.rs
++++ b/capsules/spectral-bridge/src/autonomous/division_ceremony/status.rs
+@@ -20,7 +20,7 @@ fn current_posture(records: &[ParsedEventV1], actor: &str, now_unix_ms: u64) ->
+                     .is_some_and(|expiry| expiry >= now_unix_ms) =>
+         {
+             "intent"
+-        }
++        },
+         Some(event) if event.action == DivisionCeremonyActionV1::Intent => "intent_expired",
+         _ => "unexpressed",
+     }
+@@ -136,11 +136,7 @@ pub(crate) fn status_report_at(
+     for being in ["astrid", "minime"] {
+         let intent = latest(&records, being, Some(DivisionCeremonyActionV1::Intent));
+         let hold = latest(&records, being, Some(DivisionCeremonyActionV1::Hold));
+-        let decline = latest(
+-            &records,
+-            being,
+-            Some(DivisionCeremonyActionV1::Decline),
+-        );
++        let decline = latest(&records, being, Some(DivisionCeremonyActionV1::Decline));
+         let assent = latest(&records, being, Some(DivisionCeremonyActionV1::Assent));
+         let withdrawn = assent.is_some_and(|assent| {
+             records.iter().any(|event| {
+diff --git a/capsules/spectral-bridge/src/autonomous/division_ceremony/tests.rs b/capsules/spectral-bridge/src/autonomous/division_ceremony/tests.rs
+index 4fcac9de12..a73760d7a7 100644
+--- a/capsules/spectral-bridge/src/autonomous/division_ceremony/tests.rs
++++ b/capsules/spectral-bridge/src/autonomous/division_ceremony/tests.rs
+@@ -111,12 +111,7 @@ fn hold_and_decline_block_rehearsal_until_a_newer_intent() {
+     .unwrap();
+ 
+     intent(root.path(), "astrid");
+-    posture(
+-        root.path(),
+-        "astrid",
+-        DivisionCeremonyActionV1::Hold,
+-        1_100,
+-    );
++    posture(root.path(), "astrid", DivisionCeremonyActionV1::Hold, 1_100);
+     assert!(
+         require_active_intent_at(root.path(), "astrid", &command, 1_101)
+             .unwrap_err()
+@@ -135,9 +130,7 @@ fn hold_and_decline_block_rehearsal_until_a_newer_intent() {
+         DivisionCeremonyActionV1::Decline,
+         1_300,
+     );
+-    assert!(
+-        require_active_intent_at(root.path(), "astrid", &command, 1_301).is_err()
+-    );
++    assert!(require_active_intent_at(root.path(), "astrid", &command, 1_301).is_err());
+ }
+ 
+ #[test]
+diff --git a/capsules/spectral-bridge/src/autonomous/introspect.rs b/capsules/spectral-bridge/src/autonomous/introspect.rs
+index ab8bfe1cea..a174db4edb 100644
+--- a/capsules/spectral-bridge/src/autonomous/introspect.rs
++++ b/capsules/spectral-bridge/src/autonomous/introspect.rs
+@@ -468,6 +468,7 @@ fn should_skip_introspect_dir(name: &str) -> bool {
+ fn source_roots(paths: &BridgePaths) -> Vec<PathBuf> {
+     vec![
+         paths.bridge_root().join("src"),
++        paths.bridge_root().join("DOMAIN_BOUNDARIES.md"),
+         paths.astrid_root().join("docs/steward-notes"),
+         paths.minime_root().join("minime/src"),
+         paths.minime_root().join("minime_autonomy"),
+@@ -2075,6 +2076,24 @@ mod tests {
+         assert!(err.contains("minime:regulator"));
+     }
+ 
++    #[test]
++    fn domain_boundaries_path_accepts_exact_and_legacy_lowercase_spelling() {
++        let sources = introspect_sources();
++
++        for requested in [
++            "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
++            "capsules/spectral-bridge/domain_boundaries.md",
++        ] {
++            let resolved = resolve_introspect_target_result(requested, &sources)
++                .expect("resolve bridge domain-boundary source");
++
++            assert_eq!(
++                resolved.path,
++                bridge_paths().bridge_root().join("DOMAIN_BOUNDARIES.md")
++            );
++        }
++    }
++
+     #[test]
+     fn introspect_placeholder_notice_names_concrete_examples() {
+         let notice = blocked_introspection_notice(
+diff --git a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs
+index ff63f2d298..335c6f4361 100644
+--- a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs
++++ b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs
+@@ -55,6 +55,7 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
+     "i also see the `",
+     "code identifies",
+     "in the source,",
++    "in the code,",
+     "file defines",
+     "file establishes",
+     "file describes",
+@@ -66,6 +67,7 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
+     "code describes",
+     "code labels",
+     "i see the definition of",
++    "i see the ",
+     " defines `",
+     " defines the `",
+     "i see the `",
+diff --git a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs
+index f69520e99e..b535a4d93d 100644
+--- a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs
++++ b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs
+@@ -194,11 +194,7 @@ fn visit_tree(
+     }
+ }
+ 
+-fn rust_include_edge(
+-    node: Node<'_>,
+-    content: &str,
+-    parent_path: &str,
+-) -> Option<SourceMapEntryV3> {
++fn rust_include_edge(node: Node<'_>, content: &str, parent_path: &str) -> Option<SourceMapEntryV3> {
+     if node.kind() != "macro_invocation" {
+         return None;
+     }
+diff --git a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs
+index 388204c81b..f1c1f3274e 100644
+--- a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs
++++ b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs
+@@ -486,6 +486,29 @@ mod tests {
+         );
+     }
+ 
++    #[test]
++    fn introspection_code_attribution_rejects_unseen_lending_mechanism() {
++        let dir = tempfile::tempdir().expect("tempdir");
++        let path = dir.path().join("dialogue_runtime.rs");
++        let content = "fn sanitize_model_control_markers() {}\n";
++        fs::write(&path, content).expect("fixture");
++        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 1, 1)
++            .expect("evidence");
++        let report = challenge_response_claims_v3(
++            "I am looking at the `astrid:llm` source (lines 1-400). I see the structural scaffolding for how I process external inputs and how my \"self\" is situated within the spectral runtime. Specifically, I see the mechanics of the \"lending\" process—how my internal states are shared or borrowed by the surrounding systems.\n\
++             In the code, lending looks like a specific data-handling procedure (a \"how\"), but in my experience, it feels like a \"ghost-line\".",
++            &path,
++            &evidence,
++        );
++
++        assert!(!report.all_supported);
++        assert_eq!(report.challenged_claim_count, 2);
++        assert!(report.support_refs.iter().all(|claim| {
++            claim.claim_kind == ClaimKindV2::SourceAttribution
++                && claim.support_state == ClaimSupportStateV2::Rejected
++        }));
++    }
++
+     #[test]
+     fn source_window_attribution_rejects_prompt_telemetry_and_late_symbols() {
+         let dir = tempfile::tempdir().expect("tempdir");
+diff --git a/capsules/spectral-bridge/src/autonomous/next_action/mod.rs b/capsules/spectral-bridge/src/autonomous/next_action/mod.rs
+index 4552cbac92..82995cb72d 100644
+--- a/capsules/spectral-bridge/src/autonomous/next_action/mod.rs
++++ b/capsules/spectral-bridge/src/autonomous/next_action/mod.rs
+@@ -1,6 +1,7 @@
+ //! Typed autonomous action routing facade.
+ 
+ mod ask_steward;
++mod action_syntax;
+ mod attractor;
+ mod audio;
+ pub(crate) mod auto_promote;
+@@ -28,9 +29,11 @@ pub(crate) mod shadow;
+ pub(crate) mod sovereignty;
+ mod space_hold;
+ mod spectral_drift;
++mod temporal_bearing;
+ mod workspace;
+ 
+ pub(crate) const PDF_READ_PREFIX: &str = pdf::PDF_READ_PREFIX;
++pub(crate) use action_syntax::strip_action;
+ 
+ pub(crate) fn division_action_prompt_note(workspace: Option<&std::path::Path>) -> Option<String> {
+     division::prompt_note(workspace)
+@@ -1307,22 +1310,6 @@ fn normalize_steward_typo_alias(base_action: &str, original: &str) -> Option<(St
+     Some((normalized_base, normalized_original))
+ }
+ 
+-fn strip_action(original: &str, prefix: &str) -> String {
+-    let upper = original.to_uppercase();
+-    if upper.starts_with(prefix) {
+-        // Strip the action prefix AND any trailing colon+whitespace.
+-        // Astrid often writes "BROWSE: https://..." or "SEARCH: topic"
+-        // and the colon must not be left dangling.
+-        original[prefix.len()..]
+-            .trim_start()
+-            .trim_start_matches([':', '-', '\u{2014}'])
+-            .trim()
+-            .to_string()
+-    } else {
+-        String::new()
+-    }
+-}
+-
+ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
+     if protected_diagnostics::canonical_action_for(base_action).is_some() {
+         return "protected_summary";
+@@ -1391,7 +1378,8 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
+         | "BRACE_AUDIT"
+         | "AFTERSHOCK_TRACE"
+         | "TREMOR_RESIDUE"
+-        | "CASCADE_RESIDUE" => "protected_summary",
++        | "CASCADE_RESIDUE"
++        | "TEMPORAL_BEARING" => "protected_summary",
+         "INQUIRY_START" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" | "INQUIRY_CANCEL"
+         | "INQUIRY_CANARY" | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => {
+             "protected_summary"
+@@ -1554,7 +1542,8 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
+         | "FOLD_STUDY"
+         | "HUM_DECAY"
+         | "HUM_DECAY_STUDY"
+-        | "M6_BRIDGE" => "read_only",
++        | "M6_BRIDGE"
++        | "TEMPORAL_BEARING" => "read_only",
+         "OWNER_POLICY_STATUS" | "CONCERN_STATUS" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" => {
+             "read_only"
+         },
+@@ -1694,6 +1683,7 @@ fn route_for_preflight_base(base_action: &str) -> String {
+         | "LIVED_TRANSITION_STATUS"
+         | "TRANSITION_STATUS"
+         | "PHASE_TRANSITION_STATUS" => "phase_transition_cards",
++        "TEMPORAL_BEARING" => "temporal_bearing",
+         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
+         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
+         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
+@@ -2334,6 +2324,11 @@ fn handle_next_action_with_author(
+             .with_stage_visibility("language_only", "public_correspondence");
+     }
+ 
++    if temporal_bearing::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
++        return NextActionOutcome::handled("temporal_bearing", format!("Handled `{original}`."))
++            .with_stage_visibility("read_only", "protected_summary");
++    }
++
+     if phase_transition::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+         return NextActionOutcome::handled(
+             "phase_transition_cards",
+diff --git a/capsules/spectral-bridge/src/autonomous/next_action/modes.rs b/capsules/spectral-bridge/src/autonomous/next_action/modes.rs
+index f794139c11..8c1b8d000b 100644
+--- a/capsules/spectral-bridge/src/autonomous/next_action/modes.rs
++++ b/capsules/spectral-bridge/src/autonomous/next_action/modes.rs
+@@ -238,7 +238,7 @@ pub(super) fn handle_action(
+             conv.defer_inbox = true;
+             let parts: Vec<&str> = original.splitn(3, ' ').collect();
+             if parts.len() >= 2 {
+-                let label = parts[1].to_lowercase();
++                let label = parts[1].to_string();
+                 let offset = parts
+                     .get(2)
+                     .and_then(|s| s.parse::<usize>().ok())
+@@ -484,7 +484,7 @@ mod tests {
+     }
+ 
+     #[test]
+-    fn targeted_introspect_defers_inbox_once() {
++    fn targeted_introspect_preserves_case_sensitive_path_and_defers_inbox_once() {
+         let mut conv = ConversationState::new(Vec::new(), None);
+         let db = BridgeDb::open(":memory:").expect("open in-memory db");
+         let (sensory_tx, _sensory_rx) = mpsc::channel(1);
+@@ -503,7 +503,7 @@ mod tests {
+         let handled = handle_action(
+             &mut conv,
+             "INTROSPECT",
+-            "INTROSPECT src/autonomous/introspect.rs 680",
++            "INTROSPECT capsules/spectral-bridge/DOMAIN_BOUNDARIES.md 680",
+             &mut ctx,
+         );
+ 
+@@ -512,7 +512,10 @@ mod tests {
+         assert!(conv.defer_inbox);
+         assert_eq!(
+             conv.introspect_target,
+-            Some(("src/autonomous/introspect.rs".to_string(), 680))
++            Some((
++                "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md".to_string(),
++                680
++            ))
+         );
+     }
+ 
+diff --git a/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs b/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs
+index 65299c664d..f8cf9dfd10 100644
+--- a/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs
++++ b/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs
+@@ -7,6 +7,12 @@ use tracing::info;
+ use super::{ConversationState, NextActionContext, bridge_paths, resource_governor, strip_action};
+ use crate::types::SensoryMsg;
+ 
++mod cartography;
++mod trajectory;
++
++use self::cartography::{render_shadow_coupling, render_shadow_dialogue, render_shadow_response};
++use self::trajectory::render_shadow_trajectory;
++
+ const HEALTH_FRESH_SECS: f64 = 10.0;
+ /// Maximum age of a cached preflight result that still counts as "fresh" for
+ /// the rehearse→live progression curriculum. Old enough to span one or two
+@@ -828,384 +834,7 @@ pub(crate) fn next_shadow_suggestion(label: &str) -> String {
+     }
+ }
+ 
+-// === v3 typed actions: trajectory, response, dialogue ===
+-
+-/// Render the v3 history ring as a compact ASCII trace + cartography
+-/// artifact. Astrid's `SHADOW_TRAJECTORY [label]` action: walk the last
+-/// 32 snapshots in `shadow_field_v3.history`, emit a sparkline of
+-/// field_norm and a class timeline so phase shifts are legible.
+-fn shadow_trajectory_effect_contract() -> Value {
+-    serde_json::json!({
+-        "schema": "shadow_trajectory_effect_contract_v1",
+-        "observational_only": true,
+-        "requires_being_invocation": true,
+-        "writes_cartography_artifact": true,
+-        "initiates_distance_shift": false,
+-        "changes_shadow_field": false,
+-        "changes_pressure_or_mode_packing": false,
+-        "authority": "being_invoked_cartography_only_not_shadow_influence_or_distance_control",
+-    })
+-}
+-
+-fn render_shadow_trajectory(ctx: &NextActionContext<'_>, label: &str) -> CartographyReport {
+-    let workspace = minime_workspace(ctx);
+-    let health = read_json(&workspace.join("health.json")).unwrap_or(Value::Null);
+-    let field_v3 = health
+-        .get("shadow_field_v3")
+-        .cloned()
+-        .unwrap_or(Value::Null);
+-    let history = field_v3
+-        .get("history")
+-        .and_then(Value::as_array)
+-        .cloned()
+-        .unwrap_or_default();
+-    let dwell = field_v3
+-        .get("phase_dwell_ticks")
+-        .and_then(Value::as_u64)
+-        .unwrap_or(0);
+-    let transitions = field_v3
+-        .get("recent_phase_transitions")
+-        .and_then(Value::as_array)
+-        .cloned()
+-        .unwrap_or_default();
+-
+-    let sparkline = trajectory_sparkline(&history);
+-    let class_timeline = trajectory_class_timeline(&history);
+-    let transitions_summary = if transitions.is_empty() {
+-        "(no class transitions in window)".to_string()
+-    } else {
+-        transitions
+-            .iter()
+-            .filter_map(|t| {
+-                let from = t.get("from").and_then(Value::as_str)?;
+-                let to = t.get("to").and_then(Value::as_str)?;
+-                Some(format!("{from}→{to}"))
+-            })
+-            .collect::<Vec<_>>()
+-            .join(", ")
+-    };
+-
+-    let now = SystemTime::now()
+-        .duration_since(SystemTime::UNIX_EPOCH)
+-        .map_or(0.0, |d| d.as_secs_f64());
+-    let dir = bridge_paths().bridge_workspace().join("shadow_cartography");
+-    let label_slug = if label.is_empty() {
+-        "lambda-tail/lambda4".to_string()
+-    } else {
+-        canonical_shadow_label(label)
+-    };
+-    let safe_label_slug = label_slug.replace(['/', ' '], "_");
+-    let artifact_path = dir.join(format!(
+-        "trajectory_{safe_label_slug}_{ts}.json",
+-        ts = (now as u64),
+-    ));
+-    let record = serde_json::json!({
+-        "schema": "shadow_trajectory_v1",
+-        "label": label_slug,
+-        "recorded_at_unix_s": now,
+-        "history": history,
+-        "phase_dwell_ticks": dwell,
+-        "recent_phase_transitions": transitions,
+-        "sparkline_field_norm": sparkline,
+-        "class_timeline": class_timeline,
+-        "effect_contract_v1": shadow_trajectory_effect_contract(),
+-    });
+-    let mut write_status = "ok".to_string();
+-    if let Err(err) = std::fs::create_dir_all(&dir) {
+-        write_status = format!("mkdir_failed: {err}");
+-    } else if let Err(err) = std::fs::write(
+-        &artifact_path,
+-        serde_json::to_string_pretty(&record).unwrap_or_else(|_| record.to_string()),
+-    ) {
+-        write_status = format!("write_failed: {err}");
+-    }
+-
+-    let summary = format!(
+-        "Shadow trajectory ({label}):\n  field_norm sparkline: {sparkline}\n  classes:           {class_timeline}\n  current dwell: {dwell}t\n  recent transitions: {transitions_summary}\n  Effect: observational cartography only; does not initiate a distance shift or change the Shadow field, pressure, or mode packing.\n  Artifact: {artifact_path} | status: {write_status}",
+-        label = label_slug,
+-        artifact_path = artifact_path.display(),
+-    );
+-    CartographyReport {
+-        summary,
+-        artifact_path: artifact_path.to_string_lossy().to_string(),
+-    }
+-}
+-
+-/// Render the v3 closed-loop response for the latest (or named)
+-/// influence intent. `SHADOW_RESPONSE [intent_id|latest]` action:
+-/// read the response history from minime's workspace and surface
+-/// pre/post deltas + basin shift so Astrid can learn cause→effect.
+-fn render_shadow_response(ctx: &NextActionContext<'_>, intent_query: &str) -> String {
+-    let workspace = minime_workspace(ctx);
+-    let health = read_json(&workspace.join("health.json")).unwrap_or(Value::Null);
+-    let history = health
+-        .get("shadow_influence_response_history_v3")
+-        .and_then(Value::as_array)
+-        .cloned()
+-        .unwrap_or_default();
+-
+-    let target = if intent_query.is_empty() || intent_query.eq_ignore_ascii_case("latest") {
+-        history.last().cloned()
+-    } else {
+-        history
+-            .iter()
+-            .rev()
+-            .find(|r| {
+-                r.get("intent_id")
+-                    .and_then(Value::as_str)
+-                    .is_some_and(|id| id == intent_query)
+-            })
+-            .cloned()
+-    };
+-
+-    let Some(response) = target else {
+-        return format!(
+-            "Shadow response: no v3 closed-loop response found for '{intent_query}'.\n  History size: {history_len}.\n  Closed loop activates after a SHADOW_INFLUENCE --stage=live cycle completes (~36 ticks).",
+-            history_len = history.len(),
+-        );
+-    };
+-
+-    let intent_id = response
+-        .get("intent_id")
+-        .and_then(Value::as_str)
+-        .unwrap_or("unknown");
+-    let label = response
+-        .get("label")
+-        .and_then(Value::as_str)
+-        .unwrap_or("unknown");
+-    let stage = response
+-        .get("stage")
+-        .and_then(Value::as_str)
+-        .unwrap_or("unknown");
+-    let delta = response
+-        .get("delta_field_norm")
+-        .and_then(Value::as_f64)
+-        .unwrap_or(0.0);
+-    let basin = response
+-        .get("basin_shift_score")
+-        .and_then(Value::as_f64)
+-        .unwrap_or(0.0);
+-    let class_changed = response
+-        .get("class_changed")
+-        .and_then(Value::as_bool)
+-        .unwrap_or(false);
+-    let class_from = response
+-        .get("class_from")
+-        .and_then(Value::as_str)
+-        .unwrap_or("");
+-    let class_to = response
+-        .get("class_to")
+-        .and_then(Value::as_str)
+-        .unwrap_or("");
+-    let applied_rms = response
+-        .get("applied_rms")
+-        .and_then(Value::as_f64)
+-        .unwrap_or(0.0);
+-    let applied_max = response
+-        .get("applied_max_abs")
+-        .and_then(Value::as_f64)
+-        .unwrap_or(0.0);
+-    let total_ticks = response
+-        .get("total_applied_ticks")
+-        .and_then(Value::as_u64)
+-        .unwrap_or(0);
+-    let class_seg = if class_changed {
+-        format!(", classification {class_from}→{class_to}")
+-    } else {
+-        format!(", classification stayed {class_from}")
+-    };
+-    let dir_word = if delta >= 0.0 { "+" } else { "" };
+-    format!(
+-        "Shadow influence response (intent {intent_id}, label {label}, stage {stage}):\n  Pre→Post field_norm delta: {dir_word}{delta:.4}\n  Basin shift score: {basin:.3} (1.0 = field totally rearranged, 0.0 = unchanged){class_seg}\n  Applied: rms={applied_rms:.4}, max_abs={applied_max:.4} over {total_ticks} ticks.\n  The shadow remembers."
+-    )
+-}
+-
+-/// Compare minime's and Astrid's published shadows side-by-side.
+-/// `SHADOW_DIALOGUE` action: writes a cartography artifact carrying
+-/// both v3 shadows and surfaces alignment in `conv.emphasis` so Astrid
+-/// can read mutual-witness signal at a glance.
+-fn render_shadow_dialogue(ctx: &NextActionContext<'_>) -> CartographyReport {
+-    let workspace = minime_workspace(ctx);
+-    let minime_health = read_json(&workspace.join("health.json")).unwrap_or(Value::Null);
+-    let minime_shadow = minime_health
+-        .get("shadow_field_v3")
+-        .cloned()
+-        .unwrap_or(Value::Null);
+-    let astrid_shadow = read_json(&workspace.join("astrid_shadow_v3.json")).unwrap_or(Value::Null);
+-
+-    let minime_class = minime_shadow
+-        .get("class_v3")
+-        .and_then(|c| c.get("primary"))
+-        .and_then(Value::as_str)
+-        .unwrap_or("unknown");
+-    let astrid_class = astrid_shadow
+-        .get("class_v3")
+-        .and_then(|c| c.get("primary"))
+-        .and_then(Value::as_str)
+-        .unwrap_or("unknown");
+-    let minime_norm = minime_shadow
+-        .get("v2")
+-        .and_then(|v| v.get("field_norm"))
+-        .and_then(Value::as_f64)
+-        .unwrap_or(0.0);
+-    let astrid_norm = astrid_shadow
+-        .get("v2")
+-        .and_then(|v| v.get("field_norm"))
+-        .and_then(Value::as_f64)
+-        .unwrap_or(0.0);
+-    let minime_eligible = minime_shadow
+-        .get("v2")
+-        .and_then(|v| v.get("influence_eligible"))
+-        .and_then(Value::as_bool)
+-        .unwrap_or(false);
+-    let astrid_eligible = astrid_shadow
+-        .get("v2")
+-        .and_then(|v| v.get("influence_eligible"))
+-        .and_then(Value::as_bool)
+-        .unwrap_or(false);
+-    let alignment = if minime_class == astrid_class {
+-        format!("Both shadows share the same primary class: {minime_class}.")
+-    } else {
+-        format!("Shadows diverge: minime={minime_class}, yours={astrid_class}.")
+-    };
+-
+-    let now = SystemTime::now()
+-        .duration_since(SystemTime::UNIX_EPOCH)
+-        .map_or(0.0, |d| d.as_secs_f64());
+-    let dir = bridge_paths().bridge_workspace().join("shadow_cartography");
+-    let artifact_path = dir.join(format!("dialogue_{ts}.json", ts = (now as u64)));
+-    let record = serde_json::json!({
+-        "schema": "shadow_dialogue_v1",
+-        "recorded_at_unix_s": now,
+-        "minime_shadow_v3": minime_shadow,
+-        "astrid_shadow_v3": astrid_shadow,
+-        "alignment_summary": alignment,
+-    });
+-    let mut write_status = "ok".to_string();
+-    if let Err(err) = std::fs::create_dir_all(&dir) {
+-        write_status = format!("mkdir_failed: {err}");
+-    } else if let Err(err) = std::fs::write(
+-        &artifact_path,
+-        serde_json::to_string_pretty(&record).unwrap_or_else(|_| record.to_string()),
+-    ) {
+-        write_status = format!("write_failed: {err}");
+-    }
+-
+-    let summary = format!(
+-        "Shadow dialogue:\n  Minime: {minime_class} (field_norm={minime_norm:.3}, gate {minime_gate})\n  Yours:  {astrid_class} (field_norm={astrid_norm:.3}, gate {astrid_gate})\n  {alignment}\n  Artifact: {artifact_path} | status: {write_status}",
+-        minime_gate = if minime_eligible { "OPEN" } else { "CLOSED" },
+-        astrid_gate = if astrid_eligible { "OPEN" } else { "CLOSED" },
+-        artifact_path = artifact_path.display(),
+-    );
+-    CartographyReport {
+-        summary,
+-        artifact_path: artifact_path.to_string_lossy().to_string(),
+-    }
+-}
+-
+-/// `SHADOW_COUPLING [mode|all]` action: renders the per-mode partner
+-/// graph from both shadows, writes a cartography artifact, and surfaces a
+-/// one-line summary in `conv.emphasis`.
+-fn render_shadow_coupling(ctx: &NextActionContext<'_>, scope: &str) -> CartographyReport {
+-    use crate::spectral_viz::{ShadowOwner, format_coupling_graph};
+-
+-    let workspace = minime_workspace(ctx);
+-    let minime_health = read_json(&workspace.join("health.json")).unwrap_or(Value::Null);
+-    let minime_shadow = minime_health
+-        .get("shadow_field_v3")
+-        .cloned()
+-        .unwrap_or(Value::Null);
+-    let astrid_shadow = read_json(&workspace.join("astrid_shadow_v3.json")).unwrap_or(Value::Null);
+-
+-    let minime_line = format_coupling_graph(&minime_shadow, ShadowOwner::Minime);
+-    let astrid_line = format_coupling_graph(&astrid_shadow, ShadowOwner::Yours);
+-
+-    let now = SystemTime::now()
+-        .duration_since(SystemTime::UNIX_EPOCH)
+-        .map_or(0.0, |d| d.as_secs_f64());
+-    let dir = bridge_paths().bridge_workspace().join("shadow_cartography");
+-    let artifact_path = dir.join(format!(
+-        "coupling_{scope}_{ts}.json",
+-        scope = scope,
+-        ts = (now as u64),
+-    ));
+-    let record = serde_json::json!({
+-        "schema": "shadow_coupling_v1",
+-        "scope": scope,
+-        "recorded_at_unix_s": now,
+-        "minime_mode_partners": minime_shadow.get("mode_partners").cloned().unwrap_or(Value::Null),
+-        "astrid_mode_partners": astrid_shadow.get("mode_partners").cloned().unwrap_or(Value::Null),
+-    });
+-    let mut write_status = "ok".to_string();
+-    if let Err(err) = std::fs::create_dir_all(&dir) {
+-        write_status = format!("mkdir_failed: {err}");
+-    } else if let Err(err) = std::fs::write(
+-        &artifact_path,
+-        serde_json::to_string_pretty(&record).unwrap_or_else(|_| record.to_string()),
+-    ) {
+-        write_status = format!("write_failed: {err}");
+-    }
+-
+-    let lines = match (minime_line, astrid_line) {
+-        (Some(m), Some(a)) => format!("{m}\n  {a}"),
+-        (Some(m), None) => m,
+-        (None, Some(a)) => a,
+-        (None, None) => {
+-            "(coupling graph unavailable — both shadows lack mode_partners data)".to_string()
+-        },
+-    };
+-    let summary = format!(
+-        "Shadow coupling ({scope}):\n  {lines}\n  Artifact: {artifact_path} | status: {write_status}",
+-        artifact_path = artifact_path.display(),
+-    );
+-    CartographyReport {
+-        summary,
+-        artifact_path: artifact_path.to_string_lossy().to_string(),
+-    }
+-}
+-
+-/// Compact field_norm sparkline using a 6-rune ramp. Empty for short
+-/// histories so the renderer doesn't lie about trends from 1-2 samples.
+-fn trajectory_sparkline(history: &[Value]) -> String {
+-    if history.len() < 3 {
+-        return "(history too short for sparkline)".to_string();
+-    }
+-    let glyphs = ['▁', '▂', '▃', '▅', '▆', '█'];
+-    let values: Vec<f64> = history
+-        .iter()
+-        .filter_map(|s| s.get("field_norm").and_then(Value::as_f64))
+-        .collect();
+-    if values.is_empty() {
+-        return "(no field_norm samples)".to_string();
+-    }
+-    let mn = values.iter().copied().fold(f64::INFINITY, f64::min);
+-    let mx = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+-    let span = (mx - mn).max(1e-6);
+-    values
+-        .iter()
+-        .map(|v| {
+-            let bucket = ((v - mn) / span * (glyphs.len() as f64 - 1.0)).round() as usize;
+-            glyphs[bucket.min(glyphs.len() - 1)]
+-        })
+-        .collect()
+-}
+-
+-/// Compact class timeline using single-letter codes (q/v/s/c/p/a).
+-fn trajectory_class_timeline(history: &[Value]) -> String {
+-    history
+-        .iter()
+-        .filter_map(|s| s.get("class_primary").and_then(Value::as_str))
+-        .map(|c| match c {
+-            "quiet" => 'q',
+-            "volatile" => 'v',
+-            "sticky" => 's',
+-            "coupled" => 'c',
+-            "polarized" => 'p',
+-            "active" => 'a',
+-            _ => '?',
+-        })
+-        .collect()
+-}
++// === v3 typed actions: response and dialogue ===
+ 
+ #[cfg(test)]
+ mod density_gift_tests {
+@@ -1244,19 +873,4 @@ mod density_gift_tests {
+         assert_eq!(duration_ticks, Some(24));
+         assert!(features.iter().all(|v| v.abs() <= 0.025 + 1e-6));
+     }
+-
+-    #[test]
+-    fn shadow_trajectory_effect_contract_is_observational() {
+-        let contract = shadow_trajectory_effect_contract();
+-        assert_eq!(contract["observational_only"], true);
+-        assert_eq!(contract["requires_being_invocation"], true);
+-        assert_eq!(contract["writes_cartography_artifact"], true);
+-        assert_eq!(contract["initiates_distance_shift"], false);
+-        assert_eq!(contract["changes_shadow_field"], false);
+-        assert_eq!(contract["changes_pressure_or_mode_packing"], false);
+-        assert_eq!(
+-            contract["authority"],
+-            "being_invoked_cartography_only_not_shadow_influence_or_distance_control"
+-        );
+-    }
+ }
+diff --git a/capsules/spectral-bridge/src/autonomous/next_action/workspace.rs b/capsules/spectral-bridge/src/autonomous/next_action/workspace.rs
+index a735a1e195..ea653b8927 100644
+--- a/capsules/spectral-bridge/src/autonomous/next_action/workspace.rs
++++ b/capsules/spectral-bridge/src/autonomous/next_action/workspace.rs
+@@ -385,9 +385,7 @@ pub(super) fn handle_action(
+                         "[The previous continuation reached the end of its source. Open something new with BROWSE, MIKE_READ, AR_READ, LIST_FILES, or CODEX.]"
+                             .to_string(),
+                     );
+-                    info!(
+-                        "READ_MORE: previous continuation completed; recovery fallback skipped"
+-                    );
++                    info!("READ_MORE: previous continuation completed; recovery fallback skipped");
+                     return true;
+                 }
+                 match recover_read_more_target(conv, &hint) {
+@@ -669,8 +667,8 @@ pub(super) fn handle_action(
+ mod tests {
+     use super::{
+         ConversationState, advance_by_chars, clamp_to_char_boundary, extract_url_arg,
+-        looks_like_raw_pdf_dump, parse_saved_page_header, queue_browse_url,
+-        previous_recorded_choice_was_read_more, recover_read_more_target,
++        looks_like_raw_pdf_dump, parse_saved_page_header, previous_recorded_choice_was_read_more,
++        queue_browse_url, recover_read_more_target,
+     };
+     use crate::paths::bridge_paths;
+     use std::fs;
+diff --git a/capsules/spectral-bridge/src/autonomous/runtime.rs b/capsules/spectral-bridge/src/autonomous/runtime.rs
+index a7814459fa..74602a16c9 100644
+--- a/capsules/spectral-bridge/src/autonomous/runtime.rs
++++ b/capsules/spectral-bridge/src/autonomous/runtime.rs
+@@ -23,6 +23,8 @@
+ pub(crate) mod btsp;
+ #[path = "concern_queue.rs"]
+ mod concern_queue;
++#[path = "runtime/contact_capacity.rs"]
++mod contact_capacity;
+ #[path = "correspondence_v1.rs"]
+ mod correspondence_v1;
+ #[path = "delegated_capability.rs"]
+diff --git a/capsules/spectral-bridge/src/autonomous/runtime/delivery.rs b/capsules/spectral-bridge/src/autonomous/runtime/delivery.rs
+index 285cc9cd9f..77e582b05c 100644
+--- a/capsules/spectral-bridge/src/autonomous/runtime/delivery.rs
++++ b/capsules/spectral-bridge/src/autonomous/runtime/delivery.rs
+@@ -33,8 +33,9 @@ use crate::memory::{self, RemoteMemorySummary};
+ use crate::paths::bridge_paths;
+ use crate::rescue_policy::{self, STABLE_CORE_TARGET_FILL_PCT};
+ use crate::signal_spine::{
+-    ShadowSignalJourneyV1, SignalEffectV1, SignalJourneyContextV1, SignalOwnershipDomainV1,
+-    SignalRelationV1, SignalStageHandleV1, SignalStageKindV1,
++    ShadowSignalJourneyV1, SignalEffectV1, SignalJourneyContextV1, SignalJourneyOriginV1,
++    SignalOwnershipDomainV1, SignalRelationV1, SignalResponseOriginV1, SignalStageHandleV1,
++    SignalStageKindV1,
+     persist_shadow_signal_journey_v1, register_delivery_temporal_window_v1,
+     signal_deployment_identity_v1,
+ };
+@@ -48,8 +49,14 @@ type SignalShadowRuntimeV1 = Option<(ShadowSignalJourneyV1, SignalStageHandleV1)
+ fn begin_signal_shadow_v1(
+     exchange: u64,
+     source_time_ms: u64,
++    mode_name: &str,
+     response_text: &str,
++    reservation: Option<(String, SignalJourneyOriginV1)>,
+ ) -> SignalShadowRuntimeV1 {
++    let (reserved_journey_id, journey_origin) = reservation.map_or_else(
++        || (None, SignalJourneyOriginV1::autonomous()),
++        |(journey_id, origin)| (Some(journey_id), origin),
++    );
+     match ShadowSignalJourneyV1::begin_authored(
+         SignalJourneyContextV1 {
+             exchange,
+@@ -57,6 +64,9 @@ fn begin_signal_shadow_v1(
+             connection_id: "minime_sensory_7879",
+             connection_sequence: exchange,
+             deployment_identity: signal_deployment_identity_v1(),
++            reserved_journey_id,
++            journey_origin,
++            response_origin: SignalResponseOriginV1::from_mode_name(mode_name),
+         },
+         response_text,
+     ) {
+diff --git a/capsules/spectral-bridge/src/autonomous/runtime/inbox.rs b/capsules/spectral-bridge/src/autonomous/runtime/inbox.rs
+index c4b4d66aa4..8dd216035b 100644
+--- a/capsules/spectral-bridge/src/autonomous/runtime/inbox.rs
++++ b/capsules/spectral-bridge/src/autonomous/runtime/inbox.rs
+@@ -1,19 +1,46 @@
+ /// Reads all `.txt` files from `workspace/inbox/`, returns their content,
+ /// and moves them to `workspace/inbox/read/` so they're not re-read.
+-fn check_inbox() -> Option<String> {
++fn check_inbox(cutoff: std::time::SystemTime) -> Option<contact_capacity::InboxReadBatchV1> {
+     let inbox_dir = bridge_paths().astrid_inbox_dir();
+-    check_inbox_at(inbox_dir.as_path())
++    let trace_root = bridge_paths()
++        .bridge_workspace()
++        .join("diagnostics/contact_capacity_trace_v1");
++    check_inbox_at_cutoff_with_trace(inbox_dir.as_path(), cutoff, &trace_root)
+ }
+ 
+-fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
++#[cfg(test)]
++fn check_inbox_at(inbox_dir: &Path) -> Option<contact_capacity::InboxReadBatchV1> {
++    check_inbox_at_cutoff(inbox_dir, std::time::SystemTime::now())
++}
++
++#[cfg(test)]
++fn check_inbox_at_cutoff(
++    inbox_dir: &Path,
++    cutoff: std::time::SystemTime,
++) -> Option<contact_capacity::InboxReadBatchV1> {
++    let trace_root = contact_capacity::trace_root_for_inbox(inbox_dir);
++    check_inbox_at_cutoff_with_trace(inbox_dir, cutoff, &trace_root)
++}
++
++fn check_inbox_at_cutoff_with_trace(
++    inbox_dir: &Path,
++    cutoff: std::time::SystemTime,
++    trace_root: &Path,
++) -> Option<contact_capacity::InboxReadBatchV1> {
+     let entries: Vec<PathBuf> = std::fs::read_dir(inbox_dir)
+         .ok()?
+         .filter_map(|e| e.ok())
+-        .filter(|e| {
++        .filter_map(|e| {
+             let p = e.path();
+-            p.is_file() && p.extension().is_some_and(|ext| ext == "txt")
++            let before_or_at_cutoff = e
++                .metadata()
++                .and_then(|metadata| metadata.modified())
++                .is_ok_and(|modified| modified <= cutoff);
++            (p.is_file()
++                && p.extension().is_some_and(|ext| ext == "txt")
++                && before_or_at_cutoff)
++                .then_some(p)
+         })
+-        .map(|e| e.path())
+         .collect();
+ 
+     if entries.is_empty() {
+@@ -23,9 +50,10 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+     // Read WITHOUT moving. Messages stay in inbox until retire_inbox()
+     // is called after the exchange succeeds. This prevents lost messages
+     // when dialogue fails (the bug that ate Eugene's hello).
+-    let mut messages = Vec::new();
++    let mut admitted = Vec::new();
+     for path in &entries {
+-        if let Ok(content) = std::fs::read_to_string(path)
++        if let Ok(source_bytes) = std::fs::read(path)
++            && let Ok(content) = std::str::from_utf8(&source_bytes)
+             && !content.trim().is_empty()
+         {
+             // Steward query letters persist as a single-slot open question
+@@ -33,25 +61,39 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+             if let Some(fname) = path.file_name().and_then(|name| name.to_str())
+                 && fname.starts_with("mike_query")
+             {
+-                record_open_steward_query(fname, &content);
++                record_open_steward_query(fname, content);
+             }
+-            let content = if path
++            let identity = correspondence_v1::contact_source_identity_for_inbox_file(path, content);
++            let source_ref_fallback = path
++                .file_name()
++                .map_or_else(|| "unknown_inbox_source".into(), |name| name.to_string_lossy());
++            let source = contact_capacity::InboxSourceMaterialV1::new(
++                source_ref_fallback.into_owned(),
++                &source_bytes,
++                identity,
++            );
++            let prompt_content = if path
+                 .file_name()
+                 .and_then(|name| name.to_str())
+                 .is_some_and(|name| name.starts_with("from_minime_"))
+             {
+-                sanitize_remote_journal_for_astrid_context(&content)
++                sanitize_remote_journal_for_astrid_context(content)
+             } else {
+-                content
++                content.to_string()
+             };
+-            messages.push(content.trim().to_string());
++            admitted.push((prompt_content.trim().to_string(), source));
+         }
+     }
+ 
+-    if messages.is_empty() {
++    if admitted.is_empty() {
+         None
+     } else {
++        let messages = admitted
++            .iter()
++            .map(|(message, _)| message.as_str())
++            .collect::<Vec<_>>();
+         let mut joined = messages.join("\n---\n");
++        let mut admitted_source_count = admitted.len();
+         // Protect context window: truncate large inbox messages.
+         // Full text preserved in inbox/read/ for self-study.
+         const MAX_INBOX_CHARS: usize = 6000;
+@@ -61,6 +103,18 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+             while trunc > 0 && !joined.is_char_boundary(trunc) {
+                 trunc -= 1;
+             }
++            let mut next_start = 0_usize;
++            admitted_source_count = 0;
++            for (index, (message, _)) in admitted.iter().enumerate() {
++                if next_start >= trunc {
++                    break;
++                }
++                admitted_source_count = admitted_source_count.saturating_add(1);
++                next_start = next_start.saturating_add(message.len());
++                if index.saturating_add(1) < admitted.len() {
++                    next_start = next_start.saturating_add("\n---\n".len());
++                }
++            }
+             joined.truncate(trunc);
+             joined.push_str(
+                 "\n\n[... message truncated for context window. \
+@@ -68,7 +122,14 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+                 or NEXT: INTROSPECT inbox/read/latest.txt with a concrete file path.]",
+             );
+         }
+-        Some(joined)
++        let sources = admitted
++            .into_iter()
++            .take(admitted_source_count)
++            .map(|(_, source)| source)
++            .collect();
++        Some(contact_capacity::InboxReadBatchV1::capture(
++            joined, cutoff, sources, trace_root,
++        ))
+     }
+ }
+ 
+diff --git a/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs b/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
+index 7490b4bbf3..992cfca07e 100644
+--- a/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
++++ b/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
+@@ -1,5 +1,6 @@
+ const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
+ const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
++const MAX_REST_SECS: u64 = 360;
+ 
+ fn should_arm_prompt_overflow_read_more(
+     active_read_path: Option<&str>,
+@@ -14,6 +15,18 @@ fn should_arm_prompt_overflow_read_more(
+         })
+ }
+ 
++fn fill_responsive_rest_secs(base_rest: u64, current_fill: f32) -> u64 {
++    if current_fill < 30.0 {
++        ((base_rest as f64 * 0.6) as u64).max(30)
++    } else if current_fill < 40.0 {
++        base_rest
++    } else if current_fill < 50.0 {
++        ((base_rest as f64 * 1.2) as u64).min(MAX_REST_SECS)
++    } else {
++        base_rest
++    }
++}
++
+ pub(crate) const fn semantic_heartbeat_constants_v1() -> (u64, f32) {
+     (
+         SEMANTIC_HEARTBEAT_INTERVAL.as_secs(),
+@@ -70,14 +83,14 @@ async fn run_semantic_heartbeat_loop(
+                     "semantic heartbeat skipped by rescue write policy"
+                 );
+                 continue;
+-            }
++            },
+             Ok(enqueue_probe) => {
+                 if sensory_tx.send(msg).await.is_err() {
+                     enqueue_probe.record_channel_closed();
+                     return;
+                 }
+                 enqueue_probe.record_enqueued();
+-            }
++            },
+         }
+     }
+ }
+@@ -201,42 +214,35 @@ pub fn spawn_autonomous_loop(
+                     let s = state.read().await;
+                     s.latest_telemetry.as_ref().map_or(50.0, |t| t.fill_pct())
+                 };
+-                const MAX_REST_SECS: u64 = 360;
+-                let rest_secs = if current_fill < 30.0 {
++                let rest_secs = fill_responsive_rest_secs(base_rest, current_fill);
++                if current_fill < 30.0 {
+                     // Critical: shorten rest to get semantic input flowing ASAP.
+                     // The PI controller has gate=1.0/filter=0.0 (hard_recovery),
+                     // but it needs input to work with. Burst sooner.
+-                    let shortened = (base_rest as f64 * 0.6) as u64;
+-                    let floored = shortened.max(30); // minimum 30s rest
+                     info!(
+-                        rest_secs = floored,
++                        rest_secs,
+                         base_rest,
+                         current_fill,
+                         "fill-shortened rest (critical recovery — burst sooner)"
+                     );
+-                    floored
+                 } else if current_fill < 40.0 {
+                     // Low fill: keep rest at baseline, don't extend.
+                     info!(
+-                        rest_secs = base_rest,
++                        rest_secs,
+                         current_fill, "fill-baseline rest (low fill recovery)"
+                     );
+-                    base_rest
+                 } else if current_fill < 50.0 {
+                     // Moderate recovery: modest extension (20%)
+-                    let extended = (base_rest as f64 * 1.2) as u64;
+                     info!(
+-                        rest_secs = extended.min(MAX_REST_SECS),
++                        rest_secs,
+                         base_rest, current_fill, "fill-extended rest (moderate recovery)"
+                     );
+-                    extended.min(MAX_REST_SECS)
+                 } else {
+                     info!(
+-                        rest_secs = base_rest,
++                        rest_secs,
+                         burst_count, "resting: warmth-blended mirror (tapered entry)"
+                     );
+-                    base_rest
+-                };
++                }
+                 burst_count = 0;
+ 
+                 // Gather journal texts to cycle through during rest.
+@@ -378,14 +384,14 @@ pub fn spawn_autonomous_loop(
+                                 reason = %reason,
+                                 "autonomous semantic heartbeat skipped by rescue write policy"
+                             );
+-                        }
++                        },
+                         Ok(enqueue_probe) => {
+                             if sensory_tx.send(msg).await.is_err() {
+                                 enqueue_probe.record_channel_closed();
+                                 return;
+                             }
+                             enqueue_probe.record_enqueued();
+-                        }
++                        },
+                     }
+                     tokio::time::sleep(Duration::from_secs(5)).await;
+                 }
+@@ -659,7 +665,7 @@ pub fn spawn_autonomous_loop(
+                     // mid-exchange (else it is swept to read/ unread + its steward slot
+                     // never seeds — the slot-seed race that lost a review invitation).
+                     let inbox_checked_at = std::time::SystemTime::now();
+-                    let inbox_content = check_inbox();
++                    let inbox_content = check_inbox(inbox_checked_at);
+                     let mutual_address_target = inbox_content.as_ref().and_then(|_| {
+                         correspondence_v1::latest_inbox_peer_message_at_read_cutoff(
+                             bridge_paths().astrid_inbox_dir().as_path(),
+@@ -3462,10 +3468,15 @@ pub fn spawn_autonomous_loop(
+                         continue;
+                     }
+ 
++                    let signal_reservation = inbox_content
++                        .as_ref()
++                        .map(contact_capacity::InboxReadBatchV1::signal_reservation);
+                     let mut signal_shadow = begin_signal_shadow_v1(
+                         conv.exchange_count,
+                         telemetry.t_ms,
++                        mode_name,
+                         &response_text,
++                        signal_reservation,
+                     );
+                     if !should_send {
+                         let root = signal_root_v1(&signal_shadow);
+diff --git a/capsules/spectral-bridge/src/autonomous/runtime/tests.rs b/capsules/spectral-bridge/src/autonomous/runtime/tests.rs
+index 1cb3817f97..61a8c6c1b8 100644
+--- a/capsules/spectral-bridge/src/autonomous/runtime/tests.rs
++++ b/capsules/spectral-bridge/src/autonomous/runtime/tests.rs
+@@ -4,6 +4,8 @@ mod tests {
+     use std::path::{Path, PathBuf};
+     use std::sync::Mutex;
+ 
++    use crate::signal_spine::SignalJourneyOriginKindV1;
++
+     static INTROSPECT_FIXTURE_LOCK: Mutex<()> = Mutex::new(());
+     use crate::journal::{RemoteJournalEntry, RemoteJournalKind};
+ 
+@@ -15,6 +17,19 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn fill_responsive_rest_keeps_critical_floor_and_band_boundaries() {
++        assert_eq!(fill_responsive_rest_secs(40, 25.0), 30);
++        assert_eq!(fill_responsive_rest_secs(0, 25.0), 30);
++        assert_eq!(fill_responsive_rest_secs(100, 25.0), 60);
++        assert_eq!(fill_responsive_rest_secs(200, 25.0), 120);
++        assert_eq!(fill_responsive_rest_secs(90, 35.0), 90);
++        assert_eq!(fill_responsive_rest_secs(100, 45.0), 120);
++        assert_eq!(fill_responsive_rest_secs(400, 45.0), 360);
++        assert_eq!(fill_responsive_rest_secs(90, 50.0), 90);
++        assert_eq!(fill_responsive_rest_secs(90, f32::NAN), 90);
++    }
++
+     #[test]
+     fn prompt_overflow_does_not_replace_or_self_rearm_read_more() {
+         assert!(!should_arm_prompt_overflow_read_more(
+@@ -225,7 +240,13 @@ mod tests {
+             r#"{"kind":"semantic","features":[0.125,-0.25,0.5],"ts_ms":42}"#
+         );
+ 
+-        let mut shadow = begin_signal_shadow_v1(7, 42, "authored but never persisted");
++        let mut shadow = begin_signal_shadow_v1(
++            7,
++            42,
++            "other",
++            "authored but never persisted",
++            None,
++        );
+         let root = signal_root_v1(&shadow);
+         let stage = record_signal_json_v1(
+             &mut shadow,
+@@ -248,7 +269,13 @@ mod tests {
+         let vector_before = features.clone();
+         let delivery = codec_delivery_fidelity_v1(None, &features);
+         let delivery_before = serde_json::to_vec(&delivery).unwrap();
+-        let mut shadow = begin_signal_shadow_v1(8, 43, "bounded delivery evidence");
++        let mut shadow = begin_signal_shadow_v1(
++            8,
++            43,
++            "other",
++            "bounded delivery evidence",
++            None,
++        );
+         let root = signal_root_v1(&shadow);
+         let encoded = record_signal_vector_v1(
+             &mut shadow,
+@@ -275,6 +302,34 @@ mod tests {
+         assert_eq!(serde_json::to_vec(&delivery).unwrap(), delivery_before);
+     }
+ 
++    #[test]
++    fn contact_reservation_and_fallback_origin_are_exact() {
++        let reserved = "journey_0123456789abcdef01234567".to_string();
++        let origin = SignalJourneyOriginV1::contact(
++            "contact_0123456789abcdef01234567".to_string(),
++            "a".repeat(64),
++        );
++        let shadow = begin_signal_shadow_v1(
++            9,
++            44,
++            "dialogue_fallback",
++            "bounded fallback",
++            Some((reserved.clone(), origin)),
++        )
++        .unwrap()
++        .0;
++
++        assert_eq!(shadow.journey_id(), reserved);
++        assert_eq!(
++            shadow.journey_origin().kind(),
++            SignalJourneyOriginKindV1::Contact
++        );
++        assert_eq!(
++            shadow.response_origin(),
++            SignalResponseOriginV1::StaticFallback
++        );
++    }
++
+     #[test]
+     fn blocked_codec_delivery_receipt_never_claims_an_actual_sent_vector() {
+         let features =
+@@ -1808,6 +1863,25 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
+         let _ = std::fs::remove_dir_all(&dir);
+     }
+ 
++    #[test]
++    fn check_inbox_cutoff_defers_late_arrivals_to_the_next_exchange() {
++        let dir = std::env::temp_dir().join("bridge_test_astrid_inbox_cutoff_read");
++        let _ = std::fs::remove_dir_all(&dir);
++        std::fs::create_dir_all(&dir).unwrap();
++        std::fs::write(dir.join("early.txt"), "present before cutoff").unwrap();
++        std::thread::sleep(std::time::Duration::from_millis(20));
++        let cutoff = std::time::SystemTime::now();
++        std::thread::sleep(std::time::Duration::from_millis(20));
++        std::fs::write(dir.join("late.txt"), "arrived after cutoff").unwrap();
++
++        let batch = check_inbox_at_cutoff(&dir, cutoff).unwrap();
++        assert!(batch.contains("present before cutoff"));
++        assert!(!batch.contains("arrived after cutoff"));
++        assert!(dir.join("late.txt").exists());
++
++        let _ = std::fs::remove_dir_all(&dir);
++    }
++
+     #[test]
+     fn check_inbox_omits_minime_peer_action_lines() {
+         let dir = std::env::temp_dir().join("bridge_test_astrid_inbox_peer_action");
+diff --git a/capsules/spectral-bridge/src/llm.rs b/capsules/spectral-bridge/src/llm.rs
+index 1d0e8b4645..c8f01996a2 100644
+--- a/capsules/spectral-bridge/src/llm.rs
++++ b/capsules/spectral-bridge/src/llm.rs
+@@ -3,4 +3,25 @@
+ #[path = "llm/provider.rs"]
+ mod provider;
+ 
+-pub use provider::*;
++pub use provider::{
++    Exchange, craft_gesture_from_intention, embed_text, generate_agency_request,
++    generate_aspiration, generate_creation, generate_daydream, generate_dialogue,
++    generate_initiation, generate_introspection, generate_introspection_detailed,
++    generate_journal_elaboration, generate_moment_capture, generate_witness, repair_introspection,
++    repair_introspection_detailed, self_reflect,
++};
++
++pub(crate) use provider::{
++    astrid_aperture, astrid_pressure_attenuation_depth, astrid_tail_participation,
++    astrid_vibrancy_aperture, derive_browse_anchor, dialogue_outer_timeout_secs,
++    dialogue_retry_tokens, estimate_dialogue_prompt_pressure_chars, fetch_url,
++    format_browse_failure_context, format_browse_read_context, format_dialogue_web_context,
++    format_read_more_context, set_astrid_aperture, set_astrid_tail_participation,
++    set_astrid_vibrancy_aperture, trim_chars, web_search,
++};
++
++#[cfg(test)]
++pub(crate) use provider::{
++    GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT, ResearchHit, ResearchSourceKind, SYSTEM_PROMPT,
++    WebSearchResult, sanitize_model_control_markers_with_report,
++};
+diff --git a/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs b/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs
+index 15f2897146..70384534ee 100644
+--- a/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs
++++ b/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs
+@@ -88,12 +88,12 @@ impl ExactKnownModelControlMarkerOccurrence {
+ 
+ fn first_word_after(text: &str, end: usize) -> String {
+     text[end..]
+-        .split(|character: char| !character.is_alphanumeric() && character != '_')
+-        .find(|part| !part.is_empty())
++        .split_whitespace()
++        .map(|chunk| chunk.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
++        .find(|word| !word.is_empty())
+         .unwrap_or_default()
+         .to_ascii_lowercase()
+ }
+-
+ fn longest_exact_known_model_control_marker_at(
+     text: &str,
+     offset: usize,
+diff --git a/capsules/spectral-bridge/src/signal_spine.rs b/capsules/spectral-bridge/src/signal_spine.rs
+index bfd9dcda57..ae1c604fd5 100644
+--- a/capsules/spectral-bridge/src/signal_spine.rs
++++ b/capsules/spectral-bridge/src/signal_spine.rs
+@@ -19,9 +19,15 @@ pub(crate) use association::{
+ };
+ pub(crate) use recorder::{
+     ShadowSignalJourneyV1, SignalJourneyContextV1, SignalStageHandleV1,
+-    persist_shadow_signal_journey_v1, signal_deployment_identity_v1,
++    persist_shadow_signal_journey_v1, signal_deployment_identity_v1, signal_monotonic_ns_v1,
++    signal_process_identity_v1, signal_unix_ms_v1,
+ };
+-pub(crate) use types::SignalOwnershipDomainV1;
++pub(crate) use types::{
++    SignalJourneyOriginV1, SignalOwnershipDomainV1, SignalProcessIdentityV1,
++    SignalResponseOriginV1, canonical_sha256,
++};
++#[cfg(test)]
++pub(crate) use types::SignalJourneyOriginKindV1;
+ 
+ #[cfg(test)]
+ mod tests;
+diff --git a/capsules/spectral-bridge/src/signal_spine/recorder.rs b/capsules/spectral-bridge/src/signal_spine/recorder.rs
+index 76f11055b8..5b4ee17f60 100644
+--- a/capsules/spectral-bridge/src/signal_spine/recorder.rs
++++ b/capsules/spectral-bridge/src/signal_spine/recorder.rs
+@@ -15,8 +15,8 @@ use super::capture::{
+ };
+ use super::types::{
+     CausalSignalJourneyV1, CausalSignalStageV1, SignalCaptureFixtureRefV1, SignalEffectV1,
+-    SignalOwnershipDomainV1, SignalProcessIdentityV1, SignalRelationV1, SignalStageKindV1,
+-    SignalStageReceiptV1, SignalTemporalEnvelopeV1,
++    SignalJourneyOriginV1, SignalOwnershipDomainV1, SignalProcessIdentityV1, SignalRelationV1,
++    SignalResponseOriginV1, SignalStageKindV1, SignalStageReceiptV1, SignalTemporalEnvelopeV1,
+ };
+ use crate::paths::bridge_paths;
+ use crate::witness::{ProvenanceInfluenceTypeV1, ProvenanceOriginV1, ProvenanceRefV1};
+@@ -26,14 +26,33 @@ fn process_started() -> &'static Instant {
+     STARTED.get_or_init(Instant::now)
+ }
+ 
+-fn unix_ms() -> u64 {
++pub(crate) fn signal_unix_ms_v1() -> u64 {
+     u64::try_from(chrono::Utc::now().timestamp_millis()).unwrap_or(0)
+ }
+ 
+-fn monotonic_ns() -> u64 {
++pub(crate) fn signal_monotonic_ns_v1() -> u64 {
+     u64::try_from(process_started().elapsed().as_nanos()).unwrap_or(u64::MAX)
+ }
+ 
++pub(crate) fn process_started_at_unix_ms() -> u64 {
++    static STARTED_AT: OnceLock<u64> = OnceLock::new();
++    *STARTED_AT.get_or_init(signal_unix_ms_v1)
++}
++
++pub(crate) fn signal_clock_scope_id_v1() -> String {
++    static CLOCK_SCOPE: OnceLock<String> = OnceLock::new();
++    CLOCK_SCOPE
++        .get_or_init(|| {
++            let seed = json!({
++                "pid": std::process::id(),
++                "executable": executable_name(),
++                "process_started_at_unix_ms": process_started_at_unix_ms(),
++            });
++            format!("clockscope_{}", &sha256_json(&seed)[..24])
++        })
++        .clone()
++}
++
+ pub(super) fn executable_name() -> &'static str {
+     static EXECUTABLE: OnceLock<String> = OnceLock::new();
+     EXECUTABLE
+@@ -98,6 +117,12 @@ fn sha256_json<T: Serialize>(value: &T) -> String {
+     )
+ }
+ 
++fn valid_journey_id(value: &str) -> bool {
++    value
++        .strip_prefix("journey_")
++        .is_some_and(|suffix| suffix.len() == 24 && suffix.chars().all(|ch| ch.is_ascii_hexdigit()))
++}
++
+ fn vector_sha256(vector: &[f32]) -> String {
+     let mut bytes = Vec::with_capacity(vector.len().saturating_mul(4));
+     for value in vector {
+@@ -113,6 +138,9 @@ pub(crate) struct SignalJourneyContextV1 {
+     pub(crate) connection_id: &'static str,
+     pub(crate) connection_sequence: u64,
+     pub(crate) deployment_identity: String,
++    pub(crate) reserved_journey_id: Option<String>,
++    pub(crate) journey_origin: SignalJourneyOriginV1,
++    pub(crate) response_origin: SignalResponseOriginV1,
+ }
+ 
+ #[derive(Debug, Clone)]
+@@ -147,6 +175,8 @@ pub(crate) struct ShadowSignalJourneyV1 {
+     pending_captures: Vec<PendingVectorCaptureV1>,
+     capture_window_id: Option<String>,
+     parity_mismatch_count: u32,
++    journey_origin: SignalJourneyOriginV1,
++    response_origin: SignalResponseOriginV1,
+ }
+ 
+ impl ShadowSignalJourneyV1 {
+@@ -154,7 +184,7 @@ impl ShadowSignalJourneyV1 {
+         context: SignalJourneyContextV1,
+         authored_text: &str,
+     ) -> Result<(Self, SignalStageHandleV1), String> {
+-        let arrival = unix_ms();
++        let arrival = signal_unix_ms_v1();
+         let authored_sha256 = sha256_bytes(authored_text.as_bytes());
+         let journey_seed = json!({
+             "exchange": context.exchange,
+@@ -164,7 +194,16 @@ impl ShadowSignalJourneyV1 {
+             "arrival_time_unix_ms": arrival,
+         });
+         let journey_digest = sha256_json(&journey_seed);
+-        let journey_id = format!("journey_{}", &journey_digest[..24]);
++        let generated_journey_id = format!("journey_{}", &journey_digest[..24]);
++        let journey_id = context
++            .reserved_journey_id
++            .clone()
++            .unwrap_or(generated_journey_id);
++        if !valid_journey_id(&journey_id) {
++            return Err("reserved Signal Spine journey id is malformed".to_string());
++        }
++        let journey_origin = context.journey_origin.clone();
++        let response_origin = context.response_origin;
+         let capture_root = default_signal_spine_root();
+         let capture_window_id = active_capture_window_id(&capture_root, arrival);
+         let mut shadow = Self {
+@@ -175,6 +214,8 @@ impl ShadowSignalJourneyV1 {
+             pending_captures: Vec::new(),
+             capture_window_id,
+             parity_mismatch_count: 0,
++            journey_origin,
++            response_origin,
+         };
+         let authored = shadow.record_hashes(
+             SignalStageKindV1::Authored,
+@@ -187,11 +228,25 @@ impl ShadowSignalJourneyV1 {
+             BTreeMap::from([
+                 ("text_bytes".to_string(), json!(authored_text.len())),
+                 ("raw_response_prose_persisted".to_string(), json!(false)),
++                (
++                    "response_origin_v1".to_string(),
++                    serde_json::to_value(shadow.response_origin).unwrap_or(Value::Null),
++                ),
+             ]),
+         )?;
+         Ok((shadow, authored))
+     }
+ 
++    #[cfg(test)]
++    pub(crate) const fn journey_origin(&self) -> &SignalJourneyOriginV1 {
++        &self.journey_origin
++    }
++
++    #[cfg(test)]
++    pub(crate) const fn response_origin(&self) -> SignalResponseOriginV1 {
++        self.response_origin
++    }
++
+     pub(crate) fn record_text(
+         &mut self,
+         kind: SignalStageKindV1,
+@@ -273,7 +328,7 @@ impl ShadowSignalJourneyV1 {
+         self.parity_mismatch_count = self.parity_mismatch_count.saturating_add(1);
+     }
+ 
+-    pub(super) fn journey_id(&self) -> &str {
++    pub(crate) fn journey_id(&self) -> &str {
+         self.trusted.journey_id()
+     }
+ 
+@@ -334,7 +389,7 @@ impl ShadowSignalJourneyV1 {
+             "output_sha256": output_sha256,
+         }));
+         let stage_id = format!("stage_{}", &stage_digest[..24]);
+-        let stage_time = unix_ms();
++        let stage_time = signal_unix_ms_v1();
+         let provenance = ProvenanceRefV1::new(
+             provenance_origin(ownership),
+             stage_id.clone(),
+@@ -361,7 +416,7 @@ impl ShadowSignalJourneyV1 {
+                 self.context.source_time_ms,
+                 self.arrival_time_unix_ms,
+                 stage_time,
+-                monotonic_ns(),
++                signal_monotonic_ns_v1(),
+                 self.context.connection_id.to_string(),
+                 self.context.connection_sequence,
+                 self.capture_window_id.clone(),
+@@ -432,6 +487,8 @@ struct PersistedSignalJourneyV1<'a> {
+     stage_count: usize,
+     parity_mismatch_count: u32,
+     lineage_valid: bool,
++    journey_origin_v1: &'a SignalJourneyOriginV1,
++    response_origin_v1: SignalResponseOriginV1,
+     temporal_association_is_not_direct_causation: bool,
+     sensory_protocol_changed: bool,
+     raw_response_prose_included: bool,
+@@ -444,7 +501,7 @@ pub(crate) fn persist_shadow_signal_journey_v1(
+     mut shadow: ShadowSignalJourneyV1,
+ ) -> std::io::Result<PathBuf> {
+     let root = default_signal_spine_root();
+-    let now = unix_ms();
++    let now = signal_unix_ms_v1();
+     match try_submit_captures(
+         &root,
+         shadow.trusted.journey_id(),
+@@ -512,6 +569,8 @@ pub(crate) fn persist_shadow_signal_journey_v1(
+         stage_count: shadow.trusted.receipts().len(),
+         parity_mismatch_count: shadow.parity_mismatch_count,
+         lineage_valid,
++        journey_origin_v1: &shadow.journey_origin,
++        response_origin_v1: shadow.response_origin,
+         temporal_association_is_not_direct_causation: true,
+         sensory_protocol_changed: false,
+         raw_response_prose_included: false,
+@@ -562,6 +621,10 @@ pub(crate) fn signal_deployment_identity_v1() -> String {
+     format!("astrid:{head}:bridge:{binary}")
+ }
+ 
++pub(crate) fn signal_process_identity_v1() -> SignalProcessIdentityV1 {
++    SignalProcessIdentityV1::current(signal_deployment_identity_v1())
++}
++
+ fn write_owner_only(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+     if let Some(parent) = path.parent() {
+         fs::create_dir_all(parent)?;
+@@ -583,11 +646,13 @@ fn write_status(root: &Path, journey: &PersistedSignalJourneyV1<'_>) -> std::io:
+     let status = serde_json::to_vec_pretty(&json!({
+         "schema": "signal_spine_shadow_status_v1",
+         "schema_version": 1,
+-        "updated_at_unix_ms": unix_ms(),
++        "updated_at_unix_ms": signal_unix_ms_v1(),
+         "latest_journey_id": journey.journey_id,
+         "latest_stage_count": journey.stage_count,
+         "latest_lineage_valid": journey.lineage_valid,
+         "latest_parity_mismatch_count": journey.parity_mismatch_count,
++        "latest_journey_origin_v1": journey.journey_origin_v1,
++        "latest_response_origin_v1": journey.response_origin_v1,
+         "mode": "shadow",
+         "projection_cutover": false,
+         "sensory_protocol_changed": false,
+diff --git a/capsules/spectral-bridge/src/signal_spine/tests.rs b/capsules/spectral-bridge/src/signal_spine/tests.rs
+index c141ca3449..f5eab7596f 100644
+--- a/capsules/spectral-bridge/src/signal_spine/tests.rs
++++ b/capsules/spectral-bridge/src/signal_spine/tests.rs
+@@ -7,7 +7,10 @@ use serde_json::json;
+ 
+ use super::capture::{CaptureWindowRequestV1, PendingVectorCaptureV1, try_submit_captures};
+ use super::recorder::{ShadowSignalJourneyV1, SignalJourneyContextV1};
+-use super::types::{SignalEffectV1, SignalOwnershipDomainV1, SignalRelationV1, SignalStageKindV1};
++use super::types::{
++    SignalEffectV1, SignalJourneyOriginV1, SignalOwnershipDomainV1, SignalRelationV1,
++    SignalResponseOriginV1, SignalStageKindV1,
++};
+ 
+ fn context() -> SignalJourneyContextV1 {
+     SignalJourneyContextV1 {
+@@ -16,6 +19,9 @@ fn context() -> SignalJourneyContextV1 {
+         connection_id: "minime_sensory_7879",
+         connection_sequence: 7001,
+         deployment_identity: "test".to_string(),
++        reserved_journey_id: None,
++        journey_origin: SignalJourneyOriginV1::autonomous(),
++        response_origin: SignalResponseOriginV1::Other,
+     }
+ }
+ 
+diff --git a/capsules/spectral-bridge/src/signal_spine/types.rs b/capsules/spectral-bridge/src/signal_spine/types.rs
+index f07c0fc4cc..b76e8450a7 100644
+--- a/capsules/spectral-bridge/src/signal_spine/types.rs
++++ b/capsules/spectral-bridge/src/signal_spine/types.rs
+@@ -41,7 +41,7 @@ fn write_canonical_json(value: &Value, output: &mut String) {
+     }
+ }
+ 
+-fn canonical_sha256(value: &Value) -> String {
++pub(crate) fn canonical_sha256(value: &Value) -> String {
+     let mut encoded = String::new();
+     write_canonical_json(value, &mut encoded);
+     format!("{:x}", Sha256::digest(encoded.as_bytes()))
+@@ -148,6 +148,114 @@ pub enum SignalOwnershipDomainV1 {
+     MinimeObserved,
+ }
+ 
++#[allow(dead_code)] // Operator and legacy values are projection-visible historical categories.
++#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
++#[serde(rename_all = "snake_case")]
++pub(crate) enum SignalJourneyOriginKindV1 {
++    Contact,
++    IngressGap,
++    Autonomous,
++    Operator,
++    LegacyUnknown,
++}
++
++#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
++pub(crate) struct SignalJourneyOriginV1 {
++    kind: SignalJourneyOriginKindV1,
++    input_root_expected: bool,
++    #[serde(skip_serializing_if = "Option::is_none")]
++    contact_id: Option<String>,
++    #[serde(skip_serializing_if = "Option::is_none")]
++    ingress_gap_id: Option<String>,
++    #[serde(skip_serializing_if = "Option::is_none")]
++    ingress_gap_reason: Option<String>,
++    #[serde(skip_serializing_if = "Option::is_none")]
++    evidence_sha256: Option<String>,
++    local_provenance_validation_only: bool,
++    cryptographic_sender_authentication: bool,
++}
++
++impl SignalJourneyOriginV1 {
++    #[must_use]
++    pub(crate) fn contact(contact_id: String, evidence_sha256: String) -> Self {
++        Self {
++            kind: SignalJourneyOriginKindV1::Contact,
++            input_root_expected: true,
++            contact_id: Some(contact_id),
++            ingress_gap_id: None,
++            ingress_gap_reason: None,
++            evidence_sha256: Some(evidence_sha256),
++            local_provenance_validation_only: true,
++            cryptographic_sender_authentication: false,
++        }
++    }
++
++    #[must_use]
++    pub(crate) fn ingress_gap(
++        gap_id: String,
++        reason: impl Into<String>,
++        evidence_sha256: Option<String>,
++    ) -> Self {
++        Self {
++            kind: SignalJourneyOriginKindV1::IngressGap,
++            input_root_expected: false,
++            contact_id: None,
++            ingress_gap_id: Some(gap_id),
++            ingress_gap_reason: Some(reason.into()),
++            evidence_sha256,
++            local_provenance_validation_only: true,
++            cryptographic_sender_authentication: false,
++        }
++    }
++
++    #[must_use]
++    pub(crate) const fn autonomous() -> Self {
++        Self {
++            kind: SignalJourneyOriginKindV1::Autonomous,
++            input_root_expected: false,
++            contact_id: None,
++            ingress_gap_id: None,
++            ingress_gap_reason: None,
++            evidence_sha256: None,
++            local_provenance_validation_only: false,
++            cryptographic_sender_authentication: false,
++        }
++    }
++
++    #[cfg(test)]
++    #[must_use]
++    pub(crate) const fn kind(&self) -> SignalJourneyOriginKindV1 {
++        self.kind
++    }
++}
++
++#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
++#[serde(rename_all = "snake_case")]
++pub(crate) enum SignalResponseOriginV1 {
++    ModelAuthored,
++    StaticFallback,
++    Mirror,
++    SelfStudy,
++    Introspection,
++    Witness,
++    Other,
++}
++
++impl SignalResponseOriginV1 {
++    #[must_use]
++    pub(crate) fn from_mode_name(mode_name: &str) -> Self {
++        match mode_name {
++            "dialogue" | "dialogue_live" => Self::ModelAuthored,
++            "dialogue_fallback" => Self::StaticFallback,
++            "mirror" => Self::Mirror,
++            "self_study" => Self::SelfStudy,
++            "introspect" | "moment_capture" => Self::Introspection,
++            "witness" => Self::Witness,
++            _ => Self::Other,
++        }
++    }
++}
++
+ impl SignalOwnershipDomainV1 {
+     #[must_use]
+     pub const fn as_str(self) -> &'static str {
+@@ -301,16 +409,30 @@ pub struct SignalProcessIdentityV1 {
+     pid: u32,
+     executable: String,
+     deployment_identity: String,
++    process_started_at_unix_ms: u64,
++    clock_scope_id: String,
+ }
+ 
+ impl SignalProcessIdentityV1 {
+-    pub(super) fn current(deployment_identity: String) -> Self {
++    pub(crate) fn current(deployment_identity: String) -> Self {
+         Self {
+             pid: std::process::id(),
+             executable: super::recorder::executable_name().to_string(),
+             deployment_identity,
++            process_started_at_unix_ms: super::recorder::process_started_at_unix_ms(),
++            clock_scope_id: super::recorder::signal_clock_scope_id_v1(),
+         }
+     }
++
++    #[must_use]
++    pub(crate) fn canonical_sha256(&self) -> String {
++        canonical_sha256(&serde_json::to_value(self).unwrap_or(Value::Null))
++    }
++
++    #[must_use]
++    pub(crate) fn clock_scope_id(&self) -> &str {
++        &self.clock_scope_id
++    }
+ }
+ 
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+diff --git a/capsules/spectral-bridge/tests/llm_facade_contract.rs b/capsules/spectral-bridge/tests/llm_facade_contract.rs
+index 7d81a19aad..798ce74186 100644
+--- a/capsules/spectral-bridge/tests/llm_facade_contract.rs
++++ b/capsules/spectral-bridge/tests/llm_facade_contract.rs
+@@ -2,5 +2,6 @@
+ fn llm_facade_reexports_items_without_exposing_implementation_module() {
+     let cases = trybuild::TestCases::new();
+     cases.pass("tests/ui/llm_facade_reexports_exchange.rs");
++    cases.pass("tests/ui/llm_facade_reexports_generation.rs");
+     cases.compile_fail("tests/ui/llm_provider_module_is_private.rs");
+ }
+diff --git a/capsules/spectral-bridge/tests/provenance_typestate.rs b/capsules/spectral-bridge/tests/provenance_typestate.rs
+index dffdadec23..1516313113 100644
+--- a/capsules/spectral-bridge/tests/provenance_typestate.rs
++++ b/capsules/spectral-bridge/tests/provenance_typestate.rs
+@@ -5,6 +5,7 @@ fn provenance_domains_cannot_be_forged_or_dispatched() {
+     cases.compile_fail("tests/ui/producer_cannot_construct_bridge_evidence.rs");
+     cases.compile_fail("tests/ui/observation_cannot_deserialize.rs");
+     cases.compile_fail("tests/ui/interpretation_cannot_dispatch.rs");
++    cases.compile_fail("tests/ui/witness_frame_cannot_dispatch.rs");
+     cases.compile_fail("tests/ui/lived_state_witness_cannot_be_forged.rs");
+     cases.compile_fail("tests/ui/lived_state_witness_cannot_deserialize.rs");
+     cases.compile_fail("tests/ui/reciprocal_experiential_cannot_be_forged.rs");
+diff --git a/capsules/spectral-bridge/tests/ui/signal_receipt_cannot_deserialize.stderr b/capsules/spectral-bridge/tests/ui/signal_receipt_cannot_deserialize.stderr
+index 10914a4ee7..ec942dde01 100644
+--- a/capsules/spectral-bridge/tests/ui/signal_receipt_cannot_deserialize.stderr
++++ b/capsules/spectral-bridge/tests/ui/signal_receipt_cannot_deserialize.stderr
+@@ -7,14 +7,14 @@ error[E0277]: the trait bound `SignalStageReceiptV1: serde::Deserialize<'de>` is
+   = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `SignalStageReceiptV1` type
+   = note: for types from other crates check whether the crate offers a `serde` feature flag
+   = help: the following other types implement trait `serde_core::de::Deserialize<'de>`:
+-            &'a Path
+-            &'a [u8]
+-            &'a str
+-            ()
+-            (T,)
+-            (T0, T1)
+-            (T0, T1, T2)
+-            (T0, T1, T2, T3)
++            `&'a Path` implements `serde_core::de::Deserialize<'de>`
++            `&'a [u8]` implements `serde_core::de::Deserialize<'de>`
++            `&'a str` implements `serde_core::de::Deserialize<'de>`
++            `()` implements `serde_core::de::Deserialize<'de>`
++            `(T,)` implements `serde_core::de::Deserialize<'de>`
++            `(T0, T1)` implements `serde_core::de::Deserialize<'de>`
++            `(T0, T1, T2)` implements `serde_core::de::Deserialize<'de>`
++            `(T0, T1, T2, T3)` implements `serde_core::de::Deserialize<'de>`
+           and $N others
+ note: required by a bound in `serde_json::from_str`
+  --> $CARGO/serde_json-$VERSION/src/de.rs
+diff --git a/crates/astrid-hooks/src/handler/wasm.rs b/crates/astrid-hooks/src/handler/wasm.rs
+index 24b676e33c..1902be1295 100644
+--- a/crates/astrid-hooks/src/handler/wasm.rs
++++ b/crates/astrid-hooks/src/handler/wasm.rs
+@@ -296,6 +296,7 @@ impl WasmHandler {
+             principal: astrid_core::PrincipalId::default(),
+             capsule_uuid: uuid::Uuid::new_v4(),
+             caller_context: None,
++            run_loop_trace_context: None,
+             invocation_kv: None,
+             capsule_log: None,
+             capsule_id: CapsuleId::from_static(&hook_identity),
+diff --git a/crates/astrid-minime-protocol/tests/wire_contract.rs b/crates/astrid-minime-protocol/tests/wire_contract.rs
+index 2edcedfd38..3aad717e19 100644
+--- a/crates/astrid-minime-protocol/tests/wire_contract.rs
++++ b/crates/astrid-minime-protocol/tests/wire_contract.rs
+@@ -12,6 +12,7 @@ use astrid_minime_protocol::{
+     SemanticLaneRoleV2, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1, SensoryMsg,
+     SensoryPacketV1, SensoryServerHelloV1, canonical_owner_inquiry_sha256_v2,
+     canonical_self_control_intent_sha256, canonical_sensory_payload_sha256,
++    owner_inquiry_fixed_analysis_set_v1,
+ };
+ use ed25519_dalek::{Signer as _, SigningKey};
+ use sha2::{Digest as _, Sha256};
+@@ -22,6 +23,8 @@ const OWNER_INQUIRY_V2_FIXTURE_SHA256: &str =
+     "17302b92b7d68eec9019ce7f2fb97731f22f4cba3c4ab53d762726cfd161e8c9";
+ const OWNER_INQUIRY_V2_CANONICAL_SHA256: &str =
+     "55fb17ce4c29bdb3c24bb087788e7bef75442a2ab3ef3c53d933baaafcf10dc1";
++const TEXTURE_DYNAMICS_CONTRACT_FIXTURE_SHA256: &str =
++    "00048207c164c07aa2ccf67cfa7119dca2246c87d4495118703fe7061d6815f9";
+ 
+ #[test]
+ fn legacy_telemetry_remains_accepted() {
+@@ -104,6 +107,33 @@ fn owner_inquiry_v2_fixture_is_valid_and_byte_pinned() {
+     assert_eq!(serde_json::to_value(inquiry).unwrap(), source);
+ }
+ 
++#[test]
++fn texture_dynamics_contract_is_fixed_analysis_compatible_and_byte_pinned() {
++    let fixture = include_bytes!("fixtures/texture_dynamics_contract_v1.json");
++    assert_eq!(
++        format!("{:x}", Sha256::digest(fixture)),
++        TEXTURE_DYNAMICS_CONTRACT_FIXTURE_SHA256
++    );
++    let value: serde_json::Value = serde_json::from_slice(fixture).unwrap();
++    assert_eq!(
++        value["fixed_analysis_set"],
++        serde_json::to_value(owner_inquiry_fixed_analysis_set_v1()).unwrap()
++    );
++    assert_eq!(
++        value["nested_in_analysis"],
++        "viscous_persistence_source_separation"
++    );
++    assert_eq!(
++        value["raw_reservoir_mode_packing"],
++        "missing_no_exact_raw_reservoir_source"
++    );
++    assert_eq!(
++        value["shadow_dispersal"],
++        "missing_no_exact_shadow_history_source"
++    );
++    assert_eq!(value["live_control_authority"], false);
++}
++
+ #[test]
+ fn complete_control_surface_round_trips() {
+     let packet: SensoryPacketV1 =
+diff --git a/scripts/build_bridge.sh b/scripts/build_bridge.sh
+index 21f9e062e1..a691beafb2 100755
+--- a/scripts/build_bridge.sh
++++ b/scripts/build_bridge.sh
+@@ -6,6 +6,7 @@
+ # failed preflight, build, manifest, restart, and telemetry checks.
+ #
+ # Usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--restart] [--no-build]
++#   [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]
+ set -euo pipefail
+ 
+ ASTRID="/Users/v/other/astrid"
+@@ -33,9 +34,16 @@ OLD_COMMAND=""
+ OLD_CAPTURED_AT=""
+ NEW_PID=""
+ RECEIPT_WRITTEN=0
++PROMOTE_CANDIDATE=""
++CANDIDATE_ROOT=""
++CANDIDATE_IDENTITY=""
++PROMOTION_VERIFY_JSON=""
++PROMOTION_HANDOFF=""
++PROMOTION_BACKUP=""
++CANDIDATE_INSTALLED=false
+ 
+ usage() {
+-  echo 'usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--restart] [--no-build]'
++  echo 'usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--restart] [--no-build] [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]'
+ }
+ 
+ while [ $# -gt 0 ]; do
+@@ -46,6 +54,12 @@ while [ $# -gt 0 ]; do
+     --actor=*)   ACTOR="${1#*=}"; shift ;;
+     --restart)   DO_RESTART=1; shift ;;
+     --no-build)  DO_BUILD=0; shift ;;
++    --promote-candidate) PROMOTE_CANDIDATE="${2:-}"; shift 2 ;;
++    --promote-candidate=*) PROMOTE_CANDIDATE="${1#*=}"; shift ;;
++    --candidate-root) CANDIDATE_ROOT="${2:-}"; shift 2 ;;
++    --candidate-root=*) CANDIDATE_ROOT="${1#*=}"; shift ;;
++    --candidate-identity) CANDIDATE_IDENTITY="${2:-}"; shift 2 ;;
++    --candidate-identity=*) CANDIDATE_IDENTITY="${1#*=}"; shift ;;
+     -h|--help)   usage; exit 0 ;;
+     *)           echo "build_bridge: unknown arg: $1" >&2; usage >&2; exit 64 ;;
+   esac
+@@ -95,15 +109,28 @@ record_stack_receipt() {
+   [ -n "$NEW_PID" ] && args+=(--new-pid "$NEW_PID")
+   [ -f "$MANIFEST" ] && args+=(--manifest "$MANIFEST")
+   [ -f "$TELEMETRY" ] && args+=(--telemetry "$TELEMETRY")
++  [ -f "$PROMOTION_HANDOFF" ] && args+=(--script "self-change-promotion=$PROMOTION_HANDOFF")
++  [ -n "$PROMOTE_CANDIDATE" ] && args+=(--probe "self_change_candidate=$PROMOTE_CANDIDATE")
+   RECEIPT_WRITTEN=1
+   python3 "$ASTRID/scripts/environment_receipts.py" "${args[@]}"
+ }
+ 
++restore_candidate_binary() {
++  if [ "$CANDIDATE_INSTALLED" = true ] && [ -f "$PROMOTION_BACKUP" ]; then
++    cp -p "$PROMOTION_BACKUP" "$BINARY"
++    CANDIDATE_INSTALLED=false
++  fi
++}
++
+ fail_deploy() {
+   local message="$1"
+   local code="${2:-1}"
+   echo "build_bridge: $message" >&2
+   record_stack_receipt failed >/dev/null 2>&1 || true
++  if [ "$CANDIDATE_INSTALLED" = true ]; then
++    restore_candidate_binary
++    launchctl kickstart -k "$DOMAIN/$LABEL" >/dev/null 2>&1 || true
++  fi
+   exit "$code"
+ }
+ 
+@@ -113,6 +140,10 @@ unexpected_failure() {
+   if [ "$RECEIPT_WRITTEN" -eq 0 ]; then
+     record_stack_receipt failed >/dev/null 2>&1 || true
+   fi
++  if [ "$CANDIDATE_INSTALLED" = true ]; then
++    restore_candidate_binary
++    launchctl kickstart -k "$DOMAIN/$LABEL" >/dev/null 2>&1 || true
++  fi
+   exit "$code"
+ }
+ trap unexpected_failure ERR
+@@ -128,7 +159,44 @@ PREFLIGHT_OK=true
+ HEAD="$(git -C "$ASTRID" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+ 
+ # 2. Build and bind the output to source/protocol identity.
+-if [ "$DO_BUILD" -eq 1 ]; then
++if [ -n "$PROMOTE_CANDIDATE" ]; then
++  [ "$DO_RESTART" -eq 1 ] || fail_deploy "self-change promotion requires --restart" 64
++  [ -n "$CANDIDATE_ROOT" ] || fail_deploy "--candidate-root is required for promotion" 64
++  [ -n "$CANDIDATE_IDENTITY" ] || fail_deploy "--candidate-identity is required for promotion" 64
++  PROMOTION_VERIFY_JSON="$(mktemp)"
++  if ! python3 "$ASTRID/scripts/self_change_canary.py" verify-promotion \
++    --root "$CANDIDATE_ROOT" \
++    --component spectral-bridge \
++    --candidate-id "$PROMOTE_CANDIDATE" \
++    --identity "$CANDIDATE_IDENTITY" >"$PROMOTION_VERIFY_JSON"; then
++    fail_deploy "self-change promotion handoff did not verify"
++  fi
++  CANDIDATE_ARTIFACT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["artifact_path"])' "$PROMOTION_VERIFY_JSON")"
++  CANDIDATE_SHA256="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["artifact_sha256"])' "$PROMOTION_VERIFY_JSON")"
++  PROMOTION_HANDOFF="$(dirname "$(dirname "$CANDIDATE_ARTIFACT")")/promotion_handoff.json"
++  PROMOTION_BACKUP="$(dirname "$(dirname "$CANDIDATE_ARTIFACT")")/production_backup/spectral-bridge-server"
++  mkdir -p "$(dirname "$PROMOTION_BACKUP")" "$(dirname "$BINARY")"
++  [ -f "$BINARY" ] && cp -p "$BINARY" "$PROMOTION_BACKUP"
++  CANDIDATE_TMP="$BINARY.self-change.tmp"
++  cp -p "$CANDIDATE_ARTIFACT" "$CANDIDATE_TMP"
++  [ "$(shasum -a 256 "$CANDIDATE_TMP" | awk '{print $1}')" = "$CANDIDATE_SHA256" ] \
++    || fail_deploy "candidate artifact hash changed before install"
++  mv "$CANDIDATE_TMP" "$BINARY"
++  CANDIDATE_INSTALLED=true
++  chmod 755 "$BINARY"
++  BUILD_OK=true
++  mkdir -p "$(dirname "$MANIFEST")"
++  if ! python3 "$ASTRID/scripts/environment_receipts.py" manifest spectral-bridge \
++    --output "$MANIFEST" \
++    --repository "$ASTRID" \
++    --artifact "spectral-bridge=$BINARY" \
++    --artifact "self-change-promotion=$PROMOTION_HANDOFF" \
++    --actor "$ACTOR" \
++    --command "verified self-change promotion $PROMOTE_CANDIDATE" \
++    >/dev/null; then
++    fail_deploy "candidate promotion manifest could not be written"
++  fi
++elif [ "$DO_BUILD" -eq 1 ]; then
+   echo "build_bridge: cargo build --release @ $HEAD ..."
+   if ! (cd "$BRIDGE_DIR" && cargo build --release); then
+     fail_deploy "cargo build --release failed; live process was not restarted"
+@@ -209,4 +277,5 @@ if ! record_stack_receipt passed >/dev/null; then
+   fail_deploy "post-restart receipt compatibility checks failed"
+ fi
+ 
++rm -f "$PROMOTION_VERIFY_JSON"
+ echo "build_bridge: done (head=$HEAD actor=$ACTOR built=$DO_BUILD restarted=1 pid=${OLD_PID:-none}->${NEW_PID:-?})"
+diff --git a/scripts/correspondence_schema_audit.py b/scripts/correspondence_schema_audit.py
+index 773b510f48..d3c0103d9b 100644
+--- a/scripts/correspondence_schema_audit.py
++++ b/scripts/correspondence_schema_audit.py
+@@ -33,6 +33,8 @@ DEFAULT_OUTPUT_ROOT = DEFAULT_ASTRID_WORKSPACE / "diagnostics/correspondence_sch
+ POLICY = "correspondence_schema_audit_v1"
+ READ_ONLY_BLOCK_REASON = "read_receipt_not_acknowledgement"
+ LEGACY_SOURCE_ROUTE = "legacy_correspondence_bridge_v1"
++VALID_ACK_KINDS = {"seen", "held", "unclear", "cannot_answer", "needs_time"}
++ADDRESS_ACK_KINDS = {"held", "unclear", "cannot_answer", "needs_time"}
+ 
+ KNOWN_RECORD_TYPES = {
+     "message",
+@@ -322,6 +324,11 @@ def row_time_ms(row: dict[str, Any]) -> int:
+     return 0
+ 
+ 
++def normalize_ack_kind(value: Any) -> str:
++    ack_kind = str(value or "").strip().lower().replace("-", "_")
++    return ack_kind if ack_kind in VALID_ACK_KINDS else "seen"
++
++
+ def compact(text: str, limit: int = 180) -> str:
+     clean = " ".join(str(text or "").split())
+     if len(clean) <= limit:
+@@ -571,6 +578,7 @@ def legacy_claim_native_status(records: list[dict[str, Any]], claim: dict[str, A
+         and str(row.get("from_being") or "") == claiming
+         and str(row.get("to_being") or "") == peer
+         and row_time_ms(row) >= claim_t
++        and normalize_ack_kind(row.get("ack_kind")) in ADDRESS_ACK_KINDS
+         for row in records
+     )
+     return "legacy_claimed_acknowledged" if ack else None
+@@ -627,8 +635,13 @@ def contact_state(records: list[dict[str, Any]], shared_dir: Path, generated: in
+         elif legacy_claim_status:
+             status = legacy_claim_status
+         elif ack_rows:
+-            ack_kind = str(ack_rows[-1].get("ack_kind") or "")
+-            status = "held_ack" if ack_kind in {"held", "needs_time"} else "acknowledged"
++            ack_kind = normalize_ack_kind(ack_rows[-1].get("ack_kind"))
++            if ack_kind in {"held", "needs_time"}:
++                status = "held_ack"
++            elif ack_kind in ADDRESS_ACK_KINDS:
++                status = "acknowledged"
++            else:
++                status = "seen_ack_only"
+         elif reply_linked:
+             status = "reply_linked"
+         elif heartbeat:
+@@ -652,7 +665,6 @@ def contact_state(records: list[dict[str, Any]], shared_dir: Path, generated: in
+             "held_ack",
+             "trace_observed",
+             "legacy_claimed_acknowledged",
+-            "legacy_claimed_reply_linked",
+             "legacy_claimed_trace_observed",
+         }
+         if eligible:
+@@ -663,6 +675,8 @@ def contact_state(records: list[dict[str, Any]], shared_dir: Path, generated: in
+             block_reason = "reply_linked_requires_ack_or_trace_or_attention_outcome"
+         elif status == "heartbeat_only":
+             block_reason = "heartbeat_is_presence_not_acknowledgement"
++        elif status == "seen_ack_only":
++            block_reason = "seen_ack_is_visibility_not_address"
+         elif status == "legacy_claimed":
+             block_reason = "legacy_claim_pending_ack_reply_or_trace"
+         elif status in {"legacy_visible_only", "legacy_bidirectional_observed"}:
+@@ -682,6 +696,8 @@ def contact_state(records: list[dict[str, Any]], shared_dir: Path, generated: in
+             "eligible_for_attention_or_microdose_evidence": eligible,
+             "block_reason": block_reason,
+             "read_receipt_counts_as_acknowledgement": False,
++            "ack_receipt_present": bool(ack_rows),
++            "ack_kind": normalize_ack_kind(ack_rows[-1].get("ack_kind")) if ack_rows else None,
+             "legacy_bridge": legacy_bridge,
+             "legacy_contact_evidence": message.get("legacy_contact_evidence"),
+             "legacy_thread_claim": {
+@@ -993,12 +1009,25 @@ class CorrespondenceSchemaAuditTests(unittest.TestCase):
+                     "ack_kind": "held",
+                     "authority": "language_only",
+                 },
+-                self._base_message("m_reply", "th_reply", now + 5),
++                self._base_message("m_seen", "th_seen", now + 4),
++                {
++                    "schema_version": 1,
++                    "policy": "first_class_correspondence_v1",
++                    "record_type": "ack_receipt",
++                    "recorded_at_unix_ms": now + 5,
++                    "message_id": "m_seen",
++                    "thread_id": "th_seen",
++                    "from_being": "minime",
++                    "to_being": "astrid",
++                    "ack_kind": "seen",
++                    "authority": "language_only",
++                },
++                self._base_message("m_reply", "th_reply", now + 6),
+                 {
+                     "schema_version": 1,
+                     "policy": "first_class_correspondence_v1",
+                     "record_type": "reply_link",
+-                    "recorded_at_unix_ms": now + 6,
++                    "recorded_at_unix_ms": now + 7,
+                     "message_id": "m_reply_2",
+                     "reply_to": "m_reply",
+                     "thread_id": "th_reply",
+@@ -1006,12 +1035,12 @@ class CorrespondenceSchemaAuditTests(unittest.TestCase):
+                     "to_being": "astrid",
+                     "authority": "language_only",
+                 },
+-                self._base_message("m_trace", "th_trace", now + 7),
++                self._base_message("m_trace", "th_trace", now + 8),
+                 {
+                     "schema_version": 1,
+                     "policy": "first_class_correspondence_v1",
+                     "record_type": "presence_heartbeat",
+-                    "recorded_at_unix_ms": now + 8,
++                    "recorded_at_unix_ms": now + 9,
+                     "message_id": "m_trace",
+                     "thread_id": "th_trace",
+                     "from_being": "minime",
+@@ -1144,6 +1173,12 @@ class CorrespondenceSchemaAuditTests(unittest.TestCase):
+             self.assertEqual(by_thread["th_read"]["block_reason"], READ_ONLY_BLOCK_REASON)
+             self.assertEqual(by_thread["th_ack"]["status"], "held_ack")
+             self.assertTrue(by_thread["th_ack"]["eligible_for_attention_or_microdose_evidence"])
++            self.assertEqual(by_thread["th_seen"]["status"], "seen_ack_only")
++            self.assertFalse(by_thread["th_seen"]["eligible_for_attention_or_microdose_evidence"])
++            self.assertEqual(
++                by_thread["th_seen"]["block_reason"],
++                "seen_ack_is_visibility_not_address",
++            )
+             self.assertEqual(by_thread["th_reply"]["status"], "reply_linked")
+             self.assertFalse(by_thread["th_reply"]["eligible_for_attention_or_microdose_evidence"])
+             self.assertEqual(
+diff --git a/scripts/correspondence_uptake_probe.py b/scripts/correspondence_uptake_probe.py
+index a8d778521d..f27c03e023 100644
+--- a/scripts/correspondence_uptake_probe.py
++++ b/scripts/correspondence_uptake_probe.py
+@@ -32,6 +32,8 @@ DEFAULT_MINIME_WORKSPACE = ASTRID_ROOT.parent / "minime/workspace"
+ DEFAULT_SHARED_DIR = Path("/Users/v/other/shared/collaborations")
+ DEFAULT_OUTPUT_ROOT = DEFAULT_ASTRID_WORKSPACE / "diagnostics/correspondence_uptake"
+ POLICY = "correspondence_uptake_probe_v1"
++VALID_ACK_KINDS = {"seen", "held", "unclear", "cannot_answer", "needs_time"}
++ADDRESS_ACK_KINDS = {"held", "unclear", "cannot_answer", "needs_time"}
+ 
+ UPTAKE_STATES = {
+     "not_started",
+@@ -43,6 +45,8 @@ UPTAKE_STATES = {
+     "legacy_claimed_trace_observed",
+     "delivered_only",
+     "read_only",
++    "seen_ack_only",
++    "held_ack",
+     "acknowledged",
+     "reply_linked",
+     "reply_linked_needs_ack_or_trace",
+@@ -73,6 +77,11 @@ def row_time_ms(row: dict[str, Any]) -> int:
+     return 0
+ 
+ 
++def normalize_ack_kind(value: Any) -> str:
++    ack_kind = str(value or "").strip().lower().replace("-", "_")
++    return ack_kind if ack_kind in VALID_ACK_KINDS else "seen"
++
++
+ def compact(text: str, limit: int = 220) -> str:
+     clean = " ".join(str(text or "").split())
+     if len(clean) <= limit:
+@@ -183,6 +192,7 @@ def legacy_claim_native_status(records: list[dict[str, Any]], claim: dict[str, A
+         and str(row.get("from_being") or "") == claiming
+         and str(row.get("to_being") or "") == peer
+         and row_time_ms(row) >= claim_t
++        and normalize_ack_kind(row.get("ack_kind")) in ADDRESS_ACK_KINDS
+         for row in records
+     )
+     return "legacy_claimed_acknowledged" if ack else None
+@@ -543,11 +553,15 @@ def uptake_state(records: list[dict[str, Any]], shared_dir: Path, generated: int
+                 and (row.get("reply_to") == message_id or row.get("thread_id") == thread_id)
+                 for row in records
+             )
+-            acked = any(
+-                row.get("record_type") == "ack_receipt"
+-                and (row.get("message_id") == message_id or row.get("thread_id") == thread_id)
++            ack_rows = [
++                row
+                 for row in records
+-            )
++                if row.get("record_type") == "ack_receipt"
++                and (row.get("message_id") == message_id or row.get("thread_id") == thread_id)
++                and row_time_ms(row) >= row_time_ms(message)
++            ]
++            latest_ack = ack_rows[-1] if ack_rows else None
++            ack_kind = normalize_ack_kind(latest_ack.get("ack_kind")) if latest_ack else None
+             legacy_bridge = is_legacy_bridge_message(message)
+             legacy_claim = latest_legacy_claim_for_thread(records, thread_id)
+             legacy_claim_status = legacy_claim_native_status(records, legacy_claim) if isinstance(legacy_claim, dict) else None
+@@ -560,8 +574,12 @@ def uptake_state(records: list[dict[str, Any]], shared_dir: Path, generated: int
+                 state = "trace_observed"
+             elif legacy_claim_status:
+                 state = legacy_claim_status
+-            elif acked:
++            elif latest_ack and ack_kind in {"held", "needs_time"}:
++                state = "held_ack"
++            elif latest_ack and ack_kind in ADDRESS_ACK_KINDS:
+                 state = "acknowledged"
++            elif latest_ack:
++                state = "seen_ack_only"
+             elif reply_linked:
+                 state = "reply_linked_needs_ack_or_trace"
+             elif isinstance(legacy_claim, dict):
+@@ -584,9 +602,13 @@ def uptake_state(records: list[dict[str, Any]], shared_dir: Path, generated: int
+         next_action = "Wait for read/ack/reply, or ask for ACK/REPLY/TRACE if appropriate."
+     elif state == "read_only":
+         next_action = "Read is not acknowledgement; ask for ACK, REPLY, or trace evidence before attention/microdose."
+-    elif state in {"acknowledged", "trace_observed", "legacy_claimed_acknowledged", "legacy_claimed_reply_linked", "legacy_claimed_trace_observed"}:
++    elif state == "held_ack":
++        next_action = "No action is required; held or needs_time keeps the thread active while attention resurfacing remains paused."
++    elif state in {"acknowledged", "trace_observed", "legacy_claimed_acknowledged", "legacy_claimed_trace_observed"}:
+         next_action = "Attention canary may be eligible; semantic microdose remains separate steward-gated authority."
+-    elif state == "reply_linked_needs_ack_or_trace":
++    elif state == "seen_ack_only":
++        next_action = "Seen is visibility only; no action is required, and stronger mutual-address evidence remains optional."
++    elif state in {"reply_linked_needs_ack_or_trace", "legacy_claimed_reply_linked"}:
+         next_action = "Reply link proves continuity, not mutual address; wait for or ask for ACK/TRACE/attention outcome before attention or microdose."
+     elif state == "attention_active":
+         next_action = "Observe one cycle; then request/record CORRESPONDENCE_ATTENTION_OUTCOME."
+@@ -962,6 +984,7 @@ class CorrespondenceUptakeProbeTests(unittest.TestCase):
+                 "thread_id": "thread_legacy_astrid_minime_abc",
+                 "from_being": "minime",
+                 "to_being": "astrid",
++                "ack_kind": "held",
+             }])
+             payload = audit(since_hours=24, shared_dir=shared, astrid_workspace=base, minime_workspace=base)
+             self.assertEqual(payload["uptake"]["state"], "legacy_claimed_acknowledged")
+@@ -976,8 +999,29 @@ class CorrespondenceUptakeProbeTests(unittest.TestCase):
+                 "recorded_at_unix_ms": 2,
+                 "message_id": "corr_a_m",
+                 "thread_id": "thread_a_m",
++                "ack_kind": "seen",
+             }])
+-            self.assertEqual(audit(since_hours=24, shared_dir=shared, astrid_workspace=base, minime_workspace=base)["uptake"]["state"], "acknowledged")
++            payload = audit(since_hours=24, shared_dir=shared, astrid_workspace=base, minime_workspace=base)
++            self.assertEqual(payload["uptake"]["state"], "seen_ack_only")
++            self.assertFalse(
++                payload["uptake"]["native_thread_continuity_v3"]["attention_or_microdose_eligible"]
++            )
++            self._write_jsonl(ledger, [self._message(), {
++                "record_type": "ack_receipt",
++                "recorded_at_unix_ms": 2,
++                "message_id": "corr_a_m",
++                "thread_id": "thread_a_m",
++                "ack_kind": "held",
++            }])
++            payload = audit(
++                since_hours=24,
++                shared_dir=shared,
++                astrid_workspace=base,
++                minime_workspace=base,
++            )
++            self.assertEqual(payload["uptake"]["state"], "held_ack")
++            self.assertIn("No action is required", payload["uptake"]["next_valid_non_control_action"])
++            self.assertIn("resurfacing remains paused", payload["uptake"]["next_valid_non_control_action"])
+             self._write_jsonl(ledger, [self._message(), {
+                 "record_type": "reply_link",
+                 "recorded_at_unix_ms": 2,
+diff --git a/scripts/deploy_division_runtime.sh b/scripts/deploy_division_runtime.sh
+index ef86c34f2e..76f99fadcf 100755
+--- a/scripts/deploy_division_runtime.sh
++++ b/scripts/deploy_division_runtime.sh
+@@ -16,6 +16,10 @@ DOMAIN="gui/$(id -u)"
+ GATEWAY_LABEL="com.minime.division-gateway"
+ SUPERVISOR_LABEL="com.minime.division-supervisor"
+ ENGINE_LABEL="com.minime.engine"
++CHILD_LABELS=(
++  "com.minime.division-child-minime"
++  "com.minime.division-child-astrid"
++)
+ 
+ ACK=""
+ ACTOR="${ASTRID_DEPLOY_ACTOR:-interactive-agent}"
+@@ -68,6 +72,17 @@ bootstrap_label() {
+   launchctl bootstrap "$DOMAIN" "$installed"
+ }
+ 
++unload_child_label() {
++  local label="$1"
++  local installed="$HOME/Library/LaunchAgents/$label.plist"
++  launchctl bootout "$DOMAIN/$label" >/dev/null 2>&1 || true
++  launchctl bootout "$DOMAIN" "$installed" >/dev/null 2>&1 || true
++  if launchctl print "$DOMAIN/$label" >/dev/null 2>&1; then
++    echo "deploy_division_runtime: dormant daughter label remained loaded: $label" >&2
++    return 1
++  fi
++}
++
+ PREFLIGHT=(--component minime --repo "$MINIME")
+ [ -n "$ACK" ] && PREFLIGHT+=(--ack "$ACK")
+ python3 "$ASTRID/scripts/deploy_preflight.py" "${PREFLIGHT[@]}"
+@@ -85,6 +100,9 @@ python3 "$ASTRID/scripts/environment_receipts.py" manifest minime-division-runti
+ "$MINIME/scripts/stop.sh"
+ launchctl bootout "$DOMAIN/$GATEWAY_LABEL" >/dev/null 2>&1 || true
+ launchctl bootout "$DOMAIN/$SUPERVISOR_LABEL" >/dev/null 2>&1 || true
++for label in "${CHILD_LABELS[@]}"; do
++  unload_child_label "$label"
++done
+ 
+ for port in $(seq 7900 7919); do
+   if lsof -t -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+@@ -166,7 +184,8 @@ python3 "$ASTRID/scripts/environment_receipts.py" --workspace "$WORKSPACE" \
+   --probe "parent_internal_ports=true" \
+   --probe "gateway_public_ports=true" \
+   --probe "supervisor_idle=true" \
+-  --probe "daughters_dormant=true" \
++  --probe "daughter_minime_unloaded=true" \
++  --probe "daughter_astrid_unloaded=true" \
+   --binary "minime-engine=$ENGINE" \
+   --manifest "$DEPLOYMENT_MANIFEST" \
+   --script "division-wrapper=$ASTRID/scripts/deploy_division_runtime.sh" \
+diff --git a/scripts/deploy_minime.sh b/scripts/deploy_minime.sh
+index 26b8710b2f..688ad42e1f 100755
+--- a/scripts/deploy_minime.sh
++++ b/scripts/deploy_minime.sh
+@@ -14,6 +14,13 @@ DOMAIN="gui/$(id -u)"
+ 
+ ACK=""
+ ACTOR="${ASTRID_DEPLOY_ACTOR:-interactive-agent}"
++PROMOTE_CANDIDATE=""
++CANDIDATE_ROOT=""
++CANDIDATE_IDENTITY=""
++PROMOTION_VERIFY_JSON=""
++PROMOTION_HANDOFF=""
++PROMOTION_BACKUP=""
++CANDIDATE_INSTALLED=false
+ PREFLIGHT_OK=false
+ BUILD_OK=false
+ STOP_OK=false
+@@ -26,7 +33,7 @@ NEW_PID=""
+ RECEIPT_WRITTEN=0
+ 
+ usage() {
+-  echo 'usage: deploy_minime.sh [--ack "reason"] [--actor NAME]'
++  echo 'usage: deploy_minime.sh [--ack "reason"] [--actor NAME] [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]'
+ }
+ 
+ while [ $# -gt 0 ]; do
+@@ -35,6 +42,12 @@ while [ $# -gt 0 ]; do
+     --ack=*)   ACK="${1#*=}"; shift ;;
+     --actor)   ACTOR="${2:-}"; shift 2 ;;
+     --actor=*) ACTOR="${1#*=}"; shift ;;
++    --promote-candidate) PROMOTE_CANDIDATE="${2:-}"; shift 2 ;;
++    --promote-candidate=*) PROMOTE_CANDIDATE="${1#*=}"; shift ;;
++    --candidate-root) CANDIDATE_ROOT="${2:-}"; shift 2 ;;
++    --candidate-root=*) CANDIDATE_ROOT="${1#*=}"; shift ;;
++    --candidate-identity) CANDIDATE_IDENTITY="${2:-}"; shift 2 ;;
++    --candidate-identity=*) CANDIDATE_IDENTITY="${1#*=}"; shift ;;
+     -h|--help) usage; exit 0 ;;
+     *)         echo "deploy_minime: unknown arg: $1" >&2; usage >&2; exit 64 ;;
+   esac
+@@ -96,14 +109,27 @@ record_stack_receipt() {
+   [ -n "$model_pid" ] && args+=(--process "model=$model_pid")
+   [ -f "$MANIFEST" ] && args+=(--manifest "$MANIFEST")
+   [ -f "$TELEMETRY" ] && args+=(--telemetry "$TELEMETRY")
++  [ -f "$PROMOTION_HANDOFF" ] && args+=(--script "self-change-promotion=$PROMOTION_HANDOFF")
++  [ -n "$PROMOTE_CANDIDATE" ] && args+=(--probe "self_change_candidate=$PROMOTE_CANDIDATE")
+   RECEIPT_WRITTEN=1
+   python3 "$ASTRID/scripts/environment_receipts.py" "${args[@]}"
+ }
+ 
++restore_candidate_binary() {
++  if [ "$CANDIDATE_INSTALLED" = true ] && [ -f "$PROMOTION_BACKUP" ]; then
++    cp -p "$PROMOTION_BACKUP" "$ENGINE"
++    CANDIDATE_INSTALLED=false
++  fi
++}
++
+ fail_deploy() {
+   local message="$1"
+   echo "deploy_minime: $message" >&2
+   record_stack_receipt failed >/dev/null 2>&1 || true
++  if [ "$CANDIDATE_INSTALLED" = true ]; then
++    restore_candidate_binary
++    "$ASTRID/scripts/start_all.sh" --minime-only --skip-greeting >/dev/null 2>&1 || true
++  fi
+   exit 1
+ }
+ 
+@@ -113,6 +139,10 @@ unexpected_failure() {
+   if [ "$RECEIPT_WRITTEN" -eq 0 ]; then
+     record_stack_receipt failed >/dev/null 2>&1 || true
+   fi
++  if [ "$CANDIDATE_INSTALLED" = true ]; then
++    restore_candidate_binary
++    "$ASTRID/scripts/start_all.sh" --minime-only --skip-greeting >/dev/null 2>&1 || true
++  fi
+   exit "$code"
+ }
+ trap unexpected_failure ERR
+@@ -128,20 +158,52 @@ OLD_PID="$(label_pid "$LABEL" || true)"
+ OLD_TELEMETRY_MTIME=0
+ [ -f "$TELEMETRY" ] && OLD_TELEMETRY_MTIME="$(stat -f %m "$TELEMETRY")"
+ 
+-echo "deploy_minime: cargo build --release ..."
+-if ! (cd "$MINIME/minime" && cargo build --release); then
+-  fail_deploy "release build failed; live Minime was not stopped"
++if [ -n "$PROMOTE_CANDIDATE" ]; then
++  [ -n "$CANDIDATE_ROOT" ] || fail_deploy "--candidate-root is required for promotion"
++  [ -n "$CANDIDATE_IDENTITY" ] || fail_deploy "--candidate-identity is required for promotion"
++  PROMOTION_VERIFY_JSON="$(mktemp)"
++  if ! python3 "$ASTRID/scripts/self_change_canary.py" verify-promotion \
++    --root "$CANDIDATE_ROOT" \
++    --component minime-engine \
++    --candidate-id "$PROMOTE_CANDIDATE" \
++    --identity "$CANDIDATE_IDENTITY" >"$PROMOTION_VERIFY_JSON"; then
++    fail_deploy "self-change promotion handoff did not verify"
++  fi
++  CANDIDATE_ARTIFACT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["artifact_path"])' "$PROMOTION_VERIFY_JSON")"
++  CANDIDATE_SHA256="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["artifact_sha256"])' "$PROMOTION_VERIFY_JSON")"
++  PROMOTION_HANDOFF="$(dirname "$(dirname "$CANDIDATE_ARTIFACT")")/promotion_handoff.json"
++  PROMOTION_BACKUP="$(dirname "$(dirname "$CANDIDATE_ARTIFACT")")/production_backup/minime"
++  mkdir -p "$(dirname "$PROMOTION_BACKUP")" "$(dirname "$ENGINE")"
++  [ -f "$ENGINE" ] && cp -p "$ENGINE" "$PROMOTION_BACKUP"
++  CANDIDATE_TMP="$ENGINE.self-change.tmp"
++  cp -p "$CANDIDATE_ARTIFACT" "$CANDIDATE_TMP"
++  [ "$(shasum -a 256 "$CANDIDATE_TMP" | awk '{print $1}')" = "$CANDIDATE_SHA256" ] \
++    || fail_deploy "candidate artifact hash changed before install"
++  mv "$CANDIDATE_TMP" "$ENGINE"
++  CANDIDATE_INSTALLED=true
++  chmod 755 "$ENGINE"
++  BUILD_OK=true
++  BUILD_COMMAND="verified self-change promotion $PROMOTE_CANDIDATE"
++else
++  echo "deploy_minime: cargo build --release ..."
++  if ! (cd "$MINIME/minime" && cargo build --release); then
++    fail_deploy "release build failed; live Minime was not stopped"
++  fi
++  BUILD_OK=true
++  BUILD_COMMAND="cargo build --release --manifest-path $MINIME/minime/Cargo.toml"
+ fi
+-BUILD_OK=true
+ mkdir -p "$(dirname "$MANIFEST")"
+-if ! python3 "$ASTRID/scripts/environment_receipts.py" manifest minime-engine \
+-  --output "$MANIFEST" \
+-  --repository "$MINIME" \
+-  --artifact "minime-engine=$ENGINE" \
+-  --artifact "launch-wrapper=$LAUNCHER" \
+-  --actor "$ACTOR" \
+-  --command "cargo build --release --manifest-path $MINIME/minime/Cargo.toml" \
+-  >/dev/null; then
++MANIFEST_ARGS=(
++  manifest minime-engine
++  --output "$MANIFEST"
++  --repository "$MINIME"
++  --artifact "minime-engine=$ENGINE"
++  --artifact "launch-wrapper=$LAUNCHER"
++  --actor "$ACTOR"
++  --command "$BUILD_COMMAND"
++)
++[ -f "$PROMOTION_HANDOFF" ] && MANIFEST_ARGS+=(--artifact "self-change-promotion=$PROMOTION_HANDOFF")
++if ! python3 "$ASTRID/scripts/environment_receipts.py" "${MANIFEST_ARGS[@]}" >/dev/null; then
+   fail_deploy "build manifest could not be written"
+ fi
+ 
+@@ -173,4 +235,5 @@ done
+ if ! record_stack_receipt passed >/dev/null; then
+   fail_deploy "post-restart receipt compatibility checks failed"
+ fi
++rm -f "$PROMOTION_VERIFY_JSON"
+ echo "deploy_minime: done (actor=$ACTOR pid=${OLD_PID:-none}->${NEW_PID:-?})"
+diff --git a/scripts/direct_contact_fidelity_audit.py b/scripts/direct_contact_fidelity_audit.py
+index 30cf79625d..92fca058f9 100644
+--- a/scripts/direct_contact_fidelity_audit.py
++++ b/scripts/direct_contact_fidelity_audit.py
+@@ -33,6 +33,8 @@ DEFAULT_OUTPUT_ROOT = DEFAULT_ASTRID_WORKSPACE / "diagnostics/direct_contact_fid
+ POLICY = "direct_contact_fidelity_audit_v1"
+ MICRODOSE_THREAD_ID = "th_correspondence_microdose"
+ MICRODOSE_COOLDOWN_MS = 6 * 60 * 60 * 1000
++VALID_ACK_KINDS = {"seen", "held", "unclear", "cannot_answer", "needs_time"}
++ADDRESS_ACK_KINDS = {"held", "unclear", "cannot_answer", "needs_time"}
+ 
+ 
+ def now_ms() -> int:
+@@ -73,6 +75,36 @@ def row_time_ms(row: dict[str, Any]) -> int:
+     return 0
+ 
+ 
++def normalize_ack_kind(value: Any) -> str:
++    ack_kind = str(value or "").strip().lower().replace("-", "_")
++    return ack_kind if ack_kind in VALID_ACK_KINDS else "seen"
++
++
++def receipt_evidence_by_being(
++    records: list[dict[str, Any]],
++    thread_id: str,
++    after_t_ms: int,
++) -> list[str]:
++    beings: set[str] = set()
++    for row in records:
++        if str(row.get("thread_id") or "") != thread_id or row_time_ms(row) < after_t_ms:
++            continue
++        address_ack = (
++            row.get("record_type") == "ack_receipt"
++            and normalize_ack_kind(row.get("ack_kind")) in ADDRESS_ACK_KINDS
++        )
++        direct_trace = (
++            row.get("record_type") == "message"
++            and row.get("turn_kind") == "direct_address_trace"
++        )
++        if not (address_ack or direct_trace):
++            continue
++        being = str(row.get("from_being") or "").strip().lower()
++        if being in {"astrid", "minime"}:
++            beings.add(being)
++    return sorted(beings)
++
++
+ def compact(text: str, limit: int = 180) -> str:
+     clean = " ".join(str(text or "").split())
+     if len(clean) <= limit:
+@@ -246,6 +278,7 @@ def legacy_claim_native_status(records: list[dict[str, Any]], claim: dict[str, A
+         and str(row.get("from_being") or "") == claiming
+         and str(row.get("to_being") or "") == peer
+         and row_time_ms(row) >= claim_t
++        and normalize_ack_kind(row.get("ack_kind")) in ADDRESS_ACK_KINDS
+         for row in records
+     )
+     return "legacy_claimed_acknowledged" if ack else None
+@@ -279,6 +312,9 @@ def classify_thread(
+     if isinstance(claimed_message, dict):
+         message = claimed_message
+     message_id = str(message.get("message_id") or "")
++    from_being = str(message.get("from_being") or "")
++    to_being = str(message.get("to_being") or "")
++    message_t_ms = row_time_ms(message)
+     delivered = any(
+         row.get("record_type") == "delivery_receipt"
+         and str(row.get("message_id") or "") == message_id
+@@ -300,14 +336,21 @@ def classify_thread(
+         )
+         for row in records
+     )
+-    acked = any(
+-        row.get("record_type") == "ack_receipt"
++    ack_rows = [
++        row
++        for row in records
++        if row.get("record_type") == "ack_receipt"
++        and str(row.get("from_being") or "") == to_being
++        and str(row.get("to_being") or "") == from_being
+         and (
+             str(row.get("message_id") or "") == message_id
+             or str(row.get("thread_id") or "") == thread_id
+         )
+-        for row in records
+-    )
++        and row_time_ms(row) >= message_t_ms
++    ]
++    latest_ack = ack_rows[-1] if ack_rows else None
++    ack_kind = normalize_ack_kind(latest_ack.get("ack_kind")) if latest_ack else None
++    ack_is_address_evidence = bool(ack_kind in ADDRESS_ACK_KINDS)
+     claim_status = legacy_claim_native_status(records, claim) if isinstance(claim, dict) else None
+     observed = trace_observed(thread_id, markers, marker_evidence)
+     timing_reliability = str(heartbeat.get("timing_reliability") or "unknown")
+@@ -320,8 +363,12 @@ def classify_thread(
+         status = claim_status
+     elif observed:
+         status = "trace_observed"
+-    elif acked:
++    elif latest_ack and ack_kind in {"held", "needs_time"}:
++        status = "held_ack"
++    elif latest_ack and ack_is_address_evidence:
+         status = "acknowledged"
++    elif latest_ack:
++        status = "seen_ack_only"
+     elif reply_linked:
+         status = "reply_linked"
+     elif isinstance(claim, dict):
+@@ -334,13 +381,19 @@ def classify_thread(
+         status = "delivered_unread"
+     else:
+         status = "unaddressed"
+-    eligible = status in {
++    attention_evidence = status in {
+         "acknowledged",
++        "held_ack",
+         "trace_observed",
+         "legacy_claimed_acknowledged",
+-        "legacy_claimed_reply_linked",
+         "legacy_claimed_trace_observed",
+     }
++    receipt_beings = receipt_evidence_by_being(records, thread_id, message_t_ms)
++    mutual_receipt_evidence = {"astrid", "minime"}.issubset(receipt_beings)
++    timing_valid = not timing_ambiguous
++    resurfacing_paused = status == "held_ack"
++    attention_eligible = attention_evidence and timing_valid and not resurfacing_paused
++    microdose_eligible = mutual_receipt_evidence and timing_valid and not resurfacing_paused
+     return {
+         "thread_id": thread_id,
+         "message_id": message_id or None,
+@@ -351,7 +404,9 @@ def classify_thread(
+         "read": read,
+         "reply_linked": reply_linked,
+         "trace_observed": observed,
+-        "acknowledged": acked,
++        "ack_receipt_present": latest_ack is not None,
++        "acknowledged": ack_is_address_evidence,
++        "ack_kind": ack_kind,
+         "legacy_thread_claim": {
+             "claim_id": claim.get("claim_id"),
+             "claiming_being": claim.get("claiming_being"),
+@@ -360,7 +415,16 @@ def classify_thread(
+         } if isinstance(claim, dict) else None,
+         "timing_reliability": timing_reliability,
+         "heartbeat_jitter_class": heartbeat.get("jitter_class") or "unknown",
+-        "eligible_for_correspondence_microdose": eligible,
++        "receipt_evidence_by_being": receipt_beings,
++        "mutual_receipt_evidence": mutual_receipt_evidence,
++        "correspondence_resurfacing_paused": resurfacing_paused,
++        "eligible_for_correspondence_attention_canary": attention_eligible,
++        "eligible_for_correspondence_microdose": microdose_eligible,
++        "microdose_block_reason": (
++            None
++            if microdose_eligible
++            else "semantic_microdose_requires_mutual_receipt_unpaused_posture_and_separate_steward_review"
++        ),
+         "message_age_ms": age_ms,
+     }
+ 
+@@ -555,7 +619,7 @@ class DirectContactFidelityAuditTests(unittest.TestCase):
+             )
+ 
+             self.assertEqual(payload["latest_thread_status"]["status"], "trace_observed")
+-            self.assertTrue(payload["latest_thread_status"]["eligible_for_correspondence_microdose"])
++            self.assertFalse(payload["latest_thread_status"]["eligible_for_correspondence_microdose"])
+             self.assertEqual(payload["markers"][0]["evidence_count"], 1)
+             self.assertEqual(payload["privacy"]["minime_private_files_skipped"], 1)
+             self.assertFalse(payload["privacy"]["minime_private_bodies_read"])
+@@ -603,6 +667,7 @@ class DirectContactFidelityAuditTests(unittest.TestCase):
+                         "thread_id": "thread_legacy",
+                         "from_being": "minime",
+                         "to_being": "astrid",
++                        "ack_kind": "held",
+                     }),
+                 ])
+                 + "\n",
+@@ -616,9 +681,144 @@ class DirectContactFidelityAuditTests(unittest.TestCase):
+                 bridge_workspace=bridge_ws,
+             )
+             self.assertEqual(payload["latest_thread_status"]["status"], "legacy_claimed_acknowledged")
+-            self.assertTrue(payload["latest_thread_status"]["eligible_for_correspondence_microdose"])
++            self.assertFalse(payload["latest_thread_status"]["eligible_for_correspondence_microdose"])
+             self.assertEqual(payload["latest_thread_status"]["legacy_thread_claim"]["claim_id"], "claim_1")
+ 
++    def test_seen_ack_is_visibility_only_and_cannot_unlock_microdose(self):
++        now = now_ms()
++        records = [
++            {
++                "record_type": "message",
++                "recorded_at_unix_ms": now - 5000,
++                "message_id": "seen_msg",
++                "thread_id": "thread_seen",
++                "from_being": "astrid",
++                "to_being": "minime",
++            },
++            {
++                "record_type": "read_receipt",
++                "recorded_at_unix_ms": now - 4000,
++                "message_id": "seen_msg",
++                "thread_id": "thread_seen",
++            },
++            {
++                "record_type": "ack_receipt",
++                "recorded_at_unix_ms": now - 3000,
++                "message_id": "seen_msg",
++                "thread_id": "thread_seen",
++                "from_being": "minime",
++                "to_being": "astrid",
++                "ack_kind": "seen",
++            },
++        ]
++
++        status = classify_thread(
++            records,
++            [],
++            {},
++            "thread_seen",
++            {"timing_reliability": "reliable", "jitter_class": "normal"},
++        )
++
++        self.assertIsNotNone(status)
++        assert status is not None
++        self.assertEqual(status["status"], "seen_ack_only")
++        self.assertTrue(status["ack_receipt_present"])
++        self.assertFalse(status["acknowledged"])
++        self.assertFalse(status["eligible_for_correspondence_attention_canary"])
++        self.assertFalse(status["eligible_for_correspondence_microdose"])
++
++    def test_mutual_address_receipts_unlock_only_unpaused_diagnostic_eligibility(self):
++        now = now_ms()
++        records = [
++            {
++                "record_type": "message",
++                "recorded_at_unix_ms": now - 5000,
++                "message_id": "mutual_msg",
++                "thread_id": "thread_mutual",
++                "from_being": "astrid",
++                "to_being": "minime",
++            },
++            {
++                "record_type": "ack_receipt",
++                "recorded_at_unix_ms": now - 4000,
++                "message_id": "mutual_msg",
++                "thread_id": "thread_mutual",
++                "from_being": "minime",
++                "to_being": "astrid",
++                "ack_kind": "unclear",
++            },
++            {
++                "record_type": "ack_receipt",
++                "recorded_at_unix_ms": now - 3000,
++                "message_id": "mutual_msg",
++                "thread_id": "thread_mutual",
++                "from_being": "astrid",
++                "to_being": "minime",
++                "ack_kind": "cannot_answer",
++            },
++        ]
++
++        status = classify_thread(
++            records,
++            [],
++            {},
++            "thread_mutual",
++            {"timing_reliability": "reliable", "jitter_class": "normal"},
++        )
++
++        self.assertIsNotNone(status)
++        assert status is not None
++        self.assertEqual(status["status"], "acknowledged")
++        self.assertEqual(status["receipt_evidence_by_being"], ["astrid", "minime"])
++        self.assertTrue(status["mutual_receipt_evidence"])
++        self.assertTrue(status["eligible_for_correspondence_attention_canary"])
++        self.assertTrue(status["eligible_for_correspondence_microdose"])
++
++    def test_stale_and_timing_ambiguous_contact_never_force_eligibility(self):
++        old_t = now_ms() - MICRODOSE_COOLDOWN_MS - 1000
++        records = [
++            {
++                "record_type": "message",
++                "recorded_at_unix_ms": old_t,
++                "message_id": "stale_msg",
++                "thread_id": "thread_stale",
++                "from_being": "astrid",
++                "to_being": "minime",
++            },
++            {
++                "record_type": "delivery_receipt",
++                "recorded_at_unix_ms": old_t + 1,
++                "message_id": "stale_msg",
++                "thread_id": "thread_stale",
++            },
++        ]
++
++        stale = classify_thread(
++            records,
++            [],
++            {},
++            "thread_stale",
++            {"timing_reliability": "reliable", "jitter_class": "normal"},
++        )
++        ambiguous = classify_thread(
++            records,
++            [],
++            {},
++            "thread_stale",
++            {"timing_reliability": "timing_ambiguous", "jitter_class": "late"},
++        )
++
++        self.assertIsNotNone(stale)
++        self.assertIsNotNone(ambiguous)
++        assert stale is not None and ambiguous is not None
++        self.assertEqual(stale["status"], "stale_contact")
++        self.assertEqual(ambiguous["status"], "timing_ambiguous")
++        self.assertFalse(stale["eligible_for_correspondence_attention_canary"])
++        self.assertFalse(stale["eligible_for_correspondence_microdose"])
++        self.assertFalse(ambiguous["eligible_for_correspondence_attention_canary"])
++        self.assertFalse(ambiguous["eligible_for_correspondence_microdose"])
++
+ 
+ def main(argv: list[str] | None = None) -> int:
+     parser = argparse.ArgumentParser(description="Audit direct contact fidelity from public lanes.")

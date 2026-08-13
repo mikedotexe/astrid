@@ -1,0 +1,26 @@
+diff --git a/capsules/spectral-bridge/src/signal_spine/tests.rs b/capsules/spectral-bridge/src/signal_spine/tests.rs
+index c141ca3449..f5eab7596f 100644
+--- a/capsules/spectral-bridge/src/signal_spine/tests.rs
++++ b/capsules/spectral-bridge/src/signal_spine/tests.rs
+@@ -7,7 +7,10 @@ use serde_json::json;
+ 
+ use super::capture::{CaptureWindowRequestV1, PendingVectorCaptureV1, try_submit_captures};
+ use super::recorder::{ShadowSignalJourneyV1, SignalJourneyContextV1};
+-use super::types::{SignalEffectV1, SignalOwnershipDomainV1, SignalRelationV1, SignalStageKindV1};
++use super::types::{
++    SignalEffectV1, SignalJourneyOriginV1, SignalOwnershipDomainV1, SignalRelationV1,
++    SignalResponseOriginV1, SignalStageKindV1,
++};
+ 
+ fn context() -> SignalJourneyContextV1 {
+     SignalJourneyContextV1 {
+@@ -16,6 +19,9 @@ fn context() -> SignalJourneyContextV1 {
+         connection_id: "minime_sensory_7879",
+         connection_sequence: 7001,
+         deployment_identity: "test".to_string(),
++        reserved_journey_id: None,
++        journey_origin: SignalJourneyOriginV1::autonomous(),
++        response_origin: SignalResponseOriginV1::Other,
+     }
+ }
+ 

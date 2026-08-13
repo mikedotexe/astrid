@@ -1,0 +1,11 @@
+diff --git a/capsules/spectral-bridge/tests/llm_facade_contract.rs b/capsules/spectral-bridge/tests/llm_facade_contract.rs
+index 7d81a19aad..798ce74186 100644
+--- a/capsules/spectral-bridge/tests/llm_facade_contract.rs
++++ b/capsules/spectral-bridge/tests/llm_facade_contract.rs
+@@ -2,5 +2,6 @@
+ fn llm_facade_reexports_items_without_exposing_implementation_module() {
+     let cases = trybuild::TestCases::new();
+     cases.pass("tests/ui/llm_facade_reexports_exchange.rs");
++    cases.pass("tests/ui/llm_facade_reexports_generation.rs");
+     cases.compile_fail("tests/ui/llm_provider_module_is_private.rs");
+ }

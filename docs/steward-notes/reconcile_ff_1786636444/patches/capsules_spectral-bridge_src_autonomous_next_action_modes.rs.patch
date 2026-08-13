@@ -1,0 +1,43 @@
+diff --git a/capsules/spectral-bridge/src/autonomous/next_action/modes.rs b/capsules/spectral-bridge/src/autonomous/next_action/modes.rs
+index f794139c11..8c1b8d000b 100644
+--- a/capsules/spectral-bridge/src/autonomous/next_action/modes.rs
++++ b/capsules/spectral-bridge/src/autonomous/next_action/modes.rs
+@@ -238,7 +238,7 @@ pub(super) fn handle_action(
+             conv.defer_inbox = true;
+             let parts: Vec<&str> = original.splitn(3, ' ').collect();
+             if parts.len() >= 2 {
+-                let label = parts[1].to_lowercase();
++                let label = parts[1].to_string();
+                 let offset = parts
+                     .get(2)
+                     .and_then(|s| s.parse::<usize>().ok())
+@@ -484,7 +484,7 @@ mod tests {
+     }
+ 
+     #[test]
+-    fn targeted_introspect_defers_inbox_once() {
++    fn targeted_introspect_preserves_case_sensitive_path_and_defers_inbox_once() {
+         let mut conv = ConversationState::new(Vec::new(), None);
+         let db = BridgeDb::open(":memory:").expect("open in-memory db");
+         let (sensory_tx, _sensory_rx) = mpsc::channel(1);
+@@ -503,7 +503,7 @@ mod tests {
+         let handled = handle_action(
+             &mut conv,
+             "INTROSPECT",
+-            "INTROSPECT src/autonomous/introspect.rs 680",
++            "INTROSPECT capsules/spectral-bridge/DOMAIN_BOUNDARIES.md 680",
+             &mut ctx,
+         );
+ 
+@@ -512,7 +512,10 @@ mod tests {
+         assert!(conv.defer_inbox);
+         assert_eq!(
+             conv.introspect_target,
+-            Some(("src/autonomous/introspect.rs".to_string(), 680))
++            Some((
++                "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md".to_string(),
++                680
++            ))
+         );
+     }
+ 

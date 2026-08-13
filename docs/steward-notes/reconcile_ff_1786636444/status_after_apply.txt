@@ -1,0 +1,45 @@
+ M capsules/spectral-bridge/src/autonomous/correspondence_v1.rs
+ M capsules/spectral-bridge/src/autonomous/division_ceremony.rs
+ M capsules/spectral-bridge/src/autonomous/division_ceremony/status.rs
+ M capsules/spectral-bridge/src/autonomous/division_ceremony/tests.rs
+ M capsules/spectral-bridge/src/autonomous/introspect.rs
+ M capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs
+ M capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs
+ M capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs
+ M capsules/spectral-bridge/src/autonomous/next_action/mod.rs
+ M capsules/spectral-bridge/src/autonomous/next_action/modes.rs
+ M capsules/spectral-bridge/src/autonomous/next_action/shadow.rs
+ M capsules/spectral-bridge/src/autonomous/next_action/workspace.rs
+ M capsules/spectral-bridge/src/autonomous/runtime.rs
+ M capsules/spectral-bridge/src/autonomous/runtime/delivery.rs
+ M capsules/spectral-bridge/src/autonomous/runtime/inbox.rs
+ M capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
+ M capsules/spectral-bridge/src/autonomous/runtime/tests.rs
+ M capsules/spectral-bridge/src/llm.rs
+ M capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs
+ M capsules/spectral-bridge/src/signal_spine.rs
+ M capsules/spectral-bridge/src/signal_spine/recorder.rs
+ M capsules/spectral-bridge/src/signal_spine/tests.rs
+ M capsules/spectral-bridge/src/signal_spine/types.rs
+ M capsules/spectral-bridge/tests/llm_facade_contract.rs
+ M capsules/spectral-bridge/tests/provenance_typestate.rs
+ M capsules/spectral-bridge/tests/ui/signal_receipt_cannot_deserialize.stderr
+ M crates/astrid-minime-protocol/tests/wire_contract.rs
+ M scripts/build_bridge.sh
+ M scripts/correspondence_schema_audit.py
+ M scripts/correspondence_uptake_probe.py
+ M scripts/deploy_division_runtime.sh
+ M scripts/deploy_minime.sh
+ M scripts/direct_contact_fidelity_audit.py
+?? .codex_stdin_listener_probe.rs
+?? capsules/spectral-bridge/src/autonomous/correspondence_v1/acknowledgement_tests.rs
+?? capsules/spectral-bridge/src/autonomous/correspondence_v1/contact_source.rs
+?? capsules/spectral-bridge/src/autonomous/next_action/action_syntax.rs
+?? capsules/spectral-bridge/src/autonomous/next_action/shadow/
+?? capsules/spectral-bridge/src/autonomous/next_action/temporal_bearing.rs
+?? capsules/spectral-bridge/src/autonomous/runtime/contact_capacity.rs
+?? capsules/spectral-bridge/tests/ui/llm_facade_reexports_generation.rs
+?? capsules/spectral-bridge/tests/ui/witness_frame_cannot_dispatch.rs
+?? capsules/spectral-bridge/tests/ui/witness_frame_cannot_dispatch.stderr
+?? crates/astrid-minime-protocol/tests/fixtures/texture_dynamics_contract_v1.json
+?? docs/steward-notes/reconcile_ff_1786636444/

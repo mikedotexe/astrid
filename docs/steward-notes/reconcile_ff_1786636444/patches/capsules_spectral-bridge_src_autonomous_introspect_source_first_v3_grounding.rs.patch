@@ -1,0 +1,20 @@
+diff --git a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs
+index ff63f2d298..335c6f4361 100644
+--- a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs
++++ b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs
+@@ -55,6 +55,7 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
+     "i also see the `",
+     "code identifies",
+     "in the source,",
++    "in the code,",
+     "file defines",
+     "file establishes",
+     "file describes",
+@@ -66,6 +67,7 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
+     "code describes",
+     "code labels",
+     "i see the definition of",
++    "i see the ",
+     " defines `",
+     " defines the `",
+     "i see the `",

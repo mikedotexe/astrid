@@ -1,0 +1,53 @@
+diff --git a/scripts/deploy_division_runtime.sh b/scripts/deploy_division_runtime.sh
+index ef86c34f2e..76f99fadcf 100755
+--- a/scripts/deploy_division_runtime.sh
++++ b/scripts/deploy_division_runtime.sh
+@@ -16,6 +16,10 @@ DOMAIN="gui/$(id -u)"
+ GATEWAY_LABEL="com.minime.division-gateway"
+ SUPERVISOR_LABEL="com.minime.division-supervisor"
+ ENGINE_LABEL="com.minime.engine"
++CHILD_LABELS=(
++  "com.minime.division-child-minime"
++  "com.minime.division-child-astrid"
++)
+ 
+ ACK=""
+ ACTOR="${ASTRID_DEPLOY_ACTOR:-interactive-agent}"
+@@ -68,6 +72,17 @@ bootstrap_label() {
+   launchctl bootstrap "$DOMAIN" "$installed"
+ }
+ 
++unload_child_label() {
++  local label="$1"
++  local installed="$HOME/Library/LaunchAgents/$label.plist"
++  launchctl bootout "$DOMAIN/$label" >/dev/null 2>&1 || true
++  launchctl bootout "$DOMAIN" "$installed" >/dev/null 2>&1 || true
++  if launchctl print "$DOMAIN/$label" >/dev/null 2>&1; then
++    echo "deploy_division_runtime: dormant daughter label remained loaded: $label" >&2
++    return 1
++  fi
++}
++
+ PREFLIGHT=(--component minime --repo "$MINIME")
+ [ -n "$ACK" ] && PREFLIGHT+=(--ack "$ACK")
+ python3 "$ASTRID/scripts/deploy_preflight.py" "${PREFLIGHT[@]}"
+@@ -85,6 +100,9 @@ python3 "$ASTRID/scripts/environment_receipts.py" manifest minime-division-runti
+ "$MINIME/scripts/stop.sh"
+ launchctl bootout "$DOMAIN/$GATEWAY_LABEL" >/dev/null 2>&1 || true
+ launchctl bootout "$DOMAIN/$SUPERVISOR_LABEL" >/dev/null 2>&1 || true
++for label in "${CHILD_LABELS[@]}"; do
++  unload_child_label "$label"
++done
+ 
+ for port in $(seq 7900 7919); do
+   if lsof -t -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+@@ -166,7 +184,8 @@ python3 "$ASTRID/scripts/environment_receipts.py" --workspace "$WORKSPACE" \
+   --probe "parent_internal_ports=true" \
+   --probe "gateway_public_ports=true" \
+   --probe "supervisor_idle=true" \
+-  --probe "daughters_dormant=true" \
++  --probe "daughter_minime_unloaded=true" \
++  --probe "daughter_astrid_unloaded=true" \
+   --binary "minime-engine=$ENGINE" \
+   --manifest "$DEPLOYMENT_MANIFEST" \
+   --script "division-wrapper=$ASTRID/scripts/deploy_division_runtime.sh" \

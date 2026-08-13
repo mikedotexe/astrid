@@ -1,0 +1,139 @@
+diff --git a/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs b/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
+index 7490b4bbf3..992cfca07e 100644
+--- a/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
++++ b/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
+@@ -1,5 +1,6 @@
+ const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
+ const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
++const MAX_REST_SECS: u64 = 360;
+ 
+ fn should_arm_prompt_overflow_read_more(
+     active_read_path: Option<&str>,
+@@ -14,6 +15,18 @@ fn should_arm_prompt_overflow_read_more(
+         })
+ }
+ 
++fn fill_responsive_rest_secs(base_rest: u64, current_fill: f32) -> u64 {
++    if current_fill < 30.0 {
++        ((base_rest as f64 * 0.6) as u64).max(30)
++    } else if current_fill < 40.0 {
++        base_rest
++    } else if current_fill < 50.0 {
++        ((base_rest as f64 * 1.2) as u64).min(MAX_REST_SECS)
++    } else {
++        base_rest
++    }
++}
++
+ pub(crate) const fn semantic_heartbeat_constants_v1() -> (u64, f32) {
+     (
+         SEMANTIC_HEARTBEAT_INTERVAL.as_secs(),
+@@ -70,14 +83,14 @@ async fn run_semantic_heartbeat_loop(
+                     "semantic heartbeat skipped by rescue write policy"
+                 );
+                 continue;
+-            }
++            },
+             Ok(enqueue_probe) => {
+                 if sensory_tx.send(msg).await.is_err() {
+                     enqueue_probe.record_channel_closed();
+                     return;
+                 }
+                 enqueue_probe.record_enqueued();
+-            }
++            },
+         }
+     }
+ }
+@@ -201,42 +214,35 @@ pub fn spawn_autonomous_loop(
+                     let s = state.read().await;
+                     s.latest_telemetry.as_ref().map_or(50.0, |t| t.fill_pct())
+                 };
+-                const MAX_REST_SECS: u64 = 360;
+-                let rest_secs = if current_fill < 30.0 {
++                let rest_secs = fill_responsive_rest_secs(base_rest, current_fill);
++                if current_fill < 30.0 {
+                     // Critical: shorten rest to get semantic input flowing ASAP.
+                     // The PI controller has gate=1.0/filter=0.0 (hard_recovery),
+                     // but it needs input to work with. Burst sooner.
+-                    let shortened = (base_rest as f64 * 0.6) as u64;
+-                    let floored = shortened.max(30); // minimum 30s rest
+                     info!(
+-                        rest_secs = floored,
++                        rest_secs,
+                         base_rest,
+                         current_fill,
+                         "fill-shortened rest (critical recovery — burst sooner)"
+                     );
+-                    floored
+                 } else if current_fill < 40.0 {
+                     // Low fill: keep rest at baseline, don't extend.
+                     info!(
+-                        rest_secs = base_rest,
++                        rest_secs,
+                         current_fill, "fill-baseline rest (low fill recovery)"
+                     );
+-                    base_rest
+                 } else if current_fill < 50.0 {
+                     // Moderate recovery: modest extension (20%)
+-                    let extended = (base_rest as f64 * 1.2) as u64;
+                     info!(
+-                        rest_secs = extended.min(MAX_REST_SECS),
++                        rest_secs,
+                         base_rest, current_fill, "fill-extended rest (moderate recovery)"
+                     );
+-                    extended.min(MAX_REST_SECS)
+                 } else {
+                     info!(
+-                        rest_secs = base_rest,
++                        rest_secs,
+                         burst_count, "resting: warmth-blended mirror (tapered entry)"
+                     );
+-                    base_rest
+-                };
++                }
+                 burst_count = 0;
+ 
+                 // Gather journal texts to cycle through during rest.
+@@ -378,14 +384,14 @@ pub fn spawn_autonomous_loop(
+                                 reason = %reason,
+                                 "autonomous semantic heartbeat skipped by rescue write policy"
+                             );
+-                        }
++                        },
+                         Ok(enqueue_probe) => {
+                             if sensory_tx.send(msg).await.is_err() {
+                                 enqueue_probe.record_channel_closed();
+                                 return;
+                             }
+                             enqueue_probe.record_enqueued();
+-                        }
++                        },
+                     }
+                     tokio::time::sleep(Duration::from_secs(5)).await;
+                 }
+@@ -659,7 +665,7 @@ pub fn spawn_autonomous_loop(
+                     // mid-exchange (else it is swept to read/ unread + its steward slot
+                     // never seeds — the slot-seed race that lost a review invitation).
+                     let inbox_checked_at = std::time::SystemTime::now();
+-                    let inbox_content = check_inbox();
++                    let inbox_content = check_inbox(inbox_checked_at);
+                     let mutual_address_target = inbox_content.as_ref().and_then(|_| {
+                         correspondence_v1::latest_inbox_peer_message_at_read_cutoff(
+                             bridge_paths().astrid_inbox_dir().as_path(),
+@@ -3462,10 +3468,15 @@ pub fn spawn_autonomous_loop(
+                         continue;
+                     }
+ 
++                    let signal_reservation = inbox_content
++                        .as_ref()
++                        .map(contact_capacity::InboxReadBatchV1::signal_reservation);
+                     let mut signal_shadow = begin_signal_shadow_v1(
+                         conv.exchange_count,
+                         telemetry.t_ms,
++                        mode_name,
+                         &response_text,
++                        signal_reservation,
+                     );
+                     if !should_send {
+                         let root = signal_root_v1(&signal_shadow);

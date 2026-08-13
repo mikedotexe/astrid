@@ -1,0 +1,12 @@
+diff --git a/crates/astrid-hooks/src/handler/wasm.rs b/crates/astrid-hooks/src/handler/wasm.rs
+index 24b676e33c..1902be1295 100644
+--- a/crates/astrid-hooks/src/handler/wasm.rs
++++ b/crates/astrid-hooks/src/handler/wasm.rs
+@@ -296,6 +296,7 @@ impl WasmHandler {
+             principal: astrid_core::PrincipalId::default(),
+             capsule_uuid: uuid::Uuid::new_v4(),
+             caller_context: None,
++            run_loop_trace_context: None,
+             invocation_kv: None,
+             capsule_log: None,
+             capsule_id: CapsuleId::from_static(&hook_identity),
