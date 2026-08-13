@@ -809,6 +809,9 @@ fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
         Some(0.11),
         Some(0.23),
         Some(0.41),
+        Some(0.29),
+        Some(0.31),
+        Some(0.55),
         1_000,
         Some(25),
         Some(true),
@@ -828,6 +831,20 @@ fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
     assert_eq!(encoded[5]["value"], 0.23);
     assert_eq!(encoded[6]["name"], "bridge.mode_packing");
     assert_eq!(encoded[6]["value"], 0.41);
+    assert_eq!(encoded[7]["name"], "bridge.pressure_source_score");
+    assert_eq!(encoded[7]["value"], 0.29);
+    assert_eq!(
+        encoded[7]["source_ref"],
+        "bridge_state.latest_telemetry.pressure_source_v1.pressure_score"
+    );
+    assert_eq!(encoded[8]["name"], "bridge.pressure_source_porosity");
+    assert_eq!(encoded[8]["value"], 0.31);
+    assert_eq!(encoded[9]["name"], "bridge.pressure_source_mode_packing");
+    assert_eq!(encoded[9]["value"], 0.55);
+    assert_eq!(
+        encoded[9]["source_ref"],
+        "bridge_state.latest_telemetry.pressure_source_v1.components.mode_packing"
+    );
     assert!(
         encoded
             .as_array()
@@ -840,8 +857,9 @@ fn runtime_spectral_context_preserves_entropy_and_density_without_causation() {
             })
     );
 
-    let unavailable =
-        runtime_spectral_observations(None, None, None, None, None, None, None, 2_000, None, None);
+    let unavailable = runtime_spectral_observations(
+        None, None, None, None, None, None, None, None, None, None, 2_000, None, None,
+    );
     let unavailable = serde_json::to_value(unavailable).expect("unknown observations");
     assert!(
         unavailable

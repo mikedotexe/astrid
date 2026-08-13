@@ -1094,6 +1094,11 @@ mod tests {
         assert!(desc.contains("Pressure source"));
         assert!(desc.contains("controller_pressure"));
         assert!(desc.contains("advisory only"));
+        // Scalar-provenance family tags: the two clauses whose numbers collide
+        // (two distinct mode_packing fields, pressure risk vs pressure score)
+        // must each name their telemetry family so her citations stay bindable.
+        assert!(desc.contains("[source: resonance_density_v1]"));
+        assert!(desc.contains("[source: pressure_source_v1]"));
     }
 
     #[test]

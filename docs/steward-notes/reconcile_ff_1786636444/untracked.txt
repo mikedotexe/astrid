@@ -1,0 +1,12 @@
+.codex_stdin_listener_probe.rs
+capsules/spectral-bridge/src/autonomous/correspondence_v1/acknowledgement_tests.rs
+capsules/spectral-bridge/src/autonomous/correspondence_v1/contact_source.rs
+capsules/spectral-bridge/src/autonomous/next_action/action_syntax.rs
+capsules/spectral-bridge/src/autonomous/next_action/shadow/cartography.rs
+capsules/spectral-bridge/src/autonomous/next_action/shadow/trajectory.rs
+capsules/spectral-bridge/src/autonomous/next_action/temporal_bearing.rs
+capsules/spectral-bridge/src/autonomous/runtime/contact_capacity.rs
+capsules/spectral-bridge/tests/ui/llm_facade_reexports_generation.rs
+capsules/spectral-bridge/tests/ui/witness_frame_cannot_dispatch.rs
+capsules/spectral-bridge/tests/ui/witness_frame_cannot_dispatch.stderr
+crates/astrid-minime-protocol/tests/fixtures/texture_dynamics_contract_v1.json

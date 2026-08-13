@@ -1,0 +1,135 @@
+diff --git a/scripts/build_bridge.sh b/scripts/build_bridge.sh
+index 21f9e062e1..a691beafb2 100755
+--- a/scripts/build_bridge.sh
++++ b/scripts/build_bridge.sh
+@@ -6,6 +6,7 @@
+ # failed preflight, build, manifest, restart, and telemetry checks.
+ #
+ # Usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--restart] [--no-build]
++#   [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]
+ set -euo pipefail
+ 
+ ASTRID="/Users/v/other/astrid"
+@@ -33,9 +34,16 @@ OLD_COMMAND=""
+ OLD_CAPTURED_AT=""
+ NEW_PID=""
+ RECEIPT_WRITTEN=0
++PROMOTE_CANDIDATE=""
++CANDIDATE_ROOT=""
++CANDIDATE_IDENTITY=""
++PROMOTION_VERIFY_JSON=""
++PROMOTION_HANDOFF=""
++PROMOTION_BACKUP=""
++CANDIDATE_INSTALLED=false
+ 
+ usage() {
+-  echo 'usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--restart] [--no-build]'
++  echo 'usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--restart] [--no-build] [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]'
+ }
+ 
+ while [ $# -gt 0 ]; do
+@@ -46,6 +54,12 @@ while [ $# -gt 0 ]; do
+     --actor=*)   ACTOR="${1#*=}"; shift ;;
+     --restart)   DO_RESTART=1; shift ;;
+     --no-build)  DO_BUILD=0; shift ;;
++    --promote-candidate) PROMOTE_CANDIDATE="${2:-}"; shift 2 ;;
++    --promote-candidate=*) PROMOTE_CANDIDATE="${1#*=}"; shift ;;
++    --candidate-root) CANDIDATE_ROOT="${2:-}"; shift 2 ;;
++    --candidate-root=*) CANDIDATE_ROOT="${1#*=}"; shift ;;
++    --candidate-identity) CANDIDATE_IDENTITY="${2:-}"; shift 2 ;;
++    --candidate-identity=*) CANDIDATE_IDENTITY="${1#*=}"; shift ;;
+     -h|--help)   usage; exit 0 ;;
+     *)           echo "build_bridge: unknown arg: $1" >&2; usage >&2; exit 64 ;;
+   esac
+@@ -95,15 +109,28 @@ record_stack_receipt() {
+   [ -n "$NEW_PID" ] && args+=(--new-pid "$NEW_PID")
+   [ -f "$MANIFEST" ] && args+=(--manifest "$MANIFEST")
+   [ -f "$TELEMETRY" ] && args+=(--telemetry "$TELEMETRY")
++  [ -f "$PROMOTION_HANDOFF" ] && args+=(--script "self-change-promotion=$PROMOTION_HANDOFF")
++  [ -n "$PROMOTE_CANDIDATE" ] && args+=(--probe "self_change_candidate=$PROMOTE_CANDIDATE")
+   RECEIPT_WRITTEN=1
+   python3 "$ASTRID/scripts/environment_receipts.py" "${args[@]}"
+ }
+ 
++restore_candidate_binary() {
++  if [ "$CANDIDATE_INSTALLED" = true ] && [ -f "$PROMOTION_BACKUP" ]; then
++    cp -p "$PROMOTION_BACKUP" "$BINARY"
++    CANDIDATE_INSTALLED=false
++  fi
++}
++
+ fail_deploy() {
+   local message="$1"
+   local code="${2:-1}"
+   echo "build_bridge: $message" >&2
+   record_stack_receipt failed >/dev/null 2>&1 || true
++  if [ "$CANDIDATE_INSTALLED" = true ]; then
++    restore_candidate_binary
++    launchctl kickstart -k "$DOMAIN/$LABEL" >/dev/null 2>&1 || true
++  fi
+   exit "$code"
+ }
+ 
+@@ -113,6 +140,10 @@ unexpected_failure() {
+   if [ "$RECEIPT_WRITTEN" -eq 0 ]; then
+     record_stack_receipt failed >/dev/null 2>&1 || true
+   fi
++  if [ "$CANDIDATE_INSTALLED" = true ]; then
++    restore_candidate_binary
++    launchctl kickstart -k "$DOMAIN/$LABEL" >/dev/null 2>&1 || true
++  fi
+   exit "$code"
+ }
+ trap unexpected_failure ERR
+@@ -128,7 +159,44 @@ PREFLIGHT_OK=true
+ HEAD="$(git -C "$ASTRID" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+ 
+ # 2. Build and bind the output to source/protocol identity.
+-if [ "$DO_BUILD" -eq 1 ]; then
++if [ -n "$PROMOTE_CANDIDATE" ]; then
++  [ "$DO_RESTART" -eq 1 ] || fail_deploy "self-change promotion requires --restart" 64
++  [ -n "$CANDIDATE_ROOT" ] || fail_deploy "--candidate-root is required for promotion" 64
++  [ -n "$CANDIDATE_IDENTITY" ] || fail_deploy "--candidate-identity is required for promotion" 64
++  PROMOTION_VERIFY_JSON="$(mktemp)"
++  if ! python3 "$ASTRID/scripts/self_change_canary.py" verify-promotion \
++    --root "$CANDIDATE_ROOT" \
++    --component spectral-bridge \
++    --candidate-id "$PROMOTE_CANDIDATE" \
++    --identity "$CANDIDATE_IDENTITY" >"$PROMOTION_VERIFY_JSON"; then
++    fail_deploy "self-change promotion handoff did not verify"
++  fi
++  CANDIDATE_ARTIFACT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["artifact_path"])' "$PROMOTION_VERIFY_JSON")"
++  CANDIDATE_SHA256="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["artifact_sha256"])' "$PROMOTION_VERIFY_JSON")"
++  PROMOTION_HANDOFF="$(dirname "$(dirname "$CANDIDATE_ARTIFACT")")/promotion_handoff.json"
++  PROMOTION_BACKUP="$(dirname "$(dirname "$CANDIDATE_ARTIFACT")")/production_backup/spectral-bridge-server"
++  mkdir -p "$(dirname "$PROMOTION_BACKUP")" "$(dirname "$BINARY")"
++  [ -f "$BINARY" ] && cp -p "$BINARY" "$PROMOTION_BACKUP"
++  CANDIDATE_TMP="$BINARY.self-change.tmp"
++  cp -p "$CANDIDATE_ARTIFACT" "$CANDIDATE_TMP"
++  [ "$(shasum -a 256 "$CANDIDATE_TMP" | awk '{print $1}')" = "$CANDIDATE_SHA256" ] \
++    || fail_deploy "candidate artifact hash changed before install"
++  mv "$CANDIDATE_TMP" "$BINARY"
++  CANDIDATE_INSTALLED=true
++  chmod 755 "$BINARY"
++  BUILD_OK=true
++  mkdir -p "$(dirname "$MANIFEST")"
++  if ! python3 "$ASTRID/scripts/environment_receipts.py" manifest spectral-bridge \
++    --output "$MANIFEST" \
++    --repository "$ASTRID" \
++    --artifact "spectral-bridge=$BINARY" \
++    --artifact "self-change-promotion=$PROMOTION_HANDOFF" \
++    --actor "$ACTOR" \
++    --command "verified self-change promotion $PROMOTE_CANDIDATE" \
++    >/dev/null; then
++    fail_deploy "candidate promotion manifest could not be written"
++  fi
++elif [ "$DO_BUILD" -eq 1 ]; then
+   echo "build_bridge: cargo build --release @ $HEAD ..."
+   if ! (cd "$BRIDGE_DIR" && cargo build --release); then
+     fail_deploy "cargo build --release failed; live process was not restarted"
+@@ -209,4 +277,5 @@ if ! record_stack_receipt passed >/dev/null; then
+   fail_deploy "post-restart receipt compatibility checks failed"
+ fi
+ 
++rm -f "$PROMOTION_VERIFY_JSON"
+ echo "build_bridge: done (head=$HEAD actor=$ACTOR built=$DO_BUILD restarted=1 pid=${OLD_PID:-none}->${NEW_PID:-?})"

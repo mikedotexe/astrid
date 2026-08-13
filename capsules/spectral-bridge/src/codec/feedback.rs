@@ -414,7 +414,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
                 || (resonance.control.wander_scale - 1.0).abs() > 0.000_1
                 || resonance.control.damping_coefficient > 0.000_1;
             format!(
-                " Resonance density: {:.2} ({}) with containment {:.2}, pressure risk {:.2}; legacy-PI candidate target bias {:+.1}%, wander scale {:.2}, damping {:.2}, declared local={}, numeric request={}.",
+                " Resonance density: {:.2} ({}) with containment {:.2}, pressure risk {:.2}; legacy-PI candidate target bias {:+.1}%, wander scale {:.2}, damping {:.2}, declared local={}, numeric request={} [source: resonance_density_v1].",
                 resonance.density,
                 surface_label(&resonance.quality),
                 resonance.containment_score,
@@ -432,7 +432,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         .as_ref()
         .map(|pressure| {
             format!(
-                " Pressure source: {} ({}) with score {:.2}, porosity {:.2}; advisory only: diagnostic descriptor and not a PI input (producer applied flag={}).",
+                " Pressure source: {} ({}) with score {:.2}, porosity {:.2}; advisory only: diagnostic descriptor and not a PI input (producer applied flag={}) [source: pressure_source_v1].",
                 surface_label(&pressure.dominant_source),
                 surface_label(&pressure.quality),
                 pressure.pressure_score,

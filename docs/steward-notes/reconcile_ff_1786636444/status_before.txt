@@ -1,0 +1,50 @@
+# branch.oid 3a263a63c366d81cf2cb916279fed57172b57bf0
+# branch.head codex/sovereign-daughter-runtime
+# branch.upstream origin/codex/sovereign-daughter-runtime
+# branch.ab +101 -0
+1 .M N... 100644 100644 100644 e739dd6f23a03f8a0ca63b622b14d9c9d144089b e739dd6f23a03f8a0ca63b622b14d9c9d144089b capsules/spectral-bridge/src/autonomous/correspondence_v1.rs
+1 .M N... 100644 100644 100644 0b48c630afb55cc12c084f98b59216829bfdab3e 0b48c630afb55cc12c084f98b59216829bfdab3e capsules/spectral-bridge/src/autonomous/division_ceremony.rs
+1 .M N... 100644 100644 100644 da8afdc55a2a64655c7432120dfa8d999c641112 da8afdc55a2a64655c7432120dfa8d999c641112 capsules/spectral-bridge/src/autonomous/division_ceremony/status.rs
+1 .M N... 100644 100644 100644 4fcac9de1200da79da8c6e411d578588f1868ca1 4fcac9de1200da79da8c6e411d578588f1868ca1 capsules/spectral-bridge/src/autonomous/division_ceremony/tests.rs
+1 .M N... 100644 100644 100644 ab8bfe1cea9b20dbe9fc29315802fa639dd4369c ab8bfe1cea9b20dbe9fc29315802fa639dd4369c capsules/spectral-bridge/src/autonomous/introspect.rs
+1 .M N... 100644 100644 100644 ff63f2d29854c85e3c1aa6f2140a25e4461a488f ff63f2d29854c85e3c1aa6f2140a25e4461a488f capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs
+1 .M N... 100644 100644 100644 f69520e99ef5afe215867c05d0bd9f3574a38c96 f69520e99ef5afe215867c05d0bd9f3574a38c96 capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs
+1 .M N... 100644 100644 100644 388204c81bd12ca4774f089952c1497c801d851a 388204c81bd12ca4774f089952c1497c801d851a capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs
+1 .M N... 100644 100644 100644 4552cbac92baa6405a9854a1571107691acac022 4552cbac92baa6405a9854a1571107691acac022 capsules/spectral-bridge/src/autonomous/next_action/mod.rs
+1 .M N... 100644 100644 100644 f794139c11445b386dee262b936a9d382705993a f794139c11445b386dee262b936a9d382705993a capsules/spectral-bridge/src/autonomous/next_action/modes.rs
+1 .M N... 100644 100644 100644 65299c664d2c6b665535c25658ad606149537d77 65299c664d2c6b665535c25658ad606149537d77 capsules/spectral-bridge/src/autonomous/next_action/shadow.rs
+1 .M N... 100644 100644 100644 a735a1e19566f3660b55ac70ff9f378ad67bb94c a735a1e19566f3660b55ac70ff9f378ad67bb94c capsules/spectral-bridge/src/autonomous/next_action/workspace.rs
+1 .M N... 100644 100644 100644 a7814459fa4cd3e5d4684668d38e91bbcfc31267 a7814459fa4cd3e5d4684668d38e91bbcfc31267 capsules/spectral-bridge/src/autonomous/runtime.rs
+1 .M N... 100644 100644 100644 285cc9cd9fec819157e0283c5582cc2df18de5bd 285cc9cd9fec819157e0283c5582cc2df18de5bd capsules/spectral-bridge/src/autonomous/runtime/delivery.rs
+1 .M N... 100644 100644 100644 c4b4d66aa45a54e8eb68b957f47bbf2da3b58457 c4b4d66aa45a54e8eb68b957f47bbf2da3b58457 capsules/spectral-bridge/src/autonomous/runtime/inbox.rs
+1 .M N... 100644 100644 100644 7490b4bbf38079bbe19f5d3642582630d017447b 7490b4bbf38079bbe19f5d3642582630d017447b capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
+1 .M N... 100644 100644 100644 1cb3817f9706f1ff8a73eb7b3f48f7c95650b020 1cb3817f9706f1ff8a73eb7b3f48f7c95650b020 capsules/spectral-bridge/src/autonomous/runtime/tests.rs
+1 .M N... 100644 100644 100644 1d0e8b4645f84427d8bbda018e8a6e16c22c1608 1d0e8b4645f84427d8bbda018e8a6e16c22c1608 capsules/spectral-bridge/src/llm.rs
+1 .M N... 100644 100644 100644 15f2897146c2b7ccf982e9c5daccf380f82211a6 15f2897146c2b7ccf982e9c5daccf380f82211a6 capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs
+1 .M N... 100644 100644 100644 bfd9dcda57a1303ccd64d10e03a69a3c793c9a18 bfd9dcda57a1303ccd64d10e03a69a3c793c9a18 capsules/spectral-bridge/src/signal_spine.rs
+1 .M N... 100644 100644 100644 76f11055b82f30113ece78c4059cb34fff77049d 76f11055b82f30113ece78c4059cb34fff77049d capsules/spectral-bridge/src/signal_spine/recorder.rs
+1 .M N... 100644 100644 100644 c141ca3449bdc71c112de71bc7a87b894fe137d3 c141ca3449bdc71c112de71bc7a87b894fe137d3 capsules/spectral-bridge/src/signal_spine/tests.rs
+1 .M N... 100644 100644 100644 f07c0fc4cce5e4cbda5a435f06defd4ff1bd1e4c f07c0fc4cce5e4cbda5a435f06defd4ff1bd1e4c capsules/spectral-bridge/src/signal_spine/types.rs
+1 .M N... 100644 100644 100644 7d81a19aad331695e0b8911bc76704317ac5e76c 7d81a19aad331695e0b8911bc76704317ac5e76c capsules/spectral-bridge/tests/llm_facade_contract.rs
+1 .M N... 100644 100644 100644 dffdadec2371404231314e593b8fd421b10741ad dffdadec2371404231314e593b8fd421b10741ad capsules/spectral-bridge/tests/provenance_typestate.rs
+1 .M N... 100644 100644 100644 10914a4ee785f0f887d44f49716ddbb143314a4a 10914a4ee785f0f887d44f49716ddbb143314a4a capsules/spectral-bridge/tests/ui/signal_receipt_cannot_deserialize.stderr
+1 .M N... 100644 100644 100644 24b676e33c800af6d245d7783c90c1592fcd4ea2 24b676e33c800af6d245d7783c90c1592fcd4ea2 crates/astrid-hooks/src/handler/wasm.rs
+1 .M N... 100644 100644 100644 2edcedfd38b297de768ac9c1e9e335064bd4bb45 2edcedfd38b297de768ac9c1e9e335064bd4bb45 crates/astrid-minime-protocol/tests/wire_contract.rs
+1 .M N... 100755 100755 100755 21f9e062e138a7986309f51f25a3c552da240d2c 21f9e062e138a7986309f51f25a3c552da240d2c scripts/build_bridge.sh
+1 .M N... 100644 100644 100644 773b510f48648310f9b08978d0516daec7d12fe8 773b510f48648310f9b08978d0516daec7d12fe8 scripts/correspondence_schema_audit.py
+1 .M N... 100644 100644 100644 a8d778521d4518cce66355e0d40f0c97cddff1fc a8d778521d4518cce66355e0d40f0c97cddff1fc scripts/correspondence_uptake_probe.py
+1 .M N... 100755 100755 100755 ef86c34f2ed052d88dfd3d2e9a5fda81577996cf ef86c34f2ed052d88dfd3d2e9a5fda81577996cf scripts/deploy_division_runtime.sh
+1 .M N... 100755 100755 100755 26b8710b2fe16621b76e5d77429a1f30726ac48a 26b8710b2fe16621b76e5d77429a1f30726ac48a scripts/deploy_minime.sh
+1 .M N... 100644 100644 100644 30cf79625dccb3e7356f5d206e287cfa6358754b 30cf79625dccb3e7356f5d206e287cfa6358754b scripts/direct_contact_fidelity_audit.py
+? .codex_stdin_listener_probe.rs
+? capsules/spectral-bridge/src/autonomous/correspondence_v1/acknowledgement_tests.rs
+? capsules/spectral-bridge/src/autonomous/correspondence_v1/contact_source.rs
+? capsules/spectral-bridge/src/autonomous/next_action/action_syntax.rs
+? capsules/spectral-bridge/src/autonomous/next_action/shadow/
+? capsules/spectral-bridge/src/autonomous/next_action/temporal_bearing.rs
+? capsules/spectral-bridge/src/autonomous/runtime/contact_capacity.rs
+? capsules/spectral-bridge/tests/ui/llm_facade_reexports_generation.rs
+? capsules/spectral-bridge/tests/ui/witness_frame_cannot_dispatch.rs
+? capsules/spectral-bridge/tests/ui/witness_frame_cannot_dispatch.stderr
+? crates/astrid-minime-protocol/tests/fixtures/texture_dynamics_contract_v1.json
+? docs/steward-notes/reconcile_ff_1786636444/

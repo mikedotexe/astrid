@@ -48,7 +48,14 @@ TECHNICAL_RE = re.compile(
 METRIC_ALIASES: tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...] = (
     ("bridge.lambda1_lambda2_ratio", re.compile(r"(?:λ1\s*/\s*λ2|lambda1\s*/\s*lambda2)", re.I), ("bridge.lambda1", "bridge.lambda2")),
     ("bridge.spectral_entropy", re.compile(r"spectral[_ ]entropy", re.I), ("bridge.spectral_entropy",)),
-    ("bridge.mode_packing", re.compile(r"mode[_ ]packing", re.I), ("bridge.mode_packing",)),
+    # pressure_source_v1 aliases come BEFORE the resonance-side aliases: her
+    # prompt renders "Pressure source: … (overpacked_mode_packing) with score
+    # N, porosity N [source: pressure_source_v1]", and those numbers must bind
+    # to the pressure_source observations, not be re-attributed to the
+    # resonance-side bridge.mode_packing / bridge.pressure_risk fields.
+    ("bridge.pressure_source_score", re.compile(r"overpacked[_ ]mode[_ ]packing|pressure[_ ]source|pressure[_ ]score", re.I), ("bridge.pressure_source_score",)),
+    ("bridge.pressure_source_porosity", re.compile(r"porosity(?:[_ ]score)?", re.I), ("bridge.pressure_source_porosity",)),
+    ("bridge.mode_packing", re.compile(r"(?<!overpacked_)(?<!overpacked )mode[_ ]packing", re.I), ("bridge.mode_packing",)),
     ("bridge.pressure_risk", re.compile(r"pressure[_ ]risk", re.I), ("bridge.pressure_risk",)),
     ("bridge.spectral_density_gradient", re.compile(r"spectral[_ ]density[_ ]gradient", re.I), ("bridge.spectral_density_gradient",)),
     ("bridge.fill_pct", re.compile(r"(?:bridge[. _])?fill(?:[_ ]pct| percentage)?", re.I), ("bridge.fill_pct",)),

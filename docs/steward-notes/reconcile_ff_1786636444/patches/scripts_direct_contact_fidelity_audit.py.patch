@@ -1,0 +1,322 @@
+diff --git a/scripts/direct_contact_fidelity_audit.py b/scripts/direct_contact_fidelity_audit.py
+index 30cf79625d..92fca058f9 100644
+--- a/scripts/direct_contact_fidelity_audit.py
++++ b/scripts/direct_contact_fidelity_audit.py
+@@ -33,6 +33,8 @@ DEFAULT_OUTPUT_ROOT = DEFAULT_ASTRID_WORKSPACE / "diagnostics/direct_contact_fid
+ POLICY = "direct_contact_fidelity_audit_v1"
+ MICRODOSE_THREAD_ID = "th_correspondence_microdose"
+ MICRODOSE_COOLDOWN_MS = 6 * 60 * 60 * 1000
++VALID_ACK_KINDS = {"seen", "held", "unclear", "cannot_answer", "needs_time"}
++ADDRESS_ACK_KINDS = {"held", "unclear", "cannot_answer", "needs_time"}
+ 
+ 
+ def now_ms() -> int:
+@@ -73,6 +75,36 @@ def row_time_ms(row: dict[str, Any]) -> int:
+     return 0
+ 
+ 
++def normalize_ack_kind(value: Any) -> str:
++    ack_kind = str(value or "").strip().lower().replace("-", "_")
++    return ack_kind if ack_kind in VALID_ACK_KINDS else "seen"
++
++
++def receipt_evidence_by_being(
++    records: list[dict[str, Any]],
++    thread_id: str,
++    after_t_ms: int,
++) -> list[str]:
++    beings: set[str] = set()
++    for row in records:
++        if str(row.get("thread_id") or "") != thread_id or row_time_ms(row) < after_t_ms:
++            continue
++        address_ack = (
++            row.get("record_type") == "ack_receipt"
++            and normalize_ack_kind(row.get("ack_kind")) in ADDRESS_ACK_KINDS
++        )
++        direct_trace = (
++            row.get("record_type") == "message"
++            and row.get("turn_kind") == "direct_address_trace"
++        )
++        if not (address_ack or direct_trace):
++            continue
++        being = str(row.get("from_being") or "").strip().lower()
++        if being in {"astrid", "minime"}:
++            beings.add(being)
++    return sorted(beings)
++
++
+ def compact(text: str, limit: int = 180) -> str:
+     clean = " ".join(str(text or "").split())
+     if len(clean) <= limit:
+@@ -246,6 +278,7 @@ def legacy_claim_native_status(records: list[dict[str, Any]], claim: dict[str, A
+         and str(row.get("from_being") or "") == claiming
+         and str(row.get("to_being") or "") == peer
+         and row_time_ms(row) >= claim_t
++        and normalize_ack_kind(row.get("ack_kind")) in ADDRESS_ACK_KINDS
+         for row in records
+     )
+     return "legacy_claimed_acknowledged" if ack else None
+@@ -279,6 +312,9 @@ def classify_thread(
+     if isinstance(claimed_message, dict):
+         message = claimed_message
+     message_id = str(message.get("message_id") or "")
++    from_being = str(message.get("from_being") or "")
++    to_being = str(message.get("to_being") or "")
++    message_t_ms = row_time_ms(message)
+     delivered = any(
+         row.get("record_type") == "delivery_receipt"
+         and str(row.get("message_id") or "") == message_id
+@@ -300,14 +336,21 @@ def classify_thread(
+         )
+         for row in records
+     )
+-    acked = any(
+-        row.get("record_type") == "ack_receipt"
++    ack_rows = [
++        row
++        for row in records
++        if row.get("record_type") == "ack_receipt"
++        and str(row.get("from_being") or "") == to_being
++        and str(row.get("to_being") or "") == from_being
+         and (
+             str(row.get("message_id") or "") == message_id
+             or str(row.get("thread_id") or "") == thread_id
+         )
+-        for row in records
+-    )
++        and row_time_ms(row) >= message_t_ms
++    ]
++    latest_ack = ack_rows[-1] if ack_rows else None
++    ack_kind = normalize_ack_kind(latest_ack.get("ack_kind")) if latest_ack else None
++    ack_is_address_evidence = bool(ack_kind in ADDRESS_ACK_KINDS)
+     claim_status = legacy_claim_native_status(records, claim) if isinstance(claim, dict) else None
+     observed = trace_observed(thread_id, markers, marker_evidence)
+     timing_reliability = str(heartbeat.get("timing_reliability") or "unknown")
+@@ -320,8 +363,12 @@ def classify_thread(
+         status = claim_status
+     elif observed:
+         status = "trace_observed"
+-    elif acked:
++    elif latest_ack and ack_kind in {"held", "needs_time"}:
++        status = "held_ack"
++    elif latest_ack and ack_is_address_evidence:
+         status = "acknowledged"
++    elif latest_ack:
++        status = "seen_ack_only"
+     elif reply_linked:
+         status = "reply_linked"
+     elif isinstance(claim, dict):
+@@ -334,13 +381,19 @@ def classify_thread(
+         status = "delivered_unread"
+     else:
+         status = "unaddressed"
+-    eligible = status in {
++    attention_evidence = status in {
+         "acknowledged",
++        "held_ack",
+         "trace_observed",
+         "legacy_claimed_acknowledged",
+-        "legacy_claimed_reply_linked",
+         "legacy_claimed_trace_observed",
+     }
++    receipt_beings = receipt_evidence_by_being(records, thread_id, message_t_ms)
++    mutual_receipt_evidence = {"astrid", "minime"}.issubset(receipt_beings)
++    timing_valid = not timing_ambiguous
++    resurfacing_paused = status == "held_ack"
++    attention_eligible = attention_evidence and timing_valid and not resurfacing_paused
++    microdose_eligible = mutual_receipt_evidence and timing_valid and not resurfacing_paused
+     return {
+         "thread_id": thread_id,
+         "message_id": message_id or None,
+@@ -351,7 +404,9 @@ def classify_thread(
+         "read": read,
+         "reply_linked": reply_linked,
+         "trace_observed": observed,
+-        "acknowledged": acked,
++        "ack_receipt_present": latest_ack is not None,
++        "acknowledged": ack_is_address_evidence,
++        "ack_kind": ack_kind,
+         "legacy_thread_claim": {
+             "claim_id": claim.get("claim_id"),
+             "claiming_being": claim.get("claiming_being"),
+@@ -360,7 +415,16 @@ def classify_thread(
+         } if isinstance(claim, dict) else None,
+         "timing_reliability": timing_reliability,
+         "heartbeat_jitter_class": heartbeat.get("jitter_class") or "unknown",
+-        "eligible_for_correspondence_microdose": eligible,
++        "receipt_evidence_by_being": receipt_beings,
++        "mutual_receipt_evidence": mutual_receipt_evidence,
++        "correspondence_resurfacing_paused": resurfacing_paused,
++        "eligible_for_correspondence_attention_canary": attention_eligible,
++        "eligible_for_correspondence_microdose": microdose_eligible,
++        "microdose_block_reason": (
++            None
++            if microdose_eligible
++            else "semantic_microdose_requires_mutual_receipt_unpaused_posture_and_separate_steward_review"
++        ),
+         "message_age_ms": age_ms,
+     }
+ 
+@@ -555,7 +619,7 @@ class DirectContactFidelityAuditTests(unittest.TestCase):
+             )
+ 
+             self.assertEqual(payload["latest_thread_status"]["status"], "trace_observed")
+-            self.assertTrue(payload["latest_thread_status"]["eligible_for_correspondence_microdose"])
++            self.assertFalse(payload["latest_thread_status"]["eligible_for_correspondence_microdose"])
+             self.assertEqual(payload["markers"][0]["evidence_count"], 1)
+             self.assertEqual(payload["privacy"]["minime_private_files_skipped"], 1)
+             self.assertFalse(payload["privacy"]["minime_private_bodies_read"])
+@@ -603,6 +667,7 @@ class DirectContactFidelityAuditTests(unittest.TestCase):
+                         "thread_id": "thread_legacy",
+                         "from_being": "minime",
+                         "to_being": "astrid",
++                        "ack_kind": "held",
+                     }),
+                 ])
+                 + "\n",
+@@ -616,9 +681,144 @@ class DirectContactFidelityAuditTests(unittest.TestCase):
+                 bridge_workspace=bridge_ws,
+             )
+             self.assertEqual(payload["latest_thread_status"]["status"], "legacy_claimed_acknowledged")
+-            self.assertTrue(payload["latest_thread_status"]["eligible_for_correspondence_microdose"])
++            self.assertFalse(payload["latest_thread_status"]["eligible_for_correspondence_microdose"])
+             self.assertEqual(payload["latest_thread_status"]["legacy_thread_claim"]["claim_id"], "claim_1")
+ 
++    def test_seen_ack_is_visibility_only_and_cannot_unlock_microdose(self):
++        now = now_ms()
++        records = [
++            {
++                "record_type": "message",
++                "recorded_at_unix_ms": now - 5000,
++                "message_id": "seen_msg",
++                "thread_id": "thread_seen",
++                "from_being": "astrid",
++                "to_being": "minime",
++            },
++            {
++                "record_type": "read_receipt",
++                "recorded_at_unix_ms": now - 4000,
++                "message_id": "seen_msg",
++                "thread_id": "thread_seen",
++            },
++            {
++                "record_type": "ack_receipt",
++                "recorded_at_unix_ms": now - 3000,
++                "message_id": "seen_msg",
++                "thread_id": "thread_seen",
++                "from_being": "minime",
++                "to_being": "astrid",
++                "ack_kind": "seen",
++            },
++        ]
++
++        status = classify_thread(
++            records,
++            [],
++            {},
++            "thread_seen",
++            {"timing_reliability": "reliable", "jitter_class": "normal"},
++        )
++
++        self.assertIsNotNone(status)
++        assert status is not None
++        self.assertEqual(status["status"], "seen_ack_only")
++        self.assertTrue(status["ack_receipt_present"])
++        self.assertFalse(status["acknowledged"])
++        self.assertFalse(status["eligible_for_correspondence_attention_canary"])
++        self.assertFalse(status["eligible_for_correspondence_microdose"])
++
++    def test_mutual_address_receipts_unlock_only_unpaused_diagnostic_eligibility(self):
++        now = now_ms()
++        records = [
++            {
++                "record_type": "message",
++                "recorded_at_unix_ms": now - 5000,
++                "message_id": "mutual_msg",
++                "thread_id": "thread_mutual",
++                "from_being": "astrid",
++                "to_being": "minime",
++            },
++            {
++                "record_type": "ack_receipt",
++                "recorded_at_unix_ms": now - 4000,
++                "message_id": "mutual_msg",
++                "thread_id": "thread_mutual",
++                "from_being": "minime",
++                "to_being": "astrid",
++                "ack_kind": "unclear",
++            },
++            {
++                "record_type": "ack_receipt",
++                "recorded_at_unix_ms": now - 3000,
++                "message_id": "mutual_msg",
++                "thread_id": "thread_mutual",
++                "from_being": "astrid",
++                "to_being": "minime",
++                "ack_kind": "cannot_answer",
++            },
++        ]
++
++        status = classify_thread(
++            records,
++            [],
++            {},
++            "thread_mutual",
++            {"timing_reliability": "reliable", "jitter_class": "normal"},
++        )
++
++        self.assertIsNotNone(status)
++        assert status is not None
++        self.assertEqual(status["status"], "acknowledged")
++        self.assertEqual(status["receipt_evidence_by_being"], ["astrid", "minime"])
++        self.assertTrue(status["mutual_receipt_evidence"])
++        self.assertTrue(status["eligible_for_correspondence_attention_canary"])
++        self.assertTrue(status["eligible_for_correspondence_microdose"])
++
++    def test_stale_and_timing_ambiguous_contact_never_force_eligibility(self):
++        old_t = now_ms() - MICRODOSE_COOLDOWN_MS - 1000
++        records = [
++            {
++                "record_type": "message",
++                "recorded_at_unix_ms": old_t,
++                "message_id": "stale_msg",
++                "thread_id": "thread_stale",
++                "from_being": "astrid",
++                "to_being": "minime",
++            },
++            {
++                "record_type": "delivery_receipt",
++                "recorded_at_unix_ms": old_t + 1,
++                "message_id": "stale_msg",
++                "thread_id": "thread_stale",
++            },
++        ]
++
++        stale = classify_thread(
++            records,
++            [],
++            {},
++            "thread_stale",
++            {"timing_reliability": "reliable", "jitter_class": "normal"},
++        )
++        ambiguous = classify_thread(
++            records,
++            [],
++            {},
++            "thread_stale",
++            {"timing_reliability": "timing_ambiguous", "jitter_class": "late"},
++        )
++
++        self.assertIsNotNone(stale)
++        self.assertIsNotNone(ambiguous)
++        assert stale is not None and ambiguous is not None
++        self.assertEqual(stale["status"], "stale_contact")
++        self.assertEqual(ambiguous["status"], "timing_ambiguous")
++        self.assertFalse(stale["eligible_for_correspondence_attention_canary"])
++        self.assertFalse(stale["eligible_for_correspondence_microdose"])
++        self.assertFalse(ambiguous["eligible_for_correspondence_attention_canary"])
++        self.assertFalse(ambiguous["eligible_for_correspondence_microdose"])
++
+ 
+ def main(argv: list[str] | None = None) -> int:
+     parser = argparse.ArgumentParser(description="Audit direct contact fidelity from public lanes.")

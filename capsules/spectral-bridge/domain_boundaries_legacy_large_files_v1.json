@@ -1,6 +1,9 @@
 {
-  "schema": "spectral_bridge_legacy_large_file_baseline_v1",
-  "schema_version": 1,
+  "authority": {
+    "grants_approval": false,
+    "live_eligible_now": false,
+    "runtime_consumed": false
+  },
   "captured_relation": "existing_review_debt_ratcheted_not_blanket_exception",
   "files": {
     "src/action_continuity/runtime/core.rs": 10609,
@@ -18,7 +21,7 @@
     "src/autonomous/inquiry.rs": 1112,
     "src/autonomous/inquiry/canary.rs": 1123,
     "src/autonomous/inquiry/research.rs": 1303,
-    "src/autonomous/introspect.rs": 2119,
+    "src/autonomous/introspect.rs": 2147,
     "src/autonomous/next_action/attractor.rs": 6577,
     "src/autonomous/next_action/auto_promote.rs": 1026,
     "src/autonomous/next_action/collaboration.rs": 1804,
@@ -32,7 +35,7 @@
     "src/autonomous/phase_transitions.rs": 3518,
     "src/autonomous/runtime/orchestration.rs": 4859,
     "src/autonomous/self_control_v2.rs": 3051,
-    "src/autonomous/state.rs": 3187,
+    "src/autonomous/state.rs": 3241,
     "src/bin/codec-replay-lab.rs": 1713,
     "src/codec/encoding.rs": 1106,
     "src/codec/projection.rs": 1351,
@@ -58,9 +61,6 @@
     "src/ws/sensory_delivery.rs": 1211,
     "src/ws/telemetry_port.rs": 1041
   },
-  "authority": {
-    "runtime_consumed": false,
-    "live_eligible_now": false,
-    "grants_approval": false
-  }
+  "schema": "spectral_bridge_legacy_large_file_baseline_v1",
+  "schema_version": 1
 }

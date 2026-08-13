@@ -542,6 +542,21 @@ fn render_context(cards: Vec<ContinuityCardV1>) -> PriorEvidenceContextV1 {
                 bounded_text(&claim.disposition, 240),
                 bounded_text(&claim.grounded_disposition, 720),
             ));
+            // Test-coverage visibility: name the regressions that already pin
+            // this claim so a proposed test that exists reads as covered, not
+            // missing. Evidence only — coverage is not felt closure.
+            let covering_tests = claim
+                .evidence_refs
+                .iter()
+                .filter(|reference| reference.kind == "test")
+                .map(|reference| reference.target.as_str())
+                .collect::<Vec<_>>();
+            if !covering_tests.is_empty() {
+                lines.push(format!(
+                    "  Covering tests already pinning this claim: {}",
+                    bounded_text(&covering_tests.join(", "), 360),
+                ));
+            }
         }
         if !card.remaining_gaps.is_empty() {
             lines.push(format!(

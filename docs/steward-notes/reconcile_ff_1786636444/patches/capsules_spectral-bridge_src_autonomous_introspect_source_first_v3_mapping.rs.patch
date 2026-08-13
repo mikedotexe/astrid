@@ -1,0 +1,17 @@
+diff --git a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs
+index f69520e99e..b535a4d93d 100644
+--- a/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs
++++ b/capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mapping.rs
+@@ -194,11 +194,7 @@ fn visit_tree(
+     }
+ }
+ 
+-fn rust_include_edge(
+-    node: Node<'_>,
+-    content: &str,
+-    parent_path: &str,
+-) -> Option<SourceMapEntryV3> {
++fn rust_include_edge(node: Node<'_>, content: &str, parent_path: &str) -> Option<SourceMapEntryV3> {
+     if node.kind() != "macro_invocation" {
+         return None;
+     }

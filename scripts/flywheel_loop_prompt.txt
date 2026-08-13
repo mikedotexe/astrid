@@ -25,7 +25,14 @@ The handoff is your operating law, with these adapter-mode overrides:
 The round:
 - Run: python3 scripts/division_ceremony_followup.py verify (then status).
   If review_due=true, complete the bounded Division return per the handoff
-  BEFORE processing any report, and only then continue.
+  BEFORE processing any report, and only then continue. When you complete a
+  Division return, ALSO generate the Tier-5 cadence dossier per
+  docs/steward-notes/AI_BEINGS_TIER5_EXPERIMENT_CADENCE_2026_08_13.md
+  (read-only tooling: authority_wait_readiness.py, work-queue --json,
+  sandbox_trial_queue.py queue --json) into the round packet as
+  tier5_cadence_dossier.md with a short Mike-facing summary naming 1-2
+  recommended sandbox-eligible items. PREPARE only: never approve, grant,
+  dispatch, or run trials headlessly.
 - Run: python3 scripts/introspection_addressing_audit.py next --limit 40 --json
   The returned order is canonical — never reorder. Process a small honest
   batch: 1-3 reports, and only 1 when the head is unfamiliar, large, or needs
