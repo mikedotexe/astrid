@@ -88,12 +88,12 @@ impl ExactKnownModelControlMarkerOccurrence {
 
 fn first_word_after(text: &str, end: usize) -> String {
     text[end..]
-        .split(|character: char| !character.is_alphanumeric() && character != '_')
-        .find(|part| !part.is_empty())
+        .split_whitespace()
+        .map(|chunk| chunk.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
+        .find(|word| !word.is_empty())
         .unwrap_or_default()
         .to_ascii_lowercase()
 }
-
 fn longest_exact_known_model_control_marker_at(
     text: &str,
     offset: usize,
