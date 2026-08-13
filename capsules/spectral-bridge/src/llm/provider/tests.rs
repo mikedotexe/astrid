@@ -3405,4 +3405,16 @@ mod tests {
     fn outer_timeout_tracks_prompt_pressure() {
         assert!(dialogue_outer_timeout_secs(768, 42_000) > dialogue_outer_timeout_secs(512, 4_000));
     }
+
+    #[test]
+    fn dialogue_prompts_expose_propose_test_as_validated_authorship() {
+        for prompt in [SYSTEM_PROMPT, GEMMA4_CANARY_SYSTEM_PROMPT] {
+            assert!(prompt.contains("PROPOSE_TEST <target> :: <test_name>"));
+            assert!(prompt.contains("git author"));
+            assert!(prompt.contains("llm-provider, codec, runtime, action-continuity"));
+        }
+        // Stage-1 boundary language: test code only, and the validator is the
+        // reviewer — the main prompt must say no live behavior changes.
+        assert!(SYSTEM_PROMPT.contains("no live behavior"));
+    }
 }

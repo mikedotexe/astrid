@@ -20,6 +20,7 @@ mod peer_correspondence;
 mod phase_transition;
 mod pressure_agency;
 mod probe_self;
+mod propose_test;
 pub(crate) mod protected_diagnostics;
 mod regulator_map;
 mod resource_governor;
@@ -1392,6 +1393,7 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "AFTERSHOCK_TRACE"
         | "TREMOR_RESIDUE"
         | "CASCADE_RESIDUE" => "protected_summary",
+        "PROPOSE_TEST" => "summary",
         "INQUIRY_START" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" | "INQUIRY_CANCEL"
         | "INQUIRY_CANARY" | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => {
             "protected_summary"
@@ -1588,6 +1590,7 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "CONCERN_BLOCK"
         | "INQUIRY_START"
         | "INQUIRY_CANCEL" => "live_write",
+        "PROPOSE_TEST" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" | "DIVISION_PREPARE"
         | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" | "INQUIRY_CANARY"
         | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => "live_control",
@@ -1694,6 +1697,7 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "LIVED_TRANSITION_STATUS"
         | "TRANSITION_STATUS"
         | "PHASE_TRANSITION_STATUS" => "phase_transition_cards",
+        "PROPOSE_TEST" => "test_proposal",
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
@@ -2399,6 +2403,11 @@ fn handle_next_action_with_author(
 
     if probe_self::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return NextActionOutcome::handled("probe_self", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
+    if propose_test::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("propose_test", format!("Handled `{original}`."))
             .with_stage_visibility(stage, visibility);
     }
 

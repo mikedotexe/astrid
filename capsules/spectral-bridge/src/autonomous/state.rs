@@ -1303,6 +1303,10 @@ pub(in crate::autonomous) struct ConversationState {
     /// too often are different patterns. Same 10-min cooldown semantics
     /// per `ask_steward.rs`.
     pub last_tell_steward_ts: Option<u64>,
+    /// Exchange count at her last PROPOSE_TEST filing. Persisted rail:
+    /// one test proposal per `propose_test` spacing window, surviving
+    /// restarts unlike the in-memory probe cooldown.
+    pub last_test_proposal_exchange: Option<u64>,
 }
 
 impl ConversationState {
@@ -1331,6 +1335,7 @@ impl ConversationState {
             wants_search: false,
             last_ask_steward_ts: None,
             last_tell_steward_ts: None,
+            last_test_proposal_exchange: None,
             senses_snoozed: false,
             self_reflect_paused: true,
             self_reflect_override: None,

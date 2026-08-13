@@ -507,6 +507,26 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "test_mirror_mode_filtered_from_sample",
                  "run": "cd /Users/v/other/astrid && python3 scripts/proactive_scan.py --self-test"},
     },
+    {
+        "id": "test_proposals_deterministic_consumer",
+        "shipped": "2026-08-13",
+        "surface": "Astrid test_proposals write-surface (PROPOSE_TEST -> workspace/test_proposals/*.json)",
+        "failure_mode": "a new being-write surface without a live consumer is the exact muffle class that lost her EVOLVE asks for 69 days; if the launchd applier dies or the script is renamed, her authored tests would sit pending silently while the verb keeps acknowledging them",
+        "guard": {"repo": "astrid", "file": "scripts/test_proposal_applier.py", "symbol": "apply_next_proposal"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/test_test_proposal_applier.py",
+                 "name": "LandingFlowTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/test_test_proposal_applier.py"},
+    },
+    {
+        "id": "propose_test_verb_wired",
+        "shipped": "2026-08-13",
+        "surface": "PROPOSE_TEST verb (being-authored tests, Stage 1 self-change)",
+        "failure_mode": "if a refactor drops the dispatch arm or the proposals-dir constant, her PROPOSE_TEST would fall through to the unwired log with NO inline notice to her — the verb would keep appearing in her menus while silently doing nothing",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/autonomous/next_action/propose_test.rs", "symbol": "TEST_PROPOSALS_DIR"},
+        "test": {"repo": "astrid", "kind": "rust", "file": "capsules/spectral-bridge/src/autonomous/next_action/propose_test.rs",
+                 "name": "target_allowlist_is_exactly_four_test_files",
+                 "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib target_allowlist_is_exactly_four_test_files"},
+    },
 ]
 
 
