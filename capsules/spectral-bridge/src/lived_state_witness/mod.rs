@@ -338,6 +338,7 @@ fn peer_scalar_observations(now_ms: u64) -> Vec<LivedStateParameterObservationV1
     peer_scalar_observations_from_snapshot(snapshot.value.as_ref(), age_ms, now_ms, snapshot.status)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn runtime_spectral_observations(
     spectral_entropy: Option<f64>,
     lambda1: Option<f64>,
@@ -346,6 +347,9 @@ fn runtime_spectral_observations(
     density_gradient: Option<f64>,
     pressure_risk: Option<f64>,
     mode_packing: Option<f64>,
+    pressure_source_score: Option<f64>,
+    pressure_source_porosity: Option<f64>,
+    pressure_source_mode_packing: Option<f64>,
     now_ms: u64,
     telemetry_age_ms: Option<u64>,
     telemetry_fresh: Option<bool>,
@@ -454,6 +458,56 @@ fn runtime_spectral_observations(
             "bridge_state.latest_telemetry.resonance_density_v1.components.mode_packing",
             "runtime_mode_packing_scalar_observed_context_only_no_mechanism_claim",
         ),
+        // The three pressure_source_v1 scalars below are the numbers actually
+        // rendered into Astrid's prompt by codec::interpret_spectral (beside
+        // the minime-authored quality label). They are distinct fields from
+        // the resonance_density_v1 scalars above; recording both families
+        // side by side keeps report-vs-witness grounding bindable.
+        parameter_with_relation(
+            "bridge.pressure_source_score",
+            pressure_source_score,
+            "ratio",
+            if pressure_source_score.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.pressure_source_v1.pressure_score",
+            "prompt_rendered_pressure_composite_via_interpret_spectral_distinct_from_resonance_pressure_risk_no_mechanism_claim",
+        ),
+        parameter_with_relation(
+            "bridge.pressure_source_porosity",
+            pressure_source_porosity,
+            "ratio",
+            if pressure_source_porosity.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.pressure_source_v1.porosity_score",
+            "prompt_rendered_porosity_scalar_via_interpret_spectral_no_mechanism_claim",
+        ),
+        parameter_with_relation(
+            "bridge.pressure_source_mode_packing",
+            pressure_source_mode_packing,
+            "ratio",
+            if pressure_source_mode_packing.is_some() {
+                LivedStateObservationKindV1::RuntimeObserved
+            } else {
+                LivedStateObservationKindV1::Unknown
+            },
+            now_ms,
+            telemetry_age_ms,
+            telemetry_fresh,
+            "bridge_state.latest_telemetry.pressure_source_v1.components.mode_packing",
+            "pressure_source_component_distinct_from_resonance_density_mode_packing_no_mechanism_claim",
+        ),
     ]
 }
 
@@ -558,6 +612,21 @@ pub(crate) fn runtime_context_v1(
         .as_ref()
         .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())
         .map(|resonance| f64::from(resonance.components.mode_packing));
+    let pressure_source_score = state
+        .latest_telemetry
+        .as_ref()
+        .and_then(|telemetry| telemetry.pressure_source_v1.as_ref())
+        .map(|source| f64::from(source.pressure_score));
+    let pressure_source_porosity = state
+        .latest_telemetry
+        .as_ref()
+        .and_then(|telemetry| telemetry.pressure_source_v1.as_ref())
+        .map(|source| f64::from(source.porosity_score));
+    let pressure_source_mode_packing = state
+        .latest_telemetry
+        .as_ref()
+        .and_then(|telemetry| telemetry.pressure_source_v1.as_ref())
+        .map(|source| f64::from(source.components.mode_packing));
     let mut observations = vec![
         parameter(
             "bridge.fill_pct",
@@ -610,6 +679,9 @@ pub(crate) fn runtime_context_v1(
             density_gradient,
             pressure_risk,
             mode_packing,
+            pressure_source_score,
+            pressure_source_porosity,
+            pressure_source_mode_packing,
             now.unix_ms,
             telemetry_age_ms,
             telemetry_fresh,
