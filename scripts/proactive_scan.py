@@ -116,6 +116,13 @@ REVIEW_REQUEST_CONSUMER = (
 )
 FEEDBACK_SURFACES = [
     {
+        "name": "astrid_test_proposals",
+        "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/test_proposals",
+        "glob": "*.json",
+        "kind": "request",
+        "consumer": "test_proposal_applier (launchd, 10-min) → reviewed/<landed|failed>/",
+    },
+    {
         "name": "astrid_agency_requests",
         "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/agency_requests",
         "glob": "*.json",
@@ -5752,6 +5759,15 @@ class FeedbackCoverageTests(unittest.TestCase):
         self.assertIn("reword/withdraw", detail)
         self.assertIn("never being follow-up", detail)
         self.assertNotIn("being reviews", detail)
+
+    def test_stale_test_proposal_names_applier_consumer(self):
+        s = [{"name": "astrid_test_proposals", "kind": "request",
+              "consumer": "test_proposal_applier (launchd, 10-min) → reviewed/<landed|failed>/",
+              "pending": 2,
+              "oldest_age_s": FEEDBACK_COVERAGE_ALARM_SECS + 10, "exists": True}]
+        a = _assess_coverage(s)
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("test_proposal_applier", "\n".join(a["details"]))
 
     def test_notice_surface_never_warns(self):
         # context_overflow-style surface: chronic signal, not an unread queue —

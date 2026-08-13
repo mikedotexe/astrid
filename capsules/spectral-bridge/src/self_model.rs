@@ -625,6 +625,11 @@ impl FacultySnapshot {
                             FacultyStatus::StewardGated,
                             "run experiment script",
                         ),
+                        f(
+                            "PROPOSE_TEST <target> :: <test_name>",
+                            a.clone(),
+                            "author a test for your own repo; validated, then landed with you as git author",
+                        ),
                     ],
                 },
                 FacultyCategory {

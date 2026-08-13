@@ -120,6 +120,9 @@ struct SavedState {
     // v3.6.4 Review→Decide cadence (serde(default) keeps backward compat).
     #[serde(default)]
     last_review_parameter_requests_exchange: Option<u64>,
+    // Stage-1 being self-change: PROPOSE_TEST spacing rail.
+    #[serde(default)]
+    last_test_proposal_exchange: Option<u64>,
 }
 
 fn default_noise() -> f32 {
@@ -275,6 +278,7 @@ fn save_state(conv: &mut ConversationState) {
         last_coupling_artifact_exchange: conv.last_coupling_artifact_exchange,
         last_sovereignty_nomination_exchange: conv.last_sovereignty_nomination_exchange,
         last_review_parameter_requests_exchange: conv.last_review_parameter_requests_exchange,
+        last_test_proposal_exchange: conv.last_test_proposal_exchange,
     };
     if let Ok(json) = serde_json::to_string_pretty(&state) {
         let _ = std::fs::write(&state_path, json);
@@ -368,6 +372,7 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_coupling_artifact_exchange = state.last_coupling_artifact_exchange;
     conv.last_sovereignty_nomination_exchange = state.last_sovereignty_nomination_exchange;
     conv.last_review_parameter_requests_exchange = state.last_review_parameter_requests_exchange;
+    conv.last_test_proposal_exchange = state.last_test_proposal_exchange;
     info!(
         exchanges = conv.exchange_count,
         history_len = conv.history.len(),
