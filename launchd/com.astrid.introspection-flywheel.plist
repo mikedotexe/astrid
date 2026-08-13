@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.astrid.introspection-flywheel</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/v/other/astrid/scripts/flywheel_loop_run.sh</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>1200</integer>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/v/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>FLYWHEEL_LOOP_MODEL</key>
+        <string>opus</string>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/v/other/astrid/workspace/logs/flywheel_loop.launchd.out</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/v/other/astrid/workspace/logs/flywheel_loop.launchd.err</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
