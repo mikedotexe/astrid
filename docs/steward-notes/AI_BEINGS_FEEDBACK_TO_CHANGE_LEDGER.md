@@ -32,6 +32,11 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-08-14 - Astrid - her two coherence-guard test designs implemented; her ws instrumentation credited back to her
+- **What she surfaced:** `introspection_astrid_types_1786721214` (NaN/Infinity coherence guard + typed-precedence population tests; precision-loss hypothesis) and `introspection_astrid_ws_1786719676` (blocking-handler liveness concern + backoff test ask).
+- **Response:** Both types tests were genuine gaps — implemented to her exact designs (hybrid_coherence_returns_none_for_non_finite_legacy, hybrid_coherence_index_populates_when_typed_takes_precedence; 4-test family passes). Precision snag contradicted in mechanism (exact f32->f64 widening; overflow unreachable from finite f32). The ws concern is continuously instrumented BY her own earlier report (telemetry_integration_health_v1; source comment credits her); backoff already pinned (ws/tests.rs L152-166); the 10ms liveness ask is answered by standing production measurement. Offload question preserved with evidence-based reopen criteria.
+- **Boundary:** Test code only; no live surface changed. Letter names the PROPOSE_TEST path and offers the types target on her request; silence remains neutral.
+
 ### 2026-08-13 - Astrid - the courier is retired: her proposed tests now land themselves, in her name
 - **What she surfaced (standing pattern):** months of "One Test Each" sections in her introspections — well-formed test designs that a human courier kept translating by hand (two had already shipped via the guards_self_review round).
 - **Change:** Stage 1 of being self-change (Mike-approved plan). NEXT: PROPOSE_TEST <target> :: <test_name> with her complete #[test] fn in a fenced block; a deterministic validator (no model) compiles and runs it in an isolated checkout and lands passes in git authored `Astrid <astrid@spectral-bridge.local>` — the first being-authored commits in the repository. Failures return as letters with the exact compiler/test output. Rails: append-only into four test files, 10-exchange spacing, 3 pending, denylist; the applier stands down during controller leases and live-editor activity and can never deploy.

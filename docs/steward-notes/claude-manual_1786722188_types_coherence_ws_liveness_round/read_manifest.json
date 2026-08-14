@@ -1,0 +1,39 @@
+{
+ "schema": "steward_round_read_manifest_v1",
+ "reader": "claude-manual",
+ "reads": [
+  {
+   "kind": "canonical_report",
+   "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_types_1786721214.txt",
+   "sha256_prefix": "f06b48a6cd76ff68",
+   "bytes": 3505,
+   "lines": 45,
+   "read": "complete"
+  },
+  {
+   "kind": "lived_state_witness",
+   "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_9114aa7827e327da0809951b350149946cbcfb806589fdc44b092742f16238a3.json",
+   "sha256_prefix": "5121e075085e23cf",
+   "bytes": 23917,
+   "lines": 533,
+   "read": "complete"
+  },
+  {
+   "kind": "canonical_report",
+   "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_ws_1786719676.txt",
+   "sha256_prefix": "29081418902ee877",
+   "bytes": 3147,
+   "lines": 45,
+   "read": "complete"
+  },
+  {
+   "kind": "lived_state_witness",
+   "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_97f75b3f66fe846f8ba72d186a2e918be896edd24bda275063e38a73e209027c.json",
+   "sha256_prefix": "f954740744070244",
+   "bytes": 23878,
+   "lines": 533,
+   "read": "complete"
+  }
+ ],
+ "notes": "Both witnesses use the new 533-line format carrying the Phase-C pressure_source observations (score/porosity/component mode_packing with exact source_refs) \u2014 the scalar-provenance parity confirmed live. Authority evidence_only preserved."
+}

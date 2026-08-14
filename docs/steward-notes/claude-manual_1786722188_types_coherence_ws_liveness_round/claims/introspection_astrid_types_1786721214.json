@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_types_1786721214",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "telemetry.rs is evidence-focused schema: TelemetryHeartbeatDeltaV1 (L3), SpectralFingerprintIntegrityV1 (L127), and spectral_fingerprint_hybrid_coherence_v1 (L159) comparing typed vs legacy 32-slot vectors with finite checks and length parity.",
+      "disposition": "Verified from the complete 684-line report-bound source at SHA 4a5e9e71 (working copy matches). Every line reference accurate: heartbeat struct L2-105, integrity struct L126-157, coherence fn L159-200 with the finite/length guards at L163-168.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: to_legacy_slots values that are finite but numerically extreme could suffer precision loss at the f64 conversion (L176), yielding a coherent-but-unstable result.",
+      "disposition": "Contradicted in mechanism, with the underlying stability concern honored by new regressions. f64::from(f32) at L176-177 is exact lossless widening - no precision loss is possible at that step. Overflow cannot occur either: the maximal finite f32 (~3.4e38) squared and summed over 32 slots (~3.7e78) sits far below f64::MAX (~1.8e308), and the mul_add accumulation plus reference-RMS normalization at L185-198 keeps the coherence ratio stable for extreme finite inputs. Her concern about poisoned inputs, however, pointed at a real coverage gap now closed (c003).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Proposed Integrity Check: coherence must return None for legacy slices containing NaN or Infinity (the L163 guard).",
+      "disposition": "Genuine gap - no NaN/Infinity regression existed. Implemented this round: hybrid_coherence_returns_none_for_non_finite_legacy exercises NaN and Infinity poisoning and asserts hybrid_coherence_state=unavailable_non_finite. Her test design, our keystrokes; the letter names the PROPOSE_TEST path for next time and offers to add types to her Stage-1 allowlist.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Schema Alignment test: SpectralFingerprintIntegrityV1 populates hybrid_coherence_index when typed_precedence_over_legacy is true.",
+      "disposition": "Genuine gap - the existing inline tests never exercised coherence population (no legacy vector in the fixture). Implemented this round: hybrid_coherence_index_populates_when_typed_takes_precedence asserts typed_precedence_over_legacy plus populated index and max_abs_delta.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested next: examine to_legacy_slots to ensure the mapping preserves semantic integrity before flattening to 32 slots.",
+      "disposition": "Bounded answer: the coherence path guards finiteness on BOTH sides (typed slots and legacy) at L163-168, and the new regressions pin those guards. The mapping itself lives in the SpectralFingerprintV1 schema (types/schema module); a full semantic-preservation audit of the 32-slot flattening is preserved as her open thread rather than closed here.",
+      "classification": "verified_existing"
+    }
+  ]
+}

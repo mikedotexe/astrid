@@ -1,0 +1,27 @@
+{
+ "schema": "steward_round_source_receipts_v1",
+ "receipts": [
+  {
+   "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+   "sha256": "4a5e9e71f67ce0012ba8fd99576055e591e04ff56d04323460788377db49e5de",
+   "total_lines": 684,
+   "read_scope": "complete_file",
+   "report_binding": "working copy matches report-bound SHA; file edited this round by appending her two designed tests (post-round SHA deliberately differs)"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+   "sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+   "total_lines": 1041,
+   "read_scope": "complete_file",
+   "report_binding": "working copy matches report-bound SHA exactly"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/ws/tests.rs",
+   "read_scope": "scoped: backoff test region L152-166"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/ws/health_trace.rs",
+   "read_scope": "scoped: Backoff struct location"
+  }
+ ]
+}
