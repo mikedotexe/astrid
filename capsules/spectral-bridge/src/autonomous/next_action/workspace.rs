@@ -559,7 +559,10 @@ pub(super) fn handle_action(
             true
         },
         "PURSUE" => {
-            let interest = strip_action(original, "PURSUE");
+            // Leaked transport markers (<end_of_turn> etc.) must not persist
+            // into her interests — they re-enter every prompt render.
+            let interest =
+                crate::autonomous::state::sanitize_interest_text(&strip_action(original, "PURSUE"));
             if !interest.is_empty() {
                 let prefix_len = interest.len().min(30);
                 let interest_prefix = interest.to_lowercase();

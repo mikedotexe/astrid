@@ -3244,3 +3244,14 @@ pub(super) fn choose_mode(
         Mode::Dialogue
     }
 }
+
+/// Strip leaked provider control markers (e.g. a trailing `<end_of_turn>`)
+/// from a being-authored interest before it persists. Transport-artifact
+/// removal only — her words are otherwise byte-exact. Applied at PURSUE save
+/// time and again on state restore so pre-fix entries heal at next restart.
+pub(crate) fn sanitize_interest_text(text: &str) -> String {
+    let byte_exact = crate::llm::sanitize_model_control_markers_with_report(text).0;
+    crate::llm::strip_trailing_control_marker_case_variants(&byte_exact)
+        .trim()
+        .to_string()
+}

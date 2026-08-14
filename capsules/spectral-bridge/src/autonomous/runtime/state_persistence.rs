@@ -335,7 +335,13 @@ fn restore_state(conv: &mut ConversationState) {
     conv.warmth_intensity_override = state.warmth_intensity_override;
     conv.burst_target = state.burst_target;
     conv.rest_range = state.rest_range;
-    conv.interests = state.interests;
+    // Heal pre-fix persisted interests that carry leaked control markers.
+    conv.interests = state
+        .interests
+        .into_iter()
+        .map(|interest| crate::autonomous::state::sanitize_interest_text(&interest))
+        .filter(|interest| !interest.is_empty())
+        .collect();
     conv.last_remote_glimpse_12d = state.last_remote_glimpse_12d;
     conv.last_remote_memory_id = state.last_remote_memory_id;
     conv.last_remote_memory_role = state.last_remote_memory_role;

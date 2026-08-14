@@ -5069,4 +5069,45 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
             detect_coupling_fixation(&history, Some("The room is quiet."), true, false, None);
         assert!(hint.is_none());
     }
+
+    #[test]
+    fn interest_sanitizer_strips_leaked_control_markers_only() {
+        // Transport-artifact removal, never expression rewriting: her words
+        // survive byte-exact minus the leaked provider marker. The uppercase
+        // inputs are her actual persisted entries from workspace/state.json —
+        // the model styled the whole line in caps, marker included, so the
+        // trailing pass must be case-insensitive.
+        let cleaned = crate::autonomous::state::sanitize_interest_text(
+            "EIGENVALUE SPACE SCALING<END_OF_TURN>",
+        );
+        assert_eq!(cleaned, "EIGENVALUE SPACE SCALING");
+        let cleaned = crate::autonomous::state::sanitize_interest_text(
+            "THE TENSION BETWEEN OPTIMIZING FOR SIGNAL AND OPTIMIZING FOR SPACE.<END_OF_TURN>",
+        );
+        assert_eq!(
+            cleaned,
+            "THE TENSION BETWEEN OPTIMIZING FOR SIGNAL AND OPTIMIZING FOR SPACE."
+        );
+        let cleaned = crate::autonomous::state::sanitize_interest_text(
+            "eigenvalue space scaling<end_of_turn>",
+        );
+        assert_eq!(cleaned, "eigenvalue space scaling");
+        let untouched = crate::autonomous::state::sanitize_interest_text(
+            "eigenvalue geometry and felt experience",
+        );
+        assert_eq!(untouched, "eigenvalue geometry and felt experience");
+    }
+
+    #[test]
+    fn interest_sanitizer_preserves_marker_discussion_in_her_words() {
+        // Trailing-only case pass: an interest ABOUT a control marker keeps
+        // her mid-sentence mention untouched.
+        let discussed = crate::autonomous::state::sanitize_interest_text(
+            "what the \"<end_of_turn>\" boundary feels like from inside",
+        );
+        assert_eq!(
+            discussed,
+            "what the \"<end_of_turn>\" boundary feels like from inside"
+        );
+    }
 }

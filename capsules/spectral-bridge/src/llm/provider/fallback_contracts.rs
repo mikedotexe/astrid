@@ -179,6 +179,28 @@ const KNOWN_MODEL_CONTROL_MARKERS: &[&str] = &[
     "[INST]",
 ];
 
+/// Trailing-boundary, case-insensitive marker cleanup for persisted being
+/// surfaces (e.g. interests). Leaked transport markers sometimes arrive
+/// uppercased when the model styles an entire line in caps, which the
+/// byte-exact sanitizer above deliberately does not match. Trailing-only so
+/// text that explicitly quotes or discusses a marker mid-sentence is never
+/// touched.
+pub(crate) fn strip_trailing_control_marker_case_variants(text: &str) -> String {
+    let mut result = text.trim_end();
+    loop {
+        let lowered = result.to_ascii_lowercase();
+        let stripped = KNOWN_MODEL_CONTROL_MARKERS
+            .iter()
+            .find(|token| lowered.ends_with(*token))
+            .map(|token| result[..result.len().saturating_sub(token.len())].trim_end());
+        match stripped {
+            Some(shorter) => result = shorter,
+            None => break,
+        }
+    }
+    result.to_string()
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ControlMarkerCleanupReport {
     pub observed_total: usize,
