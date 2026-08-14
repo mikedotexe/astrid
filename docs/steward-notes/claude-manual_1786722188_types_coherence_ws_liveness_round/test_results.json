@@ -1,0 +1,13 @@
+{
+ "schema": "steward_round_test_results_v1",
+ "results": [
+  {
+   "command": "cargo test -p spectral-bridge-server --lib hybrid_coherence",
+   "outcome": "ok",
+   "passed": 4,
+   "failed": 0,
+   "note": "2 existing + her 2 new designed tests"
+  }
+ ],
+ "note": "integrity suites in verification_receipt.json"
+}

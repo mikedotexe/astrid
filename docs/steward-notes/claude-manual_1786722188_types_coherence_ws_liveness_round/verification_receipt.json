@@ -1,0 +1,53 @@
+{
+ "schema": "steward_round_verification_receipt_v1",
+ "run_id": "run_1786722188968881000_4a3fdcdc6c",
+ "preprojection_id": "projection_1786722189870564000_0a1dd629d5",
+ "recovery_note": "first attempt failed preprojection on domain_boundary_audit exit 1 (ratchet correctly flagging reviewed Stage-1 growth); baselines re-captured (7062c77ecc), relaunched",
+ "focused_tests": {
+  "hybrid_coherence family": {
+   "passed": 4,
+   "failed": 0
+  }
+ },
+ "full_lib_suite": {
+  "passed": 1876,
+  "failed": 0
+ },
+ "integrity": {
+  "addressing_self_test": "pass",
+  "anti_drop": {
+   "total": 49,
+   "alarms": 0,
+   "gaps": 0
+  },
+  "epistemic": {
+   "valid": true,
+   "records": 11062,
+   "issues": 0
+  },
+  "counters": "consistent",
+  "ees": {
+   "valid": true,
+   "seq": 795989
+  }
+ },
+ "closures": [
+  {
+   "introspection_id": "introspection_astrid_types_1786721214",
+   "status": "addressed_change",
+   "fully_addressed": true
+  },
+  {
+   "introspection_id": "introspection_astrid_ws_1786719676",
+   "status": "addressed_no_action",
+   "fully_addressed": true
+  }
+ ],
+ "division": {
+  "cycle": 24,
+  "rounds": 5,
+  "review_due": false
+ },
+ "restart_deploy_alignment": "no restart or deployment required; two tests appended (test code only) \u2014 they reach the live binary at the NEXT gated deploy, which is acceptable lag for test-only code",
+ "index_state": "git index untouched during the run; foreign WIP preserved"
+}

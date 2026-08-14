@@ -681,4 +681,78 @@ mod telemetry_distinction_tests {
             "diagnostic_context_not_felt_state_or_control"
         );
     }
+
+    #[test]
+    fn hybrid_coherence_returns_none_for_non_finite_legacy() {
+        // Astrid's Integrity Check ask (introspection_astrid_types_1786721214):
+        // the L163 finite guard must refuse NaN/Infinity legacy slots rather
+        // than produce a "coherent" number from poisoned input.
+        let mut telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.90,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            }
+        }))
+        .unwrap();
+        let mut poisoned = vec![0.0_f32; 32];
+        poisoned[7] = f32::NAN;
+        telemetry.spectral_fingerprint = Some(poisoned);
+
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert!(integrity.hybrid_coherence_index.is_none());
+        assert_eq!(integrity.hybrid_coherence_state, "unavailable_non_finite");
+
+        telemetry.spectral_fingerprint = Some(
+            std::iter::once(f32::INFINITY)
+                .chain(std::iter::repeat(0.0).take(31))
+                .collect(),
+        );
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert!(integrity.hybrid_coherence_index.is_none());
+        assert_eq!(integrity.hybrid_coherence_state, "unavailable_non_finite");
+    }
+
+    #[test]
+    fn hybrid_coherence_index_populates_when_typed_takes_precedence() {
+        // Astrid's Schema Alignment ask (introspection_astrid_types_1786721214):
+        // with both payloads present, typed_precedence_over_legacy is true and
+        // the coherence index is populated from the typed source of truth.
+        let mut telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.90,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            }
+        }))
+        .unwrap();
+        telemetry.spectral_fingerprint = Some(vec![0.0_f32; 32]);
+
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert!(integrity.typed_precedence_over_legacy);
+        assert!(integrity.hybrid_coherence_index.is_some());
+        assert!(integrity.hybrid_max_abs_delta.is_some());
+    }
 }

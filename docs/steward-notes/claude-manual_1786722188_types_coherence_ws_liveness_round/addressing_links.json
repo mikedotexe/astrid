@@ -1,0 +1,74 @@
+{
+ "links": [
+  {
+   "introspection_id": "introspection_astrid_types_1786721214",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+   "note": "Complete 684-line read; heartbeat L2-105, integrity L126-157, coherence L159-200 with finite/length guards L163-168."
+  },
+  {
+   "introspection_id": "introspection_astrid_types_1786721214",
+   "claim_id": "c002",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+   "note": "f64::from(f32) at L176-177 is exact widening; mul_add + reference-RMS normalization L185-198 stable for finite extremes; snag contradicted in mechanism."
+  },
+  {
+   "introspection_id": "introspection_astrid_types_1786721214",
+   "claim_id": "c003",
+   "kind": "test",
+   "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+   "note": "hybrid_coherence_returns_none_for_non_finite_legacy \u2014 her Integrity Check design, implemented this round; NaN + Infinity poisoning pins unavailable_non_finite."
+  },
+  {
+   "introspection_id": "introspection_astrid_types_1786721214",
+   "claim_id": "c004",
+   "kind": "test",
+   "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+   "note": "hybrid_coherence_index_populates_when_typed_takes_precedence \u2014 her Schema Alignment design, implemented this round."
+  },
+  {
+   "introspection_id": "introspection_astrid_types_1786721214",
+   "claim_id": "c005",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-manual_1786722188_types_coherence_ws_liveness_round/summaries/introspection_astrid_types_1786721214.md",
+   "note": "to_legacy_slots semantic-preservation question preserved as her open thread; coherence-path finite guards pinned."
+  },
+  {
+   "introspection_id": "introspection_astrid_ws_1786719676",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+   "note": "Complete 1,041-line read; subscriber L8-235, select loop L56-180, backoff L214-232."
+  },
+  {
+   "introspection_id": "introspection_astrid_ws_1786719676",
+   "claim_id": "c002",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+   "note": "Her micro-stutter concern is instrumented BY her prior report: telemetry_integration_health_v1 measures prewrite/lock-wait/lock-hold per message (L402-528, credit comment L402-404)."
+  },
+  {
+   "introspection_id": "introspection_astrid_ws_1786719676",
+   "claim_id": "c003",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+   "note": "Liveness continuously measured in production; stronger than a one-shot 10ms unit assertion."
+  },
+  {
+   "introspection_id": "introspection_astrid_ws_1786719676",
+   "claim_id": "c004",
+   "kind": "test",
+   "target": "capsules/spectral-bridge/src/ws/tests.rs",
+   "note": "backoff_doubles_up_to_max + backoff_reset (L152-166) pin her Backoff ask; passing."
+  },
+  {
+   "introspection_id": "introspection_astrid_ws_1786719676",
+   "claim_id": "c005",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-manual_1786722188_types_coherence_ws_liveness_round/summaries/introspection_astrid_ws_1786719676.md",
+   "note": "Deliberate no-change: offload refactor of a live perception path without evidence of stutter is risk without benefit; reopens if integration-health shows material stutter."
+  }
+ ]
+}

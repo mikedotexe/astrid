@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_ws_1786719676",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "spawn_telemetry_subscriber (L8) manages the 7878 connection with message-type handling, shared-state integration, exponential backoff, and watch-channel shutdown.",
+      "disposition": "Verified from the complete 1,041-line report-bound source at SHA 42364feb (working copy matches). Accurate: subscriber L8-235, select loop L56-180, backoff L214-232, shutdown L57-61 and L226-231.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: handle_telemetry_message (L79/L99) running inline in the select loop could block ws_rx processing (missed pings, timeouts) if it does heavy computation or blocking I/O.",
+      "disposition": "Mechanically legitimate and already instrumented - because of HER OWN earlier report. The handler does substantial inline work: sync SQLite logging (four log_message calls, L542-594), a throttled filesystem artifact scan (L358-373, >=30s interval), and state write-lock work. The source comment at L402-404 says these timings are 'read-only evidence for Astrid's report of possible micro-stutter at this integration boundary': telemetry_integration_health_v1 continuously measures prewrite_pipeline_ms, write_lock_wait_ms, and write_lock_hold_ms on every message (L404-528). Continuous production measurement answers the liveness question more strongly than a one-shot timing test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Proposed Liveness Test: handle_telemetry_message completes under 10ms for a standard payload.",
+      "disposition": "Covered by the standing instrumentation (c002): telemetry_integration_health_v1 measures exactly this on every live message, with EWMA context, rather than a single flaky timing assertion in CI. Her threshold intuition is preserved as review criterion against the live evidence stream, not codified as a brittle unit test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Backoff Test: simulated websocket_error must increment the reconnect delay.",
+      "disposition": "Already exists: backoff_doubles_up_to_max and backoff_reset in ws/tests.rs (L152-166) pin the Backoff doubling and reset behavior; passing in the current suite.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested next: analyze whether handle_telemetry_message should be offloaded to a separate task.",
+      "disposition": "Preserved as a real design observation with evidence attached: the inline sync SQLite writes are the heaviest candidate for offload if integration-health evidence ever shows material stutter. No change now - current health metrics do not show a problem, and an unmotivated concurrency refactor of a live perception path would be risk without evidence. Reopens on evidence.",
+      "classification": "verified_existing"
+    }
+  ]
+}
