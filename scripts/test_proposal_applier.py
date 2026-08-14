@@ -59,6 +59,7 @@ TARGETS = {
     "capsules/spectral-bridge/src/codec/tests.rs": "mod_wrapped",
     "capsules/spectral-bridge/src/autonomous/runtime/tests.rs": "mod_wrapped",
     "capsules/spectral-bridge/src/action_continuity/tests.rs": "eof",
+    "capsules/spectral-bridge/src/types/schema/tests.rs": "mod_wrapped",
 }
 
 DENYLIST = ("unsafe", "std::process", "std::net", "#[ignore]")

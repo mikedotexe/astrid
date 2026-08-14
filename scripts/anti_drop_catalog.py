@@ -524,8 +524,8 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
         "failure_mode": "if a refactor drops the dispatch arm or the proposals-dir constant, her PROPOSE_TEST would fall through to the unwired log with NO inline notice to her — the verb would keep appearing in her menus while silently doing nothing",
         "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/autonomous/next_action/propose_test.rs", "symbol": "TEST_PROPOSALS_DIR"},
         "test": {"repo": "astrid", "kind": "rust", "file": "capsules/spectral-bridge/src/autonomous/next_action/propose_test.rs",
-                 "name": "target_allowlist_is_exactly_four_test_files",
-                 "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib target_allowlist_is_exactly_four_test_files"},
+                 "name": "target_allowlist_is_test_files_only",
+                 "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib target_allowlist_is_test_files_only"},
     },
 ]
 

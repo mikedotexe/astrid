@@ -3411,7 +3411,7 @@ mod tests {
         for prompt in [SYSTEM_PROMPT, GEMMA4_CANARY_SYSTEM_PROMPT] {
             assert!(prompt.contains("PROPOSE_TEST <target> :: <test_name>"));
             assert!(prompt.contains("git author"));
-            assert!(prompt.contains("llm-provider, codec, runtime, action-continuity"));
+            assert!(prompt.contains("llm-provider, codec, runtime, action-continuity, types"));
         }
         // Stage-1 boundary language: test code only, and the validator is the
         // reviewer — the main prompt must say no live behavior changes.

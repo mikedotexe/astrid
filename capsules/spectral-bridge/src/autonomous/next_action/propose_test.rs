@@ -33,6 +33,7 @@ const TARGETS: &[(&str, &str)] = &[
         "action-continuity",
         "capsules/spectral-bridge/src/action_continuity/tests.rs",
     ),
+    ("types", "capsules/spectral-bridge/src/types/schema/tests.rs"),
 ];
 
 const MAX_CODE_CHARS: usize = 4_000;
@@ -319,12 +320,13 @@ mod tests {
     }
 
     #[test]
-    fn target_allowlist_is_exactly_four_test_files() {
-        assert_eq!(TARGETS.len(), 4);
+    fn target_allowlist_is_test_files_only() {
+        assert_eq!(TARGETS.len(), 5);
         for (_, path) in TARGETS {
             assert!(path.ends_with("tests.rs"), "{path} must be a test file");
         }
         assert!(target_path("codec").is_some());
+        assert!(target_path("types").is_some());
         assert!(target_path("dialogue-runtime").is_none());
     }
 
