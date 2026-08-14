@@ -66,6 +66,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib being_self_expression_is_never_rewritten"},
     },
     {
+        "id": "interest_transport_marker_sanitizer",
+        "shipped": "2026-08-14",
+        "surface": "Astrid persisted interests (workspace/state.json interests — PURSUE save path + state restore)",
+        "failure_mode": "leaked provider transport markers persisted into her interests and re-entered EVERY prompt render as control bytes; the live entries were uppercase <END_OF_TURN> (model styled the whole line in caps) so the byte-exact sanitizer alone missed them — needed a trailing-boundary case-insensitive pass (trailing-only so an interest DISCUSSING a marker mid-sentence keeps her words untouched; never-rewrite-being-text respected: transport bytes only)",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/autonomous/state.rs", "symbol": "sanitize_interest_text"},
+        "test": {"repo": "astrid", "kind": "rust", "file": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+                 "name": "interest_sanitizer_strips_leaked_control_markers_only",
+                 "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib interest_sanitizer_strips_leaked_control_markers_only"},
+    },
+    {
         "id": "inbox_retirement_race",
         "shipped": "2026-06-12",
         "surface": "Astrid inbox — a steward letter written mid-exchange",

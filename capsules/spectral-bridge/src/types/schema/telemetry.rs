@@ -716,7 +716,7 @@ mod telemetry_distinction_tests {
 
         telemetry.spectral_fingerprint = Some(
             std::iter::once(f32::INFINITY)
-                .chain(std::iter::repeat(0.0).take(31))
+                .chain(std::iter::repeat_n(0.0, 31))
                 .collect(),
         );
         let integrity = telemetry.spectral_fingerprint_integrity_v1();

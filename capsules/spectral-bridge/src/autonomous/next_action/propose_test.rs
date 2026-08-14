@@ -26,14 +26,23 @@ pub(crate) const TEST_PROPOSALS_DIR: &str = "test_proposals";
 /// Stage 1 allowlist: friendly key -> repo-relative test file. Test code only;
 /// append-only; never the applier/gate machinery itself.
 const TARGETS: &[(&str, &str)] = &[
-    ("llm-provider", "capsules/spectral-bridge/src/llm/provider/tests.rs"),
+    (
+        "llm-provider",
+        "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    ),
     ("codec", "capsules/spectral-bridge/src/codec/tests.rs"),
-    ("runtime", "capsules/spectral-bridge/src/autonomous/runtime/tests.rs"),
+    (
+        "runtime",
+        "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+    ),
     (
         "action-continuity",
         "capsules/spectral-bridge/src/action_continuity/tests.rs",
     ),
-    ("types", "capsules/spectral-bridge/src/types/schema/tests.rs"),
+    (
+        "types",
+        "capsules/spectral-bridge/src/types/schema/tests.rs",
+    ),
 ];
 
 const MAX_CODE_CHARS: usize = 4_000;
@@ -73,10 +82,7 @@ fn parse_proposal_spec(spec: &str) -> Option<(String, String)> {
     if target.is_empty() || name.is_empty() {
         return None;
     }
-    if !name
-        .chars()
-        .all(|c| c.is_ascii_alphanumeric() || c == '_')
-    {
+    if !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
         return None;
     }
     Some((target, name))
