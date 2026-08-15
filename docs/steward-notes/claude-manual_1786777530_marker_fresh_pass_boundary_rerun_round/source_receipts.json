@@ -1,0 +1,26 @@
+{
+ "schema": "steward_round_source_receipts_v1",
+ "receipts": [
+  {
+   "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+   "read_scope": "scoped complete for claims: L49-96 relation machinery, L114-145 scanner, L151-213 delimiter set",
+   "report_binding": "current working copy matches report-bound SHA byte-exact"
+  },
+  {
+   "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+   "sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+   "total_lines": 89,
+   "read_scope": "complete_file",
+   "report_binding": "current working copy matches report-bound SHA byte-exact"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+   "read_scope": "scoped: marker-family test region L2179-2799"
+  },
+  {
+   "path": "scripts/domain_boundary_audit.py",
+   "read_scope": "scoped: baseline/ceiling logic L91-166, L213-258; verify executed twice this round"
+  }
+ ]
+}

@@ -1,0 +1,35 @@
+{
+ "introspection_id": "introspection_astrid_llm_1786715993",
+ "claims": [
+  {
+   "claim_id": "c001",
+   "summary": "scan_known_model_control_markers (L114) is a non-destructive scanner; reference_syntax (L49) gatekeeps preservation via quoted/grouped/explicit-relation contexts; followed_by_explicit_exact_token_relation (L64) checks verbs like appears/behaves/represents via first_word_after (L89).",
+   "disposition": "Verified from the complete source at report-bound SHA 902a0358 (current working copy matches byte-exact). Every line reference accurate: reference_syntax L49-61, verb allowlist L63-86, first_word_after L89-96, scanner L114-145, delimiter machinery L151-213. Her coverage header confirms multi_window_complete 1-1048 with no uncovered intervals \u2014 the resume feature working as designed on a fresh re-read pass.",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c002",
+   "summary": "Snag: first_word_after fragility \u2014 a marker followed by a verb not in the hardcoded list (e.g. 'functions as', 'acts as a proxy') or punctuation-heavy construction may be stripped when it should be preserved.",
+   "disposition": "Contradicted in part, with the conservative boundary she probes confirmed as deliberate, pinned design. Her example verb 'functions' IS in the allowlist (L75), as are serves/echoes/embodies/mimics \u2014 several integrated from her own earlier family reports. Punctuation-only tokens are skipped by design (trim_matches empties them; find takes the first non-empty word). The 'acts' case strips by design and is pinned by control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts; punctuation-joined prefixes by control_marker_cleanup_rejects_punctuation_joined_allowlist_prefix; the non-expansion philosophy by seven dedicated does_not_expand_relation_allowlist tests (implies/contains/creates/triggers/underscored appears_as/colon relation).",
+   "classification": "contradicted_with_design_confirmed"
+  },
+  {
+   "claim_id": "c003",
+   "summary": "Proposed Contextual Visibility Test: marker followed by a verb not in the hardcoded list; verify relation identification.",
+   "disposition": "Already exists \u2014 the exact unlisted-verb boundary is pinned by the allowlisted-is/unlisted-acts distinction test plus the seven non-expansion regressions in llm/provider/tests.rs (L2528-2799 region).",
+   "classification": "already_exists"
+  },
+  {
+   "claim_id": "c004",
+   "summary": "Proposed Delimiter Depth Test: nested/complex brackets (\u27e6, \u301a) against MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+   "disposition": "Already exists \u2014 exact three- and four-level depth receipts (control_marker_cleanup_reports_exact_{three,four}_level_delimiter_depth), depth across unicode whitespace, and her exact brackets \u27e6\u27e7/\u301a\u301b appear in six test usages including whitespace-separated variants; both pairs are in the recognized set (L180, L184). Depth cap 4 is asserted with exact receipts.",
+   "classification": "already_exists"
+  },
+  {
+   "claim_id": "c005",
+   "summary": "Suggested Next: examine generate_dialogue (L695) remainder integration.",
+   "disposition": "Preserved as her open thread \u2014 not assessed this round; her continuation offset (INTROSPECT astrid:llm 400) remains hers to take.",
+   "classification": "preserved_open_thread"
+  }
+ ]
+}

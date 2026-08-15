@@ -1,0 +1,62 @@
+{
+ "schema": "steward_round_verification_receipt_v1",
+ "run_id": "run_1786777530477834000_35411df595",
+ "preprojection_id": "projection_1786777531578763000_ac079fccfe",
+ "recovery_note": "first session attempt failed preprojection on domain_boundary_audit exit 1 \u2014 the line ratchet correctly flagging the reviewed interests-sanitizer commit de9e82c09d; deliberate baseline re-capture 59df957d4f (state.rs 3246->3257, fallback_contracts.rs 1395->1417; foreign orchestration.rs growth NOT absorbed); relaunched clean",
+ "focused_tests": {
+  "control_marker_cleanup family": {
+   "passed": 51,
+   "failed": 0
+  },
+  "interest_sanitizer regressions": {
+   "passed": 2,
+   "failed": 0
+  }
+ },
+ "full_lib_suite": {
+  "passed": 1878,
+  "failed": 0,
+  "note": "2026-08-14 post-de9e82c09d; no source changes since"
+ },
+ "integrity": {
+  "anti_drop": {
+   "total": 50,
+   "alarms": 0,
+   "gaps": 0
+  },
+  "epistemic": {
+   "valid": true,
+   "issues": 0
+  },
+  "counters": "consistent",
+  "chronicle": "reprojected; durable_inputs_current=true, volatile_mismatches=[]"
+ },
+ "closures": [
+  {
+   "introspection_id": "introspection_astrid_llm_1786715993",
+   "status": "addressed_duplicate",
+   "fully_addressed": true,
+   "proof_missing_claims": []
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786713397",
+   "status": "addressed_duplicate",
+   "fully_addressed": true,
+   "proof_missing_claims": []
+  }
+ ],
+ "division": {
+  "cycle": 24,
+  "round_recorded": "sixth",
+  "review_due_reached": true,
+  "return_completed": true,
+  "new_cycle": 25,
+  "notes": [
+   "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle24_20260815.txt",
+   "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle24_20260815.txt"
+  ],
+  "interval_public_evidence": "473 astrid + 459 minime correspondence replies; complete mechanical Division-reference/authority scan over every file; sample read completely incl the one pre-header minime file; zero Division-specific, zero formal Actions"
+ },
+ "deploy_alignment": "no bridge source changed during the held run; live binary at de9e82c09d from the pre-session gated deploy; restart not required",
+ "foreign_work": "untouched; index clean of foreign paths throughout; commits deferred to post-finish sweep"
+}

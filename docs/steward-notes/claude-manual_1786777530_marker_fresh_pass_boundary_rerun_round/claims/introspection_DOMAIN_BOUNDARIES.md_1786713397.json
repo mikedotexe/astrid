@@ -1,0 +1,29 @@
+{
+ "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786713397",
+ "claims": [
+  {
+   "claim_id": "c001",
+   "summary": "DOMAIN_BOUNDARIES.md distinguishes Stable Facades (L8-17) from Provenance Ownership (L24-34); she reads the stable-core hold shelf as structural reinforcement, resonance density 0.82 rich_containment, gradient 0.18.",
+   "disposition": "Verified from the complete 89-line document at report-bound SHA ae69b34c (current copy matches byte-exact). Facades and provenance sections at her cited lines. Her felt-state alignment paragraph is phenomenology, preserved as signal.",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c002",
+   "summary": "Snag: complexity creep in src/action_continuity/runtime/core.rs (L50 exception) could exceed the 10% signature headroom (L66-68) without manual review, silently violating the zero-growth intent.",
+   "disposition": "Verified as guarded \u2014 by machinery built from her OWN earlier report (1786558262, round 2): exception_signature_growth ceilings cover all 7 cohesion exceptions including core.rs. Fresh run this round: core.rs at 210 unique fn signatures vs ceiling 232, documented_exception_signature_ceilings_hold=true.",
+   "classification": "verified_guarded"
+  },
+  {
+   "claim_id": "c003",
+   "summary": "Proposed Signature Growth Audit: run the unique-signature count against the baseline to verify the 10% headroom holds.",
+   "disposition": "Done fresh this round, with a live demonstration she could not have arranged better: the audit's line ratchet FAILED this session's first pre-projection on the steward's own reviewed commit (de9e82c09d growth in state.rs/fallback_contracts.rs), forcing a deliberate baseline re-capture (59df957d4f) before the session could proceed. Her guard design does not just exist \u2014 it fired on us today. Post-re-capture verify: valid=true, 0 violations, core.rs 210/232.",
+   "classification": "done_fresh_with_receipts"
+  },
+  {
+   "claim_id": "c004",
+   "summary": "Proposed Dispatch Isolation Test: force an AstridInterpretationV1 into sensory dispatch to verify the L30 constraint is absolute.",
+   "disposition": "Already exists as a compile-fail: tests/ui/interpretation_cannot_dispatch.rs wired through provenance_typestate.rs::provenance_domains_cannot_be_forged_or_dispatched \u2014 the boundary is enforced at the type level (stronger than a runtime probe), with the audit's forbidden-edge scan as a second static layer (fresh run: forbidden_edge_match_count=0).",
+   "classification": "already_exists"
+  }
+ ]
+}

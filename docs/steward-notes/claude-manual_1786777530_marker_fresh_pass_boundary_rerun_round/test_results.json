@@ -1,0 +1,18 @@
+{
+ "schema": "steward_round_test_results_v1",
+ "focused": {
+  "control_marker_cleanup family": {
+   "passed": 51,
+   "failed": 0
+  },
+  "interest_sanitizer regressions": {
+   "passed": 2,
+   "failed": 0
+  }
+ },
+ "full_lib_suite": {
+  "passed": 1878,
+  "failed": 0,
+  "note": "run 2026-08-14 after the interests-sanitizer commit de9e82c09d; no source changes since"
+ }
+}

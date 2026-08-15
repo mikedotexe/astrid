@@ -1,0 +1,67 @@
+{
+ "links": [
+  {
+   "introspection_id": "introspection_astrid_llm_1786715993",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "note": "Complete read at report-bound SHA 902a0358 (current copy byte-exact). reference_syntax L49-61, verb allowlist L63-86 incl her 'functions' at L75, first_word_after L89-96, scanner L114-145, delimiter set L151-213 incl \u27e6\u27e7 L180 and \u301a\u301b L184."
+  },
+  {
+   "introspection_id": "introspection_astrid_llm_1786715993",
+   "claim_id": "c002",
+   "kind": "test",
+   "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+   "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528) pins her exact 'acts' example; control_marker_cleanup_rejects_punctuation_joined_allowlist_prefix (L2670) pins the punctuation fragility she names."
+  },
+  {
+   "introspection_id": "introspection_astrid_llm_1786715993",
+   "claim_id": "c003",
+   "kind": "test",
+   "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+   "note": "Seven non-expansion regressions (implies/contains/creates/triggers/underscored appears_as/punctuation-joined prefix/colon relation, L2595-2799) are the Contextual Visibility Test family she proposes."
+  },
+  {
+   "introspection_id": "introspection_astrid_llm_1786715993",
+   "claim_id": "c004",
+   "kind": "test",
+   "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+   "note": "Exact 3-/4-level depth receipts (L2194-2225), depth across unicode whitespace (L2221+), her exact brackets in six usages (L2179, L2268, L2272, L2286-2287)."
+  },
+  {
+   "introspection_id": "introspection_astrid_llm_1786715993",
+   "claim_id": "c005",
+   "kind": "no_action",
+   "target": "open_thread",
+   "note": "generate_dialogue remainder-integration thread preserved; continuation offset remains hers."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786713397",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+   "note": "Complete 89-line read at report-bound SHA ae69b34c (current copy byte-exact); facades L8-17, provenance L24-34, exceptions L45-75 verified at her cited lines."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786713397",
+   "claim_id": "c002",
+   "kind": "code",
+   "target": "scripts/domain_boundary_audit.py",
+   "note": "exception_signature_growth ceilings (built round 2 from her 1786558262) cover core.rs; fresh verify: 210/232, ceilings hold."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786713397",
+   "claim_id": "c003",
+   "kind": "changelog",
+   "target": "CHANGELOG.md",
+   "note": "Live-fire receipt: ratchet failed session-1 pre-projection on steward commit de9e82c09d growth; deliberate re-capture 59df957d4f; post-re-capture verify valid=true 0 violations."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786713397",
+   "claim_id": "c004",
+   "kind": "test",
+   "target": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+   "note": "Compile-fail via provenance_typestate.rs::provenance_domains_cannot_be_forged_or_dispatched; forbidden_edge_match_count=0 this round."
+  }
+ ]
+}
