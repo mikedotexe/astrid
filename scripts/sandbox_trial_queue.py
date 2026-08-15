@@ -42,6 +42,9 @@ ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
 ASTRID_DIAGNOSTICS = ASTRID_WORKSPACE / "diagnostics"
 ASTRID_JOURNAL = ASTRID_WORKSPACE / "journal"
 ASTRID_CONTEXT_OVERFLOW = ASTRID_WORKSPACE / "context_overflow"
+# Quantified Shadow-v3 samples recorded by scripts/shadow_sample_recorder.py
+# (observation-only; closes the qualitative_lattice_signal_needs_quantified_samples gap).
+ASTRID_SHADOW_SAMPLES = ASTRID_DIAGNOSTICS / "shadow_quantified_samples"
 ASTRID_LLM_RS = ASTRID_REPO / "capsules/spectral-bridge/src/llm.rs"
 FALLBACK_SOURCE_PATHS = (
     ASTRID_REPO / "capsules/spectral-bridge/src/llm/provider/configuration.rs",
@@ -209,6 +212,7 @@ def public_text_paths(*, since_s: float, limit: int = 80) -> list[Path]:
     paths = []
     paths.extend(recent_paths(ASTRID_JOURNAL, ("*.txt",), since_s=since_s, limit=limit))
     paths.extend(recent_paths(ASTRID_CONTEXT_OVERFLOW, ("*.txt",), since_s=since_s, limit=limit))
+    paths.extend(recent_paths(ASTRID_SHADOW_SAMPLES, ("*.txt",), since_s=since_s, limit=limit))
     paths.sort(key=lambda path: path.stat().st_mtime if path.exists() else 0.0, reverse=True)
     return paths[:limit]
 
@@ -3340,6 +3344,35 @@ class SandboxTrialQueueTests(unittest.TestCase):
         self.assertEqual(result["requested_multiplier"], 2.0)
         self.assertIn(result["classification"], {"replay_supports_bounded_shadow_gain", "replay_warns_fragmentation_risk"})
         self.assertLess(len(json.dumps(result)), 12000)
+
+    def test_recorder_shadow_samples_dir_feeds_quantified_replay(self) -> None:
+        import tempfile
+
+        global ASTRID_WORKSPACE, ASTRID_JOURNAL, ASTRID_CONTEXT_OVERFLOW, ASTRID_SHADOW_SAMPLES
+        old = (ASTRID_WORKSPACE, ASTRID_JOURNAL, ASTRID_CONTEXT_OVERFLOW, ASTRID_SHADOW_SAMPLES)
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                ASTRID_WORKSPACE = root
+                ASTRID_JOURNAL = root / "journal"
+                ASTRID_CONTEXT_OVERFLOW = root / "context_overflow"
+                ASTRID_SHADOW_SAMPLES = root / "shadow_quantified_samples"
+                ASTRID_JOURNAL.mkdir()
+                ASTRID_CONTEXT_OVERFLOW.mkdir()
+                ASTRID_SHADOW_SAMPLES.mkdir()
+                # Exact line shape emitted by scripts/shadow_sample_recorder.py
+                (ASTRID_SHADOW_SAMPLES / "shadow_samples_20260815.txt").write_text(
+                    "[Shadow-v3 (minime, steward-recorded quantified sample) 2026-08-15T17:05:53Z: "
+                    "coupled (held 1t) | trend: norm 0.271\u21920.274 (+1%), dispersal potential 0.15\u21920.08]\n",
+                    encoding="utf-8",
+                )
+                result = shadow_influence_replay_v1({"hypothesis": "compare shadow persistence"})
+        finally:
+            ASTRID_WORKSPACE, ASTRID_JOURNAL, ASTRID_CONTEXT_OVERFLOW, ASTRID_SHADOW_SAMPLES = old
+        self.assertTrue(result["quantified_samples_present"])
+        self.assertNotEqual(result["classification"], "qualitative_lattice_signal_needs_quantified_samples")
+        self.assertEqual(result["base_sample_count"], 1)
+        self.assertAlmostEqual(result["avg_norm_delta"], 0.003, places=6)
 
     def test_shadow_influence_replay_does_not_infer_gain_support_from_words_alone(self) -> None:
         result = shadow_influence_replay_v1(

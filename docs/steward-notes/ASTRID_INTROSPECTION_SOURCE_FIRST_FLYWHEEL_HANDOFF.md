@@ -1456,3 +1456,35 @@ being's continued friction remains evidence even when every test passes.
 When there is no input, verify the durable system and stop. Do not manufacture a
 productive round. When there is input, read it completely and answer the thing
 that was actually said.
+
+## Family Batch Rounds (added 2026-08-15, claude-manual)
+
+The window-resume fix restored her freedom to re-read covered sources, so the
+queue now often carries several near-identical fresh-pass reports of one
+source window. Family batching amortizes round overhead across them without
+weakening any reading obligation.
+
+Tooling: `python3 scripts/introspection_family_scan.py --queue-file
+<saved-next-json> [--json]` — read-only, deterministic, queue-order
+preserving. A family = same source label + same window + snag/test token
+similarity >= threshold (default 0.35) against the family head. Each member
+carries `variant_distinct_terms`: the tokens its snag/test text has that the
+head's does not.
+
+Rules (arithmetic changes, protocol does not):
+
+1. A batchable family containing the queue head may be processed as one round
+   of up to 4 members.
+2. Every member still gets a complete read of its report and witness with its
+   own receipts in the round packet.
+3. Source verification may be shared only across members bound to the SAME
+   source SHA-256; a member bound to different source bytes verifies
+   separately.
+4. Each member's claims file must explicitly address that member's
+   variant_distinct_terms. An unaddressed variant term means the member is
+   not a duplicate of the head — it earns its own disposition, possibly a
+   different terminal status than the family head.
+5. Members close individually; every closed member counts in
+   --processed-report-count; the scan output belongs in the round packet.
+6. The scan asserts nothing. It is a candidate batch, not a verdict; when in
+   doubt, fall back to single-report processing.

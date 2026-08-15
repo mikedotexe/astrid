@@ -34,10 +34,23 @@ The round:
   recommended sandbox-eligible items. PREPARE only: never approve, grant,
   dispatch, or run trials headlessly.
 - Run: python3 scripts/introspection_addressing_audit.py next --limit 40 --json
-  The returned order is canonical — never reorder. Process a small honest
-  batch: 1-3 reports, and only 1 when the head is unfamiliar, large, or needs
-  implementation. Note: addressing CLI calls take 1-2 minutes each (full-chain
-  evidence verification); budget accordingly.
+  (save the JSON to a temp file). The returned order is canonical — never
+  reorder. Then run: python3 scripts/introspection_family_scan.py
+  --queue-file <that-file> to group same-source same-window near-duplicate
+  reports into families. Note: addressing CLI calls take 1-2 minutes each
+  (full-chain evidence verification); budget accordingly.
+- Batch sizing: process a small honest batch — 1-3 reports, and only 1 when
+  the head is unfamiliar, large, or needs implementation. EXCEPTION: when the
+  queue head belongs to a batchable family, you may process up to 4 members of
+  that family in this round. Family batching changes the arithmetic, never
+  the protocol: read EVERY member's report and witness completely with its own
+  receipts; the report-bound source verification may be done once and reused
+  only across members bound to the SAME source SHA; each member gets its own
+  claims file that explicitly addresses its variant_distinct_terms from the
+  scan (a variant term left unaddressed means that member is NOT a duplicate —
+  give it its own disposition); each member is closed individually, and
+  a member may earn a different status than its family head. Count every
+  closed member in --processed-report-count.
 - For each processed report, follow the handoff's complete reading protocol:
   read every byte of the report, its lived-state witness, and the report-bound
   source (record path, bytes, lines, SHA-256 for each; compare the source hash
