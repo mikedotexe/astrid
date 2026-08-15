@@ -1,0 +1,10 @@
+{
+ "schema": "steward_round_unprocessed_selected_v1",
+ "selected_but_unprocessed": [
+  "introspection_astrid_llm_1786712397.txt",
+  "introspection_astrid_llm_1786711252.txt",
+  "introspection_astrid_llm_1786706577.txt",
+  "introspection_astrid_llm_1786700087.txt"
+ ],
+ "note": "All four are marker-family variants of the processed head report (pre-read this round; same source window, same two test-design asks in variation). Left for the next round's canonical order rather than batch-closed without individual record-reads."
+}
