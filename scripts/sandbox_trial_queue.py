@@ -420,7 +420,11 @@ def apply_event(status: dict[str, Any], event: dict[str, Any]) -> None:
         trial = trials.setdefault(trial_id, {"trial_id": trial_id})
         result = event.get("result") if isinstance(event.get("result"), dict) else {}
         trial.setdefault("results", []).append(result)
-        trial["status"] = "result_recorded"
+        # Evidence-only offline replays (run-evidence, 2026-08-16) attach
+        # measurement to an approval-required trial WITHOUT advancing its
+        # status — the trial remains exactly as approval-gated as before.
+        if not result.get("evidence_only_offline_replay"):
+            trial["status"] = "result_recorded"
         trial["latest_result_classification"] = result.get("classification")
         trial["updated_at"] = event.get("ts") or now_s()
         refresh_trial_authority_packets(trial)
@@ -462,6 +466,13 @@ def apply_event(status: dict[str, Any], event: dict[str, Any]) -> None:
         evidence = event.get("evidence") if isinstance(event.get("evidence"), dict) else {}
         trial.setdefault("evidence_links", []).append(evidence)
         trial["updated_at"] = event.get("ts") or now_s()
+    elif event_type == "trial_operator_approval_recorded":
+        trial_id = str(event.get("trial_id") or "")
+        trial = trials.setdefault(trial_id, {"trial_id": trial_id})
+        receipt = event.get("approval") if isinstance(event.get("approval"), dict) else {}
+        trial["operator_approval"] = receipt
+        trial["updated_at"] = event.get("ts") or now_s()
+        refresh_trial_authority_packets(trial)
     elif event_type == "trial_status_set":
         trial_id = str(event.get("trial_id") or "")
         trial = trials.setdefault(trial_id, {"trial_id": trial_id})
@@ -2403,6 +2414,16 @@ def emit_proposal_card(state_dir: Path, trial: dict[str, Any], *, write: bool) -
     return card
 
 
+# Refusal/stub classifications carry no measurement. Linking them as work
+# evidence would satisfy work_item_has_replay_evidence and silently advance a
+# Tier-5 lifecycle from replay_needed to operator_approval_wait with nothing
+# behind it (hole found 2026-08-16). Stubs still write result files; they just
+# never mint evidence links.
+STUB_RESULT_CLASSIFICATIONS = frozenset(
+    {"approval_required_provider_change", "insufficient_output"}
+)
+
+
 def addressing_events_for_result(
     trial: dict[str, Any],
     result: dict[str, Any],
@@ -2414,6 +2435,8 @@ def addressing_events_for_result(
     try:
         import introspection_addressing_audit as addressing
     except Exception:
+        return []
+    if str(result.get("classification") or "") in STUB_RESULT_CLASSIFICATIONS:
         return []
     events: list[dict[str, Any]] = []
     work_item_id = str(trial.get("source_work_item_id") or "")
@@ -2461,6 +2484,64 @@ def write_addressing_events(events: list[dict[str, Any]]) -> int:
     return len(events)
 
 
+def record_live_trial_approval(
+    state_dir: Path,
+    trial_id: str,
+    *,
+    steward: str,
+    note: str,
+    ttl_secs: float = 900.0,
+    write: bool = False,
+) -> dict[str, Any]:
+    """Record an explicit Mike/operator approval receipt onto a live trial.
+
+    This is the ladder's previously missing writer (2026-08-16): it advances
+    the consentful rung from operator_approval_wait to
+    approved_live_trial_still_manual and NOTHING more — live_eligible_now and
+    live_execution_automatic remain hardcoded false, no runner picks the trial
+    up, and any actual live change still goes through the normal approved
+    service/deploy path with its own gates. CLI-only by design; the headless
+    steward loop never calls this."""
+    status = replay_status(state_dir)
+    trial = (status.get("trials") or {}).get(trial_id)
+    if not isinstance(trial, dict):
+        raise SystemExit(f"unknown trial_id {trial_id}")
+    if str(trial.get("trial_mode")) not in NON_RUNNABLE_MODES:
+        raise SystemExit(
+            f"approve-live-trial is for approval-required live candidates; "
+            f"trial {trial_id} has mode {trial.get('trial_mode')}"
+        )
+    steward = steward.strip()
+    if not steward:
+        raise SystemExit("approve-live-trial needs a non-empty --steward name")
+    ttl = max(60.0, min(float(ttl_secs), 900.0))
+    now = now_s()
+    receipt = {
+        "status": "approved",
+        "steward": steward,
+        "note": note,
+        "recorded_at": now,
+        "expires_at": now + ttl,
+        "execution": "manual_deploy_path_only",
+    }
+    event = {
+        "event_type": "trial_operator_approval_recorded",
+        "schema": SCHEMA,
+        "ts": now,
+        "trial_id": trial_id,
+        "approval": receipt,
+    }
+    if write:
+        append_events(state_dir, [event])
+        materialize(state_dir, replay_status(state_dir))
+    return {
+        "trial_id": trial_id,
+        "approval": receipt,
+        "written": bool(write),
+        "authority_boundary": LIVE_APPROVAL_BOUNDARY,
+    }
+
+
 def run_adapter_for_trial(
     state_dir: Path,
     trial_id: str,
@@ -2468,12 +2549,24 @@ def run_adapter_for_trial(
     write: bool,
     link_evidence: bool = True,
     emit_card: bool = True,
+    evidence_only: bool = False,
 ) -> dict[str, Any]:
+    """`evidence_only=True` is the run-evidence path (2026-08-16): it runs an
+    OFFLINE read-only adapter for an approval-required live candidate WITHOUT
+    changing its mode, status, or any live flag — the trial stays exactly as
+    non-runnable and approval-gated as before; only real offline measurement
+    attaches. This is how a Tier-5 wait accumulates the replay evidence the
+    consent ladder's sandbox_result_or_review_evidence gate asks for."""
     status = replay_status(state_dir)
     trial = (status.get("trials") or {}).get(trial_id)
     if not isinstance(trial, dict):
         raise SystemExit(f"unknown trial_id {trial_id}")
-    if str(trial.get("trial_mode")) in NON_RUNNABLE_MODES:
+    if evidence_only and str(trial.get("adapter")) not in RUNNABLE_ADAPTERS:
+        raise SystemExit(
+            f"run-evidence needs an offline runnable adapter; trial {trial_id} "
+            f"routes to {trial.get('adapter')} (manual review evidence required instead)"
+        )
+    if not evidence_only and str(trial.get("trial_mode")) in NON_RUNNABLE_MODES:
         result = {
             "schema": "sandbox_trial_result_v1",
             "adapter": trial.get("adapter"),
@@ -2499,6 +2592,9 @@ def run_adapter_for_trial(
         }
     result = dict(result)
     result["trial_id"] = trial_id
+    if evidence_only:
+        result["evidence_only_offline_replay"] = True
+        result["live_boundary"] = LIVE_APPROVAL_BOUNDARY
     result["result_sha256"] = sha_text(json.dumps(result, sort_keys=True, ensure_ascii=True))
     if write:
         ts = int(now_s())
@@ -2516,6 +2612,9 @@ def run_adapter_for_trial(
             "result": {
                 "adapter": result.get("adapter"),
                 "classification": result.get("classification"),
+                "evidence_only_offline_replay": bool(
+                    result.get("evidence_only_offline_replay")
+                ),
                 "json_path": str(json_path),
                 "markdown_path": str(md_path),
                 "result_sha256": result.get("result_sha256"),
@@ -3470,6 +3569,123 @@ class SandboxTrialQueueTests(unittest.TestCase):
         self.assertIn("evidence_linked", event_types)
         self.assertIn("post_change_response_recorded", event_types)
 
+    def test_stub_classifications_mint_no_evidence_links(self) -> None:
+        # A refusal stub must never satisfy work_item_has_replay_evidence:
+        # otherwise a Tier-5 item advances to operator_approval_wait on the
+        # strength of a refusal to run (the 2026-08-16 hole).
+        trial = {
+            "trial_id": "trial_test",
+            "source_work_item_id": "wi_test",
+            "source_introspection_id": "intro_test",
+            "claim_id": "c001",
+        }
+        for stub in sorted(STUB_RESULT_CLASSIFICATIONS):
+            events = addressing_events_for_result(
+                trial,
+                {"adapter": "shadow_influence_replay_v1", "classification": stub},
+                json_path="/tmp/result.json",
+                markdown_path="/tmp/result.md",
+                card_path="/tmp/card.md",
+            )
+            self.assertEqual(events, [], stub)
+
+    def _seed_live_trial(self, state_dir: Path, with_card: bool = True) -> str:
+        trial_id = "trial_live_test"
+        trial = {
+            "trial_id": trial_id,
+            "being": "minime",
+            "adapter": "shadow_loss_lattice_v1",
+            "trial_mode": "approval_required_live_trial",
+            "status": "approval_required_live_trial",
+            "agency_tier": 5,
+            "hypothesis": "bounded relief",
+            "felt_report_anchor": "bounded relief anchor",
+            "success_metrics": ["m"],
+            "abort_criteria": ["a"],
+        }
+        if with_card:
+            trial["proposal_cards"] = [{"path": "/tmp/card.md"}]
+        append_events(state_dir, [{"event_type": "trial_created", "ts": now_s(), "trial": trial}])
+        return trial_id
+
+    def test_approve_live_trial_records_receipt_and_advances_rung(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_dir = Path(tmp)
+            trial_id = self._seed_live_trial(state_dir)
+            payload = record_live_trial_approval(
+                state_dir, trial_id, steward="mike", note="scoped test", write=True
+            )
+            self.assertEqual(payload["approval"]["status"], "approved")
+            status = replay_status(state_dir)
+            trial = status["trials"][trial_id]
+            self.assertEqual(trial["operator_approval"]["steward"], "mike")
+            entry = consentful_ladder_entry(trial)
+            self.assertEqual(entry["current_rung"], "approved_live_trial_still_manual")
+            self.assertFalse(entry.get("live_eligible_now", False))
+            # Mode and status untouched — execution stays manual.
+            self.assertEqual(trial["trial_mode"], "approval_required_live_trial")
+
+    def test_approve_live_trial_refuses_non_live_trials(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_dir = Path(tmp)
+            append_events(state_dir, [{
+                "event_type": "trial_created", "ts": now_s(),
+                "trial": {"trial_id": "trial_sb", "trial_mode": "sandbox_replay"},
+            }])
+            with self.assertRaises(SystemExit):
+                record_live_trial_approval(state_dir, "trial_sb", steward="mike", note="", write=False)
+
+    def test_run_evidence_measures_without_mode_change(self) -> None:
+        import tempfile
+
+        global ASTRID_JOURNAL, ASTRID_CONTEXT_OVERFLOW, ASTRID_SHADOW_SAMPLES
+        old = (ASTRID_JOURNAL, ASTRID_CONTEXT_OVERFLOW, ASTRID_SHADOW_SAMPLES)
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                ASTRID_JOURNAL = root / "journal"
+                ASTRID_CONTEXT_OVERFLOW = root / "context_overflow"
+                ASTRID_SHADOW_SAMPLES = root / "shadow_samples"
+                for d in (ASTRID_JOURNAL, ASTRID_CONTEXT_OVERFLOW, ASTRID_SHADOW_SAMPLES):
+                    d.mkdir()
+                (ASTRID_SHADOW_SAMPLES / "s.txt").write_text(
+                    "[Shadow-v3 sample: settled lattice | trend: norm 0.271\u21920.274, "
+                    "dispersal potential 0.10\u21920.12]",
+                    encoding="utf-8",
+                )
+                state_dir = root / "state"
+                trial_id = self._seed_live_trial(state_dir)
+                result = run_adapter_for_trial(
+                    state_dir, trial_id, write=True,
+                    link_evidence=False, emit_card=False, evidence_only=True,
+                )
+                self.assertTrue(result.get("evidence_only_offline_replay"))
+                self.assertNotIn(result.get("classification"), STUB_RESULT_CLASSIFICATIONS)
+                status = replay_status(state_dir)
+                trial = status["trials"][trial_id]
+                self.assertEqual(trial["trial_mode"], "approval_required_live_trial")
+                self.assertEqual(trial["status"], "approval_required_live_trial")
+                self.assertTrue(trial.get("results"))
+        finally:
+            ASTRID_JOURNAL, ASTRID_CONTEXT_OVERFLOW, ASTRID_SHADOW_SAMPLES = old
+
+    def test_run_evidence_refuses_manual_adapters(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_dir = Path(tmp)
+            append_events(state_dir, [{
+                "event_type": "trial_created", "ts": now_s(),
+                "trial": {"trial_id": "trial_manual", "adapter": "manual_sandbox_review_v1",
+                          "trial_mode": "approval_required_live_trial"},
+            }])
+            with self.assertRaises(SystemExit):
+                run_adapter_for_trial(state_dir, "trial_manual", write=False, evidence_only=True)
+
 
 def run_self_tests() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(SandboxTrialQueueTests)
@@ -3515,6 +3731,26 @@ def main(argv: list[str] | None = None) -> int:
     run_p.add_argument("--json", action="store_true")
     run_p.add_argument("--no-evidence-link", action="store_true")
     run_p.add_argument("--no-closure-card", action="store_true")
+
+    evid_p = sub.add_parser(
+        "run-evidence",
+        help="run an OFFLINE adapter for an approval-required trial as evidence only (no mode/status/live change)",
+    )
+    evid_p.add_argument("--trial-id", required=True)
+    evid_p.add_argument("--write", action="store_true")
+    evid_p.add_argument("--json", action="store_true")
+    evid_p.add_argument("--no-evidence-link", action="store_true")
+    evid_p.add_argument("--no-closure-card", action="store_true")
+
+    approve_p = sub.add_parser(
+        "approve-live-trial",
+        help="record an explicit Mike/operator approval receipt on a live trial (execution stays manual)",
+    )
+    approve_p.add_argument("--trial-id", required=True)
+    approve_p.add_argument("--steward", required=True)
+    approve_p.add_argument("--note", default="")
+    approve_p.add_argument("--ttl-secs", type=float, default=900.0)
+    approve_p.add_argument("--write", action="store_true")
 
     proposal_p = sub.add_parser("emit-proposal-card")
     proposal_p.add_argument("--trial-id", action="append", default=[])
@@ -3576,6 +3812,28 @@ def main(argv: list[str] | None = None) -> int:
             write=bool(args.write),
             link_evidence=not bool(args.no_evidence_link),
             emit_card=not bool(args.no_closure_card),
+        )
+        print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
+        return 0
+    if args.cmd == "run-evidence":
+        payload = run_adapter_for_trial(
+            args.state_dir,
+            args.trial_id,
+            write=bool(args.write),
+            link_evidence=not bool(args.no_evidence_link),
+            emit_card=not bool(args.no_closure_card),
+            evidence_only=True,
+        )
+        print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
+        return 0
+    if args.cmd == "approve-live-trial":
+        payload = record_live_trial_approval(
+            args.state_dir,
+            args.trial_id,
+            steward=args.steward,
+            note=args.note,
+            ttl_secs=float(args.ttl_secs),
+            write=bool(args.write),
         )
         print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
         return 0

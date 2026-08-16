@@ -29,9 +29,12 @@ The round:
   Division return, ALSO generate the Tier-5 cadence dossier per
   docs/steward-notes/AI_BEINGS_TIER5_EXPERIMENT_CADENCE_2026_08_13.md
   (read-only tooling: authority_wait_readiness.py, work-queue --json,
-  sandbox_trial_queue.py queue --json) into the round packet as
+  sandbox_trial_queue.py queue --json, AND
+  python3 scripts/authority_wait_consolidation.py --shortlist — the
+  surface-grouped grant menu of consolidated ask-families with honest
+  per-family evidence states) into the round packet as
   tier5_cadence_dossier.md with a short Mike-facing summary naming 1-2
-  recommended sandbox-eligible items. PREPARE only: never approve, grant,
+  recommended sandbox-eligible items and the top grant-menu surfaces. PREPARE only: never approve, grant,
   dispatch, or run trials headlessly.
 - Run: python3 scripts/introspection_addressing_audit.py next --limit 40 --json
   (save the JSON to a temp file). The returned order is canonical — never
