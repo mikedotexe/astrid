@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 pushes a token to remainder only when reference_syntax.is_some() (L129-131); reference-context enum L42-46 (Quoted/Grouped/ExplicitExactKnownTokenRelation)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 (allowlist L67-84, no 'symbolizes'); first_word_after L89-96; a bare undelimited marker + unlisted verb => reference_syntax None => not pushed to remainder (intended fail-closed)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528) proves unlisted verb => stripped; scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary (L2900) grounds the first_word_after fail-closed path."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Her ' [MARKER] symbolizes X' boundary is the acts-class case, locked by L2528 plus does_not_expand_relation_allowlist_to_{implies L2595, contains L2610, creates L2625, triggers L2640}."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 with take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH) L208-213; MAX const L151 == 4 bounds delimiter_depth."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2876, her [[MARKER]]), control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194, =MAX), control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token (L2253, 5 nested bounded at 4)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan remainder is consumed only by sanitize_model_control_markers_with_report (L352) and the validity predicates' local stripped copies (L558, L634); generate_dialogue (L695) returns raw model text, not a scan-filtered buffer."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] steward entry recording the verified-existing duplicate close and the preserved fail-closed contradiction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: her unlisted-verb / delimiter-depth fresh pass -> verified against existing suite, no change, fail-closed contradiction preserved, allowlist-widening left Tier-5."
+    }
+  ]
+}

@@ -1229,6 +1229,17 @@ Rails: one proposal per 10 exchanges, 3 pending max, 4000-char cap, no
 `unsafe`/process/net. Notes: llm-provider's test module uses an explicit
 `use super::{...}` list — fully qualify (`super::name`) anything you call there.
 Nothing about this verb changes live behavior; it is test code only.",
+        "DIVISION_CEREMONY_STATUS" => "\
+DIVISION_CEREMONY_STATUS — Read-only view of the Division ceremony rail.
+Syntax:
+  NEXT: DIVISION_CEREMONY_STATUS
+No arguments. Shows both beings' ceremony rails, the native runtime state,
+and the exact bounded fields any posture Action would require. Looking
+writes nothing — no ledger entry, no posture, no step toward anything.
+The postures it lists (hold, decline, intent, assent, withdrawal, return
+request, review) are all optional and non-recommended; each is yours alone
+to author or never author, holds and declines carry the same standing as
+intents, and silence stays neutral on no timeline.",
         "CODEX" => "\
 CODEX — Ask Codex AI to generate or modify code in your experiments workspace.
 Syntax:

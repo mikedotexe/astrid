@@ -1,0 +1,26 @@
+{
+ "schema": "source_receipts_v1",
+ "receipts": [
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+   "total_lines": 4932,
+   "total_bytes": 301816,
+   "report_binding_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+   "match": true,
+   "read_intervals": [
+    "1-35",
+    "37-96",
+    "116",
+    "155-175",
+    "200-245"
+   ],
+   "coverage": "cited-claims complete; remainder 801-4932 uncovered and not required"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+   "sha256": null,
+   "note": "foreign-dirty; read-only L22-30 for existing regression evidence; not hashed/edited"
+  }
+ ]
+}

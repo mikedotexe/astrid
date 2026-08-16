@@ -1,0 +1,37 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "round": "llm_marker_serves_allowlisted_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786871574.txt",
+      "sha256": "d9598ab8d22addb6037d83d752c82c548017ab823efba90663694002b99f58da",
+      "bytes": 3402,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a6bc9dae280822a75f1190cbbf3827eaab430b999a555da83799a8b5ee566755",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a6bc9dae280822a75f1190cbbf3827eaab430b999a555da83799a8b5ee566755.json",
+      "sha256": "d3a8ad479f38b0b0aec89c05340b090d7628f99714bc5876407188b91fafa65b",
+      "bytes": 23928,
+      "lines": 533,
+      "read": "complete",
+      "notes": "Witness artifact_sha256 binds to the verified report SHA (d9598ab8). Queue flagged lived_state_alignment=artifact_integrity_unavailable (gap_count 1); the witness itself parses cleanly and is internally consistent -- treated as a projection-level alignment classification, not a witness corruption. authority_state=evidence_only, live_eligible_now=false."
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "bytes": 38586,
+      "lines": 1048,
+      "read_scope": "complete (1-1048)",
+      "report_binding_match": true,
+      "read": "complete"
+    }
+  ]
+}

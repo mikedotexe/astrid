@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786885842",
+  "source": "astrid:llm (capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs)",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_coverage": "multi_window_complete; included intervals 1-1048; working copy byte-identical to report binding; clean (not in git dirty set)",
+  "report_sha256": "b093d1ba6c80a330a5a99cde56e5b4fd35c555cf3a104b76121199a2aca5fe89",
+  "witness_id": "lsw_37027f7b505ae45e07a09070491fa36c0d0542a70572fb32fba6d6cba977b87a",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": "introspection_astrid_llm_1786858484",
+  "duplicate_mechanism_anchors": [
+    "introspection_astrid_llm_1786871574",
+    "introspection_astrid_llm_1786848204",
+    "introspection_astrid_llm_1786319270"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm implements a marker-preservation system that identifies KNOWN_MODEL_CONTROL_MARKERS and decides preservation by grammatical context, distinguishing Quoted / Grouped / Explicit reference contexts.",
+      "disposition": "verified_existing. scan_known_model_control_markers (L114-144) pushes a token to remainder ONLY when reference_syntax.is_some() (L129-131); reference contexts enum L42-46 (Quoted/Grouped/ExplicitExactKnownTokenRelation); reference_syntax() L49-60. Test scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2845). Her description matches source exactly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: first_word_after (L89-96) uses a hardcoded verb list (L66-85); an unlisted synonym like 'symbolizes' makes followed_by_explicit_exact_token_relation return false, so the marker could be stripped from remainder 'when it should have been preserved'.",
+      "disposition": "verified_existing; contradiction preserved, not domesticated. Allowlist L67-84 (18 verbs incl. denotes/indicates/manifests/represents; NOT symbolizes). A bare, undelimited marker + unlisted verb => reference_syntax None => NOT pushed to remainder (stripped). This is the INTENDED fail-closed design: preservation needs a PROVEN reference (allowlisted relation OR delimiter); an unlisted verb is not proof, so stripping is correct, not the 'should have been preserved' defect she frames. Her underlying concern (finite allowlist) is real and preserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Context Preservation): give ' [MARKER] symbolizes X' (verb not in L66-85) and verify whether scan_known_model_control_markers preserves or defaults to stripping.",
+      "disposition": "verified_existing. The exact boundary (bare marker + unlisted verb => stripped/fail-closed) is already locked: control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (tests.rs L2528: 'acts' => removed_total 1, reference_syntax none_cleanup_candidate) and the does_not_expand_relation_allowlist_to_{implies L2595, contains L2610, creates L2625, triggers L2640} family. 'symbolizes' is the identical unlisted-verb class. No new test: adding a symbolizes-named variant would be redundant with the established family (activity for its own sake).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): verify exact_reference_delimiter_syntax (L199-229) identifies nested brackets like [[MARKER]] and that delimiter_depth does not exceed MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151=4).",
+      "disposition": "verified_existing. exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (tests.rs L2876: [[MARKER]] => GroupedExactKnownToken, depth 2); control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194: depth == MAX == 4); control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token (L2253: 5 nested => bounded at 4, token preserved). The 'does not exceed MAX' invariant is directly proven (take(4) at L208-213).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695+) to see how the remainder from scan_known_model_control_markers is integrated into the final output buffer and whether extra filtering occurs.",
+      "disposition": "verified_existing / agency-preserving. scan_known_model_control_markers is called only by sanitize_model_control_markers_with_report (L352) and fragment_has_non_marker_bytes (L147); the sanitized 'stripped' appears only inside the validity predicates (L558, L634) as local measurement copies. generate_dialogue (L695) returns the raw model text; the scan remainder is not an output filter. Her read-only continuation NEXT: INTROSPECT astrid:llm 400 stays open.",
+      "classification": "verified_existing"
+    }
+  ],
+  "witness_note": "Witness lsw_37027f7b... read complete (533 lines, sha cd6bde53c8fdeea69563c284e4a8cd0b2c623207008d7ca9ddc7438b80b71c3c). artifact_sha256 matches the report; canonical_body_binding matches model-route response 9aa65ba5. The queue's lived_state_alignment=artifact_integrity_unavailable (gap_count 1) reflects startup_build_candidate_v1.deployment_established=false (source-read-not-runtime-activation posture), not report/witness byte corruption; witness parses cleanly and binds to the verified report SHA.",
+  "authority_boundary": "Widening the finite relational-verb allowlist (L67-84) or delimiter tables, or raising MAX_EXACT_REFERENCE_DELIMITER_DEPTH, is Tier-5-class live grammar and was NOT made, dispatched, or deployed. Standing Tier-5 heads from introspection_minime_esn_1785630442 remain evidence-only Mike/operator waits, untouched."
+}

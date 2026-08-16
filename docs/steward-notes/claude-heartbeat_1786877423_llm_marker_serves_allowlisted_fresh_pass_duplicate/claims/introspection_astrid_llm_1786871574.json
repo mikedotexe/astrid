@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786871574",
+  "report_sha256": "d9598ab8d22addb6037d83d752c82c548017ab823efba90663694002b99f58da",
+  "witness_id": "lsw_a6bc9dae280822a75f1190cbbf3827eaab430b999a555da83799a8b5ee566755",
+  "witness_sha256": "d3a8ad479f38b0b0aec89c05340b090d7628f99714bc5876407188b91fafa65b",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": "introspection_astrid_llm_1786862165",
+  "duplicate_anchor": "introspection_astrid_llm_1786848204",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm implements a non-destructive scanner scan_known_model_control_markers (L114); ExactKnownMarkerReferenceContext (L42) is the taxonomy distinguishing quoted, grouped, and explicit-relation contexts, preserving vs redacting a marker by syntactic context.",
+      "disposition": "Verified from complete source at SHA 902a0358: scan L114-144 pushes the token to remainder only when reference_syntax.is_some() (L124-131), else strips it; taxonomy enum L42-46 (Quoted/Grouped/ExplicitRelation). Test scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2845). Same as 1786862165 c001 / anchor 1786848204.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snags: first_word_after (L89) + hardcoded verb list (L65-85) via followed_by_explicit_exact_token_relation (L64); novel verbs (report example 'serves to act as') fail the relation check, so the marker may be stripped or mishandled.",
+      "disposition": "Mechanism verified: only the 17 listed verbs (L65-85) match; a bare unlisted verb yields reference_syntax=None then the token is stripped (tests L2528, L2595+). CONTRADICTION preserved: the report's own example verb 'serves' IS allowlisted (L83) and first_word_after inspects only the first word, so 'serves to act as' is recognized and preserved -- the example does not demonstrate the snag; only genuinely unlisted verbs strip. Widening the allowlist is Tier-5 live grammar; not made.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "One Test Each #1 (Contextual Preservation): pass '[MARKER] simulates' vs '[MARKER] behaves' to verify scan_known_model_control_markers correctly identifies the lack of an explicit relation.",
+      "disposition": "Relation distinction already tested for undelimited markers (distinguishes_allowlisted_is_from_unlisted_acts L2528; grouped+relation L2845). CONTRADICTION preserved: the report's literal '[MARKER]' is bracket-delimited, so exact_reference_delimiter_syntax returns GroupedExactKnownToken first (early return L50-52) and BOTH '[MARKER] simulates' and '[MARKER] behaves' are preserved via the delimiter path; the verb is never inspected. The relation path needs an undelimited marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #2 (Delimiter Depth): pass '[[MARKER]]' to exact_reference_delimiter_syntax (L199) to ensure it respects MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151) and identifies the grouping context.",
+      "disposition": "Exact literal coverage: exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (tests.rs L2876) asserts GroupedExactKnownToken with delimiter_depth=2 for '[[<end_of_turn>]]'. MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151) exercised by control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194); over-limit bounding by control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token (L2253).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder from scan_known_model_control_markers is integrated into the final output buffer / maintains structural integrity.",
+      "disposition": "generate_dialogue at L695. The scan remainder feeds only quality-gate MEASUREMENT copies: is_valid_dialogue_output (L558) and has_one_nonempty_final_next_action (L634) call sanitize_model_control_markers for a local 'stripped' used in predicates. generate_dialogue returns the RAW model text (L988-1047); the remainder is never spliced into the output buffer. Her read-only continuation 'NEXT: INTROSPECT astrid:llm 400' stays open (agency-preserving).",
+      "classification": "verified_existing"
+    }
+  ]
+}

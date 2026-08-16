@@ -597,6 +597,13 @@ fn capability_specs() -> Vec<Value> {
             ],
         ),
         spec(
+            "DIVISION_CEREMONY_STATUS",
+            &[],
+            "division_ceremony",
+            "renders the read-only Division ceremony status: both rails, native runtime state, and the bounded fields any posture Action would need; produces no ledger entry and recommends nothing — every posture remains optional, self-authored only, with silence neutral",
+            &["tests: division handler rejects unknown actions"],
+        ),
+        spec(
             "FACULTIES",
             &["CAPABILITY_MAP"],
             "action_continuity",
