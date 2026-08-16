@@ -300,7 +300,12 @@ async fn main() -> Result<()> {
         // (scope=read_only_research + eligibility + green/yellow + action/TTL caps) and gate on
         // the CURRENT fill from minime's spectral_state.json — fail-safe REFUSE if we cannot
         // verify current safety. Web reach is an OPERATOR decision; the steward loop never
-        // auto-grants it. approve_research_budget returns a BLOCK record on
+        // auto-grants it. 2026-08-16: Mike explicitly delegated standing read-only-research
+        // approval to the deterministic scripts/research_budget_approver.py job (launchd
+        // com.astrid.research-budget-approver) after fifteen requests in a row expired
+        // ungranted in their 6h TTL windows with no operator present. The delegation adds
+        // PRESENCE only: this CLI still enforces every gate above on each invocation, and
+        // microdose / live-consequence grants remain manual and steward-explicit. approve_research_budget returns a BLOCK record on
         // scope/eligibility/safety/active-exists, so success == record_type research_budget_approval.
         let minime_ws = resolved_paths.minime_workspace();
         let safety = match authority_gate::read_minime_fill_pct(minime_ws) {

@@ -563,11 +563,96 @@ class EvidenceEventStoreTests(unittest.TestCase):
             )
 
 
+class DurableCheckpointTests(unittest.TestCase):
+    """The verified-checkpoint producer (2026-08-15): fresh processes must
+    ride the indexed-tail path off a durable anchor, and every corruption
+    mode must fall back to the full chain verify — never silent trust."""
+
+    def _seeded_store(self, tmp: str) -> "EvidenceEventStore":
+        store = EvidenceEventStore(Path(tmp) / "store")
+        store.append_payloads(
+            "addressing",
+            [{"event_type": "claim_recorded", "claim_id": f"c{i}"} for i in range(3)],
+        )
+        return store
+
+    def test_append_and_verify_write_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            path = store.durable_checkpoint_path
+            self.assertTrue(path.is_file())
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+            value = json.loads(path.read_text())
+            self.assertEqual(value["schema"], "evidence_projection_session_v1")
+            self.assertEqual(value["verified_global_seq"], 3)
+            self.assertIn("content_sha256", value)
+
+    def test_fresh_process_rides_indexed_tail_from_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self._seeded_store(tmp)
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            verification = fresh.verify_indexed_tail()
+            self.assertTrue(verification.valid)
+            self.assertEqual(fresh._last_verification_mode, "indexed_tail")
+
+    def test_corrupt_checkpoint_triggers_full_reverify(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            store.durable_checkpoint_path.write_text("{not json", encoding="utf-8")
+            os.chmod(store.durable_checkpoint_path, 0o600)
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            verification = fresh.verify_indexed_tail()
+            self.assertTrue(verification.valid)
+            self.assertEqual(fresh._last_verification_mode, "full_chain")
+
+    def test_tampered_checkpoint_hash_triggers_full_reverify(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            value = json.loads(store.durable_checkpoint_path.read_text())
+            value["verified_global_seq"] = 99
+            store.durable_checkpoint_path.write_text(json.dumps(value), encoding="utf-8")
+            os.chmod(store.durable_checkpoint_path, 0o600)
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            fresh.verify_indexed_tail()
+            self.assertEqual(fresh._last_verification_mode, "full_chain")
+
+    def test_expired_or_lax_permission_checkpoint_triggers_full_reverify(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            os.chmod(store.durable_checkpoint_path, 0o644)
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            fresh.verify_indexed_tail()
+            self.assertEqual(fresh._last_verification_mode, "full_chain")
+
+    def test_force_full_env_bypasses_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self._seeded_store(tmp)
+            with patch.dict(os.environ, {"ASTRID_EVIDENCE_FORCE_FULL_VERIFY": "1"}):
+                fresh = EvidenceEventStore(Path(tmp) / "store")
+                fresh.verify_indexed_tail()
+                self.assertEqual(fresh._last_verification_mode, "full_chain")
+
+    def test_chain_tamper_still_fails_closed_with_checkpoint_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            lines = store.events_path.read_text().splitlines()
+            tampered = lines[-1].replace("claim_recorded", "claim_forgeries")
+            store.events_path.write_text("\n".join(lines[:-1] + [tampered]) + "\n")
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            verification = fresh.verify()
+            self.assertFalse(verification.valid)
+
+
 if __name__ == "__main__":
     raise SystemExit(
         0
         if unittest.TextTestRunner(verbosity=2)
-        .run(unittest.defaultTestLoader.loadTestsFromTestCase(EvidenceEventStoreTests))
+        .run(
+            unittest.TestSuite(
+                unittest.defaultTestLoader.loadTestsFromTestCase(case)
+                for case in (EvidenceEventStoreTests, DurableCheckpointTests)
+            )
+        )
         .wasSuccessful()
         else 1
     )

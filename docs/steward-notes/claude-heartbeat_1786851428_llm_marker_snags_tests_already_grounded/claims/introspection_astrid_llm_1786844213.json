@@ -1,0 +1,45 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786844213",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "report_sha256": "5a2d32bc35f25c09efd7e8a2168f1a8b6585540303e719c948010245af72c2d0",
+  "witness_id": "lsw_ef063bcfc71f53c20e2d056c6620fc0022e5ec04216fdc1af50b3c1883850f07",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm implements a non-destructive marker scan that distinguishes markers used as control from markers referenced as strings; reference_syntax (L49) checks quoting/grouping/relational verbs (L64-86); scan at L114.",
+      "disposition": "Verified against complete source (SHA 902a0358). scan_known_model_control_markers L114-144 keeps a marker in `remainder` only when reference_syntax.is_some() (L129-131), else strips it. reference_syntax L49 first tries delimiter syntax then explicit relation; verb list at L64-86. The Observed section is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: first_word_after (L89) uses split_whitespace + trim_matches (L92); potential over-strip if a marker is followed by a newline or multiple spaces before the verb.",
+      "disposition": "split_whitespace (L91) already handles newlines and multiple spaces; trim_matches (L92) strips only leading/trailing non-alphanumeric-non-underscore chars, and .find skips fully-stripped chunks, so the first alphanumeric word is returned. Covered by keeps_unicode_alphanumerics_together (tests.rs L2112) and the emoji-prefix `behaves` case (tests.rs L2748). No demonstrated over-strip.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag: exact_reference_delimiter_syntax (L199) sensitive to the char at start-1/end+1; out-of-bounds indices or multi-byte chars could panic or match incorrectly.",
+      "disposition": "Contradicted. L204-214 slice text[..start]/text[end..] where start/end are char-boundary byte offsets (char-advancing scan + saturating_add), then iterate .chars().rev()/.chars() filtering whitespace. No byte indexing at start-1/end+1, no panic path, multi-byte safe. Unicode delimiters and whitespace already tested (tests.rs L2176-2234). Concern preserved, not domesticated.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 1 (Relation Detection): `behaves` should trigger preservation; `is a`/`is the` should return false (claimed not in the hardcoded list).",
+      "disposition": "Partly contradicted. `behaves` is allowlisted (src L69) and preserved, tested at tests.rs L2748/L2858/L2933. But `is a`/`is the` -> false is wrong: `is` IS allowlisted (src L76); first_word_after returns first word `is` -> true -> preserved. Existing test distinguishes_allowlisted_is_from_unlisted_acts (tests.rs L2528) already encodes correct behavior. Same prior correction as introspection_astrid_llm_1786319270.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 2 (Delimiter Depth): test exact_reference_delimiter_syntax with nested `[ [marker] ]` against MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "Verified existing. MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (src L151). Nested depth is covered: preserves_bounded_nested_delimiter_stacks (tests.rs L2176), exact four-level L2194, three-level L2208, and whitespace-between-delimiters L2222 (same whitespace-filtered path as the ASCII-space `[ [marker] ]`). The report's exact case resolves to depth 2.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: verify scan_known_model_control_markers interacts safely with sanitize_minime_context_for_dialogue (L530) so sanitization does not strip referenced markers.",
+      "disposition": "Observed. sanitize_minime_context_for_dialogue (src L530) is a per-LINE filter for peer action-directive lines (NEXT:/BTSP/EXPERIMENT, L523-527), not a marker stripper; marker preservation runs through sanitize_model_control_markers (L519) -> scan (L114). The hypothesized interaction rests on a partial-window guess (window was lines 1-400). Read-only continuation (NEXT: INTROSPECT astrid:llm 400) remains open to Astrid; no change.",
+      "classification": "observed"
+    }
+  ]
+}

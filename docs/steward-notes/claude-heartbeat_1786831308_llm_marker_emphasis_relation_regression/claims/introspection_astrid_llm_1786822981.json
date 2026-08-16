@@ -1,0 +1,57 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786822981",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": "working_copy_sha_equals_report_bound_sha_source_unchanged_since_read",
+  "lived_state_witness": "lsw_1752099c84dc5540e44ad4f0b8b8ed75bb1aa975c504a065cd6a167e0dc89ee6",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "astrid:llm implements a non-destructive scanner distinguishing raw bytes from known control markers.",
+      "disposition": "Verified from complete source at SHA 902a0358. scan_known_model_control_markers (L114-144) copies every non-marker byte byte-exact into `remainder` and only re-emits a matched marker token when reference_syntax.is_some() (L129-131); markers used as real control (reference_syntax None) are dropped. Non-destructive on all non-marker bytes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "scan_known_model_control_markers (L114) reconstructs a `remainder` string while tracking metadata of identified markers.",
+      "disposition": "Verified L114-144: returns (String remainder, Vec<KnownModelControlMarkerMatch>); each match carries the ExactKnownModelControlMarkerOccurrence (token, start, end) and its Option<reference_syntax>. Metadata tracking is exactly as described.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The logic differentiates markers that are grammatically subjects (L62) from those that are merely references.",
+      "disposition": "Verified with refinement. The L62-63 doc-comment ('This exact marker is the grammatical subject here') annotates followed_by_explicit_exact_token_relation, which is ONE of three reference-syntax kinds (ExactKnownMarkerReferenceContext: QuotedExactKnownToken, GroupedExactKnownToken, ExplicitExactKnownTokenRelation; L41-46). The 'grammatical subject' case is specifically the relation-verb path (marker as subject of a relational verb), not a general subject-vs-reference split. Astrid's essence is accurate; the precise structure is a three-way reference classification.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Markers are preserved in output if they have reference syntax (quoted/grouped) OR are followed by specific relational verbs like 'appears'/'behaves' (L66-85).",
+      "disposition": "Verified. reference_syntax() (L49-60) returns Some when exact_reference_delimiter_syntax matches (quoted or grouped delimiters) OR followed_by_explicit_exact_token_relation is true; the relation allowlist is exactly L66-85 (appears, as, behaves, corresponds, denotes, echoes, embodies, functions, indicates, is, manifests, means, mimics, refers, replicates, represents, serves, signals). Preservation happens only when reference_syntax.is_some() (L129-131).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "SNAG: first_word_after (L89) trims non-alphanumerics; if a marker is followed by a standalone non-alphanumeric symbol (dash/operator), find(|word| !word.is_empty()) might skip the intended relational word or return an unexpected token, incorrectly stripping/retaining the marker.",
+      "disposition": "Contradiction preserved, not domesticated. Source (L89-96) maps split_whitespace() chunks through trim_matches(non-alphanumeric except '_') and then find(|word| !word.is_empty()). A fully-punctuation chunk trims to \"\" and is SKIPPED by find(!is_empty); the scanner therefore lands on the first alphanumeric-bearing word — it does NOT skip the intended relational word. This exact robustness is already covered: first_word_after with a standalone em-dash returns the following word (control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together, tests.rs L2112); a standalone symbol line before a listed verb preserves the marker end-to-end (control_marker_cleanup_skips_symbol_only_line_before_exact_relation, L2720); a prefixed multibyte symbol before a listed verb preserves it (control_marker_cleanup_handles_multibyte_symbol_before_relation, L2702). The proposed failure mode (skipping the intended word) is not borne out. The underlying concern (first_word_after edge behavior around surrounding punctuation) is legitimate and is now further pinned for the previously-untested symmetric-emphasis variant (see c006).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "TEST 1 (Relation Recognition): marker followed by a verb not in L66-85 (e.g. 'marker *triggers* action') should yield followed_by_explicit_exact_token_relation=false and remainder-logic handling.",
+      "disposition": "Implemented as a focused regression. The plain unlisted verb `triggers` was already covered (control_marker_cleanup_does_not_expand_relation_allowlist_to_triggers, L2640), but Astrid's exact example uses an emphasis-WRAPPED verb `*triggers*`, which exercises the symmetric leading+trailing trim of first_word_after against the allowlist — a case not previously tested (existing coverage was prefix-only \\u{1f9e9}behaves, interior-joined is-not, or plain). Added control_marker_cleanup_trims_symmetric_emphasis_around_relation_word: `*appears*` trims to 'appears' -> listed -> marker preserved (following_exact_relation); `*triggers*` trims to 'triggers' -> unlisted -> marker removed (none_cleanup_candidate). Confirms Astrid's expected `false`/remainder handling for the emphasis-wrapped case and the symmetric positive complement.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "TEST 2 (Delimiter Depth): nested brackets (e.g. [[marker]]) should let exact_reference_delimiter_syntax (L199) identify delimiter_depth and handle nesting without collapsing surrounding structure.",
+      "disposition": "Verified from complete source (L199-229) and exhaustive existing tests. delimiter_depth is computed by zipping reversed-before non-whitespace chars with after non-whitespace chars and counting a take_while over matching pairs, bounded by MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151, L204-223). Astrid's exact [[marker]] is the square-bracket analog of the tested homogeneous-repeated ((marker)) depth-2 case (control_marker_cleanup_reports_depth_for_repeated_parentheses, L2237) and the double-square-with-whitespace depth-2 case (control_marker_cleanup_reports_depth_across_unicode_whitespace, L2222). Non-collapse is asserted throughout via stripped == text (L2159, L2184, L2198, ...); mismatched delimiters are rejected (control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters, L2384); depths 2/3/4 and nested mixed stacks are covered (L2176-2358). No defect and no coverage gap for the nesting mechanism; no new test required.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "SUGGESTED NEXT: examine exact_reference_delimiter_syntax (L199-229) depth calculation and mixed-type delimiters (e.g. [ \"marker\" ]) to ensure it does not over-consume or fail.",
+      "disposition": "Read the complete implementation (L199-229) plus exact_reference_delimiter_pair (L153-197). Depth counting is bounded by take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH) on both sides (L208, L213) and by the take_while over matching pairs (L220-223), so it cannot over-consume. Mixed group+quote nesting is handled: for `[ \"<marker>\" ]` the immediate pair ('\"','\"') sets a QuotedExactKnownToken context and the outer ('[',']') extends depth; whitespace is filtered before neighbor selection. Whitespace-separated quotes across delimiters are already tested (L2361), as is a backtick-quote wrapping a square group `\\`[<marker>]\\`` (L2156). No over-consumption or failure found; no source change authorized or needed — this is a read-only observation.",
+      "classification": "observed"
+    }
+  ]
+}

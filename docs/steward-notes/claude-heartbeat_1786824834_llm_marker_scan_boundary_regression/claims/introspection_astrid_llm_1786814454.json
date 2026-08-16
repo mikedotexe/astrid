@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786814454",
+  "report_sha256": "2bc990522f529d244644b7908ba9fb75a2f4bfc3cebf3012c0112b47ef357bf1",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_verified": "working_copy_hash_equals_report_bound_hash",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) identifies KNOWN_MODEL_CONTROL_MARKERS and decides preservation by syntactic context, distinguishing quoted, grouped, and explicit-relation contexts; exact_reference_delimiter_syntax (L199) handles a wide array of international and specialized punctuation pairs.",
+      "disposition": "Verified against complete source at SHA 902a0358. scan_known_model_control_markers (L114-144) pushes the exact token into the remainder iff reference_syntax.is_some() (L129-131); the three contexts are the ExactKnownMarkerReferenceContext enum QuotedExactKnownToken / GroupedExactKnownToken / ExplicitExactKnownTokenRelation (L41-46); exact_reference_delimiter_pair (L153-197) enumerates extensive international quote pairs (straight, curly, guillemets, CJK corner/tortoise) and bracket pairs (ASCII, mathematical, CJK, fullwidth). Observation is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag (hypothesis): first_word_after (L89) uses split_whitespace + trim_matches; if a marker is followed by a complex phrase or a non-alphanumeric character not handled by the is_alphanumeric filter, the find call could skip the intended relation and default to an empty string, causing the marker to be stripped or improperly handled by followed_by_explicit_exact_token_relation (L64).",
+      "disposition": "Complete source refines the proposed mechanism (contradiction preserved, not domesticated). first_word_after's find(|word| !word.is_empty()) (L93) ADVANCES past punctuation-only chunks to the next real word, so an allowlisted relation separated from the marker by punctuation runs is still recognized -- the marker is NOT stripped. The empty-default via unwrap_or_default (L94) is reached ONLY when no alphanumeric word follows at all, where stripping is the intended fail-closed behavior; quoted/grouped delimiter contexts are handled separately by exact_reference_delimiter_syntax (L199) before the relation path is consulted (reference_syntax, L49-60). Her underlying concern -- that a marker naming a boundary could be dropped -- is preserved and made testable. Behavior was already proven at the wrapper level (control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs; control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows); a new direct regression pins it at the exact scan_known_model_control_markers / first_word_after boundary she named.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Proposed One Test Each #1 (Contextual Preservation): a marker followed by a recognized relation (e.g. [marker] behaves as) should be included in the remainder returned by scan_known_model_control_markers.",
+      "disposition": "The behavior was already covered through the higher-level sanitize_model_control_markers_with_report wrapper, but the exact scan_known_model_control_markers function she named was not directly asserted. Implemented as a direct focused regression that asserts both a group-delimited marker and a bare explicit-relation marker stay in the remainder AND records the exact reference-context enum value in each case.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed One Test Each #2 (Delimiter Depth): a nested structure ([[marker]]) should be classified as GroupedExactKnownToken by exact_reference_delimiter_syntax despite the double brackets.",
+      "disposition": "The depth-2 grouped mechanism was already proven at the wrapper level for repeated parentheses (control_marker_cleanup_reports_depth_for_repeated_parentheses) and unicode-whitespace brackets (control_marker_cleanup_reports_depth_across_unicode_whitespace), but neither the exact exact_reference_delimiter_syntax function nor the literal double-square-bracket case was directly asserted. Implemented as a direct focused regression asserting context == GroupedExactKnownToken and delimiter_depth == 2 for [[<end_of_turn>]].",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder and matches from scan_known_model_control_markers are integrated into the final output stream.",
+      "disposition": "Navigation suggestion answered from complete source, no action required. The exact chain is scan_known_model_control_markers (L114) -> sanitize_model_control_markers_with_report (L352, builds the ControlMarkerCleanupReport from matches) -> sanitize_model_control_markers (L519, returns only the remainder) -> applied to generated text at L558 and L634 in the response post-processing that feeds generation; generate_dialogue (L695) orchestrates prompt assembly and generation and consumes the sanitized output downstream. The remainder is the sanitized visible text; matches drive the evidence report only.",
+      "classification": "verified_existing"
+    }
+  ]
+}

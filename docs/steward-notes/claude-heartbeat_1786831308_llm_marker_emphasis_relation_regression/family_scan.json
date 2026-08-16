@@ -1,0 +1,670 @@
+{
+ "schema": "introspection_family_scan_v1",
+ "threshold": 0.35,
+ "family_count": 25,
+ "batchable_family_count": 3,
+ "families": [
+  {
+   "family_head": "introspection_astrid_llm_1786822981",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786822981",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786809350",
+     "similarity_to_head": 0.404,
+     "variant_distinct_terms": [
+      "appears",
+      "behaves",
+      "captured",
+      "check",
+      "constraint",
+      "empty",
+      "failing",
+      "function",
+      "groupedexactknowntoken",
+      "grouping",
+      "is_alphanumeric",
+      "l114"
+     ],
+     "variant_distinct_term_count": 29
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786782248",
+     "similarity_to_head": 0.419,
+     "variant_distinct_terms": [
+      "calculates",
+      "captured",
+      "character",
+      "control",
+      "denotes",
+      "despite",
+      "does",
+      "empty",
+      "exceed",
+      "filter",
+      "function",
+      "is_alphanumeric"
+     ],
+     "variant_distinct_term_count": 23
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786711252",
+     "similarity_to_head": 0.356,
+     "variant_distinct_terms": [
+      "accidental",
+      "after",
+      "before",
+      "behaves",
+      "character",
+      "check",
+      "collapse",
+      "doesn",
+      "empty",
+      "fail",
+      "filter",
+      "function"
+     ],
+     "variant_distinct_term_count": 31
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786693815",
+     "similarity_to_head": 0.404,
+     "variant_distinct_terms": [
+      "based",
+      "call",
+      "cause",
+      "constant",
+      "contains",
+      "despite",
+      "detection",
+      "empty",
+      "exactknownmarkerreferencesyntax",
+      "explicitly",
+      "filter",
+      "following"
+     ],
+     "variant_distinct_term_count": 24
+    }
+   ],
+   "member_count": 5
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786814454",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786814454",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786788349",
+     "similarity_to_head": 0.368,
+     "variant_distinct_terms": [
+      "aren",
+      "certain",
+      "check",
+      "constant",
+      "ensuring",
+      "even",
+      "extracts",
+      "fail",
+      "first",
+      "following",
+      "fragility",
+      "heavy"
+     ],
+     "variant_distinct_term_count": 33
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786747782",
+     "similarity_to_head": 0.379,
+     "variant_distinct_terms": [
+      "been",
+      "boundary",
+      "catch",
+      "doesn",
+      "during",
+      "expected",
+      "heavy",
+      "iterative",
+      "l151",
+      "l92",
+      "manual",
+      "match"
+     ],
+     "variant_distinct_term_count": 25
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786740336",
+     "similarity_to_head": 0.371,
+     "variant_distinct_terms": [
+      "current",
+      "failing",
+      "first",
+      "following",
+      "functions",
+      "heavy",
+      "l180",
+      "l68",
+      "l74",
+      "l76",
+      "logic",
+      "manual"
+     ],
+     "variant_distinct_term_count": 27
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786731228",
+     "similarity_to_head": 0.371,
+     "variant_distinct_terms": [
+      "account",
+      "additionally",
+      "because",
+      "block",
+      "certain",
+      "characters",
+      "confirming",
+      "doesn",
+      "employs",
+      "exactknownmarkerreferencecontext",
+      "fail",
+      "fragility"
+     ],
+     "variant_distinct_term_count": 35
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786712397",
+     "similarity_to_head": 0.359,
+     "variant_distinct_terms": [
+      "against",
+      "aggressive",
+      "assert",
+      "bracket",
+      "calculates",
+      "correct",
+      "delimiter_depth",
+      "fail",
+      "heavy",
+      "isolate",
+      "l151",
+      "leading"
+     ],
+     "variant_distinct_term_count": 30
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786685402",
+     "similarity_to_head": 0.391,
+     "variant_distinct_terms": [
+      "arms",
+      "because",
+      "catch",
+      "defined",
+      "doesn",
+      "exact_reference_delimiter_pair",
+      "exactknownmarkerreferencecontext",
+      "false",
+      "guide",
+      "heavy",
+      "incorrectly",
+      "l153"
+     ],
+     "variant_distinct_term_count": 30
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786600655",
+     "similarity_to_head": 0.426,
+     "variant_distinct_terms": [
+      "actually",
+      "additionally",
+      "appears",
+      "aren",
+      "because",
+      "byte",
+      "characters",
+      "check",
+      "constraint",
+      "falls",
+      "first",
+      "incorrect"
+     ],
+     "variant_distinct_term_count": 39
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786597768",
+     "similarity_to_head": 0.358,
+     "variant_distinct_terms": [
+      "based",
+      "before",
+      "characters",
+      "construct",
+      "contains",
+      "doesn",
+      "exceeding",
+      "handles",
+      "hardcoded",
+      "known",
+      "levels",
+      "list"
+     ],
+     "variant_distinct_term_count": 33
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786589303",
+     "similarity_to_head": 0.376,
+     "variant_distinct_terms": [
+      "been",
+      "before",
+      "boundaries",
+      "byte",
+      "certain",
+      "characters",
+      "checks",
+      "constant",
+      "current",
+      "during",
+      "emojis",
+      "ends"
+     ],
+     "variant_distinct_term_count": 39
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786586177",
+     "similarity_to_head": 0.367,
+     "variant_distinct_terms": [
+      "bracket",
+      "breaking",
+      "delimiter_depth",
+      "fail",
+      "functions",
+      "gateway",
+      "heavy",
+      "incorrectly",
+      "isolate",
+      "logic",
+      "maintains",
+      "manual"
+     ],
+     "variant_distinct_term_count": 28
+    }
+   ],
+   "member_count": 11
+  },
+  {
+   "family_head": "introspection_llm.rs_1786807306",
+   "source_label": "llm.rs",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+   "window": "lines1-28of28",
+   "members": [
+    {
+     "introspection_id": "introspection_llm.rs_1786807306",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_codec_1786784975",
+   "source_label": "astrid:codec",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "window": "lines1-400of1351",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_codec_1786784975",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_DOMAIN_BOUNDARIES.md_1786752896",
+   "source_label": "DOMAIN_BOUNDARIES.md",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+   "window": "lines1-89of89",
+   "members": [
+    {
+     "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786752896",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786706577",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786706577",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786700087",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786700087",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    },
+    {
+     "introspection_id": "introspection_astrid_llm_1786564979",
+     "similarity_to_head": 0.37,
+     "variant_distinct_terms": [
+      "against",
+      "calculates",
+      "care",
+      "chars",
+      "check",
+      "containing",
+      "contextual",
+      "delimiter_depth",
+      "determine",
+      "explicitexactknowntokenrelation",
+      "extreme",
+      "grammatical"
+     ],
+     "variant_distinct_term_count": 32
+    }
+   ],
+   "member_count": 2
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786691520",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786691520",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_minime_regulator_1786676901",
+   "source_label": "minime:regulator",
+   "source_path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+   "window": "lines1-24of24",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_regulator_1786676901",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_codec_1786675317",
+   "source_label": "astrid:codec",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "window": "lines1-400of1351",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_codec_1786675317",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786674481",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786674481",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786668147",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786668147",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_llm.rs_1786664552",
+   "source_label": "llm.rs",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+   "window": "lines1-27of27",
+   "members": [
+    {
+     "introspection_id": "introspection_llm.rs_1786664552",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786661484",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines801-1048of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786661484",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786658532",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines401-800of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786658532",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_DOMAIN_BOUNDARIES.md_1786640688",
+   "source_label": "DOMAIN_BOUNDARIES.md",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+   "window": "lines1-89of89",
+   "members": [
+    {
+     "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786640688",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_llm.rs_1786638900",
+   "source_label": "llm.rs",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+   "window": "lines1-27of27",
+   "members": [
+    {
+     "introspection_id": "introspection_llm.rs_1786638900",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786629317",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786629317",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_DOMAIN_BOUNDARIES.md_1786624390",
+   "source_label": "DOMAIN_BOUNDARIES.md",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+   "window": "lines1-89of89",
+   "members": [
+    {
+     "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1786624390",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786621427",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786621427",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786603996",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786603996",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786573808",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786573808",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786561627",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786561627",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_astrid_llm_1786535315",
+   "source_label": "astrid:llm",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+   "window": "lines1-400of1048",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_llm_1786535315",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  },
+  {
+   "family_head": "introspection_llm.rs_1786531091",
+   "source_label": "llm.rs",
+   "source_path": "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+   "window": "lines1-27of27",
+   "members": [
+    {
+     "introspection_id": "introspection_llm.rs_1786531091",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1
+  }
+ ],
+ "skipped": [],
+ "authority_boundary": "evidence routing only: a family is a candidate batch, not a disposition; every member still requires its own complete read, per-report claims naming its variant_distinct_terms, and its own close"
+}

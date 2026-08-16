@@ -1,0 +1,24 @@
+{
+  "schema": "round_read_manifest_v1",
+  "round": "claude-heartbeat_1786831308_llm_marker_emphasis_relation_regression",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786822981",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786822981.txt",
+      "sha256": "e7a12f5105f975363f48112d47af1543d86c0823008f042c462cb5e4160ff64e",
+      "bytes": 3658,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_1752099c84dc5540e44ad4f0b8b8ed75bb1aa975c504a065cd6a167e0dc89ee6",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1752099c84dc5540e44ad4f0b8b8ed75bb1aa975c504a065cd6a167e0dc89ee6.json",
+      "sha256": "e481ab93574633c6535f1620f4af0c246472320c8b13f99dac72cce71f9669b6",
+      "bytes": 23922,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

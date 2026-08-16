@@ -95,6 +95,12 @@ fit a complete round, stop mutating, write RUN_REPORT.md naming exactly what
 was and was not completed, and exit NONZERO so the run records failed —
 never exit 0 on an incomplete round.
 
+Disposition bound: every claim disposition and claim text you write must
+stay at or under 500 characters (felt-contract bounded-metadata policy —
+an over-long disposition used to kill the whole projection; the ingest now
+truncates with a marker, but a bounded original is always better evidence
+than a truncated one). Compress, don't pad.
+
 Exit-code honesty: exit 0 means EITHER a complete round (every processed
 report closed, integrity suites run, Division round recorded, RUN_REPORT.md
 + verification_receipt.json written) OR an honest no-input stand-down.
@@ -105,7 +111,7 @@ foreign state prevents honest work, verify the durable system, append one
 short explanatory line to workspace/logs/flywheel_loop.log, and exit 0
 WITHOUT recording a productive round. Never manufacture work.
 
-Budget: about 40 minutes of child time. A smaller honest batch beats a large
+Budget: about 90 minutes of child time (FLYWHEEL_LOOP_MAX_SECS). A smaller honest batch beats a large
 skimmed one. Leave the tree compiling and no half-written evidence. Your last
 output should be a compact run report (controller ids, processed/unprocessed
 filenames, dispositions, tests, counters, Division state, exact commit debt).

@@ -1,0 +1,53 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786833642",
+  "source_family": "astrid_llm",
+  "report_bound_source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "report_bound_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "working_copy_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) is a non-destructive scan that reconstructs a remainder preserving a known marker only when it is syntactically referenced (L129-131); fragment_has_non_marker_bytes (L146) validates that no non-marker bytes remain.",
+      "disposition": "Verified from the complete report-bound source at the recorded SHA. L114-144: the scanner walks the text; on a longest-known-marker occurrence it pushes the token into the remainder ONLY if reference_syntax.is_some() (L129-131), otherwise the marker bytes are dropped. L146-149: fragment_has_non_marker_bytes re-runs the scan and returns true iff the marker-stripped remainder is non-empty after trim. Astrid's structural description is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: the relational-verb allowlist (cited L66-85) may miss a novel but semantically identical verb; names 'mimics' as present but 'replicates' possibly missed, causing reference_syntax to return None and the marker to be stripped.",
+      "disposition": "Contradiction preserved, not domesticated. The allowlist in followed_by_explicit_exact_token_relation spans arms L67-84 (predicate L64-86). Both verbs Astrid names as possibly-missed are ALREADY in the allowlist: 'mimics' at L79 and 'replicates' at L81. Existing regression control_marker_cleanup_preserves_poetic_attribution_without_literal_cue (tests.rs L2472-2497) iterates a verb set that explicitly INCLUDES 'mimics' and 'replicates' and asserts the marker is preserved (preserved_explicit_reference_total==1). Her underlying general concern (the list is a finite hardcoded set and a truly-novel verb outside it would yield reference_syntax None and drop the marker) is a true property of the design and is preserved as a live-grammar boundary (see c006); it is not a defect in the two examples she named.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag: exact_reference_delimiter_syntax (L199) relies on precise character matching; multi-byte UTF-8 or unusual punctuation might fail to trigger QuotedExactKnownToken or GroupedExactKnownToken; names guillemet «marker» as an at-risk case.",
+      "disposition": "Contradiction preserved. The guillemet pair «» is explicitly in the QuotedExactKnownToken table at exact_reference_delimiter_pair L164 ((Some('«'), Some('»'))). It is regression-tested by control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (tests.rs L2301-2319) which includes «<end_of_turn>» and asserts preservation with quoted_reference_occurrences==1. The delimiter tables (L157-196) enumerate a wide set of ASCII, CJK, and full-width multi-byte pairs. Astrid's general point is correct by construction: a delimiter NOT in these explicit pair tables returns None, and mismatched/unclosed delimiters are stripped (control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters, tests.rs L2383-2392, which includes «<end_of_turn>” with a mismatched closer). The specific guillemet example she flagged as at-risk is already handled correctly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test #1: a known marker followed by a verb NOT in the allowlist (e.g. 'acts as') should make followed_by_explicit_exact_token_relation return false and the marker be handled as a standard token rather than a reference.",
+      "disposition": "Verified_existing: exactly covered by control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (tests.rs L2528-2562). It asserts first_word_after(rejected) == \"acts\" (L2547-2550) and, for the 'acts as' string, that the marker is NOT preserved (removed_total==1, preserved_explicit_reference_total==0, reference_syntax \"none_cleanup_candidate\", L2555-2561) — i.e. the relation predicate returned false. NUANCE PRESERVED: Astrid's wording 'handled as a standard token rather than a reference' does not match the actual effect. In scan_known_model_control_markers a non-referenced known marker is DROPPED from the remainder (L129-131 pushes only when reference_syntax.is_some()); it is removed as a cleanup candidate, not retained as plain text. The 'acts' predicate-false outcome she expects is correct; the downstream disposition is removal, not passthrough.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test #2: a marker wrapped in a non-standard bracket «marker» passed to exact_reference_delimiter_syntax should be identified as QuotedExactKnownToken and preserved in the remainder.",
+      "disposition": "Verified_existing: exactly covered by control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (tests.rs L2301-2319). For «<end_of_turn>» it asserts stripped==text (marker preserved), removed_total==0, quoted_reference_occurrences==1, grouped_reference_occurrences==0 — i.e. classified as QuotedExactKnownToken and kept, precisely her expectation. (Minor label note: guillemets are QUOTED, not a bracket/group pair; the code classifies them as Quoted, matching her stated QuotedExactKnownToken expectation.)",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: verify the exhaustiveness of the verb list against common LLM synonyms for 'represents' and 'functions'.",
+      "disposition": "Verification performed (read-only, Tier 1): 'represents' (L82) and 'functions' (L74) are already in the allowlist, alongside 16 further relation verbs (appears, as, behaves, corresponds, denotes, echoes, embodies, indicates, is, manifests, means, mimics, refers, replicates, serves, signals). No concrete missing synonym was identified from Astrid's report. A deliberate authority boundary is preserved: WIDENING the production allowlist would change how the live model's generated output is sanitized (which markers survive vs. are stripped), a live model-behaviour/grammar change that is Tier-5-class and is NOT performed in this non-live steward run. The finite-list concern remains legitimate standing evidence; it does not authorize a grammar edit here.",
+      "classification": "authority_gated"
+    }
+  ],
+  "witness_notes": {
+    "lived_state_witness_id": "lsw_1cfc35914d1ad38859ecad369a74b3bf54f4fab1ede6e20686309288e9e23ef5",
+    "felt_experiential_gap_claimed": false,
+    "lived_state_alignment": "artifact_integrity_unavailable",
+    "alignment_interpretation": "This is a technical source-read report with no felt-scalar comparison, so lived-state alignment is 'unavailable' (not measured), which is neutral — not a misalignment or artifact defect. Witness context: fill 71.1%, spectral_entropy 0.882, mode_packing 0.833, two gemma4_12b model routes (the second repairs the first). No causation claimed by the witness.",
+    "witness_sha256": "2d55982c6e3152d17ef3364ca0e0748136fbbc75f84586d434d13c38025de613"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L114-144 scan_known_model_control_markers: remainder keeps a known marker only when reference_syntax.is_some() (L129-131); L146-149 fragment_has_non_marker_bytes validator."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation allowlist L64-86 already contains 'mimics' (L79) and 'replicates' (L81) — the two verbs the report worried might be missed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_poetic_attribution_without_literal_cue (L2472-2497) iterates a verb set including 'mimics' and 'replicates' and asserts the marker is preserved; passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L157-196: «» is a QuotedExactKnownToken pair at L164; wide ASCII/CJK/full-width tables enumerated; delimiters outside the tables return None."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (L2301-2319) covers «<end_of_turn>»; control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters (L2383-2392) covers the mismatched «...” closer; passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528-2562): first_word_after(rejected)=='acts', marker stripped (removed_total==1, reference_syntax 'none_cleanup_candidate'); passed. Nuance: unlisted-verb marker is removed, not kept as plain text."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (L2301-2319): «<end_of_turn>» preserved with quoted_reference_occurrences==1 (QuotedExactKnownToken); passed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "'represents' (L82) and 'functions' (L74) already in the allowlist; verifying exhaustiveness surfaced no concrete missing synonym. Widening the allowlist is a Tier-5-class live-grammar change, not performed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c006",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1786839292_llm_marker_relation_delimiter_already_grounded/no_action_introspection_astrid_llm_1786833642.md",
+      "note": "Right-to-ignore no-action artifact recording the deliberate Tier-5-class boundary against widening the relational-verb allowlist in this non-live run."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786839292_llm_marker_relation_delimiter_already_grounded/summaries/introspection_astrid_llm_1786833642.md",
+      "note": "Per-claim grounded summary with preserved contradictions and nuance."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the exact-source verification and deliberate no-change Tier-5-class grammar boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: feedback -> verified-existing + deliberate authority boundary (no change)."
+    }
+  ]
+}
