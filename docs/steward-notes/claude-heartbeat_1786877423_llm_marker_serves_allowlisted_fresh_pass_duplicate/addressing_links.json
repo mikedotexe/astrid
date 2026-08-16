@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 (keep token only when reference_syntax.is_some, L124-131); ExactKnownMarkerReferenceContext taxonomy L42-46."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845) covers grouped + explicit-relation contexts."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "17-verb allowlist L65-85 (includes 'serves' L83); first_word_after L89 inspects only the first word; followed_by_explicit_exact_token_relation L64."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "distinguishes_allowlisted_is_from_unlisted_acts (L2528) + does_not_expand_relation_allowlist_to_* (L2595+) prove only listed verbs preserve; unlisted strip."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax checks delimiter first with early return (L48-60); bracket-delimited '[MARKER]' resolves as GroupedExactKnownToken before the verb is inspected."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Grouped-delimiter preservation at L2845; undelimited relation distinction at L2528. The report's literal '[MARKER] simulates' vs '[MARKER] behaves' exercises the delimiter path, not the relation path."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229; MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 at L151."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2876) = literal '[[MARKER]]' depth 2; four-level depth L2194; over-limit bounding L2253."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695 returns raw model text L988-1047; scan remainder is used only in quality-gate measurement copies (is_valid_dialogue_output L558, has_one_nonempty_final_next_action L634), never spliced into output."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786877423_llm_marker_serves_allowlisted_fresh_pass_duplicate/summaries/introspection_astrid_llm_1786871574.md",
+      "note": "Remainder-flow grounding and the Tier-5 boundary (allowlist/delimiter widening not made)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] bullet recording the duplicate close and preserved contradictions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786871574",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-08-16 row: fresh-pass duplicate; verified_existing; two variant contradictions preserved; Tier-5 boundary reaffirmed; no code change."
+    }
+  ]
+}

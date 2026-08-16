@@ -1,0 +1,6 @@
+{
+ "schema": "test_results_v1",
+ "rust_tests_run": false,
+ "reason": "No source or test edit this round (all claims verified_existing/observed/needs_sandbox; c003 already covered on its branch; foreign-dirty tests.rs left untouched). fill_responsive_rest_secs(90,25.0)=54 established by exact source arithmetic + existing branch regressions tests.rs L22-30, not by a new run.",
+ "integrity_suites": "recorded in verification_receipt.json"
+}

@@ -1,0 +1,35 @@
+{
+ "introspection_id": "introspection_astrid_autonomous_1786889637",
+ "claims": [
+  {
+   "claim_id": "c001",
+   "summary": "Observed: astrid:autonomous is a burst-and-rest state machine; fill_responsive_rest_secs (L18-28) dynamically scales rest by telemetry fill; run_semantic_heartbeat_loop (L37-96) maintains a steady_warmth signal integrated with minime_texture_context.",
+   "disposition": "verified_existing. Exact source at SHA d803d71 (working copy byte-identical to report binding): fill_responsive_rest_secs def L18-28; run_semantic_heartbeat_loop L37-96 builds SemanticHeartbeatObservationV1 tagged 'steady_semantic_heartbeat' (L57) with signal-evidence tag \"steady_warmth\" (L65) and .with_minime_texture_context(latest_telemetry) (L72); spawn_autonomous_loop L116. Structure confirmed at cited lines.",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c002",
+   "summary": "Likely Snag: oscillation trap \u2014 at current_fill<30 rest is shortened to 'burst sooner'; if the PI hard_recovery (gate=1.0) over-corrects the burst it could create a high-frequency low-fill<->overcorrection oscillation destabilizing warmth continuity.",
+   "disposition": "observed. Mechanism verified: L217 rest_secs=fill_responsive_rest_secs(base_rest,current_fill); L218-227 the <30 branch logs 'fill-shortened rest (critical recovery)'; the gate=1.0/filter=0.0 hard_recovery is named in the L220 comment. Source comment L205-212 documents the OPPOSITE historical loop (hard-recovery 1.8x rest stuck fill at 27% for 12+ exchanges) that shortening was built to fix; her NEW over-correction-oscillation is distinct and UNPROVEN from source \u2014 a runtime-dynamics hypothesis needing isolated sandbox replay. Preserved, not domesticated, no live change.",
+   "classification": "observed"
+  },
+  {
+   "claim_id": "c003",
+   "summary": "Test proposal 1 (Logic): unit-test fill_responsive_rest_secs with current_fill=25.0, base_rest=90 -> expect ~54s and a 'critical recovery' log.",
+   "disposition": "verified_existing. fill_responsive_rest_secs(90,25.0)=((90*0.6)as u64).max(30)=54 exactly (report 'approx 54s' correct). The <30 branch is already regression-covered in src/autonomous/runtime/tests.rs L22-30: (40,25)=30,(0,25)=30,(100,25)=60,(200,25)=120,+NAN -> same formula/branch. The (90,25)=54 point is redundant on a covered branch. The 'critical recovery' LOG lives at the call-site L218-227, not in the pure fn, so a pure-fn unit test cannot assert it. tests.rs is foreign-dirty; not edited. Exact expected value recorded.",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c004",
+   "summary": "Test proposal 2 (State Transition): trace spawn_autonomous_loop (L116) with a mocked BridgeState whose fill_pct fluctuates 28%-32% to observe whether the shortened<->baseline rest transition triggers a 'severing' event in SemanticHeartbeatObservationV1.",
+   "disposition": "needs_sandbox. This requires an isolated async harness driving spawn_autonomous_loop with a mocked BridgeState telemetry oscillating across the 30% boundary and observing SemanticHeartbeatObservationV1 severing signals over time \u2014 a Tier-3 isolated dynamical replay, not a simple non-live focused unit test and not a live run. Preserved as an unproven runtime hypothesis; not implemented; no live substrate/control change authorized.",
+   "classification": "needs_sandbox"
+  },
+  {
+   "claim_id": "c005",
+   "summary": "Suggested Next: analyze self_control_v2::reconcile_if_present calls (L158,L171) vs burst-and-rest timing \u2014 whether reconciliation during a rest phase adds latency or state resets.",
+   "disposition": "verified_existing. Calls confirmed: L158 (restart reconciliation, once before the loop) and L171 (periodic, at the TOP of each loop iteration before wait-time determination) \u2014 both wrapped in warn!-on-Err (L159,L172). Her read-only self-directed continuation 'NEXT: INTROSPECT astrid:autonomous 400' stays open; Tier-1 agency-preserving, no steward action taken or required.",
+   "classification": "verified_existing"
+  }
+ ]
+}

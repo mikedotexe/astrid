@@ -1,0 +1,11 @@
+{
+ "schema": "steward_no_action_artifact_v1",
+ "introspection_id": "introspection_astrid_autonomous_1786889637",
+ "report_sha256": "669a301154efa4b8c7b03cf06f0ae1b0089f90badab234d941071a03c6d1a5e9",
+ "reason": "All concrete claims grounded against exact source at SHA d803d71 (working copy byte-identical to report binding) and existing regressions. Structural claims c001/c005 verified at cited lines. Test proposal c003 is already covered by src/autonomous/runtime/tests.rs L22-30 on the same <30 branch (redundant point); its log component belongs to the call-site, not the pure fn. Runtime-dynamics hypotheses c002 (over-correction oscillation) and c004 (severing on 28-32% fluctuation) are UNPROVEN from source and require Tier-3 isolated sandbox replay \u2014 not manufacturable as a non-live focused test and not authorized as a live run. No source/test change warranted; foreign-dirty tests.rs and orchestration.rs left untouched; no live substrate/control change.",
+ "preserved_hypotheses": [
+  "c002 over-correction oscillation (needs_sandbox)",
+  "c004 severing across 30% boundary (needs_sandbox)"
+ ],
+ "authority_boundary": "read_evidence_not_control_approval; Tier-3 sandbox and any live burst/rest, PI, or fill change remain separate gated waits."
+}

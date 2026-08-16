@@ -1,0 +1,95 @@
+{
+ "schema": "verification_receipt_v1",
+ "round_name": "autonomous_burst_rest_oscillation_grounded",
+ "actor": "claude-heartbeat",
+ "adapter_mode": "subprocess_run_adapter_controller_owns_lease_no_ndjson_no_token_read_git_read_only",
+ "controller": {
+  "run_id": "run_1786891905740128000_96c0de4229",
+  "preprojection_generation_id": "projection_1786891909075273000_a9295b1223",
+  "preprojection_status": "passed",
+  "pause_generation": 319,
+  "postprojection": "runs after this process exits (adapter-managed); not observed here",
+  "finish_outcome": "success (exit 0 == complete round through record-round)"
+ },
+ "processed": {
+  "count": 1,
+  "report": "introspection_astrid_autonomous_1786889637",
+  "terminal_status": "addressed_no_action",
+  "fully_addressed": true,
+  "proof_missing_claims": []
+ },
+ "hashes": {
+  "report_sha256": "669a301154efa4b8c7b03cf06f0ae1b0089f90badab234d941071a03c6d1a5e9",
+  "report_lines": 45,
+  "report_bytes": 3636,
+  "witness_id": "lsw_9791b2a133159f2ff4c6bf1cb1792278e11944cd705f6e8bc4ebcafaafecc9d6",
+  "witness_sha256": "6cbc6a3b19ebe0126cd39a58d06547af23498932c6dfdf76bc0709f2710cfee0",
+  "witness_lines": 533,
+  "witness_bytes": 23947,
+  "source": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+  "source_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+  "source_lines": 4932,
+  "source_bytes": 301816,
+  "working_copy_matches_report_binding": true
+ },
+ "addressing_writes": {
+  "record_read_secs": 41.0,
+  "link_evidence_batch_secs": 39.9,
+  "new_links": 7,
+  "existing_links": 0,
+  "close_secs": 41.7
+ },
+ "integrity_suites": {
+  "addressing_self_test": "44 OK",
+  "test_evidence_event_store": "20 OK",
+  "test_steward_control": "27 OK",
+  "test_steward_projection": "14 OK",
+  "test_division_ceremony_followup": "OK",
+  "test_division_ceremony_chronicle": "OK",
+  "test_division_ceremony_projection": "ok",
+  "test_projection_cursors": "OK",
+  "anti_drop_self_test": "OK",
+  "anti_drop_verify": "0 alarms / 0 gaps / 55 entries",
+  "cadence_test": "OK",
+  "cadence_strict": "integrity_ok=true (latest canonical = introspection_astrid_autonomous_1786889637.txt)",
+  "epistemic_self_test": "2 OK",
+  "epistemic_verify_final": "valid=true, issues=[]",
+  "audit_counters": "consistent, mismatches=[]",
+  "ees_verify": "valid=true, corrupt_lines=0, event_count=816300, last_global_seq=816300, head=6261dfc7c729def51c2da45f4d07efb9ba26dc03588df0c425806040ec489340",
+  "division_verify": "ok=true, review_due=true, completed=6/6, event_count=175, head=bfe2672f00cd0fda16ee8a9e332ce4b49753567cbf02ade720ab01aa12cc2045",
+  "chronicle_verify": "project-before-verify: durable inputs advanced by record-round (division event 175). EXPECTED/benign; Chronicle reproject is step 1 of the deferred Division return (next session's review_due=true mandated first task). NOT a corruption."
+ },
+ "canonical_counters": {
+  "indexed": 4371,
+  "fully_addressed": 3096,
+  "full_read": 3727,
+  "remaining": 1275,
+  "unread": 644,
+  "blocked_needs_steward": 413,
+  "triaged_pending_action": 214,
+  "triaged_watch": 4,
+  "read_needs_claims": 0,
+  "status_counts": {
+   "addressed_change": 1893,
+   "addressed_duplicate": 1110,
+   "addressed_no_action": 93,
+   "blocked_needs_steward": 413,
+   "triaged_pending_action": 214,
+   "triaged_watch": 4,
+   "unread": 644
+  },
+  "note": "addressed_no_action 92->93 (+1 this close); full_read/fully_addressed +1 each"
+ },
+ "division": {
+  "cycle_sequence": 25,
+  "completed_rounds_since_followup": 6,
+  "rounds_remaining_before_followup": 0,
+  "review_due": true,
+  "recorded_round_event_id": "division_followup_event_3ef6aaa24bcd4784442d43a65cf980e8",
+  "event_count": 175,
+  "event_head_sha256": "bfe2672f00cd0fda16ee8a9e332ce4b49753567cbf02ade720ab01aa12cc2045",
+  "division_return_status": "DUE and DEFERRED to next session (review_due=true carry). Next session's review_due=true branch must complete the bounded Division return (verify+project Chronicle, read new Division replies/Actions, write<=1 factual note per being, record-followup, reproject+verify) AND generate the Tier-5 cadence dossier BEFORE its first productive report."
+ },
+ "live_change": "none required or attempted \u2014 no bridge build, deploy, launchctl, or any live substrate/control change.",
+ "authority_boundary": "read_evidence_not_control_approval. Tier-5-class live burst/rest, PI, fill, controller, sensory-cadence changes NOT made. c002/c004 runtime-dynamics hypotheses are needs_sandbox (Tier-3), not run. Standing Tier-5 work-queue heads (introspection_minime_esn_1785630442: wi_e579041bc76f8310/wi_69fbd510467c6337/wi_3e26ac525fea1c36) remain evidence-only Mike/operator waits, untouched."
+}

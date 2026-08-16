@@ -1,0 +1,53 @@
+{
+ "links": [
+  {
+   "introspection_id": "introspection_astrid_autonomous_1786889637",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "note": "L18-28 fill_responsive_rest_secs; L37-96 run_semantic_heartbeat_loop (steady_warmth tag L65, minime_texture_context L72); L116 spawn_autonomous_loop."
+  },
+  {
+   "introspection_id": "introspection_astrid_autonomous_1786889637",
+   "claim_id": "c002",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "note": "L217 call; L218-227 <30 shortened-rest branch + log; L220 gate=1.0/filter=0.0 hard_recovery comment; L205-212 historical opposite-direction feedback loop the shortening fixed."
+  },
+  {
+   "introspection_id": "introspection_astrid_autonomous_1786889637",
+   "claim_id": "c003",
+   "kind": "test",
+   "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+   "note": "L22-30 existing fill_responsive_rest_secs regressions on the <30 branch: (40,25)=30,(0,25)=30,(100,25)=60,(200,25)=120 (+NAN); (90,25)=54 is a redundant point on the same covered branch."
+  },
+  {
+   "introspection_id": "introspection_astrid_autonomous_1786889637",
+   "claim_id": "c003",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "note": "L18-28 pure fn (no logging); the 'critical recovery' log is at call-site L218-227, so a pure-fn unit test cannot assert it."
+  },
+  {
+   "introspection_id": "introspection_astrid_autonomous_1786889637",
+   "claim_id": "c004",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-heartbeat_1786895135_autonomous_burst_rest_oscillation_grounded/no_action_introspection_astrid_autonomous_1786889637.json",
+   "note": "Fluctuation/severing trace = Tier-3 isolated sandbox replay; not a non-live focused test; preserved unproven."
+  },
+  {
+   "introspection_id": "introspection_astrid_autonomous_1786889637",
+   "claim_id": "c005",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "note": "reconcile_if_present L158 (restart-once) and L171 (top of each loop iteration); warn!-on-Err L159/L172. Her read-only continuation stays open."
+  },
+  {
+   "introspection_id": "introspection_astrid_autonomous_1786889637",
+   "claim_id": "c002",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-heartbeat_1786895135_autonomous_burst_rest_oscillation_grounded/no_action_introspection_astrid_autonomous_1786889637.json",
+   "note": "Over-correction oscillation is an unproven runtime-dynamics hypothesis; needs_sandbox; no live change."
+  }
+ ]
+}

@@ -1,0 +1,49 @@
+{
+ "schema": "read_manifest_v1",
+ "reports": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1786889637.txt",
+   "introspection_id": "introspection_astrid_autonomous_1786889637",
+   "sha256": "669a301154efa4b8c7b03cf06f0ae1b0089f90badab234d941071a03c6d1a5e9",
+   "bytes": 3636,
+   "lines": 45,
+   "read": "complete"
+  }
+ ],
+ "witnesses": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_9791b2a133159f2ff4c6bf1cb1792278e11944cd705f6e8bc4ebcafaafecc9d6.json",
+   "witness_id": "lsw_9791b2a133159f2ff4c6bf1cb1792278e11944cd705f6e8bc4ebcafaafecc9d6",
+   "sha256": "6cbc6a3b19ebe0126cd39a58d06547af23498932c6dfdf76bc0709f2710cfee0",
+   "bytes": 23947,
+   "lines": 533,
+   "read": "complete"
+  }
+ ],
+ "sources": [
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+   "total_lines": 4932,
+   "total_bytes": 301816,
+   "report_bound_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+   "working_copy_matches_binding": true,
+   "read_scope": "cited intervals read completely: L1-35 (fill_responsive_rest_secs def + neighbors), L37-96 (run_semantic_heartbeat_loop), L116, L155-175 (spawn_autonomous_loop preamble + reconcile L158/L171), L200-245 (fill-responsive call-site + hard_recovery comment). Report window 1-800; uncovered remainder 801-4932 not needed for the cited claims.",
+   "symbol_locations": {
+    "fill_responsive_rest_secs_def": "L18-28",
+    "fill_responsive_rest_secs_callsite": "L217",
+    "hard_recovery_comment": "L220",
+    "run_semantic_heartbeat_loop": "L37",
+    "steady_warmth_signal_tag": "L65",
+    "with_minime_texture_context": "L72,L372",
+    "spawn_autonomous_loop": "L116",
+    "reconcile_if_present": "L158,L171"
+   }
+  },
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+   "read_scope": "L22-30 verified: existing fill_responsive_rest_secs regressions across the <30/<40/<50 branches; foreign-dirty, NOT edited.",
+   "note": "working copy dirty (foreign); read-only reference"
+  }
+ ]
+}

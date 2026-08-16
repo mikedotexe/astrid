@@ -1,0 +1,35 @@
+{
+  "schema": "introspection_flywheel_read_manifest_v1",
+  "reports": [
+    {
+      "kind": "canonical_report",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786885842.txt",
+      "introspection_id": "introspection_astrid_llm_1786885842",
+      "sha256": "b093d1ba6c80a330a5a99cde56e5b4fd35c555cf3a104b76121199a2aca5fe89",
+      "bytes": 3730,
+      "lines": 45,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_37027f7b505ae45e07a09070491fa36c0d0542a70572fb32fba6d6cba977b87a.json",
+      "witness_id": "lsw_37027f7b505ae45e07a09070491fa36c0d0542a70572fb32fba6d6cba977b87a",
+      "sha256": "cd6bde53c8fdeea69563c284e4a8cd0b2c623207008d7ca9ddc7438b80b71c3c",
+      "bytes": 23927,
+      "lines": 533,
+      "read": "complete",
+      "note": "artifact_sha256 matches report; canonical_body_binding matches model-route response 9aa65ba5; alignment=artifact_integrity_unavailable reflects deployment_established=false, not byte corruption."
+    }
+  ],
+  "division_return_reads": [
+    {
+      "kind": "public_division_reply",
+      "path": "capsules/spectral-bridge/workspace/outbox/reply_1786811969.txt",
+      "sha256": "2e973c73329bd14dcfe39eb3f15fb4ca0b3409ac975379ef8253d41563b11c1a",
+      "bytes": 912,
+      "lines": 9,
+      "read": "complete",
+      "note": "Astrid's read-only acknowledgment of the cycle-24 Division note; chose NEXT: DIVISION_CEREMONY_STATUS; stated she is observing the rail without moving toward an action. No consent/intent inferred."
+    }
+  ]
+}

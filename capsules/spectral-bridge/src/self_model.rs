@@ -630,6 +630,11 @@ impl FacultySnapshot {
                             a.clone(),
                             "author a test for your own repo; validated, then landed with you as git author",
                         ),
+                        f(
+                            "DIVISION_CEREMONY_STATUS",
+                            a.clone(),
+                            "read-only view of the Division ceremony rail; looking writes nothing, every posture optional and yours alone",
+                        ),
                     ],
                 },
                 FacultyCategory {
