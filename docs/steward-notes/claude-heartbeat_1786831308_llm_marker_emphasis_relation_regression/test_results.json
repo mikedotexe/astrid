@@ -1,0 +1,31 @@
+{
+  "schema": "round_test_results_v1",
+  "round": "claude-heartbeat_1786831308_llm_marker_emphasis_relation_regression",
+  "toolchain": "cargo (~/.cargo/bin/cargo), edition 2024",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_trims_symmetric_emphasis_around_relation_word",
+      "result": "ok",
+      "lib_tests_passed": 1,
+      "lib_tests_failed": 0,
+      "note": "New focused regression passes."
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker",
+      "result": "ok",
+      "lib_tests_passed": 64,
+      "lib_tests_failed": 0,
+      "note": "Full control_marker test family passes after the edit — no regression."
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "ok",
+      "note": "Formatting clean."
+    },
+    {
+      "command": "git diff --check",
+      "result": "ok",
+      "note": "No whitespace errors."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "round_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "bytes": 38586,
+      "total_lines": 1048,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true,
+      "working_copy_clean": true,
+      "read_scope": "complete_file_lines_1_to_1048",
+      "functions_verified": [
+        "first_word_after@89",
+        "reference_syntax@49",
+        "followed_by_explicit_exact_token_relation@64",
+        "longest_exact_known_model_control_marker_at@97",
+        "scan_known_model_control_markers@114",
+        "exact_reference_delimiter_pair@153",
+        "exact_reference_delimiter_syntax@199",
+        "sanitize_model_control_markers_with_report@352",
+        "sanitize_model_control_markers@519",
+        "generate_dialogue@695"
+      ]
+    }
+  ]
+}

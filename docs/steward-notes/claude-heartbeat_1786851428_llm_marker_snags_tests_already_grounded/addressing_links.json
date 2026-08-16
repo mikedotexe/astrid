@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax L49-60; scan_known_model_control_markers L114-144 keeps a marker only when reference_syntax.is_some() (L129-131). Observed section accurate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1786851428_llm_marker_snags_tests_already_grounded/no_action_introspection_astrid_llm_1786844213.md",
+      "note": "Right-to-ignore artifact; per-claim evidence-backed no-action rationale."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace handles newlines/multi-space; trim_matches end-only; .find skips empty chunks. No over-strip."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together (L2112) and emoji-prefix behaves case (L2748) cover trim behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229: char-boundary slices + char-iterators, whitespace-filtered; no byte indexing at start-1/end+1, no panic, multi-byte safe. Contradicts panic snag."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Unicode delimiter stacks (L2176-2191) and depth-across-unicode-whitespace (L2222) exercise multi-byte delimiter handling without panic."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Relation allowlist L64-86 includes both `behaves` (L69) and `is` (L76). first_word_after returns first word `is`, so `is a`/`is the` -> preserved (contradicts report's false expectation)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528) asserts first_word_after==is and preservation; behaves preservation tested L2748/L2858/L2933."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1786851428_llm_marker_snags_tests_already_grounded/no_action_introspection_astrid_llm_1786844213.md",
+      "note": "Contradiction preserved, not domesticated; allowlist widening is Tier-5-class and not done."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c004",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] entry records the grounding and preserved contradiction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-08-15 row: two snags and two tests already grounded, one repeated allowlist contradiction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "MAX_EXACT_REFERENCE_DELIMITER_DEPTH = 4 (L151); delimiter_depth computed L216-223 by zipping before/after pairs."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Nested depth covered: preserves_bounded_nested_delimiter_stacks (L2176), exact four-level (L2194), three-level (L2208), whitespace-between-delimiters (L2222) — same path as ASCII-space `[ [marker] ]`."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "sanitize_minime_context_for_dialogue L530 is a per-line action-directive filter (is_peer_action_directive_line L523-528); marker preservation is sanitize_model_control_markers L519. Distinct functions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786851428_llm_marker_snags_tests_already_grounded/summaries/introspection_astrid_llm_1786844213.md",
+      "note": "Read-only continuation (NEXT: INTROSPECT astrid:llm 400) remains open to Astrid; partial-window guess noted."
+    }
+  ]
+}

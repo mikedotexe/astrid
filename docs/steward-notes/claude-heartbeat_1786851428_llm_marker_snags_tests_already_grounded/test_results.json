@@ -1,0 +1,34 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "reader": "claude-heartbeat",
+  "report_change": "addressed_no_action — no source or test change; both proposed tests already exist and pass. No cargo build/test run because nothing was implemented.",
+  "verified_existing_tests": [
+    "capsules/spectral-bridge/src/llm/provider/tests.rs::control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together (L2112)",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs::control_marker_cleanup_preserves_bounded_nested_delimiter_stacks (L2176)",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs::control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194)",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs::control_marker_cleanup_reports_exact_three_level_delimiter_depth (L2208)",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs::control_marker_cleanup_reports_depth_across_unicode_whitespace (L2222)",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs::control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528)",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs::behaves relation coverage (L2748, L2858, L2933)"
+  ],
+  "integrity_suites": [
+    {"suite": "introspection_addressing_audit.py --self-test", "result": "pass", "detail": "44 tests OK"},
+    {"suite": "test_evidence_event_store.py", "result": "pass", "detail": "20 tests OK"},
+    {"suite": "test_steward_control.py", "result": "fail_flaky_environmental", "detail": "errors=1 (test_pause_cooperatively_interrupts_wrapped_subprocess: PausedError 'fixture stop' on subprocess begin); retry alone produced a DIFFERENT error (errors=2, OSError Errno 66 Directory not empty on temp-fixture teardown). Nondeterministic under concurrent live-stack load; source clean/unmodified this round; unrelated to the addressed report."},
+    {"suite": "test_steward_projection.py", "result": "fail_flaky_environmental", "detail": "failures=1 (test_projection_pause_interrupts_child_once_without_force_kill: return_code -2 (SIGINT) != 0). Cooperative pause-interrupt timing race under load; source clean/unmodified; unrelated to the addressed report."},
+    {"suite": "test_division_ceremony_followup.py", "result": "pass", "detail": "3 tests OK"},
+    {"suite": "test_division_ceremony_chronicle.py", "result": "pass", "detail": "10 tests OK"},
+    {"suite": "test_division_ceremony_projection.py", "result": "pass", "detail": "self-test ok"},
+    {"suite": "test_projection_cursors.py", "result": "pass", "detail": "4 tests OK"},
+    {"suite": "test_introspection_cadence_audit.py", "result": "pass", "detail": "6 tests OK"},
+    {"suite": "experiential_epistemics.py self-test --json", "result": "pass", "detail": "valid true"},
+    {"suite": "anti_drop_catalog.py --self-test", "result": "pass", "detail": "5 tests OK"},
+    {"suite": "anti_drop_catalog.py verify --json", "result": "pass", "detail": "exit 0, no guard alarm"},
+    {"suite": "introspection_cadence_audit.py --strict --compact", "result": "pass", "detail": "integrity_ok true, errors []"},
+    {"suite": "experiential_epistemics.py verify --json", "result": "pass", "detail": "valid true, issues [], issue_count 0, history_rewritten false"},
+    {"suite": "introspection_addressing_audit.py audit-counters --json", "result": "pass", "detail": "all checks.* True (consistent); read_needs_claims 0; canonical addressed_no_action 90->91"},
+    {"suite": "evidence_event_store.py --json verify", "result": "pass", "detail": "valid true; event_count/last_global_seq 810631; head 079747ca...; corrupt_lines 0"},
+    {"suite": "division_ceremony_followup.py verify (post record-round)", "result": "pass", "detail": "event_count 170; review_due false; completed_rounds_since_followup 1"},
+    {"suite": "division_ceremony_chronicle.py verify", "result": "expected_stale", "detail": "'chronicle durable source inputs changed; project before verify' — expected: record-round appended division_followup event (169->170); Chronicle reprojection belongs to the review_due=true Division return path (5 rounds away), not a non-due productive round. Not a corruption; all other integrity passed."}
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "round_source_receipts_v1",
+  "round": "claude-heartbeat_1786831308_llm_marker_emphasis_relation_regression",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048_with_focused_reading_of_marker_scanner_L1_to_L600",
+      "note": "Report window was lines 1-400; the report's own coverage manifest declared multi_window_complete (intervals 1-1048). Working-copy hash equals the report-bound hash, so report-time and current-source conclusions coincide."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_after_edit": "a782c20f5329ed6346de48242b96cb27392eadade684afa259817a0a6fef2c32",
+      "total_lines_after_edit": 3567,
+      "total_bytes_after_edit": 146730,
+      "read_scope": "focused_reading_of_marker_cleanup_test_family_L1637_to_L2760_plus_import_block_L23_to_L41",
+      "note": "Existing marker-cleanup coverage confirmed before adding one non-duplicate regression."
+    }
+  ]
+}

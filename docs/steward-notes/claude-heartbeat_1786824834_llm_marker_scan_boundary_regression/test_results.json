@@ -1,0 +1,22 @@
+{
+  "schema": "round_test_results_v1",
+  "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- scan_known_model_control_markers exact_reference_delimiter_syntax control_marker",
+  "result": "ok",
+  "passed": 64,
+  "failed": 0,
+  "ignored": 0,
+  "filtered_out": 1817,
+  "new_tests": [
+    "llm::provider::tests::scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+    "llm::provider::tests::exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+    "llm::provider::tests::scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary"
+  ],
+  "edited_test_file": {
+    "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "sha256": "ba1bcc1b61bd694d85c1e0e977e0b9c2e3b84c1d5fa200e1f626751443980185",
+    "bytes": 144404,
+    "lines": 3522
+  },
+  "fmt_check": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check => exit 0, zero diff",
+  "diff_check": "git diff --check (edited file) => clean"
+}

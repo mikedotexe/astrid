@@ -1,0 +1,28 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "run_id": "run_1786848086586564000_f9672f202d",
+  "preprojection_generation_id": "projection_1786848162394499000_02801ffaad",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786844213",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786844213.txt",
+      "sha256": "5a2d32bc35f25c09efd7e8a2168f1a8b6585540303e719c948010245af72c2d0",
+      "bytes": 3842,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_ef063bcfc71f53c20e2d056c6620fc0022e5ec04216fdc1af50b3c1883850f07",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ef063bcfc71f53c20e2d056c6620fc0022e5ec04216fdc1af50b3c1883850f07.json",
+      "sha256": "855097027b5d7cd9830cd692ba51b7046d9e98b71a5574fe5bce2583fe5e1418",
+      "bytes": 23929,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "live_eligible_now": false
+    }
+  ]
+}

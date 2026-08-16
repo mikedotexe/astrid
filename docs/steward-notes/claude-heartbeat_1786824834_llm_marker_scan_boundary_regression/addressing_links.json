@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786814454",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; ExactKnownMarkerReferenceContext enum L41-46; exact_reference_delimiter_pair/syntax L153-229 (international + specialized pairs)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786814454",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: find(|word| !word.is_empty()) advances past punctuation-only chunks; unwrap_or_default reached only when no alphanumeric word follows (intended fail-closed)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786814454",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary: preserves marker across punctuation runs; strips (fails closed) when only punctuation follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786814454",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts: grouped + explicit-relation markers kept in remainder with exact reference context."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786814454",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two: [[marker]] -> GroupedExactKnownToken, delimiter_depth == 2."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786814454",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Integration chain: scan L114 -> sanitize_..._with_report L352 -> sanitize_model_control_markers L519 -> applied L558/L634 feeding generation; generate_dialogue L695 consumes sanitized output."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786814454",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the three added marker-scan boundary regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786814454",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Row recording the snag-hypothesis grounding + the two proposed tests shipped."
+    }
+  ]
+}
