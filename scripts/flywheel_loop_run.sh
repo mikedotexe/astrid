@@ -29,6 +29,16 @@ set -u
 export PATH="/Users/v/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 ASTRID="/Users/v/other/astrid"
+
+# Optional operator-provided environment (chmod 600, never committed): e.g.
+#   export CLAUDE_CODE_OAUTH_TOKEN=...   # from `claude setup-token`
+#   export FLYWHEEL_LOOP_MAX_SECS=5400   # budget overrides must land BEFORE
+# the assignments below read them (cycle-5 bug: sourcing happened after).
+if [ -f "$HOME/.astrid_flywheel_env" ]; then
+    # shellcheck disable=SC1091
+    . "$HOME/.astrid_flywheel_env"
+fi
+
 MAX_SECS="${FLYWHEEL_LOOP_MAX_SECS:-2700}"
 OUTER_MAX_SECS="${FLYWHEEL_LOOP_OUTER_MAX_SECS:-7200}"
 LOG_DIR="$ASTRID/workspace/logs"
@@ -64,13 +74,6 @@ fi
 # Mark this as the loop (interactive-priority session hooks skip themselves).
 export STEWARD_LOOP=1
 
-# Optional operator-provided environment (chmod 600, never committed): e.g.
-#   export CLAUDE_CODE_OAUTH_TOKEN=...   # from `claude setup-token`
-# so headless auth survives interactive OAuth session expiry.
-if [ -f "$HOME/.astrid_flywheel_env" ]; then
-    # shellcheck disable=SC1091
-    . "$HOME/.astrid_flywheel_env"
-fi
 
 # Auth preflight: a failed credential otherwise costs a full ~40-min
 # preprojection before the child dies in seconds. Probe cheaply first; on
