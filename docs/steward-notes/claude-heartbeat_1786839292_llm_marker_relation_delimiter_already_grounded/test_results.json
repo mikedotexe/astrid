@@ -1,0 +1,22 @@
+{
+  "focused_tests": [
+    {
+      "crate": "spectral-bridge",
+      "manifest": "capsules/spectral-bridge/Cargo.toml",
+      "target": "--lib",
+      "filters": [
+        "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts",
+        "control_marker_cleanup_preserves_poetic_attribution_without_literal_cue",
+        "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs",
+        "control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters"
+      ],
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1878,
+      "note": "Warm build (1.69s), ran 0.05s. These are the existing regressions grounding claims c002-c005; no test was added or modified this round."
+    }
+  ],
+  "changes_made": "none — no source or test file was modified; this round is verified_existing + a deliberate Tier-5-class authority boundary."
+}

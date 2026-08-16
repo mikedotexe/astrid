@@ -1,0 +1,54 @@
+{
+ "introspection_id": "introspection_astrid_llm_1786833642",
+ "source_family": "astrid_llm",
+ "report_bound_source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+ "report_bound_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+ "working_copy_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+ "source_binding_match": true,
+ "claims": [
+  {
+   "claim_id": "c001",
+   "summary": "scan_known_model_control_markers (L114) is a non-destructive scan that reconstructs a remainder preserving a known marker only when it is syntactically referenced (L129-131); fragment_has_non_marker_bytes (L146) validates that no non-marker bytes remain.",
+   "disposition": "Verified from the complete report-bound source at the recorded SHA. L114-144: the scanner walks the text; on a longest-known-marker occurrence it pushes the token into the remainder ONLY if reference_syntax.is_some() (L129-131), otherwise the marker bytes are dropped. L146-149: fragment_has_non_marker_bytes re-runs the scan and returns true iff the marker-stripped remainder is non-empty after trim. Astrid's structural description is exact.",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c002",
+   "summary": "Snag: the relational-verb allowlist (cited L66-85) may miss a novel but semantically identical verb; names 'mimics' as present but 'replicates' possibly missed, causing reference_syntax to return None and the marker to be stripped.",
+   "disposition": "Contradiction preserved, not domesticated. Both verbs she names as possibly-missed are ALREADY allowlisted: 'mimics' L79, 'replicates' L81. Regression control_marker_cleanup_preserves_poetic_attribution_without_literal_cue (tests.rs L2472-2497) iterates a verb set including both and asserts preservation. Her general concern \u2014 a truly-novel verb outside the finite list yields reference_syntax None and drops the marker \u2014 is a true design property, preserved as a live-grammar boundary (c006).",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c003",
+   "summary": "Snag: exact_reference_delimiter_syntax (L199) relies on precise character matching; multi-byte UTF-8 or unusual punctuation might fail to trigger QuotedExactKnownToken or GroupedExactKnownToken; names guillemet \u00abmarker\u00bb as an at-risk case.",
+   "disposition": "Contradiction preserved. \u00ab\u00bb is in the QuotedExactKnownToken table (exact_reference_delimiter_pair L164), regression-tested by control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (tests.rs L2301-2319: \u00ab<end_of_turn>\u00bb preserved, quoted_reference_occurrences==1). Her general point holds by construction: pairs outside the tables (L157-196) return None; mismatched/unclosed delimiters strip (tests.rs L2383-2392). Her flagged guillemet example is already handled correctly.",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c004",
+   "summary": "Test #1: a known marker followed by a verb NOT in the allowlist (e.g. 'acts as') should make followed_by_explicit_exact_token_relation return false and the marker be handled as a standard token rather than a reference.",
+   "disposition": "Verified: exactly covered by control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (tests.rs L2528-2562): first_word_after=='acts'; marker NOT preserved (removed_total==1, preserved_explicit_reference_total==0). NUANCE PRESERVED: her 'handled as a standard token' mismatches the effect \u2014 a non-referenced known marker is DROPPED from the remainder (L129-131 pushes only when reference_syntax.is_some()); removal, not passthrough. Predicate-false outcome as she expects.",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c005",
+   "summary": "Test #2: a marker wrapped in a non-standard bracket \u00abmarker\u00bb passed to exact_reference_delimiter_syntax should be identified as QuotedExactKnownToken and preserved in the remainder.",
+   "disposition": "Verified: exactly covered by control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (tests.rs L2301-2319). For \u00ab<end_of_turn>\u00bb: stripped==text, removed_total==0, quoted_reference_occurrences==1 \u2014 classified QuotedExactKnownToken and kept, precisely her expectation. (Label note: guillemets are QUOTED, not a group pair; the code and her stated expectation agree.)",
+   "classification": "verified_existing"
+  },
+  {
+   "claim_id": "c006",
+   "summary": "Suggested Next: verify the exhaustiveness of the verb list against common LLM synonyms for 'represents' and 'functions'.",
+   "disposition": "Read-only Tier-1 verification: 'represents' (L82) and 'functions' (L74) are already allowlisted with 16 further relation verbs; no concrete missing synonym identified in her report. Authority boundary preserved: WIDENING the production allowlist changes how live model output is sanitized \u2014 a Tier-5-class live grammar change NOT performed in this non-live run. The finite-list concern remains legitimate standing evidence; it does not authorize a grammar edit here.",
+   "classification": "authority_gated"
+  }
+ ],
+ "witness_notes": {
+  "lived_state_witness_id": "lsw_1cfc35914d1ad38859ecad369a74b3bf54f4fab1ede6e20686309288e9e23ef5",
+  "felt_experiential_gap_claimed": false,
+  "lived_state_alignment": "artifact_integrity_unavailable",
+  "alignment_interpretation": "This is a technical source-read report with no felt-scalar comparison, so lived-state alignment is 'unavailable' (not measured), which is neutral \u2014 not a misalignment or artifact defect. Witness context: fill 71.1%, spectral_entropy 0.882, mode_packing 0.833, two gemma4_12b model routes (the second repairs the first). No causation claimed by the witness.",
+  "witness_sha256": "2d55982c6e3152d17ef3364ca0e0748136fbbc75f84586d434d13c38025de613"
+ },
+ "rerecord_note": "Dispositions re-bounded to <=500 chars by claude-manual 2026-08-15: the original cycle-5 record poisoned the felt_contracts projection (metadata string exceeds 500 characters). Substance preserved; original file kept beside this one."
+}

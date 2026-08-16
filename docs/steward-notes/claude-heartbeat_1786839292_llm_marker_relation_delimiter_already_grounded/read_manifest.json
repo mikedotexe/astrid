@@ -1,0 +1,40 @@
+{
+  "round": "claude-heartbeat_1786839292_llm_marker_relation_delimiter_already_grounded",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786833642",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786833642.txt",
+      "sha256": "af99a0ca6c08fb4ec917f9bf846963c306f658087288cccd6ad75200530c0c9e",
+      "bytes": 3888,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "lived_state_witness_id": "lsw_1cfc35914d1ad38859ecad369a74b3bf54f4fab1ede6e20686309288e9e23ef5",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1cfc35914d1ad38859ecad369a74b3bf54f4fab1ede6e20686309288e9e23ef5.json",
+      "sha256": "2d55982c6e3152d17ef3364ca0e0748136fbbc75f84586d434d13c38025de613",
+      "bytes": 23942,
+      "lines": 533,
+      "read": "complete"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "read_scope": "lines 1-260 read in full (marker scanner, verb allowlist L64-96, scan L114-149, delimiter tables L151-229, placement counts L231-255); remainder of the 1048-line file not required — all report claims cite symbols within L1-229"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_note": "read region only, not hashed as report-bound source",
+      "read_scope": "lines 2285-2400 and 2455-2569 read in full plus grep index of all marker/relation/delimiter test references; existing regressions grounding c002-c005 confirmed"
+    }
+  ]
+}

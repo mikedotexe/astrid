@@ -90,6 +90,22 @@ class SourceBuild:
     source_hashes: dict[str, str]
 
 
+def bounded_disposition_text(text: str) -> str:
+    """Bound claim text/disposition strings to the contract metadata limit
+    with HONEST truncation: the marker names the cut and carries the full
+    text's sha256 prefix + original length, so nothing silently vanishes.
+
+    One over-long steward disposition must degrade to a truncated node, never
+    poison the entire projection (2026-08-15: a 5x cycle-killing ValueError
+    chain started from one 871-char disposition). The _bounded_metadata
+    validator stays intact for every other string."""
+    if len(text) <= 500:
+        return text
+    digest = hashlib.sha256(text.encode()).hexdigest()[:12]
+    marker = f" …[truncated; full {len(text)} chars sha256:{digest}]"
+    return text[: 500 - len(marker)] + marker
+
+
 def graph_state_dir(workspace: Path) -> Path:
     return workspace / "diagnostics/felt_contract_graph_v1"
 
@@ -244,8 +260,10 @@ def _claim_sources(workspace: Path) -> tuple[list[ClaimSource], str]:
                         family.get("requested_outcome") or "observe_or_verify"
                     ),
                     polarity=str(family.get("polarity") or "neutral"),
-                    text=str(claim.get("text") or ""),
-                    disposition=str(claim.get("disposition") or ""),
+                    text=bounded_disposition_text(str(claim.get("text") or "")),
+                    disposition=bounded_disposition_text(
+                        str(claim.get("disposition") or "")
+                    ),
                     classification=str(claim.get("classification") or ""),
                     record_sha256=str(
                         claim.get("canonical_claim_record_sha256")
