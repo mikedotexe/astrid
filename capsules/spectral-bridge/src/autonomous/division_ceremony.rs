@@ -806,9 +806,7 @@ fn intent_draft(
     Ok(draft)
 }
 
-fn pre_intent_posture_draft(
-    fields: &BTreeMap<String, String>,
-) -> Result<EventDraftV1, String> {
+fn pre_intent_posture_draft(fields: &BTreeMap<String, String>) -> Result<EventDraftV1, String> {
     Ok(EventDraftV1::new(candidate_from_fields(fields)?))
 }
 

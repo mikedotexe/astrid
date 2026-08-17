@@ -476,6 +476,7 @@ fn should_skip_introspect_dir(name: &str) -> bool {
 fn source_roots(paths: &BridgePaths) -> Vec<PathBuf> {
     vec![
         paths.bridge_root().join("src"),
+        paths.bridge_root().join("DOMAIN_BOUNDARIES.md"),
         paths.astrid_root().join("docs/steward-notes"),
         paths.minime_root().join("minime/src"),
         paths.minime_root().join("minime_autonomy"),
@@ -2101,6 +2102,24 @@ mod tests {
         assert!(err.contains("syntax placeholder"));
         assert!(err.contains("astrid:llm"));
         assert!(err.contains("minime:regulator"));
+    }
+
+    #[test]
+    fn domain_boundaries_path_accepts_exact_and_legacy_lowercase_spelling() {
+        let sources = introspect_sources();
+
+        for requested in [
+            "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+            "capsules/spectral-bridge/domain_boundaries.md",
+        ] {
+            let resolved = resolve_introspect_target_result(requested, &sources)
+                .expect("resolve bridge domain-boundary source");
+
+            assert_eq!(
+                resolved.path,
+                bridge_paths().bridge_root().join("DOMAIN_BOUNDARIES.md")
+            );
+        }
     }
 
     #[test]

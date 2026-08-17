@@ -385,9 +385,7 @@ pub(super) fn handle_action(
                         "[The previous continuation reached the end of its source. Open something new with BROWSE, MIKE_READ, AR_READ, LIST_FILES, or CODEX.]"
                             .to_string(),
                     );
-                    info!(
-                        "READ_MORE: previous continuation completed; recovery fallback skipped"
-                    );
+                    info!("READ_MORE: previous continuation completed; recovery fallback skipped");
                     return true;
                 }
                 match recover_read_more_target(conv, &hint) {
@@ -672,8 +670,8 @@ pub(super) fn handle_action(
 mod tests {
     use super::{
         ConversationState, advance_by_chars, clamp_to_char_boundary, extract_url_arg,
-        looks_like_raw_pdf_dump, parse_saved_page_header, queue_browse_url,
-        previous_recorded_choice_was_read_more, recover_read_more_target,
+        looks_like_raw_pdf_dump, parse_saved_page_header, previous_recorded_choice_was_read_more,
+        queue_browse_url, recover_read_more_target,
     };
     use crate::paths::bridge_paths;
     use std::fs;

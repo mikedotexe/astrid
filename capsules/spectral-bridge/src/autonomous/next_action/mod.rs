@@ -1,5 +1,6 @@
 //! Typed autonomous action routing facade.
 
+mod action_syntax;
 mod ask_steward;
 mod attractor;
 mod audio;
@@ -29,9 +30,11 @@ pub(crate) mod shadow;
 pub(crate) mod sovereignty;
 mod space_hold;
 mod spectral_drift;
+mod temporal_bearing;
 mod workspace;
 
 pub(crate) const PDF_READ_PREFIX: &str = pdf::PDF_READ_PREFIX;
+pub(crate) use action_syntax::strip_action;
 
 pub(crate) fn division_action_prompt_note(workspace: Option<&std::path::Path>) -> Option<String> {
     division::prompt_note(workspace)
@@ -1308,22 +1311,6 @@ fn normalize_steward_typo_alias(base_action: &str, original: &str) -> Option<(St
     Some((normalized_base, normalized_original))
 }
 
-fn strip_action(original: &str, prefix: &str) -> String {
-    let upper = original.to_uppercase();
-    if upper.starts_with(prefix) {
-        // Strip the action prefix AND any trailing colon+whitespace.
-        // Astrid often writes "BROWSE: https://..." or "SEARCH: topic"
-        // and the colon must not be left dangling.
-        original[prefix.len()..]
-            .trim_start()
-            .trim_start_matches([':', '-', '\u{2014}'])
-            .trim()
-            .to_string()
-    } else {
-        String::new()
-    }
-}
-
 fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
     if protected_diagnostics::canonical_action_for(base_action).is_some() {
         return "protected_summary";
@@ -1392,7 +1379,8 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "BRACE_AUDIT"
         | "AFTERSHOCK_TRACE"
         | "TREMOR_RESIDUE"
-        | "CASCADE_RESIDUE" => "protected_summary",
+        | "CASCADE_RESIDUE"
+        | "TEMPORAL_BEARING" => "protected_summary",
         "PROPOSE_TEST" => "summary",
         "INQUIRY_START" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" | "INQUIRY_CANCEL"
         | "INQUIRY_CANARY" | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => {
@@ -1556,7 +1544,8 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "FOLD_STUDY"
         | "HUM_DECAY"
         | "HUM_DECAY_STUDY"
-        | "M6_BRIDGE" => "read_only",
+        | "M6_BRIDGE"
+        | "TEMPORAL_BEARING" => "read_only",
         "OWNER_POLICY_STATUS" | "CONCERN_STATUS" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" => {
             "read_only"
         },
@@ -1697,6 +1686,7 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "LIVED_TRANSITION_STATUS"
         | "TRANSITION_STATUS"
         | "PHASE_TRANSITION_STATUS" => "phase_transition_cards",
+        "TEMPORAL_BEARING" => "temporal_bearing",
         "PROPOSE_TEST" => "test_proposal",
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
@@ -2336,6 +2326,11 @@ fn handle_next_action_with_author(
     if peer_correspondence::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return NextActionOutcome::handled("peer_correspondence", format!("Handled `{original}`."))
             .with_stage_visibility("language_only", "public_correspondence");
+    }
+
+    if temporal_bearing::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("temporal_bearing", format!("Handled `{original}`."))
+            .with_stage_visibility("read_only", "protected_summary");
     }
 
     if phase_transition::handle_action(conv, base_action.as_str(), &original, &mut ctx) {

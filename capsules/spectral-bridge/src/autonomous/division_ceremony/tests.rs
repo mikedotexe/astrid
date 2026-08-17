@@ -111,12 +111,7 @@ fn hold_and_decline_block_rehearsal_until_a_newer_intent() {
     .unwrap();
 
     intent(root.path(), "astrid");
-    posture(
-        root.path(),
-        "astrid",
-        DivisionCeremonyActionV1::Hold,
-        1_100,
-    );
+    posture(root.path(), "astrid", DivisionCeremonyActionV1::Hold, 1_100);
     assert!(
         require_active_intent_at(root.path(), "astrid", &command, 1_101)
             .unwrap_err()
@@ -135,9 +130,7 @@ fn hold_and_decline_block_rehearsal_until_a_newer_intent() {
         DivisionCeremonyActionV1::Decline,
         1_300,
     );
-    assert!(
-        require_active_intent_at(root.path(), "astrid", &command, 1_301).is_err()
-    );
+    assert!(require_active_intent_at(root.path(), "astrid", &command, 1_301).is_err());
 }
 
 #[test]

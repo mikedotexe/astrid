@@ -15,8 +15,8 @@ use super::capture::{
 };
 use super::types::{
     CausalSignalJourneyV1, CausalSignalStageV1, SignalCaptureFixtureRefV1, SignalEffectV1,
-    SignalOwnershipDomainV1, SignalProcessIdentityV1, SignalRelationV1, SignalStageKindV1,
-    SignalStageReceiptV1, SignalTemporalEnvelopeV1,
+    SignalJourneyOriginV1, SignalOwnershipDomainV1, SignalProcessIdentityV1, SignalRelationV1,
+    SignalResponseOriginV1, SignalStageKindV1, SignalStageReceiptV1, SignalTemporalEnvelopeV1,
 };
 use crate::paths::bridge_paths;
 use crate::witness::{ProvenanceInfluenceTypeV1, ProvenanceOriginV1, ProvenanceRefV1};
@@ -26,12 +26,31 @@ fn process_started() -> &'static Instant {
     STARTED.get_or_init(Instant::now)
 }
 
-fn unix_ms() -> u64 {
+pub(crate) fn signal_unix_ms_v1() -> u64 {
     u64::try_from(chrono::Utc::now().timestamp_millis()).unwrap_or(0)
 }
 
-fn monotonic_ns() -> u64 {
+pub(crate) fn signal_monotonic_ns_v1() -> u64 {
     u64::try_from(process_started().elapsed().as_nanos()).unwrap_or(u64::MAX)
+}
+
+pub(crate) fn process_started_at_unix_ms() -> u64 {
+    static STARTED_AT: OnceLock<u64> = OnceLock::new();
+    *STARTED_AT.get_or_init(signal_unix_ms_v1)
+}
+
+pub(crate) fn signal_clock_scope_id_v1() -> String {
+    static CLOCK_SCOPE: OnceLock<String> = OnceLock::new();
+    CLOCK_SCOPE
+        .get_or_init(|| {
+            let seed = json!({
+                "pid": std::process::id(),
+                "executable": executable_name(),
+                "process_started_at_unix_ms": process_started_at_unix_ms(),
+            });
+            format!("clockscope_{}", &sha256_json(&seed)[..24])
+        })
+        .clone()
 }
 
 pub(super) fn executable_name() -> &'static str {
@@ -98,6 +117,12 @@ fn sha256_json<T: Serialize>(value: &T) -> String {
     )
 }
 
+fn valid_journey_id(value: &str) -> bool {
+    value
+        .strip_prefix("journey_")
+        .is_some_and(|suffix| suffix.len() == 24 && suffix.chars().all(|ch| ch.is_ascii_hexdigit()))
+}
+
 fn vector_sha256(vector: &[f32]) -> String {
     let mut bytes = Vec::with_capacity(vector.len().saturating_mul(4));
     for value in vector {
@@ -113,6 +138,9 @@ pub(crate) struct SignalJourneyContextV1 {
     pub(crate) connection_id: &'static str,
     pub(crate) connection_sequence: u64,
     pub(crate) deployment_identity: String,
+    pub(crate) reserved_journey_id: Option<String>,
+    pub(crate) journey_origin: SignalJourneyOriginV1,
+    pub(crate) response_origin: SignalResponseOriginV1,
 }
 
 #[derive(Debug, Clone)]
@@ -147,6 +175,8 @@ pub(crate) struct ShadowSignalJourneyV1 {
     pending_captures: Vec<PendingVectorCaptureV1>,
     capture_window_id: Option<String>,
     parity_mismatch_count: u32,
+    journey_origin: SignalJourneyOriginV1,
+    response_origin: SignalResponseOriginV1,
 }
 
 impl ShadowSignalJourneyV1 {
@@ -154,7 +184,7 @@ impl ShadowSignalJourneyV1 {
         context: SignalJourneyContextV1,
         authored_text: &str,
     ) -> Result<(Self, SignalStageHandleV1), String> {
-        let arrival = unix_ms();
+        let arrival = signal_unix_ms_v1();
         let authored_sha256 = sha256_bytes(authored_text.as_bytes());
         let journey_seed = json!({
             "exchange": context.exchange,
@@ -164,7 +194,16 @@ impl ShadowSignalJourneyV1 {
             "arrival_time_unix_ms": arrival,
         });
         let journey_digest = sha256_json(&journey_seed);
-        let journey_id = format!("journey_{}", &journey_digest[..24]);
+        let generated_journey_id = format!("journey_{}", &journey_digest[..24]);
+        let journey_id = context
+            .reserved_journey_id
+            .clone()
+            .unwrap_or(generated_journey_id);
+        if !valid_journey_id(&journey_id) {
+            return Err("reserved Signal Spine journey id is malformed".to_string());
+        }
+        let journey_origin = context.journey_origin.clone();
+        let response_origin = context.response_origin;
         let capture_root = default_signal_spine_root();
         let capture_window_id = active_capture_window_id(&capture_root, arrival);
         let mut shadow = Self {
@@ -175,6 +214,8 @@ impl ShadowSignalJourneyV1 {
             pending_captures: Vec::new(),
             capture_window_id,
             parity_mismatch_count: 0,
+            journey_origin,
+            response_origin,
         };
         let authored = shadow.record_hashes(
             SignalStageKindV1::Authored,
@@ -187,9 +228,23 @@ impl ShadowSignalJourneyV1 {
             BTreeMap::from([
                 ("text_bytes".to_string(), json!(authored_text.len())),
                 ("raw_response_prose_persisted".to_string(), json!(false)),
+                (
+                    "response_origin_v1".to_string(),
+                    serde_json::to_value(shadow.response_origin).unwrap_or(Value::Null),
+                ),
             ]),
         )?;
         Ok((shadow, authored))
+    }
+
+    #[cfg(test)]
+    pub(crate) const fn journey_origin(&self) -> &SignalJourneyOriginV1 {
+        &self.journey_origin
+    }
+
+    #[cfg(test)]
+    pub(crate) const fn response_origin(&self) -> SignalResponseOriginV1 {
+        self.response_origin
     }
 
     pub(crate) fn record_text(
@@ -273,7 +328,7 @@ impl ShadowSignalJourneyV1 {
         self.parity_mismatch_count = self.parity_mismatch_count.saturating_add(1);
     }
 
-    pub(super) fn journey_id(&self) -> &str {
+    pub(crate) fn journey_id(&self) -> &str {
         self.trusted.journey_id()
     }
 
@@ -334,7 +389,7 @@ impl ShadowSignalJourneyV1 {
             "output_sha256": output_sha256,
         }));
         let stage_id = format!("stage_{}", &stage_digest[..24]);
-        let stage_time = unix_ms();
+        let stage_time = signal_unix_ms_v1();
         let provenance = ProvenanceRefV1::new(
             provenance_origin(ownership),
             stage_id.clone(),
@@ -361,7 +416,7 @@ impl ShadowSignalJourneyV1 {
                 self.context.source_time_ms,
                 self.arrival_time_unix_ms,
                 stage_time,
-                monotonic_ns(),
+                signal_monotonic_ns_v1(),
                 self.context.connection_id.to_string(),
                 self.context.connection_sequence,
                 self.capture_window_id.clone(),
@@ -432,6 +487,8 @@ struct PersistedSignalJourneyV1<'a> {
     stage_count: usize,
     parity_mismatch_count: u32,
     lineage_valid: bool,
+    journey_origin_v1: &'a SignalJourneyOriginV1,
+    response_origin_v1: SignalResponseOriginV1,
     temporal_association_is_not_direct_causation: bool,
     sensory_protocol_changed: bool,
     raw_response_prose_included: bool,
@@ -444,7 +501,7 @@ pub(crate) fn persist_shadow_signal_journey_v1(
     mut shadow: ShadowSignalJourneyV1,
 ) -> std::io::Result<PathBuf> {
     let root = default_signal_spine_root();
-    let now = unix_ms();
+    let now = signal_unix_ms_v1();
     match try_submit_captures(
         &root,
         shadow.trusted.journey_id(),
@@ -512,6 +569,8 @@ pub(crate) fn persist_shadow_signal_journey_v1(
         stage_count: shadow.trusted.receipts().len(),
         parity_mismatch_count: shadow.parity_mismatch_count,
         lineage_valid,
+        journey_origin_v1: &shadow.journey_origin,
+        response_origin_v1: shadow.response_origin,
         temporal_association_is_not_direct_causation: true,
         sensory_protocol_changed: false,
         raw_response_prose_included: false,
@@ -562,6 +621,10 @@ pub(crate) fn signal_deployment_identity_v1() -> String {
     format!("astrid:{head}:bridge:{binary}")
 }
 
+pub(crate) fn signal_process_identity_v1() -> SignalProcessIdentityV1 {
+    SignalProcessIdentityV1::current(signal_deployment_identity_v1())
+}
+
 fn write_owner_only(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
@@ -583,11 +646,13 @@ fn write_status(root: &Path, journey: &PersistedSignalJourneyV1<'_>) -> std::io:
     let status = serde_json::to_vec_pretty(&json!({
         "schema": "signal_spine_shadow_status_v1",
         "schema_version": 1,
-        "updated_at_unix_ms": unix_ms(),
+        "updated_at_unix_ms": signal_unix_ms_v1(),
         "latest_journey_id": journey.journey_id,
         "latest_stage_count": journey.stage_count,
         "latest_lineage_valid": journey.lineage_valid,
         "latest_parity_mismatch_count": journey.parity_mismatch_count,
+        "latest_journey_origin_v1": journey.journey_origin_v1,
+        "latest_response_origin_v1": journey.response_origin_v1,
         "mode": "shadow",
         "projection_cutover": false,
         "sensory_protocol_changed": false,
