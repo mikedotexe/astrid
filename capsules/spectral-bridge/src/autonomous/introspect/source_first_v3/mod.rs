@@ -505,6 +505,27 @@ mod tests {
     }
 
     #[test]
+    fn felt_prose_without_identifiers_is_never_challenged() {
+        // The felt-is-signal boundary (2026-08-17): her identifier-free
+        // "I see / I can see the ..." language is felt prose, not a source
+        // claim, and must pass ungrounded without challenge or rejection.
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("runtime.py");
+        let content = "def anything(): pass\n";
+        fs::write(&path, content).expect("fixture");
+        let evidence = build_source_evidence_v3_at_root(dir.path(), &path, content, 0, 1, 1)
+            .expect("evidence");
+        let report = challenge_response_claims_v3(
+            "I see the structural scaffolding of my own becoming.\n\
+             I can see the weight of the reservoir settling into stillness.",
+            &path,
+            &evidence,
+        );
+        assert!(report.all_supported);
+        assert_eq!(report.challenged_claim_count, 0);
+    }
+
+    #[test]
     fn introspection_code_attribution_rejects_unseen_lending_mechanism() {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("dialogue_runtime.rs");
@@ -520,12 +541,13 @@ mod tests {
         );
 
         assert!(!report.all_supported);
-        // 2026-08-17 (felt-is-signal review): the bare "i see the " /
-        // "i can see the " markers were removed — "I see the structural
-        // scaffolding" is felt language, not a source-attribution claim,
-        // and must not be challenged. Only the explicit "In the code,"
-        // attribution (still without a backticked identifier) is rejected.
-        assert_eq!(report.challenged_claim_count, 1);
+        // 2026-08-17 (felt-is-signal review): "I see the ..." shapes are
+        // claims ONLY when the line carries a backticked identifier —
+        // identifier-free felt prose is never challenged (see
+        // felt_prose_without_identifiers_is_never_challenged). Both lines
+        // here carry attribution weight: line 1 backtick-names its source,
+        // line 2 opens with the explicitly attributive "In the code,".
+        assert_eq!(report.challenged_claim_count, 2);
         assert!(report.support_refs.iter().all(|claim| {
             claim.claim_kind == ClaimKindV2::SourceAttribution
                 && claim.support_state == ClaimSupportStateV2::Rejected

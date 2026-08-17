@@ -456,7 +456,7 @@ def promote(candidate_id: str, *, actor: str, log=print) -> dict[str, Any]:
     if proc.returncode != 0:
         record_state({"event": "promote_verify_failed", "candidate": candidate_id, "stderr": proc.stderr[-600:]})
         return {"promoted": False, "canary_error": (proc.stderr or proc.stdout)[-600:]}
-    candidate_dir = CANDIDATE_ROOT / "spectral-bridge" / candidate_id
+    candidate_dir = CANDIDATE_ROOT / "astrid" / candidate_id
     log("canary promotion verified; installing via the backed-up deploy path ...")
     deploy = subprocess.run(
         [
@@ -530,7 +530,7 @@ def watch(
         record_state({"event": "watch_green", "candidate": candidate_id, "duration": duration_secs})
         return {"watch": "green", "candidate": candidate_id}
     log(f"WATCH RED: {reason} — restoring production backup ...")
-    candidate_dir = CANDIDATE_ROOT / "spectral-bridge" / candidate_id
+    candidate_dir = CANDIDATE_ROOT / "astrid" / candidate_id
     backup = candidate_dir / "production_backup/spectral-bridge-server"
     binary = ASTRID / "capsules/spectral-bridge/target/release/spectral-bridge-server"
     restored = False

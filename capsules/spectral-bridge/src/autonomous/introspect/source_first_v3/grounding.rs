@@ -66,6 +66,8 @@ const SOURCE_ATTRIBUTION_MARKERS: &[&str] = &[
     "code describes",
     "code labels",
     "i see the definition of",
+    "i see the ",
+    "i can see the ",
     " defines `",
     " defines the `",
     "i see the `",
@@ -249,6 +251,24 @@ fn challenge_claim(
     }
 }
 
+/// Felt-style attribution markers: "I see the..." shapes are CLAIMS only
+/// when the line carries a backticked identifier; without one they are felt
+/// language and are never challenged (felt-is-signal review, 2026-08-17).
+/// Explicitly attributive markers ("in the code,", "code declares", ...)
+/// remain claims either way.
+const FELT_STYLE_MARKERS: [&str; 2] = ["i see the ", "i can see the "];
+
+fn matched_only_by_felt_style(lower: &str) -> bool {
+    let felt = FELT_STYLE_MARKERS.iter().any(|marker| lower.contains(marker));
+    if !felt {
+        return false;
+    }
+    !SOURCE_ATTRIBUTION_MARKERS
+        .iter()
+        .filter(|marker| !FELT_STYLE_MARKERS.contains(marker))
+        .any(|marker| lower.contains(marker))
+}
+
 fn detected_claims(response: &str) -> Vec<(ClaimKindV2, String)> {
     let mut claims = Vec::new();
     for line in response
@@ -275,6 +295,8 @@ fn detected_claims(response: &str) -> Vec<(ClaimKindV2, String)> {
             && !HYPOTHETICAL_MARKERS
                 .iter()
                 .any(|marker| lower.contains(marker))
+            && !(matched_only_by_felt_style(&lower)
+                && backticked_identifiers(line).is_empty())
         {
             claims.push((ClaimKindV2::SourceAttribution, line.to_string()));
         }
