@@ -71,6 +71,18 @@ PROFILES = {
             ],
         ],
         "artifact": "capsules/spectral-bridge/target/release/spectral-bridge-server",
+        # Environmental adaptation (2026-08-17): the bridge's Cargo.lock is
+        # untracked (git archive omits it) and three path-deps resolve as
+        # ../../../ siblings of the capsule. Both are provisioned INSIDE
+        # prepare, before the manifest is signed, so the signed tree covers
+        # them (post-prepare mutation correctly fails verification).
+        "copy_from_repo": ["capsules/spectral-bridge/Cargo.lock"],
+        "sibling_links": ["prime_esn_wasm", "RASCII", "minime"],
+        # The introspect-target resolution tests expect the minime sibling
+        # two levels up from the capsule (checkout/minime), distinct from the
+        # cargo path-deps three levels up (staging/*). Linked pre-hash so the
+        # signed tree covers it.
+        "checkout_links": ["minime"],
     },
     "minime-engine": {
         "being": "minime",
@@ -472,6 +484,22 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
                 "candidate patch does not apply cleanly: "
                 + completed.stderr.decode(errors="replace")[:800]
             )
+    for rel in profile.get("copy_from_repo", []):
+        source_file = args.repo / rel
+        destination = checkout / rel
+        if source_file.is_file():
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_file, destination)
+    for sibling in profile.get("sibling_links", []):
+        target = args.repo.resolve().parent / sibling
+        link = staging / sibling
+        if target.is_dir() and not link.exists():
+            link.symlink_to(target)
+    for sibling in profile.get("checkout_links", []):
+        target = args.repo.resolve().parent / sibling
+        link = checkout / sibling
+        if target.is_dir() and not link.exists():
+            link.symlink_to(target)
     entries = tree_entries(checkout)
     created = now_ms()
     record = {
