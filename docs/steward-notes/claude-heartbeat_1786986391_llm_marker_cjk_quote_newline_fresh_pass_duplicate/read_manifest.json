@@ -1,0 +1,41 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786980416.txt",
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "sha256": "87a89341c52823297e146d5b83146145666dd21deec15782c893a22a605151f7",
+      "bytes": 3600,
+      "lines": 46,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_3c02c12aa236bc15a6ebd6d132dcb57703023528d3b9252b0db6df14f19e161b.json",
+      "witness_id": "lsw_3c02c12aa236bc15a6ebd6d132dcb57703023528d3b9252b0db6df14f19e161b",
+      "sha256": "94de07ba37c77ad3c811bab81b7707769733ec5bb76d51bca5d45b30ca089131",
+      "bytes": 23914,
+      "lines": 533,
+      "read": "complete"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "bytes": 38586,
+      "lines": 1048,
+      "read_scope": "complete_file_available_at_report_bound_sha; cited regions read L1-240 (L49-96 first_word_after/relation, L114-144 scanner, L151-229 delimiter syntax) and L695-754 generate_dialogue; working-copy SHA == report-bound SHA, git-clean",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "sha_matches_binding": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "6ef61e40eaf8df58b047217453cfb986b6e4701517dc9ceb3d37e7dcaf219007",
+      "bytes": 151411,
+      "lines": 3655,
+      "read_scope": "read existing marker/relation/delimiter regressions: L2302-2401 (non-ASCII quote pairs incl. \u300c\u300d, fullwidth CJK groups, nested stack, whitespace), L2786-2929 (relation across newline / punctuation runs / fail-closed), L2845-2976 (exact-function regressions added for family sibling 1786814454 + nbsp for 1786936281)"
+    }
+  ]
+}

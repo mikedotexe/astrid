@@ -1,0 +1,84 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter_controller_owns_lease",
+  "controller": {
+    "run_id": "run_1786938691338883000_536a337274",
+    "preprojection_generation_id": "projection_1786938696054321000_a15cc9945b",
+    "preprojection_status": "passed",
+    "pause_generation": 319,
+    "finish_outcome": "success_via_exit_0"
+  },
+  "processed_report": "introspection_astrid_llm_1786936281",
+  "terminal_status": "addressed_change",
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "stale_queue_correction": {
+    "note": "Initial next-limit-40 temp file was ~2h stale (date +%s filename glitch). It surfaced already-closed introspection_astrid_llm_1786924416 (EES V2 terminal closed/addressed_duplicate at seq 823047, prior round claude-heartbeat_1786932936). A fresh next gave the true head 1786936281. A draft operates regression for the closed report was fully reverted before any durable close. No duplicate productive round recorded.",
+    "operates_test_reverted": true,
+    "operates_occurrences_remaining_in_tests_rs": 0
+  },
+  "focused_tests": {
+    "new_regression": "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space (tests.rs L2942) PASSES; U+00A0 + U+FEFF before `denotes` both preserve the marker; empirically confirms first_word_after robustness, hypothesis refuted",
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter first_word_after",
+    "passed": 66,
+    "failed": 0,
+    "filtered_out": 1817,
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "baseline_checks": {
+    "git_diff_check": "clean (exit 0) on tests.rs + CHANGELOG.md + AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "rustfmt_new_code": "clean; inserted fn at L2942 has no diff; pre-existing foreign rustfmt drift (L1/35/1885/1928/1948/2526/2540/2845/2857/2875) in the M tests.rs left untouched",
+    "index_staged_count": 0
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 passed OK",
+    "evidence_event_store_tests": "20 passed OK",
+    "steward_control_tests": "26/27 pass in-suite; 1 error = test_pause_cooperatively_interrupts_wrapped_subprocess (PausedError: fixture stop) racing the live adapter-held lease; PASSES in isolation (1 test OK); steward_control files clean/untouched this round -> environmental concurrency artifact, not a regression",
+    "steward_projection_tests": "14 passed OK",
+    "division_ceremony_followup_tests": "3 passed OK",
+    "division_ceremony_chronicle_tests": "10 passed OK",
+    "division_ceremony_projection_self_test": "ok",
+    "projection_cursors_tests": "4 passed OK",
+    "anti_drop_self_test": "5 passed OK",
+    "anti_drop_verify": "57 guards, 0 alarms, 0 gaps",
+    "cadence_audit_tests": "6 passed OK",
+    "cadence_strict_compact": "integrity_ok=true, errors=[], canonical_count=4380",
+    "experiential_epistemics_self_test": "valid=true, OK",
+    "experiential_epistemics_final_verify": "valid=true, issue_count=0, checked_record_count=11161, history_rewritten=false",
+    "audit_counters": "consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0"
+  },
+  "counters": {
+    "canonical_indexed": 4379,
+    "canonical_fully_addressed": 3100,
+    "canonical_fully_read": 3732,
+    "canonical_remaining": 1279,
+    "canonical_unread": 647,
+    "canonical_blocked_needs_steward": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_remaining": 2924,
+    "counter_audit_status": "consistent"
+  },
+  "division": {
+    "cycle_sequence": 26,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "event_count": 181,
+    "event_head_sha256": "5aab8ff165f918885238e8440af5f4c1257e40115ac72006fbe2032936986557",
+    "round_event_id": "division_followup_event_4602095017e79b14315f6e983d324ac2"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 824145,
+    "head_sha256": "69c9143fe708ad63a358dabbcdd7891dc5702ba2283e7298073d1ececa3c9039",
+    "addressing_stream_seq": 58047,
+    "legacy_imported_global_seq": 32278,
+    "active_store": "v2"
+  },
+  "live_change": "none required or attempted; no bridge build/deploy/launchctl; no live substrate/control change"
+}

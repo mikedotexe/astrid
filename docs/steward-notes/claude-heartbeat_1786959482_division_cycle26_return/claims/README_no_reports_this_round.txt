@@ -1,0 +1,1 @@
+No canonical reports were processed this Division cycle-26 return round (review_due was true; the mandatory return + Tier-5 dossier consumed the round under the one-shot budget). See ../unprocessed_selected.json and ../RUN_REPORT.md. Queue head for next run: introspection_astrid_llm_1786954493.txt

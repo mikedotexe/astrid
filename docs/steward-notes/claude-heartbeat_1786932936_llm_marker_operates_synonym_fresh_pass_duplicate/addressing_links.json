@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 builds remainder; L123-131 pushes token only when reference_syntax.is_some() (L49-60) -> preserve-or-redact by grammar, source-faithful to the report's non-inverted Observed framing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845): grouped + explicit-relation markers stay in remainder with reference_syntax set."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 holds the finite verb allowlist ('functions'/'mimics' present, 'operates' absent); first_word_after L89-96 only extracts the word. Unlisted synonym -> reference_syntax None."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528): unlisted 'acts' -> removed_total=1; 'operates' is behaviorally identical."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "'mimics' is in the allowlist at source L79, so a marker followed by 'mimics' yields ExplicitExactKnownTokenRelation and is preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Allowlisted-positive preservation locked by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts ('behaves', L2858) and allowlisted 'is' (L2528-2541); 'mimics' is identical."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 at L151; grouped bracket pair table L175-193; exact_reference_delimiter_syntax L199-229 computes delimiter_depth."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2876): '[[<end_of_turn>]]' -> GroupedExactKnownToken, delimiter_depth==2; docstring names 'Report One Test Each #2 (Delimiter Depth)'."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Allowlist guarded against silent expansion: control_marker_cleanup_does_not_expand_relation_allowlist_to_{implies,contains,creates,triggers,underscored_appears_as} (L2595-2655). Widening = Tier-5, not made."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786932936_llm_marker_operates_synonym_fresh_pass_duplicate/summaries/introspection_astrid_llm_1786924416.md",
+      "note": "Read-only exhaustiveness review preserved as Astrid's open NEXT: INTROSPECT astrid:llm 400 continuation; live grammar widening remains Tier-5."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] bullet recording the fresh-pass duplicate close with the non-inverted framing note and reaffirmed Tier-5 boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-08-16 ledger block: verified-no-change duplicate close; grounding chain, source SHA, 65-test pass, Tier-5 allowlist-widening boundary."
+    }
+  ]
+}

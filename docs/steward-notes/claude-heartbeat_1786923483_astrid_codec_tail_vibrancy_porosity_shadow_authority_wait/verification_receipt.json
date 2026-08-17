@@ -1,0 +1,88 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "headless_subprocess_adapter_controller_held_lease",
+  "controller": {
+    "run_id": "run_1786920394077913000_99b5715f3b",
+    "preprojection_generation_id": "projection_1786920402735045000_1e7b7d784a",
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "pause_generation": 319,
+    "postprojection": "adapter-owned, runs after process exit; not observed by this process"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "report_sha256": "9735489dd470a80de62891403a0d9db09274cb735b835229e18436b4bc4384a6",
+      "witness_id": "lsw_cc8e22ae0d167a399e7e4645095b9e1a58e734d30d25d6ca0d6d8acbe668bc24",
+      "witness_sha256": "0b6da5830bc3bdee360d9430698547e5c89134adf42e046740b4c2587f8d1d8c",
+      "source_path": "capsules/spectral-bridge/src/codec/projection.rs",
+      "source_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+      "source_binding_match": true,
+      "window": "lines 1-400 of 1351 (complete)",
+      "final_status": "blocked_needs_steward",
+      "fully_addressed": false,
+      "proof_missing_claims": [],
+      "claim_count": 7,
+      "evidence_links": 16
+    }
+  ],
+  "addressing_writes": {
+    "record_read": "write=true",
+    "link_evidence_batch": "16 links, 16 new, 16 events appended",
+    "close": "blocked_needs_steward, proof_missing_claims=[]"
+  },
+  "integrity_suites": {
+    "git_diff_check": "clean",
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "20 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "57 guards, alarms=[]",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "introspection_cadence_audit_strict": "integrity_ok=true, errors=[]",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_FINAL": "valid=true, issue_count=0 (after all durable writes)",
+    "audit_counters": "status=consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=821852, head=02bc16a4fa65276bfe1c37fef3f0239bc9278f43ea3d656ddb383cb760a7c5f9",
+    "division_followup_verify": "ok=true, 3/6 rounds, review_due=false, event_count=179, head=d7c8a11dbeaac9b1d872f59d13e8ce13f6f06a2e8156ea888a9f6c49aecd954a",
+    "division_chronicle_verify": "ok=true, durable_inputs_current=true, durable_mismatches=[], volatile_mismatches=[supervisor_status_sha256] (expected non-failure), json_sha256=408415507e170034e09742e4cd47f97983082324dc4cfb636a2e3d47a437a078"
+  },
+  "division_round_recorded": {
+    "steward_run_id": "run_1786920394077913000_99b5715f3b",
+    "projection_generation_id": "projection_1786920402735045000_1e7b7d784a",
+    "processed_report_count": 1,
+    "new_round_event_id": "division_followup_event_914f5545448eb7da6a81de57b04191c4",
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false
+  },
+  "chronicle_projected": {
+    "chronicle_id": "division_chronicle_6da1674cdb005fa7aa0a6238",
+    "json_sha256": "408415507e170034e09742e4cd47f97983082324dc4cfb636a2e3d47a437a078",
+    "reason": "record-round dirtied the Chronicle's durable inputs; projected + verified clean (adapter postprojection also re-runs division_chronicle)"
+  },
+  "counters": {
+    "canonical": {
+      "indexed": 4375,
+      "fully_addressed": 3098,
+      "full_read": 3730,
+      "remaining": 1277,
+      "unread": 645,
+      "blocked_needs_steward": 414,
+      "triaged_pending_action": 214,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts_remaining": 2921,
+    "audit_status": "consistent"
+  },
+  "live_change": "NONE. No source/test/prompt/model/codec/transport/pressure/fill/PI/controller/sensory/protocol/Minime change; no build, restart, or deploy attempted or required.",
+  "git": "read-only this run; no stage/commit/merge/push. Commit debt named in RUN_REPORT.md.",
+  "exit_intent": "0 (complete productive round)"
+}

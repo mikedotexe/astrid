@@ -23,6 +23,8 @@
 pub(crate) mod btsp;
 #[path = "concern_queue.rs"]
 mod concern_queue;
+#[path = "runtime/contact_capacity.rs"]
+mod contact_capacity;
 #[path = "correspondence_v1.rs"]
 mod correspondence_v1;
 #[path = "delegated_capability.rs"]

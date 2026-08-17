@@ -1,0 +1,16 @@
+{
+  "round": "llm_marker_multibyte_boundary_fresh_pass_duplicate",
+  "source_change": false,
+  "note": "No source or test code changed this round (all claims verified_existing; a near-identical regression would be activity without evidentiary value). Focused suite run to confirm the cited regressions currently pass at the report-bound source SHA 902a0358.",
+  "focused": [
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter first_word_after",
+      "result": "ok",
+      "passed": 65,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1817
+    }
+  ],
+  "integrity_suites": "recorded in verification_receipt.json"
+}

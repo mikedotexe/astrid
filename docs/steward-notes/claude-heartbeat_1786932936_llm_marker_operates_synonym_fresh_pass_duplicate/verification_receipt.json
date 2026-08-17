@@ -1,0 +1,76 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter_controller_owns_lease",
+  "controller": {
+    "run_id": "run_1786929865968118000_704483f429",
+    "preprojection_generation_id": "projection_1786929871511414000_f9afcadd6b",
+    "pause_generation": 319,
+    "finish_outcome": "success_via_exit_0"
+  },
+  "processed_report": "introspection_astrid_llm_1786924416",
+  "terminal_status": "addressed_duplicate",
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter first_word_after",
+    "passed": 65,
+    "failed": 0,
+    "filtered_out": 1817,
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "baseline_checks": {
+    "git_diff_check_tracked_edits": "clean (exit 0) on CHANGELOG.md + AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "cargo_fmt": "not run — no Rust changed this round (all claims verified_existing); fmt state unaffected"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 passed OK",
+    "evidence_event_store_tests": "20 passed OK",
+    "steward_control_tests": "27 passed OK",
+    "steward_projection_tests": "14 passed OK",
+    "division_ceremony_followup_tests": "3 passed OK",
+    "division_ceremony_chronicle_tests": "10 passed OK",
+    "division_ceremony_projection_self_test": "ok",
+    "projection_cursors_tests": "4 passed OK",
+    "anti_drop_self_test": "5 passed OK",
+    "anti_drop_verify": "57 guards, 0 alarms, 0 gaps",
+    "cadence_audit_tests": "6 passed OK",
+    "cadence_strict_compact": "integrity_ok=true, errors=[]",
+    "experiential_epistemics_self_test": "2 passed OK, valid=true",
+    "experiential_epistemics_final_verify": "valid=true, issue_count=0, checked_record_count=11155, history_rewritten=false",
+    "audit_counters": "consistent, mismatches=[] (all canonical/scope checks true)",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_sequence=823056",
+    "evidence_event_store_status": "per-stream enumeration is slow at current store size; ran read-only in the background after verify; verify already establishes validity + 0 corrupt at seq 823056",
+    "division_ceremony_followup_verify": "review_due=false, completed_rounds_since_followup=4, rounds_remaining_before_followup=2, event_count=180, event_head=7cf2475cff4601d3107027d1145a5474e90f3e78b612be872db1fa2b104a69a1",
+    "division_ceremony_chronicle_verify": "durable source inputs changed; project before verify — EXPECTED non-due-round posture after record-round appended follow-up event 180; chronicle reprojection is scoped to the review_due=true return path (not due) and the adapter postprojection division_chronicle stage; NOT a corruption"
+  },
+  "counters": {
+    "canonical_indexed": 4377,
+    "canonical_fully_addressed": 3099,
+    "canonical_fully_read": 3731,
+    "canonical_remaining": 1278,
+    "canonical_unread": 646,
+    "canonical_blocked_needs_steward": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 2922,
+    "noncanonical_pending": 1644,
+    "counter_audit_status": "consistent"
+  },
+  "division": {
+    "cycle_sequence": 26,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_4ecaebc1e50937bdb0d2cf3be9ecce71",
+    "event_count": 180,
+    "event_head_sha256": "7cf2475cff4601d3107027d1145a5474e90f3e78b612be872db1fa2b104a69a1",
+    "tier5_cadence_dossier": "not generated — only required on a Division return; review_due=false this round"
+  },
+  "live_change": "none — no bridge build, deploy, launchctl, or any live substrate/control change required or attempted",
+  "evidence_link_count": {
+    "new": 12,
+    "existing": 0
+  }
+}

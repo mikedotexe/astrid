@@ -1,0 +1,32 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "llm_marker_cjk_quote_newline_fresh_pass_duplicate",
+  "source_or_test_code_changed": false,
+  "cargo_run": "none",
+  "cargo_run_rationale": "addressed_duplicate — no source or test edited. Each proposed test + snag already has a verbatim regression at source SHA 902a0358 (tests.rs L2302, L2322, L2786, L2900, L2942, L2845, L1916), verified by exact source+test reading. The shared bridge tree carries foreign in-progress edits (many M/untracked .rs), so a bridge cargo build would reflect foreign state, not this round's evidence. Same precedent as the identical-shape prior round claude-heartbeat_1786851428.",
+  "stewardship_integrity_suites": [
+    {"name": "introspection_addressing_audit --self-test", "result": "OK", "exit": 0},
+    {"name": "test_evidence_event_store.py", "result": "OK", "exit": 0},
+    {"name": "test_division_ceremony_followup.py", "result": "OK", "exit": 0},
+    {"name": "test_division_ceremony_chronicle.py", "result": "OK", "exit": 0},
+    {"name": "test_division_ceremony_projection.py", "result": "OK (division ceremony projection self-test: ok)", "exit": 0},
+    {"name": "test_projection_cursors.py", "result": "OK", "exit": 0},
+    {"name": "test_introspection_cadence_audit.py", "result": "OK", "exit": 0},
+    {"name": "introspection_cadence_audit.py --strict --compact", "result": "OK (canonical_count 4391)", "exit": 0},
+    {"name": "test_steward_projection.py", "result": "OK", "exit": 0},
+    {"name": "anti_drop_catalog.py --self-test", "result": "OK", "exit": 0},
+    {"name": "anti_drop_catalog.py verify --json", "result": "OK (57 guards, 0 alarms)", "exit": 0},
+    {"name": "experiential_epistemics.py self-test --json", "result": "OK (valid=true)", "exit": 0},
+    {"name": "experiential_epistemics.py verify --json (FINAL, after durable writes)", "result": "OK (valid=true, issue_count=0, history_rewritten=false)", "exit": 0},
+    {"name": "introspection_addressing_audit audit-counters --json", "result": "consistent (all checks True, mismatches [])", "exit": 0},
+    {"name": "evidence_event_store.py --json verify", "result": "valid=true, corrupt_lines=0, errors=[], event_count=829710, head=6b332398e4d7776be98a0a236c5e682b11e83cc97a637bcbe1ea07d94b83f109", "exit": 0}
+  ],
+  "flaky_environmental_failures": [
+    {
+      "name": "test_steward_control.py::test_pause_cooperatively_interrupts_wrapped_subprocess",
+      "observed": "non-deterministic across 4 runs this round: FAILED(errors=1, PausedError: 'fixture stop'), FAILED, OK, OK",
+      "assessment": "documented load-sensitive cooperative-pause race, aggravated by running inside a live controller-held lease; steward_control.py / steward_projection.py / test_steward_control.py are git-clean (untouched this round); orthogonal to the addressed duplicate close (no source touched).",
+      "first_safe_reproduction": "run test_steward_control.py alone on an idle machine outside a live controller lease; expect intermittent errors=1 on the cooperative-pause fixture teardown."
+    }
+  ]
+}

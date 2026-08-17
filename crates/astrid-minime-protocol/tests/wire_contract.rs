@@ -12,6 +12,7 @@ use astrid_minime_protocol::{
     SemanticLaneRoleV2, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1, SensoryMsg,
     SensoryPacketV1, SensoryServerHelloV1, canonical_owner_inquiry_sha256_v2,
     canonical_self_control_intent_sha256, canonical_sensory_payload_sha256,
+    owner_inquiry_fixed_analysis_set_v1,
 };
 use ed25519_dalek::{Signer as _, SigningKey};
 use sha2::{Digest as _, Sha256};
@@ -22,6 +23,8 @@ const OWNER_INQUIRY_V2_FIXTURE_SHA256: &str =
     "17302b92b7d68eec9019ce7f2fb97731f22f4cba3c4ab53d762726cfd161e8c9";
 const OWNER_INQUIRY_V2_CANONICAL_SHA256: &str =
     "55fb17ce4c29bdb3c24bb087788e7bef75442a2ab3ef3c53d933baaafcf10dc1";
+const TEXTURE_DYNAMICS_CONTRACT_FIXTURE_SHA256: &str =
+    "00048207c164c07aa2ccf67cfa7119dca2246c87d4495118703fe7061d6815f9";
 
 #[test]
 fn legacy_telemetry_remains_accepted() {
@@ -102,6 +105,33 @@ fn owner_inquiry_v2_fixture_is_valid_and_byte_pinned() {
         OWNER_INQUIRY_V2_CANONICAL_SHA256
     );
     assert_eq!(serde_json::to_value(inquiry).unwrap(), source);
+}
+
+#[test]
+fn texture_dynamics_contract_is_fixed_analysis_compatible_and_byte_pinned() {
+    let fixture = include_bytes!("fixtures/texture_dynamics_contract_v1.json");
+    assert_eq!(
+        format!("{:x}", Sha256::digest(fixture)),
+        TEXTURE_DYNAMICS_CONTRACT_FIXTURE_SHA256
+    );
+    let value: serde_json::Value = serde_json::from_slice(fixture).unwrap();
+    assert_eq!(
+        value["fixed_analysis_set"],
+        serde_json::to_value(owner_inquiry_fixed_analysis_set_v1()).unwrap()
+    );
+    assert_eq!(
+        value["nested_in_analysis"],
+        "viscous_persistence_source_separation"
+    );
+    assert_eq!(
+        value["raw_reservoir_mode_packing"],
+        "missing_no_exact_raw_reservoir_source"
+    );
+    assert_eq!(
+        value["shadow_dispersal"],
+        "missing_no_exact_shadow_history_source"
+    );
+    assert_eq!(value["live_control_authority"], false);
 }
 
 #[test]

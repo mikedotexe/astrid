@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "projection.rs 1-400: SEMANTIC_DIM=48 (L26); entropy handling TAIL_VIBRANCY_ENTROPY_GATE 0.85 (L48), STRUCTURAL_ENTROPY_DAMPENING 0.80-0.95 (L60-64); text/embedding codec, not raw-spectral<->token."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L358 ProjectionCompressionAuditV1: read-only characterization of distinguishability lost across 768D->8D; no lambda-distribution mapping (0 'lambda' refs); not error-correction."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/spectral_schema.rs",
+      "note": "distinguishability_loss = (1.0-normalized).clamp (L321,L477): derived read-only metric, computed here not in projection.rs."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "note": "porosity_score/pressure fields (L230): pressure_source_v1 lives here + codec/pressure.rs, not projection.rs; 0.33 is composite pressure_score not a mode_packing component."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786923483_astrid_codec_tail_vibrancy_porosity_shadow_authority_wait/summaries/introspection_astrid_codec_1786916726.md",
+      "note": "Witness scalar grounding: pressure_source_score 0.324 (composite), mode_packing 0.570/1.0; felt constriction preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "tail_vibrancy_entropy_086_lifts_tail_output_above_threshold (L2791), tail_vibrancy_raises_only_tail_ceiling_in_high_entropy (L2892), extreme_entropy_tail_vibrancy_gets_bounded_noise_dampening (L2926): tail is LIFTED+bounded above the gate, not over-compressed. Existence-of-coverage (no fresh run: foreign dirty bridge tree)."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "TAIL_VIBRANCY_ENTROPY_GATE 0.85 (L48), TAIL_VIBRANCY_MAX 6.0 (L53), TAIL_VIBRANCY_NOISE_DAMPENING 0.90-1.0 (L65-67): entropy-gated lift + mild noise dampening only."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c004",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the exact-source verification of the tail-vibrancy contradiction for introspection_astrid_codec_1786916726."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated feedback->change ledger row for introspection_astrid_codec_1786916726 (verification + authority boundary, no code change)."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "note": "porosity_score is a derived read-only field (L230), not a settable knob; Test 1 = substrate/derivation change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "POROSITY_OPEN_FLOOR consumer (L47): porosity_score is consumed downstream; steward-visible pre-tuning warning path exists (spectral_explorer.rs)."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786923483_astrid_codec_tail_vibrancy_porosity_shadow_authority_wait/summaries/introspection_astrid_codec_1786916726.md",
+      "note": "Tier-5 needs_operator_approval boundary; Astrid-side twin of minime wi_69fbd510467c6337; no grant, not implemented."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L358 ProjectionCompressionAuditV1 already characterizes 768->8D truncation/fold read-only; exact eigen-tail(lambda4+)-through-codec trace differs and needs isolated replay."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786923483_astrid_codec_tail_vibrancy_porosity_shadow_authority_wait/summaries/introspection_astrid_codec_1786916726.md",
+      "note": "needs_sandbox (Tier 3): bounded isolated replay; no live change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "CROSS_SPECTRAL_RESERVED_DIM_ROLES (L85-90): shadow_magnetization_default_off_candidate + shadow_dispersal_default_off_candidate already exist as DEFAULT-OFF candidates; activation = codec transport change."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786923483_astrid_codec_tail_vibrancy_porosity_shadow_authority_wait/summaries/introspection_astrid_codec_1786916726.md",
+      "note": "Tier-5 needs_operator_approval boundary; 'shadow_preserving' is a new proposal (absent from code/packets); needs captured replay + operator approval."
+    }
+  ]
+}

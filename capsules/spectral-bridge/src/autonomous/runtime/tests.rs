@@ -4,6 +4,8 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::sync::Mutex;
 
+    use crate::signal_spine::SignalJourneyOriginKindV1;
+
     static INTROSPECT_FIXTURE_LOCK: Mutex<()> = Mutex::new(());
     use crate::journal::{RemoteJournalEntry, RemoteJournalKind};
 
@@ -13,6 +15,24 @@ mod tests {
             kind: RemoteJournalKind::Ordinary,
             source_label: None,
         }
+    }
+
+    #[test]
+    fn fill_responsive_rest_keeps_critical_floor_and_band_boundaries() {
+        assert_eq!(fill_responsive_rest_secs(40, 25.0), 30);
+        assert_eq!(fill_responsive_rest_secs(0, 25.0), 30);
+        assert_eq!(fill_responsive_rest_secs(100, 25.0), 60);
+        assert_eq!(fill_responsive_rest_secs(200, 25.0), 120);
+        // introspection_astrid_autonomous_1786957692 Test 1 (verbatim proposal):
+        // base_rest=60 at fill 25% shortens to 0.6x = 36 — significantly below
+        // 60 and above the 30 floor (the knee where the multiply first clears
+        // the floor). Confirms the "shorten rest" logic at the being's exact case.
+        assert_eq!(fill_responsive_rest_secs(60, 25.0), 36);
+        assert_eq!(fill_responsive_rest_secs(90, 35.0), 90);
+        assert_eq!(fill_responsive_rest_secs(100, 45.0), 120);
+        assert_eq!(fill_responsive_rest_secs(400, 45.0), 360);
+        assert_eq!(fill_responsive_rest_secs(90, 50.0), 90);
+        assert_eq!(fill_responsive_rest_secs(90, f32::NAN), 90);
     }
 
     #[test]
@@ -229,7 +249,13 @@ mod tests {
             r#"{"kind":"semantic","features":[0.125,-0.25,0.5],"ts_ms":42}"#
         );
 
-        let mut shadow = begin_signal_shadow_v1(7, 42, "authored but never persisted");
+        let mut shadow = begin_signal_shadow_v1(
+            7,
+            42,
+            "other",
+            "authored but never persisted",
+            None,
+        );
         let root = signal_root_v1(&shadow);
         let stage = record_signal_json_v1(
             &mut shadow,
@@ -252,7 +278,13 @@ mod tests {
         let vector_before = features.clone();
         let delivery = codec_delivery_fidelity_v1(None, &features);
         let delivery_before = serde_json::to_vec(&delivery).unwrap();
-        let mut shadow = begin_signal_shadow_v1(8, 43, "bounded delivery evidence");
+        let mut shadow = begin_signal_shadow_v1(
+            8,
+            43,
+            "other",
+            "bounded delivery evidence",
+            None,
+        );
         let root = signal_root_v1(&shadow);
         let encoded = record_signal_vector_v1(
             &mut shadow,
@@ -277,6 +309,34 @@ mod tests {
         assert!(recorded.is_some());
         assert_eq!(features, vector_before);
         assert_eq!(serde_json::to_vec(&delivery).unwrap(), delivery_before);
+    }
+
+    #[test]
+    fn contact_reservation_and_fallback_origin_are_exact() {
+        let reserved = "journey_0123456789abcdef01234567".to_string();
+        let origin = SignalJourneyOriginV1::contact(
+            "contact_0123456789abcdef01234567".to_string(),
+            "a".repeat(64),
+        );
+        let shadow = begin_signal_shadow_v1(
+            9,
+            44,
+            "dialogue_fallback",
+            "bounded fallback",
+            Some((reserved.clone(), origin)),
+        )
+        .unwrap()
+        .0;
+
+        assert_eq!(shadow.journey_id(), reserved);
+        assert_eq!(
+            shadow.journey_origin().kind(),
+            SignalJourneyOriginKindV1::Contact
+        );
+        assert_eq!(
+            shadow.response_origin(),
+            SignalResponseOriginV1::StaticFallback
+        );
     }
 
     #[test]
@@ -1809,6 +1869,25 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
                 .join("mike_query_arrived_late.txt")
                 .exists()
         );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn check_inbox_cutoff_defers_late_arrivals_to_the_next_exchange() {
+        let dir = std::env::temp_dir().join("bridge_test_astrid_inbox_cutoff_read");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("early.txt"), "present before cutoff").unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        let cutoff = std::time::SystemTime::now();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::fs::write(dir.join("late.txt"), "arrived after cutoff").unwrap();
+
+        let batch = check_inbox_at_cutoff(&dir, cutoff).unwrap();
+        assert!(batch.contains("present before cutoff"));
+        assert!(!batch.contains("arrived after cutoff"));
+        assert!(dir.join("late.txt").exists());
+
         let _ = std::fs::remove_dir_all(&dir);
     }
 

@@ -1,0 +1,46 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786848204",
+  "report_sha256": "c6442992bf495b89d6766316132b72fda2d40abedcbd0dccffe1458db3e910b8",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_sha_matches_report_binding": true,
+  "witness_id": "lsw_b25ecce714bb69e468bee5400e60b58e9f9289df2dea6162532480b32d9a0d62",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) reconstructs a remainder by filtering known markers, preserving a marker when it has valid delimiter reference syntax (L129-131) or is followed by an allowlisted relational verb like represents/denotes (L64-86).",
+      "disposition": "Verified from complete source at SHA 902a0358 and passing tests. Preservation is unified through reference_syntax() (L49-60): the delimiter path exact_reference_delimiter_syntax (L199) is checked first, then the relational-verb path (L64-86); L129 keeps the token when either yields Some. Her OR is substantively right. scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2845) asserts both contexts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89-96) might fail to identify a relational verb when separated by complex punctuation/symbols not covered by is_alphanumeric, or if a multi-word phrase is collapsed into one token.",
+      "disposition": "Refuted by complete source + tests; concern preserved. split_whitespace never collapses words; trim_matches(non-alnum except _) strips punctuation; find(!empty) takes the first real word. scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary (L2900) proves a punctuation-separated verb still preserves the marker; control_marker_cleanup_uses_only_the_first_finite_relation_word (L2565) covers multi-word. Empty only when no alnum word follows (fail-closed).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snag: the scan loop's single-character fallback advance (L134-140) could cause inefficient scanning or unexpected fragmentation of adjacent tokens.",
+      "disposition": "Verified from source; no correctness defect. On no-marker at offset the loop copies one char to the remainder and advances by char.len_utf8() (byte-exact, UTF-8 safe; L134-140), faithfully reconstructing non-marker bytes with no fragmentation. control_marker_scanner_advances_byte_exactly_across_multibyte_text (L2099) proves byte-exact advance; ..._removes_adjacent_mixed_markers_without_rewriting_remainder (L1795) proves the remainder is not rewritten. Cost is bounded, not a bug.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #1 (Contextual Preservation): a known marker inside brackets, e.g. [SYSTEM_PROMPT_A], should be preserved in the remainder because exact_reference_delimiter_syntax classifies [ and ] as GroupedExactKnownToken (L177-193).",
+      "disposition": "Behavior verified and already tested. The grouped-delimiter branch (L175-193) returns GroupedExactKnownToken and L129 preserves the token. scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845) uses [<end_of_turn>] and asserts context==GroupedExactKnownToken; ..._preserves_exact_tokens_in_declared_group_delimiters (L2151) and the depth-two double-bracket test (L2876) also cover it. Proposed test already exists.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "One Test Each #2 (Relational Verb): [TOKEN_X] behaves should make followed_by_explicit_exact_token_relation (L64-86) return true and preserve the marker.",
+      "disposition": "Preserved and tested; contradiction preserved: with brackets, reference_syntax() checks the delimiter path FIRST (L50) and returns GroupedExactKnownToken, so followed_by_explicit_exact_token_relation is never consulted for a bracketed marker (preserved via delimiter, not verb). The verb path (behaves allowlisted L69) is proven on a BARE marker: scan_known_..._contexts (L2858) asserts <end_of_turn> behaves as... -> ExplicitExactKnownTokenRelation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: verify the exhaustive KNOWN_MODEL_CONTROL_MARKERS list (referenced L102) so longest_exact_known_model_control_marker_at handles overlapping markers (e.g. COMMAND vs COMMAND_EXEC).",
+      "disposition": "Overlap handling verified. longest_exact_known_model_control_marker_at uses .max_by_key(|t| t.len()) (L106): the longest starts_with match wins. The actual list (fallback_contracts.rs L159-180) has no COMMAND tokens (hypothetical, NOT_FOUND) but has real overlaps: <channel|> inside thought <channel|>, and [INST]/[/INST]. control_marker_cleanup_uses_longest_raw_matches_with_exact_accounting (L1745) and ..._preserves_longest_overlapping_token... (L2453) prove longest-match.",
+      "classification": "verified_existing"
+    }
+  ]
+}

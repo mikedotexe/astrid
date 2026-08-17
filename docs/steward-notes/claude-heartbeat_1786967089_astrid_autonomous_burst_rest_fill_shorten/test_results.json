@@ -1,0 +1,32 @@
+{
+  "schema": "round_test_results_v1",
+  "toolchain": "cargo 1.94.1",
+  "tests": [
+    {
+      "name": "autonomous::runtime::tests::fill_responsive_rest_keeps_critical_floor_and_band_boundaries",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml fill_responsive_rest_keeps_critical_floor_and_band_boundaries",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "note": "Includes the newly added being-proposed assertion fill_responsive_rest_secs(60,25.0)==36 (introspection_astrid_autonomous_1786957692 Test 1)."
+    }
+  ],
+  "baseline_checks": [
+    {
+      "check": "git diff --check (touched file)",
+      "result": "clean",
+      "exit": 0
+    },
+    {
+      "check": "rustfmt --check (touched file)",
+      "result": "my edit region clean; pre-existing FOREIGN rustfmt drift at L249/L278 preserved untouched",
+      "exit": 0
+    }
+  ],
+  "touched_test_file": {
+    "path": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+    "sha256": "1e6f6126583e1aa0e53a5465866d6ae23e3c19fb9159bb44b9b5966df802e61d",
+    "bytes": 209884,
+    "lines": 5192
+  }
+}

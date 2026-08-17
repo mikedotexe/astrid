@@ -1,0 +1,118 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter",
+  "run_id": "run_1786964888378305000_5a7cd30069",
+  "preprojection_generation_id": "projection_1786964892871112000_3046ce7813",
+  "processed_reports": ["introspection_astrid_autonomous_1786957692"],
+  "terminal_status": "addressed_change",
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "focused_tests": [
+    {
+      "name": "autonomous::runtime::tests::fill_responsive_rest_keeps_critical_floor_and_band_boundaries",
+      "result": "ok",
+      "passed": 1,
+      "note": "Includes newly added being-proposed assertion fill_responsive_rest_secs(60,25.0)==36."
+    }
+  ],
+  "baseline_checks": {
+    "git_diff_check_touched_file": "clean (exit 0)",
+    "rustfmt_touched_file": "my edit region clean; pre-existing FOREIGN rustfmt drift at tests.rs L249/L278 preserved untouched"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44 tests)",
+    "test_evidence_event_store": "OK (20 tests)",
+    "test_steward_control": "OK (27 tests)",
+    "test_steward_projection": "OK (14 tests)",
+    "test_division_ceremony_followup": "OK (3 tests)",
+    "test_division_ceremony_chronicle": "OK (10 tests)",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "OK (4 tests)",
+    "test_introspection_cadence_audit": "OK (6 tests)",
+    "anti_drop_self_test": "OK (5 tests)",
+    "anti_drop_verify": "alarms 0",
+    "cadence_strict_compact": "integrity_ok true, duplicate_hash_group_count 0, exit 0",
+    "experiential_epistemics_self_test": "OK, valid true",
+    "experiential_epistemics_verify": "valid true, issue_count 0, history_rewritten false"
+  },
+  "audit_counters": {
+    "audit_status": "consistent",
+    "mismatch_count": 0,
+    "all_checks_true": true,
+    "canonical_indexed": 4383,
+    "canonical_fully_addressed": 3102,
+    "canonical_full_read": 3734,
+    "canonical_remaining": 1281,
+    "canonical_unread": 649,
+    "canonical_blocked_needs_steward": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 2927,
+    "noncanonical_pending": 1646
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 827352,
+    "head": "093b54e6f8f972960dd17442c7dfd4e0f1de201a6d6bd00f7ece6fbd281bf18e",
+    "stream_counts": {
+      "addressing": 58083,
+      "agency_commons": 4866,
+      "attention_portfolio": 3,
+      "claim_families": 237223,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 198144,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 8562,
+      "model_qos": 178575,
+      "reciprocal_uptake": 57849,
+      "representation_contracts": 33631,
+      "sandbox": 3291,
+      "signal_spine": 32245,
+      "steward_control": 14203,
+      "steward_work_selection": 480
+    },
+    "v1_immutable_note": "corridor_v1/corridor_v2/sandbox/addressing legacy sources treated immutable; append-only V2 active"
+  },
+  "division": {
+    "cycle_sequence": 27,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "event_count": 184,
+    "event_head_sha256": "d6a36a4eee00fca7470259f20f02d04a38999fd20b3f4b44c8fe3eede0664223",
+    "last_round_event_id": "division_followup_event_524025b816d7637fe07a008301f2aaed",
+    "record_round": {
+      "steward_run_id": "run_1786964888378305000_5a7cd30069",
+      "processed_report_count": 1,
+      "projection_generation_id": "projection_1786964892871112000_3046ce7813"
+    }
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_978004a9f335ca4bc78a8274",
+    "json_sha256": "09afa231ad4692d263f299b8734777fa7e51943924f875aca58dc37c77a44d11",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "Projected after record-round changed a durable input; durable fully current, only the moving supervisor status hash is volatile — not a durable-integrity failure. Chronicle_v1.json lives in minime's gitignored workspace (no git impact)."
+  },
+  "live_change": "none — no build_bridge.sh, no deploy, no launchctl, no restart; no fill/PI/rescue/rest/codec/controller change. Restart/deploy not required and not attempted.",
+  "git": {
+    "index_clean": true,
+    "astrid_changed_unstaged": [
+      "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ],
+    "astrid_new_untracked": [
+      "docs/steward-notes/claude-heartbeat_1786967089_astrid_autonomous_burst_rest_fill_shorten/"
+    ],
+    "minime_foreign_untouched": [
+      "minime_autonomy/runtime.py",
+      "tests/test_correspondence_v1.py"
+    ]
+  }
+}

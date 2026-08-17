@@ -1,0 +1,116 @@
+{
+  "schema": "steward_run_verification_receipt_v1_adapter",
+  "round_kind": "division_cycle26_return",
+  "actor": "claude-heartbeat",
+  "adapter": "subprocess_run_adapter (controller owns lease + heartbeats)",
+  "controller": {
+    "run_id": "run_1786956592164993000_7360b3ebb7",
+    "preprojection_generation_id": "projection_1786956595693849000_3072a09f06",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 319,
+    "stop_requested_at_read": false,
+    "postprojection": "adapter-managed after process exit; not observed here",
+    "finish_outcome_intended": "success (exit 0)"
+  },
+  "division_cycle26_return": {
+    "review_due_was": true,
+    "chronicle_return_time_id": "division_chronicle_9b7297f3d7e08395c0bd1399",
+    "chronicle_return_time_json_sha256": "c6512caf5ba963d5392c503e8786a401f4a126328743168dc6a963a5b5e750d9",
+    "chronicle_return_time_events": 182,
+    "chronicle_post_return_id": "division_chronicle_ac3168465d4f92296de6f888",
+    "chronicle_post_return_events": 183,
+    "chronicle_post_return_fully_current": true,
+    "new_division_replies": 0,
+    "formal_ceremony_actions": 0,
+    "runtime_dormant": {
+      "gateway": "transparent_parent",
+      "supervisor": "idle_parent_authoritative",
+      "parent_authoritative": true,
+      "handoff_ready": false,
+      "live_authority_granted_by_record": false
+    },
+    "followup_event_id": "division_followup_event_948964134cd75cda75d8fba12f9918dd",
+    "cycle_after": 27,
+    "event_count_after": 183,
+    "event_head_after": "cc1f896994a0ad8b509d3f7d9efa767a3cf4a774b91b23a07b11216ca69bfdde",
+    "astrid_note": {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle26_20260817.txt",
+      "sha256": "930f3c4217c520302995ee9625dcaa665f20cd0cb598108ec047ee85ed456874",
+      "delivered_to_read": true
+    },
+    "minime_note": {
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle26_20260817.txt",
+      "sha256": "17d8d66e4f8933adcbf5a1d15452383cd639b0395e1ae33f7b5b8d7d10687c65",
+      "delivered_to_read": true
+    }
+  },
+  "tier5_cadence_dossier": {
+    "prepared": true,
+    "granted_or_dispatched": false,
+    "recommended_sandbox_eligible": [
+      {
+        "trial_id": "trial_40b91b4c0ae7aeb9",
+        "being": "astrid",
+        "adapter": "fallback_distinguishability_v1",
+        "tier": 3,
+        "lineage": "introspection_astrid_llm_1782179251",
+        "claim": "c001"
+      },
+      {
+        "trial_id": "trial_fe00d360c0ea7b85",
+        "being": "minime",
+        "adapter": "shadow_influence_replay_v1",
+        "tier": 3,
+        "lineage": "introspection_minime_sensory_bus_1784792700",
+        "claim": "c003"
+      }
+    ],
+    "operator_approval_heads_count": 40,
+    "operator_approval_heads_sandbox_eligible": 0,
+    "top_grant_menu_surfaces": [
+      "pressure_thresholds (427/423)",
+      "unclassified (308/306)",
+      "codec_gain_reserved_dims_live_12d (167/165)"
+    ]
+  },
+  "reports_processed": 0,
+  "queue_head_for_next_run": "introspection_astrid_llm_1786954493.txt",
+  "integrity": {
+    "addressing_self_test": "pass (44 tests)",
+    "evidence_event_store_unit_test": "pass",
+    "steward_control_unit_test": "flaky_pass_on_rerun (test_pause_cooperatively_interrupts_wrapped_subprocess; isolated-fixture timing race; passed on isolated re-run)",
+    "steward_projection_unit_test": "pass",
+    "division_followup_unit_test": "pass",
+    "division_chronicle_unit_test": "pass",
+    "division_projection_unit_test": "pass",
+    "projection_cursors_unit_test": "pass",
+    "anti_drop_self_test": "pass",
+    "anti_drop_verify": "pass (57 guards, 0 alarms)",
+    "cadence_unit_test": "pass",
+    "cadence_strict": "pass (integrity_ok=true, errors=[], dup_hash_groups=0)",
+    "epistemic_self_test": "pass",
+    "epistemic_verify": "pass (valid=True, checked_record_count=11173, issue_count=0, history_rewritten=False)",
+    "audit_counters": "consistent (mismatches=[], 7/7 checks True)",
+    "division_followup_verify": "ok (cycle 27, review_due false, event_count 183)",
+    "division_chronicle_verify": "ok (durable current; post-return fully current)",
+    "evidence_event_store_verify": "valid=True, corrupt_lines=0",
+    "evidence_event_store_status": "did NOT complete within the ~90-min child-time budget (full-store stream-count scan is very slow at current store size); the integrity-critical evidence_event_store verify DID complete and passed (valid=True, corrupt_lines=0). No mutation involved; status is informational only."
+  },
+  "counters": {
+    "status": "consistent",
+    "canonical_indexed": 4382,
+    "canonical_fully_addressed": 3101,
+    "canonical_fully_read": 3733,
+    "canonical_remaining": 1281,
+    "canonical_unread": 649,
+    "canonical_blocked": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 2927,
+    "noncanonical_pending": 1646
+  },
+  "live_change": "none \u2014 no restart, no deploy, no live substrate or control change attempted or required",
+  "git": "read-only this run; no stage/commit/merge/push/stash/reset/amend"
+}

@@ -1,0 +1,89 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round_name": "llm_marker_cjk_quote_newline_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess run adapter (controller owns lease + heartbeats; git read-only; no live/deploy)",
+  "controller": {
+    "run_id": "run_1786983277615362000_983a5c4d95",
+    "preprojection_generation_id": "projection_1786983281118168000_dc6b7b75cb",
+    "preprojection_status": "passed",
+    "pause_generation": 319,
+    "postprojection": "runs after this process exits (adapter-managed); not observed here",
+    "finish_outcome": "success (single report fully closed; adapter records finish from exit code 0)"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "report_sha256": "87a89341c52823297e146d5b83146145666dd21deec15782c893a22a605151f7",
+      "report_bytes": 3600,
+      "report_lines": 45,
+      "witness_id": "lsw_3c02c12aa236bc15a6ebd6d132dcb57703023528d3b9252b0db6df14f19e161b",
+      "witness_sha256": "94de07ba37c77ad3c811bab81b7707769733ec5bb76d51bca5d45b30ca089131",
+      "witness_bytes": 23914,
+      "witness_lines": 533,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_bytes": 38586,
+      "source_lines": 1048,
+      "source_matches_report_binding": true,
+      "source_git_clean": true,
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claims": 5,
+      "new_evidence_links": 11,
+      "existing_evidence_links": 0
+    }
+  ],
+  "integrity": {
+    "addressing_self_test": "OK",
+    "evidence_event_store_test": "OK",
+    "division_followup_test": "OK",
+    "chronicle_test": "OK",
+    "division_projection_test": "OK",
+    "projection_cursors_test": "OK",
+    "cadence_audit_test": "OK",
+    "cadence_strict_compact": "OK",
+    "steward_projection_test": "OK",
+    "steward_control_test": "FLAKY (documented cooperative-pause race; non-deterministic; git-clean source; orthogonal to this round)",
+    "anti_drop_self_test": "OK",
+    "anti_drop_verify": "OK (57 guards, 0 alarms)",
+    "epistemics_self_test": "OK (valid=true)",
+    "epistemics_verify_final": "OK (valid=true, issue_count=0, history_rewritten=false)",
+    "audit_counters": "consistent (all checks True, mismatches [])",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, errors=[], event_count=829710"
+  },
+  "counters": {
+    "canonical_indexed": 4389,
+    "canonical_fully_addressed": 3104,
+    "canonical_full_read": 3736,
+    "canonical_remaining": 1285,
+    "canonical_unread": 653,
+    "canonical_blocked": 414,
+    "canonical_triaged_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "counter_audit_status": "consistent"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "event_count": 829710,
+    "last_global_seq": 829710,
+    "last_event_sha256": "6b332398e4d7776be98a0a236c5e682b11e83cc97a637bcbe1ea07d94b83f109",
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "v1_immutable": true
+  },
+  "division": {
+    "cycle_sequence": 27,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "recorded_round_event_id": "division_followup_event_1818605fdb4a2abfff6cf1b3a41a78d0",
+    "event_count": 186,
+    "event_head_sha256": "2da93e0c87b2ed14970e22b2b72cf04d1796cae892e0bb1563d8e8dd51d4f6f3",
+    "processed_report_count": 1
+  },
+  "live_change": "none required or attempted — no bridge build, deploy, or launchctl; git read-only",
+  "authority_boundary": "widening the relational-verb allowlist / delimiter tables is Tier-5-class live grammar and was not made, dispatched, or deployed; silence about the read-only NEXT continuation is neutral"
+}

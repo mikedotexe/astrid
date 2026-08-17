@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786936281",
+  "source": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786936281.txt",
+  "report_sha256": "ee9e1ca1ec9bbdc6403605c9404c9ad88c47abe39e1a1e77fc5be55b91a7eb44",
+  "lived_state_witness": "lsw_c77007a1a3fdb08377b4ad2f5a1e767796a3accf6fcbc4beb227c96d648c86d7",
+  "report_bound_source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "report_bound_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_hash_matches_binding": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The scanner is non-destructive: it distinguishes raw transport markers from referenced markers; scan_known_model_control_markers (L114) rebuilds a remainder preserving markers only when they have reference syntax (L130); a multi-layered delimiter check (L153-197) identifies quoted/grouped references incl. international punctuation.",
+      "disposition": "Verified from complete source (SHA 902a0358, matches report binding). scan_known_model_control_markers L114 rebuilds a clean remainder, preserving a marker only when reference_syntax.is_some() (L129-131 = her L130); the delimiter check is exact_reference_delimiter_pair L153-197 (quoted L157-174, grouped L175-196) incl. international pairs like 'corner' L168 and 'white corner' L169. Accurate and non-inverted (preserve-only-when-referenced).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "first_word_after (L89) uses split_whitespace + a manual alphanumeric filter (L92); if a marker is followed by a punctuation-heavy string or a non-standard whitespace char (like a non-breaking space) before the next word, find might skip the verb or return empty, so followed_by_explicit_exact_token_relation (L64) fails and the marker is stripped.",
+      "disposition": "Hypothesis (non-breaking space/punctuation makes first_word_after L89 skip the verb, stripping the marker) REFUTED by source (not domesticated). split_whitespace L91 treats U+00A0 as whitespace; trim_matches L92 strips a leading U+FEFF; find skips punctuation-only chunks. Punctuation case grounded by existing test L2899; her non-breaking-space case by a NEW regression (U+00A0 + U+FEFF -> `denotes` found, marker preserved). Strips only when no alphanumeric word follows (fail-closed).",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Reference Retention): a marker followed by `denotes` (e.g. `[MARKER] denotes the state`) must be included in the remainder returned by scan_known_model_control_markers.",
+      "disposition": "Already covered. `denotes` preservation via control_marker_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate (tests.rs L2500, uses `denotes`); scan-level explicit-relation preservation via scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845). `denotes` is in the allowlist at dialogue_runtime.rs L71.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): nested [[MARKER]] must let exact_reference_delimiter_syntax identify the depth/context without incorrectly collapsing the outer brackets into a single GroupedExactKnownToken context.",
+      "disposition": "Already covered exactly. exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (tests.rs L2876) asserts [[<end_of_turn>]] -> GroupedExactKnownToken with delimiter_depth 2 (NOT collapsed to 1), refuting the 'incorrectly collapsing into a single context' concern. Grouped [ ] pair at dialogue_runtime.rs L177; depth logic in exact_reference_delimiter_syntax L199-228.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder from scan_known_model_control_markers is integrated into final prompt construction.",
+      "disposition": "Read-only pointer, accurate. generate_dialogue is exactly at L695. The remainder flows downstream via sanitize_model_control_markers_with_report (L352) / sanitize_model_control_markers (L519), consumed at L558 and L634. A full L695 prompt-integration assessment is her declared NEXT window (L400+), out of this report's 1-400 scope; no implementation needed and no overclaim made.",
+      "classification": "observed"
+    }
+  ]
+}

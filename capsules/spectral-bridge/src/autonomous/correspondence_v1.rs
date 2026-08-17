@@ -11,9 +11,14 @@ use sha2::{Digest as _, Sha256};
 
 use astrid_minime_protocol::MutualAddressEnvelopeV1;
 
+#[path = "correspondence_v1/contact_source.rs"]
+mod contact_source;
 #[path = "correspondence_v1/relation_axes.rs"]
 mod relation_axes;
 
+pub(crate) use contact_source::{
+    InboxContactSourceIdentityV1, InboxPeerMessage, contact_source_identity_for_inbox_file,
+};
 use relation_axes::{RelationEvidenceV4, correspondence_relation_axes_v4};
 
 pub(crate) const LEDGER_PATH: &str = "/Users/v/other/shared/collaborations/correspondence_v1.jsonl";
@@ -220,15 +225,6 @@ pub(crate) struct CorrespondenceFields {
     pub transition_payload: Option<CorrespondenceTransitionPayload>,
     pub mutual_witness_signal: bool,
     pub silt_continuity: bool,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct InboxPeerMessage {
-    pub message_id: String,
-    pub thread_id: String,
-    pub persistence_id: Option<String>,
-    pub from_being: String,
-    pub file_path: PathBuf,
 }
 
 #[must_use]
@@ -5031,7 +5027,8 @@ fn native_thread_continuity_v3_for(
         "stall_reason": stall_reason,
         "age_ms": age_ms,
         "reply_linked": reply_linked,
-        "acknowledged": ack.is_some(),
+        "ack_receipt_present": ack.is_some(),
+        "acknowledged": ack_is_address_evidence,
         "ack_kind": ack_kind,
         "trace_observed": trace_observed,
         "attention_outcome_present": attention_outcome,
@@ -6238,7 +6235,8 @@ fn direct_contact_fidelity_for_with_context(
         "legacy_claim_affordance_v25": legacy_claim.map(|claim| legacy_claim_affordance_v25(records, claim)),
         "native_thread_continuity_v3": if legacy_bridge { None } else { native_thread_continuity_v3_for(records, thread_id, "astrid") },
         "persistent_thread_continuity_v1": persistent_thread,
-        "acknowledged": ack.is_some(),
+        "ack_receipt_present": ack.is_some(),
+        "acknowledged": ack_is_address_evidence,
         "ack_kind": ack_kind,
         "latest_ack": ack.map(|row| json!({
             "ack_kind": row.get("ack_kind").cloned().unwrap_or_else(|| json!("seen")),
@@ -7311,6 +7309,10 @@ fn chamber_correspondence_state_summary() -> String {
          {active_thread_clarity_line}; {attention_line}{legacy_line}correspondence_weight_candidate is one-shot authority-gate only; prompt attention canary is TTL language context only; telemetry/controller hooks remain inert, not standing weighting/control."
     )
 }
+
+#[cfg(test)]
+#[path = "correspondence_v1/acknowledgement_tests.rs"]
+mod acknowledgement_tests;
 
 #[cfg(test)]
 mod tests {
@@ -9268,71 +9270,6 @@ mod tests {
     }
 
     #[test]
-    fn seen_ack_is_visibility_not_attention_evidence() {
-        let root = std::env::temp_dir().join(format!("corr_seen_ack_test_{}", now_ms()));
-        let inbox = root.join("inbox");
-        let ledger = root.join("ledger.jsonl");
-        let (envelope, path) = deliver_to_inbox_with_ledger(
-            &ledger,
-            &inbox,
-            "astrid",
-            "minime",
-            "A direct address that has only been seen.",
-            CorrespondenceFields::default(),
-        )
-        .unwrap();
-        append_read_receipt_at(
-            &ledger,
-            "minime",
-            &envelope.message_id,
-            &envelope.thread_id,
-            &path,
-        )
-        .unwrap();
-        let seen = append_ack_receipt_at(&ledger, "latest", "minime", "astrid", "seen", "seen");
-        assert!(seen.contains("ACK RECEIPT WRITTEN"));
-        let heartbeat = Some(serde_json::json!({
-            "jitter_class": "normal",
-            "timing_reliability": "reliable",
-            "field_vs_hearing": "telemetry cadence is steady"
-        }));
-        let records = read_ledger_records_at(&ledger);
-        let fidelity =
-            direct_contact_fidelity_for_with_heartbeat(&records, "latest", heartbeat.clone());
-        assert_eq!(
-            fidelity.get("status").and_then(Value::as_str),
-            Some("seen_ack_only")
-        );
-        assert_eq!(
-            fidelity.get("block_reason").and_then(Value::as_str),
-            Some("seen_ack_is_visibility_not_address")
-        );
-        assert_eq!(
-            fidelity
-                .get("eligible_for_correspondence_attention_canary")
-                .and_then(Value::as_bool),
-            Some(false)
-        );
-        assert_eq!(
-            fidelity
-                .get("direct_contact_fidelity_v3")
-                .and_then(|value| value.get("status"))
-                .and_then(Value::as_str),
-            Some("seen_ack_only")
-        );
-        let blocked = activate_attention_canary_at_with_heartbeat(
-            &ledger,
-            "latest",
-            "reason: hold it distinctly; focus: direct address; stop_criteria: one turn",
-            "astrid",
-            "minime",
-            heartbeat,
-        );
-        assert!(blocked.contains("blocked_no_receipt"), "{blocked}");
-        let _ = std::fs::remove_dir_all(root);
-    }
-
-    #[test]
     fn correspondence_metadata_survives_reply_ack_and_trace_without_priority() {
         let root = std::env::temp_dir().join(format!("corr_metadata_test_{}", now_ms()));
         let inbox = root.join("inbox");
@@ -10042,7 +9979,7 @@ mod tests {
         );
     }
 
-    fn deliver_to_inbox_with_ledger(
+    pub(super) fn deliver_to_inbox_with_ledger(
         ledger_path: &Path,
         inbox_dir: &Path,
         from_being: &str,

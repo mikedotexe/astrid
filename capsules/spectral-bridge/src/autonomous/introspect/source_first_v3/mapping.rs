@@ -194,11 +194,7 @@ fn visit_tree(
     }
 }
 
-fn rust_include_edge(
-    node: Node<'_>,
-    content: &str,
-    parent_path: &str,
-) -> Option<SourceMapEntryV3> {
+fn rust_include_edge(node: Node<'_>, content: &str, parent_path: &str) -> Option<SourceMapEntryV3> {
     if node.kind() != "macro_invocation" {
         return None;
     }

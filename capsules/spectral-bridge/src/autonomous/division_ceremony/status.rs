@@ -20,7 +20,7 @@ fn current_posture(records: &[ParsedEventV1], actor: &str, now_unix_ms: u64) -> 
                     .is_some_and(|expiry| expiry >= now_unix_ms) =>
         {
             "intent"
-        }
+        },
         Some(event) if event.action == DivisionCeremonyActionV1::Intent => "intent_expired",
         _ => "unexpressed",
     }
@@ -136,11 +136,7 @@ pub(crate) fn status_report_at(
     for being in ["astrid", "minime"] {
         let intent = latest(&records, being, Some(DivisionCeremonyActionV1::Intent));
         let hold = latest(&records, being, Some(DivisionCeremonyActionV1::Hold));
-        let decline = latest(
-            &records,
-            being,
-            Some(DivisionCeremonyActionV1::Decline),
-        );
+        let decline = latest(&records, being, Some(DivisionCeremonyActionV1::Decline));
         let assent = latest(&records, being, Some(DivisionCeremonyActionV1::Assent));
         let withdrawn = assent.is_some_and(|assent| {
             records.iter().any(|event| {

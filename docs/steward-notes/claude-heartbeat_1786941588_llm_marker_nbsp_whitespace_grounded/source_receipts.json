@@ -1,0 +1,40 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "round": "claude-heartbeat_1786941588_llm_marker_nbsp_whitespace_grounded",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_matches_report_binding": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "Lines 1-405 read completely this run; L695 (generate_dialogue) and the sanitizer consumption sites (L519-520, L558, L634) read via targeted inspection. All extracted claims cite L64-L197 (scanner/allowlist/delimiter) plus the c005 pointer at L695. Working-copy SHA equals the report-bound SHA, so report-time and current source are byte-identical.",
+      "cited_symbols": {
+        "reference_syntax": 49,
+        "followed_by_explicit_exact_token_relation": 64,
+        "denotes_allowlist_verb": 71,
+        "first_word_after": 89,
+        "split_whitespace": 91,
+        "trim_matches_alphanumeric_filter": 92,
+        "scan_known_model_control_markers": 114,
+        "preserve_vs_redact_guard": 129,
+        "exact_reference_delimiter_pair": 153,
+        "quoted_pairs": "157-174",
+        "grouped_pairs": "175-196",
+        "cjk_corner_bracket_pairs": "168-169",
+        "grouped_square_bracket_pair": 177,
+        "exact_reference_delimiter_syntax": 199,
+        "sanitize_model_control_markers_with_report": 352,
+        "sanitize_model_control_markers": 519,
+        "sanitizer_consumed_sites": "558,634",
+        "generate_dialogue": 695
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "Read the marker-scanner test region (L2453-2620, L2843-2934) to verify existing coverage of Astrid's two test proposals and the punctuation-boundary sibling, and to place the new regression. Pre-existing foreign-dirty (git status M) with pre-existing rustfmt drift at L1/L35 (imports), L1885/1928/1948, L2526/2540 (is/acts test), L2845/2857/2875 (grouped-relation + double-bracket tests) that was NOT modified.",
+      "edit": "Added fn scan_known_model_control_markers_grounds_first_word_after_non_breaking_space at L2942 (post-edit). A separate draft regression for the already-closed introspection_astrid_llm_1786924416 (operates synonym) was added then fully reverted after the stale-queue discovery."
+    }
+  ]
+}

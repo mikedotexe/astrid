@@ -1,0 +1,40 @@
+{
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786944125",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786944125.txt",
+      "sha256": "8ad7afd901e92a45df30ed97929c061ded9763bdec539b2d959684925cb22aab",
+      "bytes": 3405,
+      "lines": 47,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_96f1d8af3c21340a9c612561723143b98568ef41042e41ec75453ced3afead3f",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_96f1d8af3c21340a9c612561723143b98568ef41042e41ec75453ced3afead3f.json",
+      "sha256": "14cfa3584ed620f9bf1e7f2b8c1ec61324dd3f19b2d2cf3d0790c1bfcebd7b45",
+      "bytes": 23929,
+      "lines": 533,
+      "read": "complete",
+      "notes": "artifact_sha256 matches report; fill 71.03%; authority evidence_only; live_eligible_now false; no private paths; witness source_snapshot window 0-400 while report header asserts multi_window_complete 1-1048 (full-file SHA matches, verified against complete source)"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete 1-1048 (report-bound window 1-400; full file read to verify multi_window_complete claim)",
+      "working_copy_matches_report_binding": true,
+      "git_state": "clean at HEAD (not in dirty status list)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": null,
+      "read_scope": "targeted regions L2460-2620, L2690-2977 (existing marker regressions grounding all report claims)",
+      "git_state": "dirty (M) \u2014 accumulated stewardship + foreign edits; NOT modified this round"
+    }
+  ]
+}

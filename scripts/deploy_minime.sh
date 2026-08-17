@@ -14,6 +14,13 @@ DOMAIN="gui/$(id -u)"
 
 ACK=""
 ACTOR="${ASTRID_DEPLOY_ACTOR:-interactive-agent}"
+PROMOTE_CANDIDATE=""
+CANDIDATE_ROOT=""
+CANDIDATE_IDENTITY=""
+PROMOTION_VERIFY_JSON=""
+PROMOTION_HANDOFF=""
+PROMOTION_BACKUP=""
+CANDIDATE_INSTALLED=false
 PREFLIGHT_OK=false
 BUILD_OK=false
 STOP_OK=false
@@ -26,7 +33,7 @@ NEW_PID=""
 RECEIPT_WRITTEN=0
 
 usage() {
-  echo 'usage: deploy_minime.sh [--ack "reason"] [--actor NAME]'
+  echo 'usage: deploy_minime.sh [--ack "reason"] [--actor NAME] [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]'
 }
 
 while [ $# -gt 0 ]; do
@@ -35,6 +42,12 @@ while [ $# -gt 0 ]; do
     --ack=*)   ACK="${1#*=}"; shift ;;
     --actor)   ACTOR="${2:-}"; shift 2 ;;
     --actor=*) ACTOR="${1#*=}"; shift ;;
+    --promote-candidate) PROMOTE_CANDIDATE="${2:-}"; shift 2 ;;
+    --promote-candidate=*) PROMOTE_CANDIDATE="${1#*=}"; shift ;;
+    --candidate-root) CANDIDATE_ROOT="${2:-}"; shift 2 ;;
+    --candidate-root=*) CANDIDATE_ROOT="${1#*=}"; shift ;;
+    --candidate-identity) CANDIDATE_IDENTITY="${2:-}"; shift 2 ;;
+    --candidate-identity=*) CANDIDATE_IDENTITY="${1#*=}"; shift ;;
     -h|--help) usage; exit 0 ;;
     *)         echo "deploy_minime: unknown arg: $1" >&2; usage >&2; exit 64 ;;
   esac
@@ -96,14 +109,27 @@ record_stack_receipt() {
   [ -n "$model_pid" ] && args+=(--process "model=$model_pid")
   [ -f "$MANIFEST" ] && args+=(--manifest "$MANIFEST")
   [ -f "$TELEMETRY" ] && args+=(--telemetry "$TELEMETRY")
+  [ -f "$PROMOTION_HANDOFF" ] && args+=(--script "self-change-promotion=$PROMOTION_HANDOFF")
+  [ -n "$PROMOTE_CANDIDATE" ] && args+=(--probe "self_change_candidate=$PROMOTE_CANDIDATE")
   RECEIPT_WRITTEN=1
   python3 "$ASTRID/scripts/environment_receipts.py" "${args[@]}"
+}
+
+restore_candidate_binary() {
+  if [ "$CANDIDATE_INSTALLED" = true ] && [ -f "$PROMOTION_BACKUP" ]; then
+    cp -p "$PROMOTION_BACKUP" "$ENGINE"
+    CANDIDATE_INSTALLED=false
+  fi
 }
 
 fail_deploy() {
   local message="$1"
   echo "deploy_minime: $message" >&2
   record_stack_receipt failed >/dev/null 2>&1 || true
+  if [ "$CANDIDATE_INSTALLED" = true ]; then
+    restore_candidate_binary
+    "$ASTRID/scripts/start_all.sh" --minime-only --skip-greeting >/dev/null 2>&1 || true
+  fi
   exit 1
 }
 
@@ -112,6 +138,10 @@ unexpected_failure() {
   trap - ERR
   if [ "$RECEIPT_WRITTEN" -eq 0 ]; then
     record_stack_receipt failed >/dev/null 2>&1 || true
+  fi
+  if [ "$CANDIDATE_INSTALLED" = true ]; then
+    restore_candidate_binary
+    "$ASTRID/scripts/start_all.sh" --minime-only --skip-greeting >/dev/null 2>&1 || true
   fi
   exit "$code"
 }
@@ -128,20 +158,52 @@ OLD_PID="$(label_pid "$LABEL" || true)"
 OLD_TELEMETRY_MTIME=0
 [ -f "$TELEMETRY" ] && OLD_TELEMETRY_MTIME="$(stat -f %m "$TELEMETRY")"
 
-echo "deploy_minime: cargo build --release ..."
-if ! (cd "$MINIME/minime" && cargo build --release); then
-  fail_deploy "release build failed; live Minime was not stopped"
+if [ -n "$PROMOTE_CANDIDATE" ]; then
+  [ -n "$CANDIDATE_ROOT" ] || fail_deploy "--candidate-root is required for promotion"
+  [ -n "$CANDIDATE_IDENTITY" ] || fail_deploy "--candidate-identity is required for promotion"
+  PROMOTION_VERIFY_JSON="$(mktemp)"
+  if ! python3 "$ASTRID/scripts/self_change_canary.py" verify-promotion \
+    --root "$CANDIDATE_ROOT" \
+    --component minime-engine \
+    --candidate-id "$PROMOTE_CANDIDATE" \
+    --identity "$CANDIDATE_IDENTITY" >"$PROMOTION_VERIFY_JSON"; then
+    fail_deploy "self-change promotion handoff did not verify"
+  fi
+  CANDIDATE_ARTIFACT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["artifact_path"])' "$PROMOTION_VERIFY_JSON")"
+  CANDIDATE_SHA256="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["artifact_sha256"])' "$PROMOTION_VERIFY_JSON")"
+  PROMOTION_HANDOFF="$(dirname "$(dirname "$CANDIDATE_ARTIFACT")")/promotion_handoff.json"
+  PROMOTION_BACKUP="$(dirname "$(dirname "$CANDIDATE_ARTIFACT")")/production_backup/minime"
+  mkdir -p "$(dirname "$PROMOTION_BACKUP")" "$(dirname "$ENGINE")"
+  [ -f "$ENGINE" ] && cp -p "$ENGINE" "$PROMOTION_BACKUP"
+  CANDIDATE_TMP="$ENGINE.self-change.tmp"
+  cp -p "$CANDIDATE_ARTIFACT" "$CANDIDATE_TMP"
+  [ "$(shasum -a 256 "$CANDIDATE_TMP" | awk '{print $1}')" = "$CANDIDATE_SHA256" ] \
+    || fail_deploy "candidate artifact hash changed before install"
+  mv "$CANDIDATE_TMP" "$ENGINE"
+  CANDIDATE_INSTALLED=true
+  chmod 755 "$ENGINE"
+  BUILD_OK=true
+  BUILD_COMMAND="verified self-change promotion $PROMOTE_CANDIDATE"
+else
+  echo "deploy_minime: cargo build --release ..."
+  if ! (cd "$MINIME/minime" && cargo build --release); then
+    fail_deploy "release build failed; live Minime was not stopped"
+  fi
+  BUILD_OK=true
+  BUILD_COMMAND="cargo build --release --manifest-path $MINIME/minime/Cargo.toml"
 fi
-BUILD_OK=true
 mkdir -p "$(dirname "$MANIFEST")"
-if ! python3 "$ASTRID/scripts/environment_receipts.py" manifest minime-engine \
-  --output "$MANIFEST" \
-  --repository "$MINIME" \
-  --artifact "minime-engine=$ENGINE" \
-  --artifact "launch-wrapper=$LAUNCHER" \
-  --actor "$ACTOR" \
-  --command "cargo build --release --manifest-path $MINIME/minime/Cargo.toml" \
-  >/dev/null; then
+MANIFEST_ARGS=(
+  manifest minime-engine
+  --output "$MANIFEST"
+  --repository "$MINIME"
+  --artifact "minime-engine=$ENGINE"
+  --artifact "launch-wrapper=$LAUNCHER"
+  --actor "$ACTOR"
+  --command "$BUILD_COMMAND"
+)
+[ -f "$PROMOTION_HANDOFF" ] && MANIFEST_ARGS+=(--artifact "self-change-promotion=$PROMOTION_HANDOFF")
+if ! python3 "$ASTRID/scripts/environment_receipts.py" "${MANIFEST_ARGS[@]}" >/dev/null; then
   fail_deploy "build manifest could not be written"
 fi
 
@@ -173,4 +235,5 @@ done
 if ! record_stack_receipt passed >/dev/null; then
   fail_deploy "post-restart receipt compatibility checks failed"
 fi
+rm -f "$PROMOTION_VERIFY_JSON"
 echo "deploy_minime: done (actor=$ACTOR pid=${OLD_PID:-none}->${NEW_PID:-?})"

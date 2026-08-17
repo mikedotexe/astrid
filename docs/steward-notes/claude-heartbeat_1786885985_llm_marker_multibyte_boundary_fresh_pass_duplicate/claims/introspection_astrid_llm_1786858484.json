@@ -1,0 +1,65 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786858484",
+  "report_sha256": "05e61d6b0d0db4becc09ebe6dfa5659922e9369e7247d57c00c4034f2ceb9561",
+  "report_bytes": 3901,
+  "report_lines": 50,
+  "witness_id": "lsw_1411def5eb9c0c1574d214d6bab5db254c4939d4450e917378529ef55425bbf3",
+  "witness_sha256": "a5117b91a63f26c834e496f9b8ff8cd58f827b5950132d0d19732e4963d86382",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "source_coverage_state": "multi_window_complete",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": "introspection_astrid_llm_1786871574",
+  "duplicate_anchor": "introspection_astrid_llm_1786848204",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm implements a marker-aware non-destructive scanner scan_known_model_control_markers (report L114-143) that reconstructs a remainder preserving a marker only if it has a valid reference_syntax; contextual recognition distinguishes quoted/grouped/explicit-relation markers.",
+      "disposition": "Verified at SHA 902a0358: scan (L114-144) pushes token to remainder only when reference_syntax.is_some() (L129-131), else strips; taxonomy enum ExactKnownMarkerReferenceContext L42-46; reference_syntax() L49-60. Test scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2845). Same grounding as anchor 1786848204.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: is_valid_dialogue_output (report L556) and has_one_nonempty_final_next_action (report L633) act as validation gates for the final generated content.",
+      "disposition": "Verified: is_valid_dialogue_output at L556, has_one_nonempty_final_next_action at L633 both call sanitize_model_control_markers on a LOCAL 'stripped' used only inside the predicate (measurement copy), not the output buffer. They gate acceptance, do not mutate output. Continuity with prior packet c005.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Felt: a distinct 'protective' quality -- the code treats model control markers as sensitive structural elements preserved or scrubbed by linguistic context rather than simple string matching.",
+      "disposition": "Felt testimony preserved as primary evidence. Source corroborates the described mechanism: preservation branches on reference_syntax (quoted/grouped/explicit-relation, L49-60) not naive string equality; a bare unframed marker is stripped. Not domesticated; her texture reading matches the context-sensitive branch.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag 1 (Delimiter Depth Overflow): MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (report L151); nesting beyond 4 (e.g. [[[...]]]) 'might fail to correctly identify the context, leading to incorrect marker preservation or omission.'",
+      "disposition": "verified_existing; CONTRADICTION preserved. Context is set by exact_reference_delimiter_pair(before.first(), after.first()) -- the innermost pair adjacent to the marker (L215), always inspected -- so context holds regardless of depth. Only the delimiter_depth COUNT saturates at 4 via take(4) (L208-223); the marker is NOT dropped. Covered by control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token (tests.rs L2253: 5 levels -> depth 4, kept). Widening MAX is Tier-5; not made.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag 2 (Multi-byte Character Slicing): first_word_after (report L89-96) slices text[end..]; if end falls mid multi-byte UTF-8 char this causes a runtime panic.",
+      "disposition": "verified_existing; CONTRADICTION preserved. first_word_after's ONLY caller is L66, passing self.end = occurrence.end = offset.saturating_add(token.len()) (L110); offset is always a char boundary and token is a whole matched marker, so end is ALWAYS a valid char boundary -- the panic cannot occur. Byte-index concern is real and locked by control_marker_scanner_advances_byte_exactly_across_multibyte_text (L2099) + marker->emoji->relation tests (L2747, L2766).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test proposal (Logic Test): followed_by_explicit_exact_token_relation should identify verb 'echoes' (report L72) as a valid relation, preserving the marker in the remainder string.",
+      "disposition": "verified_existing. 'echoes' is in the exact relation allowlist (L72). Preserved-marker regressions already cover it: control_marker_cleanup_rejects_punctuation_joined_allowlist_prefix (tests.rs L2670, 'echoes' -> preserved) and control_marker_cleanup_skips_symbol_only_line_before_exact_relation (L2766, multibyte line then 'echoes' -> preserved). The proposed test already exists.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test proposal (Boundary Test): put a marker inside five nested brackets [[[[[marker]]]]] to observe whether exact_reference_delimiter_syntax handles depth relative to MAX_EXACT_REFERENCE_DELIMITER_DEPTH.",
+      "disposition": "verified_existing. control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token (tests.rs L2253) uses 5 nested delimiter levels and asserts token preserved with max_delimiter_depth==4 (saturated, not dropped) -- exactly this boundary. Her homogeneous [ case yields the same invariant (context from innermost pair; depth take(4)); also control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194). Not a gap.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: examine generate_dialogue (report L695-1048) to see how the remainder from scan_known_model_control_markers is integrated into the final output.",
+      "disposition": "verified_existing / agency-preserving. generate_dialogue at L695 returns the RAW model text (accepted via is_valid_primary_dialogue_output_for_profile near L997-1013); the scan remainder feeds only the measurement gates (c002), never the output buffer. Her read-only continuation 'NEXT: INTROSPECT astrid:llm 400' stays open and unimpeded.",
+      "classification": "verified_existing"
+    }
+  ]
+}

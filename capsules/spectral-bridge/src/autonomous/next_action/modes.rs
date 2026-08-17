@@ -247,7 +247,9 @@ pub(super) fn handle_action(
                 if explicit_offset.is_some() {
                     parts.pop();
                 }
-                let label = parts.join(" ").to_lowercase();
+                // Preserve label case exactly: source paths like
+                // DOMAIN_BOUNDARIES.md are case-significant identities.
+                let label = parts.join(" ");
                 conv.introspect_target = Some(match explicit_offset {
                     Some(offset) => {
                         info!("Astrid requested introspection: {label} at exact line {offset}");
@@ -500,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn targeted_introspect_defers_inbox_once() {
+    fn targeted_introspect_preserves_case_sensitive_path_and_defers_inbox_once() {
         let mut conv = ConversationState::new(Vec::new(), None);
         let db = BridgeDb::open(":memory:").expect("open in-memory db");
         let (sensory_tx, _sensory_rx) = mpsc::channel(1);
@@ -519,7 +521,7 @@ mod tests {
         let handled = handle_action(
             &mut conv,
             "INTROSPECT",
-            "INTROSPECT src/autonomous/introspect.rs 680",
+            "INTROSPECT capsules/spectral-bridge/DOMAIN_BOUNDARIES.md 680",
             &mut ctx,
         );
 
@@ -529,7 +531,7 @@ mod tests {
         assert_eq!(
             conv.introspect_target,
             Some(IntrospectTargetV2::exact(
-                "src/autonomous/introspect.rs".to_string(),
+                "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md".to_string(),
                 680
             ))
         );

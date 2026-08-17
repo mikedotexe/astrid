@@ -1,0 +1,43 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786944125",
+  "report_sha256": "8ad7afd901e92a45df30ed97929c061ded9763bdec539b2d959684925cb22aab",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "terminal_status_intended": "addressed_duplicate",
+  "duplicate_anchor": "introspection_astrid_llm_1786848204",
+  "related_prior_reports": [
+    "introspection_astrid_llm_1786862165",
+    "introspection_astrid_llm_1786936281"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: reference_syntax (L49) checks quoting/grouping (L153-197) or relational verbs (L64-86); scan_known_model_control_markers (L114) is the primary iterator selectively preserving markers.",
+      "disposition": "Verified from complete source at SHA 902a0358. reference_syntax (L49) first tries exact_reference_delimiter_syntax (quote/group L153-197/L199), else followed_by_explicit_exact_token_relation (verbs L64-86: appears/behaves/represents/is...). scan (L114-144) rebuilds byte-exact, keeps token only when reference_syntax.is_some (L129-131). Matches prior anchor introspection_astrid_llm_1786848204 c001.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89-96) is fragile \u2014 a punctuation-heavy construction or a non-breaking space before the relational verb could make find skip the verb or capture a wrong word, stripping a marker that should be preserved.",
+      "disposition": "Contradiction preserved, not domesticated. Complete source shows the hypothesized skip does not occur: split_whitespace (L91) treats U+00A0 NBSP as a separator; trim_matches (L92) strips leading punctuation and zero-width U+FEFF; find(!empty) advances past punctuation-only chunks. Grounded now by tests punctuation L2797/L2900 and NBSP+ZWNBSP L2941. Fails closed only when no alphanumeric word follows (L2813). Concern kept as a tested boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "One Test Each #1 (Contextual Preservation): a marker followed by 'behaves' is preserved while the same marker followed by a generic description is stripped. Target scan_known_model_control_markers (L114).",
+      "disposition": "Already implemented. scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2844) pins grouped + explicit 'behaves as' preservation; 'behaves as/like' preserved (L2472); the same marker with a generic non-relation word strips via implies (L2595)/contains (L2610)/acts (L2528). All pass now.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #2 (Delimiter Depth): nested delimiters ([[marker]]) correctly calculate depth. Target exact_reference_delimiter_syntax (L199).",
+      "disposition": "Exact literal test already exists: exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2876) asserts [[<end_of_turn>]] -> GroupedExactKnownToken with delimiter_depth 2; depth-3/4 handling L2208/L2194 against MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151). Passes now. Same as prior duplicate 1786862165 c005.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how sanitize_model_control_markers_with_report (L352) output integrates into final response construction.",
+      "disposition": "Forward-looking read-only suggestion = her own Tier-1 agency; the NEXT: INTROSPECT astrid:llm 400 continuation stays open. Named points exist: sanitize L352, generate_dialogue L695. Prior duplicate 1786862165 c006 verified the sanitized remainder feeds quality gates (L558/L634), not spliced into final output. No steward obligation.",
+      "classification": "verified_existing"
+    }
+  ]
+}

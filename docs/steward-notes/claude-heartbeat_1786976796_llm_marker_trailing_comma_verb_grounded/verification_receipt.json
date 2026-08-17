@@ -1,0 +1,85 @@
+{
+  "round": "claude-heartbeat_1786976796_llm_marker_trailing_comma_verb_grounded",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1786973664832299000_551c50cd7a",
+    "preprojection_generation_id": "projection_1786973669156834000_2689846725",
+    "pause_generation": 319,
+    "adapter_kind": "subprocess",
+    "lease_stop_requested": false
+  },
+  "addressing_close": {
+    "introspection_id": "introspection_astrid_llm_1786967484",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claims": 6,
+    "evidence_links_new": 12
+  },
+  "focused_tests": {
+    "new_test": "scan_known_model_control_markers_grounds_trailing_comma_relation_verb",
+    "new_test_result": "passed",
+    "marker_family_command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter",
+    "marker_family_result": "67 passed, 0 failed",
+    "rustfmt_touched_file": "appended block clean; pre-existing foreign drift left untouched",
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "20 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "problems: [] (all guards intact)",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "introspection_cadence_audit_strict": "integrity_ok true, errors [], duplicate_hash_group_count 0"
+  },
+  "final_checks": {
+    "audit_counters": "consistent, mismatches []",
+    "canonical_indexed": 4385,
+    "canonical_fully_addressed": 3103,
+    "canonical_full_read": 3735,
+    "canonical_remaining": 1282,
+    "canonical_unread": 650,
+    "canonical_blocked": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_remaining": 2929,
+    "evidence_event_store_verify": {
+      "valid": true,
+      "corrupt_lines": 0,
+      "event_count": 828558,
+      "last_global_seq": 828558,
+      "head": "e233f36946f8aa80b3674196cf932e0cf95bcb886df000ba2ddc2a21b29574f0",
+      "active_store": "v2",
+      "legacy_immutable": "corridor_v1/corridor_v2/sandbox/addressing legacy inputs unchanged"
+    },
+    "experiential_epistemics": {
+      "self_test": "valid true",
+      "verify_valid": true,
+      "checked_record_count": 11182,
+      "issue_count": 0,
+      "history_rewritten": false
+    },
+    "division_verify": {
+      "review_due": false,
+      "cycle_sequence": 27,
+      "completed_rounds_since_followup": 2,
+      "event_count": 185,
+      "event_head_sha256": "99ebb5bee305ce12f2b700c5c1ceb44fe0c5c1994f9353bd98f814afb4a3eca0",
+      "round_event_id": "division_followup_event_fff761f26e572de5c872a218a31266f4"
+    },
+    "chronicle_verify": "durable inputs changed; project before verify — expected consequence of this round's record-round (event 184->185). The controller postprojection (division_chronicle stage) reconciles it after finish; not manually projected to avoid racing the controller."
+  },
+  "authority": {
+    "live_change": "none — no restart or deployment required or attempted",
+    "tier5_waits": "unchanged; no operator-approval work items acted on",
+    "index_clean": true,
+    "foreign_work_untouched": true
+  }
+}

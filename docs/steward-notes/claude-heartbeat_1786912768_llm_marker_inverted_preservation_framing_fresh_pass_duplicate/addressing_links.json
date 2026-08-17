@@ -1,0 +1,103 @@
+{
+  "schema": "round_addressing_links_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L114-144 scan_known_model_control_markers; L129-131 pushes token only when reference_syntax.is_some(); enum L42-46. Preservation is for references, strip for bare active marker (report polarity inverted)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845); control_marker_cleanup_preserves_quoted_exact_token_reference (L1995)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96; followed_by_explicit_exact_token_relation finite matches! allowlist L64-86."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together (L2112); control_marker_cleanup_uses_only_the_first_finite_relation_word (L2565)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax L49-60 returns None when neither delimiter nor allowlisted relation matches -> marker not pushed to remainder (L129-131)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528): unlisted 'acts' -> removed_total=1, reference_syntax none_cleanup_candidate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "'operates' twin of locked cases: L2528 + does_not_expand_relation_allowlist_to_implies/contains/creates/triggers (L2595-2655)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L153-197 (\u00ab \u00bb QuotedExactKnownToken L164; [ ] Grouped L177); exact_reference_delimiter_syntax L199-229 uses innermost adjacent pair."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_non_ascii_matching_quote_pairs (L2302); preserves_nested_fullwidth_cjk_reference_stack (L2343); preserves_bounded_nested_delimiter_stacks (L2176); exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2876)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS matched by longest_exact_known_model_control_marker_at L97-112; allowlist L64-86 finite by design."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "does_not_expand_relation_allowlist_to_implies/contains/creates/triggers/underscored_appears_as (L2595-2655) lock the allowlist against silent expansion."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786912768_llm_marker_inverted_preservation_framing_fresh_pass_duplicate/summaries/introspection_astrid_llm_1786906593.md",
+      "note": "Round summary: inverted preservation polarity corrected, contradiction preserved; addressed_duplicate lineage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] bullet recording this duplicate close + preserved polarity contradiction + Tier-5 boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786906593",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: verified-no-change; mechanism + both proposed tests already grounded at SHA 902a0358."
+    }
+  ]
+}

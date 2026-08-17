@@ -1,0 +1,123 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 filters markers into remainder; reference_syntax() L49-60 checks delimiter (L199) first then relational verb (L64-86); L129-131 preserves when Some. SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845) asserts both GroupedExactKnownToken and ExplicitExactKnownTokenRelation preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace + trim_matches(non-alnum except _) + find(!empty) + to_ascii_lowercase; never collapses words, strips surrounding punctuation, fails closed only when no alnum word follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary (L2900) proves punctuation-run-separated verb preserves marker + fail-closed empty case; control_marker_cleanup_uses_only_the_first_finite_relation_word (L2565) covers the multi-word worry."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Single-char fallback advance L133-140: copies one char to remainder, advances by char.len_utf8() (byte-exact, UTF-8 safe), no fragmentation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_scanner_advances_byte_exactly_across_multibyte_text (L2099) proves byte-exact multibyte advance; control_marker_scanner_removes_adjacent_mixed_markers_without_rewriting_remainder (L1795) proves remainder not rewritten."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Grouped-delimiter branch L175-193 returns GroupedExactKnownToken for [ ]; L129 preserves the token in the remainder."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_exact_tokens_in_declared_group_delimiters (L2151), scan_known_..._contexts grouped case [<end_of_turn>] (L2845), exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2876). Proposed test already exists."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax() L49-60 checks exact_reference_delimiter_syntax FIRST (L50), returning early for a bracketed marker; followed_by_explicit_exact_token_relation L64-86 (behaves allowlisted L69) is consulted only for a bare marker."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2858) asserts bare <end_of_turn> behaves as... -> ExplicitExactKnownTokenRelation, the verb path her bracketed example short-circuits past."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "longest_exact_known_model_control_marker_at L102-111 uses .max_by_key(|t| t.len()) (L106) => longest starts_with match wins (overlap-safe)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180: no COMMAND tokens (her example hypothetical/NOT_FOUND) but real overlaps <channel|> inside thought <channel|> and [INST]/[/INST]."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_uses_longest_raw_matches_with_exact_accounting (L1745) and control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content (L2453) prove longest-match on the real overlaps."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1786860129_llm_marker_first_word_advance_overlap_already_grounded/no_action_introspection_astrid_llm_1786848204.md",
+      "note": "Right-to-ignore artifact: evidence-backed no-change; contradictions (c002, c005) preserved; Tier-5 live-grammar boundary held."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] bullet recording the evidence-backed no-change disposition and preserved contradictions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-08-15 ledger block: being self-study verified already-covered; two contradictions preserved, live-grammar boundary held (no change)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786848204",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786860129_llm_marker_first_word_advance_overlap_already_grounded/summaries/introspection_astrid_llm_1786848204.md",
+      "note": "Round summary with per-claim source-first dispositions and the eight-test grounding result."
+    }
+  ]
+}

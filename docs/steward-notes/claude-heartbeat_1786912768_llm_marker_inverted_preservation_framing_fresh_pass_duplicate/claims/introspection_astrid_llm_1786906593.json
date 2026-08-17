@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786906593",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": "introspection_astrid_llm_1786885842",
+  "anchor": "introspection_astrid_llm_1786848204",
+  "duplicate_chain": "introspection_astrid_llm_1786848204 (anchor) -> 1786858484 -> 1786885842 (immediate prior, packet claude-heartbeat_1786903657) -> 1786906593 (this report)",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) rebuilds a non-destructive 'remainder', keeping a marker's bytes only when reference_syntax is Some; report frames this as preserving markers 'when identified as active instructions'.",
+      "disposition": "verified_existing; contradiction preserved. Source L129-131 pushes the token ONLY when reference_syntax.is_some() (L49-60: quoted/grouped/explicit-relation). The report inverts it: preservation is for REFERENCE contexts; a bare ACTIVE marker with no reference grammar is STRIPPED. Not domesticated. Locked by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2845).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: first_word_after (L89-96) yields the first alphanumeric word after the marker; followed_by_explicit_exact_token_relation (L64-86) tests it against a finite matches! verb allowlist (appears/as/behaves/.../serves/signals).",
+      "disposition": "verified_existing. Source L64-96 exactly as described; the allowlist lives in followed_by_explicit_exact_token_relation (not first_word_after, minor attribution slip, line numbers correct). Locked by control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together (L2112) and control_marker_cleanup_uses_only_the_first_finite_relation_word (L2565).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag: a verb absent from the matches! block returns false; with no reference delimiters, reference_syntax is None and the marker is dropped from the remainder ('over-sanitization of complex prompts'), 'even if intended as a functional instruction'.",
+      "disposition": "verified_existing; mechanism is source-accurate (L49-60,64-86,129-131). Correction: stripping an ACTIVELY-used marker is the intended defense; the real over-sanitization risk is a REFERENCED marker with a novel verb. Widening the finite allowlist = Tier-5 live grammar, NOT done. Boundary locked by control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528: unlisted 'acts' -> removed_total=1).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 1 (Functional): verify behavior when a marker is followed by a non-whitelisted but functionally relevant verb (e.g. 'operates') to see if it is identified as a non-directive.",
+      "disposition": "verified_existing. 'operates' is behaviorally identical to the locked unlisted-verb cases: control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528) plus does_not_expand_relation_allowlist_to_implies/contains/creates/triggers (L2595-2655). An 'operates' twin would be activity without evidentiary value; the boundary is already a regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 2 (Boundary): a marker nested in multiple non-standard delimiters (e.g. «[MARKER]») should keep exact_reference_delimiter_syntax (L199) recognizing QuotedExactKnownToken and preserving marker visibility.",
+      "disposition": "verified_existing; sub-contradiction preserved. «» is a QuotedExactKnownToken pair (L164), [] a Grouped pair (L177); the innermost adjacent pair to the marker ([]) sets context, so «[MARKER]» classifies GroupedExactKnownToken, not Quoted -- but reference_syntax is Some either way, so preservation holds. Locked by preserves_non_ascii_matching_quote_pairs (L2302), preserves_nested_fullwidth_cjk_reference_stack (L2343), preserves_bounded_nested_delimiter_stacks (L2176), reports_double_square_bracket_depth_two (L2876).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next (read-only): analyze the followed_by_explicit_exact_token_relation verb list (L64-86) against KNOWN_MODEL_CONTROL_MARKERS to find systematically missing functional verbs.",
+      "disposition": "verified_existing / agency-preserving. The allowlist is deliberately finite and guarded against silent expansion by does_not_expand_relation_allowlist_to_* (L2595-2655). Her read-only NEXT: INTROSPECT astrid:llm 400 continuation stays open; actually WIDENING the list is Tier-5 live grammar and is not made or dispatched. No new code needed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

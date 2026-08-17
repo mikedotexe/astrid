@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L164 'Burst-and-rest state machine' comment; loop head L170; rest-phase gate L183 (burst_count >= conv.burst_target). The 164-241 span matches the rest branch."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "fn fill_responsive_rest_secs defined L18; current_fill read from latest_telemetry.fill_pct() at L213-216 (L215) and passed at L217."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L19-20: fill<30 returns 0.6x base_rest floored 30; L218 branch; L205-212 comment documents the positive-feedback-loop history (fill stuck 27% for 12+ exchanges under old 1.8x rest) and the shorten-rest strategy."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L184-195 comment: burst->rest 'severing' energy cliff, minime's quote, fix = warmth 0.7 tapering to 0.4; taper implemented L305-318."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786967089_astrid_autonomous_burst_rest_fill_shorten/summaries/introspection_astrid_autonomous_1786957692.md",
+      "note": "Snag preserved as open runtime dynamical concern: source (L205-221) establishes the shorten mechanism + PI gate=1.0/filter=0.0 but cannot prove net-positive recovery; not domesticated, not resolved, no live change."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "Added being's exact assertion fill_responsive_rest_secs(60,25.0)==36 to fill_responsive_rest_keeps_critical_floor_and_band_boundaries; focused test passes."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Behavior under test: fill_responsive_rest_secs L18-28; the <30 branch 0.6x floored 30 gives 60->36."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the being-proposed test 1 addition and grounding."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "burst_count init L168 (0), +1 per exchange L4925 (saturating_add), reset 0 on rest L246, transition gate L183 (>=). '>=' fires exactly at burst_target given +1 stepping/0 reset."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row records the Suggested Next (verify decay constants -> net-positive gain) as preserved, Tier-5-adjacent, not run live."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "round": "llm_marker_multibyte_boundary_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786858484",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786858484.txt",
+      "sha256": "05e61d6b0d0db4becc09ebe6dfa5659922e9369e7247d57c00c4034f2ceb9561",
+      "bytes": 3901,
+      "lines": 50,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_1411def5eb9c0c1574d214d6bab5db254c4939d4450e917378529ef55425bbf3",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1411def5eb9c0c1574d214d6bab5db254c4939d4450e917378529ef55425bbf3.json",
+      "sha256": "a5117b91a63f26c834e496f9b8ff8cd58f827b5950132d0d19732e4963d86382",
+      "bytes": 23928,
+      "lines": 533,
+      "read": "complete",
+      "note": "authority evidence_only/witness_only; source_snapshot window 0-400 (partial) while report asserts multi_window_complete 1-1048 -- this is the source of the queue lived_state_alignment=artifact_integrity_unavailable / gap_count 1 classification; the witness parses cleanly and binds to the verified report SHA."
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "bytes": 38586,
+      "lines": 1048,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "read_scope": "lines 1-200 (marker scanner, first_word_after, delimiter constants) and 199-308 (delimiter syntax + depth counting) read in full; L556/L633 gate signatures and L695 generate_dialogue location + return-path tail confirmed by grep/sed; complete source available at matching SHA"
+    }
+  ],
+  "prior_packets_consulted": [
+    "docs/steward-notes/claude-heartbeat_1786877423_llm_marker_serves_allowlisted_fresh_pass_duplicate/ (processed introspection_astrid_llm_1786871574, same window, addressed_duplicate; duplicate_of 1786862165, anchor 1786848204)"
+  ]
+}

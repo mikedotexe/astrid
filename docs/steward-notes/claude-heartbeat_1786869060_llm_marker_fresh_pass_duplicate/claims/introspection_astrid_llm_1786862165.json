@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786862165",
+  "report_sha256": "fd21e752507b3c79d2473e02ee0237760e4908f8cc6368e62d2d35d7cf7e2c65",
+  "witness_id": "lsw_01d26cfc5633055eac652f56a129308cf94068f259eb8fd23679a9a74b1f082b",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": "introspection_astrid_llm_1786848204",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm implements marker-aware sanitization distinguishing raw text from Known Model Control Markers, preserving/stripping grammatical-subject markers by syntactic context; scan_known_model_control_markers (L114) rebuilds a clean string while tracking metadata in KnownModelControlMarkerMatch structs.",
+      "disposition": "Accurate. Source L18-22 (KnownModelControlMarkerMatch), L41-46 (three reference contexts), L48-60 (reference_syntax dispatch), L114-144 (scan rebuild) confirm exactly this. Grounded by test scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89), via split_whitespace + trim_matches, could miss a relation word separated from the marker by multiple non-alphanumeric chars/punctuation, or a multi-word relation phrase.",
+      "disposition": "verified_existing; contradiction preserved. trim_matches strips non-alnum (except _) at both ends of each ws chunk and find(!empty) advances past punctuation-only chunks, so a punctuation-run-separated allowlisted verb still preserves the marker (tests L2797, L2900); only the first finite word is used by design (L2565); it fails closed only when no alnum word follows (L2813). The fragility does not occur as framed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snag: scan (L114) omits a marker from remainder when reference_syntax is None (L129-131), which could cause unexpected text 'jumps'; concern that the valid-reference logic may be too restrictive.",
+      "disposition": "verified_existing. The omission is the intended cleanup of leaked control markers: the token is pushed only if reference_syntax.is_some() (L129-131); the resulting gap is proven (e.g. 'Here,  acts as...' in test L2528). Fail-closed by design. Whether the valid-reference criteria (quote/bracket/explicit-relation allowlist) should widen is Tier-5-class live grammar and was not made.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #1 (Relation Recognition): followed_by_explicit_exact_token_relation (L64) should identify 'behaves', return false for 'is' (noted in-list) vs a not-in-list word 'becomes'.",
+      "disposition": "verified_existing; contradiction preserved. Source L76 allowlists 'is', so the fn returns TRUE for 'is' (marker preserved), not false as stated. 'behaves' (L69) -> true, proven L2858; allowlisted 'is' preserved vs unlisted 'acts' stripped L2528; not-in-list negatives implies/contains/creates/triggers (L2595+) cover the 'becomes'-equivalent case ('becomes' itself untested, functionally identical).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "One Test Each #2 (Delimiter Depth): [[MARKER]] passed to exact_reference_delimiter_syntax (L199) should classify GroupedExactKnownToken and handle MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "verified_existing. Literal case tested: exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two ([[<end_of_turn>]] -> GroupedExactKnownToken, depth 2, L2876). MAX=4 depth handling proven: reports_exact_four_level_delimiter_depth (L2194), bounds_deeper_delimiter_receipt_without_dropping_token (L2253), preserves_bounded_nested_delimiter_stacks (L2176).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder string from scan_known_model_control_markers is used in final output construction.",
+      "disposition": "verified_existing / agency-preserving. generate_dialogue confirmed at L695. The sanitized remainder is used only in quality gates - is_valid_dialogue_output (L558) and has_one_nonempty_final_next_action (L634) strip markers to measure output shape and count NEXT lines; it is not spliced into the final text (final output is the raw valid model text). Her read-only NEXT: INTROSPECT astrid:llm 400 continuation stays open.",
+      "classification": "verified_existing"
+    }
+  ]
+}

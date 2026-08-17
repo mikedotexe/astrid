@@ -157,10 +157,7 @@ fn target_is_carried_and_rotation_remains_unforced() {
     );
 
     let mut continuing = conv();
-    astrid_action(
-        &mut continuing,
-        "INTROSPECTION_CADENCE EVERY 4 astrid:llm",
-    );
+    astrid_action(&mut continuing, "INTROSPECTION_CADENCE EVERY 4 astrid:llm");
     continuing.exchange_count = 5;
     assert!(try_select_due(&mut continuing));
     assert_eq!(
