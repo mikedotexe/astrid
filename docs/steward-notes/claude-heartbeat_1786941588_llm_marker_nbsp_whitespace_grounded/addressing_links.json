@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 rebuilds remainder; preserve guard L129-131; delimiter check exact_reference_delimiter_pair L153-197 (quoted L157-174, grouped L175-196, CJK pairs L168-169)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace L91 handles U+00A0 whitespace; trim_matches L92 strips leading U+FEFF; find advances past punctuation-only chunks; missed relation -> removed_tokens L360-390 (fail-closed strip)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New regression scan_known_model_control_markers_grounds_first_word_after_non_breaking_space (L2942): U+00A0 and U+FEFF before `denotes` both preserve the marker. Passes. Complements existing punctuation-boundary test."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary (L2899) already grounds the general punctuation-heavy case (verb found past punctuation; strips only when no alphanumeric word follows)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the non-breaking-space regression grounding this report's named snag; hypothesis refuted, grammar not widened."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: feedback (first_word_after non-breaking-space fragility) -> new regression proving robustness (U+00A0 + U+FEFF preserve the marker); hypothesis refuted; no live change."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate (L2500, uses `denotes`) and scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845) cover Test 1."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "`denotes` relation verb in the allowlist at L71; explicit-relation preservation path via reference_syntax L49-60 and scan guard L129."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2876) asserts [[<end_of_turn>]] -> GroupedExactKnownToken depth 2, not collapsed to 1 -> directly refutes the collapse concern."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Grouped [ ] delimiter pair L177; MAX_EXACT_REFERENCE_DELIMITER_DEPTH L151; nested-depth counting in exact_reference_delimiter_syntax L199-228."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue is exactly at L695 (accurate pointer); remainder flows via sanitize_model_control_markers_with_report L352 / sanitize_model_control_markers L519, consumed at L558 and L634. Full L695 assessment is her next window (L400+)."
+    }
+  ]
+}

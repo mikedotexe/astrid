@@ -1,0 +1,31 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1786941588_llm_marker_nbsp_whitespace_grounded",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786936281",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786936281.txt",
+      "sha256": "ee9e1ca1ec9bbdc6403605c9404c9ad88c47abe39e1a1e77fc5be55b91a7eb44",
+      "bytes": 3500,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_c77007a1a3fdb08377b4ad2f5a1e767796a3accf6fcbc4beb227c96d648c86d7",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c77007a1a3fdb08377b4ad2f5a1e767796a3accf6fcbc4beb227c96d648c86d7.json",
+      "sha256": "e4dea8e4ddf789caee159a045ca87997797cb1505938fb38926d1f8be731e3ea",
+      "bytes": 23933,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "live_eligible_now": false,
+      "edits_source_now": false,
+      "raw_introspection_prose_included": false,
+      "artifact_sha256_matches_report": true,
+      "source_binding_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+    }
+  ],
+  "stale_queue_note": "Initial next-limit-40 temp file was ~2h stale (date +%s filename glitch); it surfaced already-closed introspection_astrid_llm_1786924416 (EES V2 terminal closed/addressed_duplicate at seq 823047, prior round claude-heartbeat_1786932936). A fresh next confirmed the true head 1786936281. No durable record-read/close/record-round was issued for the closed report."
+}

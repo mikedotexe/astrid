@@ -1,0 +1,17 @@
+{
+  "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- <5 exact filters>",
+  "filters": [
+    "llm::provider::tests::scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+    "llm::provider::tests::exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+    "llm::provider::tests::scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary",
+    "llm::provider::tests::scan_known_model_control_markers_grounds_first_word_after_non_breaking_space",
+    "llm::provider::tests::control_marker_cleanup_preserves_poetic_attribution_without_literal_cue"
+  ],
+  "result": "ok",
+  "passed": 5,
+  "failed": 0,
+  "ignored": 0,
+  "filtered_out": 1878,
+  "duration_s": 2.76,
+  "note": "Current verification the earlier evidence still applies at source SHA 902a0358. No new tests added (all claims already covered); no source edited."
+}

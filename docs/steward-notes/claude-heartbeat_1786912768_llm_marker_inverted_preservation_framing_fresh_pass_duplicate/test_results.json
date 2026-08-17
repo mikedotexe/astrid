@@ -1,0 +1,28 @@
+{
+  "schema": "round_test_results_v1",
+  "actor": "claude-heartbeat",
+  "focused": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter first_word_after",
+    "result": "ok",
+    "passed": 65,
+    "failed": 0,
+    "ignored": 0,
+    "filtered_out": 1817,
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "cited_tests_present_and_passing": [
+      "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+      "control_marker_cleanup_preserves_quoted_exact_token_reference",
+      "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts",
+      "control_marker_cleanup_uses_only_the_first_finite_relation_word",
+      "control_marker_cleanup_does_not_expand_relation_allowlist_to_implies",
+      "control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together",
+      "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs",
+      "control_marker_cleanup_preserves_nested_fullwidth_cjk_reference_stack",
+      "control_marker_cleanup_preserves_bounded_nested_delimiter_stacks",
+      "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two"
+    ]
+  },
+  "source_or_test_code_changed": false,
+  "note": "No Rust changed this round (all claims verified_existing; report duplicates already-closed work). dialogue_runtime.rs stays at SHA 902a0358; tests.rs was READ ONLY (it is foreign-dirty from before this round and was not edited).",
+  "integrity_suites": "recorded in verification_receipt.json"
+}

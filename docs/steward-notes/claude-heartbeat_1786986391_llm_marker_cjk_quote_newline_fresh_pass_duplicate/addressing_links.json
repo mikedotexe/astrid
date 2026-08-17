@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 preserves marker in remainder only when reference_syntax.is_some() (L129-131); delimiter sets L153-197."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace L91, edge-only trim_matches L92, find(|w| !w.is_empty()) L93 \u2014 no over-strip; fails closed only when no alphanumeric word follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary (L2900) and _non_breaking_space (L2942) ground the snag hypothesis."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (L2302) tests \u300c<end_of_turn>\u300d asserting quoted==1, grouped==0 \u2014 \u300c\u300d is Quoted, not Grouped; _preserves_fullwidth_and_cjk_group_pairs (L2322) covers genuine multi-byte groups."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L157-197: \u300c\u300d at L168 -> QuotedExactKnownToken (quoted branch); grouped branch L175-193."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_relation_across_newline (L2786): '<end_of_turn>\\nrepresents...' asserts removed_total==0, explicit_relation_occurrences==1 \u2014 Test 2 verbatim."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2845-2868), exact-function regression added for family sibling introspection_astrid_llm_1786814454 at the same source SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "provider_output_normalization_rejects_marker_only_output_on_both_routes (L1916) covers the secondary filtering (quality-gate rejection) that generate_dialogue L695 applies."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695 applies is_valid_primary_dialogue_output_for_profile quality gate; sanitizer sanitize_model_control_markers L519->L352, scanner call sites L558/L634. No raw-buffer splice."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786824834_llm_marker_scan_boundary_regression/",
+      "note": "Prior packet that added the exact-function regressions grounding this family at source SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786980416",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786851428_llm_marker_snags_tests_already_grounded/",
+      "note": "Prior round closing the same Observed+two-tests+snag shape (report 1786844213) as verified/no-action at the same source SHA."
+    }
+  ]
+}

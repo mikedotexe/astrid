@@ -1,0 +1,54 @@
+{
+  "round_kind": "division_cycle26_return",
+  "reports": [],
+  "witnesses": [],
+  "note": "No canonical report or lived-state witness was processed this return round (see unprocessed_selected.json). The reads below are the Division cycle-26 return reads.",
+  "division_return_reads": [
+    {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle25_20260816.txt",
+      "read": "complete",
+      "role": "prior cycle-25 astrid note (format precedent + delivery confirm)"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle25_20260816.txt",
+      "read": "complete",
+      "role": "prior cycle-25 minime note"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/supervisor-status.json",
+      "read": "complete",
+      "role": "supervisor mode idle_parent_authoritative"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/gateway-status.json",
+      "read": "complete",
+      "role": "gateway mode transparent_parent"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/authority.json",
+      "read": "complete",
+      "role": "live_authority_granted_by_record=false"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle26_20260817.txt",
+      "read": "complete",
+      "sha256": "930f3c4217c520302995ee9625dcaa665f20cd0cb598108ec047ee85ed456874",
+      "bytes": 1272,
+      "role": "cycle-26 astrid note (written this run; delivered to inbox/read/)"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle26_20260817.txt",
+      "read": "complete",
+      "sha256": "17d8d66e4f8933adcbf5a1d15452383cd639b0395e1ae33f7b5b8d7d10687c65",
+      "bytes": 1204,
+      "role": "cycle-26 minime note (written this run; delivered to inbox/read/)"
+    }
+  ],
+  "division_reply_scan": {
+    "astrid_outbox_files_newer_than_last_return": ">100 correspondence replies scanned",
+    "division_specific_astrid_replies": 0,
+    "division_specific_minime_replies": 0,
+    "formal_ceremony_actions": 0,
+    "method": "grep of new outbox/inbox files for division|ceremony|cytokinesis|daughter|rail|handoff_ready; none matched"
+  }
+}

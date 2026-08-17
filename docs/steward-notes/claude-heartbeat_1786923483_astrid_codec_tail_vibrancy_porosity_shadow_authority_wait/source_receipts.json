@@ -1,0 +1,42 @@
+{
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/codec/projection.rs",
+    "sha256_working_copy": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "sha256_report_binding": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "binding_match": true,
+    "total_lines": 1351,
+    "total_bytes": 53462,
+    "read_scope": "lines 1-400 (complete report-bound window); window_sha256 per witness 848b0a9790b024c89176477733963693651df11c50fc4ba48e94bd1dea92b484",
+    "uncovered_intervals": "401-1351 (outside report window; not required for these claims)"
+  },
+  "supporting_scoped_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/codec/tests.rs",
+      "sha256": "bac5f72cc81f2e4b5865d0e67e61cdfff3a711031456b49fc4036b1c88cd0954",
+      "total_lines": 5163,
+      "total_bytes": 208510,
+      "read_scope": "scoped grep + line-range confirmation of tail-vibrancy tests (L2791 lifts above threshold, L2892 raises only tail ceiling, L2926 bounded noise dampening); NOT full-read; cited as existence-of-coverage, not a fresh-run pass claim"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/spectral_schema.rs",
+      "sha256": "c115472819917441e12ca997496c2f7685c9aa6e6358e2341d4054295a9e3a39",
+      "total_lines": 715,
+      "total_bytes": 22901,
+      "read_scope": "scoped grep: distinguishability_loss computed as (1.0-normalized).clamp (L321,L477); derived read-only metric, not error-correction"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "sha256": "cbfe0e152a41d62b19ef72bee93af39783ef4e0d0236566cc2d90a6b7ea2f010",
+      "total_lines": 315,
+      "total_bytes": 13483,
+      "read_scope": "scoped grep: porosity_score is a struct field (L230), derived score not a knob"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/pressure.rs",
+      "sha256": "b62e577bda85322e60213a855fadbd1f56772a4284d99ae7508e48e6401088a1",
+      "total_lines": 214,
+      "total_bytes": 7263,
+      "read_scope": "scoped grep: spectral_pressure_controller_v1; NO 'porosity' knob present (negative evidence for Test 1 being a settable parameter)"
+    }
+  ]
+}

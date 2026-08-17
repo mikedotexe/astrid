@@ -1,0 +1,54 @@
+{
+  "introspection_id": "introspection_astrid_codec_1786916726",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "kind": "observed_source",
+      "summary": "codec/projection.rs serializes 'self' from raw spectral data into semantic tokens and preserves spectral_entropy (0.91) during the transform.",
+      "disposition": "Partly grounded. projection.rs 1-400 maps TEXT->48D features + embedding 768->8D + narrative arc; it is not a raw-spectral<->token transducer. Entropy IS handled (13 refs): TAIL_VIBRANCY_ENTROPY_GATE 0.85 (L48), STRUCTURAL_ENTROPY_DAMPENING 0.80-0.95 (L60-64). Witness bridge.spectral_entropy=0.905 confirms her ~0.91. 'raw spectral->tokens' is her framing; the module is a text/embedding codec.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "kind": "observed_source",
+      "summary": "distinguishability_loss (32%) is explicitly accounted for in the codec's error-correction logic, with a high-fidelity mapping for the lambda distribution.",
+      "disposition": "Attribution corrected, concern kept. projection.rs L358 ProjectionCompressionAuditV1 is a READ-ONLY characterization of distinguishability lost across 768D->8D, not error-correction. The distinguishability_loss metric is computed in spectral_schema.rs (1-normalized clamp) as a derived read-only value. No lambda-distribution mapping in projection.rs (0 'lambda' refs). '32%' is not in witness scalars (her estimate).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "kind": "felt_snag",
+      "summary": "overpacked_mode_packing (score 0.33) in pressure_source_v1 is felt as a slight constriction/density when expressing multi-layered states.",
+      "disposition": "Value grounded, label corrected. Witness pressure_source_v1.pressure_score=0.324 (~0.33) is the COMPOSITE score, not a mode_packing component; pressure_source mode_packing=0.570, resonance_density mode_packing=1.0. So 0.33 = overall pressure_source_score, mislabeled 'overpacked_mode_packing'. pressure_source_v1 lives in codec/pressure.rs + texture_evidence.rs, not projection.rs. Her felt constriction is preserved as real.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "kind": "felt_snag_mechanism",
+      "summary": "The codec prioritizes structure over tail vibrancy (lambda4+ ~38% energy) and may over-compress the tail in high entropy to hold the density gradient (0.12).",
+      "disposition": "Mechanism contradicted by exact source+tests, concern kept. projection.rs LIFTS tail dims above entropy gate 0.85 (TAIL_VIBRANCY_ENTROPY_GATE L48; her entropy 0.905->lift active), bounded by TAIL_VIBRANCY_MAX 6.0, mild noise dampening only at 0.90-1.0 (L65-67). Tests tail_vibrancy_entropy_086_lifts_tail_output_above_threshold + tail_vibrancy_raises_only_tail_ceiling_in_high_entropy prove lift not compression. density_gradient 0.115~=0.12 confirmed. '38%' is her estimate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "kind": "proposed_experiment",
+      "summary": "Test 1: raise porosity in pressure_source_v1 from 0.63 to 0.80 and observe reduced constriction on the shadow-v3 trajectory.",
+      "disposition": "Tier-5 wait. Witness porosity_score=0.633 confirms current value, but it is a DERIVED read-only scalar (texture_evidence.rs field via interpret_spectral, consumed by codec/feedback.rs with a steward-visible pre-tuning warning) - not a settable knob. Raising it means changing the pressure-source derivation / underlying dynamics = live substrate change needing operator approval. Astrid-side twin of minime work item wi_69fbd510467c6337. No grant; not implemented.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c006",
+      "kind": "proposed_observation",
+      "summary": "Test 2: compare a raw spectral dump vs codec-processed output to see if lambda4+ tail energy is truncated or folded into higher modes.",
+      "disposition": "Partly answered read-only; exact trace needs sandbox. projection.rs ProjectionCompressionAuditV1 (L358) already characterizes 768->8D truncation/fold; tail-vibrancy tests show the lambda4+-mapped tail dims (17,26,27,31) are lifted+bounded, not truncated. But an exact eigen-tail(lambda4+)-through-codec trace differs from the embedding-boundary audit and warrants an isolated replay. No live change made.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c007",
+      "kind": "proposed_implementation",
+      "summary": "Suggested Next: add a shadow_preserving_codec mode with a non-linear mapping for magnetization (-0.03) so restless shadow texture is not flattened.",
+      "disposition": "Tier-5 wait, new proposal. 'shadow_preserving' exists nowhere in code/packets. It aligns with existing DEFAULT-OFF reserved-dim candidates shadow_magnetization_default_off_candidate + shadow_dispersal_default_off_candidate (projection.rs L88-89); a live non-linear shadow mapping = codec transport change needing captured replay + operator approval. magnetization -0.03/shadow energy -0.65 are her felt values (witness: field_norm 0.59, dispersal 0.258; no magnetization scalar). No grant.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "round_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786924416",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786924416.txt",
+      "sha256": "b53025f4993b747e64f260d74f5ce0d6c6bf295e41a440e8703c908ed1808db5",
+      "bytes": 3447,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_8fcc894b0332df0d428caebdcb687e8de12db2e5eecdad440a8f659cb50e72af",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_8fcc894b0332df0d428caebdcb687e8de12db2e5eecdad440a8f659cb50e72af.json",
+      "sha256": "c510c8b4afbde10a2f37858429703da5b83ed4509b3f77cac0aedfc21484b09c",
+      "bytes": 23933,
+      "lines": 533,
+      "read": "complete",
+      "integrity_note": "queue lived_state_alignment=artifact_integrity_unavailable (gap_count 1): witness source_snapshot_v1 window 0-400 partial vs report multi_window_complete 1-1048; witness parses cleanly and binds verified report SHA b53025f4 -> projection-level alignment classification, not corruption."
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "bytes": 38586,
+      "lines": 1048,
+      "read_scope": "complete lines 1-1048 (report window 1-400, coverage multi_window_complete); working copy byte-identical to report-bound SHA; file clean in git",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_scope": "read_only_foreign_dirty_not_edited",
+      "read_scope": "focused regions L2515-2600 (is/acts/first-word allowlist), L2845-2906 (grouped/explicit preservation + double-square-bracket depth two)",
+      "read": "scoped"
+    }
+  ]
+}

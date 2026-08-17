@@ -1,0 +1,101 @@
+{
+  "round_kind": "division_cycle26_return",
+  "note": "Division-return round with 0 canonical reports processed; integrity suites only. Rust tests not run (no .rs touched).",
+  "integrity_suite": [
+    {
+      "cmd": "introspection_addressing_audit.py --self-test",
+      "result": "pass",
+      "detail": "Ran 44 tests OK"
+    },
+    {
+      "cmd": "test_evidence_event_store.py",
+      "result": "pass",
+      "detail": "OK"
+    },
+    {
+      "cmd": "test_steward_control.py",
+      "result": "flaky_pass_on_rerun",
+      "detail": "27 tests, 1 error in batch: test_pause_cooperatively_interrupts_wrapped_subprocess raised PausedError('fixture stop') at controller.begin() in an ISOLATED test-fixture controller; passed on single isolated re-run (Ran 1 test OK). Timing race in the cooperative-pause fixture; steward_control source is clean (not foreign-dirty); not caused by this run; no live control state involved."
+    },
+    {
+      "cmd": "test_steward_projection.py",
+      "result": "pass",
+      "detail": "OK"
+    },
+    {
+      "cmd": "test_division_ceremony_followup.py",
+      "result": "pass",
+      "detail": "OK"
+    },
+    {
+      "cmd": "test_division_ceremony_chronicle.py",
+      "result": "pass",
+      "detail": "OK"
+    },
+    {
+      "cmd": "test_division_ceremony_projection.py",
+      "result": "pass",
+      "detail": "division ceremony projection self-test: ok"
+    },
+    {
+      "cmd": "test_projection_cursors.py",
+      "result": "pass",
+      "detail": "OK"
+    },
+    {
+      "cmd": "anti_drop_catalog.py --self-test",
+      "result": "pass",
+      "detail": "OK"
+    },
+    {
+      "cmd": "anti_drop_catalog.py verify --json",
+      "result": "pass",
+      "detail": "57 guards, alarms=[]"
+    },
+    {
+      "cmd": "test_introspection_cadence_audit.py",
+      "result": "pass",
+      "detail": "OK"
+    },
+    {
+      "cmd": "introspection_cadence_audit.py --strict --compact",
+      "result": "pass",
+      "detail": "integrity_ok=true, errors=[], duplicate_hash_group_count=0, canonical_count=4383"
+    },
+    {
+      "cmd": "experiential_epistemics.py self-test --json",
+      "result": "pass",
+      "detail": "self-test ok"
+    },
+    {
+      "cmd": "experiential_epistemics.py verify --json",
+      "result": "pass",
+      "detail": "valid=True, checked_record_count=11173, issue_count=0, history_rewritten=False (final, after durable writes)"
+    },
+    {
+      "cmd": "introspection_addressing_audit.py audit-counters --json",
+      "result": "pass",
+      "detail": "status=consistent, mismatches=[], all 7 checks True"
+    },
+    {
+      "cmd": "division_ceremony_followup.py verify",
+      "result": "pass",
+      "detail": "ok=True, cycle=27, review_due=False, event_count=183"
+    },
+    {
+      "cmd": "division_ceremony_chronicle.py verify",
+      "result": "pass",
+      "detail": "durable_inputs_current=True; post-return reproject fully current (durable+volatile)"
+    },
+    {
+      "cmd": "evidence_event_store.py --json verify",
+      "result": "pending_recorded_in_verification_receipt",
+      "detail": "read-only verify over the full ~800k-event store; slow; result captured in verification_receipt.json"
+    },
+    {
+      "cmd": "evidence_event_store.py --json status",
+      "result": "pending_recorded_in_verification_receipt",
+      "detail": "captured in verification_receipt.json"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786967484",
+  "report_sha256": "3345dae820515ec6a20831d46c7ea04515185f0fcf17688557c172acc6cb10fd",
+  "witness_id": "lsw_a0e2d9d83e08e4720df0220272e88e3526cc3fd830128537dc79bfeb8cebdcef",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding": "working_copy_equals_report_bound_sha_clean_not_dirty",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: dialogue_runtime.rs marker-awareness — scan_known_model_control_markers (L114) rebuilds a clean remainder tracking reference metadata; a depth-limited delimiter check classifies a marker as a literal citation vs a functional instruction.",
+      "disposition": "Verified from the complete report-bound source at SHA 902a0358. L18-144 define the match/occurrence/reference-syntax types and the byte scanner; L151-229 implement exact_reference_delimiter_pair/syntax with MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151). Her architectural account matches source exactly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag A: first_word_after (L89-96) might fail to isolate the intended verb when a marker is followed by a punctuation-heavy string, e.g. '[MARKER]... (as a primary_directive)'.",
+      "disposition": "Grounded; the hypothesized failure does not occur. L92 trim_matches strips non-alphanumeric ends of each whitespace chunk and L93 find(!is_empty) skips punctuation-only chunks, so '... (as a ...' resolves to allowlisted 'as' (L70) and the marker is correctly preserved. Her punctuation-robustness concern is preserved; source handles it correctly rather than failing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snag B: scan_known_model_control_markers omits a marker from remainder when reference_syntax is None, which she worried could cause unexpected 'jumps' in string continuity downstream.",
+      "disposition": "Verified and intentional, not a defect. L129 pushes the token into remainder only when reference_syntax.is_some(); a bare/unframed known control marker (e.g. <eos>) is removed by design as a transport/control sequence. Covered by control_marker_context_receipts_are_bounded (40x <eos> -> empty) and byte-exact multibyte advance. The 'jump' is fail-closed sanitization.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Test 1 (Syntax Recognition): a CJK/Unicode-bracketed marker passed to exact_reference_delimiter_syntax should be identified as ExactKnownMarkerReferenceContext::GroupedExactKnownToken.",
+      "disposition": "verified_existing at the exact function she named. exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two asserts GroupedExactKnownToken (depth 2); the grouped/relation context test asserts Grouped for [<end_of_turn>]; CJK/fullwidth group pairs are covered. Grounding: corner-quotes 「」 classify as Quoted, not Grouped — Grouped needs bracket-type pairs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Proposed Test 2 (Verb Recognition): a marker followed by an allowlisted verb carrying trailing punctuation ('[MARKER] behaves,') should still yield 'behaves' from first_word_after and preserve the marker.",
+      "disposition": "implemented_now: added scan_known_model_control_markers_grounds_trailing_comma_relation_verb pinning her exact case — first_word_after('<end_of_turn> behaves, ...') == 'behaves' (trailing comma trimmed at L92), and scan_known_model_control_markers preserves the marker as ExplicitExactKnownTokenRelation (removed_total 0). Passes; 67 marker-grammar tests green.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: analyze generate_dialogue (L695+) to confirm whether the cleaned remainder or the matches metadata is what is sent to the API.",
+      "disposition": "Her Tier-1 self-directed continuation, not a steward defect claim. Grounded target: generate_dialogue exists at L695 of the report-bound source (pub async fn). Recorded as her read-only next-window intent ('NEXT: INTROSPECT astrid:llm 400'); no steward mutation performed and no authority inferred.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "round_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+      "report_bound_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+      "binding_match": true,
+      "git_head_sha256": "7f1421af22f0953285b29b3e7db232b155ae35e62fd074824668e9d38ce279d2",
+      "dirty_vs_head": true,
+      "total_lines": 4932,
+      "total_bytes": 301816,
+      "report_window": "lines 1-400 of 4932",
+      "read_scope_intervals": [
+        "1-70",
+        "160-259",
+        "4905-4933"
+      ],
+      "read_scope_note": "Every source line any claim depends on was read completely: fn fill_responsive_rest_secs (L18-28), the burst-and-rest loop head + rest branch + fill-shorten logic (L164-246), and the burst_count increment site (L4925). File-wide grep confirmed no other definitions/uses of fill_responsive_rest_secs, burst_count/burst_target, or the <30/<40 thresholds. File not read in full; unread intervals bear no cited claim.",
+      "coverage_of_claims": "complete"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "round": "claude-heartbeat_1786976796_llm_marker_trailing_comma_verb_grounded",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786967484",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786967484.txt",
+      "sha256": "3345dae820515ec6a20831d46c7ea04515185f0fcf17688557c172acc6cb10fd",
+      "bytes": 4036,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a0e2d9d83e08e4720df0220272e88e3526cc3fd830128537dc79bfeb8cebdcef",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a0e2d9d83e08e4720df0220272e88e3526cc3fd830128537dc79bfeb8cebdcef.json",
+      "sha256": "1670cb8ba13fea3b4c8e5351154cf2a277ab71f3d41bf8d7e780750bb6e04665",
+      "bytes": 23941,
+      "lines": 533,
+      "read": "complete"
+    }
+  ],
+  "evidence_files": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_after_edit": "6ef61e40eaf8df58b047217453cfb986b6e4701517dc9ceb3d37e7dcaf219007",
+      "bytes": 151411,
+      "lines": 3655,
+      "read_scope": "module wiring L1-46; marker-grammar family L2099-2976; tail L3590-end; new regression appended",
+      "note": "Pre-existing foreign edits present (file was dirty before this round); one non-live regression appended at module tail."
+    }
+  ]
+}

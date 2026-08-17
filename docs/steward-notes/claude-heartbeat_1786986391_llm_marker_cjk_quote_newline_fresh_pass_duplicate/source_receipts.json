@@ -1,0 +1,22 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "match": true,
+      "git_clean": true,
+      "read_scope": "cited functions read completely: first_word_after L89-96, followed_by_explicit_exact_token_relation L64-86, scan_known_model_control_markers L114-144, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229, generate_dialogue integration L695-754 + scanner call sites L519/L558/L634"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "6ef61e40eaf8df58b047217453cfb986b6e4701517dc9ceb3d37e7dcaf219007",
+      "total_lines": 3655,
+      "total_bytes": 151411,
+      "read_scope": "existing regressions verifying the report's two proposed tests + snag against the same source SHA (see read_manifest source_receipts note)"
+    }
+  ]
+}

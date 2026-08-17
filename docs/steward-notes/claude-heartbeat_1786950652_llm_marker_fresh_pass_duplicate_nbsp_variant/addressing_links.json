@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786944125",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax L49-60; followed_by_explicit_exact_token_relation verbs L64-86; scan_known_model_control_markers L114-144 (byte-exact rebuild, keep-if-referenced L129-131)"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786944125",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace L91 (NBSP U+00A0 is Unicode White_Space) + trim_matches L92 (strips leading punctuation & U+FEFF) + find(!empty) L93"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786944125",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space L2941 (U+00A0 & U+FEFF -> 'denotes' found, marker preserved); ..._punctuation_boundary L2899; fail-closed L2813"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786944125",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts L2844 ('behaves as' + grouped); preserves_poetic_attribution L2472; generic-word strip: implies L2595 / contains L2610 / acts L2528"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786944125",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two L2876 ([[<end_of_turn>]] -> GroupedExactKnownToken depth 2); depth 3/4 L2208/L2194; MAX depth 4 src L151"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786944125",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "sanitize_model_control_markers_with_report L352; generate_dialogue at L695 (named continuation target). Prior duplicate 1786862165 c006 verified remainder feeds quality gates not final splice"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786944125",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786950652_llm_marker_fresh_pass_duplicate_nbsp_variant/RUN_REPORT.md",
+      "note": "Fresh-pass duplicate determination vs anchor introspection_astrid_llm_1786848204; same source SHA 902a0358, same functions/tests; current verification = 5 regressions pass"
+    }
+  ]
+}

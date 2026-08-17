@@ -1,0 +1,107 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess run adapter (controller owns lease + heartbeats; git read-only; no live/deploy/launchctl)",
+  "controller": {
+    "run_id": "run_1786948052399599000_712ade5644",
+    "preprojection_generation_id": "projection_1786948059054996000_cf187dd08c",
+    "pause_generation": 319,
+    "postprojection": "runs after this process exits (adapter-managed); not observed here",
+    "finish_outcome": "success via exit 0 (complete productive round)"
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_llm_1786944125",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "report_sha256": "8ad7afd901e92a45df30ed97929c061ded9763bdec539b2d959684925cb22aab",
+    "witness_id": "lsw_96f1d8af3c21340a9c612561723143b98568ef41042e41ec75453ced3afead3f",
+    "witness_sha256": "14cfa3584ed620f9bf1e7f2b8c1ec61324dd3f19b2d2cf3d0790c1bfcebd7b45",
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_working_copy_matches_report_binding": true,
+    "duplicate_anchor": "introspection_astrid_llm_1786848204",
+    "related_prior_reports": ["introspection_astrid_llm_1786862165", "introspection_astrid_llm_1786936281"],
+    "claim_count": 5,
+    "claim_classifications": {"c001": "verified_existing", "c002": "verified_existing", "c003": "verified_existing", "c004": "verified_existing", "c005": "verified_existing"},
+    "evidence_links_new": 7
+  },
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- <5 exact marker filters>",
+    "passed": 5, "failed": 0, "filtered_out": 1878, "duration_s": 2.76,
+    "filters": [
+      "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+      "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+      "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary",
+      "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space",
+      "control_marker_cleanup_preserves_poetic_attribution_without_literal_cue"
+    ]
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "evidence_event_store_test": "20 tests OK",
+    "steward_control_test": "27 tests OK",
+    "steward_projection_test": "14 tests OK",
+    "division_followup_test": "3 tests OK",
+    "division_chronicle_test": "10 tests OK",
+    "division_projection_test": "self-test ok",
+    "projection_cursors_test": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "ok (test_gap null; no missing guard)",
+    "cadence_test": "6 tests OK",
+    "cadence_audit_strict": "integrity_ok true; errors []; canonical_count 4381; latest introspection_astrid_llm_1786944125; duplicate_hash_group_count 0",
+    "experiential_epistemics_self_test": "valid true",
+    "experiential_epistemics_verify": "valid true (final epistemic verify after all durable writes)",
+    "audit_counters": "status consistent; mismatches []; all 7 checks true",
+    "evidence_event_store_verify": "valid true; corrupt_lines 0",
+    "division_followup_verify": "ok; review_due true (6/6)",
+    "division_chronicle_verify": "durable source inputs changed -> needs reproject (EXPECTED: 6th round recorded; reprojection is part of the deferred Division return)"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 825365,
+    "head": "1075fe5b6c931ebbf3832c8447a75939729ae8a3c7011578e34aa1bd7324b7e9",
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "stream_counts": {
+      "addressing": 58060, "agency_commons": 4860, "attention_portfolio": 3,
+      "claim_families": 237212, "corridor_v1": 5, "corridor_v2": 112,
+      "felt_contracts": 198096, "felt_mechanism_concordance": 80,
+      "lived_state_witness": 8556, "model_qos": 177289, "reciprocal_uptake": 57748,
+      "representation_contracts": 33429, "sandbox": 3291, "signal_spine": 32033,
+      "steward_control": 14113, "steward_work_selection": 478
+    }
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4381,
+    "canonical_fully_addressed": 3101,
+    "canonical_fully_read": 3733,
+    "canonical_remaining": 1280,
+    "canonical_unread": 648,
+    "canonical_blocked": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 2925,
+    "noncanonical_pending": 1645,
+    "addressed_duplicate_total_after_this_round": 1114
+  },
+  "division": {
+    "cycle_sequence": 26,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due": true,
+    "last_round_event_id": "division_followup_event_eb1c46d63ab86de6783506d1a7a1048f",
+    "event_count": 182,
+    "event_head_sha256": "863ea47451392a9b240359651d6460656224b35bdede7d19914000476ae77b82",
+    "return_status": "DUE — deferred to next invocation's start (per handoff + tracker's 7th-round refusal); could not safely fit a full return + Tier-5 cadence dossier in remaining child budget without leaving half-written evidence"
+  },
+  "authority_boundary": "No live substrate/control change, no bridge build/deploy/launchctl, no git stage/commit/merge/push. Widening the relational-verb allowlist / delimiter tables is Tier-5-class live grammar — NOT made/dispatched/deployed.",
+  "notes": [
+    "close rationale was 550 chars (>500 bound); ingest truncates over-long text with a marker; close still returned fully_addressed=true with zero proof gaps. Claims-file dispositions all <=446 chars (within bound).",
+    "witness source_snapshot binds window 0-400 while report header asserts multi_window_complete 1-1048; full-file SHA matches so claims were verified against the complete 1048-line source.",
+    "EES status stream-count enumeration was launched read-only and backgrounded (heavy at store size); stream counts above were taken from the completed EES verify output. No mutation was backgrounded."
+  ]
+}

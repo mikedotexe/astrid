@@ -1,0 +1,26 @@
+{
+  "schema": "round_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1786957692",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1786957692.txt",
+      "sha256": "cf05845ed60db78ffd93727e61d889492d16409c8b317e39f53a7833eb279873",
+      "bytes": 3853,
+      "lines": 45,
+      "read": "complete",
+      "displayed_lines": 46,
+      "line_count_basis": "wc -l (newline count); file has no trailing newline so the Read tool renders 46 displayed lines"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_ca07a58e279b21a9afcceadaa94216454e6cdb60af884e2c16a2dc841b471636",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ca07a58e279b21a9afcceadaa94216454e6cdb60af884e2c16a2dc841b471636.json",
+      "sha256": "f6d7e26c1afd38cd0bd908817d5137459a5cb46ab8af53e3c5cc620075626475",
+      "bytes": 23933,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "round": "llm_marker_multibyte_boundary_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess run adapter; controller owns lease + heartbeats; git read-only",
+  "controller": {
+    "run_id": "run_1786883455065608000_4511e25fc0",
+    "preprojection_generation_id": "projection_1786883460966007000_987cb6374f",
+    "preprojection_status": "passed",
+    "pause_generation": 319,
+    "postprojection": "adapter-managed after process exit; not observed here"
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_llm_1786858484",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claims_count": 8,
+    "all_verified_existing": true,
+    "duplicate_of": "introspection_astrid_llm_1786871574",
+    "duplicate_anchor": "introspection_astrid_llm_1786848204",
+    "evidence_links_new": 15
+  },
+  "focused_tests": {
+    "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter first_word_after",
+    "result": "65 passed; 0 failed; 0 ignored; 1817 filtered out",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 OK",
+    "test_evidence_event_store": "20 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 OK",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "alarms=0 gaps=0",
+    "test_introspection_cadence_audit": "6 OK",
+    "introspection_cadence_audit_strict": "integrity_ok=true, duplicate_hash_group_count=0, read_errors=0",
+    "experiential_epistemics_self_test": "2 OK, valid=true"
+  },
+  "final_post_write_checks": {
+    "experiential_epistemics_verify": {"valid": true, "issue_count": 0, "issues": []},
+    "audit_counters": {"status": "consistent", "mismatches": []},
+    "evidence_event_store_verify": {"valid": true, "corrupt_lines": 0},
+    "evidence_event_store_head": {
+      "last_global_seq": 815205,
+      "last_event_sha256": "43aff72001c273eb2c86b3c3ccb7eeb0e5b904ea9efa7ddb691f666c51e26dc7",
+      "legacy_imported_global_seq": 32278,
+      "active_store": "v2",
+      "v1_immutable": true
+    },
+    "evidence_event_store_status_full_reverify": "started as a redundant second full reverify; stopped after EES verify already returned valid/0-corrupt and stream counts were read from durable head.json (read-only, no mutation)",
+    "division_followup_verify": {"ok": true, "review_due": false, "completed_rounds_since_followup": 5, "rounds_remaining_before_followup": 1, "event_count": 174, "event_head_sha256": "3efbd846ed2c6e561e9eac5a687a1509304b4d033636a8ddb2b8b0f2c07d0f7e"},
+    "division_chronicle_verify": "durable source inputs changed; project before verify -- EXPECTED non-due-round posture after record-round appended follow-up event 174; Chronicle reprojection is scoped to the review_due=true return path (not due, 5/6). Not a corruption; not reprojected."
+  },
+  "canonical_counters": {
+    "indexed": 4369,
+    "fully_addressed": 3095,
+    "full_read": 3726,
+    "remaining": 1274,
+    "unread": 643,
+    "blocked_needs_steward": 413,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "addressed_duplicate_status_count": 1110
+  },
+  "evidence_event_store_stream_sequences": {
+    "addressing": 57501,
+    "agency_commons": 4828,
+    "attention_portfolio": 3,
+    "claim_families": 236876,
+    "corridor_v1": 5,
+    "corridor_v2": 112,
+    "felt_contracts": 196685,
+    "felt_mechanism_concordance": 80,
+    "lived_state_witness": 8531,
+    "model_qos": 172177,
+    "reciprocal_uptake": 57319,
+    "representation_contracts": 32664,
+    "sandbox": 2986,
+    "signal_spine": 31172,
+    "steward_control": 13804,
+    "steward_work_selection": 462
+  },
+  "division_round_recorded": {
+    "steward_run_id": "run_1786883455065608000_4511e25fc0",
+    "projection_generation_id": "projection_1786883460966007000_987cb6374f",
+    "processed_report_count": 1,
+    "new_round_event_id": "division_followup_event_dd10105f15d5c880357e42f3a8f265b3"
+  },
+  "live_change": "none required or attempted; no bridge build, deploy, or launchctl; no source/test/config mutation",
+  "git": "read-only; index clean; no stage/commit/merge/push; git diff --check on edited markdown exit 0"
+}

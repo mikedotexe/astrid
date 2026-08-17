@@ -1,0 +1,107 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter_controller_owns_lease_and_heartbeats",
+  "git_authority": "read_only_this_run",
+  "controller": {
+    "run_id": "run_1786909754002081000_c4310a5545",
+    "preprojection_generation_id": "projection_1786909762194823000_b354df2ad1",
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "postprojection": "adapter-managed after this process exits; not observed here",
+    "pause_generation": 319,
+    "finish_outcome": "success (single report fully closed; adapter records finish from exit code 0)"
+  },
+  "processed_report": "introspection_astrid_llm_1786906593",
+  "terminal_status": "addressed_duplicate",
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "evidence_links_new": 14,
+  "evidence_links_existing": 0,
+  "baseline_checks": {
+    "git_diff_check": "clean (exit 0) on CHANGELOG.md + ledger",
+    "cargo_fmt": "unaffected (no Rust changed this round)",
+    "index_clean": true,
+    "source_dialogue_runtime_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter first_word_after",
+    "passed": 65,
+    "failed": 0,
+    "filtered_out": 1817,
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44)",
+    "test_evidence_event_store": "OK (20)",
+    "test_steward_control": "OK (27)",
+    "test_steward_projection": "OK (14)",
+    "test_division_ceremony_followup": "OK (3)",
+    "test_division_ceremony_chronicle": "OK (10)",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "OK (4)",
+    "anti_drop_self_test": "OK (5)",
+    "anti_drop_verify": "ok (55 guards, alarms 0, gaps 0)",
+    "test_introspection_cadence_audit": "OK (6)",
+    "introspection_cadence_audit_strict": "integrity_ok=true (canonical_count 4373, duplicate_hash_group_count 0, latest introspection_astrid_llm_1786906593)",
+    "experiential_epistemics_self_test": "OK (2), valid=true",
+    "experiential_epistemics_verify_FINAL": "valid=true, issue_count=0, checked_record_count=11140",
+    "audit_counters": "status=consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0",
+    "division_ceremony_followup_verify": "ok=true, review_due=false, 2/6",
+    "division_ceremony_chronicle_verify": "durable source inputs changed; project before verify -- EXPECTED non-due-round posture after record-round appended Division follow-up event (177->178); Chronicle reprojection is scoped to the review_due=true return path (not due; 4 rounds remaining) and to the adapter postprojection's division_chronicle stage. Not a corruption."
+  },
+  "audit_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4373,
+    "canonical_fully_addressed": 3098,
+    "canonical_remaining": 1275,
+    "all_artifact_pending": 2919,
+    "noncanonical_pending": 1644
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 818582,
+    "head_last_event_sha256": "7969c5c8c6f35dddfa2395b0495891a202f7445e724ae8c5916562657ddaa928",
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "verified_checkpoint_current": true,
+    "stream_sequences": {
+      "addressing": 57554,
+      "agency_commons": 4845,
+      "attention_portfolio": 3,
+      "claim_families": 236915,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 196879,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 8539,
+      "model_qos": 174260,
+      "reciprocal_uptake": 57493,
+      "representation_contracts": 32972,
+      "sandbox": 2986,
+      "signal_spine": 31535,
+      "steward_control": 13936,
+      "steward_work_selection": 468
+    }
+  },
+  "division": {
+    "cycle_sequence": 26,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_1cfbfb5f9626c4c4e865397d730b5cfd",
+    "event_count": 178,
+    "event_head_sha256": "167b774aa20cbcdd6df393ed1cbf4048b201447764999c2400777431933ec134",
+    "tier5_cadence_dossier": "not generated -- required only on a Division return; review_due=false this round"
+  },
+  "live_change": "none -- no bridge build, deploy, or launchctl; no live substrate or control mutation attempted or required",
+  "commit_debt_unstaged": [
+    "docs/steward-notes/claude-heartbeat_1786912768_llm_marker_inverted_preservation_framing_fresh_pass_duplicate/ (entire packet, created)",
+    "CHANGELOG.md (one new [Unreleased] [claude-heartbeat] bullet; file was clean before this round -> my edit only)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (one new 2026-08-16 block at top of ## Ledger; file already foreign-dirty -> preserve both, defer if inseparable)"
+  ]
+}

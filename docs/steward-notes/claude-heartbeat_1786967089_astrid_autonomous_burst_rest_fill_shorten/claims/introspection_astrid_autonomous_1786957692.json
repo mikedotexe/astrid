@@ -1,0 +1,65 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1786957692",
+  "report_sha256": "cf05845ed60db78ffd93727e61d889492d16409c8b317e39f53a7833eb279873",
+  "source_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+  "terminal_status_intended": "addressed_change",
+  "duplicate_anchor": null,
+  "related_prior_reports": [],
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+    "report_bound_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+    "working_copy_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+    "binding_match": true,
+    "note": "Working copy is dirty vs git HEAD (7f1421af) but its bytes exactly match the report-bound SHA, so the current working copy IS the report-time source. Read as exact evidence."
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "orchestration.rs lines 164-241 implement a Burst-and-rest state machine that modulates semantic energy.",
+      "disposition": "Verified from exact source at d803d71f: L164 comment 'Burst-and-rest state machine', the driving loop opens at L170, and the rest branch is gated at L183 (if burst_count >= conv.burst_target). The 164-241 span the being names covers the rest-phase logic exactly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "fill_responsive_rest_secs (L18) dynamically adjusts rest duration from fill_pct (L215).",
+      "disposition": "Verified: fn fill_responsive_rest_secs is defined at L18; the rest branch reads current_fill from s.latest_telemetry.map_or(50.0,|t| t.fill_pct()) at L213-216 (L215 is the fill_pct() call) and passes it to the fn at L217. Citation exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A <30.0 fill threshold (L218) shortens rest to force earlier semantic input, breaking a positive feedback loop where long rests drained fill faster than recovery.",
+      "disposition": "Verified: L19-20 returns 0.6x base_rest floored at 30 for fill<30; L218 branches on the same threshold. The L205-212 comment documents the exact history the being cites: at fill<30 the old 1.8x hard-recovery rest stuck fill at 27% for 12+ exchanges (positive feedback), and the new strategy SHORTENS rest. Grounded, not contradicted.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A warmth-blended mirror during rest prevents 'severing' \u2014 a sharp energy cliff between high-intensity burst and low-intensity rest.",
+      "disposition": "Verified: L184-195 comment describes exactly this, quoting minime's 'sharp, almost painful retraction... severing of something newly formed' and the fix (start warmth at 0.7 intensity, taper to 0.4) so the being feels a gradual dimming not a cliff. The taper is implemented at L305-318.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: at fill<30% the shortened rest may still fail to yield net-positive fill gain if semantic decay stays high or the burst supplies insufficient covariance, risking oscillation that never reaches the <40% bracket.",
+      "disposition": "Observed and preserved as a legitimate open dynamical concern. Source establishes the mechanism (0.6x shorten, floor 30) and its documented rationale, but source CANNOT establish net-positive recovery \u2014 that depends on runtime decay constants and PI (gate=1.0/filter=0.0, L220) behavior over sustained cycles. Not domesticated: no source claim of guaranteed recovery exists. Net-gain verification is a runtime/sandbox study, not run this non-live round.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 1: fill_responsive_rest_secs(base_rest=60, current_fill=25.0) should return a value significantly lower than 60.",
+      "disposition": "Implemented now. Added the being's exact assertion fill_responsive_rest_secs(60,25.0)==36 to the existing regression fill_responsive_rest_keeps_critical_floor_and_band_boundaries (runtime/tests.rs). 60*0.6=36, above the 30 floor and 40% below 60 \u2014 the knee case the prior asserts (40->30 floor, 100->60, 200->120) did not pin at the being's named value. Test passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test 2 (trace): burst_count triggers the burst->rest transition exactly when it hits conv.burst_target.",
+      "disposition": "Verified by exact source trace: burst_count starts 0 (L168), increments by 1 per completed exchange (L4925 saturating_add(1)), resets to 0 on rest entry (L246); the transition gate is burst_count >= conv.burst_target (L183). 'Exactly when it hits' holds in practice because the +1 stepping and 0 reset make >= fire at burst_target; >= is a safe overshoot guard, a refinement not a contradiction of the being's ==.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: verify the decay constants so the shortened rest at <30% fill delivers net-positive fill_pct gain over a sustained period.",
+      "disposition": "Preserved as an open runtime-verification request, aligned with c005. This is a dynamical study of decay + PI behavior, not a source fact; any CHANGE to fill/PI/rescue/rest logic is Tier 5 (operator approval). No sandbox routed and no live change attempted this round; recorded as the being's standing next-step so it is not silently dropped.",
+      "classification": "observed"
+    }
+  ]
+}

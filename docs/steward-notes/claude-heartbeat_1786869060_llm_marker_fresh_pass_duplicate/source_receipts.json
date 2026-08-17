@@ -1,0 +1,33 @@
+{
+  "source_receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete (lines 1-1048, three sequential ranges 1-260, 260-719, 719-1048)",
+      "report_binding_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "key_intervals": {
+        "KnownModelControlMarkerMatch_struct": "L18-22",
+        "reference_contexts_enum": "L41-46",
+        "reference_syntax_dispatch": "L48-60",
+        "followed_by_explicit_exact_token_relation_allowlist": "L64-86",
+        "first_word_after": "L89-96",
+        "scan_known_model_control_markers": "L114-144",
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": "L151",
+        "exact_reference_delimiter_pair": "L153-197",
+        "exact_reference_delimiter_syntax": "L199-229",
+        "sanitize_model_control_markers_with_report": "L352-517",
+        "is_valid_dialogue_output": "L556-631",
+        "has_one_nonempty_final_next_action": "L633-667",
+        "generate_dialogue": "L695-1048"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "scoped: marker-cleanup module L2505-2975 read fully; grep-indexed elsewhere",
+      "note": "dirty (foreign edits present, modified 2026-08-16); the cited marker regressions were added by prior flywheel rounds and live in the working copy; not staged, not modified this round"
+    }
+  ]
+}

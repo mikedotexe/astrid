@@ -1,0 +1,32 @@
+{
+  "source_receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_binding_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "intervals_read": [
+        {"range": "1-200", "content": "dialogue_requested_token_band, KnownModelControlMarkerMatch/occurrence types, ExactKnownMarkerReferenceContext enum (L42-46), reference_syntax() (L49-60), followed_by_explicit_exact_token_relation + 17-verb allowlist incl. 'echoes' L72 (L64-86), first_word_after (L89-96), longest_..._at (L97-112), scan_known_model_control_markers (L114-144), MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151), exact_reference_delimiter_pair (L153-197)"},
+        {"range": "199-308", "content": "exact_reference_delimiter_syntax (L199-229: before/after take(MAX), context from innermost pair, delimiter_depth via zip+take_while count), control_marker_placement_counts, context receipt helpers"},
+        {"range": "spot", "content": "is_valid_dialogue_output signature at L556; has_one_nonempty_final_next_action at L633 (both use a local sanitized 'stripped' for measurement); generate_dialogue at L695 (pub async fn) returning raw model text via is_valid_primary_dialogue_output_for_profile near L997"}
+      ],
+      "tests_confirmed_present_and_passing": {
+        "manifest": "capsules/spectral-bridge/Cargo.toml",
+        "filters": ["control_marker", "scan_known_model_control_markers", "exact_reference_delimiter", "first_word_after"],
+        "result": "65 passed; 0 failed; 0 ignored; 1817 filtered out",
+        "cited_test_lines": {
+          "control_marker_scanner_advances_byte_exactly_across_multibyte_text": 2099,
+          "control_marker_cleanup_reports_exact_four_level_delimiter_depth": 2194,
+          "control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token": 2253,
+          "control_marker_cleanup_rejects_punctuation_joined_allowlist_prefix": 2670,
+          "control_marker_cleanup_handles_multibyte_symbol_before_relation": 2747,
+          "control_marker_cleanup_skips_symbol_only_line_before_exact_relation": 2766,
+          "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts": 2845,
+          "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two": 2876
+        }
+      }
+    }
+  ]
+}

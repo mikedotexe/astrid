@@ -1,0 +1,28 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1786941588_llm_marker_nbsp_whitespace_grounded",
+  "toolchain": "cargo (~/.cargo/bin), rustfmt --edition 2024",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib scan_known_model_control_markers_grounds_first_word_after",
+      "matched": [
+        "llm::provider::tests::scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary",
+        "llm::provider::tests::scan_known_model_control_markers_grounds_first_word_after_non_breaking_space"
+      ],
+      "result": "ok. 2 passed; 0 failed; 1881 filtered out",
+      "note": "The new non_breaking_space test PASSES -> empirically confirms first_word_after is robust to U+00A0 and U+FEFF; Astrid's fragility hypothesis does not hold for her named case (marker preserved, not stripped)."
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter first_word_after",
+      "result": "ok. 66 passed; 0 failed; 1817 filtered out"
+    }
+  ],
+  "format_check": {
+    "command": "rustfmt --edition 2024 --check capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "new_code_clean": true,
+    "note": "Pre-existing rustfmt drift in this already-dirty (git M) foreign file at L1/L35 (imports), L1885/1928/1948, L2526/2540 (is/acts), L2845/2857/2875 (grouped-relation + double-bracket tests). All diff anchors are <=2875; the inserted fn (post-edit L2942-2992) has NO rustfmt diff and matches rustfmt style. Foreign drift left untouched."
+  },
+  "reverted": {
+    "note": "A draft regression control_marker_cleanup_distinguishes_allowlisted_functions_from_unlisted_operates (for the already-closed introspection_astrid_llm_1786924416) was added then fully reverted after the stale-queue discovery; grep confirms 0 `operates` occurrences remain in tests.rs."
+  }
+}

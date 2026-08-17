@@ -1,0 +1,31 @@
+{
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- scan_known_model_control_markers_grounds_trailing_comma_relation_verb control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "note": "New regression + two related existing tests; compiled the dirty tree cleanly (1m29s)."
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter",
+      "result": "ok",
+      "passed": 67,
+      "failed": 0,
+      "note": "Full marker-grammar family green including the new test; no regression."
+    }
+  ],
+  "format_checks": [
+    {
+      "command": "rustfmt --edition 2024 --check capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "result": "pre_existing_foreign_drift_only",
+      "note": "Diff hunks all fall in the pre-existing foreign region (import block + up to L2875); the appended regression block (~L3615) is rustfmt-clean. Foreign drift left untouched."
+    },
+    {
+      "command": "git diff --check -- capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "result": "clean",
+      "note": "No whitespace errors introduced."
+    }
+  ],
+  "integrity_suites": "recorded separately in verification_receipt.json after all durable writes"
+}

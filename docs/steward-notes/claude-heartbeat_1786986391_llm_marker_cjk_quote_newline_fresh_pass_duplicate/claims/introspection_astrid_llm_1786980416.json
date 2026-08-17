@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786980416",
+  "report_sha256": "87a89341c52823297e146d5b83146145666dd21deec15782c893a22a605151f7",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm (dialogue_runtime.rs) implements a non-destructive marker scan (scan_known_model_control_markers L114) that distinguishes raw byte occurrences from reference syntax (quoted/grouped/relation), preserving markers in the remainder only when referenced, via delimiter sets at L153-197.",
+      "disposition": "verified_existing. Complete source at SHA 902a0358 confirms exactly this: scan_known_model_control_markers (L114-144) pushes occurrence.token to remainder only when reference_syntax.is_some() (L129-131); reference_syntax (L49-60) consults exact_reference_delimiter_syntax (L199) then followed_by_explicit_exact_token_relation (L64); delimiter pairs at L153-197. Non-destructive, used-vs-referenced distinction as described.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89-96) uses split_whitespace + a non-alphanumeric char filter; on a punctuation-heavy phrase or a newline before the next word, trim_matches might over-strip or fail to isolate the relational verb, causing reference_syntax to return None and the marker to be stripped from remainder incorrectly.",
+      "disposition": "verified_existing; contradiction preserved. Source L89-96: split_whitespace (L91) treats newline as a separator; trim_matches (L92) strips only edge non-alphanumerics, not mid-word; find(|w| !w.is_empty()) (L93) skips punctuation-only chunks. The hypothesized incorrect strip does not occur; the marker is preserved, failing closed only when NO alphanumeric word follows. Pinned by scan_...grounds_first_word_after_punctuation_boundary (tests.rs L2900) and _non_breaking_space (L2942).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "One Test Each #1: verify exact_reference_delimiter_syntax (L199) identifies a multi-byte Unicode bracket pair (e.g. 「...」) as GroupedExactKnownToken and preserves the marker in the remainder during a scan pass.",
+      "disposition": "verified_existing; contradiction preserved. Preservation holds, but Grouped is wrong: source L168 maps 「」 (Japanese corner quotes) to QuotedExactKnownToken, and control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (tests.rs L2302) tests 「<end_of_turn>」 asserting quoted==1, grouped==0. Genuine multi-byte CJK groups covered by _preserves_fullwidth_and_cjk_group_pairs (L2322). Multi-byte preservation verified; marker not classified Grouped.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #2: test followed_by_explicit_exact_token_relation (L64-86) with a marker followed by a newline then the word 'represents', to ensure first_word_after (L89) bridges the whitespace to identify the relation.",
+      "disposition": "verified_existing. split_whitespace (L91) treats the newline as a separator so 'represents' (allowlisted at L82) is found and the marker preserved. Covered verbatim by control_marker_cleanup_preserves_relation_across_newline (tests.rs L2786): '<end_of_turn>\\nrepresents...' asserts removed_total==0 and explicit_relation_occurrences==1. Also grounded by the exact-function regressions added for family sibling introspection_astrid_llm_1786814454 (tests.rs L2845-2868, same source SHA).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder produced by scan_known_model_control_markers is integrated into the final output buffer and whether any secondary filtering occurs.",
+      "disposition": "observed (read-only). generate_dialogue (L695) does not splice the remainder into a raw buffer; it applies a profile quality gate (is_valid_primary_dialogue_output_for_profile) that internally calls sanitize_model_control_markers (L519->wrapper L352; scanner L558/L634) and rejects marker-only output. Secondary filtering = rejection, covered by provider_output_normalization_rejects_marker_only_output_on_both_routes (tests.rs L1916). NEXT: INTROSPECT astrid:llm 400 remains open to Astrid.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "round": "docs/steward-notes/claude-heartbeat_1786923483_astrid_codec_tail_vibrancy_porosity_shadow_authority_wait",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_codec_1786916726.txt",
+      "introspection_id": "introspection_astrid_codec_1786916726",
+      "sha256": "9735489dd470a80de62891403a0d9db09274cb735b835229e18436b4bc4384a6",
+      "bytes": 4170,
+      "lines": 43,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_cc8e22ae0d167a399e7e4645095b9e1a58e734d30d25d6ca0d6d8acbe668bc24.json",
+      "witness_id": "lsw_cc8e22ae0d167a399e7e4645095b9e1a58e734d30d25d6ca0d6d8acbe668bc24",
+      "sha256": "0b6da5830bc3bdee360d9430698547e5c89134adf42e046740b4c2587f8d1d8c",
+      "bytes": 21435,
+      "lines": 498,
+      "read": "complete"
+    }
+  ]
+}
