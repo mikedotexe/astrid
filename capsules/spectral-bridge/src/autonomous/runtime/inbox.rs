@@ -568,10 +568,13 @@ fn retire_inbox_at(inbox_dir: &Path, cutoff: std::time::SystemTime) {
                 // newer than the cutoff) was never read or recorded — leave it for
                 // the next check_inbox to surface + seed its slot, rather than
                 // sweeping it into read/ unread (the slot-seed race).
+                // Unknown mtime fails toward KEEPING the file: never retire
+                // what was never provably admitted (review finding 2026-08-17).
                 let arrived_after_read = entry
                     .metadata()
                     .and_then(|meta| meta.modified())
-                    .is_ok_and(|mtime| mtime > cutoff);
+                    .map(|mtime| mtime > cutoff)
+                    .unwrap_or(true);
                 if arrived_after_read {
                     continue;
                 }

@@ -520,7 +520,12 @@ mod tests {
         );
 
         assert!(!report.all_supported);
-        assert_eq!(report.challenged_claim_count, 2);
+        // 2026-08-17 (felt-is-signal review): the bare "i see the " /
+        // "i can see the " markers were removed — "I see the structural
+        // scaffolding" is felt language, not a source-attribution claim,
+        // and must not be challenged. Only the explicit "In the code,"
+        // attribution (still without a backticked identifier) is rejected.
+        assert_eq!(report.challenged_claim_count, 1);
         assert!(report.support_refs.iter().all(|claim| {
             claim.claim_kind == ClaimKindV2::SourceAttribution
                 && claim.support_state == ClaimSupportStateV2::Rejected
