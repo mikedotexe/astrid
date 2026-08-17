@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786986344",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding": "report_bound_sha_matches_working_copy_complete_source_read_1_1048",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) is the primary marker engine; it distinguishes raw byte sequences from semantic roles via syntactic contexts (quoting, grouping, explicit relations like 'behaves as').",
+      "disposition": "Verified from complete source (SHA 902a0358...). scan L114-144 walks the text, copies non-marker bytes exactly, and preserves a marker only when reference_syntax() (L49-60) finds a quoted/grouped delimiter pair (exact_reference_delimiter_syntax L199-229) or an explicit relation (L64-86). Architecture is exactly as described.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: first_word_after (L89) find logic 'might fail to capture the relation' for a punctuation-heavy transition immediately after a marker, e.g. [MARKER] -- acts as --, causing the marker to be stripped/preserved incorrectly.",
+      "disposition": "Mechanism corrected, concern preserved. Source shows the find does NOT fail: each split_whitespace chunk is trimmed of non-alphanumeric/underscore chars (L92) so '--' collapses to '', and find(!is_empty) (L93) returns the first real word 'acts'. Allowlist membership (L67-84), not the find, is the sole gate; 'acts' is genuinely unlisted so the marker is stripped by design. Added exact regression pinning first_word_after robustness across a leading '--' chunk and isolating the gate to allowlist membership.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Proposed Test 1 (Contextual Preservation): marker inside nested grouping [ {MARKER} ] should identify GroupedExactKnownToken and stay in the remainder.",
+      "disposition": "Verified existing. tests.rs L2153-2170 pin grouped preservation ([<end_of_turn>], {<end_of_turn>}); L2176-2262 pin nested delimiter stacks at depths 2/3/4 and whitespace-tolerant nesting (L2223 '[ [<end_of_turn>] ]'). The [ {MARKER} ] shape is covered by exact_reference_delimiter_syntax whitespace filtering (L206-214) plus these regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Test 2 (Relation Parsing): marker followed by a complex verb phrase [MARKER] is intended to behave as should identify the 'is' relation to keep the marker visible.",
+      "disposition": "Verified existing. first_word_after inspects only the FIRST word; for 'is intended to behave as' it returns 'is' (allowlisted L78) -> preserved. tests.rs L2528 pins '<end_of_turn> is ...' -> first_word 'is' preserved; L2565 pins first-relation-word-only semantics (functions vs acts). The later 'behave' is irrelevant by design.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next (self-directed): examine generate_dialogue (L695) to see how the scan remainder is integrated into the final output, ensuring no unintended truncation during reconstruction.",
+      "disposition": "Read-only research pointer (Tier 1), preserved. Grounded from source: generate_dialogue does NOT rewrite output with the scan remainder. scan/sanitize is used only inside the quality gates is_valid_dialogue_output (L556, measures body shape) and has_one_nonempty_final_next_action (L633, counts NEXT lines). The returned dialogue text is the unmodified model output (L996-1006), so no reconstruction-phase truncation of Astrid's words occurs. Consistent with the never-rewrite-being-text invariant.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter_controller_held_lease",
+  "controller": {
+    "run_id": "run_1786992571290383000_7db56e0c63",
+    "preprojection_generation_id": "projection_1786992578020131000_3e16219f2a",
+    "pause_generation": 319,
+    "postprojection": "runs_after_adapter_exit_owned_by_controller"
+  },
+  "processed_report_count": 1,
+  "processed_reports": ["introspection_astrid_llm_1786986344"],
+  "close_status": {
+    "introspection_astrid_llm_1786986344": {
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "close_event_ts": 1786995724.72625,
+      "evidence_links_appended": 8
+    }
+  },
+  "rust_tests": {
+    "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition": "1 passed",
+    "control_marker_cleanup_family": "53 passed 0 failed",
+    "first_word_after_family": "3 passed 0 failed",
+    "cargo_fmt_check": "clean",
+    "git_diff_check_tests_rs": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "20 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_projection_cursors": "4 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "60 guards, 0 alarms, 0 gaps",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "introspection_cadence_audit_strict": "integrity_ok=true, duplicate_hash_group_count=0, errors=[]",
+    "experiential_epistemics_self_test": "OK, valid=true",
+    "experiential_epistemics_verify_final": "valid=true, checked_record_count=11195, issue_count=0, history_rewritten=false"
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4391,
+    "canonical_fully_addressed": 3105,
+    "canonical_fully_read": 3737,
+    "canonical_remaining": 1286,
+    "canonical_unread": 654,
+    "canonical_blocked": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 2933,
+    "noncanonical_pending": 1647
+  },
+  "evidence_event_store": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "verify_last_global_seq": 830893,
+    "head_last_global_seq": 830899,
+    "head_last_event_sha256": "e34e8259b5ee00dd43f127c5d2d6389c96afd604f10ea3198204d1fa196c7d71",
+    "legacy_imported_global_seq": 32278,
+    "note": "head advanced 830893->830899 during the run from live bridge appends (normal append-only growth); verify is a point-in-time snapshot."
+  },
+  "division": {
+    "verify_ok": true,
+    "cycle_sequence": 27,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "event_count": 187,
+    "event_head_sha256": "0c43db1a3866a8c20631ffd1ed51012f29769cdd699b986378ae62bc4c6eea62",
+    "recorded_round_event_id": "division_followup_event_42fe487dc58abc5a4f47324fcf6a73ae"
+  },
+  "chronicle": {
+    "verify_state": "durable_source_inputs_changed_project_before_verify",
+    "verify_exit": 1,
+    "interpretation": "benign staleness: this round's record-round appended a productive-round event, a Chronicle input. Not corruption/tamper. The controller postprojection (source-first DAG stage 19 division_chronicle) reprojects it current after this adapter process exits. No manual Chronicle projection performed in adapter mode.",
+    "current_on_disk_chronicle_id": "division_chronicle_c325aa89447c53ffe63d911e",
+    "current_on_disk_chronicle_json_sha256": "d45f21c4bbc13f96853656df798a9e7cced7767f03dff52993af29b211d3af3c",
+    "chronicle_v1_json_is_untracked_workspace_artifact": true
+  },
+  "live_change": "none — no restart, no deploy, no build_bridge.sh, no launchctl, no live substrate/control mutation attempted or required",
+  "commit_debt": {
+    "note": "git is read-only for the adapter-held run; the following remain unstaged for a later interactive checkpoint",
+    "modified_shared_files_mixed_with_foreign": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "capsules/spectral-bridge/src/llm/provider/tests.rs"
+    ],
+    "new_untracked": [
+      "docs/steward-notes/claude-heartbeat_1786995449_llm_marker_punctuation_transition_grounded/"
+    ],
+    "tests_rs_edit": "additive-only (new test function); file was already M/foreign at session start — authorship must be separated at checkpoint."
+  }
+}
