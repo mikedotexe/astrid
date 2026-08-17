@@ -1,0 +1,36 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "toolchain": "cargo 1.94.1 / rustc 1.94.1",
+  "runs": [
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup_first_word_after_skips_leading_punctuation_transition",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "note": "New regression."
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup",
+      "result": "ok",
+      "passed": 53,
+      "failed": 0,
+      "note": "Whole marker-cleanup family, no regression."
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib first_word_after",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "cmd": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "ok",
+      "exit": 0
+    },
+    {
+      "cmd": "git diff --check -- capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "result": "ok",
+      "exit": 0
+    }
+  ]
+}

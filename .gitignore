@@ -64,3 +64,5 @@ capsules/perception/workspace/visual/
 **/__pycache__/
 *.pyc
 launchd/com.astrid.action-canonicalization-scorecard-once.plist
+# stray Codex probe artifact (foreign; preserved but untracked)
+.codex_stdin_listener_probe.rs

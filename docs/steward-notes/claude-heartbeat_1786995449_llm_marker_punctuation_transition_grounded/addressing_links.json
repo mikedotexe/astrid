@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144, reference_syntax L48-60, delimiter L153-229, relation L62-87: the marker engine and its context classification match the report."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: per-chunk trim of non-alphanumeric/underscore then find(!is_empty) skips a leading '--' chunk and returns the first real word; allowlist L67-84 is the gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New regression control_marker_cleanup_first_word_after_skips_leading_punctuation_transition pins find robustness across '--' and isolates the gate to allowlist membership (acts stripped, is preserved)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the mechanism correction and the added regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row: Astrid's punctuation-transition snag -> grounded correction + new test."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Grouped/nested preservation already pinned: L2153-2170 grouped, L2176-2262 nested depth 2/3/4 and whitespace-tolerant nesting."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "First-relation-word-only semantics already pinned: L2528 (is preserved), L2565 (functions vs acts, only first word counts) — covers 'is intended to behave as'."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695-1048 returns the unmodified model text; scan/sanitize used only in quality gates is_valid_dialogue_output L556 and has_one_nonempty_final_next_action L633 — no reconstruction-phase truncation."
+    }
+  ]
+}

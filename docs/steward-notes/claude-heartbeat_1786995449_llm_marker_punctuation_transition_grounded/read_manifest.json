@@ -1,0 +1,32 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "processed_report_count": 1,
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786986344",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786986344.txt",
+      "sha256": "3ca6e9b49771f778d444c2b6449028de3ab37fff42dbb74e499ac64d1c49e32c",
+      "bytes": 3543,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a0eba9a517b8cdd0abe0c83c773b9bfd4b223ef41ad19d49a5425022ffa7dfc1",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a0eba9a517b8cdd0abe0c83c773b9bfd4b223ef41ad19d49a5425022ffa7dfc1.json",
+      "sha256": "d559d32ea58cbbf11c96f8f30a8b39da121cc9ea8ff0c88cdc5854585c9dc069",
+      "bytes": 23941,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "direct_causation_claimed": false,
+      "raw_prose_included": false,
+      "private_path_included": false,
+      "experiential_gap_claimed": false,
+      "fill_pct_runtime_observed": 73.02493286132812
+    }
+  ]
+}
