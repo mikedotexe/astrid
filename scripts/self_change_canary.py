@@ -77,12 +77,13 @@ PROFILES = {
         # prepare, before the manifest is signed, so the signed tree covers
         # them (post-prepare mutation correctly fails verification).
         "copy_from_repo": ["capsules/spectral-bridge/Cargo.lock"],
-        "sibling_links": ["prime_esn_wasm", "RASCII", "minime"],
-        # The introspect-target resolution tests expect the minime sibling
-        # two levels up from the capsule (checkout/minime), distinct from the
-        # cargo path-deps three levels up (staging/*). Linked pre-hash so the
-        # signed tree covers it.
-        "checkout_links": ["minime"],
+        # Positional checkout (2026-08-17, the Stage-1 applier lesson): the
+        # bridge's cargo path-deps AND its path-derivation tests both resolve
+        # siblings of the astrid root, and processes canonicalize symlinks —
+        # so the checkout must PHYSICALLY live beside /Users/v/other/minime
+        # and friends. staging/checkout becomes a symlink to the positional
+        # directory; every existing staging-relative code path still works.
+        "positional_checkout_parent": "/Users/v/other",
     },
     "minime-engine": {
         "being": "minime",
@@ -455,7 +456,16 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     if staging.exists():
         shutil.rmtree(staging)
     checkout = staging / "checkout"
-    checkout.mkdir(parents=True)
+    positional_parent = profile.get("positional_checkout_parent")
+    if positional_parent:
+        real_checkout = Path(positional_parent) / f".self_change_{candidate_id}"
+        if real_checkout.exists():
+            shutil.rmtree(real_checkout)
+        real_checkout.mkdir(parents=True)
+        staging.mkdir(parents=True, exist_ok=True)
+        checkout.symlink_to(real_checkout)
+    else:
+        checkout.mkdir(parents=True)
     staging.chmod(0o700)
     archive = staging / "base.tar"
     with archive.open("wb") as handle:
@@ -490,16 +500,6 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         if source_file.is_file():
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_file, destination)
-    for sibling in profile.get("sibling_links", []):
-        target = args.repo.resolve().parent / sibling
-        link = staging / sibling
-        if target.is_dir() and not link.exists():
-            link.symlink_to(target)
-    for sibling in profile.get("checkout_links", []):
-        target = args.repo.resolve().parent / sibling
-        link = checkout / sibling
-        if target.is_dir() and not link.exists():
-            link.symlink_to(target)
     entries = tree_entries(checkout)
     created = now_ms()
     record = {
