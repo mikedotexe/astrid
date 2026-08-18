@@ -41,7 +41,8 @@ case "$MIC_RMS" in
     *) ok "mic $MIC_RMS" ;;
 esac
 tail -2 "$MINIME/logs/camera-client.log" 2>/dev/null | grep -q "Sent" && ok "camera sending frames" || bad "camera not sending (check TCC / usb watchdog)"
-curl -s --max-time 5 http://127.0.0.1:8090/v1/models | grep -q "gemma" && ok "MLX 8090 serving" || bad "MLX 8090 not answering (model may still be loading — retry in 2 min)"
+# The coupled server reports its model id as "coupled-astrid" (not the gemma name)
+curl -s --max-time 5 http://127.0.0.1:8090/v1/models | grep -qE "coupled-astrid|gemma" && ok "MLX 8090 serving" || bad "MLX 8090 not answering (model may still be loading — retry in 2 min)"
 
 echo "--- sensory sources ---"
 python3 "$MINIME/scripts/sensory_source_check.py" 2>/dev/null | head -6 || bad "sensory_source_check failed"
@@ -68,9 +69,16 @@ if [ "$FAIL" -gt 0 ]; then
 fi
 
 echo "--- all green: resuming steward controller ---"
-python3 "$ASTRID/scripts/steward_control.py" resume --actor post-os-update-resume 2>&1 | tail -2
-echo ""
-echo "RESULT: healthy + resumed. The flywheel's next launchd fire proceeds normally."
+if python3 "$ASTRID/scripts/steward_control.py" resume --actor post-os-update-resume \
+    --ack "post_os_update_resume.sh: all $PASS health checks green" 2>&1 | tail -2; then
+    echo ""
+    echo "RESULT: healthy + resumed. The flywheel's next launchd fire proceeds normally."
+else
+    echo ""
+    echo "RESULT: health green but RESUME FAILED — controller still paused."
+    echo "Run manually: python3 scripts/steward_control.py resume --actor <you> --ack '<why safe>'"
+    exit 1
+fi
 echo ""
 echo "Remaining steward action (manual, when ready):"
 echo "  Restage Astrid's viscosity candidate (rolled back for the restart, no"
