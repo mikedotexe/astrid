@@ -2292,6 +2292,75 @@ mod tests {
     }
 
     #[test]
+    fn project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate() {
+        // Astrid `introspection_astrid_codec_1787006424` read projection.rs
+        // lines 1-400 of 1351 and proposed a "Dimensionality Integrity" test
+        // asserting `project_embedding` (L854) "produces a vector of exactly 48
+        // dimensions" with "indices 40-43 populated" by it. Source at the
+        // report-bound SHA contradicts that scope: `project_embedding` returns
+        // `Option<[f32; EMBEDDING_PROJECT_DIM]>` — the 8-dim embedding lane that
+        // lands in codec dims 32-39. The narrative-arc lane (codec dims 40-43)
+        // is produced by a *separate* function,
+        // `compute_narrative_arc_from_embeddings` -> [f32; NARRATIVE_ARC_DIM].
+        // This regression grounds the true scope as an exact structural
+        // challenge; it does not rewrite her report or widen any live behavior.
+
+        // The embedding lane is 8 dims, distinct from the full 48-dim vector.
+        assert_eq!(EMBEDDING_PROJECT_DIM, 8);
+        assert_ne!(EMBEDDING_PROJECT_DIM, SEMANTIC_DIM);
+
+        // A canonical 768-D embedding projects to exactly the 8-dim lane,
+        // finite, L2-normalized then scaled to ~0.35 (see project_embedding).
+        let embedding = (0..EMBEDDING_INPUT_DIM)
+            .map(|idx| ((idx as f32) * 0.017).sin() * 0.5)
+            .collect::<Vec<_>>();
+        let projected = project_embedding(&embedding).expect("canonical 768D embedding projects");
+        assert_eq!(projected.len(), EMBEDDING_PROJECT_DIM);
+        assert!(projected.iter().all(|value| value.is_finite()));
+        let projected_norm = projected.iter().map(|value| value * value).sum::<f32>().sqrt();
+        assert!(
+            (projected_norm - 0.35).abs() < 1.0e-3,
+            "8-dim lane is normalized then scaled to ~0.35, got {projected_norm}"
+        );
+
+        // The actual runtime dimensionality guard is a None on wrong-length
+        // input — NOT a 48-dim populate check. A 48-length vector is itself the
+        // wrong length for the 768-D embedding input.
+        let short = vec![0.0_f32; EMBEDDING_INPUT_DIM - 1];
+        let semantic_width = vec![0.0_f32; SEMANTIC_DIM];
+        assert!(project_embedding(&short).is_none());
+        assert!(project_embedding(&semantic_width).is_none());
+
+        // Codec dims 40-43 (the narrative arc) are populated by a distinct
+        // function returning exactly NARRATIVE_ARC_DIM bounded-tanh values, and
+        // it responds to a real first->second shift.
+        assert_eq!(NARRATIVE_ARC_DIM, 4);
+        let first = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        let mut second = first;
+        second[0] = 0.20;
+        second[1] = -0.16;
+        second[2] = 0.31;
+        second[3] = -0.09;
+        let arc = compute_narrative_arc_from_embeddings(&first, &second);
+        assert_eq!(arc.len(), NARRATIVE_ARC_DIM);
+        assert!(arc.iter().all(|value| value.is_finite() && value.abs() <= 1.0));
+        let arc_rms =
+            (arc.iter().map(|value| value * value).sum::<f32>() / NARRATIVE_ARC_DIM as f32).sqrt();
+        assert!(arc_rms > 0.0, "narrative arc lane responds to a real shift");
+
+        // Lane layout arithmetic: 32-39 embedding | 40-43 narrative | 44-47
+        // reserved all fit inside the 48-dim vector; 40-43 are NOT reserved.
+        assert_eq!(RESERVED_CODEC_DIM_START, 44);
+        assert!(
+            EMBEDDING_PROJECT_DIM + NARRATIVE_ARC_DIM + (SEMANTIC_DIM - RESERVED_CODEC_DIM_START)
+                <= SEMANTIC_DIM
+        );
+        assert!(is_reserved_codec_dim(44) && is_reserved_codec_dim(47));
+        assert!(!is_reserved_codec_dim(43)); // narrative arc dim, not reserved
+        assert!(!is_reserved_codec_dim(48)); // out of range
+    }
+
+    #[test]
     fn narrative_arc_captures_direction_not_only_magnitude() {
         // Astrid `introspection_astrid_codec_1782848118`: a sharp middle pivot
         // should preserve direction in dims 40-43, not only final-state magnitude.

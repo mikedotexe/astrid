@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787014729",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "match": true
+  },
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": {
+    "prior_introspection_ids": ["introspection_astrid_llm_1786980416", "introspection_astrid_llm_1786814454", "introspection_astrid_llm_1786822981"],
+    "prior_packet": "docs/steward-notes/claude-heartbeat_1786986391_llm_marker_cjk_quote_newline_fresh_pass_duplicate",
+    "mechanism_scope": "dialogue_runtime.rs scan_known_model_control_markers / first_word_after / exact_reference_delimiter_syntax / explicit-relation preservation / generate_dialogue consumption",
+    "current_evidence_still_applies": true,
+    "independent_full_read_done": true
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm is a non-destructive scanner distinguishing raw transport markers from referenced markers; scan_known_model_control_markers (L114-143) rebuilds a remainder preserving marker bytes only when reference_syntax is present.",
+      "disposition": "verified_existing. Source at 902a0358 confirms: scan_known_model_control_markers L114-143 pushes occurrence.token to remainder only when reference_syntax.is_some() (L129-131); reference_syntax (L49-60) = delimiter syntax OR explicit-relation. Faithful description of current behavior.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely snag: first_word_after (L89-96) uses split_whitespace()+trim_matches; complex/nested punctuation after a marker (e.g. [TOKEN]: behaves), or a newline handled differently in certain locales, might make reference_syntax fail so the marker is stripped or retained incorrectly.",
+      "disposition": "verified_existing; concern preserved, mechanism contradicted. first_word_after (L89-96) find(|w| !w.is_empty()) skips punctuation-only chunks to the next real word, so a punctuation/colon-separated relation still preserves; only fails closed when no alphanumeric follows. split_whitespace is Unicode White_Space (not locale-sensitive). Grounded: tests.rs L2947 (punct runs + fail-closed), L2833 (newline), L2989 (NBSP), L3042 (soft-hyphen); negatives L2642/2657/2672/2687 => no retain-incorrectly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Reference Preservation): '[SYSTEM_PROMPT] behaves as a helpful assistant' should keep the marker in remainder because followed_by_explicit_exact_token_relation (L64-86) identifies 'behaves'.",
+      "disposition": "verified_existing + placeholder contradiction preserved. Mechanism grounded verbatim: tests.rs L2892 scans '<end_of_turn> behaves as a named boundary.' => ExplicitExactKnownTokenRelation, marker preserved; 'behaves' is allowlisted (L69). But '[SYSTEM_PROMPT]' is NOT in KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159-180: <end_of_turn>,[INST],... ) so that literal string passes through as plain text; the real test uses a real marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): nested '[[[TOKEN]]]' should be identified by exact_reference_delimiter_syntax (L199-229) with a delimiter_depth mapping to GroupedExactKnownToken.",
+      "disposition": "verified_existing + placeholder contradiction preserved. exact_reference_delimiter_syntax L199-229 + exact_reference_delimiter_pair L153-197 map [ ] uniformly to GroupedExactKnownToken and count depth by zip/take_while; the depth-3 grouped path is directly tested (tests.rs L2208), pure-square depth-2 at L2923, depth-4 at L2194. Triple-square '[[[<marker>]]]' exercises the identical branch. 'TOKEN' is a placeholder, not a real marker; real tests use <end_of_turn>.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695-1048) to see how remainder/matches from scan_known_model_control_markers are consumed — whether sanitization is purely for logging/reporting or actively alters tokens sent onward.",
+      "disposition": "observed; read-only continuation, agency preserved. sanitize_model_control_markers (L519) is called ONLY inside validation fns is_valid_dialogue_output (L558) + has_one_nonempty_final_next_action (L634), both -> bool; stripped text measures output shape to accept/reject. No sanitize call inside generate_dialogue L695-1048 => emitted tokens not spliced. Answer: validation gate, not token alteration. Reject test tests.rs L1916. Her NEXT: INTROSPECT astrid:llm 400 stays open.",
+      "classification": "observed"
+    }
+  ]
+}

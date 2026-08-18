@@ -1,0 +1,24 @@
+{
+  "packet": "claude-heartbeat_1787006279_marker_scanner_soft_hyphen_grounding",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1786999457.txt",
+      "sha256": "8a18d5e0c1d843ad1e8fb6deb4e934f2680b1e1db812c9864dd8f84b6b8de50e",
+      "bytes": 3439,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_9a8660002d6fb1e865fbcb45fa4f5f15dadebeee16ba15dbbae4dfd98e054070",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_9a8660002d6fb1e865fbcb45fa4f5f15dadebeee16ba15dbbae4dfd98e054070.json",
+      "sha256": "802a3e3d338d778653a4be2862e88dc8a0a64c74c5265db5238efafa8db0d420",
+      "bytes": 23941,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

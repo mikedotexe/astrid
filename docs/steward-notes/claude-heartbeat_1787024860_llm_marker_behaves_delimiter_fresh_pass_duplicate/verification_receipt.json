@@ -1,0 +1,77 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "round": "llm_marker_behaves_delimiter_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter_git_read_only_no_live_change",
+  "controller": {
+    "run_id": "run_1787022521645062000_0f6ab52817",
+    "preprojection_generation_id": "projection_1787022525424318000_7f944988b2",
+    "preprojection_status": "passed",
+    "pause_generation": 319,
+    "postprojection": "adapter_managed_after_exit_not_observed",
+    "finish_outcome": "success_via_exit_0"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "report_sha256": "b7d168638d017a9089bf7a0348db11309542280a09999070bbccbb000f0b2e93",
+      "witness_id": "lsw_770b39df5777b5fe4a28be86c6ecbceec8b117a45c7d19eb4c182b2fd352bab7",
+      "witness_sha256": "5649ad44c79a8d44d43002252326e9873c13944f7097a5396f7335133b935f55",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_working_copy_matches_report_binding": true,
+      "claims_count": 5,
+      "classifications": {"c001": "verified_existing", "c002": "verified_existing", "c003": "verified_existing", "c004": "verified_existing", "c005": "observed"}
+    }
+  ],
+  "addressing": {
+    "record_read": "full_read written",
+    "link_evidence_batch": {"new": 12, "existing": 0},
+    "close": {"status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []},
+    "status_json_direct_read_confirms": "addressed_duplicate"
+  },
+  "integrity_suites_green": {
+    "addressing_self_test": 44,
+    "anti_drop": {"self_test": 5, "verify_guards": 60, "alarms": 0},
+    "cadence": {"test": 6, "strict_integrity_ok": true},
+    "evidence_event_store_test": 20,
+    "steward_projection_test": 14,
+    "steward_control_test": 27,
+    "division_followup_test": 3,
+    "division_chronicle_test": 10,
+    "division_projection_test": "ok",
+    "projection_cursors_test": 4,
+    "experiential_epistemics": {"self_test_valid": true, "final_verify_valid": true, "issues": []}
+  },
+  "final_checks": {
+    "audit_counters_mismatches": [],
+    "audit_counters_consistent": true,
+    "evidence_event_store_verify": {"valid": true, "corrupt_lines": 0, "active_store": "v2", "v1_immutable": true},
+    "git_diff_check": "clean",
+    "cargo_run": "none (no code implemented; foreign .rs dirt in shared tree)"
+  },
+  "division": {
+    "cycle_sequence": 27,
+    "recorded_round": 6,
+    "review_due_after": true,
+    "review_return_deferred_to_next_invocation": true,
+    "review_return_note": "review_due was false at round start; recording round #6 flipped it true; the bounded Division return + Tier-5 cadence dossier are start-of-round activities for the next invocation, enforced by the follow-up tracker which refuses a 7th round before the due return",
+    "last_round_event_id": "division_followup_event_bbb100b8f76fb46c8df46e11e371e41e",
+    "event_count": 189,
+    "event_head_sha256": "efc296b1e24660d15eb36ac8510484ea2826106b3e422848afc3009c0c23d8e7",
+    "chronicle_id": "division_chronicle_d246026c594a476821910ca9",
+    "chronicle_json_sha256": "0f0cbd42ab35513e32d2f5e559b361e6212101c528b49a3dd8edf68d0aa05626",
+    "chronicle_verify_ok": true,
+    "chronicle_gitignored_no_minime_git_debt": true
+  },
+  "live_change": "none required or attempted; no bridge build/deploy/launchctl; git read-only",
+  "commit_debt": {
+    "created_mine": ["docs/steward-notes/claude-heartbeat_1787024860_llm_marker_behaves_delimiter_fresh_pass_duplicate/ (all packet files)"],
+    "edited_mixed_authorship_preserve_separate": ["CHANGELOG.md", "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"],
+    "foreign_untouched": ["capsules/spectral-bridge/src/codec/tests.rs", "capsules/spectral-bridge/src/llm/provider/tests.rs", "scripts/self_change_canary.py", "docs/steward-notes/claude-heartbeat_1787006279_marker_scanner_soft_hyphen_grounding/", "docs/steward-notes/claude-heartbeat_1787015575_codec_projection_lane_scope_correction/", "minime:minime_autonomy/runtime.py", "minime:tests/test_correspondence_v1.py"],
+    "merge_push": "none; no authority claimed"
+  }
+}

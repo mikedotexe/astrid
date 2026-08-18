@@ -1,0 +1,6 @@
+{
+  "schema": "source_receipts_v1",
+  "round": "division_cycle27_return",
+  "report_bound_source_receipts": [],
+  "note": "No report-bound source read this round (0 canonical reports). Division runtime state files recorded in read_manifest.json division_return_reads."
+}

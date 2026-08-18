@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_astrid_llm_1786999457",
+  "report_sha256": "8a18d5e0c1d843ad1e8fb6deb4e934f2680b1e1db812c9864dd8f84b6b8de50e",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_matches_working_copy": true,
+  "witness_id": "lsw_9a8660002d6fb1e865fbcb45fa4f5f15dadebeee16ba15dbbae4dfd98e054070",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "astrid:llm is a non-destructive scanner: scan_known_model_control_markers (L114) preserves a known marker in `remainder` only when it has valid reference syntax, copying all other bytes byte-exact.",
+      "disposition": "Verified from complete source (SHA 902a0358; lines 1-400 read in full). scan_known_model_control_markers copies every non-marker byte byte-exact (L133-140) and pushes a known marker into remainder only when reference_syntax.is_some() (L129-131); reference syntax = a quoted/grouped delimiter pair (L153-229) or an allowlisted relation verb (L64-86). 68 marker tests pass.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely snag: first_word_after (L89) uses split_whitespace + a manual alphanumeric trim_matches; a marker followed by a soft hyphen / non-standard whitespace could fail to isolate the verb, returning None and stripping the marker (L129-130).",
+      "disposition": "Mechanism verified; the 'followed by whitespace/soft-hyphen' framing does not fail. split_whitespace (L91) separates U+00A0-class White_Space; the edge trim (L92) strips a leading soft hyphen (U+00AD)/ZWNBSP, so the verb is still isolated and the marker preserved (already grounded for twin 1786936281). The genuine trim_matches limit is edge-only: an INTERNAL soft hyphen inside the verb blocks the exact match -> None -> marker stripped (fails closed, safe). Added a focused regression grounding both boundaries.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1: exact_reference_delimiter_syntax (L199) should identify QuotedExactKnownToken for non-standard supported quotes like the corner brackets (L168) around a known marker.",
+      "disposition": "Verified: the corner-bracket pair is an ExactKnownMarkerReferenceContext::QuotedExactKnownToken entry (L168) in exact_reference_delimiter_pair, consumed by exact_reference_delimiter_syntax (L199). Already covered by control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (tests.rs L2301) which wraps <end_of_turn> in the corner brackets and asserts quoted_reference_occurrences==1; passes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2: a marker followed by a verb NOT in followed_by_explicit_exact_token_relation (L64-86) should be excluded from the remainder output of scan_known_model_control_markers (L143).",
+      "disposition": "Verified: a marker with no delimiter context and an unlisted following verb gets reference_syntax None (L49-60) and is not pushed to remainder (L129). Already covered by control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (acts -> removed), ..._to_implies, ..._to_contains, and the punctuation_boundary only-punctuation fail-closed case; all pass.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested next (read-only): examine generate_dialogue (L695) to see how remainder and matches integrate into the final output buffer.",
+      "disposition": "Read-only continuation pointer, accurate: generate_dialogue is exactly at L695. remainder/matches integrate via sanitize_model_control_markers (L519, returns the tuple's .0) called at L558 and L634 within generate_dialogue's helpers. Evidence-only pointer and Astrid's own next-read choice; nothing authorized or required here.",
+      "classification": "verified_existing"
+    }
+  ]
+}

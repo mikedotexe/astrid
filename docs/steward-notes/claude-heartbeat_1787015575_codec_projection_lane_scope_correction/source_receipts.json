@@ -1,0 +1,39 @@
+{
+  "round": "claude-heartbeat_1787015575_codec_projection_lane_scope_correction",
+  "source_receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/codec/projection.rs",
+      "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+      "total_lines": 1351,
+      "total_bytes": 53462,
+      "read_scope_intervals": ["1-1351"],
+      "coverage": "complete",
+      "report_window": "1-400",
+      "report_uncovered_at_authorship": "401-1351",
+      "notes": "Report cited symbols in the uncovered region via the tree-sitter structural map (project_embedding L854, project_embedding_dynamic_epoch L759); complete read grounds those citations. Key groundings: L26 SEMANTIC_DIM=48; L28 SEMANTIC_DIM_LEGACY=32; L32 FEATURE_ABS_MAX=5.0; L48 TAIL_VIBRANCY_ENTROPY_GATE=0.85; L53 TAIL_VIBRANCY_MAX=6.0; L77 EMBEDDING_PROJECT_DIM=8; L79 NARRATIVE_ARC_DIM=4; L80-81 reserved 44-47; L172 embedding_projection_matrix ([[f32;8];768]); L196/L228 ProjectionBasisHealthV1; L340/L950 ProjectionPrecisionAuditV1 (L990 ghost_vibrancy_conclusion); L759 project_embedding_dynamic_epoch (-> [f32;8]+meta, seed L784-795); L854 project_embedding (-> Option<[f32;8]>, None guard L855-857, scale 0.35 L866-872); L1173 compute_narrative_arc_from_embeddings (-> [f32;4]); L1328 is_reserved_codec_dim (44..48)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/core.rs",
+      "sha256": null,
+      "total_lines": 45,
+      "read_scope_intervals": ["1-45"],
+      "coverage": "complete",
+      "notes": "Facade that include!s projection.rs..tests.rs into one module; L6-13 documents the 48-dim lane layout the report described (O2). Confirms tests.rs shares projection.rs private-const scope via a single included module."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec.rs",
+      "sha256": null,
+      "total_lines": 10,
+      "read_scope_intervals": ["1-10"],
+      "coverage": "complete",
+      "notes": "Compatibility facade: mod core; pub use core::*."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/tests.rs",
+      "sha256": null,
+      "read_scope_intervals": ["1-40", "1505-1600", "2258-2302"],
+      "coverage": "scoped",
+      "notes": "Read the test-module header (use super::*), existing project_embedding / narrative-arc coverage, and the narrative_arc probe idiom. Confirmed the fixed project_embedding had no direct width/None-guard regression (only dynamic-epoch: L1427; precision audit: L2133). Added the new regression after L2292."
+    }
+  ]
+}

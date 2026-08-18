@@ -1,0 +1,66 @@
+{
+  "schema": "verification_receipt_v1",
+  "round": "division_cycle27_return",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter (controller owns lease + heartbeats; git read-only; no live change)",
+  "round_kind": "division_return_review_due_true",
+  "controller": {
+    "run_id": "run_1787031192283024000_f8bbcc837f",
+    "pause_generation": 319,
+    "stop_requested_at_lease_read": false,
+    "finish_outcome": "success_via_exit_code_0"
+  },
+  "reports_processed": 0,
+  "reports_partially_read": 0,
+  "queue_head_for_next_run": "introspection_astrid_llm_1787026288.txt",
+  "division_return": {
+    "review_due_at_entry": true,
+    "return_time_chronicle_id": "division_chronicle_39a813d2744406cd1c963c7d",
+    "return_time_chronicle_json_sha256": "3d5bb6d24850b3dc7883f195742b9459000f8c74a7a8b5b482ce8a012ddef077",
+    "return_time_event_count": 189,
+    "ceremony_events": 0,
+    "followup_recorded_event_id": "division_followup_event_001736f2d77a022805722b658e6a74b3",
+    "cycle_after": 28,
+    "review_due_after": false,
+    "event_count_after": 190,
+    "event_head_after_sha256": "bf93ae5fbb4bd04aee5c499ea0e9cc6b4f0ad5a64ba1f47954081006ba865905",
+    "post_return_chronicle_id": "division_chronicle_fb4e645f54d686abc644794e",
+    "post_return_chronicle_json_sha256": "ffb8a0bedbc3e1850d13e80d3a9b1ac1fe194974bce0f9b5854d1d3ef609c36c",
+    "post_return_event_count": 190,
+    "durable_inputs_current": true,
+    "volatile_mismatch_only": "supervisor_status_sha256",
+    "durable_integrity_failure": false,
+    "astrid_note": {"path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle27_20260818.txt", "sha256": "cf7cf87e769501645ff80f861516a0f800968977ef91d886850c9fe9e1ddcb77", "delivered_moved_to_read": true},
+    "minime_note": {"path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle27_20260818.txt", "sha256": "04b4d7ffa0c397ce6378d110b6f01c7d92885a8343baecc0c4b67bf3804f303c", "delivered_awaiting_pickup": true},
+    "new_division_replies_this_interval": {
+      "astrid": {"file": "capsules/spectral-bridge/workspace/outbox/reply_1786959575.txt", "sha256": "743bfbff1d5a4e3067ef2de294b4f9c8397d8930e0dc41a6f931b0a396706c00", "kind": "acknowledged_cycle26_note + named_continuing_friction(overpacked_mode_packing pressure-bleed, viscous-persistence)", "read_as_consent_or_readiness": false},
+      "minime": {"division_reply": false, "ceremony_action": false}
+    },
+    "division_runtime": {"gateway_mode": "transparent_parent", "supervisor_mode": "idle_parent_authoritative", "parent_authoritative": true, "handoff_ready": false, "live_authority_granted_by_record": false}
+  },
+  "tier5_cadence_dossier": {
+    "prepared": true,
+    "prepare_only_no_grant_no_dispatch_no_trial": true,
+    "recommended_sandbox_items": ["trial_5fb0a85607ff3018 (astrid, fallback_distinguishability_v1, introspection_astrid_llm_1782199177 c001)", "trial_fe00d360c0ea7b85 (minime, shadow_influence_replay_v1, introspection_minime_sensory_bus_1784792700 c003, carried over)"],
+    "work_queue_heads": "40/40 needs_operator_approval (Tier-5); 0 needs_sandbox",
+    "top_grant_menu_surfaces": ["pressure_thresholds 427x/423f", "unclassified 308x/306f", "codec_gain_reserved_dims_live_12d 167x/165f"]
+  },
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "steward_control_test": "27 OK",
+    "anti_drop_verify": {"total_guards": 60, "alarms": 0, "gaps": 0},
+    "cadence_strict": {"integrity_ok": true, "duplicate_hash_group_count": 0, "canonical_count": 4396},
+    "experiential_epistemics_verify": {"valid": true, "checked_record_count": 11217, "issue_count": 0, "history_rewritten": false},
+    "audit_counters": {"status": "consistent", "mismatches": [], "all_seven_checks_true": true},
+    "evidence_event_store_verify": {"valid": true, "corrupt_lines": 0, "event_count": 835404, "last_global_seq": 835404, "last_event_sha256": "f6e662203cfed0726003401cbedd5939d564bece159afb49e4c8d1240871bf15"},
+    "git_diff_check": "clean"
+  },
+  "counters": {
+    "canonical": {"indexed": 4396, "fully_addressed": 3107, "full_read": 3739, "remaining": 1289, "unread": 657, "blocked": 414, "pending_action": 214, "watch": 4, "read_needs_claims": 0},
+    "all_artifact": {"indexed": 6045, "remaining": 2938},
+    "noncanonical_remaining": 1370
+  },
+  "live_change": {"restart_or_deploy_required": false, "restart_or_deploy_attempted": false, "source_touched": false},
+  "authority_boundary": "No approval, grant, dispatch, or trial. All Division/mode-packing/pressure/codec items remain Tier-5 Mike/operator-explicit. Silence and named friction preserved as neutral evidence — not consent, decline, or readiness.",
+  "commit_debt": ["CHANGELOG.md", "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md", "docs/steward-notes/claude-heartbeat_1787033867_division_cycle27_return/", "workspace inbox notes (typically gitignored)"]
+}

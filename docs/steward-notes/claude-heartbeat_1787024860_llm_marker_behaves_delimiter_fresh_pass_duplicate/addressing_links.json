@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-143 preserves marker bytes only when reference_syntax.is_some() (L129-131); reference_syntax L49-60."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace + trim_matches(non-alnum,keep _) + find(!empty) skips punctuation-only chunks; fails closed only when no alphanumeric word follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L2947 scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary (punctuation runs preserve + only-punctuation fails closed); L2833 relation-across-newline; L2989 NBSP; L3042 soft-hyphen."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L2892 scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts asserts '<end_of_turn> behaves as a named boundary.' => ExplicitExactKnownTokenRelation, marker preserved (report Test 1 with a real marker)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180 does not contain [SYSTEM_PROMPT]/[TOKEN]; placeholder contradiction preserved — mechanism real, literal string is not a marker."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L2923 exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two; L2208 three-level grouped depth; L2194 four-level. Triple-square '[[[<marker>]]]' exercises the identical depth-3 grouped branch."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 + exact_reference_delimiter_pair L153-197 map [ ] uniformly to GroupedExactKnownToken and count depth by zip/take_while."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "sanitize_model_control_markers (L519) consumed only by validation fns is_valid_dialogue_output (L558) + has_one_nonempty_final_next_action (L634) returning bool; no sanitize call in generate_dialogue L695-1048 => emitted tokens not spliced (validation gate, not token alteration)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L1916 provider_output_normalization_rejects_marker_only_output_on_both_routes: marker-only output is rejected by the gate, confirming reject-not-rewrite behavior."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1786986391_llm_marker_cjk_quote_newline_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Duplicate binding: prior fresh-pass of the same source window (SHA 902a0358) introspection_astrid_llm_1786980416 closed addressed_duplicate; same mechanism scope, current evidence still applies."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] bullet recording the duplicate close with verification."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ledger row: feedback -> verified-no-change (fresh-pass duplicate), evidence grounded, no new code."
+    }
+  ]
+}

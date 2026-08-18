@@ -1,0 +1,42 @@
+{
+  "toolchain": "cargo 1.94.1 / rustc 1.94.1",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib grounds_first_word_after",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "note": "includes new scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "result": "ok",
+      "passed": 68,
+      "failed": 0,
+      "note": "was 67 before this round; +1 new regression"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib scan_known_model_control_markers",
+      "result": "ok",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "cargo fmt --all -- --check",
+      "result": "ok",
+      "exit": 0
+    },
+    {
+      "command": "git diff --check",
+      "result": "ok",
+      "note": "no whitespace errors"
+    }
+  ],
+  "changed_test_file": {
+    "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "post_edit_sha256": "f5b6788d9a6662cc1e35c6fc36548e950d52a9bb03085c5ee32efcc7ee34e161",
+    "new_test": "scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen",
+    "new_test_line": 3042,
+    "insertions": 60
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "introspection_id": "introspection_astrid_codec_1787006424",
+  "source_bound_path": "capsules/spectral-bridge/src/codec/projection.rs",
+  "source_bound_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+  "working_copy_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+  "source_hash_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "SEMANTIC_DIM is currently 48.",
+      "disposition": "Verified. projection.rs L26 `pub const SEMANTIC_DIM: usize = 48;`. Witness records compiled_constant bridge.semantic_dimensions=48.0 (source_ref codec::SEMANTIC_DIM, observed in running binary). Existing test tests.rs L8-9 asserts total_dims==SEMANTIC_DIM==48.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Multi-lane layout: 32-39 embedding-projected (768D), 40-43 narrative arc, 44-47 reserved.",
+      "disposition": "Verified. core.rs L6-13 doc and projection.rs L74-81 (EMBEDDING_PROJECT_DIM=8 for 32-39; NARRATIVE_ARC_DIM=4 for 40-43; RESERVED_CODEC_DIM_START=44, SEMANTIC_PROJECTION_RESERVED_DIMS=[44,45,46,47]). Narrative arc filled by compute_narrative_arc_from_embeddings (L1173). is_reserved_codec_dim (L1328) = 44..48. Newly grounded by added regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "TAIL_VIBRANCY_ENTROPY_GATE (L48) modulates feature dims when spectral entropy exceeds 0.85.",
+      "disposition": "Verified constant: L48 `TAIL_VIBRANCY_ENTROPY_GATE: f32 = 0.85`. Doc L33-47: NOT a hard gate; normalized distance above 0.85 passes through a smoothstep (3t^2-2t^3) at the application site apply_spectral_feedback_inner (feedback.rs, outside the report-bound window). Witness records spectral_entropy=0.898 at authorship (gate active). Application-site behavior not re-tested this round (out of bound source).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "ProjectionBasisHealthV1 and ProjectionPrecisionAuditV1 monitor projection health/drift.",
+      "disposition": "Verified. ProjectionBasisHealthV1 struct L196 + fn projection_basis_health_v1 L228 (column norms, dead-dim, correlation, read-only, no basis rotation). ProjectionPrecisionAuditV1 struct L340 + fn projection_precision_audit_v1 L950 (f32-vs-f64 accumulation delta). Both marked observational_only / live_projection_write=false.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: dims 40-47 risk 'ghost'/uninitialized values if embedding_projection_matrix (L172) or project_embedding (L854) don't enforce mapping of the new 16 dims.",
+      "disposition": "Mechanism contradicted, concern preserved. project_embedding (L854) returns Option<[f32; EMBEDDING_PROJECT_DIM]>=8 dims; embedding_projection_matrix (L172) is [[f32;8];768]. Neither maps dims 40-47 at all — they own the 768->8 lane (codec 32-39). The 48-dim assembly (40-47) is not in projection.rs's window. The ghost-value concern is already instrumented read-only: ProjectionPrecisionAuditV1.ghost_vibrancy_conclusion (L990). No live change.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Snag: entropy-gate vibrancy lift may be asymmetric with the clamp-ceiling offset, risking non-deterministic drift.",
+      "disposition": "Mechanism contradicted. The lift is a deterministic smoothstep of a normalized entropy distance (doc L38-47); not stochastic, so 'non-deterministic drift' is not supported. TAIL_VIBRANCY_MAX=6.0 (L53) is the paired raised ceiling that collapses back to FEATURE_ABS_MAX=5.0 (L32) below the gate — a designed pairing. Full application-site (feedback.rs) not re-tested this round (out of bound window).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Proposed test: verify project_embedding (L854) produces exactly 48 dims and indices 40-43 are populated by it.",
+      "disposition": "Premise contradicted; correct-scope regression implemented. project_embedding returns [f32;8] (EMBEDDING_PROJECT_DIM), not 48; its runtime guard is None on wrong-length input; dims 40-43 come from compute_narrative_arc_from_embeddings ([f32;4]). Added tests.rs test project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate grounding 8-dim lane, None guard, ~0.35 scaled norm, separate 4-dim arc, and 40-43 not reserved.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Proposed test: toggle spectral_entropy around 0.85 to confirm the gate triggers vibrancy without a jump in FEATURE_ABS_MAX (L32).",
+      "disposition": "The 'no jump/no pop' property is the designed smoothstep behavior (zero slope at the gate; doc L38-47). FEATURE_ABS_MAX is a fixed const (L32=5.0). The gate application lives in apply_spectral_feedback_inner (feedback.rs), outside the report-bound projection.rs window; a boundary regression there was not authored this round to stay within the bound source. Design intent verified; application-site test noted as scope boundary, not no-action.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Suggested next: analyze project_embedding_dynamic_epoch (L759) for kernel-transition state handling in NARRATIVE_ARC_DIM.",
+      "disposition": "Scope conflation. project_embedding_dynamic_epoch (L759) returns the 8-dim embedding lane + ProjectionMetadata; its only 'state' is a deterministic seed = stable_hash64(epoch_id)^stable_hash64(text).rot13^chunk_index (L784-795). It carries no NARRATIVE_ARC_DIM state. Existing coverage: epoch determinism/one-short-reject tests tests.rs L1284-1490. No live change.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "round": "llm_marker_behaves_delimiter_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787014729",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787014729.txt",
+      "sha256": "b7d168638d017a9089bf7a0348db11309542280a09999070bbccbb000f0b2e93",
+      "bytes": 3853,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_770b39df5777b5fe4a28be86c6ecbceec8b117a45c7d19eb4c182b2fd352bab7",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_770b39df5777b5fe4a28be86c6ecbceec8b117a45c7d19eb4c182b2fd352bab7.json",
+      "sha256": "5649ad44c79a8d44d43002252326e9873c13944f7097a5396f7335133b935f55",
+      "bytes": 23916,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_binding_matches_report": true,
+      "authority_state": "evidence_only",
+      "live_eligible_now": false
+    }
+  ],
+  "witness_binding_check": {
+    "report_sha256": "b7d168638d017a9089bf7a0348db11309542280a09999070bbccbb000f0b2e93",
+    "witness_artifact_sha256": "b7d168638d017a9089bf7a0348db11309542280a09999070bbccbb000f0b2e93",
+    "match": true
+  }
+}

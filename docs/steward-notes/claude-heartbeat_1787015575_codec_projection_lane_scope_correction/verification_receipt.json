@@ -1,0 +1,97 @@
+{
+  "round": "claude-heartbeat_1787015575_codec_projection_lane_scope_correction",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter",
+  "controller": {
+    "run_id": "run_1787012625460313000_c136b0a925",
+    "preprojection_generation_id": "projection_1787012629294245000_d689667211",
+    "pause_generation": 319,
+    "finish_outcome": "success (exit 0 = complete round; adapter owns finish + postprojection)"
+  },
+  "processed": {
+    "count": 1,
+    "introspection_id": "introspection_astrid_codec_1787006424",
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "report_sha256": "88e4515a40fdd25eb201c56624432da41a6fdb7acb880f4444b7149849edc0f6",
+    "witness_sha256": "bb8f966738aef1b37584a08e38a33472808a4f2337c1619a82ae3df518e6448f",
+    "source_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "source_hash_match": true,
+    "claim_count": 9,
+    "classifications": {
+      "implemented_now": ["c007"],
+      "verified_existing": ["c001", "c002", "c003", "c004", "c005", "c006", "c008", "c009"]
+    },
+    "evidence_links_appended": 17
+  },
+  "implementation": {
+    "changed_paths": ["capsules/spectral-bridge/src/codec/tests.rs"],
+    "test_added": "codec::core::tests::project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate",
+    "test_result": "1 passed / 0 failed / 1887 filtered_out",
+    "live_change": "none — no bridge build/deploy/launchctl/restart; no Tier-5 codec transport/gain/gate-application change attempted or required"
+  },
+  "integrity_suites": {
+    "introspection_addressing_self_test": "44 passed",
+    "test_evidence_event_store": "20 passed",
+    "test_steward_control": "27 passed",
+    "test_steward_projection": "14 passed",
+    "test_division_ceremony_followup": "3 passed",
+    "test_division_ceremony_chronicle": "10 passed",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 passed",
+    "anti_drop_self_test": "5 passed",
+    "anti_drop_verify": "ok (no problems, no test_gap)",
+    "test_introspection_cadence_audit": "6 passed",
+    "introspection_cadence_audit_strict": "integrity_ok true, errors [] (canonical_count 4395)",
+    "experiential_epistemics_self_test": "valid",
+    "experiential_epistemics_verify_final": "valid, issues []"
+  },
+  "final_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4394,
+    "canonical_fully_addressed": 3106,
+    "canonical_full_read": 3738,
+    "canonical_remaining": 1288,
+    "canonical_unread": 656,
+    "canonical_blocked_needs_steward": 414,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 6042,
+    "all_artifacts_remaining": 2936,
+    "other_timestamped_text_indexed": 1370
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "active_store": "v2",
+    "last_global_seq": 833204,
+    "head": "2aadf902af4a555afcde1d01ad3f4bcc0ee55e1a423be939474e877e60a4d179",
+    "corrupt_lines": 0,
+    "sample_stream_counts": {"addressing": 58164, "steward_control": 14401, "felt_contracts": 198389}
+  },
+  "division": {
+    "cycle_sequence": 27,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "round_event_id": "division_followup_event_2cb3c5ab66b22081560a3defbe7a7651",
+    "event_count": 188,
+    "event_head_sha256": "6b03556089effe663d8d12c2292623169ad01f332d80721d7e0f00ac9c23c443",
+    "chronicle_id": "division_chronicle_3b10346ee6176f4b8c6f8369",
+    "chronicle_json_sha256": "497d039e76026b4e0f2024cfbee2000e930a2546c130a4036ac5afdd5fb8415c",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_durable_mismatches": [],
+    "chronicle_volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "review not due; no Division return or note this round. record-round changed a durable Chronicle input, so the gitignored Chronicle was reprojected + verified; only supervisor_status_sha256 is volatile (benign, not a durable-integrity failure)."
+  },
+  "queue": {
+    "selected": 40,
+    "processed": 1,
+    "unprocessed": 39,
+    "head_unprocessed": "introspection_DOMAIN_BOUNDARIES.md_1787003465.txt",
+    "family_scan": "head family (introspection_astrid_codec_1787006424) is a singleton (member_count=1); no family batching applied"
+  },
+  "authority_boundary": "evidence-only. No live substrate/control change, no git stage/commit/merge/push, no build/deploy/launchctl. Tier-5 codec transport/gain/entropy-gate-application untouched."
+}
