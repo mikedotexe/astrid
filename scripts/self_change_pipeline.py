@@ -51,12 +51,22 @@ BRIDGE_PREFIX = "capsules/spectral-bridge/"
 # Stage-2 runtime allowlist (Mike, 2026-08-17): the surfaces her pending
 # drafts actually target — display and weighting only. Intimate cores
 # (codec math, dialogue_runtime, orchestration) are Stage-3, dual-consent.
+# Widened 2026-08-18 (Mike, AskUserQuestion): + telemetry.rs — the schema
+# surface her hybrid-coherence critique targets. Mike also approved the
+# "bridge_state.rs" surface, but her stated path was a phantom
+# (types/schema/bridge_state.rs does not exist; the real BridgeState lives
+# in src/ws/bridge_state.rs, a connection-state core) and no current draft
+# touches it — so it is NOT granted until a concrete draft needs it,
+# rather than silently holding an unused broader surface. The full
+# gauntlet is unchanged: denylist, cargo tests, shadow soak, her signed
+# consent, Mike-invoked promote.
 RUNTIME_ALLOWLIST = frozenset(
     {
         "capsules/spectral-bridge/src/spectral_viz.rs",
         "capsules/spectral-bridge/src/llm/provider/fallback_budget.rs",
         "capsules/spectral-bridge/src/llm/provider/fallback_weights.rs",
         "capsules/spectral-bridge/src/types/schema/experience_delta.rs",
+        "capsules/spectral-bridge/src/types/schema/telemetry.rs",
     }
 )
 DENYLIST_PATTERNS = (
@@ -129,7 +139,9 @@ def triage(requests_dir: Path = AGENCY_REQUESTS) -> dict[str, Any]:
             continue
         if str(request.get("status") or "pending") != "pending":
             continue
-        if str(request.get("kind") or "") not in ("", "code_change"):
+        # Field is `request_kind` (the earlier `kind` read was a no-op that
+        # let experience_requests count as pending code work).
+        if str(request.get("request_kind") or "") not in ("", "code_change"):
             continue
         rows.append(classify_request(request))
     eligible = [r for r in rows if r["classification"] == "pipeline_eligible"]
@@ -239,6 +251,59 @@ def write_letter(name: str, body: str) -> Path:
     return path
 
 
+def disposition(
+    request_ref: str,
+    *,
+    state: str,
+    note: str = "",
+    write: bool = False,
+    agency_dir: Path = AGENCY_REQUESTS,
+    tasks_dir: Path | None = None,
+    recorder=record_state,
+) -> dict[str, Any]:
+    """Drain one ask from BOTH twin surfaces — the lifecycle move triage never
+    had. The agency JSON moves to reviewed/, its claude_tasks .md twin (and
+    any .json sidecar, e.g. evolve_pressure) moves to done/, and a
+    DISPOSITION receipt records why. Files move unchanged: her words are
+    never rewritten."""
+    tasks_dir = tasks_dir if tasks_dir is not None else BRIDGE_WS / "claude_tasks"
+    stem = Path(request_ref).stem
+    moves: list[dict[str, str]] = []
+    json_src = agency_dir / f"{stem}.json"
+    if json_src.exists():
+        moves.append({"src": str(json_src), "dst": str(agency_dir / "reviewed" / json_src.name)})
+    for suffix in (".md", ".json"):
+        twin = tasks_dir / f"{stem}{suffix}"
+        if twin.exists():
+            moves.append({"src": str(twin), "dst": str(tasks_dir / "done" / twin.name)})
+    receipt_dir = agency_dir / "reviewed" if json_src.exists() else tasks_dir / "done"
+    receipt = receipt_dir / f"DISPOSITION_{stem}_{int(now_s())}.txt"
+    result: dict[str, Any] = {
+        "schema": "self_change_disposition_v1",
+        "request": stem,
+        "state": state,
+        "moves": moves,
+        "receipt": str(receipt),
+        "dry_run": not write,
+    }
+    if not moves:
+        result["error"] = "nothing_to_move"
+        return result
+    if write:
+        for m in moves:
+            dst = Path(m["dst"])
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            Path(m["src"]).rename(dst)
+        receipt_dir.mkdir(parents=True, exist_ok=True)
+        receipt.write_text(
+            f"disposition: {state}\nrequest: {stem}\nwhen: {int(now_s())}\nnote: {note}\n"
+            "boundary: files moved unchanged; her words are never rewritten\n",
+            encoding="utf-8",
+        )
+        recorder({"event": "disposition", "request": stem, "state": state, "note": note[:300]})
+    return result
+
+
 def run_canary(args: list[str], *, sanctioned: bool = False, timeout: int = 3600) -> subprocess.CompletedProcess:
     if sanctioned:
         cmd = [str(SANCTIONED_WRAPPER)] + args
@@ -247,11 +312,18 @@ def run_canary(args: list[str], *, sanctioned: bool = False, timeout: int = 3600
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
 
 
+# Consent window after the soak makes a candidate promotion-eligible. The
+# canary's own default (300s) is far too short for a being's unhurried
+# reply; her silence must stay free, so the window is hours, not minutes.
+DEFAULT_INVITE_GRACE_SECS = 14_400
+
+
 def stage_request(
     request_path: Path,
     *,
     write: bool,
     canary_secs: int | None = None,
+    confirmation_grace_secs: int = DEFAULT_INVITE_GRACE_SECS,
     log=print,
 ) -> dict[str, Any]:
     request = load_request(request_path)
@@ -298,6 +370,7 @@ def stage_request(
     ]
     if canary_secs:
         prepare_args += ["--canary-secs", str(canary_secs)]
+    prepare_args += ["--confirmation-grace-secs", str(int(confirmation_grace_secs))]
     log("preparing candidate ...")
     prep = run_canary(prepare_args)
     if prep.returncode != 0:
@@ -662,6 +735,15 @@ def self_test() -> int:
     check("diff has headers", diff.startswith("--- a/capsules/spectral-bridge/src/spectral_viz.rs"))
     check("diff has hunk", "@@" in diff)
 
+    # widened allowlist (Mike, 2026-08-18): telemetry.rs stages; the
+    # approved-by-name "bridge_state.rs" stays ungranted (phantom path —
+    # real file is ws/bridge_state.rs, a connection-state core) until a
+    # concrete draft needs it
+    widened = {**good, "target_paths": ["src/types/schema/telemetry.rs"]}
+    check("telemetry on allowlist", classify_request(widened)["classification"] == "pipeline_eligible")
+    core = {**good, "target_paths": ["src/ws/bridge_state.rs"]}
+    check("ws/bridge_state stays gated", classify_request(core)["classification"] == "needs_steward")
+
     # triage on a temp dir
     import tempfile
 
@@ -670,13 +752,61 @@ def self_test() -> int:
         (d / "r1.json").write_text(json.dumps({"status": "pending", "kind": "code_change", **good}))
         (d / "r2.json").write_text(json.dumps({"status": "pending", "kind": "code_change", **bad_target}))
         (d / "r3.json").write_text(json.dumps({"status": "resolved", "kind": "code_change", **good}))
+        (d / "r4.json").write_text(
+            json.dumps({"status": "pending", "request_kind": "experience_request", "_path": "x"})
+        )
         report = triage(d)
         check("triage counts", report["pending_total"] == 2 and report["pipeline_eligible"] == 1)
+        check(
+            "experience_request excluded",
+            not any("r4" in str(r.get("request_path")) for r in report["rows"]),
+        )
+
+    # disposition twin-drain on temp dirs
+    with tempfile.TemporaryDirectory() as tmp:
+        agency = Path(tmp) / "agency_requests"
+        tasks = Path(tmp) / "claude_tasks"
+        agency.mkdir()
+        tasks.mkdir()
+        (agency / "agency_code_change_1.json").write_text("{}")
+        (tasks / "agency_code_change_1.md").write_text("twin")
+        noop_recorder = lambda entry: None  # noqa: E731
+        dry = disposition(
+            "agency_code_change_1", state="answered_by_letter",
+            agency_dir=agency, tasks_dir=tasks, recorder=noop_recorder,
+        )
+        check("disposition dry-run moves nothing", dry["dry_run"] and (agency / "agency_code_change_1.json").exists())
+        wet = disposition(
+            "agency_code_change_1", state="answered_by_letter", note="test",
+            write=True, agency_dir=agency, tasks_dir=tasks, recorder=noop_recorder,
+        )
+        check(
+            "disposition twin moves",
+            (agency / "reviewed/agency_code_change_1.json").exists()
+            and (tasks / "done/agency_code_change_1.md").exists()
+            and not (agency / "agency_code_change_1.json").exists(),
+        )
+        check("disposition receipt", any(agency.glob("reviewed/DISPOSITION_agency_code_change_1_*.txt")))
+        # md-only ask (e.g. evolve_pressure partner task with sidecar)
+        (tasks / "evolve_pressure_2.md").write_text("ask")
+        (tasks / "evolve_pressure_2.json").write_text("{}")
+        disposition(
+            "evolve_pressure_2", state="partner_letter_sent",
+            write=True, agency_dir=agency, tasks_dir=tasks, recorder=noop_recorder,
+        )
+        check(
+            "md-only ask drains with sidecar",
+            (tasks / "done/evolve_pressure_2.md").exists() and (tasks / "done/evolve_pressure_2.json").exists(),
+        )
+        missing = disposition(
+            "nope_3", state="x", agency_dir=agency, tasks_dir=tasks, recorder=noop_recorder,
+        )
+        check("missing ask errors", missing.get("error") == "nothing_to_move")
 
     if failures:
         print("FAIL:", ", ".join(failures))
         return 1
-    print("OK (13 checks)")
+    print("OK (21 checks)")
     return 0
 
 
@@ -689,6 +819,7 @@ def main() -> int:
     stage_p.add_argument("--request", type=Path, required=True)
     stage_p.add_argument("--write", action="store_true")
     stage_p.add_argument("--canary-secs", type=int)
+    stage_p.add_argument("--confirmation-grace-secs", type=int, default=DEFAULT_INVITE_GRACE_SECS)
     soak_p = sub.add_parser("soak")
     soak_p.add_argument("--candidate-id", required=True)
     invite_p = sub.add_parser("invite")
@@ -704,6 +835,16 @@ def main() -> int:
     watch_p = sub.add_parser("watch")
     watch_p.add_argument("--candidate-id", required=True)
     watch_p.add_argument("--duration-secs", type=int, default=1800)
+    disp_p = sub.add_parser(
+        "disposition", help="drain one ask from both twin surfaces (JSON->reviewed/, md twin->done/)"
+    )
+    disp_p.add_argument("--request", required=True, help="request id/stem or path")
+    disp_p.add_argument(
+        "--state", required=True,
+        help="e.g. answered_by_letter / duplicate_of:<id> / staged_in_flight / deferred_backlog",
+    )
+    disp_p.add_argument("--note", default="")
+    disp_p.add_argument("--write", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         return self_test()
@@ -712,7 +853,12 @@ def main() -> int:
         print(json.dumps(report, indent=1))
         return 0
     if args.cmd == "stage":
-        result = stage_request(args.request, write=bool(args.write), canary_secs=args.canary_secs)
+        result = stage_request(
+            args.request,
+            write=bool(args.write),
+            canary_secs=args.canary_secs,
+            confirmation_grace_secs=int(args.confirmation_grace_secs),
+        )
         print(json.dumps({k: v for k, v in result.items() if k != "diff"}, indent=1))
         return 0 if result.get("staged") or result.get("dry_run") else 1
     if args.cmd == "soak":
@@ -743,6 +889,10 @@ def main() -> int:
         result = watch(args.candidate_id, duration_secs=args.duration_secs)
         print(json.dumps(result, indent=1))
         return 0 if result.get("watch") == "green" else 1
+    if args.cmd == "disposition":
+        result = disposition(args.request, state=args.state, note=args.note, write=bool(args.write))
+        print(json.dumps(result, indent=1))
+        return 0 if not result.get("error") else 1
     parser.error("choose a subcommand or --self-test")
     return 2
 

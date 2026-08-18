@@ -176,6 +176,26 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "python3 scripts/self_change_pipeline.py --self-test"},
     },
     {
+        "id": "standing_blind_spot_scan_runner",
+        "shipped": "2026-08-18",
+        "surface": "ALL being-feedback surfaces + blind-spot probes (the standing steward consumer)",
+        "failure_mode": "when steward_loop_run.sh was retired into a stub, no scheduler was pointed at steward duties and every surface rotted 25-46 days (27 unread roadmap reports, 30 agency asks, 5 review invitations); proactive_scan_runner.sh (launchd com.astrid.proactive-scan, 6h) is the deterministic replacement — scan → durable report → steward_alerts.log + notification + SessionStart surfacing; if IT rots, staleness goes silent again one level up",
+        "guard": {"repo": "astrid", "file": "scripts/proactive_scan_runner.sh", "symbol": "summarize_warnings"},
+        "test": {"repo": "astrid", "kind": "shell", "file": "scripts/proactive_scan_runner.sh",
+                 "name": "--self-test",
+                 "run": "bash scripts/proactive_scan_runner.sh --self-test"},
+    },
+    {
+        "id": "agency_requests_twin_drain",
+        "shipped": "2026-08-18",
+        "surface": "agency_requests JSON + claude_tasks .md twins (double-registered feedback surfaces)",
+        "failure_mode": "every EVOLVE ask lands on BOTH surfaces but no code path ever moved the claude_tasks twin to done/ (and triage performed no lifecycle move at all), so even fully-handled asks re-surfaced as pending forever; the disposition subcommand drains both twins in lockstep with a receipt; if it rots the surfaces re-diverge and double-count",
+        "guard": {"repo": "astrid", "file": "scripts/self_change_pipeline.py", "symbol": "def disposition"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/self_change_pipeline.py",
+                 "name": "self_test",
+                 "run": "python3 scripts/self_change_pipeline.py --self-test"},
+    },
+    {
         "id": "inbox_retirement_race",
         "shipped": "2026-06-12",
         "surface": "Astrid inbox — a steward letter written mid-exchange",
@@ -667,6 +687,10 @@ def _test_present(repo: str, kind: str, rel: str, name: str) -> bool:
         return False
     if kind == "rust":
         pattern = r"fn\s+" + re.escape(name) + r"\b"
+    elif kind == "shell":
+        # shell "tests" are flag-dispatched paths (e.g. --self-test); the
+        # literal flag string in the script is the presence contract
+        pattern = re.escape(name)
     else:  # python
         pattern = r"(?:class|def)\s+" + re.escape(name) + r"\b"
     return re.search(pattern, text) is not None
@@ -745,7 +769,7 @@ class CatalogTests(unittest.TestCase):
             self.assertEqual(("test" in e) + ("test_gap" in e), 1, e["id"])
             self.assertIn(e["guard"]["repo"], REPO_ROOTS, e["id"])
             if "test" in e:
-                self.assertIn(e["test"]["kind"], ("rust", "python"), e["id"])
+                self.assertIn(e["test"]["kind"], ("rust", "python", "shell"), e["id"])
                 self.assertIn(e["test"]["repo"], REPO_ROOTS, e["id"])
 
     def test_rust_pattern_matches_present_not_absent(self):

@@ -127,7 +127,7 @@ FEEDBACK_SURFACES = [
         "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/agency_requests",
         "glob": "*.json",
         "kind": "request",
-        "consumer": "self_change_pipeline.py triage (Stage-2 eligible → stage/soak/invite) + steward triage → reviewed/",
+        "consumer": "self_change_pipeline.py triage (Stage-2 eligible → stage/soak/invite) + disposition → reviewed/ (+ claude_tasks twin → done/)",
     },
     {
         "name": "astrid_corridor_bridge_requests",
@@ -135,7 +135,7 @@ FEEDBACK_SURFACES = [
         / "capsules/spectral-bridge/workspace/diagnostics/agency_corridor_v2/bridge_requests",
         "glob": "*.json",
         "kind": "request",
-        "consumer": "steward review (write-only corridor verb surface found unregistered 2026-08-17)",
+        "consumer": "steward answers → answered/ (letter quoting her bounded_summary; first drain 2026-08-18)",
     },
     {
         "name": "astrid_claude_tasks",

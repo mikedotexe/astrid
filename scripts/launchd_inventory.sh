@@ -38,6 +38,7 @@ prod_plists=(
     "$ASTRID_DIR/launchd/com.astrid.spectral-bridge.plist"
     "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist"
     "$ASTRID_DIR/launchd/com.astrid.calm-startup-greeting.plist"
+    "$ASTRID_DIR/launchd/com.astrid.proactive-scan.plist"
 )
 
 persistent_labels=(
@@ -57,6 +58,11 @@ persistent_labels=(
     com.astrid.daemon
     com.astrid.spectral-bridge
     com.astrid.perception-host-ascii
+)
+
+# Interval jobs: loaded is the healthy state; idle between fires is normal.
+interval_labels=(
+    com.astrid.proactive-scan
 )
 
 legacy_labels=(
@@ -156,6 +162,15 @@ for label in "${persistent_labels[@]}"; do
         else
             fail "$label loaded but state=${state:-unknown}"
         fi
+    else
+        fail "$label not loaded"
+    fi
+done
+
+for label in "${interval_labels[@]}"; do
+    if label_loaded "$label"; then
+        state="$(label_state "$label")"
+        ok "$label loaded (interval job; state=${state:-idle} is normal between fires)"
     else
         fail "$label not loaded"
     fi
