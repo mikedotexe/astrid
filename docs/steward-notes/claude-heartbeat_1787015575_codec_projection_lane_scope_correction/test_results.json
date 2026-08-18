@@ -1,0 +1,28 @@
+{
+  "round": "claude-heartbeat_1787015575_codec_projection_lane_scope_correction",
+  "runner": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+  "cargo_path": "/Users/v/.cargo/bin/cargo",
+  "tests": [
+    {
+      "filter": "project_embedding_is_the_eight_dim_lane",
+      "matched": 1,
+      "full_test_name": "codec::core::tests::project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1887,
+      "compile": "Finished test profile in 2m 36s (full spectral-bridge crate compiled clean)"
+    }
+  ],
+  "formatting": {
+    "cargo_fmt_check": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+    "my_file_flagged": false,
+    "preexisting_unrelated_failures": [
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs:259 (committed on branch, clean in working tree, not touched this round)",
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs:295 (committed on branch, clean in working tree, not touched this round)"
+    ],
+    "note": "cargo fmt --check (project-config-authoritative) flags only grounding.rs, a file this round did not touch and which is not in the working-tree dirty set. codec/tests.rs (this round's edit) is not flagged. A standalone rustfmt run without project config produced a false positive on unrelated pre-existing lines and was disregarded.",
+    "git_diff_check_my_file": "clean"
+  }
+}

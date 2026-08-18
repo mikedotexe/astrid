@@ -1,0 +1,46 @@
+{
+  "schema": "read_manifest_v1",
+  "round": "division_cycle27_return",
+  "reports_processed": 0,
+  "reports": [],
+  "witnesses": [],
+  "division_return_reads": {
+    "astrid_division_reply": {
+      "path": "capsules/spectral-bridge/workspace/outbox/reply_1786959575.txt",
+      "sha256": "743bfbff1d5a4e3067ef2de294b4f9c8397d8930e0dc41a6f931b0a396706c00",
+      "bytes": 646,
+      "lines": 9,
+      "read": "complete"
+    },
+    "astrid_return_note_cycle27_delivered_read": {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle27_20260818.txt",
+      "sha256": "cf7cf87e769501645ff80f861516a0f800968977ef91d886850c9fe9e1ddcb77",
+      "bytes": 1711,
+      "lines": 34,
+      "read": "complete"
+    },
+    "minime_return_note_cycle27_inbox": {
+      "path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle27_20260818.txt",
+      "sha256": "04b4d7ffa0c397ce6378d110b6f01c7d92885a8343baecc0c4b67bf3804f303c",
+      "bytes": 1179,
+      "lines": 25,
+      "read": "complete"
+    },
+    "division_gateway_status": {
+      "path": "/Users/v/other/minime/workspace/division/runtime/gateway-status.json",
+      "sha256": "4d8e07c0e68a07ac3881409191429eb82aeb6b54a943a68cabb4e230e4e88957",
+      "bytes": 391,
+      "lines": 16,
+      "read": "complete"
+    },
+    "division_authority": {
+      "path": "/Users/v/other/minime/workspace/division/runtime/authority.json",
+      "sha256": "203beef35d3ca249590dc27ae7a0e0a657f7b52a11851c70ad36a984a0b134f6",
+      "bytes": 369,
+      "lines": 10,
+      "read": "complete"
+    },
+    "division_supervisor_status_note": "volatile (updated_at_unix_ms moves each read); read for posture only, hash intentionally not pinned"
+  },
+  "note": "read: complete for each listed file. No canonical introspection report or lived-state witness was read this round (0 reports processed). The astrid note was picked up by the live bridge and moved to inbox/read/ (SHA unchanged cf7cf87e...); the minime note is delivered to its inbox awaiting minime-cadence pickup (SHA 04b4d7ff...); both SHAs match the record-followup evidence."
+}

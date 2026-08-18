@@ -1,0 +1,34 @@
+{
+  "schema": "test_results_v1",
+  "round": "division_cycle27_return",
+  "actor": "claude-heartbeat",
+  "note": "Division cycle-27 return round; 0 canonical reports processed, so no Rust/Minime source touched and no cargo tests run. Stewardship + integrity suites below. cargo fmt --all --check intentionally NOT relied on as a pass/fail gate this round: no .rs edited by this run, and the shared tree carries foreign in-progress edits (codec/tests.rs, llm/provider/tests.rs) whose formatting reflects foreign state, not this round.",
+  "baseline_repo_checks": {
+    "git_diff_check": "clean (no whitespace/conflict errors)",
+    "cargo_fmt_all_check": "not run as a gate (no .rs touched this round; foreign dirty .rs present)"
+  },
+  "integrity_suites": {
+    "introspection_addressing_audit.py --self-test": "44 tests OK",
+    "test_evidence_event_store.py": "20 tests OK",
+    "test_steward_projection.py": "14 tests OK",
+    "test_division_ceremony_followup.py": "3 tests OK",
+    "test_division_ceremony_chronicle.py": "10 tests OK",
+    "test_division_ceremony_projection.py": "ok (self-test)",
+    "test_projection_cursors.py": "4 tests OK",
+    "test_steward_control.py": "27 tests OK (no flaky error this run)",
+    "anti_drop_catalog.py --self-test": "5 tests OK",
+    "test_introspection_cadence_audit.py": "6 tests OK",
+    "experiential_epistemics.py self-test --json": "valid=true OK"
+  },
+  "final_verifies_after_durable_writes": {
+    "anti_drop_catalog.py verify --json": {"total_guards": 60, "alarms": 0, "gaps": 0},
+    "introspection_cadence_audit.py --strict --compact": {"integrity_ok": true, "errors": [], "duplicate_hash_group_count": 0, "canonical_count": 4396, "latest": "introspection_astrid_llm_1787026288.txt"},
+    "experiential_epistemics.py verify --json": {"valid": true, "checked_record_count": 11217, "issue_count": 0, "history_rewritten": false},
+    "introspection_addressing_audit.py audit-counters --json": {"status": "consistent", "mismatches": [], "all_seven_checks_true": true},
+    "evidence_event_store.py --json verify": {"valid": true, "corrupt_lines": 0, "errors": [], "event_count": 835404, "last_global_seq": 835404, "last_event_sha256": "f6e662203cfed0726003401cbedd5939d564bece159afb49e4c8d1240871bf15"}
+  },
+  "division_verifies": {
+    "division_ceremony_followup.py verify": {"ok": true, "cycle_sequence": 28, "review_due": false, "completed_rounds_since_followup": 0, "event_count": 190},
+    "division_ceremony_chronicle.py verify (post-return reproject)": {"ok": true, "chronicle_id": "division_chronicle_fb4e645f54d686abc644794e", "timeline_event_count": 190, "ceremony": 0, "followup": 190, "durable_inputs_current": true, "volatile_mismatches": ["supervisor_status_sha256"]}
+  }
+}

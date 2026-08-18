@@ -1,0 +1,46 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "working_copy_matches_report_binding": true,
+      "read_scope": {
+        "intervals_fully_read_this_round": ["1-260", "519-718"],
+        "claim_regions_covered": {
+          "c001": "L49-60 reference_syntax, L114-143 scan_known_model_control_markers",
+          "c002": "L89-96 first_word_after",
+          "c003": "L64-86 followed_by_explicit_exact_token_relation",
+          "c004": "L153-197 exact_reference_delimiter_pair, L199-229 exact_reference_delimiter_syntax, L35-46 context enum",
+          "c005": "L519-521 sanitize wrapper, L556-686 validation gate (is_valid_dialogue_output, has_one_nonempty_final_next_action, is_valid_primary_dialogue_output_for_profile), L695-711 generate_dialogue signature"
+        },
+        "full_file_grep_for_absence_claim": {
+          "purpose": "c005: prove sanitize is NOT invoked inside generate_dialogue body (L695-1048)",
+          "sanitize_model_control_markers_call_sites": ["L520 (def body)", "L558 is_valid_dialogue_output", "L634 has_one_nonempty_final_next_action"],
+          "sanitize_model_control_markers_with_report_def": "L352 (called by wrapper L355 and public callers)",
+          "scan_known_model_control_markers_def": "L114, used at L147 fragment_has_non_marker_bytes",
+          "conclusion": "no sanitize/scan call site inside L719-1048; sanitization reaches generate_dialogue only via the boolean validation gate is_valid_primary_dialogue_output_for_profile (L683)"
+        },
+        "intervals_not_re_read_this_round": ["261-518", "719-1048"],
+        "continuity_note": "Uncited intervals 261-518 and 719-1048 were fully read at this identical source SHA 902a0358 in the precedent packet claude-heartbeat_1786986391; absence-of-sanitize-call in 719-1048 independently re-verified by full-file grep this round."
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256_scope": "read L155-199 (KNOWN_MODEL_CONTROL_MARKERS definition + trailing sanitizer)",
+      "read_scope": "L159-180 marker list inspected to ground c003/c004 placeholder-vs-real-marker contradiction",
+      "finding": "KNOWN_MODEL_CONTROL_MARKERS = <end_of_turn>,<start_of_turn>,<|endoftext|>,<|im_end|>,<|im_start|>,<|eot_id|>,<turn|>,<channel|>,<eos>,<bos>,<pad>,<unk>,[/INST],[INST] and thought/analysis/final <channel|> variants; report placeholders [SYSTEM_PROMPT]/[TOKEN] are not present"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "f5b6788d9a6662cc1e35c6fc36548e950d52a9bb03085c5ee32efcc7ee34e161",
+      "total_lines": 3762,
+      "total_bytes": 157291,
+      "read_scope": "read L2176-2265 (delimiter depth tests) and L2892-2966 (explicit-relation + double-square + punctuation-boundary tests) fully; enumerated relevant test fn names across the file",
+      "foreign_edits_present": "git shows +60 insertions (foreign, from prior rounds); read-only this round, not modified"
+    }
+  ]
+}

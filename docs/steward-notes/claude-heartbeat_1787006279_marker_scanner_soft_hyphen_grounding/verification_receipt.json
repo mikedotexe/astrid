@@ -1,0 +1,29 @@
+{
+  "round_outcome": "incomplete_budget_stopped_before_evidence_store_mutation",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_controller_held_lease",
+  "run_id": "run_1787002099335054000_2757fa46a6",
+  "preprojection_generation_id": "projection_1787002109931393000_028484ce97",
+  "processed_report": "introspection_astrid_llm_1786999457",
+  "report_status_intended": "addressed_change",
+  "report_status_recorded": "NOT_RECORDED",
+  "completed": {
+    "reads": "report (8a18d5e0..., 45 lines) + witness (802a3e3d..., 533 lines) + report-bound source dialogue_runtime.rs (902a0358..., matches binding) fully read; existing marker test coverage located and confirmed",
+    "implementation": "added focused regression scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen to capsules/spectral-bridge/src/llm/provider/tests.rs (post-edit SHA f5b6788d..., +60 lines)",
+    "tests": "grounds_first_word_after 3 passed (incl. new); control_marker 68 passed (+1); scan_known_model_control_markers 5 passed; cargo fmt --check exit 0; git diff --check clean",
+    "packet": "claims/, summaries/, read_manifest.json, source_receipts.json, addressing_links.json, test_results.json, unprocessed_selected.json written",
+    "changelog": "[Unreleased] entry added",
+    "ledger": "AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md row added"
+  },
+  "not_completed": {
+    "addressing_record_read": "NOT RUN — deliberately not started",
+    "addressing_link_evidence_batch": "NOT RUN",
+    "addressing_close": "NOT RUN — report remains unread/unclosed in the addressing store",
+    "integrity_suites": "NOT RUN (addressing self-test, evidence store, control, projection, division, chronicle, cursor, cadence, anti-drop verify, epistemic verify, audit-counters, evidence_event_store verify)",
+    "division_record_round": "NOT RUN — this is NOT a productive round"
+  },
+  "reason": "Child-time budget (~90 min FLYWHEEL_LOOP_MAX_SECS) was ~84 min elapsed at the durable-write phase; ~6 min remained. The evidence-store mutation sequence plus integrity suites plus record-round cannot fit, and the handoff warns each addressing mutation may take 20+ min at current store size. Starting record-read/link/close under this pressure risks a SIGINT mid-append to the append-only hash-chained evidence store, which would leave a corrupt line. Chose to stop before mutating the store, per the ONE-SHOT rule: one report fully closed beats three half-processed; never exit 0 on an incomplete round; leave no half-written evidence.",
+  "evidence_store_touched": false,
+  "tree_state": "clean apart from this round's additive edits + pre-existing foreign scripts/self_change_canary.py (Astrid) and minime_autonomy/runtime.py + tests/test_correspondence_v1.py (Minime); all foreign paths untouched",
+  "exit_code_intended": "nonzero (failed round)"
+}

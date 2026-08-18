@@ -3022,6 +3022,66 @@ mod tests {
         );
     }
 
+    /// Grounds the "Likely Snags" example in introspection_astrid_llm_1786999457
+    /// at the exact function it named. The report hypothesized that a marker
+    /// "followed by ... a soft hyphen" could make the `trim_matches` logic (L92)
+    /// "fail to isolate the intended verb", returning `None` and stripping the
+    /// marker. Complete source at SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee shows the
+    /// "followed by" position does not fail: a soft hyphen (U+00AD, NOT a
+    /// White_Space char) between the marker and its verb sits on the leading edge
+    /// of the first `split_whitespace` chunk, so the non-alphanumeric edge trim
+    /// strips it and the allowlisted verb is still found (parallel to the existing
+    /// U+FEFF branch). The genuine `trim_matches` limitation is edge-only: a soft
+    /// hyphen *inside* the verb word is not on a trim edge, so the verb is not
+    /// isolated, `reference_syntax` is `None`, and the marker is stripped. That is
+    /// the fail-closed (safe) direction, not a leak. This pins both boundaries and
+    /// corrects the report's "non-standard whitespace" framing without widening
+    /// grammar or domesticating the underlying concern.
+    #[test]
+    fn scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen() {
+        // Soft hyphen U+00AD between marker and verb: NOT White_Space, but the
+        // leading-edge non-alphanumeric trim strips it, so the verb is found and
+        // the marker is preserved (the hypothesized skip does not occur).
+        let leading_shy = "<end_of_turn>\u{ad}denotes the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(leading_shy, "<end_of_turn>".len()),
+            "denotes",
+            "a leading soft hyphen is trimmed, so the verb is still found"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(leading_shy);
+        assert_eq!(
+            remainder, leading_shy,
+            "a soft hyphen before the relation verb preserves the marker"
+        );
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("explicit relation survives a leading soft hyphen")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+
+        // Soft hyphen U+00AD *inside* the verb word: the edge-only trim cannot
+        // reach it, so `deno\u{ad}tes` never matches the exact `denotes` allowlist
+        // entry. The marker fails closed (is stripped) rather than leaking.
+        let internal_shy = "<end_of_turn> deno\u{ad}tes the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(internal_shy, "<end_of_turn>".len()),
+            "deno\u{ad}tes",
+            "an internal soft hyphen is not on a trim edge, so the verb is not isolated"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(internal_shy);
+        assert_eq!(
+            remainder, " deno\u{ad}tes the boundary I am naming.",
+            "an internal format char defeats the exact verb match, so the marker fails closed"
+        );
+        assert!(
+            matches[0].reference_syntax.is_none(),
+            "an internal soft hyphen blocks the exact allowlist match, so no explicit relation is recorded"
+        );
+    }
+
     #[test]
     fn control_marker_cleanup_handles_colon_relation_without_broadening_allowlist() {
         let preserved = "<end_of_turn>: behaves.";

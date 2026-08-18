@@ -1,0 +1,70 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "round": "llm_marker_behaves_delimiter_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "code_changed": false,
+  "cargo_run": "none — nothing implemented; shared bridge tree carries foreign in-progress .rs edits, verification by exact source+test reading at source SHA 902a0358",
+  "integrity_suites": {
+    "addressing_self_test": {"tests": 44, "status": "OK"},
+    "anti_drop_self_test": {"tests": 5, "status": "OK"},
+    "anti_drop_verify": {"guards": 60, "alarms": 0, "status": "OK"},
+    "cadence_test": {"tests": 6, "status": "OK"},
+    "cadence_strict_compact": {"integrity_ok": true, "canonical_count": 4395, "latest": "introspection_astrid_llm_1787014729.txt", "duplicate_hashes": 0, "read_errors": 0},
+    "evidence_event_store_test": {"tests": 20, "status": "OK"},
+    "steward_projection_test": {"tests": 14, "status": "OK"},
+    "steward_control_test": {"tests": 27, "status": "OK", "note": "no flake this run (historically test_pause_cooperatively_interrupts_wrapped_subprocess can flake inside a live lease)"},
+    "division_followup_test": {"tests": 3, "status": "OK"},
+    "division_chronicle_test": {"tests": 10, "status": "OK"},
+    "division_projection_test": {"status": "ok"},
+    "projection_cursors_test": {"tests": 4, "status": "OK"},
+    "experiential_epistemics_self_test": {"valid": true, "tests": 2},
+    "experiential_epistemics_final_verify": {"valid": true, "issues": []}
+  },
+  "addressing_writes": {
+    "record_read": {"event_type": "full_read", "write": true},
+    "link_evidence_batch": {"new_link_count": 12, "existing_link_count": 0, "write": true},
+    "close": {"status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []}
+  },
+  "audit_counters": {
+    "mismatches": [],
+    "consistent": true,
+    "checks": {"canonical_addressed_plus_remaining_matches_indexed": true, "canonical_full_read_not_above_indexed": true, "canonical_indexed_matches_summary": true},
+    "canonical": {"indexed": 4377, "fully_addressed": 3099, "full_read": 3731, "remaining": 1278, "unread": 646, "blocked_needs_steward": 414, "triaged_pending_action": 214, "triaged_watch": 4, "read_needs_claims": 0},
+    "status_counts": {"addressed_change": 1893, "addressed_duplicate": 1113, "addressed_no_action": 93, "blocked_needs_steward": 414, "triaged_pending_action": 214, "triaged_watch": 4, "unread": 646},
+    "noncanonical_pending": 1644
+  },
+  "division": {
+    "record_round": {"cycle_sequence": 27, "completed_rounds_since_followup": 6, "rounds_remaining_before_followup": 0, "review_due": true, "last_round_event_id": "division_followup_event_bbb100b8f76fb46c8df46e11e371e41e", "event_count": 189, "event_head_sha256": "efc296b1e24660d15eb36ac8510484ea2826106b3e422848afc3009c0c23d8e7"},
+    "chronicle": {"reprojected": true, "chronicle_id": "division_chronicle_d246026c594a476821910ca9", "json_sha256": "0f0cbd42ab35513e32d2f5e559b361e6212101c528b49a3dd8edf68d0aa05626", "verify_ok": true}
+  },
+  "EES_VERIFY": {"valid": true, "corrupt_lines": 0, "active_store": "v2", "v1_immutable": true},
+  "EES_STATUS": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "event_count": 834385,
+    "last_global_seq": 834385,
+    "head_last_event_sha256": "5cf5f80ecbcbaa37c3523163b76362f4fbdbb5edc8804b168f42910f145b0409",
+    "active_store": "v2",
+    "legacy_imported_global_seq_v1_boundary": 32278,
+    "history_rewritten": false,
+    "effective_aggregate_valid": true,
+    "stream_counts": {
+      "addressing": 58183,
+      "agency_commons": 4918,
+      "attention_portfolio": 3,
+      "claim_families": 237294,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 198479,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 8585,
+      "model_qos": 183002,
+      "reciprocal_uptake": 58206,
+      "representation_contracts": 34281,
+      "sandbox": 3291,
+      "signal_spine": 32990,
+      "steward_control": 14466,
+      "steward_work_selection": 490
+    }
+  }
+}

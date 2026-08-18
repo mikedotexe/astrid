@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144: preserve-only-if-reference_syntax.is_some() (L129-131), byte-exact copy of all other bytes (L133-140)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "68 control_marker tests pass, incl. scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace (L91) + edge-only trim_matches (L92); reference_syntax None path strips marker at L129."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New: scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen (L3042) — between-token soft hyphen preserved; internal soft hyphen fails closed (stripped)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing twin-report grounding: scan_known_model_control_markers_grounds_first_word_after_non_breaking_space (L2989) covers the between-token U+00A0 / U+FEFF cases."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the internal-soft-hyphen regression and the corrected framing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row tracing this report's snag to the added regression and verified-existing coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L153-197 (corner-bracket QuotedExactKnownToken pair at L168) consumed by exact_reference_delimiter_syntax L199."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (L2301) asserts corner-bracket-wrapped marker -> quoted_reference_occurrences==1."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation allowlist L64-86; None path not pushed to remainder at L129."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528) + ..._to_implies (L2642) + ..._to_contains (L2657)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1786999457",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue at L695; sanitizer integrates via sanitize_model_control_markers L519 called at L558 and L634. Evidence-only pointer, no action."
+    }
+  ]
+}
