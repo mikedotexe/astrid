@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.astrid.proactive-scan</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/v/other/astrid/scripts/proactive_scan_runner.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/v/other/astrid</string>
+    <key>StartInterval</key>
+    <integer>21600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/v/other/astrid/capsules/spectral-bridge/workspace/logs/proactive_scan/runner.launchd.out</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/v/other/astrid/capsules/spectral-bridge/workspace/logs/proactive_scan/runner.launchd.err</string>
+</dict>
+</plist>
