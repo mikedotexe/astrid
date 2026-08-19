@@ -155,6 +155,117 @@ def triage(requests_dir: Path = AGENCY_REQUESTS) -> dict[str, Any]:
     }
 
 
+def _normalize_request_ref(value: str) -> str:
+    """events.jsonl `request` is polymorphic: disposition events carry a bare
+    id, staged events carry an absolute codraft path. Normalize both."""
+    stem = Path(str(value or "")).stem
+    return stem.removeprefix("codraft_")
+
+
+def pipeline_status(
+    state_dir: Path = STATE_DIR,
+    candidate_root: Path = CANDIDATE_ROOT,
+) -> dict[str, Any]:
+    """Read-only join of codrafts × events × candidate states — the standing
+    answer to 'is anything open that triage cannot see?' (triage only scans
+    agency_requests/, so a pending codraft with a rolled-back candidate was
+    invisible until this existed, 2026-08-19). Never writes."""
+    events: list[dict[str, Any]] = []
+    events_path = state_dir / "events.jsonl"
+    if events_path.is_file():
+        for line in events_path.read_text(encoding="utf-8").splitlines():
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+
+    def candidate_record(cid: str) -> dict[str, Any] | None:
+        path = candidate_root / "astrid" / cid / "canary_state.json"
+        try:
+            envelope = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        return envelope.get("record") if isinstance(envelope.get("record"), dict) else envelope
+
+    rows: list[dict[str, Any]] = []
+    joined_cids: set[str] = set()
+    for codraft_path in sorted(state_dir.glob("codraft_*.json")):
+        try:
+            codraft = json.loads(codraft_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            rows.append({"codraft": codraft_path.name, "error": "unreadable"})
+            continue
+        rid = str(
+            (codraft.get("provenance") or {}).get("source_request")
+            or _normalize_request_ref(codraft_path.name)
+        )
+        mine = [e for e in events if _normalize_request_ref(e.get("request", "")) == rid
+                or e.get("request_id") == rid]
+        cids = {str(e["candidate"]) for e in mine if e.get("candidate")}
+        # soak/invite events carry candidate only — pull them in by cid
+        for e in events:
+            if str(e.get("candidate")) in cids and e not in mine:
+                mine.append(e)
+        joined_cids |= cids
+        newest_candidate = None
+        for cid in cids:
+            rec = candidate_record(cid)
+            if rec and (
+                newest_candidate is None
+                or rec.get("updated_at_unix_ms", 0) > newest_candidate.get("updated_at_unix_ms", 0)
+            ):
+                newest_candidate = {"candidate_id": cid, **{
+                    k: rec.get(k) for k in (
+                        "status", "machine_status", "felt_status", "rollback_reason",
+                        "silence_result", "production_effect",
+                        "expires_at_unix_ms", "updated_at_unix_ms",
+                    )
+                }}
+        last_event = max(mine, key=lambda e: e.get("ts", 0)) if mine else None
+        cand_status = (newest_candidate or {}).get("status")
+        if str(codraft.get("status")) != "pending":
+            derived = "closed"
+        elif cand_status == "rolled_back":
+            derived = "open_awaiting_her_signal"
+        elif cand_status == "active":
+            derived = "in_flight"
+        elif cand_status is None and not mine:
+            derived = "open_unsurfaced"
+        else:
+            derived = "open"
+        rows.append({
+            "request_id": rid,
+            "codraft": codraft_path.name,
+            "codraft_status": codraft.get("status"),
+            "title": codraft.get("title"),
+            "target_paths": codraft.get("target_paths"),
+            "last_event": {k: last_event.get(k) for k in ("event", "state", "ts", "note")}
+            if last_event else None,
+            "candidate": newest_candidate,
+            "derived": derived,
+        })
+
+    orphans: list[dict[str, Any]] = []
+    astrid_candidates = candidate_root / "astrid"
+    if astrid_candidates.is_dir():
+        for entry in sorted(astrid_candidates.iterdir()):
+            if entry.is_dir() and entry.name not in joined_cids:
+                rec = candidate_record(entry.name) or {}
+                orphans.append({
+                    "candidate_id": entry.name,
+                    "status": rec.get("status"),
+                    "note": "no staged event links this candidate to any codraft",
+                })
+
+    return {
+        "schema": "self_change_pipeline_status_v1",
+        "open": [r for r in rows if str(r.get("derived", "")).startswith(("open", "in_flight"))],
+        "rows": rows,
+        "orphan_candidates": orphans,
+        "authority_boundary": AUTHORITY_BOUNDARY,
+    }
+
+
 HUNK_LINE = re.compile(r"^@@ .*@@")
 
 
@@ -393,7 +504,15 @@ def stage_request(
         )
         record_state({"event": "test_failed", "candidate": candidate_id, "letter": str(letter)})
         return {"staged": False, "candidate_id": candidate_id, "test_error": (test.stderr or test.stdout)[-800:]}
-    record_state({"event": "staged", "request": str(request_path), "candidate": candidate_id, "patch": str(patch_path)})
+    record_state({
+        "event": "staged",
+        "request": str(request_path),
+        # normalized id future-proofs the codraft↔candidate join (the path
+        # form above is the only historical linkage — keep both)
+        "request_id": _normalize_request_ref(str(request_path)),
+        "candidate": candidate_id,
+        "patch": str(patch_path),
+    })
     return {"staged": True, "candidate_id": candidate_id, "patch": str(patch_path), "diff": diff_text}
 
 
@@ -803,10 +922,39 @@ def self_test() -> int:
         )
         check("missing ask errors", missing.get("error") == "nothing_to_move")
 
+    # pipeline_status join on temp fixtures
+    with tempfile.TemporaryDirectory() as tmp:
+        sd = Path(tmp) / "state"
+        cr = Path(tmp) / "candidates"
+        (cr / "astrid" / "self-change-abc").mkdir(parents=True)
+        sd.mkdir()
+        (sd / "codraft_agency_code_change_9.json").write_text(json.dumps({
+            "status": "pending", "title": "t",
+            "provenance": {"source_request": "agency_code_change_9"},
+        }))
+        (sd / "events.jsonl").write_text(
+            json.dumps({"event": "staged", "request": str(sd / "codraft_agency_code_change_9.json"),
+                        "candidate": "self-change-abc", "ts": 1.0}) + "\n"
+            + json.dumps({"event": "soak_started", "candidate": "self-change-abc", "ts": 2.0}) + "\n"
+        )
+        (cr / "astrid" / "self-change-abc" / "canary_state.json").write_text(json.dumps({
+            "record": {"status": "rolled_back", "rollback_reason": "expiry_without_exact_confirmation",
+                       "felt_status": "unreviewed", "updated_at_unix_ms": 5}}))
+        (cr / "astrid" / "self-change-orphan").mkdir()
+        status = pipeline_status(state_dir=sd, candidate_root=cr)
+        check("status finds open item", len(status["open"]) == 1
+              and status["open"][0]["derived"] == "open_awaiting_her_signal")
+        check("status joins candidate", status["open"][0]["candidate"]["status"] == "rolled_back")
+        check("status surfaces orphans",
+              any(o["candidate_id"] == "self-change-orphan" for o in status["orphan_candidates"]))
+        check("normalize handles both forms",
+              _normalize_request_ref("/x/codraft_agency_code_change_9.json") == "agency_code_change_9"
+              and _normalize_request_ref("agency_code_change_9") == "agency_code_change_9")
+
     if failures:
         print("FAIL:", ", ".join(failures))
         return 1
-    print("OK (21 checks)")
+    print("OK (25 checks)")
     return 0
 
 
@@ -845,6 +993,10 @@ def main() -> int:
     )
     disp_p.add_argument("--note", default="")
     disp_p.add_argument("--write", action="store_true")
+    sub.add_parser(
+        "pipeline_status",
+        help="read-only: codrafts x events x candidate states — open items triage cannot see",
+    )
     args = parser.parse_args()
     if args.self_test:
         return self_test()
@@ -893,6 +1045,9 @@ def main() -> int:
         result = disposition(args.request, state=args.state, note=args.note, write=bool(args.write))
         print(json.dumps(result, indent=1))
         return 0 if not result.get("error") else 1
+    if args.cmd == "pipeline_status":
+        print(json.dumps(pipeline_status(), indent=1))
+        return 0
     parser.error("choose a subcommand or --self-test")
     return 2
 

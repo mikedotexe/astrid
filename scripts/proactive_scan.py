@@ -70,6 +70,10 @@ MINIME_RUNTIME_DIR = MINIME_REPO / "workspace/runtime"
 MINIME_CAMERA_STATUS = MINIME_RUNTIME_DIR / "camera_status.json"
 MINIME_MIC_STATUS = MINIME_RUNTIME_DIR / "mic_status.json"
 MINIME_SENSORY_SOURCE = MINIME_RUNTIME_DIR / "sensory_source.json"
+MINIME_VISUAL_STATUS = MINIME_RUNTIME_DIR / "visual_status.json"
+MINIME_DIVISION_SUPERVISOR_STATUS = (
+    MINIME_REPO / "workspace/division/runtime/supervisor-status.json"
+)
 
 ASTRID_BRIDGE_DB = ASTRID_REPO / "capsules/spectral-bridge/workspace/bridge.db"
 ASTRID_DIAGNOSTICS_DIR = ASTRID_REPO / "capsules/spectral-bridge/workspace/diagnostics"
@@ -128,6 +132,18 @@ FEEDBACK_SURFACES = [
         "glob": "*.json",
         "kind": "request",
         "consumer": "self_change_pipeline.py triage (Stage-2 eligible → stage/soak/invite) + disposition → reviewed/ (+ claude_tasks twin → done/)",
+    },
+    {
+        # kind "notice", deliberately: an expired candidate awaiting HER
+        # signal is not steward-actionable debt (silence stays free and
+        # un-nagged) — but a pending codraft must never be invisible, which
+        # it was to triage (2026-08-19 finding). pipeline_status has detail.
+        "name": "astrid_self_change_codrafts",
+        "root": ASTRID_REPO
+        / "capsules/spectral-bridge/workspace/diagnostics/self_change_pipeline_v1",
+        "glob": "codraft_*.json",
+        "kind": "notice",
+        "consumer": "steward glance (self_change_pipeline.py pipeline_status → re-stage on her signal or disposition)",
     },
     {
         "name": "astrid_corridor_bridge_requests",
@@ -312,6 +328,11 @@ EXPECTED_PROCESSES = [
     "camera_client",
     "mic_to_sensory",
     "perception.py",
+    # Zero-output-by-design services (2026-08-19): alive-by-PID is only the
+    # floor; their loop-liveness probes are probe_division_supervisor /
+    # probe_visual_frame_service below.
+    "division supervisor",
+    "visual_frame_service",
 ]
 
 # Severity tiers — same ordering as architecture_health.py / launchd_inventory.sh
@@ -1317,15 +1338,30 @@ def probe_plist_drift(_prior: dict[str, Any]) -> dict[str, Any]:
             "notice",
             "launchd_inventory.sh not found",
         )
-    rc, _stdout, _stderr = _wrap_existing_script(
+    rc, stdout, stderr = _wrap_existing_script(
         "launchd_inventory", ["bash", str(inventory_script), "--strict"], timeout=20
     )
     if rc == 0:
         return _finding("plist_drift", "ok", "launchd inventory clean (no drift)")
+    # rc==-1 is our own timeout/exec failure, not evidence of drift; and the
+    # subprocess's own words are the diagnosis — dropping them cost us a
+    # 6-hour-recurring opaque warning once (2026-08-19 PATH/python3.9 misfire).
+    failure_lines = [
+        ln for ln in (stdout.splitlines() + stderr.splitlines())
+        if ln.strip().startswith(("XX", "!!")) or "Summary:" in ln or "Error" in ln
+    ][-6:]
+    if rc == -1:
+        return _finding(
+            "plist_drift",
+            "notice",
+            "launchd inventory probe could not run (timeout/exec failure) — not evidence of drift",
+            details=failure_lines or [stderr.strip()[:200] or "no output captured"],
+        )
     return _finding(
         "plist_drift",
         "warning",
-        "launchd inventory reports drift — run `bash scripts/launchd_inventory.sh --strict` for details",
+        f"launchd inventory reports drift (rc={rc}) — run `bash scripts/launchd_inventory.sh --strict` for details",
+        details=failure_lines or ["inventory produced no XX/!! lines; see full run"],
     )
 
 
@@ -1336,7 +1372,7 @@ def probe_dispatch_menu_drift(prior: dict[str, Any]) -> dict[str, Any]:
         return _finding("dispatch_menu_drift", "notice", "dispatch_menu_drift.py not found")
     rc, stdout, _ = _wrap_existing_script(
         "dispatch_menu_drift",
-        ["python3", str(script), "--json"],
+        [sys.executable, str(script), "--json"],
         # autonomous_agent.py keeps growing as Codex adds prompt actions; the
         # regex analysis is now ~92s standalone (was ~64s, was <20s). The old
         # 20s cap, then the 120s cap, each crept toward "fail to run" under
@@ -1429,13 +1465,21 @@ def probe_capsule_runtime_health(_prior: dict[str, Any]) -> dict[str, Any]:
     script = ASTRID_REPO / "scripts/capsule_runtime_health.py"
     if not script.is_file():
         return _finding("capsule_runtime_health", "notice", "capsule_runtime_health.py not found")
-    rc, stdout, _ = _wrap_existing_script(
+    rc, stdout, stderr = _wrap_existing_script(
         "capsule_runtime_health",
-        ["python3", str(script), "--json"],
+        [sys.executable, str(script), "--json"],
         timeout=20,
     )
     if rc != 0:
-        return _finding("capsule_runtime_health", "notice", "capsule runtime health probe failed")
+        # Carry the subprocess's own words: an opaque "probe failed" hid a
+        # PATH/python3.9 tomllib misfire for five consecutive scans (2026-08-19).
+        tail = [ln for ln in stderr.splitlines() if ln.strip()][-4:]
+        return _finding(
+            "capsule_runtime_health",
+            "notice",
+            f"capsule runtime health probe failed (rc={rc})",
+            details=tail or ["no stderr captured"],
+        )
     try:
         report = json.loads(stdout)
         summary = report.get("summary", {})
@@ -1465,6 +1509,140 @@ def probe_capsule_runtime_health(_prior: dict[str, Any]) -> dict[str, Any]:
         severity,
         f"capsule runtime drift needs review ({text})",
         snapshot=summary,
+    )
+
+
+def _live_pid_of(pattern: str) -> str | None:
+    try:
+        res = subprocess.run(
+            ["pgrep", "-f", pattern], capture_output=True, text=True, timeout=5
+        )
+        pids = [p for p in res.stdout.strip().splitlines() if p.strip()]
+        return pids[0] if pids else None
+    except Exception:
+        return None
+
+
+def probe_division_supervisor(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Loop-liveness for the zero-stdout division supervisor: its 500ms
+    poll loop rewrites supervisor-status.json atomically, so a fresh
+    updated_at_unix_ms + a matching live PID proves the loop is TURNING,
+    not merely that a process exists. (Zero stdout is by design — events
+    only fire on launch transitions, and the rail is dormant.)"""
+    payload = _load_json_dict(MINIME_DIVISION_SUPERVISOR_STATUS)
+    if not payload:
+        return _finding(
+            "division_supervisor_heartbeat",
+            "notice",
+            "supervisor-status.json missing/unreadable (rail stopped, or path moved)",
+        )
+    now = time.time()
+    ts_ms = payload.get("updated_at_unix_ms")
+    age_s = now - (float(ts_ms) / 1000.0) if isinstance(ts_ms, (int, float)) else None
+    live_pid = _live_pid_of("division supervisor")
+    file_pid = payload.get("pid")
+    details = [
+        f"status age: {age_s:.1f}s" if age_s is not None else "no updated_at_unix_ms",
+        f"file pid={file_pid} live pid={live_pid} mode={payload.get('mode')}",
+    ]
+    if age_s is not None and age_s <= 5.0 and live_pid is not None and str(file_pid) == live_pid:
+        return _finding(
+            "division_supervisor_heartbeat",
+            "ok",
+            f"supervisor loop turning (status {age_s:.1f}s old, pid {live_pid}, mode {payload.get('mode')})",
+            snapshot={"mode": payload.get("mode"), "pid": live_pid},
+        )
+    if live_pid is None:
+        return _finding(
+            "division_supervisor_heartbeat", "warning",
+            "supervisor process not running but status file present (stale file)", details,
+        )
+    return _finding(
+        "division_supervisor_heartbeat", "warning",
+        "supervisor alive by PID but status file stale or PID-mismatched — loop may be wedged",
+        details,
+    )
+
+
+def probe_visual_frame_service(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Loop-liveness for the request-driven visual frame service. The
+    service is legitimately idle for months (no VISUAL_LOOK requests), so
+    liveness = its per-tick visual_status.json is fresh; request backlog is
+    reported separately and never alarms by itself."""
+    payload = _load_json_dict(MINIME_VISUAL_STATUS)
+    if not payload:
+        return _finding(
+            "visual_frame_heartbeat",
+            "notice",
+            "visual_status.json not present yet (service predates the status write, or stopped)",
+        )
+    now = time.time()
+    fresh = _fresh_json_timestamp(payload, MINIME_VISUAL_STATUS, now=now, max_age_s=15.0)
+    pending = payload.get("pending_requests")
+    if fresh:
+        return _finding(
+            "visual_frame_heartbeat",
+            "ok",
+            f"visual frame loop turning (pending_requests={pending}, processed={payload.get('processed_count')})",
+            snapshot={"pending_requests": pending},
+        )
+    return _finding(
+        "visual_frame_heartbeat",
+        "warning",
+        "visual frame service status stale (>15s = 3 poll ticks) — loop may be wedged",
+        [f"pending_requests={pending}", f"last state={payload.get('state')}"],
+    )
+
+
+def probe_reflective_sidecar(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Coverage-relative sidecar heartbeat: every successful reflective
+    sidecar run leaves controller_<label>_<epoch>.json paired 1:1 by epoch
+    with introspection_<safe_label>_<epoch>.txt. Days-old pairs are HEALTHY
+    (INTROSPECT fires ~1-in-15 exchanges); the failure mode is fresh
+    introspections with missing controller siblings (timeouts + cooldown).
+    Model identity is asserted by source (reflective.rs --model-label
+    gemma3-12b), not witnessed in artifacts — a known follow-up."""
+    controller_epochs: set[int] = set()
+    introspect_epochs: list[int] = []
+    try:
+        with os.scandir(ASTRID_INTROSPECTIONS_DIR) as entries:
+            for entry in entries:
+                name = entry.name
+                if name.startswith("controller_") and name.endswith(".json"):
+                    tail = name[:-5].rsplit("_", 1)[-1]
+                    if tail.isdigit():
+                        controller_epochs.add(int(tail))
+                elif name.startswith("introspection_") and name.endswith(".txt"):
+                    tail = name[:-4].rsplit("_", 1)[-1]
+                    if tail.isdigit():
+                        introspect_epochs.append(int(tail))
+    except OSError as err:
+        return _finding("reflective_sidecar", "notice", f"introspections dir unreadable: {err}")
+    if not introspect_epochs:
+        return _finding("reflective_sidecar", "notice", "no introspection artifacts found")
+    trailing = sorted(introspect_epochs)[-5:]
+    covered = [e for e in trailing if e in controller_epochs]
+    ratio = len(covered) / len(trailing)
+    newest = trailing[-1]
+    newest_covered = newest in controller_epochs
+    snapshot = {"sidecar_coverage_ratio": ratio, "trailing_window": len(trailing)}
+    if newest_covered and len(trailing) - len(covered) < 2:
+        return _finding(
+            "reflective_sidecar",
+            "ok",
+            f"sidecar covering INTROSPECTs ({len(covered)}/{len(trailing)} of trailing window; newest paired)",
+            snapshot=snapshot,
+        )
+    missing = [str(e) for e in trailing if e not in controller_epochs]
+    return _finding(
+        "reflective_sidecar",
+        "warning" if not newest_covered or len(trailing) - len(covered) >= 2 else "notice",
+        f"sidecar coverage degraded: {len(covered)}/{len(trailing)} trailing INTROSPECTs have controller reports"
+        + (" (newest UNCOVERED)" if not newest_covered else ""),
+        [f"uncovered epochs: {', '.join(missing)}",
+         "model asserted_by_source: gemma3-12b (reflective.rs, not witnessed in artifacts)",
+         "check /tmp/bridge.log for 'MLX sidecar timed out' + 600s cooldown"],
+        snapshot=snapshot,
     )
 
 
@@ -4468,6 +4646,9 @@ BLIND_SPOT_PROBES = [
     ("dispatch_menu_drift", probe_dispatch_menu_drift),
     ("architecture_drift", probe_architecture_drift),
     ("capsule_runtime_health", probe_capsule_runtime_health),
+    ("division_supervisor_heartbeat", probe_division_supervisor),
+    ("visual_frame_heartbeat", probe_visual_frame_service),
+    ("reflective_sidecar", probe_reflective_sidecar),
     ("db_growth", probe_db_growth),
     ("journal_volume", probe_journal_volume),
     ("journal_hygiene", probe_journal_hygiene),
@@ -5732,6 +5913,77 @@ class StewardOutreachTests(unittest.TestCase):
         a = _assess_outreach(items)
         self.assertEqual(a["severity"], "warning")
         self.assertIn("PICKUP FAILING", a["summary"])
+
+
+class ZeroOutputHeartbeatTests(unittest.TestCase):
+    """The three zero-output-by-design services (2026-08-19): probes must
+    distinguish loop-turning from merely-alive, and idle from wedged."""
+
+    def test_supervisor_fresh_and_pid_match_is_ok(self):
+        import tempfile
+        global MINIME_DIVISION_SUPERVISOR_STATUS
+        saved = MINIME_DIVISION_SUPERVISOR_STATUS
+        saved_pid = globals()["_live_pid_of"]
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                p = Path(tmp) / "supervisor-status.json"
+                p.write_text(json.dumps({
+                    "updated_at_unix_ms": int(time.time() * 1000),
+                    "pid": 4242, "mode": "idle_parent_authoritative",
+                }))
+                globals()["MINIME_DIVISION_SUPERVISOR_STATUS"] = p
+                globals()["_live_pid_of"] = lambda pattern: "4242"
+                self.assertEqual(probe_division_supervisor({})["severity"], "ok")
+                # stale timestamp with live pid => wedged loop warning
+                p.write_text(json.dumps({
+                    "updated_at_unix_ms": int((time.time() - 120) * 1000),
+                    "pid": 4242, "mode": "idle_parent_authoritative",
+                }))
+                self.assertEqual(probe_division_supervisor({})["severity"], "warning")
+        finally:
+            globals()["MINIME_DIVISION_SUPERVISOR_STATUS"] = saved
+            globals()["_live_pid_of"] = saved_pid
+
+    def test_visual_fresh_ok_and_stale_warns_regardless_of_idle_queue(self):
+        import tempfile
+        global MINIME_VISUAL_STATUS
+        saved = MINIME_VISUAL_STATUS
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                p = Path(tmp) / "visual_status.json"
+                p.write_text(json.dumps({
+                    "ts_ms": int(time.time() * 1000), "state": "polling",
+                    "healthy": True, "pending_requests": 0,
+                }))
+                globals()["MINIME_VISUAL_STATUS"] = p
+                self.assertEqual(probe_visual_frame_service({})["severity"], "ok")
+                stale = int((time.time() - 300) * 1000)
+                p.write_text(json.dumps({"ts_ms": stale, "state": "polling",
+                                         "pending_requests": 0}))
+                import os as _os
+                _os.utime(p, (time.time() - 300, time.time() - 300))
+                self.assertEqual(probe_visual_frame_service({})["severity"], "warning")
+        finally:
+            globals()["MINIME_VISUAL_STATUS"] = saved
+
+    def test_sidecar_coverage_relative_not_wallclock(self):
+        import tempfile
+        global ASTRID_INTROSPECTIONS_DIR
+        saved = ASTRID_INTROSPECTIONS_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                d = Path(tmp)
+                # days-old but fully paired => healthy
+                for epoch in (1000, 2000, 3000):
+                    (d / f"introspection_astrid_llm_{epoch}.txt").write_text("x")
+                    (d / f"controller_astrid:llm_{epoch}.json").write_text("{}")
+                globals()["ASTRID_INTROSPECTIONS_DIR"] = d
+                self.assertEqual(probe_reflective_sidecar({})["severity"], "ok")
+                # fresh introspection with NO controller sibling => not ok
+                (d / "introspection_astrid_llm_4000.txt").write_text("x")
+                self.assertNotEqual(probe_reflective_sidecar({})["severity"], "ok")
+        finally:
+            globals()["ASTRID_INTROSPECTIONS_DIR"] = saved
 
 
 class FeedbackCoverageTests(unittest.TestCase):
