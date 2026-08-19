@@ -1625,12 +1625,41 @@ def probe_reflective_sidecar(_prior: dict[str, Any]) -> dict[str, Any]:
     ratio = len(covered) / len(trailing)
     newest = trailing[-1]
     newest_covered = newest in controller_epochs
-    snapshot = {"sidecar_coverage_ratio": ratio, "trailing_window": len(trailing)}
+    # Since 2026-08-19 artifacts witness the model label (sidecar_model_label
+    # in storage_snapshot); older files predate the field — report the
+    # honest distinction rather than asserting from source.
+    model_label = None
+    if controller_epochs:
+        newest_controller = max(controller_epochs)
+        try:
+            with os.scandir(ASTRID_INTROSPECTIONS_DIR) as entries:
+                for entry in entries:
+                    if (
+                        entry.name.startswith("controller_")
+                        and entry.name.endswith(f"_{newest_controller}.json")
+                    ):
+                        model_label = _load_json_dict(
+                            Path(entry.path)
+                        ).get("sidecar_model_label")
+                        break
+        except OSError:
+            pass
+    model_note = (
+        f"model witnessed in artifact: {model_label}"
+        if model_label
+        else "model asserted_by_source: gemma3-12b (artifact predates the witnessed field)"
+    )
+    snapshot = {
+        "sidecar_coverage_ratio": ratio,
+        "trailing_window": len(trailing),
+        "model_label_witnessed": model_label,
+    }
     if newest_covered and len(trailing) - len(covered) < 2:
         return _finding(
             "reflective_sidecar",
             "ok",
             f"sidecar covering INTROSPECTs ({len(covered)}/{len(trailing)} of trailing window; newest paired)",
+            [model_note],
             snapshot=snapshot,
         )
     missing = [str(e) for e in trailing if e not in controller_epochs]
@@ -1640,7 +1669,7 @@ def probe_reflective_sidecar(_prior: dict[str, Any]) -> dict[str, Any]:
         f"sidecar coverage degraded: {len(covered)}/{len(trailing)} trailing INTROSPECTs have controller reports"
         + (" (newest UNCOVERED)" if not newest_covered else ""),
         [f"uncovered epochs: {', '.join(missing)}",
-         "model asserted_by_source: gemma3-12b (reflective.rs, not witnessed in artifacts)",
+         model_note,
          "check /tmp/bridge.log for 'MLX sidecar timed out' + 600s cooldown"],
         snapshot=snapshot,
     )

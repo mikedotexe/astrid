@@ -25,6 +25,11 @@ const STORED_PROMPT_PREVIEW_CHARS: usize = 480;
 const REFLECTIVE_REWRITE_MAX_ATTEMPTS_ENV: &str = "ASTRID_REFLECTIVE_REWRITE_MAX_ATTEMPTS";
 const REFLECTIVE_REWRITE_BUDGET_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_REWRITE_BUDGET_SECONDS";
 const REFLECTIVE_ADAPTIVE_REWRITE_RELIEF_ENV: &str = "ASTRID_REFLECTIVE_ADAPTIVE_REWRITE_RELIEF";
+/// Single source for the sidecar model label: the spawn arg AND the stored
+/// controller artifact both use this const, so the artifact witnesses the
+/// label the subprocess was actually launched with (before 2026-08-19 no
+/// artifact recorded the model at all — it was only inferable from source).
+const REFLECTIVE_SIDECAR_MODEL_LABEL: &str = "gemma3-12b";
 const DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS: u32 = 1;
 const MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS: u32 = 3;
 const DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS: u64 = 90;
@@ -231,6 +236,12 @@ impl ReflectiveReport {
         };
         compact_controller_prompt_at(&mut value, "/self_tuning/last_model_advice");
         compact_controller_prompt_at(&mut value, "/self_tuning/last_model_advice/forecast");
+        if let serde_json::Value::Object(ref mut map) = value {
+            map.insert(
+                "sidecar_model_label".to_string(),
+                serde_json::Value::String(REFLECTIVE_SIDECAR_MODEL_LABEL.to_string()),
+            );
+        }
         value
     }
 
@@ -618,7 +629,7 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
             .arg("--hardware-profile")
             .arg("m4-mini")
             .arg("--model-label")
-            .arg("gemma3-12b")
+            .arg(REFLECTIVE_SIDECAR_MODEL_LABEL)
             .arg("--mode")
             .arg("reflective")
             .arg("--architecture")
@@ -700,6 +711,19 @@ mod tests {
             text: None,
             profiling: None,
         }
+    }
+
+    #[test]
+    fn storage_snapshot_witnesses_sidecar_model_label() {
+        let report = empty_report_with_self_tuning(json!({}));
+        let snapshot = report.storage_snapshot();
+        assert_eq!(
+            snapshot.pointer("/sidecar_model_label"),
+            Some(&json!(REFLECTIVE_SIDECAR_MODEL_LABEL)),
+            "controller artifacts must witness the model label the sidecar \
+             was launched with — before this field, model identity was only \
+             inferable from source"
+        );
     }
 
     #[test]
