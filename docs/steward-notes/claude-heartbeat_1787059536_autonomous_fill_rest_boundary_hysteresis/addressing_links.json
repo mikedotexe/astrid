@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Burst-and-rest state machine: L164 label, L168 burst_count init, L183 burst_count>=burst_target REST gate, L246 reset, L4925 increment."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "fill_responsive_rest_secs fn at L18-28; called L217 with current_fill read from telemetry fill_pct() at L213-216."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Severing + 0.7->0.4 taper explained at L184-195; taper computed at L308-316 (warmth_phase interpolation)."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Positive-feedback drain comment (2026-03-31 fill stuck ~27%) at L200-212 documents the exact concern and the shorten-at-low-fill remedy."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L18-28 piecewise-constant step, no hysteresis, bands 30/40/50; evaluated once per burst-rest cycle at L217 on smoothed fill_pct."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "fill_responsive_rest_steps_at_each_band_boundary_without_hysteresis pins the boundary step (no-hysteresis) that grounds the oscillation-trap snag."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787059536_autonomous_fill_rest_boundary_hysteresis/summaries/introspection_astrid_autonomous_1787038721.md",
+      "note": "Refinement of the snag mechanism (shorten<->base at 30, extend<->base at 50; direct shorten<->extend needs crossing the whole span); no live hysteresis added (Tier 5)."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "New test covers her exact 29.9%->60 / 30.1%->100 jump plus 40%/50% boundaries and the 30s floor; 2 passed / 0 failed."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L246 burst_count=0 after rest ensures the next loop iteration enters the BURST branch; shortened rest reduces drain window but never blocks the burst."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "0.7->0.4 taper is the warmth_phase<0.3 branch (L311-312) driven by warmth_phase=i/pulses (L305), distinct from burst_count/burst_target gating (L183)."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the boundary regression added from this report."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: her snag + Test 1 -> boundary regression, with source verification and Tier-5 authority boundary."
+    }
+  ]
+}

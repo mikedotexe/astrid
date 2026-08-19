@@ -1,0 +1,36 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787070878",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) preserves the marker in remainder only when reference_syntax is detected.",
+      "disposition": "Verified from complete source: L124 computes reference_syntax, L129-131 push the marker token into remainder only when reference_syntax.is_some(); otherwise the marker bytes are dropped. Existing regressions confirm: preserved grouped/explicit relation (tests.rs L2932) and fail-closed strip when only punctuation follows (L2900).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89-96) may fail to isolate the word when a marker is followed by a newline+dash or complex punctuation.",
+      "disposition": "Contradiction stated, not domesticated: the hypothesized skip does not occur. .find(|w| !w.is_empty()) skips punctuation-only chunks and trim_matches removes leading non-alphanumeric edges, so an allowlisted verb is still isolated. Most transitions already pinned; the attached-double-hyphen leading edge her literal named was un-pinned, so a new regression grounds it.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1: '[SYSTEM_PROMPT] behaves as...' should keep the marker in remainder via followed_by_explicit_exact_token_relation (behaves).",
+      "disposition": "Mechanism verified_existing: tests.rs L2945 pins '<end_of_turn> behaves as a named boundary.' -> ExplicitExactKnownTokenRelation, marker preserved. Correction (not domesticated): [SYSTEM_PROMPT] is illustrative, NOT in KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159-180), so it would not itself trigger detection; the relation grammar applies to the real markers.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2: nested '[[SYSTEM_PROMPT]]' should make exact_reference_delimiter_syntax (L199) compute depth, not collapse to a plain GroupedExactKnownToken.",
+      "disposition": "Verified_existing: tests.rs L2963 pins '[[<end_of_turn>]]' -> GroupedExactKnownToken with delimiter_depth == 2, and homogeneous '[[[[[...]]]]]' bounding (L2266) plus depth 3/4 (L2194/L2207). Depth is computed exactly, not collapsed. Same [SYSTEM_PROMPT]-is-illustrative correction as c003.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify first_word_after against punctuation-heavy transitions, e.g. '[MARKER]: --next_word'.",
+      "disposition": "Implemented_now: added scan_known_model_control_markers_grounds_first_word_after_attached_double_dash (tests.rs L3189-3252) pinning her exact literal - colon+'--represents' and newline+'- represents' isolate 'represents' (marker preserved), and her '--next_word' shape isolates 'next_word' which is not allowlisted so the marker fails closed (stripped). No grammar widened; Tier 1 non-live test only.",
+      "classification": "implemented_now"
+    }
+  ]
+}

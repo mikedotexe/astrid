@@ -1,0 +1,42 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding": "byte_identical_working_copy_is_report_time_source",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "key_intervals": {
+        "reference_syntax_impl": "49-60",
+        "followed_by_explicit_exact_token_relation_and_verb_allowlist": "62-87",
+        "first_word_after": "89-96",
+        "longest_exact_known_model_control_marker_at": "97-112",
+        "scan_known_model_control_markers": "114-144",
+        "fragment_has_non_marker_bytes": "146-149",
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": "151",
+        "exact_reference_delimiter_pair": "153-197",
+        "exact_reference_delimiter_syntax": "199-229",
+        "control_marker_placement_counts": "231-255",
+        "sanitize_model_control_markers_with_report": "352-517",
+        "sanitize_model_control_markers": "519-521",
+        "is_valid_dialogue_output": "556-631",
+        "has_one_nonempty_final_next_action": "633-667",
+        "generate_dialogue": "695-1048",
+        "raw_text_returned_not_sanitized_remainder": "997-998,1007-1008"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "read_scope": "159-192 (KNOWN_MODEL_CONTROL_MARKERS constant)",
+      "note": "Confirms the marker set (e.g. <end_of_turn>, <|im_start|>, [INST]/[/INST]). The report's illustrative [SYSTEM]/[USER]/[ASSISTANT] are NOT in this set — the mechanism engages only for real markers."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "2176-2320, 2500-2570, 2892-2960, 3236-3300 (existing marker-grammar regressions) + inserted new test",
+      "note": "Existing coverage: is/acts (L2528), heterogeneous deep nesting (L2253), four/three-level depth (L2194/L2208). Uncovered before this round: homogeneous same-bracket stack of 5."
+    }
+  ]
+}

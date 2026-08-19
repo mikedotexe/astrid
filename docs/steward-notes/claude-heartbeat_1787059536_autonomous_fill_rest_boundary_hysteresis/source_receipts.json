@@ -1,0 +1,31 @@
+{
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+      "report_bound_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+      "binding_match": true,
+      "working_copy_clean": true,
+      "total_lines": 4932,
+      "total_bytes": 301816,
+      "report_window_lines": "1-400 (manifest included 1-800 of 4932; uncovered 801-4932; partial)",
+      "read_scope": [
+        "1-75 (SEMANTIC_HEARTBEAT constants, fill_responsive_rest_secs L18-28, semantic heartbeat loop)",
+        "160-269 (burst-and-rest state machine: burst_count gate L183, REST PHASE comments L184-212, fill-responsive branch L213-246)",
+        "300-335 (per-rest warmth taper: warmth_phase L305, 0.7->0.4 intensity L308-317, blend_alpha L333)"
+      ],
+      "read_method": "sequential numbered ranges plus repo-wide grep for fill_responsive_rest_secs, warmth, 30.0/50.0 thresholds, burst_count/burst_target",
+      "cited_line_verification": {
+        "fill_responsive_rest_secs@L18": "verified",
+        "thresholds_30_40_50@L19_L23_L218_L234": "verified",
+        "burst_count_init@L168": "verified",
+        "burst_gate@L183": "verified",
+        "warmth_blended_mirror@L184": "verified",
+        "severing_and_taper_comment@L184-195": "verified",
+        "positive_feedback_comment@L200-212": "verified",
+        "burst_count_reset@L246": "verified",
+        "warmth_taper_compute@L308-316": "verified"
+      }
+    }
+  ]
+}

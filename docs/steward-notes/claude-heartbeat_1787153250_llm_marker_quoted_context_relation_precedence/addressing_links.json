@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Scanner L114-144 + longest_exact_known_model_control_marker_at L97-112 + reference_syntax L49-60, source SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180 is transport tokens only; [SYSTEM]/[USER] are not markers."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "remainder + Vec<KnownModelControlMarkerMatch> L114-144; preserve gate L129-131."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 + pair tables L153-197 (Quoted vs Grouped)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 + 18-verb allowlist L67-84 matched by followed_by_explicit_exact_token_relation L64-86."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Preservation keys only on the first following word; comment L62-63 states preceding/subsequent words are uninspected."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_uses_only_the_first_finite_relation_word (L2605) + multi-word predicate case in scan_..._grouped_and_explicit_relation_contexts (L2945)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New regression scan_known_model_control_markers_quoted_context_precedes_following_relation_verb: quote-adjacent+`is`->Quoted depth 1; unquoted+`is`->ExplicitExactKnownTokenRelation depth 0; both remainder byte-exact."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing quoted-preservation coverage control_marker_cleanup_preserves_quoted_exact_token_reference (L1995) with real marker."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax L49-60 resolves delimiter syntax (L50) before the relation fallback (L53) = the precedence pinned by the new test."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry for the quoted-context precedence regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ground-truthed feedback-to-change row for introspection_astrid_llm_1787135542."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2932) with `<end_of_turn> behaves as a named boundary.`."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86; `behaves` is allowlisted. [SYSTEM] not in the marker allowlist."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695-1048 does not call the sanitizer; remainder consumed via sanitize_model_control_markers L519-520 at L558, L634."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Fallback contract normalization also consumes the remainder via sanitize_model_control_markers_with_report L234."
+    }
+  ]
+}

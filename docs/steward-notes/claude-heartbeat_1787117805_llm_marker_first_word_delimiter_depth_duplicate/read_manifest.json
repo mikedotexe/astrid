@@ -1,0 +1,27 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787110385",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787110385.txt",
+      "sha256": "047648f1bfb0e74c68a90fefd160e459712695b1c9e70bcc5427f5b924069d64",
+      "bytes": 3480,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a47676818b75e5d56395886b8e9c435e7bd90d27db9fec980d7c4a1fdc4d6897",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a47676818b75e5d56395886b8e9c435e7bd90d27db9fec980d7c4a1fdc4d6897.json",
+      "sha256": "cbce90c2fcde6308a6e5f5f4f47cec7793eb0305f4182967e050b9f4c608c5df",
+      "bytes": 23911,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "live_eligible_now": false
+    }
+  ]
+}

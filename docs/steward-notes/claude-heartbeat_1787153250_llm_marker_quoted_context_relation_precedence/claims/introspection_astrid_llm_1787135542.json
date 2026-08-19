@@ -1,0 +1,58 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787135542",
+  "report_sha256": "78b50bdf21ac69a5afecaa54dfb6995ae5f689959030667d9ca2c78ddef59c7a",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_matches_working_copy": true,
+  "lived_state_witness": "lsw_51546f1eab64d3893186ad826e66c8406d64a2c8fea6726bd964f97e07b9322b",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm implements a deterministic scanner distinguishing raw text from model control markers by syntactic context.",
+      "disposition": "Verified at source SHA 902a0358 (complete 1-1048). scan_known_model_control_markers (L114-144) walks bytes, matches KNOWN_MODEL_CONTROL_MARKERS via longest_exact_known_model_control_marker_at (L97-112), and classifies each via reference_syntax (L49-60). Markers are transport tokens (fallback_contracts.rs L159-180: <end_of_turn>, [INST], <|im_end|>...), not [SYSTEM]/[USER].",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: scan_known_model_control_markers (L114) reconstructs a clean remainder while tracking marker metadata.",
+      "disposition": "Verified L114-144: builds `remainder` String plus Vec<KnownModelControlMarkerMatch>; a marker's bytes are re-emitted to remainder only when reference_syntax.is_some() (L129-131), else stripped; non-marker bytes are always copied. Cited function line L114 is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Observed: exact_reference_delimiter_syntax (L199) detects quoted vs grouped context informing preserve/strip.",
+      "disposition": "Verified L199-229 + pair table L153-197: QuotedExactKnownToken for matching quote pairs, GroupedExactKnownToken for bracket pairs; preserve/strip decided at L129. Contradiction preserved: the report's [SYSTEM] is not a known marker, and brackets around a bare token map to GroupedExactKnownToken, not a quoted token; the illustration diverges from the real transport-token allowlist.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: first_word_after (L89) uses split_whitespace + char filter to identify relation verbs (L64-85).",
+      "disposition": "Verified L89-96 (split_whitespace, trims non-alphanumeric except underscore, lowercases first non-empty word) and the 18-verb allowlist L67-84 matched by followed_by_explicit_exact_token_relation (L64-86). Citations exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: a multi-word predicate (e.g. [MARKER] behaves like a ghost) makes first_word_after capture 'behaves' but the relation logic ignores modifiers, risking inconsistent preservation.",
+      "disposition": "Contradiction preserved: source keys preservation solely on the first following word (L64-86; comment L62-63 states preceding/subsequent words are intentionally uninspected), so modifiers after a relation verb cannot create inconsistency; preservation is deterministic. Covered by tests.rs control_marker_cleanup_uses_only_the_first_finite_relation_word (L2605) and multi-word predicate `<end_of_turn> behaves as a named boundary.` (L2945).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 1 (Contextual Preservation): \"The prompt [SYSTEM] is active\" should hit QuotedExactKnownToken (L174) and keep the marker in remainder.",
+      "disposition": "Concern (quoted preservation) verified at tests.rs L1995: real marker \"<end_of_turn>\" -> QuotedExactKnownToken, preserved. New regression grounds two corrections: (a) [SYSTEM] is not a known marker; (b) reference_syntax resolves delimiter syntax (L50) BEFORE the relation fallback (L53), so a quote-adjacent marker then `is` -> Quoted, an unquoted marker then `is` -> ExplicitExactKnownTokenRelation. Her sentence-quoted example is relation, not quoted.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test 2 (Relation Trigger): [SYSTEM] behaves as a helper -> followed_by_explicit_exact_token_relation (L64) true, marker preserved.",
+      "disposition": "Verified at tests.rs L2932 with real marker: `<end_of_turn> behaves as a named boundary.` -> ExplicitExactKnownTokenRelation, remainder unchanged; mechanism identical (first word `behaves` is allowlisted). Contradiction preserved: [SYSTEM] is not in KNOWN_MODEL_CONTROL_MARKERS, so the literal string matches no marker and passes through unchanged; grounding uses the real transport token.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: examine generate_dialogue (L695) for how remainder is integrated into the final response buffer.",
+      "disposition": "Read-only continuation pointer (Tier 1, her agency); no steward mutation. Grounded correction: generate_dialogue (L695-1048) does not call the sanitizer directly; the remainder is consumed by sanitize_model_control_markers (L519-520) invoked from response-normalization helpers (L558, L634) and the fallback contract path (fallback_contracts.rs L234), plus autonomous/state.rs L3253.",
+      "classification": "verified_existing"
+    }
+  ]
+}

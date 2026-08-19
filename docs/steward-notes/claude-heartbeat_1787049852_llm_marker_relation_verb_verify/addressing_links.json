@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 pushes occurrence.token to remainder only when reference_syntax.is_some() (L129-130); reference_syntax L49-60 = delimiter OR explicit relation verb. Observation verified at SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787049852_llm_marker_relation_verb_verify/no_action/introspection_astrid_llm_1787043908.md",
+      "note": "Evidence-backed no-action rationale for the whole report: source verified at report-bound SHA, both proposed tests already exist, one expectation contradicts source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: trim_matches(non-alnum/underscore) + split_whitespace strip a leading colon/punctuation, so \"acts\" is extracted regardless. Snag's failure mechanism contradicted; drop of a marker before \"acts\" is due to allowlist absence (L64-86)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition (L2635) asserts first_word_after returns \"acts\" across `--` punctuation. Re-run green at current SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers else-branch L133-140: one char via chars().next(), pushed to remainder, offset advanced by len_utf8() through saturating_add. Snag 2 accurate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair: 「」 L168 (QuotedExactKnownToken), ⟦⟧ L180 (GroupedExactKnownToken); exact_reference_delimiter_syntax L199 returns Some for matching pairs. Both Test-1 examples are recognized."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "⟦...⟧ covered by control_marker_cleanup_preserves_bounded_nested_delimiter_stacks (L2179); 「...」 covered by control_marker_cleanup_preserves_quoted_exact_tokens_across_whitespace (L2404). Both re-run green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64 inspects only first_word_after; for \"is a tool\" that is \"is\", allowlisted at L76 -> marker PRESERVED, not excluded. Test-2 expected outcome contradicts source (same class as 1786319270)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2568) uses the exact \"is a substitute for\" phrase, asserts first_word_after==\"is\" and preservation, contrasting unlisted \"acts\" exclusion. Re-run green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787049852_llm_marker_relation_verb_verify/no_action/introspection_astrid_llm_1787043908.md",
+      "note": "Contradiction preserved not domesticated; correct behavior already regressed; no production-grammar change."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue at L695; remainder integration path scan L114 -> sanitize_model_control_markers_with_report L352 -> sanitize_model_control_markers L519 used at L558/L634. Continuation grounded; read-only, self-activatable."
+    }
+  ]
+}

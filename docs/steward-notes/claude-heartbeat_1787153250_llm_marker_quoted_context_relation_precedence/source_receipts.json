@@ -1,0 +1,41 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "total_lines": 1048,
+    "total_bytes": 38586,
+    "report_binding_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "binding_match": true,
+    "read_intervals": ["1-1048"],
+    "cited_symbols_verified": {
+      "scan_known_model_control_markers": "L114-144 (report cited L114) — exact",
+      "exact_reference_delimiter_syntax": "L199-229 (report cited L199) — exact",
+      "exact_reference_delimiter_pair": "L153-197 (quote vs bracket pair tables)",
+      "first_word_after": "L89-96 (report cited L89) — exact",
+      "followed_by_explicit_exact_token_relation": "L64-86 (report cited L64) — exact; 18-verb allowlist L67-84",
+      "reference_syntax_precedence": "L49-60 — delimiter syntax (L50) checked BEFORE relation fallback (L53)",
+      "QuotedExactKnownToken_return": "L174 (report cited L174) — exact",
+      "remainder_preservation_gate": "L129-131 — marker re-emitted only when reference_syntax.is_some()",
+      "generate_dialogue": "L695-1048 (report cited L695) — present; does NOT call sanitizer directly",
+      "sanitize_model_control_markers": "L519-520 wrapper; called at L558, L634"
+    }
+  },
+  "adjacent_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "total_lines": 1417,
+      "total_bytes": 49506,
+      "read_intervals": ["155-204"],
+      "purpose": "KNOWN_MODEL_CONTROL_MARKERS allowlist (L159-180) — transport tokens only, no [SYSTEM]/[USER]; sanitizer call site L234"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_after_edit": "0bed78f895a94431d0a9786651a41fff98041c71850feed4ece355459bf6e8ce",
+      "total_lines_after_edit": 3995,
+      "read_intervals": ["1985-2060", "2130-2180", "2455-2520", "2922-3096", "3900-3920"],
+      "purpose": "Existing marker-scanner regressions (L1995 quoted, L2134 nested-quotes, L2932 grouped/relation, L2605 first-finite-relation-word) + new-test insertion point"
+    }
+  ]
+}

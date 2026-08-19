@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787086168",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "dialogue_requested_token_band (L8-16) classifies requested output into 0-512 / 513-1024 / 1025+ bands.",
+      "disposition": "Verified from complete source (dialogue_runtime.rs L8-16, SHA 902a0358): >1024->requested_tokens_1025_plus, >512->513_to_1024, else 0_to_512. Exactly covered by dialogue_requested_token_band_names_only_requested_token_boundaries (tests.rs L3431) asserting 512/513/1024/1025 boundaries.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "followed_by_explicit_exact_token_relation (L64-86) marks a marker as grammatical subject so it stays visible.",
+      "disposition": "Verified L64-86: matches first_word_after against an 18-verb allowlist (appears..denotes..is..signals). In scan_known_model_control_markers, reference_syntax.is_some() re-pushes the marker into remainder, preserving it. Covered by preserves_exact_token_relation_without_preceding_vocabulary_gate (L2540) and the does_not_expand_relation_allowlist_to_* suite.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "exact_reference_delimiter_pair (L153-197) and exact_reference_delimiter_syntax (L199-229) detect delimited markers and drive preservation.",
+      "disposition": "Verified L153-229: pair maps quote/group delimiter pairs (incl \u300c\u300d) to Quoted/GroupedExactKnownToken; syntax resolves context from the innermost non-whitespace pair. Preservation covered by preserves_non_ascii_matching_quote_pairs (L2342) and exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2963).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "scan_known_model_control_markers (L114-144) is a linear scan reconstructing a remainder plus KnownModelControlMarkerMatch objects.",
+      "disposition": "Verified L114-144: linear byte scan; at each known marker it records a KnownModelControlMarkerMatch and, when reference_syntax is present, re-pushes the token into remainder, else advances one UTF-8 char. Byte-exactness/adjacency covered by scanner_advances_byte_exactly_across_multibyte_text (L2099) and scanner_removes_adjacent_mixed_markers_without_rewriting_remainder (L1795).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag 1: MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151) might not be enforced for nested delimiters, risking incorrect preservation.",
+      "disposition": "Source contradicts the feared gap: exact_reference_delimiter_syntax (L199-229) DOES enforce depth \u2014 before/after collect .take(MAX=4) non-ws chars, context is taken from the innermost pair, and delimiter_depth counts concentric matching pairs via take_while. Beyond-cap nesting cannot cause incorrect preservation (context still resolves from the innermost pair). Covered by bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2266, cites sibling 1787026288) + reports_exact_four/three_level_delimiter_depth (L2194/L2208). Her cap-correctness concern is preserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Snag 2: longest_exact_known_model_control_marker_at (L97-112) greedy longest-match might obscure the intended sequence for shared-prefix markers.",
+      "disposition": "Verified L97-112: max_by_key(token.len()) over KNOWN markers the tail starts_with (maximal munch). Enumerated all 20 KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159): NO marker is a strict prefix of another, so the shared-prefix obscuring hypothesized cannot occur with the current set. Longest-match exercised by preserves_longest_overlapping_token_when_named_as_content (L2493). Forward-looking concern (future shared-prefix additions) preserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test 1 proposal: marker followed by 'denotes' preserved; same marker followed by an unrelated word stripped.",
+      "disposition": "Both sides already regressed: positive ('denotes' preserved) by preserves_exact_token_relation_without_preceding_vocabulary_gate (L2540, uses 'denotes'); negative (unrelated word -> stripped) by does_not_expand_relation_allowlist_to_implies/contains/creates/triggers (L2682-L2727) and fails_closed_when_only_punctuation_or_whitespace_follows (L2900). No new test needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Test 2 proposal: marker wrapped in \u300c...\u300d returns QuotedExactKnownToken.",
+      "disposition": "Source L166 maps ('\u300c','\u300d')->QuotedExactKnownToken; regressed by preserves_non_ascii_matching_quote_pairs (L2342, includes \u300c<end_of_turn>\u300d -> quoted_reference_occurrences=1). Precision note: pair() takes (before,after) chars, not a string; the string-level entry point is exact_reference_delimiter_syntax(text,start,end). Both are tested.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Suggested Next: examine exact_reference_delimiter_syntax beyond L207 to confirm MAX depth enforcement.",
+      "disposition": "Performed the investigation she suggested: read L199-229 completely. MAX_EXACT_REFERENCE_DELIMITER_DEPTH bounds the collected delimiter chars (.take at L208/L213) and take_while counts concentric matching pairs \u2014 depth is both bounded and measured. Enforcement confirmed; no ambiguity remains. Bounded observation, no causal or live claim.",
+      "classification": "observed"
+    }
+  ]
+}

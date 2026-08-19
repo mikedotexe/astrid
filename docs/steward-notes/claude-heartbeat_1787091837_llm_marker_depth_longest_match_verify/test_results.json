@@ -1,0 +1,44 @@
+{
+  "schema": "round_test_results",
+  "touched_code": false,
+  "note": "No source/test code was created or modified this round (addressed_no_action verification). The cited regressions are pre-existing in llm/provider/tests.rs and were verified by reading their assertion bodies against source at the recorded SHA. They were NOT re-executed in this headless run to protect the round budget (a spectral-bridge cargo compile does not fit the remaining child time); this run makes no claim that a cargo filter executed.",
+  "verify_by_reading": [
+    {
+      "test": "dialogue_requested_token_band_names_only_requested_token_boundaries",
+      "file": "tests.rs",
+      "line": 3431,
+      "asserts": "512->0_to_512,513/1024->513_to_1024,1025->1025_plus"
+    },
+    {
+      "test": "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth",
+      "file": "tests.rs",
+      "line": 2266,
+      "asserts": "[[[[[<end_of_turn>]]]]] byte-exact preserved; max_delimiter_depth==MAX; not dropped"
+    },
+    {
+      "test": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+      "file": "tests.rs",
+      "line": 2963,
+      "asserts": "[[<end_of_turn>]] -> GroupedExactKnownToken, delimiter_depth==2"
+    },
+    {
+      "test": "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs",
+      "file": "tests.rs",
+      "line": 2342,
+      "asserts": "\u300c<end_of_turn>\u300d -> quoted_reference_occurrences==1"
+    },
+    {
+      "test": "control_marker_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate",
+      "file": "tests.rs",
+      "line": 2540,
+      "asserts": "marker + 'denotes' preserved"
+    },
+    {
+      "test": "control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content",
+      "file": "tests.rs",
+      "line": 2493,
+      "asserts": "longest 'thought <channel|>' selected over '<channel|>'"
+    }
+  ],
+  "exact_filter_if_run": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two control_marker_cleanup_preserves_non_ascii_matching_quote_pairs dialogue_requested_token_band_names_only_requested_token_boundaries"
+}

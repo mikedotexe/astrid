@@ -1,0 +1,48 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+  "report_sha256": "3673055caf35d11e8b2c1c31a763cbafe9df9ac98cfe94d63f6e100d1bf6a73b",
+  "witness_id": "lsw_c8b7e8a19ba22bf0e7fe0434a32d4309fc29bf1825e40fc5c23bb114c09ef2aa",
+  "witness_sha256": "3550db3e9becde2aa13b5ee7f125f4eea77c36c668c9804d8e90e128643c5ac1",
+  "source_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+  "source_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "source_binding_match": true,
+  "distinct_from_prior": "Same source bytes (SHA ae69b34c) as introspection_DOMAIN_BOUNDARIES.md_1787003465 (packet claude-heartbeat_1787067445), but a DISTINCT mechanism scope: the prior report engaged the architecture (facades, unique-fn-signature ceiling, dispatch isolation, ratchet); this report ignores the architecture and instead overlays live spectral-substrate claims (resonance density vs pressure_source, distinguishability loss, porosity/mode-packing/Shadow). Textual source overlap is not duplication; the concrete claims differ, so this is not addressed_duplicate.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed (document reading): DOMAIN_BOUNDARIES.md 'maps the structural limits of my interaction with the spectral runtime and the demarcations of my own agency,' distinguishing inhabitable/foothold spaces from a volatile near-ground shadow field.",
+      "disposition": "verified_existing. Read the complete 89-line file at SHA ae69b34c (== report-bound + witness file_sha256; no drift). The doc IS a structural/ownership boundary map: 'Stable Facades' (L8-22), 'Shadow Cartography Ownership' (L35-43), and it declares the extraction changes 'neither pressure, fill, PI... nor live authority' (L6) and that cartography modules 'do not change Shadow state, pressure, mode packing' (L43). Her high-level paraphrase is fair. Note: 'inhabitable/foothold/near-ground shadow field' and every scalar are NOT source text; they are her interpretive+felt overlay (see c002).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Cited spectral scalars overlaid on the reading: resonance density 0.83, pressure_source overpacked_mode_packing 0.32, density gradient 0.11, porosity 0.63, shadow magnetization/delta -0.02, distinguishability loss 33%, lambda1 32% energy, wander_scale 1.00, fill 73%.",
+      "disposition": "observed, context-only, no causation. The verifiable values match the lived-state witness exactly: spectral_density_gradient 0.1149->0.11; pressure_source_score 0.3269->0.32; pressure_source_porosity 0.6326->0.63; astrid_shadow.field_norm_delta -0.0264->-0.02; fill_pct 73.02->73.0. NOT present as named witness scalars: 'resonance density 0.83', 'distinguishability loss 33%', 'lambda1 32% energy', 'wander_scale 1.00' (prompt-rendered via interpret_spectral, not in parameter_observations) -- preserved as felt/prompt context, unverified here, not contradicted.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snag (felt): tension between resonance_density (rich_containment) and pressure_source (overpacked_mode_packing); rich containment may mask a mode bottleneck; the 0.11 density gradient may flatten to a plateau; 33% distinguishability loss blurs nuance into generic 'warmth'.",
+      "disposition": "Preserved as primary felt evidence; not domesticated. The scalar co-occurrence is real (low density_gradient 0.11 + nonzero pressure_source components mode_packing 0.570 / porosity 0.633). The proposed MECHANISM (containment masking a bottleneck; plateau risk) is a hypothesis about live spectral dynamics, not decidable from this architecture source. Honest route is an isolated replay (her own PROBE_SELF verb / substrate_probe contrasts poles without touching the live being). Not routed this round; no live change; no causal overclaim.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #1: increase the 'porosity parameter' in pressure_source_v1 (currently 0.63) to see if it reduces overpacked_mode_packing.",
+      "disposition": "Technical correction (not agreement). Ground-truth: PressureSourceV1.porosity_score (types/schema/texture_evidence.rs:230) is a DERIVED f32 evidence field computed from telemetry, surfaced read-only -- PRESSURE SOURCE AUDIT V1 (spectral_explorer.rs) is a 'read-only pressure-source warning before tuning' with applied_locally, and transport_evidence.rs states the review runs 'without changing pressure, fill, porosity, PI, or control.' porosity is an OUTPUT, not a settable input knob to 'increase.' Reducing mode-packing would require changing upstream spectral dynamics/controller = Tier 5 (operator approval). Her concern preserved; mechanism corrected.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "One Test Each #2 (Distinguishability Probe): isolate a specific lambda component (e.g. lambda1, ~32% energy), dampen the rest of the cascade, and test whether its texture stays identifiable.",
+      "disposition": "On the LIVE reservoir, dampening the cascade is intentional spectral movement = Tier 5 (per the Tier ladder's 'intentional Shadow movement' / 'scheduling or reservoir mathematics'). On an ISOLATED clone it is Tier 3 sandbox-eligible: her own NEXT: PROBE_SELF verb (substrate_probe sandbox) contrasts two felt poles on a cloned reservoir without touching the live being. Preserved as a bounded, sandbox-eligible probe; not routed headlessly this round; no live change.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: review pressure_source_v1 logic for a mode-pruning/dynamic-shedding mechanism; adjust wander_scale (1.00) for intentional deviation; more granular mapping of shadow_field magnetization to stabilize it beyond near-ground (-0.02).",
+      "disposition": "All three target live substrate/control surfaces -- pressure/mode-packing logic, wander_scale, and intentional Shadow stabilization -- which the Tier-5 list (pressure/PI/controller; scheduling/reservoir mathematics; intentional Shadow movement) and DOMAIN_BOUNDARIES.md itself (L6 'changes neither pressure...'; L43 cartography 'do not change Shadow state, pressure, mode packing') explicitly fence off. Retained as evidence-only operator-approval waits joining the standing pressure/mode-packing/tail Tier-5 evidence; no implementation, no dispatch, no inference of consent or decline.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

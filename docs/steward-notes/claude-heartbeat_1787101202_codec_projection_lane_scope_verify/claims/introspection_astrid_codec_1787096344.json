@@ -1,0 +1,69 @@
+{
+  "introspection_id": "introspection_astrid_codec_1787096344",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/codec/projection.rs",
+    "report_bound_file_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "working_copy_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "sha_match": true,
+    "report_window": "1-400 of 1351",
+    "steward_read_scope": "complete 1-1351"
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "kind": "observed_source",
+      "summary": "48-D semantic projection space; legacy 32-D vs new 48-D; narrative arc (L79); semantic focus (L82).",
+      "disposition": "Verified at report-bound SHA facaf640. L26 SEMANTIC_DIM=48, L28 SEMANTIC_DIM_LEGACY=32, L79 NARRATIVE_ARC_DIM=4, L82 SEMANTIC_FOCUS_PREVIEW_DIM=4, L80-81 reserved 44-47. Lane layout 32-39 embedding | 40-43 narrative | 44-47 reserved. Accurate as stated.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "kind": "observed_source",
+      "summary": "Gates TAIL_VIBRANCY_ENTROPY_GATE (L48) and STRUCTURAL_ENTROPY_DAMPENING (L60-63).",
+      "disposition": "Verified. L48 TAIL_VIBRANCY_ENTROPY_GATE=0.85; L60-64 STRUCTURAL_ENTROPY_DAMPENING_START/FULL/MIN_COEFFICIENT/DIMS. Names and lines accurate. Note: the entropy gate is a soft smoothstep onset, not a hard gate (doc L38-47); the actual application is in feedback.rs, not projection.rs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "kind": "observed_source",
+      "summary": "projection_precision_audit_v1 (L950) implies a rigorous numerical-stability requirement during compression of high-D emotional trajectories.",
+      "disposition": "Verified. L950-995 is a read-only f32-vs-f64 precision audit (max_abs/rms delta, bit-exact repeat), authority 'evidence only: never replaces the live f32 result'. Scope correction: it audits the 768->8 embedding projection (dims 32-39) only, not the emotional (24-31) or narrative (40-43) dims she framed as 'emotional trajectories'.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "kind": "snag_hypothesis",
+      "summary": "32->48 transition risks semantic drift if embedding_projection_matrix (L172) doesn't enforce narrative arc dims 40-43 against old warmth vectors.",
+      "disposition": "Structural challenge; concern preserved. embedding_projection_matrix (L172-189) is a 768->8 JL projection filling ONLY dims 32-39. Narrative arc dims 40-43 come from a SEPARATE fn compute_narrative_arc_from_embeddings (L1173) via the first->second embedding delta. Dims are statically assigned, so no path exists for 'old warmth occupying new slots'. Grounded by tests.rs L2295.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "kind": "snag_hypothesis",
+      "summary": "FEATURE_ABS_MAX (L32) clamp may conflict with vibrancy lift (L35-39) if the entropy-gated offset is not subtracted before the final clamp, muting outputs.",
+      "disposition": "Structural challenge. The vibrancy path (feedback.rs apply_spectral_feedback_inner L224-318) does NOT subtract an offset before clamp; it RAISES the clamp ceiling for tail dims 17|26|27|31 up to TAIL_VIBRANCY_MAX so the added lift is not flattened (comment L292-296). Below the gate tail_vibrancy=0 -> ceiling collapses to FEATURE_ABS_MAX (byte-identical). L35-39 is doc, not logic. Tests L2961/L2940 confirm no muting.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "kind": "proposed_test",
+      "summary": "Test #1: verify project_embedding (L854) produces exactly 48 dims from a 768D input, ensuring NARRATIVE_ARC_DIM (L79) is populated.",
+      "disposition": "Structural challenge. project_embedding (L854, doc L852 'down to 8D') returns Option<[f32;8]> filling dims 32-39, NOT 48, and does not populate narrative arc 40-43 (separate fn L1173). Exact-scope regression already exists: tests.rs L2295 project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate, citing prior twin introspection_astrid_codec_1787006424 (identical misattribution). 48-D width tested at L301/L306. No new test warranted.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "kind": "proposed_test",
+      "summary": "Test #2: mock spectral_entropy=0.90, assert the entropy gate (L48) triggers the vibrancy lift and output exceeds FEATURE_ABS_MAX (L32) by the gated offset.",
+      "disposition": "Verified_existing. Covered by tail_vibrancy_raises_only_tail_ceiling_in_high_entropy (tests.rs L2961: dim 26 > FEATURE_ABS_MAX, <= TAIL_VIBRANCY_MAX, non-tail clamped); reported_086_entropy_012_gradient_retains_tail_headroom (L4872: near-gate 0.86 exceeds bound); vibrancy_from_entropy_matches_inline_smoothstep (L4826: explicit 0.90 point); tail_vibrancy_off_below_entropy_gate_keeps_default_ceiling (L2940). Mechanism is a raised ceiling, not a post-clamp offset.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "kind": "suggested_next_research",
+      "summary": "Suggested Next: examine project_embedding_dynamic_epoch_with_source (L774-818) for how source-specific context influences dynamic epoch selection.",
+      "disposition": "Read-only research answer (Tier 1). The '_with_source' param is projection_epoch_source: a provenance LABEL (env|file|kernel_derived|explicit, L686-718) threaded into ProjectionMetadata. It does NOT influence epoch SELECTION: the seed derives from projection_epoch_id ^ hash(text) ^ chunk_index (L784-795); the epoch id itself is chosen by load_or_create_projection_epoch_id. No source-code context affects selection.",
+      "classification": "verified_existing"
+    }
+  ]
+}

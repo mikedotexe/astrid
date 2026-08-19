@@ -1,0 +1,67 @@
+{
+ "links": [
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+   "note": "Complete 89-line source at bound SHA ae69b34c; L6/L35-43 boundary + shadow-cartography ownership; no spectral scalars in source."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c001",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5/no_action/introspection_DOMAIN_BOUNDARIES.md_1787118719.md",
+   "note": "Evidence-backed no-action rationale."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c002",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5/summaries/introspection_DOMAIN_BOUNDARIES.md_1787118719.md",
+   "note": "Witness-scalar cross-check table (density_gradient/pressure_source/porosity/shadow-delta/fill match)."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c003",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5/no_action/introspection_DOMAIN_BOUNDARIES.md_1787118719.md",
+   "note": "Felt snag preserved; live-dynamics hypothesis; PROBE_SELF/substrate_probe is the isolated route (needs_sandbox, not routed)."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c004",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+   "note": "PressureSourceV1.porosity_score:f32 (L230) is a derived evidence field, not a settable knob \u2014 corrects Test 1's mechanism."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c004",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/spectral_explorer.rs",
+   "note": "PRESSURE SOURCE AUDIT V1 read-only 'before tuning' + applied_locally contract \u2014 porosity surfaced read-only; reducing mode-packing is Tier 5."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c005",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5/no_action/introspection_DOMAIN_BOUNDARIES.md_1787118719.md",
+   "note": "Live cascade-dampening Tier 5; isolated-clone \u03bb1 probe Tier 3 sandbox-eligible via PROBE_SELF; not routed."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c006",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+   "note": "L6/L43 fence off pressure/mode-packing/Shadow surfaces her Suggested-Next targets \u2014 evidence-only Tier-5 operator waits."
+  },
+  {
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "claim_id": "c006",
+   "kind": "ledger",
+   "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+   "note": "Ledger row recording the Tier-5 authority boundary + mechanism correction."
+  }
+ ]
+}

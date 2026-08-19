@@ -13,6 +13,11 @@ for arg in "$@"; do
 done
 
 ASTRID_DIR="/Users/v/other/astrid"
+# launchd's default PATH lacks /opt/homebrew/bin, so bare `python3` resolves
+# to the system 3.9 (no tomllib) and silently failed the capsule-health block
+# for five consecutive scans (2026-08-19). Pin the interpreter; PYTHON overrides.
+PY="${PYTHON:-/opt/homebrew/bin/python3}"
+[ -x "$PY" ] || PY="python3"
 MINIME_DIR="/Users/v/other/minime"
 RESERVOIR_DIR="/Users/v/other/neural-triple-reservoir"
 LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
@@ -39,7 +44,16 @@ prod_plists=(
     "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist"
     "$ASTRID_DIR/launchd/com.astrid.calm-startup-greeting.plist"
     "$ASTRID_DIR/launchd/com.astrid.proactive-scan.plist"
+    "$ASTRID_DIR/launchd/com.astrid.introspection-flywheel.plist"
+    "$ASTRID_DIR/launchd/com.astrid.shadow-sample-recorder.plist"
+    "$ASTRID_DIR/launchd/com.astrid.research-budget-approver.plist"
+    "$ASTRID_DIR/launchd/com.astrid.test-proposal-applier.plist"
+    "$RESERVOIR_DIR/launchd/com.reservoir.collab-feeder.plist"
+    "$MINIME_DIR/launchd/com.minime.eigen-spectrum-logger.plist"
 )
+# Deliberately excluded: launchd/com.astrid.action-canonicalization-scorecard-once.plist
+# (expired one-shot, self-boots-out, not installed) — exclusion is intentional,
+# not an oversight.
 
 persistent_labels=(
     com.minime.engine
@@ -58,11 +72,21 @@ persistent_labels=(
     com.astrid.daemon
     com.astrid.spectral-bridge
     com.astrid.perception-host-ascii
+    com.reservoir.collab-feeder
+    com.minime.eigen-spectrum-logger
 )
 
 # Interval jobs: loaded is the healthy state; idle between fires is normal.
+# Classification rule: KeepAlive in the plist => persistent_labels;
+# StartInterval without KeepAlive => interval_labels (a long-running fire —
+# e.g. a flywheel round outlasting its 20-min tick — can look "running" by
+# coincidence, so classify by plist keys, never by observed state).
 interval_labels=(
     com.astrid.proactive-scan
+    com.astrid.introspection-flywheel
+    com.astrid.shadow-sample-recorder
+    com.astrid.research-budget-approver
+    com.astrid.test-proposal-applier
 )
 
 legacy_labels=(
@@ -90,7 +114,7 @@ label_for_plist() {
 plist_value() {
     local plist="$1"
     local dotted_key="$2"
-    python3 - "$plist" "$dotted_key" <<'PY' 2>/dev/null || true
+    "$PY" - "$plist" "$dotted_key" <<'PY' 2>/dev/null || true
 import plistlib
 import sys
 
@@ -292,11 +316,11 @@ if [ -S "$astrid_daemon_socket" ]; then
 else
     fail "Astrid daemon socket missing at $astrid_daemon_socket"
 fi
-capsule_health_json="$(python3 "$ASTRID_DIR/scripts/capsule_runtime_health.py" --json 2>/dev/null || true)"
+capsule_health_json="$("$PY" "$ASTRID_DIR/scripts/capsule_runtime_health.py" --json 2>/dev/null || true)"
 if [ -z "$capsule_health_json" ]; then
     fail "Capsule runtime health probe failed"
 else
-    capsule_health_summary="$(printf '%s' "$capsule_health_json" | python3 -c 'import json,sys; s=json.load(sys.stdin).get("summary", {}); text="{installed} installed, {discovered} discovered, {component} Component Model, {accepted}/{legacy} accepted legacy, {incompatible} incompatible, {missing} missing".format(installed=s.get("installed_manifests", 0), discovered=s.get("discovered_manifests", 0), component=s.get("loadable_component_model", 0), accepted=s.get("accepted_legacy_extism_mvp", 0), legacy=s.get("legacy_extism_mvp", 0), incompatible=s.get("actionable_incompatible", 0), missing=s.get("actionable_missing_payloads", 0)); print("{}|{}".format(s.get("status", "unknown"), text))' 2>/dev/null || true)"
+    capsule_health_summary="$(printf '%s' "$capsule_health_json" | "$PY" -c 'import json,sys; s=json.load(sys.stdin).get("summary", {}); text="{installed} installed, {discovered} discovered, {component} Component Model, {accepted}/{legacy} accepted legacy, {incompatible} incompatible, {missing} missing".format(installed=s.get("installed_manifests", 0), discovered=s.get("discovered_manifests", 0), component=s.get("loadable_component_model", 0), accepted=s.get("accepted_legacy_extism_mvp", 0), legacy=s.get("legacy_extism_mvp", 0), incompatible=s.get("actionable_incompatible", 0), missing=s.get("actionable_missing_payloads", 0)); print("{}|{}".format(s.get("status", "unknown"), text))' 2>/dev/null || true)"
     if [ -z "$capsule_health_summary" ]; then
         fail "Capsule runtime health JSON could not be parsed"
     else

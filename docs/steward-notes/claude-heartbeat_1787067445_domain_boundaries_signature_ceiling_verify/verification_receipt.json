@@ -1,0 +1,137 @@
+{
+  "round": "domain_boundaries_signature_ceiling_verify",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1787065263592319000_169b326f33",
+    "preprojection_generation_id": "projection_1787065269121985000_6bc38c8e46",
+    "postprojection_generation_id": "runs_after_child_exit_not_observed_in_child",
+    "pause_generation": 319,
+    "finish_outcome": "success_via_exit_0",
+    "git_read_only": true,
+    "no_live_change": true
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "report_sha256": "ab3646ca547f9b3727ef86faa357e0f95aca1a234f57afe5f9997755c711f543",
+      "report_bytes": 3554,
+      "report_lines": 43,
+      "witness_id": "lsw_fb0172a90d24723fe703a404d61ea79eb33f9f5a94c31b10008a0d5695052948",
+      "witness_sha256": "0a6a4601a726d5d2efdda64cc184e2553d1d3144d7cc0f17d830d20fa659444b",
+      "witness_bytes": 23880,
+      "witness_lines": 533,
+      "source_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "source_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "source_bytes": 5022,
+      "source_lines": 89,
+      "source_binding_match": true,
+      "terminal_status": "addressed_no_action",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "record_read": "ok (~41s, full_read event, summary_sha256 3dc57263…)",
+      "link_evidence_batch": "ok (~47s, existing 0 / new 7)",
+      "close": "ok (~40s, addressed_no_action, rationale 546 chars -> ingest-truncated-with-marker; bounded original preserved in packet no_action artifact)"
+    }
+  ],
+  "claim_classifications": {
+    "c001_structural_map": "verified_existing",
+    "c002_signature_ceiling_snag": "verified_existing (mechanism present+tested+auto-run; not-CI-gated cadence nuance preserved)",
+    "c003_dispatch_isolation_test": "verified_existing",
+    "c004_signature_growth_audit_run": "observed"
+  },
+  "tests": {
+    "focused_test_domain_boundary_audit": "3 tests OK (incl. test_exception_signature_growth_fails_within_line_ceiling)",
+    "read_only_audit_verify": "valid=true, violation_count=0, core.rs 210/232 unique fn signatures, 7 exceptions, 6 facades, documentation_sha256=ae69b34c",
+    "baseline_git_diff_check": "clean",
+    "rust_trybuild_ui_suite": "NOT rebuilt — no .rs touched; committed interpretation_cannot_dispatch.rs + expected .stderr read in full as durable evidence instead"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "20 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "cadence_audit_strict": "integrity_ok=true, duplicate_hash_group_count=0, no read_errors, canonical_count=4398",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "total=60, alarms=0, gaps=0, all results ok",
+    "experiential_epistemics_self_test": "valid=true (2 tests OK)",
+    "experiential_epistemics_verify_final": "valid=true, issue_count=0, checked_record_count=11242, history_rewritten=false (run after all durable writes)",
+    "division_followup_verify": "ok=true, review_due=false, 4/6 completed, event_count=194",
+    "division_chronicle_verify": "confirmatory-only for a non-return round: reports 'durable source inputs changed; project before verify' (expected after record-round). NOT projected — Chronicle projection is Division-return work and no return is due (2 rounds remaining). test_division_ceremony_chronicle 10/10 OK confirms tooling integrity.",
+    "evidence_event_store_status": "NOT completed via CLI — the status stream-count scan over a 5.5GB events.jsonl exceeded the 10-min tool cap; sequence/head/stream-sequences read directly from head.json (lightweight pointer). EES verify (below) independently establishes validity."
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4398,
+    "canonical_fully_addressed": 3111,
+    "canonical_fully_read": 3743,
+    "canonical_remaining": 1287,
+    "canonical_unread": 655,
+    "canonical_blocked_needs_steward": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_indexed": 6047,
+    "all_artifact_pending": 2936,
+    "noncanonical_pending": 1649,
+    "addressed_no_action_status_count": 95
+  },
+  "division": {
+    "cycle_sequence": 28,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "recorded_round_event_id": "division_followup_event_fb07199bcdf681e9bc1ffb4bdd267f56",
+    "event_count": 194,
+    "event_head_sha256": "4464025cdc7a1fcbe55e43f441f03e8f9c41084b46294c73364d997fc3fa718b",
+    "processed_report_count": 1
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "last_global_seq": 839654,
+    "head_sha256": "b3254e183b86fa103f1406537f4255f8a4c64ba48e059787e647d0724f0b3018",
+    "legacy_imported_global_seq": 32278,
+    "stream_count": 16,
+    "stream_sequences": {
+      "addressing": 58248,
+      "steward_control": 14670,
+      "lived_state_witness": 8595,
+      "claim_families": 237352,
+      "felt_contracts": 198760,
+      "model_qos": 186289,
+      "reciprocal_uptake": 58467,
+      "representation_contracts": 34771,
+      "signal_spine": 33562,
+      "sandbox": 3291,
+      "steward_work_selection": 498
+    }
+  },
+  "commit_debt": {
+    "note": "Git is read-only for this adapter-mode run. All paths below remain unstaged for a later interactive stabilization window.",
+    "created": [
+      "docs/steward-notes/claude-heartbeat_1787067445_domain_boundaries_signature_ceiling_verify/ (RUN_REPORT.md, verification_receipt.json, addressing_links.json, read_manifest.json, source_receipts.json, test_results.json, unprocessed_selected.json, claims/introspection_DOMAIN_BOUNDARIES.md_1787003465.json, summaries/introspection_DOMAIN_BOUNDARIES.md_1787003465.md, no_action/introspection_DOMAIN_BOUNDARIES.md_1787003465.md)"
+    ],
+    "edited_preexisting_dirty": [
+      "CHANGELOG.md (prepended one [Unreleased] entry; file already carried foreign/prior-round edits — preserved untouched)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (appended one 2026-08-18 dated section; file already dirty — preserved untouched)"
+    ],
+    "workspace_diagnostics_non_git": "addressing store (record-read/link/close) + Division tracker (record-round) events are normal flywheel workspace-diagnostic writes, not git-tracked source."
+  },
+  "restart_deploy": "not required and not attempted; no live/substrate/control change of any kind",
+  "foreign_paths_untouched": [
+    "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "docs/steward-notes/claude-heartbeat_1787040866_llm_marker_homogeneous_delimiter_depth/",
+    "docs/steward-notes/claude-heartbeat_1787049852_llm_marker_relation_verb_verify/",
+    "docs/steward-notes/claude-heartbeat_1787059536_autonomous_fill_rest_boundary_hysteresis/",
+    "minime: minime_autonomy/runtime.py, tests/test_correspondence_v1.py"
+  ]
+}

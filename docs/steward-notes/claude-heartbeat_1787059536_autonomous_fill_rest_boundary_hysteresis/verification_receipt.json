@@ -1,0 +1,84 @@
+{
+  "round": "autonomous_fill_rest_boundary_hysteresis",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1787056098288215000_137fe24e6f",
+    "preprojection_generation_id": "projection_1787056102121227000_21493308a7",
+    "postprojection_generation_id": "runs_after_exit_not_observed_in_child",
+    "pause_generation": 319,
+    "finish_outcome": "success_via_exit_0",
+    "git_read_only": true,
+    "no_live_change": true
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "record_read": "ok (43s, full_read event, summary_sha256 136a73be…)",
+      "link_evidence_batch": "ok (42s, existing 0 / new 12)",
+      "close": "ok (47s)"
+    }
+  ],
+  "tests": {
+    "focused": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml fill_responsive_rest -> 2 passed / 0 failed (new: fill_responsive_rest_steps_at_each_band_boundary_without_hysteresis)",
+    "formatting": "git diff --check clean; cargo fmt --check (bridge pkg) did NOT flag edited tests.rs — only pre-existing/foreign source_first_v3/grounding.rs, left untouched"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "20 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "cadence_audit_strict": "integrity_ok=true, duplicate_hash_group_count=0, no read_errors",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "total=60, alarms=0, gaps=0, all results ok",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_final": "exit 0 (run after all durable writes)",
+    "division_followup_verify": "run at round start review_due=false; record-round confirmed 3/6 completed",
+    "division_chronicle_verify": "NOT run this round — no Division return triggered (review_due=false throughout), Chronicle not mutated; verify is confirmatory only, deferred under budget",
+    "evidence_event_store_status": "NOT completed — the compound wrapper hit the 10-min tool cap while EES status was mid-run; EES verify (below) already establishes validity"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4398,
+    "canonical_fully_addressed": 3110,
+    "canonical_fully_read": 3742,
+    "canonical_remaining": 1288,
+    "canonical_unread": 656,
+    "canonical_blocked_needs_steward": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_indexed": 6047,
+    "all_artifact_remaining": 2937,
+    "noncanonical_pending": 1370
+  },
+  "division": {
+    "cycle_sequence": 28,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_f3c27704bcfb8884fd629a21f07e8393",
+    "event_count": 193,
+    "event_head_sha256": "aed804955f440b0bb278d7fc4d9b1490e80be84a3aa612a15b8d468c2f6e9985"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 838524,
+    "head_sha256": "a31bd0550528080b5db3023b22b8c4d9e148e1d268d6ca3f58f1072dc0070df2",
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "stream_count": 16,
+    "addressing_stream": 58237,
+    "steward_control_stream": 14624,
+    "lived_state_witness_stream": 8593
+  }
+}

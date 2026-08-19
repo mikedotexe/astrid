@@ -1,0 +1,18 @@
+{
+  "round": "claude-heartbeat_1787049852_llm_marker_relation_verb_verify",
+  "purpose": "Ground the verified_existing dispositions with live evidence: re-run the existing regressions this round relies on, at the current (report-bound) source SHA.",
+  "new_tests_added": 0,
+  "source_or_test_files_modified": 0,
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts control_marker_cleanup_first_word_after_skips_leading_punctuation_transition control_marker_cleanup_preserves_bounded_nested_delimiter_stacks control_marker_cleanup_preserves_quoted_exact_tokens_across_whitespace control_marker_cleanup_preserves_exact_tokens_in_declared_group_delimiters",
+      "result": "ok",
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1884,
+      "duration_secs": 0.05,
+      "note": "Existing regressions relied upon for claims c002, c004, c005. Build cached (2.16s compile). No source or test file was modified by this round."
+    }
+  ]
+}

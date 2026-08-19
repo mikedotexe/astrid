@@ -1,0 +1,30 @@
+{
+  "toolchain": "cargo 1.94.1 (29ea6fb6a 2026-03-24)",
+  "focused": [
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib scan_known_model_control_markers_strips_bare_marker_at_end_of_string_without_after_text",
+      "result": "ok. 1 passed; 0 failed; 0 ignored; 1891 filtered out",
+      "purpose": "New c005 regression: bare marker at exact end-of-string is stripped, no panic, first_word_after empty, exact_reference_delimiter_syntax None, wrapper accounting 1 removed / 0 preserved / none_cleanup_candidate."
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "result": "ok. 71 passed; 0 failed; 0 ignored; 1821 filtered out",
+      "purpose": "Non-regression sweep of the control_marker family (includes the new test)."
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib scan_known_model_control_markers",
+      "result": "ok. 7 passed; 0 failed; 0 ignored; 1885 filtered out",
+      "purpose": "Non-regression sweep of the scan_known_model_control_markers family."
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib exact_reference_delimiter",
+      "result": "ok. 1 passed; 0 failed; 0 ignored; 1891 filtered out",
+      "purpose": "Non-regression check of the exact_reference_delimiter_syntax test."
+    }
+  ],
+  "baseline_checks": [
+    {"cmd": "git diff --check -- capsules/spectral-bridge/src/llm/provider/tests.rs", "result": "clean (exit 0), no whitespace errors"},
+    {"cmd": "cargo fmt --all -- --check (filtered for provider/tests.rs)", "result": "no diff reported for the touched file"}
+  ],
+  "notes": "The bridge test target compiled cleanly including the pre-existing foreign-dirty tests.rs (+ autonomous/runtime/tests.rs); the added test compiles and passes. No cargo build/deploy/launchctl was run; no live change."
+}

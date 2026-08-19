@@ -1,0 +1,64 @@
+{
+  "round": "claude-heartbeat_1787067445_domain_boundaries_signature_ceiling_verify",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787003465.txt",
+      "sha256": "ab3646ca547f9b3727ef86faa357e0f95aca1a234f57afe5f9997755c711f543",
+      "bytes": 3554,
+      "lines": 43,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_fb0172a90d24723fe703a404d61ea79eb33f9f5a94c31b10008a0d5695052948",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_fb0172a90d24723fe703a404d61ea79eb33f9f5a94c31b10008a0d5695052948.json",
+      "sha256": "0a6a4601a726d5d2efdda64cc184e2553d1d3144d7cc0f17d830d20fa659444b",
+      "bytes": 23880,
+      "lines": 533,
+      "read": "complete"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "total_lines": 89,
+      "total_bytes": 5022,
+      "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "binding_match": true,
+      "read_scope": "Complete file (L1-89) read in full, matching the report's declared window 1-89 of 89.",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+      "sha256": "read_as_evidence_of_existing_compile_fail_test",
+      "total_lines": 18,
+      "read_scope": "Read the full trybuild UI test (18 lines) and its committed expected stderr (interpretation_cannot_dispatch.stderr, 16 lines) confirming the AstridInterpretationV1 -> dispatch_semantic_microdose type-mismatch compile-fail. Read-only.",
+      "read": "complete"
+    },
+    {
+      "path": "scripts/domain_boundary_audit.py",
+      "sha256": "read_as_evidence_of_signature_growth_mechanism",
+      "total_lines": 260,
+      "read_scope": "Read the signature-ceiling mechanism region: _unique_fn_signature_count (L60), signature_ceilings load (L104-107), per-exception evaluation and exception_signature_growth violation (L169-183), status summary (L217-251). Ran verify read-only. Read-only, untouched.",
+      "read": "claim_relevant_complete"
+    },
+    {
+      "path": "scripts/steward_control/projection_profile.py",
+      "sha256": "read_as_evidence_of_projection_cadence",
+      "total_lines": 900,
+      "read_scope": "Read the domain_boundary_audit projection-stage wiring (L272-296, dep edge representation_contracts->domain_boundary_audit, artifact outputs) confirming the audit auto-runs as source-first projection stage 10. Read-only.",
+      "read": "claim_relevant_complete"
+    },
+    {
+      "path": "scripts/test_domain_boundary_audit.py",
+      "sha256": "read_as_evidence_of_existing_regression",
+      "total_lines": 108,
+      "read_scope": "Read the signature-growth regression test test_exception_signature_growth_fails_within_line_ceiling (L75-92) and adjacent facade/ratchet/forbidden-edge tests; executed the suite (3 tests, green). Read-only.",
+      "read": "claim_relevant_complete"
+    }
+  ]
+}

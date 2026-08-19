@@ -1,0 +1,39 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "verification_mode": "exact_committed_source_and_committed_test_reading",
+  "verification_mode_reason": "Report disposition is addressed_duplicate with NO new code. dialogue_runtime.rs source is clean/committed and its HEAD SHA == report-bound SHA == working copy == 902a0358. All 8 cited regressions were confirmed present in COMMITTED HEAD via `git show HEAD:...tests.rs`. The working-tree tests.rs carries foreign uncommitted edits (+116-class), so a cargo run would compile foreign state, not this round's committed evidence; verification is by exact source + committed-test reading, matching the two immediately-prior rounds' precedent (packets claude-heartbeat_1787109794, claude-heartbeat_1787024860).",
+  "no_cargo_run": true,
+  "cited_committed_tests_verified_in_head": [
+    "control_marker_cleanup_preserves_relation_after_dash",
+    "control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs",
+    "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition",
+    "control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows",
+    "control_marker_cleanup_preserves_bounded_nested_delimiter_stacks",
+    "control_marker_cleanup_preserves_declared_restless_group_delimiters",
+    "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+    "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts"
+  ],
+  "foreign_uncommitted_test_noted_not_relied_upon": "scan_known_model_control_markers_grounds_first_word_after_attached_double_dash (working-tree tests.rs L3190)",
+  "integrity_suites": [
+    {"name": "introspection_addressing_audit --self-test", "result": "OK", "count": 44},
+    {"name": "test_evidence_event_store.py", "result": "OK", "count": 20},
+    {"name": "test_steward_control.py", "result": "OK", "count": 27},
+    {"name": "test_steward_projection.py", "result": "OK", "count": 14},
+    {"name": "test_division_ceremony_followup.py", "result": "OK", "count": 3},
+    {"name": "test_division_ceremony_chronicle.py", "result": "OK", "count": 10},
+    {"name": "test_division_ceremony_projection.py", "result": "OK", "count": "self-test ok"},
+    {"name": "test_projection_cursors.py", "result": "OK", "count": 4},
+    {"name": "anti_drop_catalog.py --self-test", "result": "OK", "count": 5},
+    {"name": "anti_drop_catalog.py verify --json", "result": "OK", "guards": 62, "alarms": 0, "gaps": 0},
+    {"name": "test_introspection_cadence_audit.py", "result": "OK", "count": 6},
+    {"name": "introspection_cadence_audit.py --strict --compact", "result": "integrity_ok=true", "canonical_count": 4408, "latest": "introspection_astrid_llm_1787110385.txt"},
+    {"name": "experiential_epistemics.py self-test --json", "result": "valid=true"},
+    {"name": "experiential_epistemics.py verify --json (FINAL, after all durable writes)", "result": "valid=true", "issues": 0, "history_rewritten": false},
+    {"name": "introspection_addressing_audit audit-counters --json", "result": "consistent", "mismatches": 0, "all_checks_true": true},
+    {"name": "evidence_event_store.py --json verify", "result": "valid=true", "corrupt_lines": 0, "errors": 0, "event_count": 845970},
+    {"name": "division_ceremony_followup.py verify", "result": "review_due=false", "completed_rounds": 3, "event_count": 200},
+    {"name": "division_ceremony_chronicle.py verify", "result": "ok=true", "durable_inputs_current": true, "volatile_mismatch": "supervisor_status_sha256"}
+  ],
+  "restart_deploy": "No live change required or attempted. No bridge build, deploy, or launchctl. Git read-only for this controller-held run."
+}

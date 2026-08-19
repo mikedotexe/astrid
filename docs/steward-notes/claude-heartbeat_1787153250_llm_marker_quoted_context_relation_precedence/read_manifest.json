@@ -1,0 +1,58 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round": "claude-heartbeat_1787153250_llm_marker_quoted_context_relation_precedence",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787135542",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787135542.txt",
+      "sha256": "78b50bdf21ac69a5afecaa54dfb6995ae5f689959030667d9ca2c78ddef59c7a",
+      "bytes": 3596,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_51546f1eab64d3893186ad826e66c8406d64a2c8fea6726bd964f97e07b9322b",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_51546f1eab64d3893186ad826e66c8406d64a2c8fea6726bd964f97e07b9322b.json",
+      "sha256": "b30cafff2baf462156adad9abc177c628b0e9563fd1ec8b242c9d2db76a2518d",
+      "bytes": 23944,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "live_eligible_now": false,
+      "grants_approval": false
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "bytes": 38586,
+      "lines": 1048,
+      "read_scope": "complete_1_to_1048",
+      "report_bound": true,
+      "working_copy_matches_report_binding": true,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "bytes": 49506,
+      "lines": 1417,
+      "read_scope": "adjacent_evidence_lines_155_to_204_KNOWN_MODEL_CONTROL_MARKERS_and_L234_sanitizer_call",
+      "report_bound": false,
+      "read": "scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_after_edit": "0bed78f895a94431d0a9786651a41fff98041c71850feed4ece355459bf6e8ce",
+      "bytes_after_edit": 170226,
+      "lines_after_edit": 3995,
+      "read_scope": "existing_marker_scanner_tests_L1985_to_3090_plus_L3907_and_new_test_insertion",
+      "report_bound": false,
+      "edited_this_round": true,
+      "read": "scoped"
+    }
+  ]
+}

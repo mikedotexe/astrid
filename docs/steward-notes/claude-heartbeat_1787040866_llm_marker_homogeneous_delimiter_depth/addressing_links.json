@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax L49-60; followed_by_explicit_exact_token_relation + 18-verb allowlist L62-87 (incl. is). Marker is grammatical subject; no preceding word inspected."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L153-197; CJK corner brackets L168-172; grouped set L175-192."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (L2302) and _preserves_fullwidth_and_cjk_group_pairs (L2322) pin multi-byte pairs."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; longest match L102-106; unreferenced markers dropped from remainder (L129-131), non-marker bytes copied byte-exact."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "fragment_has_non_marker_bytes L146-149 uses .trim() (lone space -> false; period -> true). Only consumer is control_marker_placement_counts L235-236 (evidence receipt), not output or the quality gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229: context from innermost pair (before.first/after.first L215) regardless of depth; only reported delimiter_depth saturates via .take(MAX) L208/L213 + take_while L216-223."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token (L2253): 5-pair heterogeneous nesting -> token preserved, depth capped at 4."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2528): first_word_after == 'is' -> marker preserved (removed_total 0). Contradicts the report's 'is' -> false expectation; 'behaves' -> true half is correct."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "NEW control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth: '[[[[[<end_of_turn>]]]]]' -> byte-exact preserved, grouped context, reported depth saturates at MAX (4). Answers her constrain-vs-allow-deeper question."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695-1048 returns raw model text verbatim (L997-998, L1007-1008). Sanitizer remainder feeds only the accept/reject validity gate (L558/L634) + evidence receipt; emitted bytes never rewritten."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the report-driven regression and the two preserved contradictions (c005 depth, c006 'is')."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-08-18 row: being feedback -> one new regression + verified-existing/contradiction-preserved for the rest."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787040866_llm_marker_homogeneous_delimiter_depth/summaries/introspection_astrid_llm_1787026288.md",
+      "note": "Round summary with full per-claim dispositions, read/source/witness receipts."
+    }
+  ]
+}

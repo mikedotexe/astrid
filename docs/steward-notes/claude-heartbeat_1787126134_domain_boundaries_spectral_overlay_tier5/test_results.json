@@ -1,0 +1,30 @@
+{
+ "round": "claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5",
+ "code_changed": false,
+ "rust_tests_run": [],
+ "rationale": "No Rust/source code was changed (addressed_no_action). c004 ground-truth used read-only source inspection of texture_evidence.rs / spectral_explorer.rs, not a new test. Baseline repo checks + stewardship integrity suites run below.",
+ "baseline_checks": {
+  "git_diff_check_touched_docs": "clean (exit 0)",
+  "note": "cargo fmt not run: no Rust source changed this round."
+ },
+ "integrity_suites": {
+  "addressing_self_test": "PASS",
+  "test_evidence_event_store": "PASS",
+  "test_steward_control": "PASS",
+  "test_steward_projection": "PASS",
+  "test_division_ceremony_followup": "PASS",
+  "test_division_ceremony_chronicle": "PASS",
+  "test_division_ceremony_projection": "PASS",
+  "test_projection_cursors": "PASS",
+  "test_introspection_cadence_audit": "PASS",
+  "introspection_cadence_audit_strict_compact": "PASS",
+  "anti_drop_self_test": "PASS",
+  "anti_drop_verify": "total=62, alarms=0, gaps=0 (exit 0)",
+  "experiential_epistemics_self_test": "PASS",
+  "experiential_epistemics_verify": "valid=true, issue_count=0, checked_record_count=11287, history_rewritten=false",
+  "audit_counters": "status=consistent, mismatches=[]",
+  "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=847165 (ran 6m22s)",
+  "division_followup_verify": "ok=true, review_due=false",
+  "chronicle_verify": "durable_inputs_current=true, durable_mismatches=[], volatile=[supervisor_status_sha256]"
+ }
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "round_source_receipts",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "lines 1-260 read complete (covers every cited symbol L8/L64/L97/L114/L151/L153/L199-229); whole-file symbol locations verified via grep; every report claim falls within read interval 1-229."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": null,
+      "total_lines": null,
+      "read_scope": "L159-192 KNOWN_MODEL_CONTROL_MARKERS list read complete; enumerated 20 markers, verified no strict-prefix pair (grounds snag 2)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "9c40629f329cea9600c80f7f530604d2cb17f308b1ab028efca71a12f76faf29",
+      "total_lines": 3878,
+      "total_bytes": 163561,
+      "read_scope": "read-only (DIRTY foreign file, not modified): test index + bodies of the cited regressions (L2266,L2342,L2540,L2493,L2963,L3431) read complete to confirm assertions."
+    }
+  ]
+}

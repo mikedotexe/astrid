@@ -1,0 +1,88 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1787101202_codec_projection_lane_scope_verify",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run (lease owned by adapter; no NDJSON/session/pause/resume by this process)",
+  "controller": {
+    "run_id": "run_1787097851308869000_eca884062c",
+    "preprojection_generation_id": "projection_1787097856630375000_3e83797cc5",
+    "pause_generation": 321,
+    "lease_actor": "claude-heartbeat"
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_codec_1787096344",
+    "terminal_status": "addressed_change",
+    "full_read": true,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 8,
+    "evidence_links_new": 13
+  },
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- <6 filters>",
+    "passed": 6, "failed": 0, "filtered_out": 1885,
+    "note": "existing regressions confirming verified_existing dispositions; no source changed"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44 tests)",
+    "test_evidence_event_store": "OK (20 tests)",
+    "test_steward_control": "OK (27 tests)",
+    "test_steward_projection": "OK (14 tests)",
+    "test_division_ceremony_followup": "OK (3 tests)",
+    "test_division_ceremony_chronicle": "OK (10 tests)",
+    "test_division_ceremony_projection": "OK (self-test)",
+    "test_projection_cursors": "OK (4 tests)",
+    "anti_drop_self_test": "OK (5 tests)",
+    "anti_drop_verify": "OK (0 alarms, rc=0)",
+    "test_introspection_cadence_audit": "OK (6 tests)",
+    "cadence_strict_compact": "integrity_ok=true, errors=[], duplicate_hash_group_count=0",
+    "experiential_epistemics_self_test": "OK (2 tests)",
+    "experiential_epistemics_verify_FINAL": "valid=true, checked_record_count=11263, issue_count=0, history_rewritten=false"
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical": {"indexed": 4404, "fully_addressed": 3114, "full_read": 3746, "remaining": 1290, "unread": 658, "blocked_needs_steward": 414, "triaged_pending_action": 214, "triaged_watch": 4, "read_needs_claims": 0},
+    "all_artifacts_pending": 2941,
+    "noncanonical_pending_approx": 1370
+  },
+  "evidence_event_store_v2": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "last_global_seq": 843536,
+    "last_event_sha256": "c312c9b413fc42acb8d72853d7413413be8c815c04a4b3046899c331bbbafd64",
+    "legacy_imported_boundary": 32278,
+    "addressing_stream_seq": 58315
+  },
+  "division": {
+    "cycle_sequence": 29,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "round_event_id": "division_followup_event_c8555f2e7f13926bf1b15a1b9b70b845",
+    "event_head_sha256": "f9df0bdf725ae5db70d3af53011019718466999a109dca15ab721d3bc4cdbd65"
+  },
+  "chronicle": {
+    "projected_this_round": true,
+    "reason": "record-round appended a Division follow-up event; Chronicle projection brought durable inputs current (deterministic stewardship projection, not a live/control change)",
+    "chronicle_id": "division_chronicle_116bc08b98a5f71024514de5",
+    "json_sha256": "d3cd9908fa632b054e7f0fccd7e446aab9aea6038811c8aed34559e1530f9172",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "healthy state: only the volatile supervisor hash moved; all durable inputs current. Output files live under minime/workspace/division/chronicle/ (generated artifacts, not in git status)."
+  },
+  "restart_deploy": "not required and not attempted; no source, config, live substrate, or control change this round",
+  "commit_debt": [
+    "CHANGELOG.md (appended one [Unreleased] bullet; file also carries prior-round stewardship edits — separate authorship at checkpoint)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (appended one row; file also carries prior-round edits)",
+    "docs/steward-notes/claude-heartbeat_1787101202_codec_projection_lane_scope_verify/ (new round packet, entire directory)"
+  ],
+  "foreign_preserved_untouched": [
+    "capsules/spectral-bridge/src/autonomous/runtime/tests.rs (prior-round/foreign, not touched)",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs (prior-round/foreign, not touched)",
+    "minime: minime_autonomy/runtime.py, tests/test_correspondence_v1.py (foreign, not touched)",
+    "5 prior claude-heartbeat_* packet dirs (foreign, not touched)"
+  ]
+}

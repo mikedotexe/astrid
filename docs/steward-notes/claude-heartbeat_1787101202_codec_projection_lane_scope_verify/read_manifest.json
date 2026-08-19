@@ -1,0 +1,50 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "round": "claude-heartbeat_1787101202_codec_projection_lane_scope_verify",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_codec_1787096344",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_codec_1787096344.txt",
+      "sha256": "513352fe82720c22edec73022e7e3b5eedd686cc37dea2932fcea31e3c193ca9",
+      "bytes": 3752,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_2a3dfe1eb39c55bd83102b6b1ae892871861ab837f355cf45ca77d0fd4a619d7",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_2a3dfe1eb39c55bd83102b6b1ae892871861ab837f355cf45ca77d0fd4a619d7.json",
+      "sha256": "f867b0d391a12a45ff3bf131423cbc1e598a5476f560194c9f9768a473a90ca9",
+      "bytes": 23859,
+      "lines": 533,
+      "read": "complete",
+      "notes": "artifact_sha256 in witness == report sha256 (integrity match). Fill 73.0%, runtime spectral_entropy 0.905, density_gradient 0.115, model_profile gemma4_12b (first mlx call repaired). No experiential gap claimed."
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/codec/projection.rs",
+      "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+      "report_bound_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+      "sha_match": true,
+      "total_lines": 1351,
+      "total_bytes": 53462,
+      "report_window": "1-400",
+      "steward_read_scope": "complete 1-1351 (ranges: 1-115, 115-324, 324-543, 543-758, 759-918, 917-950, 950-1024, 1024-1183, 1183-1351)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "read": "scoped",
+      "scope": "200-325 (apply_spectral_feedback_inner vibrancy + clamp application site)",
+      "reason": "the vibrancy lift/clamp mechanism cited in her snag c005 and test c007 lives here, not in projection.rs"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/tests.rs",
+      "read": "scoped",
+      "scope": "2261-2361, 2940-3042, 4820-4909 (evidence regressions for c004/c006/c007)",
+      "reason": "existing regressions that ground the proposed tests and the twin-report grounding"
+    }
+  ]
+}

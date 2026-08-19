@@ -1,0 +1,47 @@
+{
+ "round": "claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5",
+ "reports": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787118719.txt",
+   "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+   "sha256": "3673055caf35d11e8b2c1c31a763cbafe9df9ac98cfe94d63f6e100d1bf6a73b",
+   "bytes": 4196,
+   "lines": 43,
+   "read": "complete"
+  }
+ ],
+ "witnesses": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c8b7e8a19ba22bf0e7fe0434a32d4309fc29bf1825e40fc5c23bb114c09ef2aa.json",
+   "witness_id": "lsw_c8b7e8a19ba22bf0e7fe0434a32d4309fc29bf1825e40fc5c23bb114c09ef2aa",
+   "sha256": "3550db3e9becde2aa13b5ee7f125f4eea77c36c668c9804d8e90e128643c5ac1",
+   "bytes": 21440,
+   "lines": 498,
+   "read": "complete",
+   "notes": "artifact_sha256 field matches report SHA; canonical_body_sha256 matches model response_sha256; internally consistent. Queue-item lived_state_alignment='artifact_integrity_unavailable' with gap_count=1 is a projection-computed annotation (lived_state_experiential_gap_claimed=false); not a being-claimed gap; treated as neutral."
+  }
+ ],
+ "sources": [
+  {
+   "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+   "sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+   "bytes": 5022,
+   "lines": 89,
+   "read": "complete",
+   "read_scope": "complete_file_1_89",
+   "binding_match": true
+  },
+  {
+   "path": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+   "sha256": null,
+   "read_scope": "PressureSourceV1 struct L226-262 (porosity_score:f32 L230, pressure_score L229, components mode_packing) \u2014 grounds c004 that porosity is a derived field not a knob",
+   "read": "scoped"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/spectral_explorer.rs",
+   "sha256": null,
+   "read_scope": "PRESSURE SOURCE AUDIT V1 render L155-306 (read-only 'before tuning', applied_locally, divergence alarm) \u2014 grounds c004 read-only contract",
+   "read": "scoped"
+  }
+ ]
+}

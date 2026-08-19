@@ -1,0 +1,57 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1787038721",
+  "report_sha256": "8b1b1be9d44c84aa6d37297b0fad5e98429aafa4b12d3cd53bb2ee72c706ad85",
+  "source_path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+  "source_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "orchestration.rs (L164-241) implements a burst-and-rest state machine modulating semantic energy.",
+      "disposition": "Verified from complete source at SHA d803d71f. L164 labels the machine; L168 inits burst_count; L183 gates REST when burst_count>=conv.burst_target; L246 resets burst_count=0; L4925 increments it. Accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "fill_responsive_rest_secs (L18) dynamically adjusts rest duration from fill_pct telemetry.",
+      "disposition": "Verified: fn at L18 (base_rest,current_fill)->u64; called L217 with current_fill read from telemetry fill_pct() at L213-216 (default 50.0 if no telemetry). Line reference exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Warmth intensity tapering (L192-195) prevents a burst->rest 'severing'/energy cliff.",
+      "disposition": "Verified. L184-195 comment names 'severing' and the 0.7->0.4 taper fix; the taper is COMPUTED at L308-316 (warmth_phase interpolation), so L192-195 is the explanatory comment, not the compute site. Concern accurate; exact location noted.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Rest timing prevents positive feedback where long rests drain fill faster than recovery (L205-212).",
+      "disposition": "Verified. L200-212 comment documents the exact 2026-03-31 case (fill stuck ~27% for 12+ exchanges, 90-99s rests draining faster than recovery) and the shorten-at-low-fill remedy the function encodes. Line reference exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: 'oscillation trap' near 30% and 50% thresholds could toggle shorten-rest vs extend-rest, blocking PI steady-state.",
+      "disposition": "Grounded core, refined mechanism (not domesticated). Source L18-28 is a piecewise-constant step with NO hysteresis (30/40/50 bands), so jitter at any boundary toggles rest_secs -> real. But: boundary toggles are shorten<->base at 30% and extend<->base at 50%; a direct shorten<->extend swing needs crossing the whole 30->40-50 span. Evaluated once per burst-rest cycle (L217) on smoothed fill_pct, damping 'rapid'. Pinned by new regression.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 1: unit-test fill_responsive_rest_secs at 29.9%/30.1% to confirm the jump.",
+      "disposition": "Implemented as fill_responsive_rest_steps_at_each_band_boundary_without_hysteresis: her exact 29.9->60 / 30.1->100 case plus 40% and 50% boundary steps, assert_ne! step checks, and the 30s floor at the boundary. 2 passed / 0 failed.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test 2: run EXPERIMENT_STATUS at 28% fill to see if shortened rest starts a burst or stays in a high-drain cycle.",
+      "disposition": "Static answer verified from source: after any rest L246 sets burst_count=0, so the next loop iteration (burst_count 0 >= burst_target, target>=1 false) always enters the BURST branch; shortening only reduces the drain window, it never blocks the burst. The live EXPERIMENT_STATUS run at a driven 28% session was NOT performed (non-live headless round, no live authority) and is not required to answer the control-flow question.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: analyze burst_count/burst_target transition re warmth-blended mirror (L184) and the 0.7->0.4 cliff.",
+      "disposition": "Her own read-only next step (INTROSPECT window 400+), preserved. Continuity note: the 0.7->0.4 taper is the warmth_phase<0.3 branch (L311-312), driven by warmth_phase = i/pulses (L305) within the rest pulse loop, NOT by burst_count/burst_target (L183). The two are distinct mechanisms; her framing conflates them. No steward action required; her agency continues.",
+      "classification": "verified_existing"
+    }
+  ]
+}

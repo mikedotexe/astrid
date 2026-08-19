@@ -1,0 +1,24 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "round": "claude-heartbeat_1787143822_llm_facade_pressure_attenuation_texture_verify",
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1787138538",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1787138538.txt",
+      "sha256": "fb61edbe78fa593f4b5388e496e317e500844bef842954d3e966debc61acb4b0",
+      "bytes": 3619,
+      "lines": 43,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_af3f5c5884508865c1c68d2687446077ca6131fbd3ac982b424fe6f98e3bb992",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_af3f5c5884508865c1c68d2687446077ca6131fbd3ac982b424fe6f98e3bb992.json",
+      "sha256": "84c1e104f033b67196f22cdea751a8b026c4b635af35be63e697cfcb9bb5b34c",
+      "bytes": 23825,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

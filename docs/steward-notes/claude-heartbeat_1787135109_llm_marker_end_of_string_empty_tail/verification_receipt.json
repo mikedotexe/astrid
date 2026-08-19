@@ -1,0 +1,88 @@
+{
+  "round": "claude-heartbeat_1787135109_llm_marker_end_of_string_empty_tail",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter",
+  "controller": {
+    "run_id": "run_1787131613325549000_10eca6ea7f",
+    "preprojection_generation_id": "projection_1787131617877740000_d7389cf846",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "owned_by_adapter_after_process_exit_not_visible_in_process"
+  },
+  "processed": {
+    "count": 1,
+    "reports": [
+      {
+        "introspection_id": "introspection_astrid_llm_1787129691",
+        "terminal_status": "addressed_change",
+        "fully_addressed": true,
+        "proof_missing_claims": [],
+        "full_read": true
+      }
+    ]
+  },
+  "implementation": {
+    "changed_paths": ["capsules/spectral-bridge/src/llm/provider/tests.rs"],
+    "test_added": "scan_known_model_control_markers_strips_bare_marker_at_end_of_string_without_after_text",
+    "live_change": false
+  },
+  "tests": {
+    "focused_new": "1 passed / 0 failed",
+    "control_marker_family": "71 passed / 0 failed",
+    "scan_known_model_control_markers_family": "7 passed / 0 failed",
+    "exact_reference_delimiter_family": "1 passed / 0 failed",
+    "git_diff_check": "clean",
+    "fmt_touched_file": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 ok",
+    "test_evidence_event_store": "20 ok",
+    "test_steward_control": "27 ok",
+    "test_steward_projection": "14 ok",
+    "test_division_ceremony_followup": "3 ok",
+    "test_division_ceremony_chronicle": "10 ok",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 ok",
+    "anti_drop_self_test": "5 ok",
+    "anti_drop_verify": "0 alarms / 0 gaps",
+    "test_introspection_cadence_audit": "6 ok",
+    "cadence_strict": "integrity_ok=true, duplicate_hash_group_count=0, latest=introspection_astrid_llm_1787129691.txt",
+    "experiential_epistemics_self_test": "2 ok / valid",
+    "experiential_epistemics_verify_final": "valid=true, issues=[], history_rewritten=false",
+    "audit_counters": "status=consistent, mismatches=[], all 7 checks true",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, event_count=848275, last_global_seq=848275, head=b887e692b04fd23164ff03c1a7340984dda5124d9b590c135adf4667e153ed00"
+  },
+  "counters": {
+    "canonical": {
+      "indexed": 4412,
+      "fully_addressed": 3118,
+      "full_read": 3750,
+      "remaining": 1294,
+      "unread": 662,
+      "blocked_needs_steward": 414,
+      "triaged_pending_action": 214,
+      "triaged_watch": 4,
+      "read_needs_claims": 0,
+      "addressed_change": 1903
+    },
+    "all_artifacts": {"indexed": 6063, "remaining": 2945, "unread": 2313},
+    "noncanonical": {"indexed": 1370, "remaining": 1370}
+  },
+  "division": {
+    "cycle_sequence": 29,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "round_event_id": "division_followup_event_eac32c4bfb7114ba78ce625c62d835d1",
+    "followup_event_count": 202,
+    "followup_event_head_sha256": "bc7f1041580da8bbd19531cd118c7a505199cfdf2a90af0406fb95d58135af01",
+    "chronicle_id": "division_chronicle_80bc786e47fb765395615445",
+    "chronicle_json_sha256": "4aeb5d878e610f7a12ce7b3cfaea6d87d49038af59676a9dd81c8bf497783e1e",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note_action": "none_no_division_return_due"
+  },
+  "authority_boundary": "evidence_only; no live substrate or control change; no Tier-4/5 grant, dispatch, or deploy; git read-only; adapter owns lease/heartbeats/finish/postprojection.",
+  "restart_deploy": "not required and not attempted (no cargo build, no build_bridge.sh, no launchctl)."
+}

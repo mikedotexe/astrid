@@ -1,0 +1,27 @@
+{
+  "round": "autonomous_fill_rest_boundary_hysteresis",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787038721",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1787038721.txt",
+      "sha256": "8b1b1be9d44c84aa6d37297b0fad5e98429aafa4b12d3cd53bb2ee72c706ad85",
+      "bytes": 3528,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_d43d8e7d9b27076d82b779c3a36ef9893daccd2dfad83145878a05aa0ff93a70",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d43d8e7d9b27076d82b779c3a36ef9893daccd2dfad83145878a05aa0ff93a70.json",
+      "sha256": "2c720f257c5a6c7e74dd4eea5f76e0e98ab3a00fca54d3e39720d06f96de1a70",
+      "bytes": 23933,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "authority_state": "evidence_only",
+      "live_eligible_now": false
+    }
+  ]
+}

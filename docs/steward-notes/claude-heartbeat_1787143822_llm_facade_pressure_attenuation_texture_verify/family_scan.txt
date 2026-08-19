@@ -1,0 +1,24 @@
+families: 23 (batchable: 3), skipped: 0
+
+introspection_astrid_llm_1787127736  [astrid:llm lines1-400of1048]
+  + introspection_astrid_llm_1787125386  sim=0.529  delta: adjacent, certain, containing, covered, does, exists
+  + introspection_astrid_llm_1787067967  sim=0.383  delta: behaves, cause, characters, construction, contains, dirty
+  + introspection_astrid_llm_1786999457  sim=0.391  delta: assert, containing, hyphen, included, input, isolate
+  + introspection_astrid_llm_1786978572  sim=0.389  delta: action, after, allowed, before, behaves, block
+  + introspection_astrid_llm_1786954493  sim=0.385  delta: calculates, characters, collapse, confirm, delimiter_depth, detection
+  + introspection_astrid_llm_1786940663  sim=0.404  delta: captures, constant, containing, delimiter_depth, exists, first
+  + introspection_astrid_llm_1786932195  sim=0.353  delta: additionally, any, arm, behaves, characters, control
+  + introspection_astrid_llm_1786915559  sim=0.427  delta: asserting, before, boundary, contents, control, functional
+  + introspection_astrid_llm_1786814454  sim=0.386  delta: behaves, call, cause, containing, contextual, control
+  + introspection_astrid_llm_1786809350  sim=0.387  delta: appears, behaves, captured, characters, constraint, exists
+  + introspection_astrid_llm_1786788349  sim=0.438  delta: aren, behaves, certain, constant, even, exists
+  + introspection_astrid_llm_1786782248  sim=0.525  delta: calculates, captured, control, dash, delimiter_depth, despite
+  + introspection_astrid_llm_1786747782  sim=0.513  delta: behaves, boundary, catch, control, during, expected
+  + introspection_astrid_llm_1786711252  sim=0.53  delta: accidental, after, before, behaves, collapse, delimiter_depth
+  + introspection_astrid_llm_1786693815  sim=0.386  delta: based, call, cause, characters, constant, contains
+
+introspection_astrid_llm_1786965783  [astrid:llm lines1-400of1048]
+  + introspection_astrid_llm_1786822981  sim=0.382  delta: according, action, collapsing, dash, delimiter_depth, false
+
+introspection_astrid_llm_1786838089  [astrid:llm lines1-400of1048]
+  + introspection_astrid_llm_1786731228  sim=0.354  delta: account, additionally, because, block, certain, character
