@@ -643,6 +643,49 @@ class DurableCheckpointTests(unittest.TestCase):
             self.assertFalse(verification.valid)
 
 
+class ReaderIsolationTests(unittest.TestCase):
+    """Readers must never contend for the write lock (2026-08-19): the rw
+    connection's `journal_mode` pragma needs an exclusive lock, so pure
+    readers used to hit 'database is locked' 1-in-5 against a live writer.
+    mode=ro readers + the reconcile read-only fast path fix that without
+    touching the write path's durability posture."""
+
+    def test_readers_succeed_while_writer_holds_reserved_lock(self):
+        import sqlite3
+
+        with tempfile.TemporaryDirectory() as tmp:
+            store = EvidenceEventStore(Path(tmp) / "store")
+            store.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": f"c{i}"} for i in range(3)],
+            )
+            index = store.read_index
+            index.reconcile()  # index exists and matches head
+            # Simulate the live writer: hold a RESERVED lock on the index db.
+            writer = sqlite3.connect(index.path, timeout=1)
+            try:
+                writer.execute("BEGIN IMMEDIATE")
+                writer.execute(
+                    "INSERT INTO metadata(key, value) VALUES ('t', '1') "
+                    "ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+                )
+                start = time.monotonic()
+                status = index.status()
+                self.assertTrue(status.get("matches_head"))
+                events = list(index.iter_stream("addressing"))
+                self.assertEqual(len(events), 3)
+                self.assertTrue(index.has_anchor(3, events[-1].event_sha256))
+                # reconcile's read-only fast path must also pass lock-free
+                reconciled = index.reconcile()
+                self.assertTrue(reconciled.get("matches_head"))
+                elapsed = time.monotonic() - start
+                # old behavior: each reader waited the 30s busy timeout
+                self.assertLess(elapsed, 5.0)
+            finally:
+                writer.rollback()
+                writer.close()
+
+
 if __name__ == "__main__":
     raise SystemExit(
         0
@@ -650,7 +693,7 @@ if __name__ == "__main__":
         .run(
             unittest.TestSuite(
                 unittest.defaultTestLoader.loadTestsFromTestCase(case)
-                for case in (EvidenceEventStoreTests, DurableCheckpointTests)
+                for case in (EvidenceEventStoreTests, DurableCheckpointTests, ReaderIsolationTests)
             )
         )
         .wasSuccessful()
