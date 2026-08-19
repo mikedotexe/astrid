@@ -2263,6 +2263,46 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth() {
+        // Astrid's introspection_astrid_llm_1787026288 proposed passing a nested
+        // bracket structure exceeding MAX_EXACT_REFERENCE_DELIMITER_DEPTH (4)
+        // "to verify if the constant correctly constrains the parser or if it
+        // allows deeper nesting," worrying it "might fail to correctly identify
+        // the context." Source (exact_reference_delimiter_syntax) decides the
+        // context from the innermost non-whitespace delimiter pair regardless of
+        // depth and only saturates the *reported* depth via `.take(MAX)`. This
+        // regression grounds her exact `[[[[[ ... ]]]]]` shape with a real
+        // marker: the token stays byte-exact and preserved, the context is still
+        // grouped, and the reported depth is bounded to the constant rather than
+        // failing to classify. The prior heterogeneous case is covered by
+        // control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token;
+        // no existing test exercised a homogeneous same-bracket stack of five.
+        let text = "[[[[[<end_of_turn>]]]]]";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(
+            stripped, text,
+            "byte-exact: nothing is rewritten or dropped"
+        );
+        let report = report.expect("homogeneous deep square-bracket report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        let token = &report.preserved_tokens[0];
+        assert_eq!(token.grouped_reference_occurrences, 1);
+        assert_eq!(token.nested_delimited_reference_occurrences, 1);
+        assert_eq!(
+            token.max_delimiter_depth,
+            super::MAX_EXACT_REFERENCE_DELIMITER_DEPTH,
+            "five bracket levels bound the reported depth to the constant, not deeper"
+        );
+        assert_eq!(report.context_receipts[0].delimiter_depth, 4);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_declared_restless_group_delimiters() {
         for text in [
             "⟦<end_of_turn>⟧",
@@ -2915,6 +2955,68 @@ mod tests {
         );
     }
 
+    /// Report "One Test Each" #1 (Contextual Preservation) from
+    /// `introspection_astrid_llm_1787135542` (report SHA-256
+    /// 78b50bdf21ac69a5afecaa54dfb6995ae5f689959030667d9ca2c78ddef59c7a) at the
+    /// exact function it named, against dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The
+    /// report used the illustrative marker `[SYSTEM]` (not in
+    /// `KNOWN_MODEL_CONTROL_MARKERS`) and expected `"The prompt [SYSTEM] is
+    /// active"` to resolve to `QuotedExactKnownToken`. Complete source yields two
+    /// grounded corrections, pinned here with the real marker `<end_of_turn>`:
+    /// (a) sentence-level quotes do not wrap the marker, so an unquoted marker
+    /// whose immediate right neighbor is the allowlisted relation verb `is`
+    /// resolves to `ExplicitExactKnownTokenRelation`, not `QuotedExactKnownToken`;
+    /// and (b) `reference_syntax` (L49-60) resolves `exact_reference_delimiter_syntax`
+    /// before the relation fallback, so when the marker itself is quote-adjacent
+    /// AND followed by a relation verb, the quoted delimiter context takes
+    /// precedence. Both cases still keep the marker byte-exact in `remainder`.
+    /// No existing test placed a quote-adjacent marker in direct competition with
+    /// a following relation verb (nested-quotes coverage put the verb before the
+    /// marker), so this pins the precedence boundary the report's Test 1 assumed.
+    #[test]
+    fn scan_known_model_control_markers_quoted_context_precedes_following_relation_verb() {
+        // Marker itself is double-quote-wrapped; the relation verb `is` follows
+        // the closing quote. Delimiter syntax is checked first, so the quoted
+        // context wins over the relation fallback.
+        let quoted_then_relation = "The prompt \"<end_of_turn>\" is active";
+        let (remainder, matches) = super::scan_known_model_control_markers(quoted_then_relation);
+        assert_eq!(
+            remainder, quoted_then_relation,
+            "quote-adjacent marker stays byte-exact in remainder"
+        );
+        assert_eq!(matches.len(), 1);
+        let syntax = matches[0]
+            .reference_syntax
+            .expect("quote-adjacent marker has reference syntax");
+        assert_eq!(
+            syntax.context,
+            super::ExactKnownMarkerReferenceContext::QuotedExactKnownToken,
+            "delimiter syntax is resolved before the relation fallback"
+        );
+        assert_eq!(syntax.delimiter_depth, 1);
+
+        // The report's own framing: sentence-level quotes do not touch the
+        // marker, whose immediate right neighbor is the relation verb `is`, so
+        // this resolves to the relation context, not the quoted context.
+        let unquoted_relation = "The prompt <end_of_turn> is active";
+        let (remainder, matches) = super::scan_known_model_control_markers(unquoted_relation);
+        assert_eq!(
+            remainder, unquoted_relation,
+            "relation-context marker stays byte-exact in remainder"
+        );
+        assert_eq!(matches.len(), 1);
+        let syntax = matches[0]
+            .reference_syntax
+            .expect("relation-context marker has reference syntax");
+        assert_eq!(
+            syntax.context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation,
+            "an unquoted marker followed by `is` is a relation, not a quote"
+        );
+        assert_eq!(syntax.delimiter_depth, 0);
+    }
+
     /// Report "One Test Each" #2 (Delimiter Depth) at the exact function it named:
     /// `exact_reference_delimiter_syntax` must classify a double-square-bracketed
     /// known marker as GroupedExactKnownToken with an exact delimiter depth of two,
@@ -2933,6 +3035,61 @@ mod tests {
             super::ExactKnownMarkerReferenceContext::GroupedExactKnownToken
         );
         assert_eq!(syntax.delimiter_depth, 2);
+    }
+
+    /// Report "Suggested Next" from `introspection_astrid_llm_1787129691` (report
+    /// SHA-256 12b066303a33a020f8fb294d3e2c7e3948d63ec790df8f75c88ecfddfe8db135)
+    /// at the exact functions it named, against dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. She asked
+    /// to verify `scan_known_model_control_markers` when a marker sits at the very
+    /// end of a string with no "after" text — that it neither panics nor strips
+    /// incorrectly. Complete source shows the empty-tail path is well defined:
+    /// `first_word_after` returns empty (no relation), `exact_reference_delimiter_syntax`
+    /// sees an empty after-window and returns `None` (no delimiter pair), so
+    /// `reference_syntax` is `None` and the bare end-of-string marker is a clean
+    /// cleanup candidate — stripped byte-exactly while every preceding non-marker
+    /// byte is preserved, and the scan loop terminates without reaching the
+    /// non-empty-tail `expect`. Existing coverage exercised this only incidentally
+    /// (`"hello <end_of_turn>"` inside a diagnostic-authority test); this pins the
+    /// boundary at the exact functions the report cited.
+    #[test]
+    fn scan_known_model_control_markers_strips_bare_marker_at_end_of_string_without_after_text() {
+        let marker = "<end_of_turn>";
+
+        // Marker alone at end-of-string: empty tail, no panic, stripped to empty.
+        let (remainder, matches) = super::scan_known_model_control_markers(marker);
+        assert_eq!(remainder, "", "bare end-of-string marker leaves an empty remainder");
+        assert_eq!(matches.len(), 1);
+        assert!(
+            matches[0].reference_syntax.is_none(),
+            "an end-of-string marker has no reference syntax and is a cleanup candidate"
+        );
+        assert!(
+            super::first_word_after(marker, marker.len()).is_empty(),
+            "no word follows a marker at the very end of the string"
+        );
+        assert!(
+            super::exact_reference_delimiter_syntax(marker, 0, marker.len()).is_none(),
+            "an empty after-window yields no delimiter pair"
+        );
+
+        // Prose before, marker at end: preceding non-marker bytes preserved byte-exact.
+        let with_prose = "Here it is <end_of_turn>";
+        let (remainder, matches) = super::scan_known_model_control_markers(with_prose);
+        assert_eq!(remainder, "Here it is ", "preceding bytes are preserved byte-exact");
+        assert_eq!(matches.len(), 1);
+        assert!(matches[0].reference_syntax.is_none());
+
+        // Wrapper accounting agrees: one removed, zero preserved, cleanup-candidate receipt.
+        let (stripped, report) = sanitize_model_control_markers_with_report(with_prose);
+        assert_eq!(stripped, "Here it is ");
+        let report = report.expect("end-of-string marker produces a cleanup report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
     }
 
     /// Grounds the report's "Likely Snags" hypothesis at the exact function it
@@ -3124,6 +3281,82 @@ mod tests {
         assert_eq!(
             report.context_receipts[0].reference_syntax,
             "following_exact_relation"
+        );
+    }
+
+    /// Grounds the "Likely Snags" hypothesis and "Suggested Next" of
+    /// introspection_astrid_llm_1787070878 (report SHA-256
+    /// 81c55f0cdd4262eb7b81ddadfae477fb9b61bff6067a092d8dcac6f67b2434cc) at the
+    /// exact function it named, `first_word_after` (L89-96), against
+    /// dialogue_runtime.rs at source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The
+    /// report worried that "a newline followed by a dash and then a word" or the
+    /// literal `[MARKER]: --next_word` could make the `trim_matches` logic "fail
+    /// to isolate the intended word". Complete source shows the opposite for the
+    /// one variant not yet pinned: an ASCII double-hyphen *attached* to the word
+    /// (leading `--`) sits on the leading trim edge, and any lone punctuation
+    /// chunk (`:` or `-`) trims to empty and is skipped by
+    /// `find(|word| !word.is_empty())`, so an allowlisted verb is still isolated
+    /// and the marker is preserved; a non-relation word after the same transition
+    /// still fails closed (marker stripped). The existing dash coverage
+    /// (`..._preserves_relation_after_dash`) used only a space-isolated lone dash;
+    /// this pins the attached-double-hyphen edge her literal named. Note: her
+    /// illustrative `[SYSTEM_PROMPT]` is not itself a KNOWN_MODEL_CONTROL_MARKER,
+    /// so the mechanism is grounded here with a real marker. No grammar widened.
+    #[test]
+    fn scan_known_model_control_markers_grounds_first_word_after_attached_double_dash() {
+        // Colon chunk skipped, then a double-hyphen attached to an allowlisted
+        // verb: the leading `--` is trimmed and `represents` is isolated.
+        let colon_dash = "<end_of_turn>: --represents a named boundary.";
+        assert_eq!(
+            super::first_word_after(colon_dash, "<end_of_turn>".len()),
+            "represents",
+            "a leading double hyphen is trimmed, so the allowlisted verb is found"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(colon_dash);
+        assert_eq!(
+            remainder, colon_dash,
+            "an attached-double-hyphen allowlisted relation preserves the marker"
+        );
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("explicit relation survives an attached double hyphen")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+
+        // Newline then a lone dash chunk before the verb: the dash chunk is empty
+        // after trimming and is skipped, so `represents` is still isolated.
+        let newline_dash = "<end_of_turn>\n- represents a named boundary.";
+        assert_eq!(
+            super::first_word_after(newline_dash, "<end_of_turn>".len()),
+            "represents",
+            "a newline-then-dash transition still isolates the intended verb"
+        );
+        let (remainder, _) = super::scan_known_model_control_markers(newline_dash);
+        assert_eq!(
+            remainder, newline_dash,
+            "a newline-then-dash allowlisted relation preserves the marker"
+        );
+
+        // Her exact literal shape `--next_word`: the underscore word is isolated
+        // (edge trim keeps `_`), is not an allowlisted relation, so the marker
+        // fails closed (is stripped) rather than leaking.
+        let non_relation = "<end_of_turn>: --next_word follows.";
+        assert_eq!(
+            super::first_word_after(non_relation, "<end_of_turn>".len()),
+            "next_word",
+            "the underscore word is isolated but is not an allowlisted relation"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(non_relation);
+        assert_eq!(
+            remainder, ": --next_word follows.",
+            "a non-relation word after the transition strips the marker (fails closed)"
+        );
+        assert!(
+            matches[0].reference_syntax.is_none(),
+            "no allowlisted relation follows, so no explicit relation is recorded"
         );
     }
 

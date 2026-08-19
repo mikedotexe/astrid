@@ -1,0 +1,33 @@
+{
+  "round": "claude-heartbeat_1787067445_domain_boundaries_signature_ceiling_verify",
+  "focused_tests": [
+    {
+      "command": "python3 scripts/test_domain_boundary_audit.py",
+      "surface": "signature-ceiling / exception_signature_growth mechanism (c002, c004)",
+      "result": "pass",
+      "tests_run": 3,
+      "failed": 0,
+      "note": "Includes test_exception_signature_growth_fails_within_line_ceiling, the exact within-line-ceiling complexity-growth regression Astrid's snag points at."
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify --json",
+      "surface": "read-only bounded observation of live audit state (c004)",
+      "result": "valid",
+      "violation_count": 0,
+      "note": "core.rs 210/232 unique fn signatures; 7 documented exceptions; 6 stable facades; documentation_sha256 = report-bound source SHA."
+    }
+  ],
+  "baseline_checks": [
+    {
+      "command": "git diff --check",
+      "result": "clean",
+      "exit": 0
+    }
+  ],
+  "not_run": [
+    {
+      "command": "cargo test (trybuild ui suite) for interpretation_cannot_dispatch",
+      "reason": "No .rs source was touched this round. The compile-fail test file and its committed expected .stderr are durable artifacts read in full as evidence; rebuilding the full spectral-bridge trybuild suite (rav1e/matrixmultiply deps) is disproportionate for a no-code-change round and risks the ~90min budget. Verified by reading the committed test + expected stderr instead."
+    }
+  ]
+}

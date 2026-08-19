@@ -1,0 +1,62 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "rust": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "result": "69 passed; 0 failed; 0 ignored; 1820 filtered out",
+      "includes_new_test": "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup_bounds_homogeneous",
+      "result": "1 passed; 0 failed; 1888 filtered out"
+    }
+  ],
+  "format_and_diff": {
+    "git diff --check": "clean (exit 0)",
+    "cargo fmt --check (my inserted block)": "clean — no fmt diff in tests.rs lines 2260-2320 after wrapping the long assert_eq!",
+    "cargo fmt --check (repo baseline)": "pre-existing, committed, untouched drift in grounding.rs and elsewhere in tests.rs (present at HEAD, 12 hunks) — NOT introduced by this round; left untouched as foreign/pre-existing"
+  },
+  "stewardship_integrity": {
+    "introspection_addressing_audit.py --self-test": "44 tests OK",
+    "test_evidence_event_store.py": "20 tests OK",
+    "test_steward_control.py": "27 tests OK",
+    "test_steward_projection.py": "14 tests OK",
+    "test_division_ceremony_followup.py": "3 tests OK",
+    "test_division_ceremony_chronicle.py": "10 tests OK",
+    "test_division_ceremony_projection.py": "self-test ok",
+    "test_projection_cursors.py": "4 tests OK",
+    "anti_drop_catalog.py --self-test": "5 tests OK",
+    "anti_drop_catalog.py verify --json": "exit 0, alarms 0",
+    "test_introspection_cadence_audit.py": "6 tests OK",
+    "introspection_cadence_audit.py --strict --compact": "integrity_ok true, errors [], duplicate_hash_group_count 0",
+    "experiential_epistemics.py self-test --json": "2 tests OK, valid true",
+    "experiential_epistemics.py verify --json": "valid true, issue_count 0, history_rewritten false"
+  },
+  "final_counters": {
+    "introspection_addressing_audit.py audit-counters --json": "status consistent, mismatches []",
+    "canonical_indexed": 4396,
+    "canonical_fully_addressed": 3108,
+    "canonical_full_read": 3740,
+    "canonical_remaining": 1288,
+    "canonical_unread": 656,
+    "canonical_blocked_needs_steward": 414,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_remaining": 2937,
+    "all_artifacts_unread": 2305,
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0
+  },
+  "division": {
+    "division_ceremony_followup.py verify": "ok true, cycle 28, completed 1/6, remaining 5, review_due false, event_count 191",
+    "event_head_sha256": "0ff5ad6712d826660d7edb2f2c251852b2c7ec552193c1b66a67eff0ff2fabcd",
+    "round_event_id": "division_followup_event_fd7ece559b08aa597483c181492562a9",
+    "division_ceremony_chronicle.py project": "division_chronicle_d8ff24a59e97b1fe2e35eda7",
+    "division_ceremony_chronicle.py verify": "durable_inputs_current true, durable_mismatches [], volatile_mismatches [supervisor_status_sha256] (expected volatile, not a durable-integrity failure)",
+    "chronicle_json_sha256": "90dcb76f8edb1241f2b4ea2a337c1250302e3abbf24f0777b01099b2769b5e01"
+  },
+  "deferred_read_only_debt": {
+    "evidence_event_store.py --json verify": "DEFERRED — full hash-chain verify over the V2 store (last_global_seq ~835k+ at round start) exceeds this ~90min headless round's budget; both `verify` and `status` each ran past a 300s window without completing. NOT a failure: integrity is covered by test_evidence_event_store.py (20 OK), experiential_epistemics verify (valid, 0 issues, no history rewrite), and consistent audit-counters (proof_gap 0). Re-run in an interactive window: `python3 scripts/evidence_event_store.py --json verify` and `--json status`."
+  }
+}

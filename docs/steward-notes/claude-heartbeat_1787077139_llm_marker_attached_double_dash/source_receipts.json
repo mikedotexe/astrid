@@ -1,0 +1,27 @@
+{
+  "schema": "introspection_round_source_receipts_v1",
+  "round": "claude-heartbeat_1787077139_llm_marker_attached_double_dash",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true,
+      "read_scope": "lines 1-240 read completely (covers followed_by_explicit_exact_token_relation L64-86, first_word_after L89-96, longest_exact_known_model_control_marker_at L97-112, scan_known_model_control_markers L114-144, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229); the report cites L64-86, L89-96, L114, L199 which are all inside this interval; whole-file coverage already grounded across prior same-SHA rounds",
+      "scope_note": "working copy is byte-identical to the report-bound SHA, so report-time and current-source conclusions coincide"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256_prefix": "23fb26a1388d75de",
+      "read_scope": "lines 159-200 read completely to confirm KNOWN_MODEL_CONTROL_MARKERS membership (the report's illustrative token [SYSTEM_PROMPT] is NOT in this list; the real markers include <end_of_turn>, <start_of_turn>, [INST], [/INST])",
+      "purpose": "ground the [SYSTEM_PROMPT]-is-not-a-known-marker correction"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "lines 1-80 (test index grep), 1990-2219, 2780-3174 read completely; established prior same-SHA regressions already ground the relation-word preservation (L2945), the [[<end_of_turn>]] delimiter depth-two (L2963), and first_word_after punctuation boundaries (newline L2872, symbol-line L2852, punctuation-runs L2884, colon L3126, space-isolated dash L3153, NBSP L3029, soft-hyphen L3081); the attached-double-hyphen leading-edge variant was the only un-pinned literal her Suggested Next named",
+      "edit": "added scan_known_model_control_markers_grounds_first_word_after_attached_double_dash at L3189-3252 (post-edit file 3878 lines)"
+    }
+  ]
+}

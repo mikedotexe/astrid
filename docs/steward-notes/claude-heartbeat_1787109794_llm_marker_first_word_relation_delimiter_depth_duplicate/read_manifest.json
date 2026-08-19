@@ -1,0 +1,41 @@
+{
+  "schema": "read_manifest_v1",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787103043.txt",
+      "sha256": "1cc7d6049b85b89df0655ce1cfe6c59959e59f56b68073957e2bd90d2ad589aa",
+      "bytes": 3746,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_561f574837bec5d2dc8a7435aedd1360382f9ff29a3c791ceece6b6efb137dd2",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_561f574837bec5d2dc8a7435aedd1360382f9ff29a3c791ceece6b6efb137dd2.json",
+      "sha256": "51b5f3354a4080614e7adfcb6dad16d85bf93039cbf010e532d21882a3adf2e7",
+      "bytes": 23923,
+      "lines": 533,
+      "read": "complete",
+      "notes": "artifact_sha256 matches report; source file_sha256 902a0358; fill 71.03%; model gemma4_12b; authority_effect=false, evidence_only. Queue lived_state_gap_count=1 is artifact_integrity_unavailable (alignment not computable), not a claimed felt gap (lived_state_experiential_gap_claimed=false)."
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "L1-270 read in full (marker-grammar core: token band L8-16, marker types L18-60, first_word_after L89-96, scanner L114-144, MAX depth L151, delimiter pair/syntax L153-229, placement counts L231-255); L519-566 and L624-640 (sanitize call sites is_valid_dialogue_output/has_one_nonempty_final_next_action); L680-759 (generate_dialogue signature/body opening); scan/sanitize call-site grep across whole file. Report-bound SHA == working copy; report-time and current source identical.",
+      "dirty": false
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "9c40629f329cea9600c80f7f530604d2cb17f308b1ab028efca71a12f76faf29",
+      "read_scope": "Grounding tests read in full: L2932-2956 (preserves_grouped_and_explicit_relation_contexts = Test 1), L2962-2976 (exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two = Test 2), L2987-3016 (grounds_first_word_after_punctuation_boundary = snag), L3029-3031+ (grounds_first_word_after_non_breaking_space). All four confirmed present in HEAD (committed/durable), not in the foreign working-tree diff.",
+      "dirty": true,
+      "dirty_scope": "foreign in-progress edit (+116 insertions) NOT authored by this round; preserved untouched. Cited grounding tests are in HEAD (committed), independent of the foreign diff."
+    }
+  ]
+}

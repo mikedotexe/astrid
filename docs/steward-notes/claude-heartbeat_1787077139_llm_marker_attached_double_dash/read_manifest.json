@@ -1,0 +1,29 @@
+{
+  "schema": "introspection_round_read_manifest_v1",
+  "round": "claude-heartbeat_1787077139_llm_marker_attached_double_dash",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787070878",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787070878.txt",
+      "sha256": "81c55f0cdd4262eb7b81ddadfae477fb9b61bff6067a092d8dcac6f67b2434cc",
+      "bytes": 3569,
+      "lines": 45,
+      "read": "complete",
+      "source_path_named": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha_named": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_coverage_state": "multi_window_complete",
+      "source_coverage": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_ab92076a30482a09e40f3ce342bf2325f0960683f310a6169a305b94753ef19b",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ab92076a30482a09e40f3ce342bf2325f0960683f310a6169a305b94753ef19b.json",
+      "sha256": "a09ec6029ad53eafe7528ec780c63c5e1837fc349ceffb18b84fddba3b5e7449",
+      "bytes": 23936,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "round": "claude-heartbeat_1787143822_llm_facade_pressure_attenuation_texture_verify",
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/llm.rs",
+    "report_bound_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+    "working_copy_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+    "hash_match": true,
+    "total_lines": 28,
+    "total_bytes": 1287,
+    "read_scope": "complete (1-28)"
+  },
+  "adjacent_source_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider.rs",
+      "sha256": "23999cdab646139ebda119a11333090bf72ca9dabc25a0af659629eae0cedbfa",
+      "total_lines": 39,
+      "total_bytes": 1529,
+      "read_scope": "complete (1-39) — include! facade over provider/*.rs"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "3418f8d1f69d7d556fdbfe5d2c01f9866e0e8d01c6797cc10a9452ada38f833c",
+      "total_lines": 240,
+      "total_bytes": 32643,
+      "read_scope": "175-240 (astrid_tail_participation / astrid_vibrancy_aperture / vibrancy_aperture_ceiling / astrid_pressure_attenuation_depth getters+setters)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "sha256": "bd0e682d7cb6fe611225e72a9391702fdabe37cd74d7ad49a58f129460c9f447",
+      "total_lines": 720,
+      "total_bytes": 33992,
+      "read_scope": "90-179 (apply_spectral_feedback_with_report, apply_pressure_attenuation, apply_spectral_feedback_inner)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec_gain.rs",
+      "sha256": "37092dc71ff2e08b257869f54ead8bdd6a1eb9a13741151a314a96deda0f218a",
+      "total_lines": 220,
+      "total_bytes": 9741,
+      "read_scope": "100-164 (pressure_sensitive_attenuation + doc); test names at L163/L183/L200 confirmed by line-anchored grep"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "sha256": "32cb19e0c4d7510f5e6dfbc8323549cd1078bb61cec94d66171315d7ed66c4bf",
+      "total_lines": 685,
+      "total_bytes": 32410,
+      "read_scope": "120-189 (repair_introspection + repair_introspection_detailed head + repair system prompt)"
+    }
+  ]
+}

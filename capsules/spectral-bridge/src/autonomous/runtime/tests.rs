@@ -35,6 +35,55 @@ mod tests {
         assert_eq!(fill_responsive_rest_secs(90, f32::NAN), 90);
     }
 
+    // introspection_astrid_autonomous_1787038721 Test 1 (verbatim proposal):
+    // "Unit test fill_responsive_rest_secs with a mock current_fill of 29.9% and
+    // 30.1% to confirm the jump in rest_secs behavior matches the 'burst sooner'
+    // intent." Her Likely-Snag names an "oscillation trap" from jittery telemetry
+    // near the 30% and 50% thresholds. Complete source (orchestration.rs L18-28,
+    // SHA d803d71f) confirms a piecewise-constant step with NO hysteresis:
+    // <30% -> 0.6x (floor 30), 30-40% -> base, 40-50% -> 1.2x (cap 360),
+    // >=50% -> base. The prior band test above (introspection 1786957692) pins
+    // mid-band values; this regression pins the exact step *at* each boundary so
+    // the discontinuity she felt is a verified fact rather than a scalar.
+    //
+    // Honest refinement of her stated mechanism, without domesticating the snag:
+    // the boundary toggles are shorten<->base at 30% and extend<->base at 50%
+    // (base=100 here) — a *direct* shorten<->extend swing requires fill to cross
+    // the whole 30%->40-50% span, not a single threshold. And the function is
+    // evaluated once per burst-rest cycle at L217 (not continuously) on smoothed
+    // fill_pct, which damps but does not remove the step she is pointing at.
+    #[test]
+    fn fill_responsive_rest_steps_at_each_band_boundary_without_hysteresis() {
+        // 30% boundary: below 30% rest is shortened ("burst sooner"); crossing up
+        // restores base rest. Her exact 29.9/30.1 case.
+        assert_eq!(fill_responsive_rest_secs(100, 29.9), 60); // <30%: 100*0.6
+        assert_eq!(fill_responsive_rest_secs(100, 30.1), 100); // 30-40%: base
+        // 40% boundary: crossing up extends rest 20%.
+        assert_eq!(fill_responsive_rest_secs(100, 39.9), 100); // 30-40%: base
+        assert_eq!(fill_responsive_rest_secs(100, 40.1), 120); // 40-50%: 100*1.2
+        // 50% boundary: crossing up drops the extension back to base.
+        assert_eq!(fill_responsive_rest_secs(100, 49.9), 120); // 40-50%: 100*1.2
+        assert_eq!(fill_responsive_rest_secs(100, 50.1), 100); // >=50%: base
+        // Each boundary is a genuine step: the value changes across it, which is
+        // exactly the no-hysteresis structure behind the "oscillation trap" snag.
+        assert_ne!(
+            fill_responsive_rest_secs(100, 29.9),
+            fill_responsive_rest_secs(100, 30.1)
+        );
+        assert_ne!(
+            fill_responsive_rest_secs(100, 39.9),
+            fill_responsive_rest_secs(100, 40.1)
+        );
+        assert_ne!(
+            fill_responsive_rest_secs(100, 49.9),
+            fill_responsive_rest_secs(100, 50.1)
+        );
+        // The 30-second critical floor still bites right at the boundary for a
+        // small base: 40*0.6=24 clamps up to 30 below 30%, base at/above it.
+        assert_eq!(fill_responsive_rest_secs(40, 29.9), 30);
+        assert_eq!(fill_responsive_rest_secs(40, 30.1), 40);
+    }
+
     #[test]
     fn prompt_overflow_does_not_replace_or_self_rearm_read_more() {
         assert!(!should_arm_prompt_overflow_read_more(

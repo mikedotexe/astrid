@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787129691",
+  "report_sha256": "12b066303a33a020f8fb294d3e2c7e3948d63ec790df8f75c88ecfddfe8db135",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_read_scope": "complete_1_to_1048_report_bound_sha_equals_working_copy",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) is non-destructive; only markers with a reference_syntax (quoted/grouped/relation verb such as 'appears'/'denotes') are kept in the remainder, others stripped, non-marker bytes copied.",
+      "disposition": "verified_existing. Complete source: scan_known_model_control_markers L114-144 pushes the marker into remainder only when reference_syntax.is_some() (L129-131); reference_syntax L49-60 = delimiter syntax OR followed_by_explicit_exact_token_relation; 'appears' L67, 'denotes' L71 are allowlisted; non-marker chars copied byte-exact L133-140.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89) split_whitespace + trim_matches(!alnum && !'_') might strip punctuation significant to the model's tokenization, causing a mismatch between reference detection and the following word's actual tokenization.",
+      "disposition": "verified_existing; concern preserved, mechanism contradicted. first_word_after L89-96 runs on already-generated output during cleanup, not on tokenization, so no reference-vs-tokenization mismatch is possible. split_whitespace absorbs newlines/multiple spaces; trim only strips leading/trailing non-alnum. Committed L2873 (newline), L2884 (multi-punct), L2635, L2987, L3029 already ground the whitespace/punctuation boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Reference Preservation): '[MARKER] denotes X' should keep the marker in remainder because followed_by_explicit_exact_token_relation (L64) returns true.",
+      "disposition": "verified_existing; located precisely. For a BRACKETED marker, preservation fires first via the grouped delimiter path (exact_reference_delimiter_syntax L50), not the relation path; the relation path applies to a BARE marker. Both are covered: scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2932, bare '<end_of_turn> behaves as...'); 'denotes' allowlisted L71. '[MARKER]' is a placeholder, not a real marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): '[[MARKER]]' should be classified GroupedExactKnownToken by exact_reference_delimiter_syntax (L199) respecting MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151=4).",
+      "disposition": "verified_existing. exact_reference_delimiter_syntax L199-229 collects <=4 non-whitespace chars each side; '[[<end_of_turn>]]' => GroupedExactKnownToken, depth 2. Covered verbatim by exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (tests.rs L2963); depth-3/4 and beyond-max at L2194/L2208/L2266.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify scan_known_model_control_markers when a marker is at the very end of a string (no 'after' text) — ensure it does not panic or strip incorrectly.",
+      "disposition": "implemented_now. Traced complete source: empty tail => first_word_after returns empty (L89-96), exact_reference_delimiter_syntax gets an empty after-window => None (L210-215), so reference_syntax=None and the bare end-of-string marker is stripped byte-exactly; the L137 expect is never reached (marker branch taken). Existing coverage exercised this only incidentally ('hello <end_of_turn>' in a diagnostic test L1821). Added a dedicated regression at the exact cited functions.",
+      "classification": "implemented_now"
+    }
+  ]
+}

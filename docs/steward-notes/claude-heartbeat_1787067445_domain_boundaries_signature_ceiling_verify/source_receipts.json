@@ -1,0 +1,53 @@
+{
+  "round": "claude-heartbeat_1787067445_domain_boundaries_signature_ceiling_verify",
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+    "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "working_copy_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "witness_file_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "binding_match": true,
+    "total_lines": 89,
+    "total_bytes": 5022,
+    "read_scope": "complete_file_1_89"
+  },
+  "corroborating_sources": [
+    {
+      "path": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+      "role": "Test 1 existence + behavior (compile-fail dispatch isolation)",
+      "total_bytes": 456,
+      "companion_stderr": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.stderr",
+      "read_scope": "complete"
+    },
+    {
+      "path": "scripts/domain_boundary_audit.py",
+      "role": "Snag c002 + Test 2 mechanism (unique-fn-signature ceiling / exception_signature_growth)",
+      "total_bytes": 13676,
+      "read_scope": "signature-mechanism region L60, L104-107, L169-183, L217-251"
+    },
+    {
+      "path": "scripts/steward_control/projection_profile.py",
+      "role": "Snag c002 cadence: domain_boundary_audit is source-first projection stage 10",
+      "read_scope": "L272-296"
+    },
+    {
+      "path": "scripts/test_domain_boundary_audit.py",
+      "role": "Snag c002 + Test 2 regression coverage",
+      "total_bytes": null,
+      "total_lines": 108,
+      "read_scope": "L75-92 signature-growth regression, executed 3/3 green"
+    }
+  ],
+  "runtime_observation": {
+    "tool": "python3 scripts/domain_boundary_audit.py verify --json",
+    "kind": "read_only_bounded_observation",
+    "core_rs_unique_fn_signatures": 210,
+    "core_rs_maximum_unique_fn_signatures": 232,
+    "core_rs_line_count": 10609,
+    "audit_valid": true,
+    "violation_count": 0,
+    "documented_cohesion_exception_count": 7,
+    "stable_facade_count": 6,
+    "legacy_large_file_count": 53,
+    "documentation_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f"
+  }
+}

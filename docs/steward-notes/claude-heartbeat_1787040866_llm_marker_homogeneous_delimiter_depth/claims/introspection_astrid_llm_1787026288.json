@@ -1,0 +1,60 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787026288",
+  "source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256_report_bound": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_sha256_working_copy": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding": "byte_identical_working_copy_is_report_time_source",
+  "source_coverage_read": "complete_1_to_1048",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "reference_syntax (L49) + followed_by_explicit_exact_token_relation (L64) keep a marker visible when it is the grammatical subject of a following relation verb (e.g. appears/behaves/represents).",
+      "disposition": "Verified from complete source. impl at L49-60; the verb allowlist is L65-86 (18 verbs incl. is, means, denotes). No preceding word is inspected (L62-63 doc). Structural fact accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Delimiter awareness recognizes many quote/group marks (L153-197), incl. multi-byte pairs like the CJK corner brackets.",
+      "disposition": "Verified. exact_reference_delimiter_pair L153-197; CJK corner brackets at L168-172; grouped set L175-192. Existing regressions L2302/L2322/L2343 pin non-ASCII/CJK pairs. Accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "scan_known_model_control_markers (L114) iterates the string, taking the longest KNOWN_MODEL_CONTROL_MARKERS match and reconstructing a cleaned remainder.",
+      "disposition": "Verified. Longest match via max_by_key(token.len()) L102-106; loop L121-141. Refinement: a matched marker is pushed to the remainder ONLY if reference_syntax.is_some() (L129-131) — unreferenced markers are dropped; non-marker bytes copied byte-exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: fragment_has_non_marker_bytes (L146) returns true if ANY non-marker char remains after trimming; a lone space or period could trigger a non-marker state interfering with downstream logic expecting pure control sequences.",
+      "disposition": "Partly contradicted. It returns !without_markers.trim().is_empty() (L148): .trim() strips whitespace, so a LONE SPACE returns false (not true); a period returns true. And it feeds ONLY control_marker_placement_counts (L235-236) -> boundary/contextual receipt counts (evidence), not the sanitized output or the quality gate — so 'interfere with downstream expecting pure sequences' is not grounded in the call graph. Underlying concern (over-eager classification) preserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151); nesting beyond 4 might fail to identify context -> incorrect marker visibility.",
+      "disposition": "Contradicted, not domesticated. exact_reference_delimiter_syntax (L199-229) sets context from the INNERMOST non-whitespace pair (before.first/after.first, L215) regardless of depth; only the reported delimiter_depth saturates via .take(MAX) (L208/L213) and the take_while count (L216-223). So context detection does not fail; the constant caps the reported count. Existing L2253 proves deeper nesting still preserves the token.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test: followed_by_explicit_exact_token_relation returns true for '[SYSTEM] behaves as a guide' but false for '[SYSTEM] is a test'.",
+      "disposition": "Contradicted, preserved. 'is' IS allowlisted at L76, so a marker followed by 'is' returns TRUE, not false. Same contradiction the prior round (introspection_astrid_llm_1786319270) corrected; existing regression control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (tests.rs L2528) asserts 'is' preserved vs unlisted 'acts' stripped. The 'behaves'->true half is correct. No new test needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test: pass a nested bracket structure exceeding 4 levels (e.g. [[[[[ [SYSTEM] ]]]]]) to exact_reference_delimiter_syntax to verify whether MAX_EXACT_REFERENCE_DELIMITER_DEPTH constrains the parser or allows deeper nesting.",
+      "disposition": "Implemented. Added control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (tests.rs) using her exact [[[[[...]]]]] shape with a REAL marker (<end_of_turn>; her [SYSTEM] is not in KNOWN_MODEL_CONTROL_MARKERS). Asserts: token byte-exact preserved, grouped context still identified, reported depth saturates at MAX (4) — the constant caps the reported depth, it does NOT fail to classify. No existing test covered a homogeneous same-bracket stack (only heterogeneous L2253).",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder from scan_known_model_control_markers is integrated into the final output buffer.",
+      "disposition": "Verified answer: it is NOT integrated. generate_dialogue (L695-1048) returns the RAW model text verbatim (L997-998, L1007-1008). The scan remainder is used only inside the validity gate (sanitize_model_control_markers -> is_valid_dialogue_output L558 / has_one_nonempty_final_next_action L634) and the ControlMarkerCleanupReport evidence. Astrid's emitted bytes are never rewritten by the sanitizer — accept/reject only. Aligns with the never-rewrite-being-text invariant.",
+      "classification": "verified_existing"
+    }
+  ],
+  "terminal_status": "addressed_change",
+  "terminal_rationale": "One report-driven regression added (c007 homogeneous >4 square-bracket stack, genuinely uncovered); remaining claims verified against complete source with two contradictions (c005 depth, c006 'is') preserved, not domesticated. Not a clean duplicate: c006's 'is'->false framing and c007's homogeneous shape are distinct from prior family rounds."
+}

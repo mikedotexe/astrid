@@ -1,0 +1,19 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "round": "claude-heartbeat_1787143822_llm_facade_pressure_attenuation_texture_verify",
+  "production_source_changed": false,
+  "focused_tests": {
+    "ran": false,
+    "reason": "No production or test source was changed this round (verify/observe disposition). Dispositions are grounded on complete-source reads and cited EXISTING regressions; no new Rust to compile.",
+    "cited_existing_regressions": [
+      "capsules/spectral-bridge/src/codec_gain.rs::pressure_attenuation_is_monotone_and_depth_clamped (L183)",
+      "capsules/spectral-bridge/src/codec_gain.rs::pressure_attenuation_off_is_identity_and_bounded (L163)",
+      "capsules/spectral-bridge/src/codec/tests.rs::vibrancy_aperture_dynamic_ceiling_is_bounded_and_navigable_gated (L4720)",
+      "capsules/spectral-bridge/src/autonomous/next_action/self_regulation.rs::vibrancy_aperture_requires_tail_evidence_then_applies_and_reverts (L4459)"
+    ]
+  },
+  "baseline_checks": {
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": "all OK — recorded in full in verification_receipt.json (addressing 44 / EES 20 / control 27 / projection 14 / division-followup 3 / chronicle 10 / division-projection self-test / cursors 4 / anti-drop 5 + verify / cadence 6 + strict integrity_ok / epistemic self-test + FINAL verify valid=true issue_count=0; counter audit consistent; EES verify valid=true corrupt_lines=0)"
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "introspection_round_test_results_v1",
+  "round": "claude-heartbeat_1787077139_llm_marker_attached_double_dash",
+  "toolchain": "cargo via ~/.cargo/bin (rustup shim); PATH-adjusted",
+  "focused": [
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib scan_known_model_control_markers_grounds_first_word_after_attached_double_dash",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "note": "new regression added this round"
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "result": "ok",
+      "passed": 70,
+      "failed": 0
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- scan_known_model_control_markers first_word_after exact_reference_delimiter",
+      "result": "ok",
+      "passed": 8,
+      "failed": 0
+    }
+  ],
+  "formatting": [
+    {
+      "cmd": "git diff --check",
+      "result": "clean (no whitespace errors)"
+    },
+    {
+      "cmd": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check (crate-wide)",
+      "result": "edited file provider/tests.rs conforms; a PRE-EXISTING, foreign, committed rustfmt nonconformance remains in src/autonomous/introspect/source_first_v3/grounding.rs (unmodified by this round, left untouched)"
+    }
+  ]
+}

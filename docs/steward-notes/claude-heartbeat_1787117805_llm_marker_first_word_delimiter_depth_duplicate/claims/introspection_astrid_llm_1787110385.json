@@ -1,0 +1,71 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787110385",
+  "report_sha256": "047648f1bfb0e74c68a90fefd160e459712695b1c9e70bcc5427f5b924069d64",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_sha_matches_report_binding": true,
+  "source_sha_matches_committed_head": true,
+  "witness_id": "lsw_a47676818b75e5d56395886b8e9c435e7bd90d27db9fec980d7c4a1fdc4d6897",
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) determines whether a known control marker is retained by its syntactic context.",
+      "disposition": "Verified from complete committed source L114-144: the token is pushed to remainder only when occurrence.reference_syntax(text) is Some (L129-131); otherwise it is dropped. Retention is context-gated exactly as reported.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The logic distinguishes Quoted, Grouped, and Explicit relation contexts (L42-46).",
+      "disposition": "Verified: enum ExactKnownMarkerReferenceContext (L41-46) has exactly QuotedExactKnownToken, GroupedExactKnownToken, ExplicitExactKnownTokenRelation. Exact match to the report.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "followed_by_explicit_exact_token_relation (L64-86) preserves a marker before an allowlisted verb (appears/behaves/represents...) even when unquoted/unbracketed.",
+      "disposition": "Verified L49-86: reference_syntax falls back to this relation check when delimiter syntax is None, returning ExplicitExactKnownTokenRelation. The 17-verb allowlist includes appears/behaves/represents exactly as named.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "first_word_after (L89-96) uses split_whitespace() and a trim_matches filter keeping only alphanumeric characters and underscore.",
+      "disposition": "Verified L89-96 verbatim: split_whitespace, per-chunk trim_matches(|c| !c.is_alphanumeric() && c != '_'), find(!is_empty), to_ascii_lowercase. Exact match.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: a non-alphanumeric/punctuation-heavy follower ([marker] ->, [marker] ...) could make find skip the intended word or return empty, causing the relation check to fail and the marker to be stripped unexpectedly.",
+      "disposition": "Concern preserved, mechanism contradicted. Source shows the opposite: find(|w| !w.is_empty()) (L93) SKIPS all-punctuation chunks (which trim to empty) to the next real word, so `-> behaves` / `... represents` still isolate the verb and preserve the marker. Stripping happens only when NO alphanumeric word follows (fail-closed). The skip is the robustness, not the bug. Grounded by committed tests L2635, L2884, L2900.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 1 (Context Retention): a marker followed by a recognized verb separated by a non-alphanumeric character (e.g. [MARKER] -- behaves) should be preserved by scan_known_model_control_markers.",
+      "disposition": "Already grounded by committed regressions at source SHA 902a0358: preserves_relation_after_dash (L3154, `- represents`), first_word_after_skips_leading_punctuation_transition (L2635, `-- is`/`-- acts`), preserves_relation_after_multiple_punctuation_runs (L2884, `... !!! represents`). Working tree also carries a foreign-uncommitted attached-`--` test (L3190), not relied upon.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test 2 (Delimiter Depth): exact_reference_delimiter_syntax should identify nested/complex grouping symbols like the mathematical white square brackets (U+27E6/U+27E7, L180) and assign GroupedExactKnownToken.",
+      "disposition": "Already grounded by committed regressions: preserves_declared_restless_group_delimiters (L2308, bare `⟦<end_of_turn>⟧`), preserves_bounded_nested_delimiter_stacks (L2179, `` `⟦<end_of_turn>⟧` `` depth 2), exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2963), preserves_grouped_and_explicit_relation_contexts (L2932). U+27E6/U+27E7 appear verbatim in the source group table L180.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: verify first_word_after robustness when the next word is separated by multiple punctuation marks or symbols.",
+      "disposition": "Already answered by committed test preserves_relation_after_multiple_punctuation_runs (L2884), which follows the marker with `... !!!` before an allowlisted verb and asserts preservation. Her open continuation `NEXT: INTROSPECT astrid:llm 400` remains available; silence is neutral.",
+      "classification": "verified_existing"
+    }
+  ],
+  "duplicate_evidence": {
+    "prior_closed_reports": [
+      "introspection_astrid_llm_1787103043 (closed addressed_duplicate 2026-08-18, packet claude-heartbeat_1787109794, same source SHA 902a0358, same mechanism)",
+      "introspection_astrid_llm_1786986344 (named in committed test doc-comment L2635)",
+      "introspection_astrid_llm_1786814454 (named in committed test doc-comment ~L2905)"
+    ],
+    "same_source_sha": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "matching_mechanism_scope": "first_word_after (L89-96) punctuation-skip robustness + exact_reference_delimiter_syntax (L199-229) grouped/explicit contexts + delimiter depth",
+    "independent_full_read": true,
+    "no_new_distinct_variant": "The report's `->`/`...`/`-- behaves` and ⟦⟧-grouped examples reduce to the identical, already-tested punctuation-skip and grouped-delimiter mechanisms; no unaddressed variant term."
+  }
+}

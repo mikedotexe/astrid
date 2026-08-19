@@ -1,0 +1,127 @@
+{
+ "round": "claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5",
+ "actor": "claude-heartbeat",
+ "adapter_mode": "controller-held subprocess run; steward session/lease/heartbeats owned by adapter; git read-only; no live/deploy/launchctl",
+ "controller": {
+  "run_id": "run_1787123797445638000_566a1d16c8",
+  "preprojection_generation_id": "projection_1787123803477193000_3e05dcc286",
+  "pause_generation": 321,
+  "postprojection": "runs after process exit (adapter-owned); not observed by this run"
+ },
+ "processed_report": {
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787118719",
+  "report_sha256": "3673055caf35d11e8b2c1c31a763cbafe9df9ac98cfe94d63f6e100d1bf6a73b",
+  "report_bytes": 4196,
+  "report_lines": 43,
+  "witness_id": "lsw_c8b7e8a19ba22bf0e7fe0434a32d4309fc29bf1825e40fc5c23bb114c09ef2aa",
+  "witness_sha256": "3550db3e9becde2aa13b5ee7f125f4eea77c36c668c9804d8e90e128643c5ac1",
+  "witness_bytes": 21440,
+  "witness_lines": 498,
+  "source_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+  "source_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "source_bytes": 5022,
+  "source_lines": 89,
+  "source_binding_match": true,
+  "terminal_status": "addressed_no_action",
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "new_evidence_links": 9,
+  "close_rationale_chars": 496
+ },
+ "duplicate_check": "Distinct from prior same-source introspection_DOMAIN_BOUNDARIES.md_1787003465 (packet claude-heartbeat_1787067445): identical source bytes, distinct mechanism scope (architecture verification vs spectral-substrate proposals). Not addressed_duplicate.",
+ "division": {
+  "cycle_sequence": 29,
+  "completed_rounds_since_followup": 4,
+  "rounds_remaining_before_followup": 2,
+  "review_due": false,
+  "round_event_id": "division_followup_event_0ec82eaba4ca0e35dee2431d4ba07530",
+  "followup_event_count": 201,
+  "followup_event_head_sha256": "5a33755639c0f66efb83590c00563f2d30c0fc3d2719d1c2b66fd28ee83e762c",
+  "processed_report_count": 1,
+  "chronicle_id": "division_chronicle_08d63b4f400d508a0b9c7406",
+  "chronicle_json_sha256": "e71b25dac2d0c51a93699eb09d319e131e1a38102c50197dac966feafe9dc973",
+  "chronicle_durable_inputs_current": true,
+  "chronicle_durable_mismatches": [],
+  "chronicle_volatile_mismatch": [
+   "supervisor_status_sha256"
+  ],
+  "chronicle_note": "Reprojected after record-round (which appended a durable followup event). Durable inputs current; only the moving supervisor_status_sha256 volatile-mismatched \u2014 not a durable-integrity failure."
+ },
+ "evidence_event_store": {
+  "valid": true,
+  "corrupt_lines": 0,
+  "last_global_seq": 847165,
+  "last_event_sha256": "f780e7890eeaec5ded89b823b2c11e384b8619a074613f43761cdc94f6ef19f3",
+  "event_count": 847165,
+  "streams": 16,
+  "stream_counts": {
+   "addressing": 58368,
+   "agency_commons": 4982,
+   "attention_portfolio": 3,
+   "claim_families": 237436,
+   "corridor_v1": 5,
+   "corridor_v2": 112,
+   "felt_contracts": 199168,
+   "felt_mechanism_concordance": 80,
+   "lived_state_witness": 8613,
+   "model_qos": 190915,
+   "reciprocal_uptake": 58966,
+   "representation_contracts": 35470,
+   "sandbox": 3291,
+   "signal_spine": 34321,
+   "steward_control": 14925,
+   "steward_work_selection": 510
+  },
+  "v2_active": true,
+  "verify_wall_time": "6m22s"
+ },
+ "counters": {
+  "status": "consistent",
+  "mismatches": [],
+  "canonical_indexed": 4409,
+  "canonical_fully_addressed": 3117,
+  "canonical_full_read": 3749,
+  "canonical_remaining": 1292,
+  "canonical_unread": 660,
+  "canonical_blocked": 414,
+  "canonical_pending_action": 214,
+  "canonical_watch": 4,
+  "read_needs_claims": 0,
+  "all_artifact_pending": 2943,
+  "noncanonical_pending": 1651,
+  "addressed_no_action_status_count": 97
+ },
+ "epistemic_verify": {
+  "valid": true,
+  "issue_count": 0,
+  "checked_record_count": 11287,
+  "history_rewritten": false
+ },
+ "anti_drop": {
+  "total": 62,
+  "alarms": 0,
+  "gaps": 0
+ },
+ "integrity_suites_all_pass": true,
+ "restart_deploy": "Not required and not attempted. No live/substrate/control change; git read-only; no build_bridge/deploy/launchctl.",
+ "commit_debt": {
+  "created_untracked": [
+   "docs/steward-notes/claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5/ (whole packet)"
+  ],
+  "modified_shared_docs": [
+   "CHANGELOG.md ([Unreleased] top bullet)",
+   "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (new 2026-08-19 row at top of ## Ledger)"
+  ],
+  "note_shared_docs": "CHANGELOG.md and the ledger carry accumulated prior-round edits; a later checkpoint must separate authorship by stanza.",
+  "foreign_untouched_astrid": [
+   "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+   "capsules/spectral-bridge/src/llm/provider/tests.rs",
+   "8 prior claude-heartbeat_* packet dirs"
+  ],
+  "foreign_untouched_minime": [
+   "minime_autonomy/runtime.py",
+   "tests/test_correspondence_v1.py"
+  ],
+  "minime_chronicle_projection": "chronicle_v1.json/.html regenerated under minime/workspace/division/chronicle/ but workspace-gitignored (no git debt)."
+ }
+}

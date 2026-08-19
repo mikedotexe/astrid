@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787129691",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 keeps a marker in the remainder only when reference_syntax.is_some() (L129-131); reference_syntax L49-60; relation allowlist L64-86; non-marker bytes copied byte-exact L133-140."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787129691",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 runs on generated output during cleanup, not tokenization; split_whitespace absorbs newlines/multiple spaces; trim_matches strips only leading/trailing non-alnum."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787129691",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Whitespace/punctuation boundary already grounded: control_marker_cleanup_preserves_relation_across_newline (L2873), ...after_multiple_punctuation_runs (L2884), scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary (L2987), ...non_breaking_space (L3029)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787129691",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2932) covers bare-relation preservation ('<end_of_turn> behaves as...'); 'denotes' allowlisted at dialogue_runtime.rs L71. Bracketed markers preserve via the grouped path first."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787129691",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L2963) pins '[[<end_of_turn>]]' => GroupedExactKnownToken depth 2; deeper depths at L2194/L2208/L2266."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787129691",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New regression scan_known_model_control_markers_strips_bare_marker_at_end_of_string_without_after_text: bare end-of-string marker => empty remainder, no panic, first_word_after empty, exact_reference_delimiter_syntax None; prose-before preserved byte-exact; wrapper report 1 removed / 0 preserved / none_cleanup_candidate receipt."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787129691",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Empty-tail path: first_word_after L89-96 returns empty; exact_reference_delimiter_syntax L199-215 returns None for an empty after-window; scan loop L121-141 terminates without reaching the non-empty-tail expect at L137."
+    }
+  ]
+}

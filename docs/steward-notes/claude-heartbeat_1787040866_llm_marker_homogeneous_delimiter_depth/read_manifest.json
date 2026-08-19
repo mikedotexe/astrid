@@ -1,0 +1,45 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787026288.txt",
+      "sha256": "5a0edfb35fc2be0a949d39b2057e085be3bc896598730431c31ca575fe75d42b",
+      "bytes": 4094,
+      "lines": 49,
+      "read": "complete",
+      "source_path_named": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha_named": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_coverage": "multi_window_complete_included_1_to_1048_uncovered_none",
+      "witness_id": "lsw_d6a99fad… (lsw_d7e1edf72488a1234b4d5bb5ba24e67f4d6b67b5808de8dd34aaef9bb80a8a71)"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_d7e1edf72488a1234b4d5bb5ba24e67f4d6b67b5808de8dd34aaef9bb80a8a71",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d7e1edf72488a1234b4d5bb5ba24e67f4d6b67b5808de8dd34aaef9bb80a8a71.json",
+      "sha256": "8eea01e0a18a3f5832cdd0a8ac10deee1942e800bb26cd6db9d10c09c13fc609",
+      "bytes": 23912,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_binding": "5a0edfb35fc2be0a949d39b2057e085be3bc896598730431c31ca575fe75d42b",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "grants_approval": false,
+      "edits_source_now": false,
+      "direct_causation_claimed": false,
+      "raw_introspection_prose_included": false,
+      "runtime_observations_context_only": {
+        "fill_pct": 66.517,
+        "spectral_entropy": 0.898,
+        "mode_packing_resonance": 1.0,
+        "pressure_source_porosity": 0.606,
+        "model_profile": "gemma4_12b",
+        "model_calls": 2,
+        "second_call_is_repair_of_first": true
+      }
+    }
+  ]
+}

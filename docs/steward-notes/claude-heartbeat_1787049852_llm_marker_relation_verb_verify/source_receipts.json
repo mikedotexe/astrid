@@ -1,0 +1,25 @@
+{
+  "round": "claude-heartbeat_1787049852_llm_marker_relation_verb_verify",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "read_scope": "L1-260 read completely (all marker-scanning functions cited by the report: KnownModelControlMarkerMatch struct L18-22, ExactKnownMarkerReferenceSyntax L36-39, reference_syntax L49-60, followed_by_explicit_exact_token_relation L64-86, first_word_after L89-96, longest_exact_known_model_control_marker_at L97-112, scan_known_model_control_markers L114-144, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229). Integration path verified by grep: sanitize_model_control_markers_with_report L352, sanitize_model_control_markers L519 used at L558/L634, generate_dialogue L695.",
+      "verified_line_citations": {
+        "scan_known_model_control_markers": 114,
+        "first_word_after": 89,
+        "followed_by_explicit_exact_token_relation": 64,
+        "exact_reference_delimiter_syntax": 199,
+        "ExactKnownMarkerReferenceSyntax_struct": 36,
+        "remainder_push_when_reference_syntax_some": "129-130",
+        "saturating_add_len_utf8": 139,
+        "generate_dialogue": 695
+      },
+      "note": "Every line number Astrid cited resolves exactly to the named construct at the report-bound SHA."
+    }
+  ]
+}

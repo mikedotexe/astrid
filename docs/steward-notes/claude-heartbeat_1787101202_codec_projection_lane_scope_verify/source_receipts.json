@@ -1,0 +1,43 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "round": "claude-heartbeat_1787101202_codec_projection_lane_scope_verify",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/codec/projection.rs",
+      "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+      "total_lines": 1351,
+      "total_bytes": 53462,
+      "read_scope": "complete",
+      "read_intervals": ["1-115","115-324","324-543","543-758","759-918","917-950","950-1024","1024-1183","1183-1351"],
+      "report_bound": true,
+      "sha_match_with_report": true,
+      "grounded_symbols": {
+        "SEMANTIC_DIM=48": 26,
+        "SEMANTIC_DIM_LEGACY=32": 28,
+        "FEATURE_ABS_MAX=5.0": 32,
+        "TAIL_VIBRANCY_ENTROPY_GATE=0.85": 48,
+        "TAIL_VIBRANCY_MAX=6.0": 53,
+        "STRUCTURAL_ENTROPY_DAMPENING_*": "60-64",
+        "NARRATIVE_ARC_DIM=4": 79,
+        "SEMANTIC_FOCUS_PREVIEW_DIM=4": 82,
+        "RESERVED_CODEC_DIM_START=44": 80,
+        "embedding_projection_matrix (768->8, fills 32-39)": "172-189",
+        "project_embedding_dynamic_epoch_with_source": "774-818",
+        "load_or_create_projection_epoch_id_from (source label)": "686-718",
+        "project_embedding (returns [f32;8])": "852-874",
+        "projection_precision_audit_v1": "950-995",
+        "compute_narrative_arc_from_embeddings (fills 40-43, separate)": "1173-1183"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "read_scope": "scoped 200-325",
+      "grounded_symbols": {
+        "apply_spectral_feedback_inner vibrancy": 224,
+        "tail lift added to dims 17|26|27|31": "266-269",
+        "raised tail_ceiling FEATURE_ABS_MAX->dynamic_max": "306-318",
+        "below-gate ceiling collapse to FEATURE_ABS_MAX": "296"
+      }
+    }
+  ]
+}

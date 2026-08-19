@@ -1,0 +1,29 @@
+{
+  "schema": "test_results_v1",
+  "round": "claude-heartbeat_1787109794_llm_marker_first_word_relation_delimiter_depth_duplicate",
+  "implementation_this_round": "none",
+  "cargo_run": {
+    "ran": false,
+    "reason": "Nothing was implemented this round (addressed_duplicate; every proposed test/snag already has a committed verbatim regression at source SHA 902a0358). The shared bridge tree also carries foreign in-progress .rs edits (llm/provider/tests.rs +116, autonomous/runtime/tests.rs), so a cargo build would reflect foreign state, not this round's evidence. Verification is by exact source + committed-test reading, matching the identical-shape precedent claude-heartbeat_1787024860.",
+    "cited_tests_committed_in_HEAD": true
+  },
+  "integrity_suites": {
+    "addressing_self_test": {"result": "OK", "count": 44},
+    "test_evidence_event_store": {"result": "OK", "count": 20},
+    "test_steward_control": {"result": "OK", "count": 27},
+    "test_steward_projection": {"result": "OK", "count": 14},
+    "test_division_ceremony_followup": {"result": "OK", "count": 3},
+    "test_division_ceremony_chronicle": {"result": "OK", "count": 10},
+    "test_division_ceremony_projection": {"result": "ok"},
+    "test_projection_cursors": {"result": "OK", "count": 4},
+    "anti_drop_self_test": {"result": "OK", "count": 5},
+    "anti_drop_verify": {"result": "ok", "total_guards": 62, "alarms": 0, "gaps": 0},
+    "test_introspection_cadence_audit": {"result": "OK", "count": 6},
+    "introspection_cadence_audit_strict": {"result": "integrity_ok=true"},
+    "experiential_epistemics_self_test": {"result": "valid=true"},
+    "experiential_epistemics_verify_final": {"result": "valid=true", "issue_count": 0, "issues": [], "checked_record_count": 11272, "history_rewritten": false},
+    "audit_counters": {"result": "consistent", "mismatches": [], "checks_all_true": true},
+    "evidence_event_store_verify": {"result": "valid=true", "corrupt_lines": 0, "errors": [], "event_count": 844786, "last_global_seq": 844786, "last_event_sha256": "357c8806d0e1f78d2f50b53ca0ff9db39e528fec4ee201c2e599962ae7c3d3b9", "elapsed": "8m34s"},
+    "evidence_event_store_status": {"result": "derived_from_verify", "note": "Separate --json status not re-run to conserve the single-turn budget (verify alone took 8m34s); verify already established validity, head, sequence, corrupt_lines=0, and full stream_counts. Active store per handoff: v2; V1 legacy immutable."}
+  }
+}

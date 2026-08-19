@@ -1,0 +1,52 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787103043",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "binding_match": true,
+    "coverage_state": "multi_window_complete_1_1048"
+  },
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": [
+    "introspection_astrid_llm_1787014729",
+    "introspection_astrid_llm_1786936281",
+    "introspection_astrid_llm_1786999457"
+  ],
+  "duplicate_precedent_packets": [
+    "docs/steward-notes/claude-heartbeat_1787024860_llm_marker_behaves_delimiter_fresh_pass_duplicate/",
+    "docs/steward-notes/claude-heartbeat_1786941588_llm_marker_nbsp_whitespace_grounded/"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: dialogue_runtime.rs implements a non-destructive marker scanner; scan_known_model_control_markers (L114) preserves the remainder while identifying markers, and exact_reference_delimiter_syntax (L199) distinguishes quoted/grouped/explicit relations; requested token bands (L8) are separate from felt pressure.",
+      "disposition": "verified_existing. Complete source at SHA 902a0358 confirms the mechanism: scan_known_model_control_markers L114-144 rebuilds a remainder and pushes a marker's bytes back only when reference_syntax.is_some() (L129-131); exact_reference_delimiter_syntax L199-229 + exact_reference_delimiter_pair L153-197 classify Quoted/Grouped/Explicit; dialogue_requested_token_band L8-16 is deliberately doc-separated from felt/spectral meaning. Description is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89) uses split_whitespace() + a manual alphanumeric filter (L92); a marker followed by a punctuation-heavy string or non-standard whitespace could be handled differently than a clean word, making reference_syntax return None and the marker be stripped or improperly preserved (L124-L132).",
+      "disposition": "verified_existing; concern preserved, mechanism contradicted. find(|w| !w.is_empty()) (L93) skips punctuation-only chunks to the next real word; trim_matches (L92) strips surrounding non-alphanumerics, so an allowlisted relation survives punctuation/whitespace and the marker stays; strips (fails closed) only when NO alphanumeric word follows. Grounded: committed tests L2987 (punct+fail-closed), L3029 (NBSP); improper-preservation ruled out by negatives L2568/L2682-2727/L2757.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "One Test Each #1 (Marker Preservation): give a string with a known marker followed by a recognized relation verb (e.g. \"COMMAND_X behaves as...\") and assert scan_known_model_control_markers returns the marker in the remainder while populating the KnownModelControlMarkerMatch vector.",
+      "disposition": "verified_existing. Committed test scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2932-2956) is exactly this: \"<end_of_turn> behaves as a named boundary.\" asserts remainder==input, matches.len()==1, context ExplicitExactKnownTokenRelation; behaves/as are allowlisted L64-86. Placeholder note: COMMAND_X is illustrative, not a real KNOWN_MODEL_CONTROL_MARKER; the mechanism is grounded on a genuine marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #2 (Delimiter Depth): pass a nested-delimiter string (e.g. [[COMMAND_X]]) to exact_reference_delimiter_syntax (L199) to verify delimiter_depth correctly identifies nesting relative to MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "verified_existing. Committed test exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (tests.rs L2962-2976) is exactly this: [[<end_of_turn>]] -> GroupedExactKnownToken, delimiter_depth==2. Depth machinery L199-229; MAX=4 at L151. Further depth coverage: L2194 (4-level), L2208 (3-level), L2266 (homogeneous square stack beyond MAX). Placeholder note: COMMAND_X is illustrative; the branch is exercised on a real marker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder from scan_known_model_control_markers is injected into the final output buffer versus how the matches are handled downstream.",
+      "disposition": "observed; agency preserved. Scanner feeds sanitize_model_control_markers_with_report (L352/355); sanitize_model_control_markers (L519) is called only at L558 (is_valid_dialogue_output) and L634 (has_one_nonempty_final_next_action) — validation gates. No scan/sanitize inside generate_dialogue L695-1048, so the remainder is not injected into emitted tokens; it gates candidate acceptance. Her NEXT: INTROSPECT astrid:llm 400 continuation stays open.",
+      "classification": "observed"
+    }
+  ]
+}

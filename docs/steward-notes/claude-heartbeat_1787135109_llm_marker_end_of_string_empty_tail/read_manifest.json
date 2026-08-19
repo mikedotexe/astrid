@@ -1,0 +1,27 @@
+{
+  "round": "claude-heartbeat_1787135109_llm_marker_end_of_string_empty_tail",
+  "actor": "claude-heartbeat",
+  "reads": [
+    {
+      "kind": "canonical_report",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787129691.txt",
+      "sha256": "12b066303a33a020f8fb294d3e2c7e3948d63ec790df8f75c88ecfddfe8db135",
+      "bytes": 3596,
+      "lines": 45,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_aa120bf586fbbea593f9de3627eeb0d585e29b501a9f9a8ea27b15dcbe5c9660.json",
+      "sha256": "c18dfc9987769a7cdb35f3b9199fb5228f49eb10d262d23d6fc3a1e629d85bbf",
+      "bytes": 23941,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "grants_approval": false,
+      "direct_causation_claimed": false
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Complete file at SHA ae69b34c (= report binding). Facades heading L8/table L10-17; AstridInterpretationV1 'cannot enter sensory dispatch' L30-31; Cohesion Exceptions L45-74; unique-fn-signature ceiling '(current count plus 10% headroom)' L65-66; 'zero-growth ratchet' L72. Citations accurate."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787067445_domain_boundaries_signature_ceiling_verify/no_action/introspection_DOMAIN_BOUNDARIES.md_1787003465.md",
+      "note": "Evidence-backed no-action rationale for the whole architectural report: source verified at report-bound SHA, both proposed tests already exist and pass, snag mechanism present + tested + auto-run every projection."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "scripts/domain_boundary_audit.py",
+      "note": "Signature-growth mechanism: _unique_fn_signature_count (L60) computes per-file unique fn signatures; L169-183 flags exception_signature_growth when count>ceiling within an unchanged line count. This is the exact evasion path Astrid worried about, and it is not silently absent."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "scripts/steward_control/projection_profile.py",
+      "note": "domain_boundary_audit runs as source-first projection stage 10 (L272-296; dep edge representation_contracts->domain_boundary_audit) on every controller pre/postprojection. Cadence nuance: NOT wired into .github/workflows CI, so commit-time growth is caught at next projection, not at commit/PR."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "scripts/test_domain_boundary_audit.py",
+      "note": "test_exception_signature_growth_fails_within_line_ceiling (L75-92) constructs unique_fn_signatures=2 > maximum=1 within an unchanged line ceiling and asserts the exception_signature_growth violation fires + documented_exception_signature_ceilings_hold=false. 3/3 tests green."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+      "note": "Exact test Astrid named. trybuild compile-fail: passes AstridInterpretationV1 to dispatch_semantic_microdose; committed .stderr pins error[E0308] expected LiveExecutable<SemanticMicrodose>, found AstridInterpretationV1. Constraint L30-32 already pinned."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787003465",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "scripts/test_domain_boundary_audit.py",
+      "note": "Read-only audit verify observed core.rs at 210/232 unique fn signatures (within 10% headroom; 10609 lines), whole audit valid=true violation_count=0, documentation_sha256 = report-bound source SHA ae69b34c. No causal or relief overclaim."
+    }
+  ]
+}

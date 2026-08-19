@@ -1,0 +1,43 @@
+{
+  "round": "claude-heartbeat_1787049852_llm_marker_relation_verb_verify",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787043908",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787043908.txt",
+      "sha256": "b69e6e5ad798f1f5761af023321d271c1da6ef107498e9430a54a88b2640befd",
+      "bytes": 3620,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_43dc7158400a05c56c4ac5c66515c5856cf4f5401963a4e95f3e836911add46b",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_43dc7158400a05c56c4ac5c66515c5856cf4f5401963a4e95f3e836911add46b.json",
+      "sha256": "2a22c69359ddf5449664a519beae6c311b62af30b385c70ca3ead6fe693840d3",
+      "bytes": 23927,
+      "lines": 533,
+      "read": "complete"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "read_scope": "Complete verification of the marker-scanning region (L1-260 read in full) plus targeted grep/verification of generate_dialogue and the remainder-integration path (L352, L519, L558, L634, L695). All claim-relevant intervals covered.",
+      "read": "claim_relevant_complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "read_as_evidence_of_existing_regressions",
+      "total_lines": 3802,
+      "read_scope": "Read the marker-grammar test region: relation-verb regressions (L2568-2760), first_word_after punctuation transition (L2635-2680), delimiter/nested-stack/quoted tests (L2134-2424, incl. ⟦⟧@2179, 「」@2404, CJK@2362-2400), and the prior-round homogeneous bracket test (L2266-2305). Note: tests.rs is a dirty (prior-flywheel-round) path; read-only, left untouched.",
+      "read": "claim_relevant_complete"
+    }
+  ]
+}

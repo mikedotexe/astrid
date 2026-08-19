@@ -1,0 +1,21 @@
+{
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml fill_responsive_rest",
+      "package": "spectral-bridge-server",
+      "matched": [
+        "autonomous::runtime::tests::fill_responsive_rest_keeps_critical_floor_and_band_boundaries",
+        "autonomous::runtime::tests::fill_responsive_rest_steps_at_each_band_boundary_without_hysteresis"
+      ],
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "filtered_out": 1888
+    }
+  ],
+  "new_test": "fill_responsive_rest_steps_at_each_band_boundary_without_hysteresis",
+  "formatting": {
+    "git_diff_check": "clean (exit 0)",
+    "cargo_fmt_check_bridge_package": "edited file src/autonomous/runtime/tests.rs NOT flagged; only pre-existing/foreign source_first_v3/grounding.rs (L259,L295) flagged and left untouched"
+  }
+}

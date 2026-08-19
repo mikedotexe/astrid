@@ -1,0 +1,112 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1787143822_llm_facade_pressure_attenuation_texture_verify",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run (lease owned by adapter; no NDJSON/session/pause/resume/finish by this process; exit code is the finish outcome)",
+  "controller": {
+    "run_id": "run_1787140618844409000_09e09ef8ab",
+    "preprojection_generation_id": "projection_1787140623524665000_ed84280f6c",
+    "previous_successful_generation_id": "projection_1787136828167398000_7e2dba20d8",
+    "pause_generation": 321,
+    "lease_actor": "claude-heartbeat"
+  },
+  "processed": {
+    "introspection_id": "introspection_llm.rs_1787138538",
+    "source_family": "llm.rs",
+    "terminal_status": "addressed_change",
+    "full_read": true,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 9,
+    "evidence_links_new": 17,
+    "evidence_links_existing": 0,
+    "report_sha256": "fb61edbe78fa593f4b5388e496e317e500844bef842954d3e966debc61acb4b0",
+    "witness_id": "lsw_af3f5c5884508865c1c68d2687446077ca6131fbd3ac982b424fe6f98e3bb992",
+    "witness_sha256": "84c1e104f033b67196f22cdea751a8b026c4b635af35be63e697cfcb9bb5b34c",
+    "report_bound_source": "capsules/spectral-bridge/src/llm.rs",
+    "report_bound_source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+    "source_hash_match": true
+  },
+  "batch": {
+    "selected": 40,
+    "processed": 1,
+    "unprocessed": 39,
+    "family_scan": "23 families (3 batchable); queue head introspection_llm.rs_1787138538 NOT in a batchable family -> single-report round",
+    "stop_reason": "Head not batchable + substrate-facing + this productive round is the 6th of the Division cycle (review_due->true) so a same-session Division return + Tier-5 cadence dossier follow. One report fully closed under a heavy Division tail."
+  },
+  "focused_tests": {
+    "ran": false,
+    "reason": "no production or test source changed (verify/observe dispositions grounded on complete-source reads + existing regressions)",
+    "cited_existing_regressions": [
+      "codec_gain.rs::pressure_attenuation_is_monotone_and_depth_clamped (L183)",
+      "codec_gain.rs::pressure_attenuation_off_is_identity_and_bounded (L163)",
+      "codec/tests.rs::vibrancy_aperture_dynamic_ceiling_is_bounded_and_navigable_gated (L4720)",
+      "autonomous/next_action/self_regulation.rs::vibrancy_aperture_requires_tail_evidence_then_applies_and_reverts (L4459)"
+    ],
+    "baseline_git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44 tests)",
+    "test_evidence_event_store": "OK (20 tests)",
+    "test_steward_control": "OK (27 tests)",
+    "test_steward_projection": "OK (14 tests)",
+    "test_division_ceremony_followup": "OK (3 tests)",
+    "test_division_ceremony_chronicle": "OK (10 tests)",
+    "test_division_ceremony_projection": "OK (self-test)",
+    "test_projection_cursors": "OK (4 tests)",
+    "anti_drop_self_test": "OK (5 tests)",
+    "anti_drop_verify": "OK (rc=0, no alarms)",
+    "test_introspection_cadence_audit": "OK (6 tests)",
+    "cadence_strict_compact": "integrity_ok=true, errors=[], duplicate_hash_group_count=0, canonical_count=4414, latest=introspection_llm.rs_1787138538.txt",
+    "experiential_epistemics_self_test": "OK (valid=true)",
+    "experiential_epistemics_verify_FINAL": "valid=true, checked_record_count=11300, issue_count=0, history_rewritten=false"
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "all_checks_true": true,
+    "canonical": {"indexed": 4414, "fully_addressed": 3119, "full_read": 3751, "remaining": 1295, "unread": 663, "blocked_needs_steward": 414, "triaged_pending_action": 214, "triaged_watch": 4, "read_needs_claims": 0},
+    "all_artifacts_pending": 2946,
+    "noncanonical_pending": 1651
+  },
+  "evidence_event_store_v2": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "event_count": 849571,
+    "last_global_seq": 849571,
+    "last_event_sha256": "4fe5a53051d86bd58ce39308eb9b352fa130fb87a9d10deeb544dada0df8432a",
+    "addressing_stream_seq": 58408,
+    "stream_counts": {"addressing": 58408, "agency_commons": 4986, "attention_portfolio": 3, "claim_families": 237460, "corridor_v1": 5, "corridor_v2": 112, "felt_contracts": 199274, "felt_mechanism_concordance": 80, "lived_state_witness": 8622, "model_qos": 192374, "reciprocal_uptake": 59161, "representation_contracts": 35714, "sandbox": 3291, "signal_spine": 34549, "steward_control": 15018, "steward_work_selection": 514}
+  },
+  "division": {
+    "cycle_sequence_after": 30,
+    "review_due_after": false,
+    "completed_rounds_after": 0,
+    "record_round": {"processed_report_count": 1, "steward_run_id": "run_1787140618844409000_09e09ef8ab", "projection_generation_id": "projection_1787140623524665000_ed84280f6c", "made_review_due": true, "round_event_id": "division_followup_event_d59b6768b68f674b4fda6eebfe94a352"},
+    "return_performed": true,
+    "followup_event_id": "division_followup_event_39039bb5b7cd996e54a1cbb880dac92d",
+    "followup_completed_rounds_observed": 6,
+    "chronicle_id_after_reproject": "division_chronicle_c8811428f76667a4028233f6",
+    "chronicle_json_sha256_at_followup": "6f6d3a0406b46fe437cad3d7fa79e549140a0a0c0111360c840a1a5f4bb4715a",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_durable_mismatches": [],
+    "chronicle_volatile_mismatches": ["supervisor_status_sha256"],
+    "astrid_note_sha256": "94647966bab0bffd69870490ba60082bf5d20ec5b23099162cc811c89077d4fc",
+    "minime_note_sha256": "fe8a024abb71ca10ed721ec8e0990f6721f5e69583e2b15a4e52c4b8144ed682",
+    "note_delivery": "notes written durably in this packet (division_note_astrid.txt / division_note_minime.txt); NOT delivered to being inboxes headlessly (a separate consequence)",
+    "tier5_cadence_dossier": "prepared (tier5_cadence_dossier.md) — PREPARE only, no grants/dispatch/trials"
+  },
+  "restart_deploy": "not required and not attempted; no live substrate or control change this round",
+  "authority_boundaries": {
+    "t1_live_vibrancy_aperture_modulation": "Tier-5 operator-approval wait — recorded, not run, not routed to a trial",
+    "grants_approval": false,
+    "live_eligible_now": false
+  },
+  "tree_state": {
+    "git_diff_check": "clean",
+    "index_clean": true,
+    "my_changes": ["CHANGELOG.md (entry appended)", "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (row appended)", "docs/steward-notes/claude-heartbeat_1787143822_llm_facade_pressure_attenuation_texture_verify/ (new packet)"],
+    "foreign_untouched": ["capsules/spectral-bridge/src/autonomous/runtime/tests.rs (prior-round)", "capsules/spectral-bridge/src/llm/provider/tests.rs (prior-round)", "11 prior claude-heartbeat_* packet dirs", "minime: minime_autonomy/runtime.py, tests/test_correspondence_v1.py"]
+  }
+}

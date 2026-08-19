@@ -1,0 +1,80 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_held_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1787038353161692000_0b25a1ee8f",
+    "preprojection_generation_id": "projection_1787038357131981000_944abb00ab",
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "pause_generation": 319,
+    "postprojection": "adapter-run after process exit; not observed by this child",
+    "finish_outcome": "exit 0 (complete round)"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787026288",
+      "report_sha256": "5a0edfb35fc2be0a949d39b2057e085be3bc896598730431c31ca575fe75d42b",
+      "report_bytes": 4094,
+      "report_lines": 49,
+      "witness_id": "lsw_d7e1edf72488a1234b4d5bb5ba24e67f4d6b67b5808de8dd34aaef9bb80a8a71",
+      "witness_sha256": "8eea01e0a18a3f5832cdd0a8ac10deee1942e800bb26cd6db9d10c09c13fc609",
+      "witness_bytes": 23912,
+      "witness_lines": 533,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding": "byte_identical_working_copy_is_report_time_source",
+      "source_read": "complete_1_to_1048",
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "evidence_link_count": 13
+    }
+  ],
+  "processed_report_count": 1,
+  "selected_count": 40,
+  "unprocessed_count": 39,
+  "batch_rationale": "Queue head is a single-member family (no batchable siblings); it needed a full source read + one new focused regression (implementation). One report fully closed with all integrity suites fits the ~90min one-shot budget; three half-processed would not.",
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/llm/provider/tests.rs (added 1 test: control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth)",
+      "CHANGELOG.md ([Unreleased] entry prepended)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (row prepended)",
+      "docs/steward-notes/claude-heartbeat_1787040866_llm_marker_homogeneous_delimiter_depth/ (new round packet)"
+    ],
+    "tests": "cargo test --lib control_marker -> 69 passed / 0 failed (new test included)",
+    "fmt": "my block fmt-clean; git diff --check clean; pre-existing baseline drift untouched",
+    "live_change": "NONE — no bridge build/deploy/launchctl/restart; git read-only (adapter-held run). Tier-5 grammar (verb allowlist / delimiter tables) untouched."
+  },
+  "durable_addressing": {
+    "record_read": "full_read event appended (summary_sha256 047b3559...)",
+    "link_evidence_batch": "13 links appended, 13 new",
+    "close": "addressed_change; fully_addressed true; proof_missing_claims []; exit 0"
+  },
+  "division": {
+    "review_due_at_start": false,
+    "record_round": "recorded; cycle 28; completed 1/6; remaining 5; review_due false; event_count 191",
+    "round_event_id": "division_followup_event_fd7ece559b08aa597483c181492562a9",
+    "event_head_sha256": "0ff5ad6712d826660d7edb2f2c251852b2c7ec552193c1b66a67eff0ff2fabcd",
+    "chronicle_reprojected": "division_chronicle_d8ff24a59e97b1fe2e35eda7 (durable current; only volatile supervisor_status_sha256 moving)",
+    "tier5_cadence_dossier": "NOT generated — only required when a Division return (review_due=true) is completed; review_due=false this round"
+  },
+  "counters": {
+    "audit_status": "consistent",
+    "mismatches": [],
+    "canonical_read_needs_claims": 0,
+    "proof_gap_artifact_count": 0
+  },
+  "integrity_suites": "all green (addressing self-test 44, evidence-store unit 20, control 27, projection 14, division followup 3 / chronicle 10 / projection ok, cursors 4, anti-drop self-test 5 + verify 0 alarms, cadence 6 + strict integrity_ok, epistemics self-test + verify valid/0 issues)",
+  "deferred_read_only": "evidence_event_store.py --json verify / status: both exceeded a 300s window at current store size (~835k+ events); deferred to an interactive window. Integrity otherwise attested by the unit suite + epistemic verify + consistent counters.",
+  "commit_debt": [
+    "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "CHANGELOG.md",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "docs/steward-notes/claude-heartbeat_1787040866_llm_marker_homogeneous_delimiter_depth/ (all files)"
+  ],
+  "foreign_preserved": {
+    "minime": ["minime_autonomy/runtime.py", "tests/test_correspondence_v1.py"],
+    "note": "Chronicle projection wrote generated artifacts to /Users/v/other/minime/workspace/division/chronicle/ (untracked); foreign minime source paths remain the two known dirty files, unchanged."
+  }
+}

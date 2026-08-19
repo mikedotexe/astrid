@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Mechanism verified at SHA 902a0358: scanner L114-144 preserves remainder only when reference_syntax present; exact_reference_delimiter_syntax L199-229 classifies quoted/grouped/explicit; token band L8-16 doc-separated from felt/spectral meaning."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] bullet recording the addressed_duplicate fresh-pass grounding of the marker-grammar report."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: report surfaced marker-grammar snag + two tests; verified_existing against committed tests; deliberate no new code (duplicate)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 find(!is_empty)+trim_matches skips punctuation to next real word; scan L129-131 preserves marker only when reference_syntax present, so it strips only when no alphanumeric word follows (fail-closed)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Snag grounded: L2987 grounds_first_word_after_punctuation_boundary (punct runs preserve + only-punct fails closed); L3029 non_breaking_space; improper-preservation ruled out by negatives L2568, L2682-2727, L2757 (all committed in HEAD)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 1 verbatim: L2932-2956 preserves_grouped_and_explicit_relation_contexts asserts \"<end_of_turn> behaves as a named boundary.\" -> remainder==input, matches.len()==1, context ExplicitExactKnownTokenRelation (committed in HEAD)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Relation allowlist at L64-86 (behaves, as, ... ); COMMAND_X is a placeholder, not a real KNOWN_MODEL_CONTROL_MARKER."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 2 verbatim: L2962-2976 exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two ([[<end_of_turn>]] -> GroupedExactKnownToken, depth 2). Further depth coverage L2194 (4), L2208 (3), L2266 (homogeneous beyond MAX). Committed in HEAD."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Depth machinery exact_reference_delimiter_syntax L199-229 (zip/take_while over matching pairs); MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 at L151."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Consumption answer: sanitize_model_control_markers L519 called only at L558 (is_valid_dialogue_output) and L634 (has_one_nonempty_final_next_action); no scan/sanitize inside generate_dialogue L695-1048 -> validation gate, not token splice."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787103043",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787024860_llm_marker_behaves_delimiter_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Exact duplicate precedent: prior fresh-pass introspection_astrid_llm_1787014729 proposed the identical behaves/delimiter tests from the same source window (SHA 902a0358) and closed addressed_duplicate with all claims verified_existing."
+    }
+  ]
+}

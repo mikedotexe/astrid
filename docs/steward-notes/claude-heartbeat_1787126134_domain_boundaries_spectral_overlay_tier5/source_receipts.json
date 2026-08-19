@@ -1,0 +1,30 @@
+{
+ "round": "claude-heartbeat_1787126134_domain_boundaries_spectral_overlay_tier5",
+ "report_bound_source": {
+  "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+  "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "working_copy_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "witness_file_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "binding_match": true,
+  "total_lines": 89,
+  "total_bytes": 5022,
+  "read_scope": "complete_file_1_89"
+ },
+ "corroborating_sources": [
+  {
+   "path": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+   "role": "c004 ground-truth: PressureSourceV1 (L226) with pressure_score/porosity_score as derived f32 fields (L229-230); porosity is an output, not an input knob",
+   "read_scope": "struct region L191-306"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/spectral_explorer.rs",
+   "role": "c004 read-only contract: PRESSURE SOURCE AUDIT V1 'read-only pressure-source warning before tuning' + applied_locally control contract + pressure_porosity_divergence alarm",
+   "read_scope": "L155-306, L450-496"
+  },
+  {
+   "path": "docs/steward-notes/claude-heartbeat_1787067445_domain_boundaries_signature_ceiling_verify/claims/introspection_DOMAIN_BOUNDARIES.md_1787003465.json",
+   "role": "Duplicate-standard check: prior same-source report; confirmed DISTINCT mechanism scope (architecture verification vs spectral-substrate proposals)",
+   "read_scope": "complete"
+  }
+ ]
+}

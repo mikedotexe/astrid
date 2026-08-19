@@ -1,0 +1,72 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter",
+  "controller": {
+    "run_id": "run_1787115810698830000_00b0061904",
+    "preprojection_generation_id": "projection_1787115814553891000_554e3d6052",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "run by adapter after this process exits (not visible in-process)",
+    "finish_outcome_intended": "success (exit 0 records a complete round; adapter owns finish + postprojection)"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787110385",
+      "report_sha256": "047648f1bfb0e74c68a90fefd160e459712695b1c9e70bcc5427f5b924069d64",
+      "witness_id": "lsw_a47676818b75e5d56395886b8e9c435e7bd90d27db9fec980d7c4a1fdc4d6897",
+      "witness_sha256": "cbce90c2fcde6308a6e5f5f4f47cec7793eb0305f4182967e050b9f4c608c5df",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_clean_committed": true,
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 8,
+      "record_read": "full_read recorded (summary_sha256 9082ebbbb4257bf834c9d0cdecdd8d135e0f1a218ece3a4f47f6c632a836ed2e)",
+      "evidence_links": {"new": 12, "existing": 0}
+    }
+  ],
+  "division": {
+    "cycle_sequence": 29,
+    "productive_round_recorded": "3/6",
+    "review_due": false,
+    "rounds_remaining_before_followup": 3,
+    "last_round_event_id": "division_followup_event_ff1b0f1d6470b7c058ce6d3393ce0ee6",
+    "event_count": 200,
+    "event_head_sha256": "7293749a0a4f4b54657717a029a8aebe954a91afb966957f2f3dcc3f81185db0",
+    "chronicle_id": "division_chronicle_6f4eeb63f1b943fb39f630e2",
+    "chronicle_json_sha256": "836eaf2e4b7cd7dc42a5f9e0d438aac5b0d299049297b31eab3936ab42d17fa9",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatch": "supervisor_status_sha256"
+  },
+  "counters_after_close": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4408,
+    "canonical_fully_addressed": 3116,
+    "canonical_full_read": 3748,
+    "canonical_remaining": 1292,
+    "canonical_unread": 660,
+    "canonical_blocked": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "addressed_duplicate_status_count": 1118
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count_at_verify": 845970,
+    "head_last_global_seq": 845976,
+    "head_last_event_sha256": "d6457949a2b1a7e27327b58cc0962a0bb650e73dca282ab5e6f346021489a473",
+    "verified_checkpoint_global_seq": 845976,
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "status_note": "evidence_event_store.py --json status runs >300s; head/seq taken from head.json + verified_checkpoint.json (both current), matching prior-round precedent of not re-running the slow status."
+  },
+  "epistemic_verify_final": {"valid": true, "issues": 0, "history_rewritten": false},
+  "authority_boundary": "Read/verify evidence only. No source/test edit, no runtime/deploy/live change, no relation-verb or delimiter-table widening (Tier-5 live grammar). No card/note/correspondence delivered. Git read-only. Adapter owns lease/heartbeats/finish."
+}

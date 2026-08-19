@@ -1,0 +1,32 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "toolchain": "cargo (rustup) via ~/.cargo/bin",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib scan_known_model_control_markers_quoted_context_precedes_following_relation_verb",
+      "binary": "unittests src/lib.rs (spectral_bridge_server)",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "note": "New regression for the report's Test 1 precedence boundary."
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker scan_known_model_control_markers exact_reference_delimiter first_word_after",
+      "binary": "unittests src/lib.rs (spectral_bridge_server)",
+      "result": "ok",
+      "passed": 73,
+      "failed": 0,
+      "note": "Full marker-scanner family (72 existing + 1 new); no regression."
+    }
+  ],
+  "formatting": {
+    "cargo_fmt_check_scope": "capsules/spectral-bridge (spectral-bridge-server)",
+    "edited_file_tests_rs": "clean (no fmt diff)",
+    "preexisting_foreign_fmt_drift": "capsules/spectral-bridge/src/llm/provider/source_first_v3/grounding.rs (grounding.rs L259, L295) — committed file, not in this round's dirty set, rustfmt-version drift, left untouched",
+    "git_diff_check_tests_rs": "clean (exit 0)"
+  },
+  "not_run": {
+    "full_workspace_suite": "not run — proportionate to a single-test-file addition; touched surface is the marker-scanner regression family only",
+    "restart_or_deploy": "not required and not attempted — non-live test-only change"
+  }
+}
