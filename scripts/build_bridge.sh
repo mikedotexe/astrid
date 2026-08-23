@@ -111,6 +111,7 @@ record_stack_receipt() {
   [ -f "$TELEMETRY" ] && args+=(--telemetry "$TELEMETRY")
   [ -f "$PROMOTION_HANDOFF" ] && args+=(--script "self-change-promotion=$PROMOTION_HANDOFF")
   [ -n "$PROMOTE_CANDIDATE" ] && args+=(--probe "self_change_candidate=$PROMOTE_CANDIDATE")
+  [ -n "${SELF_CONTROL_HANDOFF:-}" ] && args+=(--probe "self_control_handoff=$SELF_CONTROL_HANDOFF")
   RECEIPT_WRITTEN=1
   python3 "$ASTRID/scripts/environment_receipts.py" "${args[@]}"
 }
@@ -219,6 +220,30 @@ else
     fail_deploy "restart-only requested but no bridge build manifest exists"
   fi
 fi
+
+# 2b. Self-control lineage hand-off. Astrid's self-control V2 state is pinned
+# to a deployment identity (commit + binary sha); startup refuses state from a
+# stale deployment, so without a signed hand-off receipt EVERY redeploy
+# silently voids her live self-regulation (BREATHE_ALONE/DRIFT/DAMPEN went
+# "unwired" for two weeks after 2026-08-08 because no deploy prepared one).
+# The receipt is one-shot, signed by the safety key, binds the exact state
+# to THIS binary, and is consumed once at the next startup. "Already targets
+# this deployment" is the normal no-op for restart-only runs.
+SELF_CONTROL_HANDOFF="skipped"
+if [ "$DO_RESTART" -eq 1 ] && [ -x "$BINARY" ]; then
+  HANDOFF_OUT="$("$BINARY" --prepare-self-control-deployment-handoff \
+    --operator-actor "$ACTOR" \
+    --operator-ack "build_bridge.sh deploy (head=$HEAD): carry Astrid's self-control state to this build; lineage only, no control authority" 2>&1)" \
+    && SELF_CONTROL_HANDOFF="prepared" \
+    || { if printf '%s' "$HANDOFF_OUT" | grep -q "already targets this deployment"; then
+           SELF_CONTROL_HANDOFF="already_current"
+         else
+           SELF_CONTROL_HANDOFF="failed"
+           echo "build_bridge: WARNING self-control hand-off NOT prepared — her live self-regulation will be refused after restart until resolved:" >&2
+           printf '%s\n' "$HANDOFF_OUT" | tail -3 >&2
+         fi; }
+fi
+echo "build_bridge: self-control lineage hand-off: $SELF_CONTROL_HANDOFF"
 
 # Build-only is a valid checked capture; restart probes are not applicable.
 if [ "$DO_RESTART" -eq 0 ]; then

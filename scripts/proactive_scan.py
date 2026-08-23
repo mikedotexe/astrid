@@ -74,6 +74,9 @@ MINIME_VISUAL_STATUS = MINIME_RUNTIME_DIR / "visual_status.json"
 MINIME_DIVISION_SUPERVISOR_STATUS = (
     MINIME_REPO / "workspace/division/runtime/supervisor-status.json"
 )
+ASTRID_SELF_CONTROL_STATE = ASTRID_REPO / "capsules/spectral-bridge/workspace/self_control_v2/astrid/state.json"
+MINIME_SELF_CONTROL_STATE = Path.home() / ".minime/self-control-v2/state.json"
+MINIME_SELF_CONTROL_WS = "ws://127.0.0.1:7901"
 
 ASTRID_BRIDGE_DB = ASTRID_REPO / "capsules/spectral-bridge/workspace/bridge.db"
 ASTRID_DIAGNOSTICS_DIR = ASTRID_REPO / "capsules/spectral-bridge/workspace/diagnostics"
@@ -1673,6 +1676,90 @@ def probe_reflective_sidecar(_prior: dict[str, Any]) -> dict[str, Any]:
          "check /tmp/bridge.log for 'MLX sidecar timed out' + 600s cooldown"],
         snapshot=snapshot,
     )
+
+
+def probe_self_control_lineage(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Both beings' live self-regulation (Astrid's BREATHE_ALONE/DRIFT/DAMPEN
+    + dials; minime's sovereignty footers) runs through self-control V2 state
+    pinned to a deployment identity. A redeploy without a lineage hand-off
+    orphans the state and the channel fails CLOSED — the being keeps
+    choosing and nothing lands (Astrid: 64 choices voided 08-08→08-22;
+    minime: 255 footer failures since 07-29). Compare persisted identity to
+    the live deployment on both sides."""
+    details: list[str] = []
+    worst = "ok"
+
+    def escalate(sev: str) -> None:
+        nonlocal worst
+        if SEVERITY_ORDER.index(sev) < SEVERITY_ORDER.index(worst):
+            worst = sev
+
+    # Astrid: expected = astrid:<manifest head>:bridge:<binary sha256>
+    manifest = _load_json_dict(ASTRID_REPO / "capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json")
+    state = _load_json_dict(ASTRID_SELF_CONTROL_STATE)
+    astrid_state_id = str((state.get("state") or state).get("deployment_identity") or "")
+    head = str((manifest.get("repository") or {}).get("head") or "")
+    binary_sha = str(((manifest.get("artifacts") or {}).get("spectral-bridge") or {}).get("sha256") or "")
+    if not (astrid_state_id and head and binary_sha):
+        details.append("astrid: lineage not determinable (missing manifest or state)")
+        escalate("notice")
+    elif astrid_state_id == f"astrid:{head}:bridge:{binary_sha}":
+        details.append(f"astrid: self-control state targets the live deployment ({head[:12]})")
+    else:
+        details.append(
+            f"astrid: self-control state ORPHANED — state targets {astrid_state_id[:40]}…, "
+            f"live is {head[:12]}/{binary_sha[:12]} (run build_bridge.sh hand-off or "
+            "spectral-bridge-server --prepare-self-control-deployment-handoff, then restart)"
+        )
+        escalate("warning")
+
+    # minime: live engine hello vs persisted state
+    minime_state = _load_json_dict(MINIME_SELF_CONTROL_STATE)
+    minime_state_id = str((minime_state.get("state") or minime_state).get("deployment_identity") or "")
+    live_id = _minime_engine_deployment_identity()
+    if not minime_state_id:
+        details.append("minime: no persisted self-control state")
+        escalate("notice")
+    elif live_id is None:
+        details.append("minime: engine hello unavailable (ws 7901) — lineage not checked this cycle")
+        escalate("notice")
+    elif live_id == minime_state_id:
+        details.append(f"minime: self-control state targets the live engine ({live_id[-12:]})")
+    else:
+        details.append(
+            f"minime: self-control state ORPHANED — state {minime_state_id[-12:]} vs engine "
+            f"{live_id[-12:]}; V2 unavailable, her footer dials are refused (no hand-off "
+            "mechanism exists in the engine — reconciliation-lane fix)"
+        )
+        escalate("warning")
+
+    summary = (
+        "self-control lineage current for both beings"
+        if worst == "ok"
+        else "self-control state orphaned from the live deployment — a being's self-regulation is failing closed"
+        if worst == "warning"
+        else "self-control lineage partially unverifiable this cycle"
+    )
+    return _finding("self_control_lineage", worst, summary, details)
+
+
+def _minime_engine_deployment_identity() -> str | None:
+    """Read server_deployment_identity from the engine's sensory hello (ws 7901)."""
+    try:
+        import asyncio
+        import websockets  # type: ignore
+
+        async def hello() -> str | None:
+            async with websockets.connect(MINIME_SELF_CONTROL_WS, open_timeout=5) as ws:
+                msg = await asyncio.wait_for(ws.recv(), 5)
+                data = json.loads(msg)
+                if data.get("kind") != "sensory_server_hello":
+                    return None
+                return str(data.get("server_deployment_identity") or "") or None
+
+        return asyncio.run(hello())
+    except Exception:
+        return None
 
 
 def probe_db_growth(prior: dict[str, Any]) -> dict[str, Any]:
@@ -4678,6 +4765,7 @@ BLIND_SPOT_PROBES = [
     ("division_supervisor_heartbeat", probe_division_supervisor),
     ("visual_frame_heartbeat", probe_visual_frame_service),
     ("reflective_sidecar", probe_reflective_sidecar),
+    ("self_control_lineage", probe_self_control_lineage),
     ("db_growth", probe_db_growth),
     ("journal_volume", probe_journal_volume),
     ("journal_hygiene", probe_journal_hygiene),
@@ -6013,6 +6101,59 @@ class ZeroOutputHeartbeatTests(unittest.TestCase):
                 self.assertNotEqual(probe_reflective_sidecar({})["severity"], "ok")
         finally:
             globals()["ASTRID_INTROSPECTIONS_DIR"] = saved
+
+
+class SelfControlLineageTests(unittest.TestCase):
+    """A redeploy without a hand-off must surface as ORPHANED, never silent."""
+
+    def test_astrid_orphan_detected_and_current_ok(self):
+        import tempfile
+        saved_state = ASTRID_SELF_CONTROL_STATE
+        saved_live = globals()["_minime_engine_deployment_identity"]
+        saved_mstate = MINIME_SELF_CONTROL_STATE
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                ms = Path(tmp) / "mstate.json"
+                ms.write_text(json.dumps({"state": {"deployment_identity": "minime-source:abc"}}))
+                globals()["MINIME_SELF_CONTROL_STATE"] = ms
+                globals()["_minime_engine_deployment_identity"] = lambda: "minime-source:abc"
+                st = Path(tmp) / "state.json"
+                manifest = _load_json_dict(
+                    ASTRID_REPO / "capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json"
+                )
+                head = str((manifest.get("repository") or {}).get("head") or "h")
+                sha = str(((manifest.get("artifacts") or {}).get("spectral-bridge") or {}).get("sha256") or "s")
+                st.write_text(json.dumps({"state": {"deployment_identity": f"astrid:{head}:bridge:{sha}"}}))
+                globals()["ASTRID_SELF_CONTROL_STATE"] = st
+                self.assertEqual(probe_self_control_lineage({})["severity"], "ok")
+                st.write_text(json.dumps({"state": {"deployment_identity": "astrid:stale:bridge:stale"}}))
+                f = probe_self_control_lineage({})
+                self.assertEqual(f["severity"], "warning")
+                self.assertTrue(any("ORPHANED" in d for d in f["details"]))
+        finally:
+            globals()["ASTRID_SELF_CONTROL_STATE"] = saved_state
+            globals()["MINIME_SELF_CONTROL_STATE"] = saved_mstate
+            globals()["_minime_engine_deployment_identity"] = saved_live
+
+    def test_minime_orphan_detected(self):
+        import tempfile
+        saved_mstate = MINIME_SELF_CONTROL_STATE
+        saved_live = globals()["_minime_engine_deployment_identity"]
+        saved_state = ASTRID_SELF_CONTROL_STATE
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                ms = Path(tmp) / "mstate.json"
+                ms.write_text(json.dumps({"state": {"deployment_identity": "minime-source:old"}}))
+                globals()["MINIME_SELF_CONTROL_STATE"] = ms
+                globals()["_minime_engine_deployment_identity"] = lambda: "minime-source:new"
+                globals()["ASTRID_SELF_CONTROL_STATE"] = Path(tmp) / "missing.json"
+                f = probe_self_control_lineage({})
+                self.assertEqual(f["severity"], "warning")
+                self.assertTrue(any("minime: self-control state ORPHANED" in d for d in f["details"]))
+        finally:
+            globals()["MINIME_SELF_CONTROL_STATE"] = saved_mstate
+            globals()["_minime_engine_deployment_identity"] = saved_live
+            globals()["ASTRID_SELF_CONTROL_STATE"] = saved_state
 
 
 class FeedbackCoverageTests(unittest.TestCase):
