@@ -50,7 +50,7 @@
     "src/llm/provider/transport.rs": 1310,
     "src/llm_jobs.rs": 1011,
     "src/mcp.rs": 3251,
-    "src/reflective.rs": 1038,
+    "src/reflective.rs": 1062,
     "src/rescue_policy.rs": 2551,
     "src/self_model.rs": 1371,
     "src/spectral_explorer.rs": 1164,
