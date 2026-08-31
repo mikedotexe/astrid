@@ -96,8 +96,8 @@ record_stack_receipt() {
     --probe "port_7878=$PORT_7878_OK"
     --probe "port_7879=$PORT_7879_OK"
     --probe "telemetry_update=$TELEMETRY_OK"
-    --probe "self_control_handoff=${HANDOFF_STATUS:-not_attempted}"
-    --probe "self_control_lineage_verified=${LINEAGE_OK:-unknown}"
+    --probe "self_control_handoff_ok=${HANDOFF_OK:-false}"
+    --probe "self_control_lineage_verified=${LINEAGE_OK:-false}"
     --binary "minime-engine=$ENGINE"
     --script "deploy-wrapper=$ASTRID/scripts/deploy_minime.sh"
     --script "launch-wrapper=$LAUNCHER"
@@ -226,6 +226,10 @@ if HANDOFF_JSON="$("$ENGINE" self-control prepare-deployment-handoff \
   --operator-ack "minime engine deploy at $HANDOFF_HEAD: ${ACK:-no ack given}")"; then
   HANDOFF_STATUS="$(printf '%s' "$HANDOFF_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status","unparseable"))' 2>/dev/null || echo unparseable)"
 fi
+HANDOFF_OK=false
+case "$HANDOFF_STATUS" in
+  prepared|already_current|not_needed) HANDOFF_OK=true ;;
+esac
 echo "deploy_minime: self-control lineage hand-off: $HANDOFF_STATUS"
 
 if ! "$ASTRID/scripts/start_all.sh" --minime-only --skip-greeting; then
@@ -262,10 +266,7 @@ echo "deploy_minime: self-control lineage verified: $LINEAGE_OK"
 if ! record_stack_receipt passed >/dev/null; then
   fail_deploy "post-restart receipt compatibility checks failed"
 fi
-case "$HANDOFF_STATUS" in
-  prepared|already_current|not_needed) ;;
-  *) fail_deploy "self-control lineage hand-off did not complete (status=$HANDOFF_STATUS); her stack is up but her state may be orphaned" ;;
-esac
+[ "$HANDOFF_OK" = true ] || fail_deploy "self-control lineage hand-off did not complete (status=$HANDOFF_STATUS); her stack is up but her state may be orphaned"
 [ "$LINEAGE_OK" = true ] || fail_deploy "restarted engine's self-control state does not target the live binary"
 rm -f "$PROMOTION_VERIFY_JSON"
 echo "deploy_minime: done (actor=$ACTOR pid=${OLD_PID:-none}->${NEW_PID:-?})"

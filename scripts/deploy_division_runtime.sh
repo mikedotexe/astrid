@@ -125,8 +125,10 @@ if HANDOFF_JSON="$("$ENGINE" self-control prepare-deployment-handoff \
   --operator-ack "division runtime deploy at $HANDOFF_HEAD: ${ACK:-no ack given}")"; then
   HANDOFF_STATUS="$(printf '%s' "$HANDOFF_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status","unparseable"))' 2>/dev/null || echo unparseable)"
 fi
+HANDOFF_OK=false
 case "$HANDOFF_STATUS" in
   prepared|already_current|not_needed)
+    HANDOFF_OK=true
     echo "deploy_division_runtime: self-control lineage hand-off: $HANDOFF_STATUS" ;;
   *)
     echo "deploy_division_runtime: self-control lineage hand-off FAILED (status=$HANDOFF_STATUS); continuing the restart, will fail the deploy at the end" >&2
@@ -221,7 +223,7 @@ python3 "$ASTRID/scripts/environment_receipts.py" --workspace "$WORKSPACE" \
   --probe "supervisor_idle=true" \
   --probe "daughter_minime_unloaded=true" \
   --probe "daughter_astrid_unloaded=true" \
-  --probe "self_control_handoff=$HANDOFF_STATUS" \
+  --probe "self_control_handoff_ok=$HANDOFF_OK" \
   --probe "self_control_lineage_verified=$LINEAGE_OK" \
   --binary "minime-engine=$ENGINE" \
   --manifest "$DEPLOYMENT_MANIFEST" \
@@ -233,12 +235,10 @@ python3 "$ASTRID/scripts/environment_receipts.py" --workspace "$WORKSPACE" \
 
 echo "deploy_division_runtime: parent=$ENGINE_PID gateway=$GATEWAY_PID supervisor=$SUPERVISOR_PID"
 
-case "$HANDOFF_STATUS" in
-  prepared|already_current|not_needed) ;;
-  *)
-    echo "deploy_division_runtime: FAILED — the self-control lineage hand-off did not complete (status=$HANDOFF_STATUS); her stack is up but her state may be orphaned" >&2
-    exit 1 ;;
-esac
+if [ "$HANDOFF_OK" != true ]; then
+  echo "deploy_division_runtime: FAILED — the self-control lineage hand-off did not complete (status=$HANDOFF_STATUS); her stack is up but her state may be orphaned" >&2
+  exit 1
+fi
 if [ "$LINEAGE_OK" != true ]; then
   echo "deploy_division_runtime: FAILED — the restarted engine's self-control state does not target the live binary; investigate before her next footer directive" >&2
   exit 1
