@@ -1,0 +1,36 @@
+{
+  "schema": "test_results_v1",
+  "toolchain": "cargo (via ~/.cargo/bin on PATH)",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib scan_known_model_control_markers_grounds_first_word_after_zero_width_joiner",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "filtered_out": 1907,
+      "note": "New regression pins U+200D ZWJ and U+200B ZWSP: leading => verb found + marker preserved; interior U+200D => fail closed."
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib first_word_after",
+      "result": "ok",
+      "passed": 7,
+      "failed": 0,
+      "filtered_out": 1901,
+      "note": "Sibling first_word_after grounding tests remain green with the addition."
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib grounds_",
+      "result": "ok",
+      "passed": 9,
+      "failed": 0,
+      "filtered_out": 1899,
+      "note": "All grounds_ regressions (NBSP, FEFF, soft-hyphen, punctuation-boundary, new ZWJ, etc.) green."
+    },
+    {
+      "command": "git diff --check -- capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "result": "ok",
+      "note": "No whitespace errors introduced."
+    }
+  ],
+  "fmt_note": "cargo fmt --check reported NO diff for tests.rs (the addition is fmt-clean). A pre-existing fmt nonconformance exists in the committed, untouched file autonomous/introspect/source_first_v3/grounding.rs (not in this round's working set, out of scope)."
+}

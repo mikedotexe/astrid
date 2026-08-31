@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L114-144 scan retains marker iff reference_syntax.is_some(); L42-46 three contexts; L64-86 verb allowlist. Complete source at SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L89-96 first_word_after: per-chunk trim of non-alphanumeric/underscore, find first non-empty. Pure-punctuation collapses; a word displaces the slot (by design)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition (pure-punctuation collapses) + control_marker_cleanup_does_not_skip_adverb_before_relation_word (word displaces slot) already ground the snag's two directions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New: control_marker_cleanup_first_word_after_skips_colon_before_relation \u2014 bare colon+denotes preserved via relation; bracketed form preserved via grouped delimiter path; unlisted-verb control isolates the gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L64 followed_by_explicit_exact_token_relation / L89 first_word_after \u2014 the exact functions Test 1 targets."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the colon-relation regression and the verified/observed dispositions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: her Test 1 colon case -> shipped regression; Tests 2 + Suggested-Next -> verified_existing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing depth regressions cover nested [[MARKER]]: repeated_parentheses (depth2), depth_across_unicode_whitespace (depth2), three-/four-level, [[[[[<end_of_turn>]]]]] (depth4)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L199-229 exact_reference_delimiter_syntax computes delimiter_depth; L44 GroupedExactKnownToken; L177-193 bracket pairs."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Full L199-229 read: nesting handled via take_while over zipped leading/trailing pairs, bounded at MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151). The report's L207 cutoff concern is resolved; no gap."
+    }
+  ]
+}

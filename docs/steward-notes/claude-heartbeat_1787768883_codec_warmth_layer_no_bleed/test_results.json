@@ -1,0 +1,31 @@
+{
+  "round": "claude-heartbeat_1787768883_codec_warmth_layer_no_bleed",
+  "toolchain": "cargo 1.94.1",
+  "focused_tests": [
+    {
+      "filter": "warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes",
+      "full_path": "codec::core::tests::warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes",
+      "status": "pass",
+      "kind": "new_regression"
+    },
+    {
+      "filter": "tail_vibrancy_raises_only_tail_ceiling_in_high_entropy",
+      "full_path": "codec::core::tests::tail_vibrancy_raises_only_tail_ceiling_in_high_entropy",
+      "status": "pass",
+      "kind": "cited_existing_evidence_c005_c007"
+    },
+    {
+      "filter": "warmth_vector_has_correct_shape",
+      "full_path": "codec::core::tests::warmth_vector_has_correct_shape",
+      "status": "pass",
+      "kind": "cited_existing_baseline"
+    }
+  ],
+  "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes tail_vibrancy_raises_only_tail_ceiling_in_high_entropy warmth_vector_has_correct_shape",
+  "result": "3 passed; 0 failed; 0 ignored; 1892 filtered out",
+  "baseline_checks": {
+    "git_diff_check": "clean",
+    "cargo_fmt_all_check": "clean (exit 0)"
+  },
+  "notes": "Only a non-live test was added; no production codec code changed. Compile of the spectral-bridge lib succeeded (1m53s cold build)."
+}

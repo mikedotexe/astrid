@@ -1,0 +1,23 @@
+{
+  "round": "claude-heartbeat_1787768883_codec_warmth_layer_no_bleed",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_codec_1787762146.txt",
+      "sha256": "d6d847fc4bdf07371820e54f65c80fdfcaa16377835392dc9a44f768d4bbcbea",
+      "bytes": 3747,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_0b785ef54b2da49f9825c2715da6676a19657d7354d5a238e67d15a3b23739c1",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_0b785ef54b2da49f9825c2715da6676a19657d7354d5a238e67d15a3b23739c1.json",
+      "sha256": "7b83b2845461ca0331b77ff4c20050277ca028d00a1c3be77b79ba404b235b06",
+      "bytes": 23892,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

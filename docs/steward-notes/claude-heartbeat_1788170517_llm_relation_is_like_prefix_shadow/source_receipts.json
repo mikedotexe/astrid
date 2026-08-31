@@ -1,0 +1,29 @@
+{
+  "round": "claude-heartbeat_1788170517_llm_relation_is_like_prefix_shadow",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "Complete read of the cited functions and their context: L1-240 read fully in-session (marker structs, first_word_after L89-96, scan_known_model_control_markers L114-144, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229); generate_dialogue confirmed at L695. Working copy hash equals report binding, so report-time and current source are identical.",
+      "cited_intervals_verified": [
+        "L64-86 followed_by_explicit_exact_token_relation (verb allowlist; functions present, operates absent)",
+        "L89-96 first_word_after (whitespace split + edge trim)",
+        "L114-144 scan_known_model_control_markers (raw vs referenced; preserve when reference_syntax.is_some())",
+        "L153-197 exact_reference_delimiter_pair (fixed quoted/grouped pair sets)",
+        "L199-229 exact_reference_delimiter_syntax",
+        "L695 generate_dialogue"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_post_edit": "acf50837482b17d94cbd4062a7ae6329d65740241a6bae4c334ae5f394395b1e",
+      "total_lines_post_edit": 4683,
+      "total_bytes_post_edit": 208310,
+      "read_scope": "Verified existing coverage: verb-list test (L2547), is-vs-acts (L2603), colon-triggers (L2819), internal-soft-hyphen (L3526), paren/grouped delimiters (L2150-2173), repeated-parens depth (L2272), prefix-shadow byte-marker invariant (L3254 area), corner-quoted vs lenticular-grouped CJK (L3288 area). Added one regression at the module tail."
+    }
+  ]
+}

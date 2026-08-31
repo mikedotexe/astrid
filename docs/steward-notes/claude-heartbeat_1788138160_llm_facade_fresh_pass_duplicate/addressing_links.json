@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Complete file (28 lines, SHA a9c5e380): mod provider (L3-4), pub use block (L6-12), pub(crate) use block (L14-22), cfg(test) block (L24-28). No local logic/arithmetic/state — pure facade."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "L14 `pub(crate) use provider::{`; astrid_pressure_attenuation_depth on L15, astrid_vibrancy_aperture on L16 — crate-internal, absent from the L6-12 pub block."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "astrid_pressure_attenuation_depth DEFINED at :235; llm.rs holds only the re-export. Confirms the facade-over-implementation gap."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Definition L235; env ASTRID_PRESSURE_ATTENUATION read L236; `map_or(0.0, |v| v.clamp(0.0, 0.6))` at L239; doc L228-234 bounds [0,0.6], never below 0.4x. Her ~line-235 clamp(0.0,0.6) pointer is exact."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec_gain.rs",
+      "note": "pressure_attenuation_is_monotone_and_depth_clamped (fn at L183) asserts monotone attenuation and depth clamped to [0,0.6] so output never drops below 0.4x. Passed this round (1 passed)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "astrid_vibrancy_aperture() consumed L103-307: feeds `dynamic_max = TAIL_VIBRANCY_MAX*(1.0+(vibrancy_aperture-1.0)*navigable)`. Also codec/structure.rs:313. Functional codec-tail gate, not cosmetic; acts downstream of text so does not change output text."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "note": "repair_introspection_detailed (:159, wrapped by repair_introspection :137) builds a system+user chat messages vector re-prompting for the sectioned shape and returns rewritten .text. Text-lane regeneration; no reservoir/shadow/codec mutation in the path."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788138160_llm_facade_fresh_pass_duplicate/duplicate_determination.md",
+      "note": "Duplicate determination: fresh-pass of the llm.rs facade family at SHA a9c5e380; prior IDs 1788102610/1788037243/1787810107, matching mechanism scope, SHA-identity re-verified, independent full re-read — no unaddressed variant."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787927999_llm_facade_reexport_grounded",
+      "note": "Original grounding of the llm.rs facade family (introspection_llm.rs_1787810107) — establishes the facade/re-export mechanism this report re-observes."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788106070_llm_facade_fresh_pass_duplicate",
+      "note": "Immediately-prior fresh-pass (introspection_llm.rs_1788102610) closed addressed_duplicate; its Vibrancy-Gate contradiction and Repair-Integrity mechanism grounding map one-to-one onto this report."
+    }
+  ]
+}

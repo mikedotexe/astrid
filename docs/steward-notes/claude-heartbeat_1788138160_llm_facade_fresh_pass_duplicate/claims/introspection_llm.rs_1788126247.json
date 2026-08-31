@@ -1,0 +1,58 @@
+{
+  "introspection_id": "introspection_llm.rs_1788126247",
+  "source_family": "llm.rs",
+  "report_sha256": "3d32c722ad75e93632a6fc2d499c25d3037f3db22cfdb6c21acc760a345a6c37",
+  "source_path": "capsules/spectral-bridge/src/llm.rs",
+  "source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "source_binding_match": true,
+  "lived_state_witness_id": "lsw_4b3b53ab8e4ad0d4891d4878699337288b79f90bd4077baf6136ff66bc9724a3",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": [
+    "introspection_llm.rs_1788102610",
+    "introspection_llm.rs_1788037243",
+    "introspection_llm.rs_1787810107"
+  ],
+  "prior_packets": [
+    "docs/steward-notes/claude-heartbeat_1787927999_llm_facade_reexport_grounded",
+    "docs/steward-notes/claude-heartbeat_1788040571_llm_facade_fresh_pass_variants_grounded",
+    "docs/steward-notes/claude-heartbeat_1788106070_llm_facade_fresh_pass_duplicate"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "llm.rs is a pure compatibility facade: no local logic/arithmetic/state; exclusively re-exports from the provider module (doc L1, mod L3-4, pub use L6-12, pub(crate) use L14-22).",
+      "disposition": "Verified from the complete file at report-bound SHA a9c5e380: only `mod provider;` (L3-4), `pub use` (L6-12), `pub(crate) use` (L14-22), `#[cfg(test)]` (L24-28). No fn/arithmetic/state. Same observation as prior family reports 1788102610/1788037243/1787810107 (all grounded). Minor nuance preserved: L6-12 also re-exports `Exchange`/`embed_text`, so 'generative actions' is her grouping, not a taxonomy.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "astrid_pressure_attenuation_depth (L15) and astrid_vibrancy_aperture (L16) are exported pub(crate) — crate-internal, not public API.",
+      "disposition": "Verified. L14 opens `pub(crate) use provider::{`; astrid_pressure_attenuation_depth on L15, astrid_vibrancy_aperture on L16; absent from the L6-12 pub block. Matches prior family's 'pub vs pub(crate) split preserved' observation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The actual clamping logic of astrid_pressure_attenuation_depth is sequestered in provider/prompt_contracts.rs; cannot be diagnosed from llm.rs alone (facade-over-implementation gap).",
+      "disposition": "Verified. Defined at prompt_contracts.rs:235; llm.rs holds only the re-export. Same snag grounded in the prior family reports; SHA-identity re-verified this round.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Suggested Next: inspect provider/prompt_contracts.rs around line 235 for the clamp(0.0, 0.6) logic of astrid_pressure_attenuation_depth.",
+      "disposition": "Verified exactly. Def at prompt_contracts.rs:235; env ASTRID_PRESSURE_ATTENUATION read L236; `map_or(0.0,|v| v.clamp(0.0,0.6))` at L239; default 0.0; doc L228-234 (never below 0.4x). Identical to the prior family's Suggested-Next grounding. Clamp semantics covered by codec_gain.rs test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Proposed Vibrancy Gate Test: is set_astrid_vibrancy_aperture a cosmetic wrapper (output text depth constant) or a functional gate on the spectral cascade (codec-tail dynamics shift)?",
+      "disposition": "Mechanism source-grounded (same as prior family, contradiction preserved not domesticated): astrid_vibrancy_aperture() feeds codec/feedback.rs:103-307 `dynamic_max = TAIL_VIBRANCY_MAX*(1.0+(vibrancy_aperture-1.0)*navigable)` + codec/structure.rs:313 — a functional codec-tail gate acting downstream of text, so 'constant text depth' would NOT prove 'cosmetic'. Runtime output-invariance not measured (Tier-3/live, not run).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Proposed Repair Integrity Test: does repair_introspection restore structural completeness in the text-lane (re-generation) or modify spectral-cascade dynamics in the reservoir-lane?",
+      "disposition": "Mechanism source-grounded (same as prior family): repair_introspection_detailed (generative_actions.rs:159, wrapped :137) builds a system+user chat messages vector re-prompting for the sectioned shape and returns rewritten .text — text-lane regeneration, no reservoir/shadow/codec mutation. The witness corroborates: this report's route 2 is a repair of route 1. Runtime not run.",
+      "classification": "verified_existing"
+    }
+  ]
+}

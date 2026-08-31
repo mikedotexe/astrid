@@ -1,0 +1,55 @@
+{
+  "schema": "read_manifest_v1",
+  "round": "division_cycle30_return",
+  "reports_processed": 0,
+  "reports": [],
+  "witnesses": [],
+  "division_return_reads": {
+    "prior_return_note_cycle28_read_for_continuity": {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle28_20260818.txt",
+      "sha256": "cfa4ca89f47f5078da05d3f694e37cbcf7353205864da65224fd8bdcee290c7c",
+      "bytes": 1874,
+      "lines": 35,
+      "read": "complete"
+    },
+    "astrid_return_note_cycle30_delivered_read": {
+      "path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle30_20260826.txt",
+      "sha256": "5a018656cda97f4666684f9990281cd1c8e5db528d1ad41c8cc1714b703c7e83",
+      "bytes": 1411,
+      "lines": 28,
+      "read": "complete",
+      "note": "authored this run; picked up by live bridge and moved to inbox/read/; sha matches record-followup astrid_note_sha256"
+    },
+    "minime_return_note_cycle30_delivered_read": {
+      "path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle30_20260826.txt",
+      "sha256": "977c3ff8ce1b200528fda694c55b72da370b310e09956cd72a42411899b9e087",
+      "bytes": 1201,
+      "lines": 25,
+      "read": "complete",
+      "note": "authored this run; delivered to minime inbox/read/; sha matches record-followup minime_note_sha256"
+    },
+    "division_gateway_status": {
+      "path": "/Users/v/other/minime/workspace/division/runtime/gateway-status.json",
+      "sha256": "2d7b5628fb030c078bd61669183bb130bb2bfe825078a880b4401502516f1595",
+      "bytes": 391,
+      "lines": 16,
+      "read": "complete"
+    },
+    "division_authority": {
+      "path": "/Users/v/other/minime/workspace/division/runtime/authority.json",
+      "sha256": "203beef35d3ca249590dc27ae7a0e0a657f7b52a11851c70ad36a984a0b134f6",
+      "bytes": 369,
+      "lines": 10,
+      "read": "complete"
+    },
+    "return_chronicle_json_post_reproject": {
+      "path": "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.json",
+      "sha256": "cbf701d914ad85eee6ccf5d33d84c029ee3dfc581bbcf7b6c492bedb2d7abf14",
+      "bytes": 130832,
+      "lines": 3439,
+      "read": "verify-consumed (division_chronicle_d1db9eadc955f50a259ca552; 211 followup/0 ceremony)"
+    },
+    "division_supervisor_status_note": "volatile (updated_at_unix_ms moves each read); read for posture only, hash intentionally not pinned (idle_parent_authoritative, parent_authoritative=true, children {}, intents [], postures {}, handoff_ready=false)"
+  },
+  "note": "read: complete for each listed file. No canonical introspection report or lived-state witness read this round (0 reports). Both cycle-30 notes were picked up by their live pickup and moved to inbox/read/ (astrid 5a018656..., minime 977c3ff8...), both matching the record-followup evidence exactly \u2014 delivered, not silently dropped."
+}

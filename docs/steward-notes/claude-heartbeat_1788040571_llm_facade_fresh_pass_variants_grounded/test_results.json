@@ -1,0 +1,26 @@
+{
+  "round": "llm_facade_fresh_pass_variants_grounded",
+  "note": "No Rust source or test edits this round (fresh-pass duplicate + read-only grounding + doc/packet writes only). Ran baseline + full stewardship integrity suite. Final epistemic verify, counter audit, and V2 verify recorded separately after durable addressing writes.",
+  "baseline": {
+    "git_diff_check": "clean (no whitespace errors)",
+    "cargo_fmt_all_check": "rc=0 (pass; PATH=~/.cargo/bin)"
+  },
+  "suites": [
+    {"name": "introspection_addressing_audit.py --self-test", "result": "OK", "count": 44},
+    {"name": "test_evidence_event_store.py", "result": "OK", "count": 21},
+    {"name": "test_steward_control.py", "result": "OK", "count": 27},
+    {"name": "test_steward_projection.py", "result": "OK", "count": 14},
+    {"name": "test_division_ceremony_followup.py", "result": "OK", "count": 3},
+    {"name": "test_division_ceremony_chronicle.py", "result": "OK", "count": 10},
+    {"name": "test_division_ceremony_projection.py", "result": "OK (self-test ok)", "count": null},
+    {"name": "test_projection_cursors.py", "result": "OK", "count": 4},
+    {"name": "test_introspection_cadence_audit.py", "result": "OK", "count": 6},
+    {"name": "anti_drop_catalog.py --self-test", "result": "OK", "count": 5},
+    {"name": "anti_drop_catalog.py verify --json", "result": "total=69 guards, alarms=0, gaps=0"},
+    {"name": "introspection_cadence_audit.py --strict --compact", "result": "integrity_ok=true, errors=[], 0 duplicate hash groups; latest=introspection_llm.rs_1788037243"},
+    {"name": "experiential_epistemics.py self-test --json", "result": "OK valid:true"}
+  ],
+  "post_write_verification": {
+    "note": "experiential_epistemics verify, audit-counters, evidence_event_store verify/status recorded in verification_receipt.json after record-read/link/close/record-round."
+  }
+}

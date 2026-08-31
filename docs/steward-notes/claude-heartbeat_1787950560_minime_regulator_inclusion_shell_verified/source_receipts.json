@@ -1,0 +1,45 @@
+{
+  "round": "claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified",
+  "sources": [
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "repository_relative_path": "minime/src/regulator/core.rs",
+      "owner": "minime",
+      "sha256_working_copy": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "sha256_report_bound": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "sha256_witness_snapshot": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "hash_match": true,
+      "total_lines": 24,
+      "total_bytes": 940,
+      "read_scope": "complete_file lines 1-24",
+      "included_intervals": "1-24",
+      "uncovered_intervals": "none",
+      "structural_facts": {
+        "comments_lines": "1-12",
+        "crate_attr": "#![allow(dead_code)] at line 8",
+        "use_decls": "use serde::{Deserialize, Serialize}; at line 14",
+        "include_macros_lines": "16-24",
+        "include_targets_actual_count": 9,
+        "include_targets_actual": [
+          "core/telemetry_types.rs (L16)",
+          "core/viscosity.rs (L17)",
+          "core/resonance_evidence.rs (L18)",
+          "core/pressure_types.rs (L19)",
+          "core/reviews.rs (L20)",
+          "core/pressure_source.rs (L21)",
+          "core/rate_gate.rs (L22)",
+          "core/pi.rs (L23)",
+          "core/tests.rs (L24)"
+        ],
+        "include_targets_report_named_count": 6,
+        "include_targets_report_omitted": [
+          "core/telemetry_types.rs (L16)",
+          "core/reviews.rs (L20)",
+          "core/tests.rs (L24)"
+        ],
+        "active_logic_in_core_rs": "none (no fn/impl/const bodies; shell only)"
+      }
+    }
+  ]
+}

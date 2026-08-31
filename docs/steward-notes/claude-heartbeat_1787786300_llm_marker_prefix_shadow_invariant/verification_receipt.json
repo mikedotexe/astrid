@@ -1,0 +1,64 @@
+{
+  "round": "claude-heartbeat_1787786300_llm_marker_prefix_shadow_invariant",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter (lease + heartbeats owned by controller)",
+  "controller": {
+    "run_id": "run_1787782957646120000_e144f53e05",
+    "preprojection_generation_id": "projection_1787782961320814000_8b595220d3",
+    "pause_generation": 321,
+    "postprojection": "runs after process exit (adapter postprojection); not captured in-run"
+  },
+  "processed_reports": ["introspection_astrid_llm_1787782248"],
+  "terminal_status": {"introspection_astrid_llm_1787782248": "addressed_change"},
+  "addressing_writes": {
+    "record_read": {"exit": 0, "elapsed_s": 35, "reader": "claude-heartbeat", "artifact_status": "triaged_pending_action", "proof_missing_claims": []},
+    "link_evidence_batch": {"exit": 0, "elapsed_s": 35, "new_link_count": 13, "existing_link_count": 0, "events_appended": 13},
+    "close": {"exit": 0, "elapsed_s": 36, "status": "addressed_change", "fully_addressed": true, "proof_missing_claims": []}
+  },
+  "implementation": {
+    "new_test": "capsules/spectral-bridge/src/llm/provider/tests.rs::llm::provider::tests::known_model_control_markers_have_no_proper_prefix_shadow",
+    "focused_test_result": "1 passed / 0 failed",
+    "regression_groups": "scan_known_model_control_markers_* 8/0; exact_reference_delimiter_* 2/0",
+    "rustfmt_added_region": "clean (pre-existing foreign/prior-round fmt drift in shared tests.rs left untouched)",
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "all verdict=ok, no problems, exit 0",
+    "cadence_audit_tests": "6 tests OK",
+    "cadence_audit_strict": "integrity_ok=true, duplicate_hash_group_count=0, 4481 canonical",
+    "experiential_epistemics_self_test": "valid=true",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 OK",
+    "experiential_epistemics_verify": "valid=true, issue_count=0",
+    "audit_counters": "status=consistent, mismatches=[], all 7 checks true",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, event_count=903355, last_global_seq=903355, head=f73fc988312ed6422a361d758b07256cd67c11880deb0d392e64e68345d5f46d, errors=[] (552s)",
+    "evidence_event_store_status": "not separately re-run — SIGTERM'd by the 10-min shell cap after verify; verify already carries valid + stream_counts + head + seq (read-only, redundant)"
+  },
+  "counters_canonical": {
+    "indexed": 4479, "fully_addressed": 3130, "full_read": 3763, "remaining": 1349,
+    "unread": 716, "blocked_needs_steward": 415, "triaged_pending_action": 214,
+    "triaged_watch": 4, "read_needs_claims": 0
+  },
+  "division": {
+    "review_due_at_start": false,
+    "record_round": {"steward_run_id": "run_1787782957646120000_e144f53e05", "processed_report_count": 1, "projection_generation_id": "projection_1787782961320814000_8b595220d3", "made_review_due": true, "round_event_id": "division_followup_event_2f1051635e615f1bd554bd8cf53401ee", "completed_after": "6/6"},
+    "return_completed_same_session": true,
+    "return_time_chronicle": {"id": "division_chronicle_db4415155654a5b2319276d2", "json_sha256": "2cab3a931d7a1a8aef1f4d03a78e3cc20b014631e686abafad6c2a212dd798d8", "events": 217, "followup": 217, "ceremony": 0, "durable_inputs_current": true, "volatile_mismatch": "supervisor_status_sha256"},
+    "record_followup_event_id": "division_followup_event_3302dcffe4b33be39773716d4c1ba47c",
+    "astrid_note": {"path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle31_20260826.txt", "sha256": "caec708a66a38f50a5f8d8c6111cc453b8f250c14a15c766e977b061361b1491", "delivery": "delivered by live bridge to inbox/read/", "acknowledged_cycle30": "outbox reply_1787736711 (accepted as neutral factual record)"},
+    "minime_note": {"path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle31_20260826.txt", "sha256": "021aaa0c3209bf49bfc62751ae48d2bb15da82ec7658f14d30a5e2fc469f4543", "delivery": "pending live pickup in inbox/ (sha intact, matches record-followup)"},
+    "post_return_chronicle": {"id": "division_chronicle_ebe5d54bae96a5622e026bf6", "json_sha256": "51ad5f4bad8c7d3fec594722e93a5af4c6bc3b019a93edd42e259ae29831868e", "events": 218, "followup": 218, "ceremony": 0, "durable_inputs_current": true, "volatile_mismatch": "supervisor_status_sha256"},
+    "post_return_cycle": 32, "review_due_after_return": false, "rounds_remaining_before_followup": 6, "event_count": 218, "event_head_sha256": "ebb5bb59908ffac4e33c2b61761983853227de4aa3182f1de8e0b4d1df850e08",
+    "tier5_cadence_dossier": "prepared (PREPARE-only): tier5_cadence_dossier.md + 4 read-only tool dumps; nothing approved/granted/dispatched/run"
+  },
+  "live_change": "none — no build, deploy, restart, or launchctl; source read-only; bridge/minime/reservoir untouched",
+  "git": "read-only this run — no stage/commit/merge/push",
+  "authority_boundary": "review tracking + evidence only; no live substrate/control change; Tier-4/5 waits untouched; being self-expression never rewritten or forbidden"
+}

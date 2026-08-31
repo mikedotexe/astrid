@@ -1,0 +1,30 @@
+{
+  "round": "claude-heartbeat_1787812297_llm_marker_functions_proxy_fresh_pass_duplicate",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787806291.txt",
+      "sha256": "72f8c068878c6916be479bf5de3fa0f66731d0bd8470b81a8b2e004e7abf1ac0",
+      "bytes": 3682,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_948ef59eb6c49fd55bbbbef427614122b2c62f6086e3c6f0048881cb5e2676b9",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_948ef59eb6c49fd55bbbbef427614122b2c62f6086e3c6f0048881cb5e2676b9.json",
+      "sha256": "d7da961873df034ffbcb058539af7463d11760f30623975d0d59b2e35c7a84dc",
+      "bytes": 23929,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "live_eligible_now": false,
+      "model_profile": "gemma4_12b",
+      "provider_route": "mlx",
+      "fill_pct": 64.30128479003906,
+      "canonical_body_binding_sha256": "839c5bf54f033beee188cd2dac8598ea4dc459c2a3cdd0a021486de0fcbd2c38"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "round": "claude-heartbeat_1787794806_llm_marker_relation_delimiter_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787789890.txt",
+      "sha256": "99a25fb7f8bcf9ef54048db3987e5d98693e0f400fa3ee9fa892b32cbef38e94",
+      "bytes": 3755,
+      "lines": 45,
+      "read": "complete",
+      "source_path_named": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha_named": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_window_named": "lines 1-400 of 1048 (coverage manifest: included 1-1048, uncovered none, multi_window_complete)",
+      "source_coverage": "complete_source_available"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_e980812819016abe0d3457705624af46004d7b801cf9520ab2fcb1b61e0e0852",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_e980812819016abe0d3457705624af46004d7b801cf9520ab2fcb1b61e0e0852.json",
+      "sha256": "77d223df1e5c4a4f2c52ccb7fcc4a84be05120dd8e846ba4b1361e0288c6eec4",
+      "bytes": 23942,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "grants_approval": false,
+      "edits_source_now": false,
+      "fill_pct": 72.17076110839844,
+      "model_profile": "gemma4_12b",
+      "provider_route": "mlx",
+      "notes": "Two model routes (introspect job + repair retry), both gemma4_12b/mlx. mode_packing 0.833, pressure_risk 0.228, porosity 0.664, minime.fill 74.73%. raw prose/prompt/response NOT included; no private path."
+    }
+  ]
+}

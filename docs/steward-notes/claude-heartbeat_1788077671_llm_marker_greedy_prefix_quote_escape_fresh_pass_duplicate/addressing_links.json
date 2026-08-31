@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 (remainder rebuild; preserve at L129-131 only when reference_syntax.is_some); exact_reference_delimiter_syntax L199-229; pipeline sanitize_model_control_markers_with_report L352-517 + wrapper sanitize_model_control_markers L519. Source SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180 (20 markers): no token is a proper byte-prefix of another, so longest_exact_known_model_control_marker_at max_by_key(len) (L106) never disambiguates a shadow. accounting_basis L507: single_pass, no_second_order_marker_creation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "known_model_control_markers_have_no_proper_prefix_shadow (L3254) pins the no-proper-prefix invariant AND the behavioral each-marker-resolves-to-itself consequence; fails if a future overlapping marker is added. Re-run green this round."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary (L3430): advances past punctuation-only chunks, fails closed when no alnum word follows. scan_known_model_control_markers_grounds_first_word_after_non_breaking_space (L3472): U+00A0 splits, U+FEFF trimmed. Both re-run green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "known_model_control_markers_have_no_proper_prefix_shadow (L3254) — invariant + behavioral longest-match resolution. Production-faithful form of the report's overlap test (no synthetic overlapping markers exist). Re-run green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (L3178) pins the report's exact example: unquoted 'The prompt <marker> is active' -> ExplicitExactKnownTokenRelation (not QuotedExactKnownToken); quote-adjacent marker + following verb -> QuotedExactKnownToken (delimiter precedence). Both keep marker byte-exact in remainder. Re-run green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "sanitize_model_control_markers_with_report L352-517: remainder is the byte-exact cleaned string; matches -> ControlMarkerCleanupReport of removed/preserved counts + bounded context receipts (L484-512); no re-injection of marker bytes. Wrapper sanitize_model_control_markers L519 returns only the cleaned string. Vocabulary fully mapped (fallback_contracts.rs L159-180)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788077671_llm_marker_greedy_prefix_quote_escape_fresh_pass_duplicate/summaries/introspection_astrid_llm_1788070591.md",
+      "note": "Round summary: complete report+witness+source read receipts, per-claim dispositions, duplicate standard evidence, preserved corrections, authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the verified-duplicate close and the preserved relation-vs-quote correction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row for the being-output -> verified-no-change causal chain (all claims verified_existing, addressed_duplicate)."
+    }
+  ]
+}

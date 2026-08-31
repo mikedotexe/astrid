@@ -1,0 +1,22 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "L1-240 complete (all cited symbols) + targeted grep for KNOWN_MODEL_CONTROL_MARKERS",
+      "report_binding_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "match": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": null,
+      "total_lines": null,
+      "total_bytes": 170226,
+      "read_scope": "L2176-2211 and L2605-2694 read complete; test-fn index grep L1736-2712",
+      "note": "regression grounding for c001-c005"
+    }
+  ]
+}

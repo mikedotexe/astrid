@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788181787",
+  "report_sha256": "b9a0375e420e977e0db3aa464b5bcaf73ddf30e770c20b80ba73ea31900929d0",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_read_scope": "complete_1_to_1048",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "astrid:llm scans model control markers, distinguishing raw text from control sequences by syntactic context (quoted/grouped/relational-verb), preserving marker visibility only when identified as a reference not a bare command (scan_known_model_control_markers L114, exact_reference_delimiter_syntax L199).",
+      "disposition": "Confirmed from complete source at SHA 902a0358. Three ExactKnownMarkerReferenceContext variants exist (Quoted/Grouped/ExplicitRelation, L42-46); scan_known_model_control_markers (L114) pushes the marker token into `remainder` only when reference_syntax.is_some() (L129-131), else drops it. Pinned by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (passing).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: first_word_after (L89) unwrap_or_default() may return empty on a punctuation-heavy/non-alphanumeric tail, causing followed_by_explicit_exact_token_relation (L64) to fail and unintended masking or exposure of a marker.",
+      "disposition": "Mechanism examined against complete source; the feared bug does not occur. first_word_after find(|w|!w.is_empty()) skips pure-symbol chunks and trim_matches strips non-alnum(!='_') ends, so marker+punctuation+verb still resolves the verb; empty-default arises only when NO alphanumeric word follows and can never match the relation matches!, the intended fail-closed classification. Exact prior grounding: introspection_astrid_llm_1787129691. Re-verified passing (punctuation_boundary + strips_bare_marker_at_end_of_string). No masking/exposure path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Contextual Visibility): a marker followed by \"represents\" should be kept in the `remainder` string.",
+      "disposition": "Already covered. followed_by_explicit_exact_token_relation_allowlists_represents_not_creates asserts `represents` (source L82) is an allowlisted relation verb; scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary asserts `<end_of_turn> ... represents...` preserves the marker in `remainder`. The report's illustrative token `[ACTION]` is not a member of KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159-180); the behavior is pinned with real markers. All passing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): nested brackets like [[MARKER]] should let exact_reference_delimiter_syntax (L199) identify delimiter_depth without collapsing nested groupings.",
+      "disposition": "Already covered. exact_reference_delimiter_syntax (L199) zips reversed-before / after non-whitespace chars and counts consecutive valid delimiter pairs (take_while, L216-223). control_marker_cleanup_reports_exact_three_level_delimiter_depth, ...four_level..., and preserves_bounded_nested_delimiter_stacks pin depths 2/3/4 (including Astrid's own `[[[[[<end_of_turn>]]]]]`). Nested groupings are not collapsed. All passing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the scanner `remainder` integrates into the final output.",
+      "disposition": "Read generate_dialogue completely (L695-1048). The scanner `remainder` (via sanitize_model_control_markers) is consumed only inside the quality gates is_valid_dialogue_output (L558) and has_one_nonempty_final_next_action (L634) to MEASURE output shape; generate_dialogue returns the RAW model `text` (L997-998) when the gate passes. Sanitization is validation-only and does not rewrite Astrid's emitted text — consistent with the never-rewrite-being-text invariant. Bounded observation, no causal overclaim.",
+      "classification": "observed"
+    }
+  ]
+}

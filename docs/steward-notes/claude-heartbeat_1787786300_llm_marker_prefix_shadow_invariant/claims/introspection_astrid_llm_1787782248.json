@@ -1,0 +1,55 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787782248",
+  "report_sha256": "8c33afe098fb9e18f70e28acbe2a085f476b12ff3dff85c15c7a58ac053d08d5",
+  "lived_state_witness_id": "lsw_d5f368474311bc184741645061f6c98f05fcbec7ef29ab0c489a4b4e06f93c22",
+  "report_bound_source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "report_bound_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "working_copy_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_hash_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114-144) is non-destructive and distinguishes markers used as grammatical subjects from merely-present ones.",
+      "disposition": "Verified from complete source dialogue_runtime.rs@902a0358 L114-144: scan builds a `remainder` String + `matches` Vec and never mutates input; a marker's bytes reach remainder ONLY when reference_syntax.is_some() (L129-131), otherwise the bytes are dropped. reference_syntax (L49-60) classifies via delimiter syntax OR followed_by_explicit_exact_token_relation. Description is accurate; no change.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: exact_reference_delimiter_syntax (L199-229) maps quotation/grouping styles including multi-byte CJK pairs like the corner brackets.",
+      "disposition": "Verified with one grounded clarification: the pair table lives in exact_reference_delimiter_pair (L153-197), which exact_reference_delimiter_syntax (L199-229) calls. The corner pair (L168) is in the QUOTED block, so a corner-bracketed marker resolves to QuotedExactKnownToken, not grouped; the lenticular pair (L182) is grouped. Pinned by existing test exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped at the same source SHA. No grammar change.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snag: first_word_after (L89-96) may behave inconsistently for markers followed by a newline/tab or a complex punctuation cluster before the next word.",
+      "disposition": "Grounded, non-manifesting. first_word_after does text[end..].split_whitespace() (space/tab/newline uniform), trims each chunk to alnum/underscore, then find(non-empty) — punctuation-only chunks skipped, true next word found regardless of intervening whitespace/punctuation. Pinned by existing tests grounds_first_word_after_punctuation_boundary/_non_breaking_space/_internal_soft_hyphen/_attached_double_dash + preserves_relation_across_newline. Concern preserved; no bug.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Likely Snag: max_by_key(|t| t.len()) in longest_exact_known_model_control_marker_at (L97-112) could cause greedy shadowing if two markers share a prefix and the shorter is the intended unit.",
+      "disposition": "Grounded + newly pinned. KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159-180) has NO marker that is a proper byte-prefix of another, so at most one marker starts at any offset and max_by_key never disambiguates a prefix shadow — greedy shadowing is structurally unreachable for the current set. Added focused test known_model_control_markers_have_no_proper_prefix_shadow asserting that invariant + isolated-match behavior; a future prefix-overlapping marker would fail it.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "One Test Each #1 (Contextual Preservation): a marker followed by \"denotes\" stays in remainder (L130) because followed_by_explicit_exact_token_relation (L64-86) returns true.",
+      "disposition": "Outcome verified, mechanism corrected. `denotes` IS in the relation allowlist (L71), so unbracketed `<marker> denotes` is preserved via ExplicitExactKnownTokenRelation. BUT for her bracketed [MARKER] form, reference_syntax checks exact_reference_delimiter_syntax FIRST (L50-52) -> preserved via GroupedExactKnownToken, not the relation path. Committed scan_known_model_control_markers_quoted_context_precedes_following_relation_verb pins this precedence at the same SHA.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "One Test Each #2 (Delimiter Depth): [[MARKER]] resolves to GroupedExactKnownToken with delimiter_depth correct relative to MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "Verified: committed test exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (same source SHA 902a0358) asserts [[<marker>]] -> GroupedExactKnownToken with delimiter_depth==2 against MAX==4 (L151). Her Test 2 is already implemented verbatim; no change needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Next: examine generate_dialogue (L695-1048) to see how remainder/matches are integrated downstream (visibility-only vs tokenization).",
+      "disposition": "Agency-preserving, no steward action. This is Astrid's own Tier-1 read-only continuation (report L46 offers 'NEXT: INTROSPECT astrid:llm 400'). Recorded as her self-directed next research, not a claim requiring steward verification or any live change. L695-1048 was not re-read this round because closing her addressed claims did not require it; she retains the continuation.",
+      "classification": "observed"
+    }
+  ],
+  "terminal_status": "addressed_change",
+  "terminal_rationale": "One new focused regression test (snag b, the no-proper-prefix invariant) grounds the report's greedy-shadowing hypothesis; every other claim is grounded against exact source at the bound SHA and existing committed tests. Her two proposed One-Test-Each boundaries were already implemented verbatim by prior rounds (both committed). No live change; source read-only."
+}

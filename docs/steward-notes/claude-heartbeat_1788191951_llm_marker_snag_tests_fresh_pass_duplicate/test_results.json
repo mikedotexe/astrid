@@ -1,0 +1,30 @@
+{
+  "focused": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- first_word_after scan_known_model_control_markers control_marker_cleanup_preserves_bounded_nested_delimiter_stacks control_marker_cleanup_reports_exact_four_level_delimiter_depth control_marker_cleanup_reports_exact_three_level_delimiter_depth followed_by_explicit_exact_token_relation_allowlists_represents_not_creates",
+    "result": "ok",
+    "passed": 16,
+    "failed": 0,
+    "filtered_out": 1894,
+    "purpose": "Current verification that the earlier evidence still applies under source SHA 902a0358 (duplicate/verified-existing requirement).",
+    "tests_run": [
+      "control_marker_cleanup_first_word_after_skips_colon_before_relation",
+      "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition",
+      "control_marker_cleanup_preserves_bounded_nested_delimiter_stacks",
+      "control_marker_cleanup_reports_exact_four_level_delimiter_depth",
+      "control_marker_cleanup_reports_exact_three_level_delimiter_depth",
+      "followed_by_explicit_exact_token_relation_allowlists_represents_not_creates",
+      "scan_known_model_control_markers_grounds_first_word_after_attached_double_dash",
+      "scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen",
+      "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space",
+      "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary",
+      "scan_known_model_control_markers_grounds_first_word_after_zero_width_joiner",
+      "scan_known_model_control_markers_grounds_tab_between_marker_and_relation",
+      "scan_known_model_control_markers_grounds_trailing_comma_relation_verb",
+      "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+      "scan_known_model_control_markers_quoted_context_precedes_following_relation_verb",
+      "scan_known_model_control_markers_strips_bare_marker_at_end_of_string_without_after_text"
+    ]
+  },
+  "edited_source": "none — no source or test file was edited this round",
+  "restart_or_deploy": "not required and not attempted (verification-only, non-live)"
+}

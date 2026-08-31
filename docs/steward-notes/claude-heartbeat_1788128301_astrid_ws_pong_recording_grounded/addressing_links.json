@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "L8 spawn_telemetry_subscriber; select loop arms Binary L64, Text L83, Ping L102, Pong L142, Close L159, None/stream_ended L167."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "record_ws_message_received L104-113 increments messages_received + per-kind ping/pong counters and sets last_message_at_unix_s; call sites telemetry_port.rs L73/92/111/151."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "L119 ws_tx.send(Message::Pong(data)); L120 pong_send_error:{e}; L123 record_ws_send_error then break."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "Backoff impl L173-200 (1s doubling, 60s cap, reset). Close-vs-stream-end at telemetry_port.rs L159 vs L167."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "binary handle_telemetry_message L79-81; text handle_telemetry_message L98-100."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "Pong arm records: record_ws_message_received('pong') L110-112 increments pongs_received/messages_received/timestamp BEFORE telemetry_port.rs L157 debug log — refutes 'only a debug log'."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "New regression telemetry_pong_received_is_recorded_not_sent (fn L223): a received Pong records pongs_received==1/messages_received==1/timestamp and messages_sent==0 (isolates receive-side recording, not echo/send)."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "record write-locks scoped/dropped before handle_telemetry_message (L71-78 then L79); handle_telemetry_message_at short read lock L339-350; artifact scan throttled 30s (L356-357) and lock-free (L358-373); shared-state write in uncovered 403-1041."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "ws_trace_records_connection_lifecycle_without_payloads L174-214 asserts messages_sent==1 (record_ws_message_sent primitive). Loop echo is integration-level; mock-WS harness at tests/mock_ws_integration.rs."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c009",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "L2809-2816 record_ws_message_received('text') -> telemetry_messages_received_total==1; source ordering record L92 precedes handle_telemetry_message L98."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "handle_telemetry_message awaited inline in receive loop L79-81/L98-100 (would delay next poll); mitigations: scan throttled 30s L356-357, lock-free; full assessment needs uncovered 403-1041."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "record_ws_message_received L104-113 is saturating counter increments + one unix_now_s() timestamp — no I/O, no heavy computation; suggested optimization already unnecessary."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the astrid:ws pong-recording grounding and the new regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: Astrid's astrid:ws Pong-asymmetry snag -> source correction + isolating regression."
+    }
+  ]
+}

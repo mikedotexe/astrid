@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787817920",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 (marker kept only when reference_syntax.is_some(), L129); reference_syntax L49-60 (delimiter-first, relation fallback); exact_reference_delimiter_syntax L199-229; grouped/quoted pair table L153-197."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787817920",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 (split_whitespace, per-chunk non-alnum trim, first non-empty); L129 confirms unlisted first word + no delimiter => reference_syntax None => marker stripped. Intended fail-closed contract."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787817920",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "uses_only_the_first_finite_relation_word L2605 (exact multi-word case: `functions like a proxy` kept, `acts like a proxy` stripped); distinguishes_allowlisted_is_from_unlisted_acts L2568; first_word_after_skips_leading_punctuation_transition L2635; fails_closed_when_only_punctuation_or_whitespace_follows L2947."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787817920",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts L2992-3002: `<end_of_turn> behaves as a named boundary.` -> ExplicitExactKnownTokenRelation, kept byte-exact. (`behaves` is L69 in source, not the cited L67.)"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787817920",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two L3072-3085: `[[<end_of_turn>]]` -> GroupedExactKnownToken, delimiter_depth 2."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787817920",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue at L695 is in the unseen L400-1048 window; forward-reading agency pointer only, her NEXT: INTROSPECT astrid:llm 400 preserved. No action."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787817920",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787820759_llm_marker_first_word_relation_fresh_pass_duplicate/summaries/introspection_astrid_llm_1787817920.md",
+      "note": "Round summary: clean addressed_duplicate, all claims verified_existing at source SHA 902a0358, snag concern preserved."
+    }
+  ]
+}

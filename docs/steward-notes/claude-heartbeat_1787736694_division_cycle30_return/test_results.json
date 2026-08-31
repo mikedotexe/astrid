@@ -1,0 +1,29 @@
+{
+  "schema": "test_results_v1",
+  "round": "division_cycle30_return",
+  "note": "Division cycle-30 return round; 0 canonical reports processed, so no Rust/Minime source tests (no code touched). Integrity suites below.",
+  "integrity_suites": {
+    "test_evidence_event_store.py": "OK",
+    "test_steward_control.py": "OK on rerun (27 tests); first run had the known transient single-error flake, passed cleanly on immediate rerun \u2014 not a regression",
+    "test_steward_projection.py": "OK (14)",
+    "test_division_ceremony_followup.py": "OK (3)",
+    "test_division_ceremony_chronicle.py": "OK (10)",
+    "test_division_ceremony_projection.py": "OK (self-test)",
+    "test_projection_cursors.py": "OK (4)",
+    "test_introspection_cadence_audit.py": "OK (6)",
+    "introspection_addressing_audit.py --self-test": "OK",
+    "anti_drop_catalog.py --self-test": "OK",
+    "anti_drop_catalog.py verify --json": "69 guards, 0 alarms, 0 gaps",
+    "experiential_epistemics.py self-test --json": "valid=true",
+    "introspection_cadence_audit.py --strict --compact": "integrity_ok=true, errors=[], canonical_count=4470, duplicate_hash_group_count=0, latest=introspection_astrid_llm_1787730919.txt"
+  },
+  "final_verifies": {
+    "introspection_addressing_audit.py audit-counters --json": "status=consistent, mismatches=[], all 7 checks True",
+    "evidence_event_store.py --json verify": "valid=True, corrupt_lines=0, errors=[] (heavy verify over full store; integrity gate PASSED)",
+    "evidence_event_store.py --json status": "NOT captured \u2014 status sub-query still running at the ~90-min budget deadline; verify (above) already passed so the integrity gate is met",
+    "experiential_epistemics.py verify --json": "DEFERRED \u2014 not run before the ~90-min budget deadline (macOS lacks `timeout`; the heavy verify could not be safely bounded in the remaining ~3 min). This dimension was NOT modified by this run (0 reports; no experiential_epistemics records written). Re-run next round: python3 scripts/experiential_epistemics.py verify --json"
+  },
+  "baseline_checks": {
+    "git diff --check": "not re-run at deadline (no source/test bytes touched; only docs + workspace notes)"
+  }
+}

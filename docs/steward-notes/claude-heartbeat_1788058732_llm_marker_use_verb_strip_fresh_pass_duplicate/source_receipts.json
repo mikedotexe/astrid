@@ -1,0 +1,45 @@
+{
+  "round": "claude-heartbeat_1788058732_llm_marker_use_verb_strip_fresh_pass_duplicate",
+  "source_receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete 1-1048",
+      "role": "report_bound_source",
+      "dirty": false,
+      "key_intervals": {
+        "first_word_after": "L89-96",
+        "followed_by_explicit_exact_token_relation (mention-verb allowlist)": "L64-86",
+        "scan_known_model_control_markers (L129 preserves only reference_syntax.is_some())": "L114-144",
+        "reference_syntax (delimiter before relation)": "L48-60",
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": "L151",
+        "exact_reference_delimiter_syntax": "L199-229",
+        "generate_dialogue (returns original text on pass)": "L695-1048",
+        "quality gates consuming sanitizer": "is_valid_dialogue_output L556-631, has_one_nonempty_final_next_action L633-667"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "3899dc0ff4d5b7faa2eee4bf5dff41552ef96b3fdccb433f92a34434f6cab585",
+      "total_lines": 4595,
+      "total_bytes": 203334,
+      "read_scope": "targeted intervals L2151-2230, L2570-2730, L2836-2949, L4389 (existing regressions cited for verified_existing)",
+      "role": "existing_test_evidence",
+      "dirty": true,
+      "dirty_note": "Foreign accumulated edits (M) predate this round; a triggers/activates regression drafted this round was reverted; file byte-restored to this SHA (== pre-round). No net change by this round.",
+      "cited_tests": {
+        "control_marker_cleanup_does_not_expand_relation_allowlist_to_triggers (her exact triggers example, verbatim)": "L2934",
+        "anti-expansion family (implies/contains/creates/triggers/underscored_appears_as)": "L2889-2949",
+        "distinguishes_allowlisted_is_from_unlisted_acts": "L2603",
+        "signals_from_unlisted_signifies": "L4389",
+        "reports_exact_four_level_delimiter_depth (MAX=4)": "L2194",
+        "preserves_bounded_nested_delimiter_stacks": "L2176",
+        "reports_exact_three_level_delimiter_depth": "L2208"
+      }
+    }
+  ]
+}

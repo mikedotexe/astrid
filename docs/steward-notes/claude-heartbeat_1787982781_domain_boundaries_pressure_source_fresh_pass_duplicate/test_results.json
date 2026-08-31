@@ -1,0 +1,16 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "suites": [
+    {
+      "name": "focused_pressure_source_porosity_read_only",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- status_explains_advisory_pressure_source_without_pi_mutation permeability_shift_names_porosity_without_live_authority pressure_source_audit_formats_unavailable_and_typed_metric",
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1903,
+      "backs_claim": "c006",
+      "result": "ok",
+      "note": "Confirms live-source read-only pressure-source contract (advisory PressureSourceControl, no PI mutation) and porosity naming without live authority. No new test written; existing coverage is sufficient and a new regression would duplicate."
+    }
+  ]
+}

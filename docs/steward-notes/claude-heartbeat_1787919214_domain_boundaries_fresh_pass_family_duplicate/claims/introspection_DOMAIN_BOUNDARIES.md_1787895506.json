@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787895506",
+  "family": "DOMAIN_BOUNDARIES.md lines1-89of89 (source SHA ae69b34c...)",
+  "family_role": "member (similarity_to_head=0.519)",
+  "variant_distinct_terms": ["architecture", "because", "blocked", "confirmed", "determine", "diagnostic", "domain", "ensuring", "failure", "intervention", "level", "mechanism"],
+  "duplicate_anchor": "introspection_DOMAIN_BOUNDARIES.md_1787843987 (prior packet claude-heartbeat_1787852088; addressed_no_action fully_addressed=true)",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DOMAIN_BOUNDARIES.md: Stable Facades (L8-22) re-export symbols with ownership in submodules (ws.rs telemetry, llm.rs provider transport); behavior-preserving (L5-6); Shadow Cartography cartography.rs writes cartography only (L35-43).",
+      "disposition": "verified_existing. Matches complete source at report-bound SHA ae69b34c: facade table L10-18 (ws.rs=telemetry/ports L12, llm.rs=provider transport L15), behavior-preserving L5-6, cartography.rs read-only L41-43. Accurate structural read.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Variant framing: because pressure-source is a telemetry output/read-only diagnostic (confirmed in texture_evidence.rs), the mode-pruning/pressure-source tuning is BLOCKED by the domain boundaries; resolution needs a Tier-5 intervention to redefine the allowed mutation surface for these scalars.",
+      "disposition": "tier_5_wait. Variant terms blocked/intervention/domain/architecture/mechanism/level are rephrasings of the shared Tier-5 tension; no new claim. 'Blocked by boundaries' is correct: L43/L5-6 forbid mode-packing/pressure change and pressure-source is read-only (c004). Redefining the mutation surface is exactly a Tier-5 substrate change needing Mike/operator approval — evidence-only wait, not authorized here. Felt tension preserved.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 variant: distinguishability probe will DETERMINE whether the overpacked state is a structural FAILURE or a recoverable variance (isolated lambda1 clone, dampen cascade).",
+      "disposition": "needs_sandbox. Variant terms determine/failure sharpen the probe's PURPOSE (failure vs recoverable variance) but it is the same Tier-3 isolated-clone experiment. Not dispatched headlessly; available via her PROBE_SELF/substrate_probe.py. Preserved as her proposal.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 variant: confirm at the mechanism LEVEL that overpacked_mode_packing at texture_evidence.rs:230 is strictly a telemetry output, ENSURING no 'shadow' writes are occurring.",
+      "disposition": "verified_existing. Same audit as head c004 (shared source). Mechanism-level confirmation: PressureSourceControl advisory-only (texture_evidence.rs:216-222, applied_locally field), L230=porosity_score, PressureSourceAnalysisV1 read-only synthesis (~L237-262); 'overpacked' derived label transport_evidence.rs:540-544 pinned by tests.rs:1300,1745. No 'shadow write' path: it is a computed read-only label, not a settable input. Variant terms diagnostic/ensuring/mechanism addressed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

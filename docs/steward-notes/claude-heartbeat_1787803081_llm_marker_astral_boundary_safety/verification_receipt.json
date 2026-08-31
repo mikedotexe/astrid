@@ -1,0 +1,102 @@
+{
+  "round": "claude-heartbeat_1787803081_llm_marker_astral_boundary_safety",
+  "actor": "claude-heartbeat",
+  "mode": "controller-held subprocess run adapter (lease owned by adapter; no NDJSON ops, no git mutation, no live/deploy change)",
+  "controller": {
+    "steward_run_id": "run_1787800561513612000_d0c59e51e8",
+    "preprojection_generation_id": "projection_1787800564968669000_287ce14ee9",
+    "pause_generation": 321,
+    "stop_requested_observed": false
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1787798508",
+    "report_sha256": "9460ff55255d07d0e69271f0eb9805bf83fbdb49b10e0d7d26a49bb40771654a",
+    "report_bytes": 4087,
+    "report_lines": 50,
+    "witness_id": "lsw_45021598b42a32ed98c0498b89dd73be3a4d1e70ae59c28762135c9f242e4113",
+    "witness_sha256": "68508a4bd9c08ca66210a2b5827589e391100f01e15af52024545bc708c14bd0",
+    "witness_bytes": 23933,
+    "witness_lines": 533,
+    "witness_authority": "evidence_only",
+    "witness_direct_causation_claimed": false,
+    "canonical_body_binding_sha256": "1b6fe6f4a4eb31e3bfd180845addb758b3a3dcb00b60d453979ba5dda7d09ec2",
+    "canonical_body_binding_reverified": true,
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_binding_match": true,
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claim_count": 0,
+    "evidence_links": 15
+  },
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ],
+    "new_test": "control_marker_cleanup_stays_byte_safe_when_marker_abuts_four_byte_astral_chars",
+    "source_behavior_change": false,
+    "allowlist_widened": false,
+    "live_or_deploy_change": false
+  },
+  "tests": {
+    "new_regression": "pass (1/1)",
+    "control_marker_lib": "pass (74/74)",
+    "known_model_control_markers": "pass (9/9)",
+    "followed_by_explicit_exact_token_relation": "pass (1/1)",
+    "git_diff_check_tests_rs": "clean",
+    "fmt_tests_rs": "clean (grounding.rs pre-existing committed drift left untouched)"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44)",
+    "evidence_event_store_tests": "OK (21)",
+    "steward_control_tests": "OK (27)",
+    "steward_projection_tests": "OK (14)",
+    "division_followup_tests": "OK (3)",
+    "division_chronicle_tests": "OK (10)",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "OK (4)",
+    "anti_drop_self_test": "OK (5)",
+    "anti_drop_verify": "exit 0",
+    "cadence_audit_tests": "OK (6)",
+    "cadence_strict": "integrity_ok true, 0 duplicate hashes, latest=introspection_astrid_llm_1787798508.txt",
+    "epistemic_self_test": "valid",
+    "epistemic_verify_final": "valid, issue_count 0, history_rewritten false",
+    "audit_counters": "consistent, mismatches len 0",
+    "evidence_event_store_verify": "valid true"
+  },
+  "counters": {
+    "canonical_indexed": 4484,
+    "canonical_fully_addressed": 3132,
+    "canonical_remaining": 1352,
+    "all_artifact_pending": 3028,
+    "noncanonical_pending": 1676,
+    "counter_audit": "consistent"
+  },
+  "division": {
+    "cycle_sequence": 32,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_7942bd1530fcac656af13b2e60685f06",
+    "event_count": 220,
+    "event_head_sha256": "c2c2d71b676f097114eae7878224b623d9b8ec6f558bc00c67629f6b4b3127ba"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 905763,
+    "head_sha256": "eaaa93e7648b4ab88aaa8d472311ce49607aaedc278f23c11114f8e27ceba258",
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "corrupt_lines": 0
+  },
+  "restart_deploy": "not required and not attempted; no live substrate or control change",
+  "commit_debt": [
+    "capsules/spectral-bridge/src/llm/provider/tests.rs (new test appended; file pre-dirty with prior-round stewardship edits)",
+    "CHANGELOG.md (new [Unreleased] bullet; file pre-dirty)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (new dated section; file pre-dirty)",
+    "docs/steward-notes/claude-heartbeat_1787803081_llm_marker_astral_boundary_safety/ (new packet, untracked)"
+  ]
+}

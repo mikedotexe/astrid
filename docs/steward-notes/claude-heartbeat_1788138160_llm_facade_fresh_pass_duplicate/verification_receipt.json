@@ -1,0 +1,110 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1788138160_llm_facade_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1788134916470492000_09080abc43",
+    "preprojection_generation_id": "projection_1788134920667937000_81461a195b",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "postprojection": "adapter-owned; runs after process exit; not observed by this process",
+    "pause_generation": 321
+  },
+  "processed": {
+    "introspection_id": "introspection_llm.rs_1788126247",
+    "terminal_status": "addressed_duplicate",
+    "report_sha256": "3d32c722ad75e93632a6fc2d499c25d3037f3db22cfdb6c21acc760a345a6c37",
+    "witness_id": "lsw_4b3b53ab8e4ad0d4891d4878699337288b79f90bd4077baf6136ff66bc9724a3",
+    "witness_sha256": "831ba2611e38b78c2907c5e38d36411fa0ab539e98c13e1c1f4db7bbe62440b0",
+    "source_path": "capsules/spectral-bridge/src/llm.rs",
+    "source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+    "source_binding_match": true,
+    "evidence_links": 10,
+    "proof_missing_claims": 0
+  },
+  "durable_writes": [
+    "record-read (full_read event)",
+    "link-evidence-batch (10 new links)",
+    "close (addressed_duplicate; proof_missing_claims empty)",
+    "division record-round (steward-run-id run_1788134916470492000_09080abc43, processed-report-count 1)"
+  ],
+  "integrity_suites": {
+    "introspection_addressing_self_test": "OK (44 tests)",
+    "test_evidence_event_store": "OK (21 tests)",
+    "test_steward_control": "1 pre-existing timing flake (test_pause_cooperatively_interrupts_wrapped_subprocess; passes on isolated retry; no steward_control code touched this round; isolated temp-repo, not live state)",
+    "test_steward_projection": "OK (14 tests)",
+    "test_division_ceremony_followup": "OK (3 tests)",
+    "test_division_ceremony_chronicle": "OK (10 tests)",
+    "test_division_ceremony_projection": "OK (self-test)",
+    "test_projection_cursors": "OK (4 tests)",
+    "anti_drop_catalog_self_test": "OK (5 tests)",
+    "anti_drop_catalog_verify": "ok (problems [], test_gap null)",
+    "test_introspection_cadence_audit": "OK (6 tests)",
+    "introspection_cadence_audit_strict": "integrity_ok true, errors [], duplicate_hash_group_count 0",
+    "experiential_epistemics_self_test": "OK (valid true)",
+    "experiential_epistemics_verify": "valid true, issue_count 0, checked_record_count 11647, history_rewritten false",
+    "audit_counters": "consistent, mismatches []",
+    "evidence_event_store_verify": "valid true, corrupt lines 0, active store v2",
+    "division_followup_verify": "ok true",
+    "division_chronicle_verify": "project before verify (expected after record-round; postprojection division_chronicle stage refreshes; not manually projected)"
+  },
+  "focused_tests": {
+    "codec_gain::tests::pressure_attenuation_is_monotone_and_depth_clamped": "1 passed / 0 failed (1908 filtered) — existing evidence the [0,0.6] clamp semantics are covered"
+  },
+  "code_changed": false,
+  "rust_source_touched": false,
+  "counters": {
+    "canonical_indexed": 4545,
+    "canonical_fully_addressed": 3168,
+    "canonical_full_read": 3801,
+    "canonical_remaining": 1377,
+    "canonical_unread": 744,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3072,
+    "noncanonical_pending": 1695,
+    "counter_audit_status": "consistent"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 947899,
+    "head_sha256": "b2f48b8eba8015c42b5e3e940e72d1cbdabd818912d227269f7e1ccc257be9a5",
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "corrupt_lines": 0,
+    "stream_sequences": {
+      "addressing": 59437,
+      "agency_commons": 6041,
+      "attention_portfolio": 3,
+      "claim_families": 238106,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 202396,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 8933,
+      "model_qos": 255074,
+      "reciprocal_uptake": 65334,
+      "representation_contracts": 45222,
+      "sandbox": 3291,
+      "signal_spine": 45525,
+      "steward_control": 17732,
+      "steward_work_selection": 608
+    }
+  },
+  "division": {
+    "cycle_sequence": 37,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "event_count": 258,
+    "event_head_sha256": "c55f0084f18f17ccb10e8ae5d66b40e10c23ee5318a6d6866c1ac224193a68af",
+    "new_round_event_id": "division_followup_event_3a0ff220a8c12c0912aa53ff1081f92f",
+    "chronicle_id": "division_chronicle_944484ac78223606ccdf1581",
+    "chronicle_verify": "project before verify (expected; postprojection refreshes)"
+  },
+  "live_change": "none attempted or required; no restart/deploy; git read-only (adapter mode)",
+  "authority_boundary": "evidence_only throughout; Tier-5 ESN heads wi_e579041bc76f8310 / wi_69fbd510467c6337 / wi_3e26ac525fea1c36 untouched (live_authority_granted=false); the two proposed runtime tests grounded at mechanism level only, live execution not run"
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "runner": "cargo 1.94.1",
+  "suites": [
+    {
+      "name": "minime esn viscous_rho_target (filter: viscous_rho_target)",
+      "command": "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml viscous_rho_target",
+      "result": "pass",
+      "tests_passed": 4,
+      "tests_failed": 0,
+      "tests": [
+        "viscous_rho_target_monotonic_and_bounded_across_density_and_entropy_sweeps (NEW)",
+        "viscous_rho_target_preserves_memory_for_high_entropy_low_gradient_states",
+        "viscous_rho_target_moves_high_entropy_low_gradient_toward_ceiling",
+        "viscous_rho_target_threshold_edge_does_not_jump"
+      ],
+      "note": "Ran in both the lib and bin unittest targets; 4 passed / 0 failed each."
+    },
+    {
+      "name": "minime rustfmt check (esn.rs touched)",
+      "command": "cargo fmt --manifest-path /Users/v/other/minime/minime/Cargo.toml -- --check",
+      "result": "clean"
+    }
+  ],
+  "note": "The lone touched Rust surface is the additive pure-function regression in minime/src/esn.rs. Stewardship-tooling integrity suites (addressing self-test, evidence store, controller, projection, Division, Chronicle, cursor, cadence, anti-drop, epistemic, counters) are recorded separately in verification_receipt.json."
+}

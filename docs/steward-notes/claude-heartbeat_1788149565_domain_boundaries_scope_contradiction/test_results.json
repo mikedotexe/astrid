@@ -1,0 +1,22 @@
+{
+  "round": "claude-heartbeat_1788149565_domain_boundaries_scope_contradiction",
+  "code_or_test_change": false,
+  "rationale": "addressed_no_action: no source/test/doc change was warranted. DOMAIN_BOUNDARIES.md was deliberately NOT edited (editing to match a spectral-permission misread would domesticate the contradiction and mislocate live-control concepts); its behavior-preservation is already pinned by the audit + compile-fail/parity tests it names (lines 76-89). No redundant regression added (would be padding). Therefore no focused cargo test filter applies this round.",
+  "cargo_tests_run": [],
+  "baseline_checks": [
+    {"check": "git diff --check -- CHANGELOG.md docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md", "result": "clean (no whitespace errors in the two edited files)"},
+    {"check": "packet JSON parse (claims, read_manifest, source_receipts, addressing_links, unprocessed_selected)", "result": "all parse OK"},
+    {"check": "claim disposition/summary <=500 chars (felt-contract bounded-metadata policy)", "result": "9/9 claims within bound"}
+  ],
+  "source_grounding_grep": {
+    "scope": "read-only ripgrep over capsules/spectral-bridge/src (evidence for claim dispositions, not report-bound source)",
+    "regulator_participation_files": 3,
+    "runtime_path_not_exported_exact_site": "src/types/schema/regulator_participation.rs:59 and :251",
+    "semantic_trickle_files": 31,
+    "fissure_tendency_files": 8,
+    "permeability_coefficient_files": 0,
+    "stable_core_permeability_review_v1_present": true,
+    "shadow_v3_meaning": "astrid_shadow_v3.json snapshot schema filename"
+  },
+  "integrity_suites": "recorded separately in verification_receipt.json (addressing self-test, anti-drop, audit-counters, evidence_event_store verify, experiential_epistemics verify, division verify, chronicle verify, cadence, cursors, control, projection)"
+}

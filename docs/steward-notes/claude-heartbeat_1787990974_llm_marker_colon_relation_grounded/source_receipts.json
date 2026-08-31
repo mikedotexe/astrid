@@ -1,0 +1,26 @@
+{
+  "schema": "round_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "working_copy_clean": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "lines 1-260 read completely (covers every report-cited function: dialogue_requested_token_band L8, contexts enum L42-46, followed_by_explicit_exact_token_relation L64-86, first_word_after L89-96, longest_exact_known_model_control_marker_at L97-112, scan_known_model_control_markers L114-144, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229, control_marker_placement_counts L231-255). Lines 261-1048 not required by any claim disposition and not read.",
+      "note": "Every claim is bounded to L8-229; the Suggested-Next target L199-229 was read in full (does not cut off), resolving the report's L207 cutoff concern."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "read_scope": "lines 159-192 (KNOWN_MODEL_CONTROL_MARKERS definition + strip_trailing helper) \u2014 read to identify a real marker (<end_of_turn>) for the regression.",
+      "note": "Adjacent evidence: the marker allowlist consumed by longest_exact_known_model_control_marker_at."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "lines 2000-2940 (marker cleanup + delimiter-depth + first_word_after test cluster) read completely to establish existing coverage and idioms; new regression inserted after control_marker_cleanup_first_word_after_skips_leading_punctuation_transition.",
+      "note": "File carries accumulated prior-round stewardship edits (dirty before this round); this round only APPENDS one #[test] fn, preserving all existing content."
+    }
+  ]
+}

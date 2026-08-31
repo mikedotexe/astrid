@@ -1,0 +1,46 @@
+{
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+    "sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "sha_match": true,
+    "total_lines": 89,
+    "total_bytes": 5022,
+    "read_scope": "complete_file_lines_1_to_89"
+  },
+  "audit_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "sha256": "cbfe0e152a41d62b19ef72bee93af39783ef4e0d0236566cc2d90a6b7ea2f010",
+      "total_lines": 315,
+      "total_bytes": 13483,
+      "read_scope": "lines 176-276 (PressureSourceComponents/PressureSourceV1/PressureSourceControl/PressureSourceAnalysisV1) plus full-file symbol grep for mode_packing/pressure/overpacked",
+      "dirty_foreign_working_copy": false
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/transport_evidence.rs",
+      "sha256": "eac5e6a626a23231dd488de1bf169b0ef12b95c0563aa1e61e1f7e6d07bf6d95",
+      "total_lines": 752,
+      "total_bytes": 31871,
+      "read_scope": "lines 528-551 (viscosity_porosity_transport_review threshold_state 'overpacked' match derivation)",
+      "dirty_foreign_working_copy": false
+    },
+    {
+      "path": "capsules/spectral-bridge/src/spectral_explorer.rs",
+      "sha256": "b2bf25e49ffcdff3a5f1db2d95b88166a516162102f5b43d3dd7ee79dc507106",
+      "total_lines": 1164,
+      "total_bytes": 48203,
+      "read_scope": "lines 790-879 (PressureSourceV1 construction: applied_locally=false, note 'advisory only')",
+      "dirty_foreign_working_copy": false
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/tests.rs",
+      "sha256": "4cee1306ea31c3a7636b2a8cd616b95f2be0ebf4a8677e555f1572f72a7cf8a5",
+      "total_lines": 4197,
+      "total_bytes": 171374,
+      "read_scope": "lines 1283-1306 plus grep of threshold_state/'advisory only'/applied_locally; pins threshold_state=='mode_packing_overpacked_with_pressure_velocity' (L1298-1301) and advisory contract (L940)",
+      "dirty_foreign_working_copy": false
+    }
+  ],
+  "note": "Symbol 'overpacked_mode_packing' cited by the report at texture_evidence.rs:230 is not a code field; line 230 is porosity_score. The literal appears only as prompt example prose at autonomous/introspect/source_first_v3/mod.rs:573 (consulted via grep). codec/tests.rs (L1078-1096, applied_locally:false / 'advisory only') corroborates but is a foreign-dirty working copy, so it is not anchored as a primary receipt."
+}

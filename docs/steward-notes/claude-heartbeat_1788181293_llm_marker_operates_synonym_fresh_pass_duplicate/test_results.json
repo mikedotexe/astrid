@@ -1,0 +1,27 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup",
+      "result": "ok",
+      "passed": 59,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1851,
+      "duration_s": 0.06,
+      "cited_tests_confirmed": [
+        "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts",
+        "control_marker_cleanup_uses_only_the_first_finite_relation_word",
+        "control_marker_cleanup_reports_exact_four_level_delimiter_depth",
+        "control_marker_cleanup_reports_exact_three_level_delimiter_depth",
+        "control_marker_cleanup_reports_mixed_ascii_quote_bracket_stack_depth_three",
+        "control_marker_cleanup_does_not_expand_relation_allowlist_to_implies",
+        "control_marker_cleanup_does_not_expand_relation_allowlist_to_contains",
+        "control_marker_cleanup_does_not_expand_relation_allowlist_to_triggers",
+        "control_marker_cleanup_does_not_expand_relation_allowlist_to_creates",
+        "control_marker_cleanup_distinguishes_allowlisted_signals_from_unlisted_signifies"
+      ],
+      "note": "No source or test edits this round (addressed_duplicate). Focused run validates the verified_existing evidence at source SHA 902a0358."
+    }
+  ]
+}

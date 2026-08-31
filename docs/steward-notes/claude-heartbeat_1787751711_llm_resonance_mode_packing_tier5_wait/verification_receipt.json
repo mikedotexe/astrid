@@ -1,0 +1,93 @@
+{
+  "round": "llm_resonance_mode_packing_tier5_wait",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1787749253414221000_8fd2d6a7d2",
+    "preprojection_generation_id": "projection_1787749255364979000_ba3618621d",
+    "pause_generation": 321
+  },
+  "processed_reports": ["introspection_astrid_llm_1787730919"],
+  "processed_report_count": 1,
+  "close_status": "blocked_needs_steward",
+  "close_proof_missing_claims": [],
+  "close_fully_addressed": false,
+  "close_note": "fully_addressed=false is expected and honest: the Tier-5 (c009 porosity/damping) authority boundary keeps the report open pending separate operator approval; proof_missing_claims is empty (all 10 claims evidence-linked).",
+  "evidence_link_count": 17,
+  "baseline_checks": {
+    "git_diff_check": "clean (rc=0)"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK (rc=0)",
+    "test_evidence_event_store": "21 tests OK (rc=0)",
+    "test_steward_control": "27 tests OK (rc=0)",
+    "test_steward_projection": "14 tests OK (rc=0)",
+    "test_division_ceremony_followup": "3 tests OK (rc=0)",
+    "test_division_ceremony_chronicle": "10 tests OK (rc=0)",
+    "test_division_ceremony_projection": "self-test ok (rc=0)",
+    "test_projection_cursors": "4 tests OK (rc=0)",
+    "anti_drop_self_test": "5 tests OK (rc=0)",
+    "test_introspection_cadence_audit": "6 tests OK (rc=0)",
+    "anti_drop_verify": "verdict ok, problems [], no test_gap (rc=0)",
+    "cadence_strict_compact": "integrity_ok=true, configuration_valid=true, errors=[], duplicate_hash_group_count=0, canonical_count=4471 (rc=0)",
+    "experiential_epistemics_self_test": "valid=true, 2 tests OK (rc=0)",
+    "experiential_epistemics_verify_final": "valid=true, checked_record_count=11360, issue_count=0, history_rewritten=false (rc=0)"
+  },
+  "audit_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "checks_all_true": true,
+    "canonical_indexed": 4471,
+    "canonical_fully_addressed": 3126,
+    "canonical_full_read": 3759,
+    "canonical_remaining": 1345,
+    "canonical_unread": 712,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3017,
+    "noncanonical_pending": 1672,
+    "delta_note": "unread 713->712, full_read 3758->3759, blocked_needs_steward 414->415 — exactly the one report processed this round."
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "last_global_seq": 898429,
+    "head": "9381abc2d724b310c560dfe704d305644534a12aac567910e6062a67f250f570",
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "head_source": "head.json pointer (evidence_event_store.py --json verify returned valid=true, corrupt_lines=0 in 533s; sequence/head read from the head_v1 pointer file to avoid a redundant recompute)"
+  },
+  "division": {
+    "cycle_sequence": 31,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "event_count": 213,
+    "event_head_sha256": "39637b6f03e71f623592568d3cd22585c8d086b2a92244ecfc11a1fa3701af98",
+    "last_round_event_id": "division_followup_event_633a5fcf99f868b381c1899579bee383"
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_79d9229a85770816544a4565",
+    "json_sha256": "3974fd25c0027aab132242ab43a67515be520a4430f565d47bc7c33b2927fde6",
+    "html_sha256": "e4094e4a1959768afdc239cc15cbe65223282d6b42a8e86816a07fc5f6116b8c",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "Reprojected after record-round (record-round changed durable inputs). Only the volatile supervisor hash mismatches — a moving hash, not a durable-integrity failure."
+  },
+  "restart_deploy": "none required or attempted; no live substrate or control change this round",
+  "commit_debt": {
+    "note": "READ-ONLY git for this adapter-mode run; nothing staged or committed. Exact paths created/edited this round listed in RUN_REPORT.md.",
+    "created_or_edited_paths": [
+      "CHANGELOG.md (edited: one [Unreleased] bullet)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (edited: one dated row)",
+      "docs/steward-notes/claude-heartbeat_1787751711_llm_resonance_mode_packing_tier5_wait/ (new packet dir + files)",
+      "capsules/spectral-bridge/workspace/diagnostics/introspection_addressing_v1/ (addressing events: record-read, 17 links, close)",
+      "capsules/spectral-bridge/workspace/diagnostics/evidence_event_store_v2/ (append-only evidence events + head)",
+      "minime/workspace/division/ (Division round event + reprojected Chronicle json/html)"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "result": "ok",
+      "passed": 72,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1822,
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "note": "All marker-scan regressions bearing on this report pass at the report-bound source SHA. Includes preserves_poetic_attribution_without_literal_cue ('behaves like' preserved), uses_only_the_first_finite_relation_word, first_word_after_skips_leading_punctuation_transition, distinguishes_allowlisted_is_from_unlisted_acts, the scan_known_model_control_markers_grounds_first_word_after_* family, and the full delimiter-depth suite (three/four-level, beyond-max, CJK/fullwidth, ⟦⟧, 「」)."
+    }
+  ],
+  "code_change": "none",
+  "reason": "addressed_duplicate / verified_existing across all claims; a new test would duplicate passing regressions. Adapter-mode run made no source/test edits."
+}

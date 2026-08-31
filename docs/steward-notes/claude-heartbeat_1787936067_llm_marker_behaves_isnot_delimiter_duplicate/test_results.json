@@ -1,0 +1,16 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- <6 filters>",
+  "cargo_exit": 0,
+  "lib_binary": "spectral_bridge_server (unittests src/lib.rs)",
+  "summary": "6 passed; 0 failed; 0 ignored; 1898 filtered out",
+  "purpose": "Confirm the prior exact evidence still applies at the current (dirty) working tree \u2014 the duplicate-standard 'current verification' obligation. No source changed by this round.",
+  "tests": [
+    "llm::provider::tests::control_marker_cleanup_does_not_skip_adverb_before_relation_word ... ok",
+    "llm::provider::tests::control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts ... ok",
+    "llm::provider::tests::exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two ... ok",
+    "llm::provider::tests::control_marker_cleanup_uses_only_the_first_finite_relation_word ... ok",
+    "llm::provider::tests::scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts ... ok",
+    "llm::provider::tests::control_marker_cleanup_preserves_poetic_attribution_without_literal_cue ... ok"
+  ]
+}

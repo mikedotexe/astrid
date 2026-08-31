@@ -1,0 +1,23 @@
+{
+  "schema": "test_results_v1",
+  "commands": [
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped followed_by_explicit_exact_token_relation_allowlists_represents_not_creates",
+      "lib_unittests": "2 passed; 0 failed; 1895 filtered out",
+      "result": "ok"
+    }
+  ],
+  "new_tests": [
+    "llm::provider::tests::exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped",
+    "llm::provider::tests::followed_by_explicit_exact_token_relation_allowlists_represents_not_creates"
+  ],
+  "fmt": {
+    "canonical_cmd": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+    "tests_rs_flagged": false,
+    "pre_existing_foreign_flags": [
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs:259",
+      "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs:295"
+    ]
+  },
+  "git_diff_check_tests_rs": "clean"
+}

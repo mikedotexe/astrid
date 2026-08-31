@@ -1,0 +1,81 @@
+{
+  "schema": "steward_flywheel_verification_receipt_v1",
+  "round_name": "llm_marker_cjk_relation_grounded",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1787774794557943000_a80148e222",
+    "preprojection_generation_id": "projection_1787774798561366000_340bba5c98",
+    "preprojection_completed_step_count": 27,
+    "postprojection_generation_id": "runs_after_adapter_exit_not_observed_in_this_process"
+  },
+  "processed_reports": ["introspection_astrid_llm_1787773776"],
+  "processed_report_count": 1,
+  "terminal_status": "addressed_change",
+  "close": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "live_eligible_now": false,
+    "grants_approval": false
+  },
+  "record_read": {"event_type": "full_read", "summary_sha256": "45f1a32280408ac63c7fbbf5e5922d441db396e50ceced8814557a5af40a85c3"},
+  "link_evidence_batch": {"new_link_count": 15, "existing_link_count": 0, "events_appended": 15},
+  "implementation": {
+    "changed_paths": ["capsules/spectral-bridge/src/llm/provider/tests.rs"],
+    "new_tests": [
+      "llm::provider::tests::exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped",
+      "llm::provider::tests::followed_by_explicit_exact_token_relation_allowlists_represents_not_creates"
+    ],
+    "focused_test_result": "2 passed; 0 failed; 1895 filtered out",
+    "fmt": "canonical cargo fmt --check flags only pre-existing foreign grounding.rs; tests.rs not flagged",
+    "git_diff_check": "clean on tests.rs"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44 tests)",
+    "test_evidence_event_store": "OK (21 tests)",
+    "test_steward_control": "OK on rerun (known first-run flake; exit0)",
+    "test_steward_projection": "OK (14 tests)",
+    "test_division_ceremony_followup": "OK (3 tests)",
+    "test_division_ceremony_chronicle": "OK (10 tests)",
+    "test_division_ceremony_projection": "OK",
+    "test_projection_cursors": "OK (4 tests)",
+    "anti_drop_self_test": "OK (5 tests)",
+    "anti_drop_verify": "exit0, 69 guards, no alarm",
+    "test_introspection_cadence_audit": "OK (6 tests)",
+    "cadence_audit_strict": "integrity_ok=true",
+    "experiential_epistemics_self_test": "OK (2 tests)",
+    "experiential_epistemics_verify_FINAL": "valid=true, issue_count=0",
+    "audit_counters": "status=consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0",
+    "division_ceremony_followup_verify": "ok=true",
+    "division_ceremony_chronicle_verify": "durable source inputs changed; project before verify — expected between-returns state (5 round events since the 2026-08-19 return projected at ~event 211); Chronicle is reprojected at the next Division return (1 round away), NOT a durable-integrity failure"
+  },
+  "canonical_counters": {
+    "indexed": 4476,
+    "fully_addressed_count": 3129,
+    "full_read_count": 3762,
+    "remaining_count": 1347,
+    "unread_count": 714,
+    "blocked_needs_steward_count": 415,
+    "triaged_pending_action_count": 214,
+    "triaged_watch_count": 4,
+    "read_needs_claims_count": 0,
+    "status_counts_addressed_change": 1907
+  },
+  "division": {
+    "cycle_sequence": 31,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_370438a628f163e903533c84a4c808f2",
+    "event_count": 216,
+    "event_head_sha256": "902873486e451a942d59c7fe08d9d680fefa9cd988150afc9ab4e9c37278882e"
+  },
+  "authority_boundary": "evidence_only; no live/substrate/control change; no grammar/allowlist/delimiter-table widening (Tier-5); no build/restart/deploy; git read-only (no stage/commit/merge/push)",
+  "commit_debt": [
+    "capsules/spectral-bridge/src/llm/provider/tests.rs (2 new focused regressions; accumulates with prior-round foreign edits — separate authorship at a later stabilization window)",
+    "CHANGELOG.md (one [Unreleased] entry appended; carries prior-round accumulated edits)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (one row prepended; carries prior-round accumulated edits)",
+    "docs/steward-notes/claude-heartbeat_1787777692_llm_marker_cjk_relation_grounded/ (new packet, untracked)"
+  ]
+}

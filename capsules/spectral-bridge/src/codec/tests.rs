@@ -5102,6 +5102,48 @@ mod tests {
         }
     }
 
+    // Astrid `introspection_astrid_codec_1787762146` "Dimension Alignment Test":
+    // the 32->48 widening (projection.rs L20-26, L74-81) was purely additive —
+    // embedding 32-39, narrative 40-43, reserved 44-47 were APPENDED after the
+    // legacy 0-31 layout, not renumbered. So a crafted warmth vector must keep
+    // its emotional intent at the SAME legacy indices (24-31) and must NOT bleed
+    // warmth data into the appended lanes. This pins the report's feared drift
+    // path (old data mapping into the new 32-39 semantic slots) against a future
+    // re-layout, and guards the `legacy_warmth_mapping_v1().warmth_orphaned ==
+    // false` invariant that `craft_warmth_vector` relies on.
+    #[test]
+    fn warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes() {
+        let mapping = legacy_warmth_mapping_v1();
+        assert_eq!(mapping.legacy_dim_count, SEMANTIC_DIM_LEGACY);
+        assert_eq!(mapping.current_dim_count, SEMANTIC_DIM);
+        assert_eq!(mapping.emotional_layer_range, (24, 31));
+        assert!(!mapping.warmth_orphaned);
+        // Warmth's declared home (dim 24) and the whole emotional layer sit
+        // inside the legacy 0..32 range — index stability across the widening.
+        assert!(mapping.warmth_dim < SEMANTIC_DIM_LEGACY);
+        assert!(mapping.emotional_layer_range.1 < SEMANTIC_DIM_LEGACY);
+
+        let warmth = craft_warmth_vector(0.25, 1.0);
+        assert_eq!(warmth.len(), SEMANTIC_DIM);
+        // Emotional intent present at its canonical legacy indices.
+        assert!(warmth[24] > 0.0, "warmth lives at legacy dim 24: {}", warmth[24]);
+        assert!(warmth[25] < 0.0, "tension suppressed at legacy dim 25: {}", warmth[25]);
+
+        // The appended lanes (embedding 32-39, narrative 40-43, reserved 44-47)
+        // are never written by the warmth path, so they carry only the codec's
+        // bounded +/-1.5% micro-texture noise (|noise| <= 0.5, scaled by 0.03 and
+        // the same DEFAULT_SEMANTIC_GAIN the warmth path applies) — never warmth
+        // signal. Bound is derived from the code's own noise model, not a magic
+        // number, so it stays coherent with the constant it guards.
+        let noise_ceiling = 0.015 * DEFAULT_SEMANTIC_GAIN;
+        for (i, value) in warmth.iter().enumerate().skip(SEMANTIC_DIM_LEGACY) {
+            assert!(
+                value.abs() <= noise_ceiling + 1.0e-4,
+                "appended lane dim {i} must not carry warmth data (no bleed): {value}"
+            );
+        }
+    }
+
     #[test]
     fn warmth_vector_breathes_across_phase() {
         let v0 = craft_warmth_vector(0.0, 0.8);

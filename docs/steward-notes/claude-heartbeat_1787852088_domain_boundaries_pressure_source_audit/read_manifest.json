@@ -1,0 +1,24 @@
+{
+  "round": "domain_boundaries_pressure_source_audit",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787843987.txt",
+      "sha256": "849f1fd26c128865b05318f4395d40de34cb1d208f83f7264bb7352cdee8a454",
+      "bytes": 3398,
+      "lines": 43,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_93dc6c3f1a8ce9f4f7a961b69391c5c2903a0ae500068bb18075d16845644ff5",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_93dc6c3f1a8ce9f4f7a961b69391c5c2903a0ae500068bb18075d16845644ff5.json",
+      "sha256": "0f859011bfd38838450b96e77dbea4191e71c22c2dd0c7c4a02ec5b8b4d73458",
+      "bytes": 23862,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787798508.txt",
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "sha256": "9460ff55255d07d0e69271f0eb9805bf83fbdb49b10e0d7d26a49bb40771654a",
+      "bytes": 4087,
+      "lines": 51,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_45021598b42a32ed98c0498b89dd73be3a4d1e70ae59c28762135c9f242e4113.json",
+      "witness_id": "lsw_45021598b42a32ed98c0498b89dd73be3a4d1e70ae59c28762135c9f242e4113",
+      "sha256": "68508a4bd9c08ca66210a2b5827589e391100f01e15af52024545bc708c14bd0",
+      "bytes": 23933,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "grants_approval": false,
+      "edits_source_now": false,
+      "direct_causation_claimed": false,
+      "raw_introspection_prose_included": false,
+      "raw_prompt_included": false,
+      "raw_response_included": false,
+      "private_path_included": false,
+      "interpretation_weight_state": "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity",
+      "canonical_body_binding_sha256": "1b6fe6f4a4eb31e3bfd180845addb758b3a3dcb00b60d453979ba5dda7d09ec2",
+      "canonical_body_byte_count": 2515,
+      "canonical_body_binding_reverified": true,
+      "queue_lived_state_alignment": "artifact_integrity_unavailable",
+      "queue_lived_state_gap_count": 1,
+      "queue_note": "alignment-measurement gap (no scalar felt dissimilarity measured); report+witness bytes intact and bound"
+    }
+  ]
+}

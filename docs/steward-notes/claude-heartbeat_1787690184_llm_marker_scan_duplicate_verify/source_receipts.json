@@ -1,0 +1,30 @@
+{
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete (L1-1048 read line-by-line)",
+      "sha_matches_report_binding": true,
+      "sha_matches_witness_source_binding": true,
+      "cited_intervals_verified": {
+        "L41-46": "enum ExactKnownMarkerReferenceContext (Quoted/Grouped/ExplicitRelation)",
+        "L49-60": "reference_syntax: delimiter checked before relation",
+        "L64-86": "followed_by_explicit_exact_token_relation 17-verb allowlist (incl. behaves, is)",
+        "L89-96": "first_word_after: split_whitespace + trim_matches(!alnum && !'_') + find(!is_empty) + to_ascii_lowercase",
+        "L97-112": "longest_exact_known_model_control_marker_at: filter prefix matches, max_by_key(len)",
+        "L114-144": "scan_known_model_control_markers: push token to remainder only when reference_syntax is Some (L129-131)",
+        "L153-197": "exact_reference_delimiter_pair: quoted pairs L157-174, grouped pairs L175-193",
+        "L199-229": "exact_reference_delimiter_syntax: bounded delimiter_depth up to MAX (4)"
+      },
+      "note": "Every line number cited by the report resolves accurately at the current SHA (no MISLOCATED/STALE citation). Report window was lines 1-400 but coverage state multi_window_complete 1-1048; all cited functions live in L1-260."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256_scope": "L159-180 read (KNOWN_MODEL_CONTROL_MARKERS definition, 20 markers)",
+      "read_scope": "L159-198 read",
+      "finding": "No marker in the table is a prefix of another (verified programmatically over all 20), so the greedy-substring concern (claim c004) cannot arise for the current marker set; max_by_key(len) remains the correct guard for any future superstring marker."
+    }
+  ]
+}

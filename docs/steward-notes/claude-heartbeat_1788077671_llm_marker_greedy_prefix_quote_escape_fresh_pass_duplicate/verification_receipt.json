@@ -1,0 +1,63 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1788074075627784000_4f2930e42e",
+    "preprojection_generation_id": "projection_1788074078931028000_af1e3007cd",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 321
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "close_event_ts": 1788077961.73883,
+      "record_read_ts": 1788077893.150326,
+      "evidence_links_new": 10
+    }
+  ],
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- known_model_control_markers_have_no_proper_prefix_shadow scan_known_model_control_markers_quoted_context_precedes_following_relation_verb scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary scan_known_model_control_markers_grounds_first_word_after_non_breaking_space followed_by_explicit_exact_token_relation_allowlists_represents_not_creates",
+    "passed": 5, "failed": 0, "filtered_out": 1903
+  },
+  "integrity": {
+    "addressing_self_test": "44 passed",
+    "test_evidence_event_store": "21 passed",
+    "test_steward_control": "27 passed",
+    "test_steward_projection": "14 passed",
+    "test_division_ceremony_followup": "3 passed",
+    "test_division_ceremony_chronicle": "10 passed",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 passed",
+    "anti_drop_self_test": "5 passed",
+    "anti_drop_verify": "exit 0, test_gap null",
+    "test_introspection_cadence_audit": "6 passed",
+    "cadence_audit_strict": "integrity_ok true, 0 duplicate hashes, latest introspection_astrid_llm_1788070591",
+    "experiential_self_test": "valid true",
+    "audit_counters": "consistent, 0 mismatches",
+    "evidence_event_store_verify": "valid true, 0 corrupt lines",
+    "experiential_epistemics_verify_FINAL": "valid true, checked_record_count 11588, issue_count 0, history_rewritten false",
+    "division_followup_verify_post_record": "ok true, cycle 36, completed 6/6, review_due true, event_count 252"
+  },
+  "deferred_to_budget_read_only": [
+    "evidence_event_store.py --json status (stream-count enumeration hung on budget; EES verify already valid/0-corrupt — same deferral as the 1788015484 clean-split precedent)",
+    "Division Chronicle project/verify (belongs to the DEFERRED Division return, not this round)"
+  ],
+  "division": {
+    "cycle_sequence": 36,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due": true,
+    "recorded_round_event_id": "division_followup_event_e3f9170a9a85d9bbce2529c3d851e9b4",
+    "event_count": 252,
+    "event_head_sha256": "30aff37ed311559b83acc169cbccf29bc8b93c04a0370533431b8e53e661b416",
+    "return_disposition": "clean_split_session: 6th productive round recorded; Division return DEFERRED to the next tracker-enforced session (tracker refuses a 7th round before the due return). Follows the documented 1788015484 clean-split precedent."
+  },
+  "live_change": "none — no build, restart, deploy, launchctl, or live substrate/control change attempted or required; git read-only in adapter mode (no stage/commit/merge/push)",
+  "tree_discipline": "no foreign path modified; only new packet files + appended CHANGELOG.md [Unreleased] and AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+  "budget_note": "Round ran ~30 min over the 5400s FLYWHEEL_LOOP_MAX_SECS while completing durable writes + the final epistemic verify; no SIGINT received. Report processing, evidence links, close, Division-round record, and all load-bearing integrity checks completed."
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "read_manifest_v1",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788059082.txt",
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "sha256": "f372814c0b9c8593deeee95af1c84e61755fbf803408aee362f2888ee5872ea6",
+      "bytes": 3732,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_56d694d168d2b133b82b61c175b82a844ead1ad90f18106f3e4f048edd97d8e7.json",
+      "witness_id": "lsw_56d694d168d2b133b82b61c175b82a844ead1ad90f18106f3e4f048edd97d8e7",
+      "sha256": "a0c937698c84569e92c0862c7bd311adb16eed3ce932f34a0ab9dffc84811e33",
+      "bytes": 23928,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

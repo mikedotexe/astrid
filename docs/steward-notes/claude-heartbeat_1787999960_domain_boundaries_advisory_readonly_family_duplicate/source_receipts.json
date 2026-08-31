@@ -1,0 +1,46 @@
+{
+  "schema": "round_source_receipts_v1",
+  "shared_source_note": "Both reports bind the identical report-time source SHA; source verification is shared across the two members per the family-batch same-source-SHA rule.",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "working_copy_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "sha_match": true,
+      "total_lines": 89,
+      "total_bytes": 5022,
+      "read_scope": "complete_file_1-89",
+      "verified_intervals": {
+        "L3-6": "behavior-preserving: neither pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, nor live authority",
+        "L8-22": "Stable Facades table + every facade <1000 lines re-exporting established symbols",
+        "L35-43": "Shadow Cartography Ownership; L41-43 cartography modules write cartography only, do not change Shadow state/pressure/mode packing/temporal decay/scheduling/control",
+        "L45-68": "Cohesion Exceptions; L65-68 unique-fn-signature ceiling (current + 10% headroom) tripping exception_signature_growth",
+        "L85-88": "python3 scripts/domain_boundary_audit.py verify pins facade targets, exception ceilings, legacy ratchet, forbidden edges"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "read_scope": "L185-264 (PressureSourceComponents/Context/Control/V1/AnalysisV1)",
+      "verified_facts": {
+        "L217": "'V1 pressure-source control contract. This remains advisory only.'",
+        "L219-222": "PressureSourceControl { applied_locally: bool, note: String } — no setter/write-path",
+        "L230": "porosity_score: f32 — plain read field of PressureSourceV1 (matches report Test 2 line citation)",
+        "L239-262": "PressureSourceAnalysisV1 'read-only synthesis ... diagnostic provenance, not a threshold write'"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/spectral_explorer.rs",
+      "read_scope": "L845-855",
+      "verified_facts": {
+        "L849-852": "producer emits control: PressureSourceControl { applied_locally: false, note: \"advisory only\" }"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/transport_evidence.rs",
+      "read_scope": "L540-544 (grep-confirmed)",
+      "verified_facts": {
+        "L540-544": "'overpacked' appears only as derived read-only match labels (mode_packing_overpacked_*), not a settable field"
+      }
+    }
+  ]
+}

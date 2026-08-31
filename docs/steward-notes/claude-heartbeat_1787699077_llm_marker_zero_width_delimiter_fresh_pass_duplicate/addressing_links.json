@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; followed_by_explicit_exact_token_relation L64-87 (verb list L67-84); retention gate L129-131. Source SHA 902a0358 == report binding."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2932) pins ExplicitExactKnownTokenRelation retention at the exact scan fn."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229; quoted pairs L157-173; grouped pairs L175-192 incl the cited multi-byte ⟦⟧ at L180."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Multi-byte grouped-delimiter coverage: ⟦⟧/⟨⟩/【】 at L2306-2338; nested multibyte-grouped depth L2195/L2254."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace (L91) then edge-only trim_matches of non-alphanumeric except '_' (L92). Edge-only trim => interior format chars are not reached."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen (L3199-3240): leading format char trimmed => verb found/marker preserved; internal format char (deno\\u{ad}tes) => verb not isolated, reference_syntax None, marker fails CLOSED. _non_breaking_space (L3146) covers U+00A0/U+FEFF leading."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_poetic_attribution_without_literal_cue (L2513-2537) iterates verbs incl `mimics` (L2520), asserts removed_total=0 / preserved=1; scan-fn retention pinned at L2932."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "⟦…⟧ Grouped classification at L2306-2338; nested multibyte-grouped depth L2195/L2254; exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3025) pins depth=2 Grouped at the exact fn."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Multi-byte UTF-8 first_word_after coverage: _handles_multibyte_symbol_before_relation U+1F9E9 (L2834); _skips_symbol_only_line_before_exact_relation U+1F30A (L2852); _non_breaking_space U+00A0/U+FEFF (L3146); _internal_soft_hyphen U+00AD (L3199); unicode-whitespace depth U+2003/U+3000 (L2222/L2328)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180: `[INST]`/`[/INST]` present (L178-179); `<<SYS>>` absent from the 20-entry table. Report's `like ... etc.` is illustrative, not exact-membership."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787690184_llm_marker_scan_duplicate_verify/RUN_REPORT.md",
+      "note": "Immediate prior round processed introspection_astrid_llm_1787485984 (same family, identical source SHA 902a0358), closed addressed_duplicate, all claims verified_existing, no new tests. Duplicate chain: 1786999457, 1787026288, 1787070878, 1787129691, 1787135542."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] entry recording the verified-no-change/duplicate disposition of introspection_astrid_llm_1787692007."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787692007",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated 2026-08-25 row: Astrid marker-grammar fresh pass -> verified-no-change (duplicate); every claim grounded by existing exact-source regressions at SHA 902a0358."
+    }
+  ]
+}

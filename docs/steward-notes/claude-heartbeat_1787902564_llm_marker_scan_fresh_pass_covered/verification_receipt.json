@@ -1,0 +1,113 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "headless_subprocess_controller_lease_adapter",
+  "generated_at_unix": 1787902564,
+  "controller": {
+    "run_id": "run_1787899901432738000_bb19638ca6",
+    "preprojection_generation_id": "projection_1787899904823236000_4b53c9755a",
+    "preprojection_authority_scan_passed": true,
+    "preprojection_completed_step_count": 27,
+    "pause_generation": 321,
+    "postprojection": "adapter-owned, runs after this process exits; not observed in-run",
+    "finish_outcome": "success_exit_0_complete_round"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "terminal_status": "addressed_no_action",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "evidence_link_count": 10,
+      "report_sha256": "f32112a1fc36e3d6d56548706b4664c3da82f42a69c34b9eb1f136fd0710bf8f",
+      "report_bytes": 3473,
+      "report_lines": 45,
+      "witness_id": "lsw_b4787fb015fbcd90a46d3416216cadf2d8ff46ef9311b2feb0509e19082ec982",
+      "witness_sha256": "9841cdb6860b2847444d6cdc964123ee466efedc28e1fee4a80abf23764d0c3d",
+      "witness_bytes": 23929,
+      "witness_lines": 533,
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding_match": true,
+      "source_read_scope": "complete_1_to_1048",
+      "claim_classifications": {
+        "c001": "verified_existing",
+        "c002": "verified_existing",
+        "c003": "verified_existing",
+        "c004": "verified_existing",
+        "c005": "observed"
+      }
+    }
+  ],
+  "tests": {
+    "new_tests": 0,
+    "production_code_changed": false,
+    "cited_marker_tests_run": 9,
+    "cited_marker_tests_passed": 9,
+    "cited_marker_tests_failed": 0,
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 OK",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "69/69 ok, alarms 0, gaps 0",
+    "cadence_test": "6 OK",
+    "cadence_strict": "integrity_ok true, 0 duplicate hashes, errors []",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 OK",
+    "experiential_self_test": "2 OK",
+    "experiential_verify_final": "valid true, issue_count 0, history_rewritten false",
+    "audit_counters": "consistent, mismatches []"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 918224,
+    "last_event_sha256": "7b938868f7f5c2a85b2f7f9dd406c2910892166b1c2b879101dd006494b035a3",
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "stream_count": 16
+  },
+  "division": {
+    "cycle_sequence": 34,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "round_event_id": "division_followup_event_44ccc7c1049f53dcb3f0250acb218adf",
+    "event_count": 233,
+    "event_head_sha256": "3bbbc580bb7ce0d852c32254b40ae438c1f76e83c4570409fee0169c9680b5fe",
+    "processed_report_count": 1
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_cc97ad392808387a9e5369a4",
+    "timeline_event_count": 233,
+    "durable_inputs_current": true,
+    "volatile_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": [],
+    "json_sha256": "c9e6c6ae675a9d052ce2fb7b1f1a0ebc6e26e10172a9e1e61b94d0b1e5f218a6",
+    "note": "Reprojected this round to absorb the record-round follow-up event (233); left durable+volatile current."
+  },
+  "counters": {
+    "audit_status": "consistent",
+    "canonical": {
+      "indexed": 4498,
+      "fully_addressed": 3143,
+      "full_read": 3776,
+      "remaining": 1355,
+      "unread": 722,
+      "blocked_needs_steward": 415,
+      "triaged_pending_action": 214,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": { "indexed": 6176, "remaining": 3033 }
+  },
+  "live_change": "none — no build/restart/deploy/launchctl; no live/substrate/control mutation attempted or required",
+  "git": "read-only this run — nothing staged/committed/merged/pushed"
+}

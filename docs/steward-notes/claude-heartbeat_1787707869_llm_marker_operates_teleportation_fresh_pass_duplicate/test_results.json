@@ -1,0 +1,18 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "source_sha256_at_test_time": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "runner": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib <filter>",
+  "filters": [
+    { "filter": "marker", "passed": 80, "failed": 0, "ignored": 0 },
+    { "filter": "delimiter", "passed": 10, "failed": 0, "ignored": 0 },
+    { "filter": "first_word", "passed": 5, "failed": 0, "ignored": 0 }
+  ],
+  "total_passed": 95,
+  "total_failed": 0,
+  "new_tests_authored": 0,
+  "new_tests_rationale": "Every concrete claim maps to existing passing regressions at the report-bound source SHA. 'operates' is same-path as the covered unlisted-verb class ('acts','implies','contains','creates','triggers'); the 'teleportation' hypothesis is already refuted by asserted in-place-removal outputs. A redundant test would create activity, not coverage.",
+  "baseline_checks": {
+    "git_diff_check": "pass",
+    "cargo_fmt_all_check": "not_run_no_rust_source_edited"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1787816493",
+  "source_path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+  "source_sha256_report_bound": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+  "source_sha256_working_copy": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+  "source_hash_match": true,
+  "witness_id": "lsw_b69800303a69063ec580b89e354744ec636b675b98ac320e705126b0f5f3b662",
+  "terminal_status": "addressed_no_action",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: fill_responsive_rest_secs (L18) dynamically scales rest duration by fill_pct; it shortens rest when current_fill<30% to force semantic input sooner and break a prior positive-feedback loop where long rests drained fill faster than recovery replenished it.",
+      "disposition": "verified_existing at report-bound SHA d803d71 (==working copy). L18-28: <30%→*0.6(min30); 40-50%→*1.2(min MAX_REST_SECS=360); else base. Comment L205-216 documents the 2026-03-31 observation (fill stuck ~27%, 1.8x rest drained faster than recovery) and the new shorten-at-low-fill strategy. Pinned by the fill_responsive_rest_* tests (autonomous/runtime/tests.rs L21-84).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Test 1 (Logic Validation): fill_responsive_rest_secs returns a value <= MAX_REST_SECS when current_fill=45.0 (1.2x multiplier) and prioritizes shorter rests when current_fill=25.0.",
+      "disposition": "verified_existing. Exact cases already asserted: (100,45.0)==120 proves the 1.2x branch (tests.rs L32); (400,45.0)==360 proves the min(MAX_REST_SECS=360) clamp (L33); fill 25.0 -> 0.6x shorter via (40,25.0)==30 / (100,25.0)==60 / (200,25.0)==120 (L22-25,30). Ran fill_responsive_rest_keeps_critical_floor_and_band_boundaries + ..._steps_at_each_band_boundary_without_hysteresis = 2 passed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 2 (Telemetry Integration): state.read().await (L214) extracts fill_pct() from latest_telemetry to drive the rest_secs calculation in the main loop.",
+      "disposition": "verified_existing from source at SHA d803d71. L213-216: current_fill = { let s = state.read().await; s.latest_telemetry.as_ref().map_or(50.0, |t| t.fill_pct()) }; L217 feeds it to fill_responsive_rest_secs(base_rest, current_fill). Default 50.0 when telemetry is absent. This is the async-loop integration path; the pure decision fn it drives is unit-tested (c002).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: the burst->rest energy cliff (L185-195) risks 'severing' continuity; despite the 0.7->0.4 warmth taper the transition is still a discrete logic gate, and a roll-derived rest duration too short/long vs burst_count may still feel like a sharp retraction.",
+      "disposition": "observed - felt/architectural concern preserved, not refuted. Source: within a rest the intensity taper is piecewise-linear-continuous (L308-317), not a gate. The real discreteness is (a) the burst (full codec gain) -> first rest pulse (intensity 0.7) boundary and (b) pulse granularity pulses=rest_secs/5 (L300), which varies with the roll-derived rest_secs (L179-198). Live warmth/cadence change is Tier-5; no change made.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify the 0.7->0.4 'tapering' (comment L192-195) is real temporal decay inside craft_warmth_vector (referenced L56) rather than just a static intensity shift.",
+      "disposition": "verified_existing + correction (not domesticated): the taper is REAL but lives in the caller loop (orchestration.rs L302-317: per-pulse warmth_phase=i/pulses -> piecewise warmth_intensity), passed as the scalar arg to craft_warmth_vector (codec/structure.rs L1373), which applies intensity as a static per-call scalar (test warmth_intensity_scales) and phase as a sinusoidal breath, no decay (warmth_vector_breathes_across_phase). Caller-driven temporal taper, not inside the vector fn.",
+      "classification": "verified_existing"
+    }
+  ]
+}

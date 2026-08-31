@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; reference_syntax L49-60; delimiter pairs L153-197; relation verbs L64-86."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_quoted_exact_token_reference L1995; preserves_exact_tokens_in_declared_group_delimiters L2151; preserves_exact_token_relation_without_preceding_vocabulary_gate L2540."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace + per-chunk trim_matches(!alnum&&!_) + find(!is_empty)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "first_word_after_skips_leading_punctuation_transition L2635 (same SHA 902a0358); uses_only_the_first_finite_relation_word L2605."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 allowlist incl. 'behaves' L69."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_proxy_relation_phrase L2552."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229; MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 L151; grouped pair '['/']' L177/L193."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_bounded_nested_delimiter_stacks L2176; reports_exact_four_level_delimiter_depth L2194; bounds_homogeneous_square_bracket_stack_beyond_max_depth L2266."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "longest_exact_known_model_control_marker_at L97-112 max_by_key(token.len())."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "uses_longest_raw_matches_with_exact_accounting L1745; preserves_longest_overlapping_token_when_named_as_content L2493."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] fresh-pass duplicate verification bullet for introspection_astrid_llm_1787706169."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787706169",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Row: marker-scanner fresh-pass duplicate; all 5 claims verified_existing at SHA 902a0358; no code change."
+    }
+  ]
+}

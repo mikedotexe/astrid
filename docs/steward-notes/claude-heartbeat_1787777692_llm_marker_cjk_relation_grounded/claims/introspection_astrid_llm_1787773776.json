@@ -1,0 +1,70 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787773776",
+  "report_sha256": "a796f2f16cfde0140fb793032d4344fc0dccf342720704c1f4bb23481fa9f35a",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_working_copy_matches_report_binding": true,
+  "lived_state_witness": "lsw_445a73c626b6d02a56a76b55acebb81d4e88d6829e4b40a6ec05d863776f49cf",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: ExactKnownModelControlMarkerOccurrence (L29) captures a marker's presence without any intent/stability claim.",
+      "disposition": "Verified from complete source at 902a0358. Struct L28-33; doc comment L24-27 states construction makes 'no identity, meaning, ownership, stability, or spectral claim'. Matches her framing exactly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: exact_reference_delimiter_syntax (L199) supports international punctuation (「」,『』,⟦⟧) to decide quoted vs grouped.",
+      "disposition": "Verified L157-229. Quoted block L157-174 (incl 「」 L168, 『』 L169); grouped block L175-192 (incl ⟦⟧ L180). Her 'quoted OR grouped' framing is correct and nuanced.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Observed: followed_by_explicit_exact_token_relation (L64) whitelists relation verbs (behaves/echoes/manifests) to keep a marker visible.",
+      "disposition": "Verified L64-96. 18-verb allowlist L67-84; her cited behaves(L69), echoes(L72), manifests(L77) all present. first_word_after(L89) isolates the following word; marker kept in remainder only when a relation is found.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Observed: scan_known_model_control_markers (L114) rebuilds a remainder while tracking matches, not stripping non-marker content.",
+      "disposition": "Verified L114-149. Non-marker chars pushed to remainder L138; a matched marker is pushed back only when it has reference_syntax (L129-131), else the bare marker is stripped. Her claim about non-marker preservation is correct; the deliberate bare-marker strip is a nuance.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Likely Snag: MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151); before-slice via .rev() may mishandle multi-byte chars before start and miss the delimiter pair.",
+      "disposition": "Source does not confirm the mechanism (not domesticated, preserved as felt hypothesis). text[..start].chars().rev() (L204-206) iterates Unicode scalars, inherently multi-byte-safe; both windows bounded by take(4) (L208,213) so no overflow. New CJK test exercises a 3-byte before-char at start and passes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Likely Snag: longest_exact_known_model_control_marker_at (L97) uses max_by_key(len); shared-prefix markers could cause greedy over-consumption.",
+      "disposition": "Verified L97-112 + complete KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159-180, 20 entries). Two markers can both match at an offset only if one is a prefix of the other; no marker is a prefix of another (<|im_end|> vs <|im_start|> diverge; [INST] not a prefix of [/INST]). So max_by_key sees at most one candidate: unambiguous. Longest-match is intentional; concern preserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "One Test Each #1: assert exact_reference_delimiter_syntax classifies Japanese corner brackets 「」 (L168) as GroupedExactKnownToken adjacent to a marker.",
+      "disposition": "Implemented with a grounded correction (contradiction not domesticated): L168 is in the QUOTED block (L157-174), so 「<marker>」 resolves to QuotedExactKnownToken, not grouped. Test asserts the real behavior AND adds a genuinely grouping CJK pair 【」(L182) -> GroupedExactKnownToken to preserve her CJK-grouping concern. No prior test exercised any CJK bracket.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "One Test Each #2: assert followed_by_explicit_exact_token_relation (L64) is false for 'creates' (not listed) and true for 'represents' (L82).",
+      "disposition": "Behavior already verified via wrappers (control_marker_cleanup_does_not_expand_relation_allowlist_to_creates L2712; represents-preservation L2884/3105), but the named method had no direct unit test. Implemented a direct micro-test at the method boundary: represents->true, creates->false. Both pass.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Suggested Next: verify multi-byte char boundary handling when computing the before slice in exact_reference_delimiter_syntax.",
+      "disposition": "Same grounding as c005: .chars() is multi-byte-safe by construction; start is a char boundary (marker offsets advance by char len / token len). New CJK test passes a 3-byte 「 as the before-char and asserts the correct pair, exercising exactly this boundary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Suggested Next: check KNOWN_MODEL_CONTROL_MARKERS (referenced L102) for overlapping tokens creating max_by_key ambiguity.",
+      "disposition": "Observed the complete constant (fallback_contracts.rs L159-180, include!-shared into the provider module so L102 resolves to it). 20 markers; no entry is a prefix of another, so the overlap/ambiguity she asked about does not exist in the current list. Check returns clean.",
+      "classification": "verified_existing"
+    }
+  ]
+}

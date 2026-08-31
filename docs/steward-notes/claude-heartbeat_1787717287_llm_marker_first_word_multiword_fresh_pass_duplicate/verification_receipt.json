@@ -1,0 +1,89 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1787715141286070000_dc19a847d0",
+    "preprojection_generation_id": "projection_1787715144297224000_e80e019174",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "adapter-owned; runs after process exit (not observed by this process)"
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_llm_1787706169",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 5,
+    "all_classifications": "verified_existing",
+    "evidence_links_added": 12,
+    "evidence_links_existing": 0
+  },
+  "report_hashes": {
+    "report_sha256": "a30c1fad93143adfd86f6fe1da39e5fb585e7f6462c148c529b296451ce582fc",
+    "report_bytes": 3613, "report_lines": 45,
+    "witness_id": "lsw_93cdb51d71965c6018127cadd005aadf99be7de7dede05a4bb81cf8488584c84",
+    "witness_sha256": "d57c3c841c519c55d167607ef901ec2558c89b9e3745e43c8d9fff7bf7fbad2b",
+    "witness_bytes": 23925, "witness_lines": 533,
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_bytes": 38586, "source_lines": 1048,
+    "source_binding_match": true
+  },
+  "tests": {
+    "focused": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker => ok, 72 passed / 0 failed / 1822 filtered",
+    "addressing_self_test": "44 OK",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "0 alarms / 0 gaps / 69 guards ok",
+    "cadence_audit_strict": "integrity_ok true, exit 0, 0 duplicate hashes",
+    "experiential_epistemics_self_test": "valid",
+    "experiential_epistemics_verify": "valid, issue_count 0",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 OK",
+    "test_introspection_cadence_audit": "6 OK"
+  },
+  "counters": {
+    "audit_status": "consistent",
+    "mismatches": [],
+    "all_checks_true": true,
+    "proof_gap_artifact_count": 0,
+    "canonical_indexed": 4468,
+    "canonical_fully_addressed": 3124,
+    "canonical_full_read": 3756,
+    "canonical_remaining": 1344,
+    "canonical_unread": 712,
+    "canonical_blocked": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3014,
+    "noncanonical_pending": 1670
+  },
+  "division": {
+    "cycle_sequence": 30,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_3a29b11bcf2e19443069ff5b9a6b3e05",
+    "event_count": 209,
+    "event_head_sha256": "34492a38813f98aad3a0b9f92d1ad51d12b03683af69e7545efa085836c69c86",
+    "processed_report_count": 1
+  },
+  "evidence_event_store": {
+    "verify": "valid true, corrupt_lines 0",
+    "active_store": "v2",
+    "last_global_seq": 894068,
+    "verified_global_seq": 894068,
+    "verified_event_sha256": "55e9e57afa175426c5085682d172267e3b76605870e29df18774fb8d01072b1c",
+    "legacy_imported_global_seq": 32278,
+    "addressing_stream_seq": 58617,
+    "events_jsonl_size_note": "6.17 GB — full status projection is minutes-slow; verify (chain validity) passed; head read from head.json/verified_checkpoint.json"
+  },
+  "authority_boundary": "Evidence and regression verification only. No source/test change; no live substrate or control change; no deploy/build/launchctl; no git staging/commit/push. Adapter owns the lease and heartbeats. All Tier 4/5 items remain explicit waits.",
+  "restart_deploy": "not required and not attempted"
+}

@@ -1,0 +1,32 @@
+{
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib porosity",
+      "passed": 14,
+      "failed": 0,
+      "ignored": 0,
+      "backs_claims": ["c006", "c002"],
+      "on_point": [
+        "types::schema::tests::permeability_shift_names_porosity_without_live_authority",
+        "ws::runtime::tests::pressure_porosity_readiness_distinguishes_032_from_029_without_control",
+        "ws::runtime::tests::bridge_surfaces_viscosity_porosity_transport_review_without_control",
+        "ws::runtime::tests::pressure_porosity_expansion_readiness_marks_candidate_without_local_control"
+      ]
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib advisory",
+      "passed": 13,
+      "failed": 0,
+      "ignored": 0,
+      "backs_claims": ["c006"],
+      "on_point": [
+        "autonomous::runtime::next_action::pressure_agency::tests::status_explains_advisory_pressure_source_without_pi_mutation",
+        "types::schema::tests::resonance_texture_signature_default_authority_is_advisory"
+      ]
+    }
+  ],
+  "code_changed": false,
+  "note": "No source or test code changed (fresh-pass duplicate). Existing coverage already pins the porosity-telemetry / advisory-only no-control contract; a new regression would duplicate. Tests run to confirm the contract still holds at the current tree.",
+  "cargo_fmt": "not run (no code changed)",
+  "git_diff_check": "no tracked source/test files modified by this round"
+}

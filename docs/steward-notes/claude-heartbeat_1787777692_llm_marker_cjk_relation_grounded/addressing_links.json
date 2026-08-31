@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "ExactKnownModelControlMarkerOccurrence struct L28-33; doc comment L24-27 states construction makes no identity/meaning/ownership/stability/spectral claim."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229; quoted delimiter block L157-174 (incl 「」 L168, 『』 L169), grouped block L175-192 (incl ⟦⟧ L180)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86; 18-verb allowlist L67-84 (behaves L69, echoes L72, manifests L77, represents L82); first_word_after L89-96."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; non-marker chars to remainder L138; matched marker pushed back only when reference_syntax present L129-131, else stripped."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax before-slice L204-209 uses text[..start].chars().rev() (multi-byte-safe over Unicode scalars); take(MAX_..DEPTH=4) L208/213 bounds both windows. No overflow; hypothesis not confirmed by source, preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New CJK test passes a 3-byte 「 (start=3) / 」 as the before/after chars, exercising the multi-byte before-slice boundary she flagged; passes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180 (20 entries); no entry is a prefix of another, so longest_exact..._at (dialogue_runtime.rs L97-112) max_by_key(len) sees at most one candidate — the ambiguity is absent."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped: 「marker」 -> QuotedExactKnownToken (corrects her Grouped expectation; L168 is quoted block); 【marker】 -> GroupedExactKnownToken (preserves her CJK-grouping concern). First CJK-bracket coverage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Corner brackets 「」 at L168 sit inside the quoted matches! block returning QuotedExactKnownToken (L174); lenticular 【】 at L182 sit in the grouped block returning GroupedExactKnownToken (L193)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "followed_by_explicit_exact_token_relation_allowlists_represents_not_creates: direct micro-test at the named method — represents->true, creates->false. First direct call; behavior also covered via wrappers at L2712/L2884."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 (represents L82 in allowlist; creates absent); longest_exact_known_model_control_marker_at L97-112 obtains the occurrence the test exercises."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Same before-slice mechanism as c005: chars().rev() is multi-byte-safe; start is always a char boundary (offsets advance by char len_utf8 or token len)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Complete KNOWN_MODEL_CONTROL_MARKERS L159-180; include!-shared into the provider module (llm/provider.rs L30/L32) so dialogue_runtime.rs L102 resolves to it. No prefix-nested tokens: overlap check clean."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the CJK corner/lenticular-bracket delimiter regression and the corrected expectation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787773776",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row: her two One-Test-Each asks -> one grounded correction + one direct-method test shipped."
+    }
+  ]
+}

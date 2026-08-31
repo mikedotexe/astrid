@@ -1,0 +1,118 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_held_subprocess_run",
+  "round_name": "llm_marker_operates_teleportation_fresh_pass_duplicate",
+  "controller": {
+    "run_id": "run_1787705303075752000_561ef5b6b8",
+    "preprojection_generation_id": "projection_1787705306136553000_3b3f55f6a2",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection_note": "runs after process exit (adapter-owned); not observed in-run"
+  },
+  "processed": {
+    "count": 1,
+    "introspection_id": "introspection_astrid_llm_1787699463",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "duplicate_of": "introspection_astrid_llm_1787692007",
+    "evidence_links_new": 10,
+    "evidence_links_existing": 0
+  },
+  "hashes": {
+    "report_sha256": "e09f82ea0947a11813474b878a84cbd493e6319e8d5181d84b2e61f7dd5ef827",
+    "witness_sha256": "85366186aae59a4bb96bcd420b4afff624638fa4455e36b728250ba1983a5d56",
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_working_copy_equals_binding": true
+  },
+  "tests": {
+    "focused_rust": {
+      "runner": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib <filter>",
+      "marker": "80 passed / 0 failed",
+      "delimiter": "10 passed / 0 failed",
+      "first_word": "5 passed / 0 failed",
+      "total": "95 passed / 0 failed",
+      "source_sha256_at_test_time": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "new_tests_authored": 0
+    },
+    "baseline": {
+      "git_diff_check": "clean (rc=0)",
+      "cargo_fmt_check": "not_run_no_rust_source_edited"
+    }
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "alarms=0, total=69 guards",
+    "cadence_unittest": "6 tests OK",
+    "cadence_strict_compact": "integrity_ok=true, errors=[], duplicate_hash_group_count=0",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify": "valid=true, issue_count=0, history_rewritten=false",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK (prior load-flake did not recur)",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "audit_counters": "status=consistent, mismatches=[]"
+  },
+  "counters_canonical": {
+    "indexed": 4467,
+    "fully_addressed": 3123,
+    "full_read": 3755,
+    "remaining": 1344,
+    "unread": 712,
+    "blocked_needs_steward": 414,
+    "pending_action": 214,
+    "watch": 4,
+    "read_needs_claims": 0,
+    "addressed_duplicate_total": 1121
+  },
+  "division": {
+    "cycle_sequence": 30,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "round_event_id": "division_followup_event_148ebb6dc878888926d2e203c3357867",
+    "event_count": 208,
+    "event_head_sha256": "91455fe845a2f549293e563d13037a770542dd4ed92fa1a2868ad3e152a678ab"
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_0657bb9cc219f226cb860056",
+    "reprojected_after_record_round": true,
+    "timeline_event_count": 208,
+    "json_sha256": "4978fef99abf0fe974519f29f7d6b54ddb6847d7676ead65563faf181b5f80dc",
+    "html_sha256": "a54084372dedd5cd05b85bf82a5f6a4161b1fdab6169ae5fb1b4f6c8ee19f4cf",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"]
+  },
+  "evidence_event_store": {
+    "verify": "valid=true, corrupt_lines=0 (fast run earlier this round)",
+    "verified_checkpoint_global_seq": 892901,
+    "verified_checkpoint_event_sha256": "4831a28f4b7acbfef84c7fc01397d632d8cebfda10d5019c034bc784eddbe747",
+    "head_last_global_seq": 892901,
+    "head_last_event_sha256": "4831a28f4b7acbfef84c7fc01397d632d8cebfda10d5019c034bc784eddbe747",
+    "active_store": "v2",
+    "v1_immutable": true,
+    "legacy_imported_global_seq": 32278,
+    "addressing_stream_seq": 58600,
+    "status_full_stream_enumeration": "not_re-run_this_round: a full status scan over the 6.1GB events.jsonl exceeded the read window under self-induced contention (two concurrent read-only scans); redundant jobs stopped (SIGTERM). Integrity is asserted by the fast verify (valid/0-corrupt) plus the non-expired verified_checkpoint whose global_seq equals the head."
+  },
+  "authority_boundary": "No source/test/config change. No prompt, model, codec, transport, marker-grammar, pressure, fill, PI, controller, sensory cadence, protocol, or Minime change. No build, restart, or deployment. Git read-only (no stage/commit/merge/push). Standing Tier-5 waits (wi_e579041bc76f8310 / wi_69fbd510467c6337 / wi_3e26ac525fea1c36, live_authority_granted=false) untouched.",
+  "commit_debt_unstaged": [
+    "CHANGELOG.md (my [claude-heartbeat] bullet + accumulated foreign edits)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (my 2026-08-25 section at EOF + accumulated foreign edits)",
+    "docs/steward-notes/claude-heartbeat_1787707869_llm_marker_operates_teleportation_fresh_pass_duplicate/ (this packet)"
+  ],
+  "foreign_untouched": [
+    "capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json",
+    "docs/steward-notes/claude-heartbeat_1787690184_llm_marker_scan_duplicate_verify/",
+    "docs/steward-notes/claude-heartbeat_1787699077_llm_marker_zero_width_delimiter_fresh_pass_duplicate/",
+    "minime: minime_autonomy/runtime.py",
+    "minime: tests/test_correspondence_v1.py"
+  ]
+}

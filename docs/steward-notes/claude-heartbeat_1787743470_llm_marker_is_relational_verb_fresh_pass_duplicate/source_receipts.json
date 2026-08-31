@@ -1,0 +1,34 @@
+{
+  "schema": "introspection_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "working_copy_matches_report_binding": true,
+      "cited_symbols": {
+        "ExactKnownModelControlMarkerOccurrence": "L28-33",
+        "reference_syntax": "L49-60",
+        "followed_by_explicit_exact_token_relation": "L64-86 (is L76, appears L67, behaves L69, represents L82)",
+        "first_word_after": "L89-96",
+        "longest_exact_known_model_control_marker_at": "L97-112 (starts_with exact byte match L105)",
+        "scan_known_model_control_markers": "L114-144 (preserve push L129-131)",
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": "L151 (=4)",
+        "exact_reference_delimiter_pair_CJK_corner_bracket": "L168 (QuotedExactKnownToken arm)",
+        "exact_reference_delimiter_syntax": "L199-229 (delimiter_depth L216-223)",
+        "sanitize_model_control_markers_with_report": "L352-517",
+        "generate_dialogue": "L695-1048"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": null,
+      "total_lines": null,
+      "read_scope": "targeted_test_bodies_L1736_to_L2680_plus_grep_of_marker_tests",
+      "note": "sha/line-count not separately hashed; read scope is the cited regression bodies, verified compiling+passing (72/0) at the current source SHA."
+    }
+  ]
+}

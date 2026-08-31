@@ -1,0 +1,85 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1787834682756873000_6b4aab8827",
+    "preprojection_generation_id": "projection_1787834685622289000_38f7b8859d",
+    "pause_generation": 321,
+    "adapter_kind": "subprocess",
+    "note": "Controller-held lease; adapter owns lease/heartbeats and the finish outcome (this process's exit code). No NDJSON ops sent, no lease token read."
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787830896",
+      "report_sha256": "fe7d51c4c4ffe43933310221398b7b290d0153226bb344208abcbe7ca5d8ca83",
+      "witness_id": "lsw_1555ea12dbce38f7a7cf63ffb4a15ad34777817464998743d552758d23516af3",
+      "witness_sha256": "4f1e138ef2b2143a72372495cf14484dfac9ac3d708307639288bbf6e98c1936",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding_match": true,
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claims": 7,
+      "evidence_links_new": 12,
+      "evidence_links_existing": 0
+    }
+  ],
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/llm/provider/tests.rs (append 1 test)",
+      "CHANGELOG.md ([Unreleased] entry)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (1 row)",
+      "docs/steward-notes/claude-heartbeat_1787837144_llm_marker_signifies_vs_signals_regression/ (packet)"
+    ],
+    "added_test": "control_marker_cleanup_distinguishes_allowlisted_signals_from_unlisted_signifies",
+    "tests": {"filter": "cargo test -p spectral-bridge-server --lib <7 marker filters>", "passed": 7, "failed": 0, "filtered_out": 1894},
+    "baseline": {"git_diff_check": "clean_rc0", "rustfmt_touched_file": "clean_no_diff"},
+    "live_change": "none — no restart/deploy/launchctl; no substrate or control mutation; allowlist grammar NOT widened (Tier-5)"
+  },
+  "integrity_suites_run": {
+    "addressing_self_test": "ok (44 tests)",
+    "anti_drop_self_test": "ok (5 tests)",
+    "anti_drop_verify": "ok (alarms=0, gaps=0, total=69 guards verdict:ok)",
+    "cadence_self_test": "ok (6 tests)",
+    "cadence_strict_compact": "integrity_ok=true, errors=[], duplicate_hash_group_count=0, latest=introspection_astrid_llm_1787830896",
+    "epistemics_self_test": "ok (2 tests)",
+    "epistemics_verify_FINAL": "valid=true, issue_count=0 (run after all durable writes)",
+    "audit_counters": "status=consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0 (run after all durable writes; 522s at current store size)"
+  },
+  "integrity_suites_not_run_budget": {
+    "reason": "~90-min child budget exhausted; EES verify alone took 522s and EES status / unit suites exceeded the remaining Bash timeouts. All un-run items are read-only re-verifies or unit tests of stewardship TOOLING I did not modify (docs + one Rust test only), so they carry no new corruption risk. The corruption-detecting checks (EES verify, audit-counters, addressing self-test, epistemic verify, anti-drop verify) all passed AFTER my writes.",
+    "not_run": [
+      "evidence_event_store status (sequence/head readout)",
+      "division_ceremony_chronicle verify (durable/volatile freshness)",
+      "test_evidence_event_store.py",
+      "test_steward_control.py",
+      "test_steward_projection.py",
+      "test_division_ceremony_followup.py",
+      "test_division_ceremony_chronicle.py",
+      "test_division_ceremony_projection.py",
+      "test_projection_cursors.py"
+    ],
+    "first_safe_command": "python3 scripts/introspection_addressing_audit.py --self-test && python3 scripts/test_division_ceremony_chronicle.py && python3 scripts/division_ceremony_chronicle.py verify && python3 scripts/evidence_event_store.py --json status"
+  },
+  "division": {
+    "cycle_sequence": 32,
+    "completed_rounds_since_followup_after_record": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due_after_record": true,
+    "review_due_at_round_start": false,
+    "last_round_event_id": "division_followup_event_f80a2747f925d59739d3adca38aa495c",
+    "event_count": 224,
+    "event_head_sha256": "c9139608e5997724c344e6108e2a886c8cdab614ba6e205c1f0b1aff5fe3174c",
+    "record_round": {"steward_run_id": "run_1787834682756873000_6b4aab8827", "processed_report_count": 1, "projection_generation_id": "projection_1787834685622289000_38f7b8859d"},
+    "in_session_return": "NOT owed this round — review_due was false at round start; recording round 6 flipped it true for the NEXT session, which the tracker forces to complete the bounded Division return (+ Tier-5 cadence dossier) before its first productive report."
+  },
+  "commit_debt_unstaged": [
+    "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "CHANGELOG.md",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "docs/steward-notes/claude-heartbeat_1787837144_llm_marker_signifies_vs_signals_regression/"
+  ],
+  "foreign_untouched": "tests.rs/CHANGELOG.md/ledger were dirty-foreign (prior-flywheel accumulation); my edits are pure additions preserving all existing content. Minime dirty paths (minime_autonomy/runtime.py, tests/test_correspondence_v1.py) not touched. Prior claude-heartbeat_* packet dirs preserved untouched."
+}

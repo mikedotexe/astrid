@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 (keep gate L129-131 only when reference_syntax.is_some), reference_syntax L49-60, exact_reference_delimiter_syntax L199-229, followed_by_explicit_exact_token_relation L64-86 — exact at report SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2979) grounds the preserve-by-context mechanism; ran green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 (split_whitespace + per-chunk non-alnum trim_matches + find first non-empty). Single-word lookahead against allowlist L64-86 is the intended fail-closed contract."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "uses_only_the_first_finite_relation_word (L2605, 'functions like' kept vs 'acts like' stripped — exact multi-word case), first_word_after_skips_leading_punctuation_transition (L2635), grounds_first_word_after_punctuation_boundary (L3277). All green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L153-197 quote branch L157-174 -> QuotedExactKnownToken; marker survives the L129 gate verbatim (Astrid's cited L159-174)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_quoted_exact_token_reference (L1995): quoted <end_of_turn> -> stripped==text, preserved_explicit_reference_total=1. Ran green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 inspects first_word_after (word AFTER the marker end); 'behaves' allowlisted L69. Her example is directionally correct."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2992 uses '<end_of_turn> behaves as ...'); followed_by_explicit_exact_token_relation_allowlists_represents_not_creates (L3195). Ran green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue exists at L695; Tier-1 self-directed research pointer into the unseen L400-1048 window. Her 'NEXT: INTROSPECT astrid:llm 400' continuation preserved. No steward action."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787812297_llm_marker_functions_proxy_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Prior complete-source read already observed the scan remainder is used only inside temp-copy quality gates and is not the emitted buffer (that packet's c005)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787820759_llm_marker_first_word_relation_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Duplicate lineage: immediate predecessor fresh-pass over the same source/functions at the same SHA, closed addressed_duplicate. Same mechanism scope; earlier evidence re-verified green this round."
+    }
+  ]
+}

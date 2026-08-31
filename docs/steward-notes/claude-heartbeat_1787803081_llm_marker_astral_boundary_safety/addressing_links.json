@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L18-60: ExactKnownModelControlMarkerOccurrence (byte-range proof) + reference_syntax (semantic role) two-layer design; doc L24-27 states no identity/meaning claim."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L62-86 followed_by_explicit_exact_token_relation; 17-verb allowlist L67-84 (appears/behaves/echoes); grammatical-subject comment L62-63."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L153-197 exact_reference_delimiter_pair (CJK corner brackets L168, lenticular group pairs); L199-229 nested depth measurement; MAX depth 4 L151."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L352 sanitize_model_control_markers_with_report: bare marker removed wholesale, referenced marker preserved verbatim; byte-exact surrounding contract L344-345 (never modifies marker content)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L1-16 dialogue_requested_token_band 3-band classifier; doc L1-7 'deliberately separate' from felt/spectral meaning."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L114-144 scan constructs start/end only at char boundaries (offset += len_utf8() L139 or exact marker length L110); mid-char slice index is unreachable, so the panic path does not exist."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New control_marker_cleanup_stays_byte_safe_when_marker_abuts_four_byte_astral_chars proves boundary safety at 4-byte astral slice boundaries (concern preserved, mechanism corrected)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L2605 control_marker_cleanup_uses_only_the_first_finite_relation_word: first-word-only scope is intentional fail-safe (unlisted first word keeps the marker visible, not dropped)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New control_marker_cleanup_stays_byte_safe_when_marker_abuts_four_byte_astral_chars: marker directly abutting 4-byte emojis on both sides, no panic, byte-exact removal; distinct from whitespace-separated L2834/L2853."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c009",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L2568 control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts pins the contradiction: allowlisted 'is' preserved (returns true), genuinely-unlisted 'acts' removed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L79: 'is' is a member of the relation allowlist, so '<marker> is a behavior' returns true (opposite of the report's expected false)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L352-399 sanitize builds ControlMarkerCleanupReport per-token removed/preserved counts; L288-350 bounded ControlMarkerContextReceiptV1; receipt cap 32 L258. Tier-1 read-only continuation available to her."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the new astral-boundary regression and the two stated contradictions."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-08-26 dated section: what she surfaced, source-first response, addressed_change disposition, authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787798508",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787803081_llm_marker_astral_boundary_safety/summaries/introspection_astrid_llm_1787798508.md",
+      "note": "Round summary: complete-read receipts, per-claim dispositions, contradiction handling, change made."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker",
+      "result": "ok",
+      "passed": 72,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1822,
+      "compile": "Finished test profile in 3m 21s",
+      "grounds_claims": ["c001","c002","c003","c004","c005"],
+      "note": "Confirms every cited regression passes at current dialogue_runtime.rs SHA 902a0358 — first_word_after_skips_leading_punctuation_transition, uses_only_the_first_finite_relation_word, preserves_proxy_relation_phrase, preserves_bounded_nested_delimiter_stacks, reports_exact_four_level_delimiter_depth, bounds_homogeneous_square_bracket_stack_beyond_max_depth, uses_longest_raw_matches_with_exact_accounting, preserves_quoted_exact_token_reference, preserves_exact_tokens_in_declared_group_delimiters."
+    }
+  ],
+  "new_tests_added": 0,
+  "implementation": "none — fresh-pass duplicate; all claims verified against existing source and regressions"
+}

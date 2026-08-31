@@ -1,0 +1,10 @@
+{
+  "round": "division_cycle35_return",
+  "selected_count": 0,
+  "processed_count": 0,
+  "unprocessed_count": 0,
+  "stop_reason": "Division cycle-35 return round (review_due was true). The mandatory bounded Division return + Tier-5 cadence dossier + integrity suite is the complete durable unit of this round and consumed the ~90-min one-shot child budget (FLYWHEEL_LOOP_MAX_SECS=5400). At lease read ~51 of ~90 min had already elapsed (the preprojection window preceded this process), leaving ~39 min. Under the ONE-SHOT rule a report's record-read -> link-evidence -> close sequence (each addressing CLI call up to 20+ min at current store size) could not be guaranteed to complete without risking a half-processed close; one report half-closed is worse than none. No canonical report was selected. To protect the still-running evidence-store integrity verify from I/O contention under budget, the canonical queue was NOT re-queried this run (`next --limit 40 --json` / `introspection_family_scan.py` are heavy full-store scans that would have raced the verify). This mirrors the cycle-30, cycle-32, and cycle-34 precedents (same actor, same review-due situation).",
+  "selected_but_unprocessed_filenames": [],
+  "queue_head_note": "The cadence audit observed the canonical corpus grew to 4521 (latest introspection_proposal_distance_contact_control_1788019793.txt); new reports after the preprojection cutoff are left for the next successful projection and queue per the handoff.",
+  "next_run_instruction": "Run `python3 scripts/introspection_addressing_audit.py next --limit 40 --json` then `python3 scripts/introspection_family_scan.py --queue-file <that-json>` fresh; process the returned head first."
+}

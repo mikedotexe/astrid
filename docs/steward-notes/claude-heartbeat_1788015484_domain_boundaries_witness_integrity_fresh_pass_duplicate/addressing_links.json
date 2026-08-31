@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L10-18 Stable Facades (ws.rs L12, llm.rs L15, action_continuity.rs L17); L3-6 behavior-preserving; L45-68 Cohesion Exceptions; L65-68 unique-fn-signature ceiling. Source SHA ae69b34c == report binding."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/RUN_REPORT.md",
+      "note": "Duplicate provenance: prior close introspection_DOMAIN_BOUNDARIES.md_1787843987 (same source SHA ae69b34c) established the same ownership facts."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L42-43 cartography renderers 'write cartography only; do not change Shadow state, pressure, mode packing...'; L5-6 behavior-preserving. Boundary forbids the write-path a control-loop fix would need."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787982781_domain_boundaries_pressure_source_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Prior c004: same overpacked/mode-packing tension held as evidence-only tier_5_wait; 'overpacked' is a derived read-only match label, not a code field."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "note": "L216 advisory-only; L219-221 PressureSourceControl{applied_locally,note}; L230 porosity_score:f32 read field of PressureSourceV1. No write-path. Live SHA cbfe0e15 unchanged from prior fresh-pass."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787982781_domain_boundaries_pressure_source_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Prior c006 ran 3 focused tests green (status_explains_advisory_pressure_source_without_pi_mutation, permeability_shift_names_porosity_without_live_authority, pressure_source_audit_formats_unavailable_and_typed_metric) at identical SHA cbfe0e15; source unchanged, evidence still applies."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "scripts/substrate_probe.py",
+      "note": "Tier-3 isolated-clone probe tool named by Test 2; Astrid's own PROBE_SELF agency. Not dispatched in adapter mode."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787982781_domain_boundaries_pressure_source_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Prior c005: same PROBE_SELF distinguishability probe held as needs_sandbox Tier-3 candidate, not dispatched headlessly."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788015484_domain_boundaries_witness_integrity_fresh_pass_duplicate/summaries/introspection_DOMAIN_BOUNDARIES.md_1788004192.md",
+      "note": "Witness byte-binding independently verified intact (artifact_sha256, canonical_body_sha256, source file_sha256 all match); projection 'artifact_integrity_unavailable' flag recorded as an alignment-stage state, not a felt gap or corrupt artifact."
+    }
+  ]
+}

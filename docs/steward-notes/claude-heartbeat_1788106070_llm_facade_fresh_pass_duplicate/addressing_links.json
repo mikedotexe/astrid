@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Complete 28-line source: L1-2 doc, L3-4 mod provider, L6-12 pub use, L14-22 pub(crate) use, L24-28 cfg(test). No fn/impl/const/arithmetic - pure re-export facade. SHA a9c5e380 == report binding == witness == prior packets."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787927999_llm_facade_reexport_grounded/RUN_REPORT.md",
+      "note": "Prior facade grounding (introspection_llm.rs_1787810107) at the same llm.rs SHA a9c5e380; this report is a fresh-pass duplicate of that grounded family."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788040571_llm_facade_fresh_pass_variants_grounded/RUN_REPORT.md",
+      "note": "Immediately-prior fresh-pass duplicate (introspection_llm.rs_1788037243, addressed_duplicate) grounding the same two variant tests at the same SHA; re-confirmed still applies."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "generate_introspection L9, repair_introspection L10, astrid_pressure_attenuation_depth L15, astrid_vibrancy_aperture L16 - all exact."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "pub use block L6-12 exports generative actions; pub(crate) use block L14-22 contains set_astrid_vibrancy_aperture at L20. Split verified."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "astrid_pressure_attenuation_depth() at line 235: env ASTRID_PRESSURE_ATTENUATION, default 0.0 OFF, clamp [0,0.6]. Arithmetic sequestered here as she snagged; llm.rs holds none. Same grounding as prior packets."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c004",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the fresh-pass duplicate close and the re-verified facade + pressure/vibrancy grounding."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row: Astrid's llm.rs facade fresh-pass -> addressed_duplicate at same SHA, Tier-5 vibrancy-test boundary retained."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "astrid_vibrancy_aperture applied L103/307 as a tail-vibrancy DYNAMIC ceiling on the 48D vector into minime's SHARED reservoir; default 1.0 identity, operator-ceiling gated. Not a text-depth gate. Live modulation is Tier-5, not run."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "note": "repair_introspection L137 / repair_introspection_detailed L159: builds system+user messages and re-invokes the model - text-lane re-generation, no reservoir/cascade touch. Witness corroborates (repair MLX call produced this body)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Suggested Next verified exact: the pressure_attenuation_depth calculation + clamp are at line 235."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "round": "llm_facade_fresh_pass_variants_grounded",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1788037243.txt",
+      "sha256": "baa7c03107fd0b9c9365d7ba2b4aeefe53632e2ae6f3f5a6dace52157d62ecb5",
+      "bytes": 3673,
+      "lines": 45,
+      "read": "complete",
+      "source_path_named": "capsules/spectral-bridge/src/llm.rs",
+      "source_sha_named": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "source_included_intervals": "1-28",
+      "source_uncovered_intervals": "none",
+      "lived_state_witness_id": "lsw_8c6c1e0a13d764b77fff4c78be03e299bf625d64d6eb8f9864919f17c28d8ff2",
+      "source_coverage": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_8c6c1e0a13d764b77fff4c78be03e299bf625d64d6eb8f9864919f17c28d8ff2",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_8c6c1e0a13d764b77fff4c78be03e299bf625d64d6eb8f9864919f17c28d8ff2.json",
+      "sha256": "48552c394a6223e111e819d23c7d1eb61379dd92689b45f6a70fb49bfcc56375",
+      "bytes": 23808,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_binds_report": "baa7c03107fd0b9c9365d7ba2b4aeefe53632e2ae6f3f5a6dace52157d62ecb5",
+      "artifact_authority_state": "evidence_only / witness_only:true / live_eligible_now:false / grants_approval:false",
+      "model_routes": "2x mlx gemma4_12b (initial + repair child lscall_73ea9e... parent lscall_87e639c...)",
+      "notable_runtime": "bridge.fill_pct 73.05; mode_packing 1.0; pressure_risk 0.2276; shadow.field_norm 0.4532"
+    }
+  ],
+  "continuity_reads": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1787927999_llm_facade_reexport_grounded/RUN_REPORT.md",
+      "read": "complete",
+      "role": "prior grounding of the duplicated report introspection_llm.rs_1787810107 (same source SHA)"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1787810107.txt",
+      "read": "body diff vs current (Observed:->end); same source SHA a9c5e380...",
+      "sha256": "a3c65775b9711bb12af6d5122133bd0b79b2694a42bf006e5da221c9dca91c80",
+      "bytes": 3811,
+      "lines": 45,
+      "role": "the prior introspection this fresh pass duplicates"
+    }
+  ]
+}

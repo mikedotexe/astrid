@@ -1,0 +1,32 @@
+{
+  "round": "claude-heartbeat_1787927999_llm_facade_reexport_grounded",
+  "rust_or_source_changes": "none — no Rust/source/test file was modified this round; disposition is verified_existing/observed + addressed_no_action",
+  "focused_tests": {
+    "note": "No focused Rust test was authored or required: the report is a structural reading of a pure re-export facade (llm.rs). The facade's re-export integrity is already compiler-enforced (a `pub use`/`pub(crate) use` of a symbol the provider module stopped exporting is a hard build error), so a facade-re-export unit test would only duplicate `cargo build`. Adding one for activity's sake is discouraged by the stewardship posture."
+  },
+  "baseline_checks": {
+    "git_diff_check_touched_files": "clean (rc=0) on CHANGELOG.md + AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "cargo_fmt": "not run — `cargo` is not on this shell's PATH and zero Rust files were modified, so formatting cannot have regressed from this round's work"
+  },
+  "integrity_suites": {
+    "introspection_addressing_audit --self-test": "44 tests OK",
+    "test_evidence_event_store.py": "21 tests OK",
+    "test_steward_control.py": "27 tests OK",
+    "test_steward_projection.py": "14 tests OK",
+    "test_division_ceremony_followup.py": "3 tests OK",
+    "test_division_ceremony_chronicle.py": "10 tests OK",
+    "test_division_ceremony_projection.py": "self-test ok",
+    "test_projection_cursors.py": "4 tests OK",
+    "anti_drop_catalog.py --self-test": "5 tests OK",
+    "anti_drop_catalog.py verify --json": "ok, test_gap null (no gaps)",
+    "test_introspection_cadence_audit.py": "6 tests OK",
+    "introspection_cadence_audit.py --strict --compact": "integrity_ok true, duplicate_hash_group_count 0, configuration_valid true, errors []",
+    "experiential_epistemics.py self-test --json": "2 tests OK, valid true",
+    "experiential_epistemics.py verify --json (final, post durable writes)": "valid true, issues []",
+    "introspection_addressing_audit audit-counters --json": "status consistent, mismatches [], all 7 checks true, read_needs_claims 0",
+    "evidence_event_store.py --json verify": "valid true, corrupt_lines 0, last_global_seq 921502, head fd8d8f03…",
+    "evidence_event_store active_store": "v2 (legacy V1 imported boundary seq 32278, immutable), 16 streams, live/append-only (head advances as the running bridge writes)",
+    "division_ceremony_followup.py verify": "ok true, review_due false, completed_rounds_since_followup 4, event_count 236, head 7f0207a8…",
+    "division_ceremony_chronicle.py verify": "reports 'project before verify' — BENIGN: recording round 4 appended followup event (235->236); Chronicle re-projection is the Division RETURN / controller postprojection's job, and no return was due this non-return round; matches the prior-round convention (packet claude-heartbeat_1787919214). All corruption-detecting checks passed."
+  }
+}

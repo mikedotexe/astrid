@@ -1,0 +1,90 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1788191951_llm_marker_snag_tests_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run (lease owned by adapter; no steward session opened by this process)",
+  "controller": {
+    "run_id": "run_1788188494020463000_92216d4fdc",
+    "preprojection_generation_id": "projection_1788188498317815000_31d768dba0",
+    "preprojection_status": "passed",
+    "pause_generation": 321
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_llm_1788181787",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "record_read": "ok (event_type=full_read, summary_sha256=3b1acd268ae7956fa6347c9b6a8c0243abc76a83ec40aafea15fce2fdd3d9084)",
+    "evidence_links": {"existing": 0, "new": 10}
+  },
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- first_word_after scan_known_model_control_markers control_marker_cleanup_preserves_bounded_nested_delimiter_stacks control_marker_cleanup_reports_exact_four_level_delimiter_depth control_marker_cleanup_reports_exact_three_level_delimiter_depth followed_by_explicit_exact_token_relation_allowlists_represents_not_creates",
+    "passed": 16,
+    "failed": 0
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 passed",
+    "anti_drop_self_test": "5 passed",
+    "anti_drop_verify": "all ok, no problems",
+    "cadence_audit_strict": "integrity_ok=true, errors=[]",
+    "test_introspection_cadence_audit": "6 passed",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_final": "valid=true, issues=[] (run after all durable writes incl. record-round)",
+    "test_evidence_event_store": "21 passed",
+    "test_steward_control": "27 passed",
+    "test_steward_projection": "14 passed",
+    "test_division_ceremony_followup": "3 passed",
+    "test_division_ceremony_chronicle": "10 passed",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 passed",
+    "audit_counters": "consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0"
+  },
+  "counters": {
+    "canonical_indexed": 4554,
+    "canonical_fully_addressed": 3172,
+    "canonical_fully_read": 3805,
+    "canonical_remaining": 1382,
+    "canonical_unread": 749,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3081,
+    "noncanonical_pending": 1699
+  },
+  "division": {
+    "cycle_sequence": 38,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_0ae5330997b36b222f303221f549e52c",
+    "event_count": 263,
+    "event_head_sha256": "603a71765cacd02bb811b8d2cec05e049162a7e9e60068e635ebc537a1a2cf22",
+    "chronicle_verify": {
+      "ok": true,
+      "durable_inputs_current": true,
+      "durable_mismatches": [],
+      "volatile_mismatches": ["supervisor_status_sha256"]
+    }
+  },
+  "evidence_event_store": {
+    "active_store": "v2",
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 954403,
+    "last_event_sha256": "b03a7d35108a1f97d0934393e2b91d67fb9689df1a56a9fab46372f36a7db379",
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "note": "Full-store `status` stream-count scan is long-running (events.jsonl ~6.9GB); the definitive `verify` passed. head.json stream_sequences at capture: addressing 59518, steward_control 17926, claim_families 238166, felt_contracts 202688, model_qos 259268, reciprocal_uptake 65643."
+  },
+  "baseline": {
+    "git_diff_check": "clean",
+    "cargo_fmt_check": "clean (no rust source edited)"
+  },
+  "live_change": "none required and none attempted (verification-only, non-live). No build/deploy/restart/launchctl. Git read-only.",
+  "commit_debt": {
+    "new": ["docs/steward-notes/claude-heartbeat_1788191951_llm_marker_snag_tests_fresh_pass_duplicate/"],
+    "modified_mixed_with_prior_rounds": ["CHANGELOG.md", "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"]
+  }
+}

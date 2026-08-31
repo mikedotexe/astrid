@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L8-22 Stable Facades; L12 ws.rs=telemetry/sensory ports; L15 llm.rs=provider transport; L19-22 facades <1000 lines re-export symbols. Source SHA ae69b34c matches report binding."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/RUN_REPORT.md",
+      "note": "Duplicate provenance: prior close introspection_DOMAIN_BOUNDARIES.md_1787843987 (same source SHA ae69b34c) established the same ownership facts."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L35-43 Shadow Cartography Ownership; L41-43 cartography.rs renderers 'write cartography only; they do not change Shadow state, pressure, mode packing, temporal decay, scheduling, or control.'"
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L45-68 Cohesion Exceptions; L50 action_continuity/runtime/core.rs; L65-68 unique-fn-signature ceiling (current count +10% headroom) trips exception_signature_growth and forces manual review. Variant emphasis vs prior report, verified at same SHA."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L5-6 extraction changes neither pressure/fill/PI/etc.; L43 forbids cartography renderers from changing mode packing. Felt tension preserved; 'overpacked_mode_packing' is not a code field (contradiction stated, not domesticated)."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/no_action.md",
+      "note": "Prior packet c004 established the same tier_5_wait: a mode-packing/pressure remedial write-path is a live control change requiring separate authority; live_authority_granted=false."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/RUN_REPORT.md",
+      "note": "Prior packet c005: Test 1 distinguishability PROBE_SELF (substrate_probe.py isolated clone) is Astrid's own Tier-3 sandbox agency; left as a candidate, not steward-dispatched headlessly."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "note": "L216 'This remains advisory only'; L217-221 struct PressureSourceControl { applied_locally: bool, note: String }; L230 'pub porosity_score: f32' (field of read-only PressureSourceV1 synthesis). No write-path; confirms L230 is porosity_score, not overpacked_mode_packing."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "status_explains_advisory_pressure_source_without_pi_mutation passes (advisory pressure-source, no PI mutation). With permeability_shift_names_porosity_without_live_authority and pressure_source_audit_formats_unavailable_and_typed_metric: 3 passed / 0 failed."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the fresh-pass duplicate re-verification and preserved tier_5_wait / Tier-3 sandbox boundaries."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row recording exact-source re-verification (no new code) and the authority boundary for this fresh-pass duplicate."
+    }
+  ]
+}

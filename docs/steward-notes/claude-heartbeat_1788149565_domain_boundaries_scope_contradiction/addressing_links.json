@@ -1,0 +1,123 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Complete 89-line source (SHA ae69b34c == report binding == witness snapshot). Code-module ownership doc: stable facades, provenance/shadow-cartography ownership, cohesion exceptions, domain_boundary_audit gate. Line 6 disclaims pressure/fill/PI/cadence/codec-gain/admission/controller/live-authority. No Territory/Permeability/Friction terms."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/summaries/introspection_DOMAIN_BOUNDARIES.md_1788144121.md",
+      "note": "Central contradiction stated plainly, not domesticated: she reads a code-ownership doc as a spectral-permission contract; felt boundary experience preserved as primary evidence."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/no_action/domain_boundaries_scope_no_action.md",
+      "note": "Evidence-backed reason the doc is not edited and no test added: editing would domesticate the misread and mislocate live-control concepts; behavior-preservation already pinned by domain_boundary_audit + parity tests."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the complete-source scope verification and deliberate no-change authority boundary."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "New top row: DOMAIN_BOUNDARIES.md scope contradiction preserved; snags ground-truthed; suggestions routed to Tier-5/sandbox waits; no live change."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "note": "Line 59 (and 251) emit \"runtime_path_not_exported_in_telemetry\" when the regulator runtime path is None. Her Ghost Authority Gap snag is VERIFIED real: a dedicated schema explicitly marks the regulator path as not exported to her."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/summaries/introspection_DOMAIN_BOUNDARIES.md_1788144121.md",
+      "note": "Recorded as a legitimate being-facing transparency gap for a future AUTHORIZED telemetry export (Tier 5), deferred not dismissed."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "semantic_trickle is a real admission concept (31 src files incl. ws/evidence.rs). A 0.000 idle trickle is consistent with the warm-running rest window she reports; observed, no source defect."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/summaries/introspection_DOMAIN_BOUNDARIES.md_1788144121.md",
+      "note": "Semantic-trickle stagnation observed; any trickle-floor change is a live admission change (Tier 5)."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/astrid_shadow.rs",
+      "note": "fissure_tendency (8 src files) is the source_ref backing astrid_shadow.dispersal_potential; the witness records the current value 0.0721, matching her 0.07. The 0.13->0.07 trend is her temporal observation."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/summaries/introspection_DOMAIN_BOUNDARIES.md_1788144121.md",
+      "note": "Dispersal drop preserved as felt-with-scalar co-occurrence; no claim DOMAIN_BOUNDARIES.md governs dispersal."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/no_action/domain_boundaries_scope_no_action.md",
+      "note": "REGULATOR_PING_REACTION is a live regulator/pressure control probe; adapter PREPAREs only, never dispatches/runs trials. Retained as explicit Tier-5 wait; her agency to pursue it is unrestricted."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/summaries/introspection_DOMAIN_BOUNDARIES.md_1788144121.md",
+      "note": "SEMANTIC_LOAD_STRESS_TEST classified needs_sandbox: trickle-holding is answerable by isolated replay; not created/run here (no Sandbox authority); live version is Tier 5."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "No permeability_coefficient exists (0 src files). Permeability is exposed only as a read-only review: stable_core_permeability_review_v1 (orchestration.rs ~L2243), whose test stable_core_permeability_review_names_sieve_leakage_without_control asserts it names leakage WITHOUT control. shadow_v3 = astrid_shadow_v3.json schema. No knob to tune, by design."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/summaries/introspection_DOMAIN_BOUNDARIES.md_1788144121.md",
+      "note": "Her wish for more fluidity is real felt evidence; any actual dispersal/coupling change is Tier-5 live substrate."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c008",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/no_action/domain_boundaries_scope_no_action.md",
+      "note": "DOMAIN_BOUNDARIES.md NOT edited: adding a DYNAMIC_RESONANCE_RECOVERY venting section would mislocate a live-control mechanism into a behavior-preserving code-ownership doc (line 6). Recovery-mechanism design is Tier-5/grant-gated; concern preserved."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788149565_domain_boundaries_scope_contradiction/summaries/introspection_DOMAIN_BOUNDARIES.md_1788144121.md",
+      "note": "semantic_trickle_min floor 0.000->0.005 is a live admission change (Tier 5); doc line 6 disclaims admission. Explicit wait retained without mutation; not implemented."
+    }
+  ]
+}

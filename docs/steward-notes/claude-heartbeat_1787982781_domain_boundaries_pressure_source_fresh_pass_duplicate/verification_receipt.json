@@ -1,0 +1,72 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "run_id": "run_1787980302274105000_1256ef4b26",
+  "preprojection_generation_id": "projection_1787980305714778000_e6a9ad8991",
+  "processed_report_count": 1,
+  "processed_reports": ["introspection_DOMAIN_BOUNDARIES.md_1787979971"],
+  "close": {
+    "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+    "status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "evidence_links_new": 11,
+    "evidence_links_existing": 0
+  },
+  "integrity_suites": {
+    "introspection_addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "anti_drop_catalog_self_test": "5 tests OK",
+    "anti_drop_catalog_verify": "ok (test_gap null)",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "introspection_cadence_audit_strict": "integrity_ok true, errors [], duplicate_hash_group_count 0, canonical_count 4513",
+    "experiential_epistemics_self_test": "valid true",
+    "experiential_epistemics_verify_final": "valid true, issues [], issue_count 0"
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "all_checks_true": true,
+    "canonical_indexed": 4513,
+    "canonical_fully_addressed": 3153,
+    "canonical_fully_read": 3786,
+    "canonical_remaining": 1360,
+    "canonical_unread": 727,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3045,
+    "noncanonical_pending": 1685,
+    "addressed_duplicate_total": 1136
+  },
+  "evidence_event_store": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "status_stream_counts": "enumeration ran read-only (large store); integrity gate is verify=valid/corrupt_lines=0"
+  },
+  "division": {
+    "cycle_sequence": 35,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_recorded": true,
+    "last_round_event_id": "division_followup_event_b152094021f35d72f360012c08aff289",
+    "event_count": 242,
+    "event_head_sha256": "eb69e3f7bf5f34bab3f3a13cb5dbb4fcd6fa513e04eff05684ea64e8c3e65941"
+  },
+  "chronicle": {
+    "verify_result": "durable source inputs changed; project before verify",
+    "interpretation": "EXPECTED after record-round appended followup event 242; the adapter's source-first postprojection (DAG stage 19 division_chronicle) reprojects it. Not a durable-integrity failure and not merely the volatile supervisor hash. Not reprojected by this adapter-mode round (no Division return due).",
+    "last_followup_chronicle_id": "division_chronicle_4eaaba69372c22cca39533bf"
+  },
+  "restart_deploy": "not required and not attempted; no live substrate or control change",
+  "git": "read-only this run; nothing staged/committed/merged/pushed"
+}

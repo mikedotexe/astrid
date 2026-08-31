@@ -1,0 +1,17 @@
+{
+  "round": "domain_boundaries_pressure_source_audit",
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib viscosity_porosity_transport",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "note": "Confirms the 'overpacked' state is a derived read-only classification: viscosity_porosity_transport_distinguishes_navigable_from_sludge_risk asserts threshold_state == 'mode_packing_overpacked_with_pressure_velocity' (types/schema/tests.rs:1298-1301). Backs c006 verified_existing at current source SHA. No code changed."
+    }
+  ],
+  "baseline_checks": [
+    {"command": "git diff --check", "result": "pending_recorded_in_run_report"}
+  ],
+  "note": "No source or test files were modified this round; the run verifies existing behavior answering Astrid's Test 2 read-only pressure-source audit."
+}

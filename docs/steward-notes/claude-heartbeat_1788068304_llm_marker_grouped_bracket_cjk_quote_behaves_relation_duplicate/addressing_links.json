@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 (preserve when reference_syntax.is_some, L129); exact_reference_delimiter_syntax L199-229 + pair table L153-197 (quote set L157-173, group set L175-196)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Quoted/grouped preservation family: declared group delimiters L2341, non-ASCII quote pairs L2377, fullwidth/CJK group pairs L2397."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 (trim non-alnum/_, first non-empty token); longest_exact_known_model_control_marker_at L97-112 (max_by_key(len), single pass)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "first_word_after boundary tests: first finite relation word L2640, adverb-skip L2670, punctuation-transition L2724, colon-skip L2771, symmetric emphasis L2943, unicode alphanumerics L2112."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 (innermost via before.first()/after.first() L215); GroupedExactKnownToken branch L175-196/L193; nested delimiter depth counting L216-223."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Grouped-under-outer-quote verified at depth 3 (L2418, ﹁《（…）》﹂) and depth 4 (L2195); ASCII bracket grouped L2153; CJK quote pair L2382. 「[…]」 depth 2 is the same code path (no depth branch)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax L49-60 checks delimiter FIRST then relation; a bracketed marker short-circuits to Grouped; followed_by_explicit_exact_token_relation allowlist L64-86 includes 'behaves'."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Bare 'behaves as'/'behaves like' relation -> explicit_relation_occurrences=1 (L2548); bracket-short-circuits-relation nuance documented at L2680."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695; passing generation returns raw model text L997-998; marker scanner feeds only quality gates is_valid_dialogue_output L558 / has_one_nonempty_final_next_action L634 / L683; history uses sanitize_minime_context_for_dialogue L530."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788058732_llm_marker_use_verb_strip_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Immediately prior same-source (dialogue_runtime.rs @ 902a0358) fresh-pass sibling introspection_astrid_llm_1788042666, closed addressed_duplicate — establishes the duplicate lineage."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c004",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the verified-duplicate close and the bracketed-marker grouped short-circuit correction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788059082",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated Astrid row: source-first verification of both proposed tests + the relation-vs-grouped correction + Tier-5 boundary."
+    }
+  ]
+}

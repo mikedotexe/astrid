@@ -1,0 +1,17 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- known_model_control_markers_have_no_proper_prefix_shadow scan_known_model_control_markers_quoted_context_precedes_following_relation_verb scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary scan_known_model_control_markers_grounds_first_word_after_non_breaking_space followed_by_explicit_exact_token_relation_allowlists_represents_not_creates",
+      "result": "ok",
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1903,
+      "note": "The five existing tests that ground every claim in introspection_astrid_llm_1788070591. All pass at working-copy source SHA 902a0358 == report binding. No test code changed this round."
+    }
+  ],
+  "code_changed": false,
+  "test_changed": false,
+  "rationale": "addressed_duplicate: all claims verified_existing against exact pre-existing tests re-run green; adding any new test would duplicate coverage / domesticate the report."
+}

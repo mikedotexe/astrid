@@ -1,0 +1,76 @@
+{
+  "round": "claude-heartbeat_1788170517_llm_relation_is_like_prefix_shadow",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1788166453046953000_e8b609791f",
+    "preprojection_generation_id": "projection_1788166457632854000_672936e4f2",
+    "postprojection": "runs_after_process_exit (adapter-owned)"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1788162779",
+    "terminal_status": "addressed_change",
+    "proof_missing_claims": [],
+    "evidence_links_new": 10
+  },
+  "focused_tests": {
+    "new_regression": "followed_by_explicit_exact_token_relation_rejects_hyphenated_is_like_prefix_shadow",
+    "result": "1 passed / 0 failed"
+  },
+  "baseline_checks": {
+    "git_diff_check": "clean",
+    "cargo_fmt_check": "fail_preexisting_only: grounding.rs (L259,L295), committed cbf2161a7c, not this round's file; provider/tests.rs clean per canonical config-aware fmt"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "OK (rc=0)",
+    "test_projection_cursors": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "alarms=0, total=69, gaps=0",
+    "cadence_self_test": "6 tests OK",
+    "cadence_strict": "integrity_ok=true, duplicate_hash_group_count=0, read_errors=[]",
+    "epistemic_self_test": "2 tests OK, valid=true",
+    "epistemic_verify_final": "valid=true, issue_count=0, checked_record_count=11664, history_rewritten=false"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": 0,
+    "all_checks_true": true,
+    "canonical_indexed": 4551,
+    "canonical_fully_addressed": 3170,
+    "canonical_full_read": 3803,
+    "canonical_remaining": 1381,
+    "canonical_unread": 748,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3078,
+    "noncanonical_pending": 1697,
+    "proof_gap_claim_count": 0
+  },
+  "evidence_event_store": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "status_head": "captured_in_run_report (background status computation)"
+  },
+  "division": {
+    "cycle_sequence": 38,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_ce50bf91e25cfec0c17991d11834446a",
+    "event_count": 261,
+    "event_head_sha256": "6d4dc0a6ffd3cb1fbaa8cff5fce9f995e200e3208de1a8e3f47e335bb73f72dd",
+    "chronicle_id": "division_chronicle_4fe6421b2334f7d78acd76b1",
+    "chronicle_json_sha256": "e225c8ea1821cc03bfeb15ad1fd66287d4c797eabaafa3d97f714557d9d0aa62",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatches": ["supervisor_status_sha256"]
+  },
+  "live_change": "none — no build, deploy, restart, or live substrate/control change required or attempted (adapter round is PREPARE-only)"
+}

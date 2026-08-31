@@ -1,0 +1,9 @@
+{
+  "round": "division_cycle32_return",
+  "selected_count": 0,
+  "processed_count": 0,
+  "unprocessed_count": 0,
+  "stop_reason": "Division cycle-32 return round (review_due was true). The mandatory bounded Division return + Tier-5 cadence dossier + integrity suite is the complete durable unit of this round and consumed the ~90-min one-shot child budget (cycle-30 precedent). No canonical report was selected. To protect the still-running evidence-store integrity verify from I/O contention under budget, the canonical queue was NOT re-queried this run (`next --limit 40 --json` / `introspection_family_scan.py` are heavy full-store scans that would have raced the verify). The next run re-queries the queue fresh after its own preprojection per the handoff.",
+  "selected_but_unprocessed_filenames": [],
+  "next_run_instruction": "Run `python3 scripts/introspection_addressing_audit.py next --limit 40 --json` then `python3 scripts/introspection_family_scan.py --queue-file <that-json>` fresh; process the returned head first."
+}

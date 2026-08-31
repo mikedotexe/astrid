@@ -1,0 +1,21 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "lines 1-260 (all cited marker-grammar functions: dialogue_requested_token_band L8, followed_by_explicit_exact_token_relation + allowlist L64-86, first_word_after L89, longest_exact_known_model_control_marker_at L97, scan_known_model_control_markers L114, fragment_has_non_marker_bytes L146, MAX_EXACT_REFERENCE_DELIMITER_DEPTH L151, exact_reference_delimiter_pair L153 incl. CJK L168, exact_reference_delimiter_syntax L199, control_marker_placement_counts L231) and lines 690-715 (generate_dialogue signature at L695, the Suggested-Next target). Every line-numbered claim in the report falls within these intervals."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "read_as_evidence_of_existing_coverage",
+      "total_lines": 4283,
+      "total_bytes": 186130,
+      "read_scope": "focused regression blocks grounding each report claim: first_word_after direct (L2116), delimiter-depth suite (L2180-2303 incl. CJK stacks, four/three-level, beyond-MAX), relation-verb is/acts (L2568), first-finite-relation-word (L2604), leading-punctuation transition (L2635), and CJK corner-bracket L168 resolution (L3137-3161). Existing-coverage read, not a modified surface this round."
+    }
+  ]
+}

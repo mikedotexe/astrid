@@ -1,0 +1,76 @@
+{
+  "introspection_id": "introspection_astrid_ws_1788120514",
+  "source_label": "astrid:ws",
+  "source_path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+  "source_sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+  "report_window": "lines 1-400 of 1041",
+  "report_scope": "partial_window_unseen_source_not_assessed",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "spawn_telemetry_subscriber (L8) runs a persistent WebSocket subscriber loop to Minime's eigenvalue broadcast, handling Binary/Text/Ping/Pong.",
+      "disposition": "Verified from telemetry_port.rs at report SHA 42364fe: L8 pub fn spawn_telemetry_subscriber; the tokio::select loop matches Message::Binary (L64), Text (L83), Ping (L102), Pong (L142), Close (L159), None/stream_ended (L167). Structural claim exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Every message type triggers record_ws_message_received to update the shared BridgeState (report cites L73/91/110/150).",
+      "disposition": "Verified: binary records at L73, text L92, ping L111, pong L151 (report line cites carry ~1-line offsets; behavior exact). record_ws_message_received (health_trace.rs L104-113) increments messages_received plus per-kind ping/pong counters and sets last_message_at_unix_s.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Incoming Ping is echoed with a Pong (L119); send failures are logged as pong_send_error.",
+      "disposition": "Verified: L119 ws_tx.send(Message::Pong(data)).await; on Err L120 reason=pong_send_error:{e}, then record_ws_send_error (L123) and break. Exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Error handling uses a Backoff (L15) and distinguishes explicit Close frames (L159) from stream terminations (L167).",
+      "disposition": "Verified: L15 Backoff::new(); Close arm L159 break close_reason(frame); None arm L167 break 'stream_ended'. Backoff impl health_trace.rs L173-200 (1s doubling, 60s cap). Exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Both binary and text payloads are routed to handle_telemetry_message (report cites L81/L99).",
+      "disposition": "Verified: binary handle_telemetry_message(&data,...) L79-81; text handle_telemetry_message(data.as_bytes(),...) L98-100. Exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Snag #1: Ping/Pong asymmetry — no explicit logic to handle incoming Pong other than a debug log (L157); possible silent omission.",
+      "disposition": "Refined, not domesticated: source contradicts 'only a debug log' — the Pong arm (L142-158) calls record_ws_message_received('pong') so pongs_received++/messages_received++/timestamp (health_trace.rs L110-112) BEFORE the L157 debug log. Her deeper concern holds: the bridge only reflects incoming pings and keeps no Ping-liveness/sequencing keyed on received Pong. New regression telemetry_pong_received_is_recorded_not_sent isolates pong-received as recorded, not a send.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Snag #2: frequent state.write().await could contend on BridgeState under high-frequency telemetry.",
+      "disposition": "Observed, no causal overclaim: each record write-lock is scoped in {} and dropped BEFORE handle_telemetry_message runs (binary L71-78 then L79). handle_telemetry_message_at takes a short read lock (L339-350) then runs the throttled (30s, L356-357) lock-free artifact scan (L358-373). The shared-state write sits in uncovered 401-1041 (report scope: partial_window_unseen_source_not_assessed). A real contention claim needs runtime profiling; not asserted.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Proposed Ping Echo Test: Ping on Telemetry lane triggers Pong send and record_ws_message_sent.",
+      "disposition": "The record_ws_message_sent primitive is covered by ws_trace_records_connection_lifecycle_without_payloads (tests.rs L183/L201, messages_sent==1). The loop echo (L119 send -> L138-139 record) is source-verified but integration-level; a mock-WS harness exists (tests/mock_ws_integration.rs). No redundant loop test manufactured.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Proposed State Update Test: Message::Text updates BridgeState via record_ws_message_received before handle_telemetry_message.",
+      "disposition": "Covered: record_ws_message_received('text') -> telemetry_messages_received_total==1 (tests.rs L2809-2816). Source ordering verified: record at L92 precedes handle_telemetry_message at L98. No new test needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Suggested next: determine whether handle_telemetry_message processing could delay the ws_rx.next() loop and cause buffer buildup.",
+      "disposition": "Observed: handle_telemetry_message is awaited inline in the receive loop (L79-81, L98-100), so heavy processing would delay the next ws_rx.next() poll — the concern is structurally valid. Source mitigations: artifact scan throttled to a 30s min interval (L356-357) and run lock-free. Full assessment needs uncovered 401-1041; not read here (report's own next-window scope).",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Suggested next: check if record_ws_message_received does heavy computation/IO that could be optimized to shorten the state.write() lock.",
+      "disposition": "Verified: record_ws_message_received (health_trace.rs L104-113) does only saturating counter increments plus one unix_now_s() timestamp — no I/O, no heavy computation. The suggested optimization is already unnecessary; the write-lock it holds is minimal.",
+      "classification": "verified_existing"
+    }
+  ]
+}

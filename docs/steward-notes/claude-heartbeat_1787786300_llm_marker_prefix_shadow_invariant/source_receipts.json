@@ -1,0 +1,32 @@
+{
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "working_tree_clean": true,
+      "matches_report_binding": true,
+      "read_intervals": ["1-260"],
+      "read_note": "Report-time source == current source (identical SHA, file not in git status). All report line citations confirmed exact against the working copy."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "total_lines": 1417,
+      "total_bytes": 49506,
+      "working_tree_clean": true,
+      "read_intervals": ["159-198"],
+      "read_note": "KNOWN_MODEL_CONTROL_MARKERS is a committed const (file clean). Manually verified pairwise that no listed marker is a proper byte-prefix of another; the added test encodes this as an executable invariant."
+    }
+  ],
+  "line_citation_verification": {
+    "followed_by_explicit_exact_token_relation": {"report_lines": "64-86", "source_lines": "64-86", "match": true},
+    "first_word_after": {"report_lines": "89-96", "source_lines": "89-96", "match": true},
+    "longest_exact_known_model_control_marker_at": {"report_lines": "97-112", "source_lines": "97-112", "match": true},
+    "scan_known_model_control_markers": {"report_lines": "114-144", "source_lines": "114-144", "match": true},
+    "remainder_push_str": {"report_line": "130", "source_line": "130", "match": true},
+    "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": {"report_line": "151", "source_line": "151", "match": true},
+    "exact_reference_delimiter_syntax": {"report_lines": "199-229", "source_lines": "199-229", "match": true}
+  }
+}

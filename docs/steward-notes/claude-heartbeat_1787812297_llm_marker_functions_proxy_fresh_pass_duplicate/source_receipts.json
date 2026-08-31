@@ -1,0 +1,45 @@
+{
+  "round": "claude-heartbeat_1787812297_llm_marker_functions_proxy_fresh_pass_duplicate",
+  "source_receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "binding": "working_copy_sha256 == report_bound_source_sha256 == witness.source_snapshot_v1.file_sha256; no drift",
+      "cited_symbols_verified": {
+        "dialogue_requested_token_band": 8,
+        "reference_syntax": 49,
+        "followed_by_explicit_exact_token_relation_verb_allowlist": "64-85",
+        "first_word_after": 89,
+        "longest_exact_known_model_control_marker_at": 97,
+        "scan_known_model_control_markers": 114,
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": 151,
+        "exact_reference_delimiter_syntax": 199,
+        "GroupedExactKnownToken": "44,193",
+        "sanitize_model_control_markers_with_report": 352,
+        "is_valid_dialogue_output": 558,
+        "has_one_nonempty_final_next_action": 634,
+        "generate_dialogue": 695
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_scope": "evidence_only_existing_regressions_not_edited_this_round",
+      "total_lines": 4168,
+      "total_bytes": 179822,
+      "read_scope": "targeted_regression_intervals_L2543_2680_and_L2970_3105",
+      "grounding_tests": {
+        "control_marker_cleanup_preserves_proxy_relation_phrase": 2551,
+        "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts": 2568,
+        "control_marker_cleanup_uses_only_the_first_finite_relation_word": 2604,
+        "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition": 2634,
+        "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts": 2979,
+        "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two": 3072,
+        "known_model_control_markers_have_no_proper_prefix_shadow": 3101
+      },
+      "note": "tests.rs carries accumulated prior-round stewardship edits (foreign to this round); it was READ for grounding evidence only and NOT modified this round."
+    }
+  ]
+}

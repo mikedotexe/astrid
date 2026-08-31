@@ -1,0 +1,36 @@
+{
+  "round": "llm_resonance_mode_packing_tier5_wait",
+  "source_receipts": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787730919",
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_matched": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "scope_grounding": {
+        "damping": 0,
+        "porosity": 0,
+        "resonance_density_v1": 0,
+        "inhabitability": 0,
+        "mode_packing": 0,
+        "pressure_source": 0,
+        "semantic_trickle": 1,
+        "semantic_trickle_line_347_declares": "not_connected_to_semantic_trickle_pressure_or_live_control",
+        "resonance_mode_packing_doc_lines": "5-6 (assembled later, elsewhere)",
+        "fallback_trace_reads_spectral_lines": "1013-1021 (pressure_risk/density_gradient/shadow_dispersal read into Ollama fallback trace only)"
+      },
+      "conclusion": "Bound source is the dialogue generation runtime; it neither computes nor drives the resonance/porosity/damping/mode-packing/inhabitability machinery she proposes to change. Those live upstream. Her mechanistic proposals cannot be grounded (verified or refuted) in this file's bytes."
+    },
+    {
+      "purpose": "capability_verification_for_c010",
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/probe_self.rs",
+      "verified_present": true,
+      "wired_at": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs:2399-2400",
+      "advertised_at": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs:28,68",
+      "note": "PROBE_SELF <a> vs <b> [:: ticks=N] runs an isolated-clone contrast probe on her OWN reservoir; live state untouched. Read-only verification of existence only; not dispatched."
+    }
+  ]
+}

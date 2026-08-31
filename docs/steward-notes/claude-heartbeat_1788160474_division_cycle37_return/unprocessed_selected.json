@@ -1,0 +1,8 @@
+{
+  "round": "division_cycle37_return",
+  "selected_count": 0,
+  "processed_count": 0,
+  "unprocessed_count": 0,
+  "unprocessed_filenames": [],
+  "stop_reason": "Division-return round (review_due=true at start, cycle_sequence 37, 6/6 rounds completed). Per the round instructions the bounded Division return was completed BEFORE any report. Under the one-shot ~90min child budget (~62min already elapsed at lease read; the preprojection window preceded this process, leaving ~28min), the mandatory return + Tier-5 dossier + fast integrity suite consumed the remainder. To avoid racing heavy scans, the canonical queue was NOT re-queried (next --limit 40 / family_scan). No report was partially read. Next run must query the queue fresh after its own preprojection. Precedent: cycle-30/32/34/35/36 returns."
+}

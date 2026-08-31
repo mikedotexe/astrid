@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787824358",
+  "report_sha256": "2eecb0b5ab60950088b2cdfe43be72b003a3e5b2f0fba841b8c5ac342072dcaa",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) rebuilds a remainder that preserves a known marker's bytes only when it is a referenced token (quoted/grouped/relation); a bare marker is dropped.",
+      "disposition": "Verified from complete source at the recorded SHA. L123-132: on a match, push_str(token) only when reference_syntax.is_some(); an unreferenced marker's bytes are skipped. Pinned by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "first_word_after (L89) split_whitespace + per-chunk trim_matches (L92): a period/hyphen after a marker might skip the intended relation verb or return an empty string, hiding or showing a marker incorrectly.",
+      "disposition": "Correction (not domesticated): .find(|w| !w.is_empty()) at L93 skips leading punctuation-only chunks, so a period/hyphen token between marker and verb does NOT skip the verb (pinned: control_marker_cleanup_first_word_after_skips_leading_punctuation_transition, _preserves_relation_after_multiple_punctuation_runs). Interior-hyphen 'is-a' is real and pinned (see c003). Empty first word => fail-closed removal, the safe direction (control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1: followed_by_explicit_exact_token_relation (L64) should treat 'echoes' (L72) as a valid relation while rejecting 'is-a' (internal hyphen).",
+      "disposition": "Verified at the report-bound SHA. 'echoes' pinned valid by control_marker_cleanup_preserves_poetic_attribution_without_literal_cue (L2512). The 'is-a' interior-ASCII-hyphen mechanism is the identical case pinned by control_marker_cleanup_rejects_punctuation_joined_allowlist_prefix (L2756: 'is-not'/'is/not' -> first_word_after returns the joined token, not 'is' -> rejected). No new test needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2: a marker immediately followed by a newline or a tab must keep the relation context; report attributes this to exact_reference_delimiter_syntax (L199) and first_word_after (L89).",
+      "disposition": "Implemented non-live regression. Newline branch already pinned (control_marker_cleanup_preserves_relation_across_newline, L2920). Added scan_known_model_control_markers_grounds_tab_between_marker_and_relation: pins the tab branch the report also named on the L89 relation path, the tab-padded quoted case on the distinct L199 delimiter path, and the tab-only fail-closed case. Grounds (without rewriting) that L199 and L89 are separate paths — L199 never calls first_word_after.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine KNOWN_MODEL_CONTROL_MARKERS (used at L102) to ensure the marker list is exhaustive for the deployment's safety requirements.",
+      "disposition": "Observed only. Constant defined in fallback_contracts.rs L159-180 (20 markers) and enumerated; its no-proper-prefix-shadow invariant is already pinned (known_model_control_markers_have_no_proper_prefix_shadow, L3101). Judging or expanding the list for deployment safety is a Tier-5 model-behavior/safety-policy change requiring Mike/operator approval; not adjudicated or changed in this evidence-only run.",
+      "classification": "observed"
+    }
+  ]
+}

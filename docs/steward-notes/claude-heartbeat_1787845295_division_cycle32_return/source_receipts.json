@@ -1,0 +1,5 @@
+{
+  "round": "division_cycle32_return",
+  "receipts": [],
+  "note": "No canonical report was processed, so no report-bound source file was read for a claim disposition. Division-runtime state files inspected for the return (read-only, evidence-only): /Users/v/other/minime/workspace/division/runtime/{gateway-status.json,supervisor-status.json,authority.json} — all show the dormant rail (gateway transparent_parent; supervisor idle_parent_authoritative, parent_authoritative=true, handoff_ready=false, empty children/matching_intents/ceremony_postures; live_authority_granted_by_record=false everywhere)."
+}

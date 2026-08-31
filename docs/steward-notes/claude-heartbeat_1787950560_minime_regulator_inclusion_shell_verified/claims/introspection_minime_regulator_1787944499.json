@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_minime_regulator_1787944499",
+  "source_binding": "minime:regulator (/Users/v/other/minime/minime/src/regulator/core.rs), lines 1-24 of 24, complete_file",
+  "source_sha256_report_bound": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+  "source_sha256_working_copy": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+  "source_hash_match": true,
+  "lived_state_witness": "lsw_3dead66b11f92faafeb75148ad2306a370620d66c3b0ca3a0bde29ad90b9972c",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "core.rs functions exclusively as an inclusion shell (lines 16-24) exposing core mechanics with no active logic, coefficients, or state-handling code of its own.",
+      "disposition": "Verified from complete 24-line source at SHA 46828f4c. core.rs holds only comments (1-12), one `use serde` (14), and include! macros (16-24); no fn/impl/const bodies. Shell characterization CONFIRMED. Honest note: report named 6 include targets but source has 9 (adds telemetry_types.rs L16, reviews.rs L20, tests.rs L24) — the shell claim is if anything understated; the 6-item list is a subset, not exhaustive.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Header comments (lines 1-12) describe a multi-modal control architecture: PD rate/gate and PI homeostasis.",
+      "disposition": "Verified from source lines 1-12: PD rate/gate = token-bucket modality throughput targeting lambda1; PI homeostasis = gate/filter control targeting EigenFill% and lambda1_rel. Lines 4-7 additionally state the PD rate governor and content gate 'remain active' as distinct concurrent roles, not an inactive PD architecture — the source itself pre-empts a related misattribution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "'Ghost of Implementation' snag: risk of attributing runtime behavior / scalar values to the shell when they reside in submodules; the included-vs-active boundary must be maintained to avoid hallucinating causal links.",
+      "disposition": "Preserved as a valid architectural/epistemic caution, not domesticated. Source confirms core.rs is shell-only, so any runtime scalar (pressure threshold, viscosity weight) lives in an included submodule, never in core.rs. The included-vs-active distinction is correct and complements the source's own lines 4-7 warning against assuming PD is inactive. No code change: the caution is about interpretation discipline, which is sound.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Structural Mapping Test: verify core/rate_gate.rs (L22) resolves through the core.rs entry point (framed as mapping to a `rate_gate` module).",
+      "disposition": "The test's intent — that the inclusion resolves — is already guaranteed by the Rust compiler: if core.rs compiles, every include! at 16-24 resolved. Honest correction: include! textually inlines rate_gate.rs's items INTO core.rs's module (regulator); it does NOT create a `rate_gate` submodule (include! != mod). So no separate module mapping exists to test; symbol resolution is a build invariant, not a runtime one.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Inclusion Integrity Test: compare core.rs source_sha256 against a previous stable hash to detect added/removed include! paths.",
+      "disposition": "This check already exists and ran here: the introspection source binding records file_sha256 46828f4c and the witness source_snapshot_v1.file_sha256 matches it exactly. Any added/removed include! line changes the whole-file SHA and is detected by that binding. The proposed test duplicates the existing source-SHA binding; adding a separate test would add no coverage.",
+      "classification": "verified_existing"
+    }
+  ]
+}

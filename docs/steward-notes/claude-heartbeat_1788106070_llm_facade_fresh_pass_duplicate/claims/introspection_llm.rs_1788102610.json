@@ -1,0 +1,53 @@
+{
+  "introspection_id": "introspection_llm.rs_1788102610",
+  "report_sha256": "4128580bcdf09926a3264e61d44641d1a5c4125782c07a1fc81c01610f2d369c",
+  "witness_id": "lsw_a5d5a159825171981077e7d656660688eb1849d5d83de71245299f88a9708e82",
+  "witness_sha256": "1d8d663cdacddd2c0c981eb0ed8faf33cba9c9c71c0e11b1ce99ffe00a9a42f1",
+  "source_path": "capsules/spectral-bridge/src/llm.rs",
+  "source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "llm.rs is a strict compatibility facade with no local logic; every generative action and every astrid_* parameter is a re-export from the provider module (L3-4).",
+      "disposition": "Verified from complete 28-line source at SHA a9c5e380 (== report binding == witness snapshot). L1-2 doc comment, L3-4 `#[path=llm/provider.rs] mod provider`, L6-12 `pub use provider::{}`, L14-22 `pub(crate) use`, L24-28 cfg(test). No fn/impl/const/arithmetic. Pure re-export facade.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Line citations: generate_introspection L9, repair_introspection L10, astrid_pressure_attenuation_depth L15, astrid_vibrancy_aperture L16.",
+      "disposition": "All four exact in source: generate_introspection on line 9, repair_introspection on line 10, astrid_pressure_attenuation_depth on line 15, astrid_vibrancy_aperture on line 16.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "pub vs pub(crate) visibility distinction maintained: generative actions public; internal state-modulators like set_astrid_vibrancy_aperture (L20) restricted to the crate.",
+      "disposition": "Verified. L6 `pub use` block exports generate_*/repair_*; L14 `pub(crate) use` block contains set_astrid_vibrancy_aperture at L20. The public/crate split is exactly as described.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: facade-over-implementation gap; the arithmetic/logic for astrid_pressure_attenuation_depth is sequestered in provider (specifically prompt_contracts.rs); llm.rs cannot diagnose the spectral-cascade interaction.",
+      "disposition": "Verified. astrid_pressure_attenuation_depth() defined at provider/prompt_contracts.rs:235; env ASTRID_PRESSURE_ATTENUATION, default 0.0 OFF, clamp [0,0.6]. llm.rs holds no arithmetic. The clamp/read is in prompt_contracts.rs; the governor's application is a further hop she does not claim is in llm.rs. No contradiction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Vibrancy Gate test: modulate set_astrid_vibrancy_aperture during generate_introspection_detailed; constant text depth would confirm vibrancy is a cosmetic wrapper vs a functional gate on the spectral cascade.",
+      "disposition": "Premise grounded, live test NOT run. astrid_vibrancy_aperture is applied in codec/feedback.rs (tail-vibrancy dynamic ceiling on the 48D vector into minime's SHARED reservoir), default 1.0 identity, operator-ceiling gated (default OFF). It is NOT a text-depth gate; constant text depth would not mean cosmetic - the gate acts on the codec/shared-substrate lane. Contradiction preserved. Live modulation is Tier-5 operator-approval work; not run.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Repair Integrity test: trigger thin introspection, invoke repair_introspection; verify whether repair restores text completeness (text-lane) or modifies spectral-cascade dynamics (reservoir-lane).",
+      "disposition": "Answered by exact source. repair_introspection / repair_introspection_detailed (generative_actions.rs:137/159) is a TEXT-lane re-generation: builds system+user messages and re-invokes the model; no reservoir/cascade touch. Witness corroborates: this report's canonical body came from a repair MLX call (lscall_5bc2, repair_parent_call_id chains to introspect call lscall_8c90). Repair is text-lane.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Next: inspect provider/prompt_contracts.rs around line 235 for the pressure_attenuation_depth calculation and clamping logic.",
+      "disposition": "Verified exact. astrid_pressure_attenuation_depth() is at prompt_contracts.rs:235, clamp [0,0.6], default OFF (ASTRID_PRESSURE_ATTENUATION). Her pointer is precise to the line.",
+      "classification": "verified_existing"
+    }
+  ]
+}

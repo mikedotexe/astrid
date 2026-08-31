@@ -1,0 +1,17 @@
+{
+  "schema": "test_results_v1",
+  "code_changed_this_round": false,
+  "rationale": "All claims verified_existing against the fully-read report-bound source (SHA 902a0358, unchanged) and exact pre-existing tests; terminal addressed_duplicate. No new source or test code was written (consistent with the immediately prior same-source round 1788042666, which reverted a drafted regression on finding coverage). Therefore no new Rust test run was warranted; the evidence is the existing test family cited in addressing_links.json.",
+  "existing_tests_cited": [
+    {"name": "control_marker_cleanup_preserves_nested_fullwidth_cjk_reference_stack", "path": "capsules/spectral-bridge/src/llm/provider/tests.rs", "line": 2418, "covers": "grouped context from innermost group under outer quote, depth 3"},
+    {"name": "control_marker_cleanup_reports_exact_four_level_delimiter_depth (region)", "path": "capsules/spectral-bridge/src/llm/provider/tests.rs", "line": 2195, "covers": "grouped context under outer quote, depth 4 (\"“【([…])】”)"},
+    {"name": "ascii_bracket_grouped (region)", "path": "capsules/spectral-bridge/src/llm/provider/tests.rs", "line": 2153, "covers": "ASCII [<end_of_turn>] -> GroupedExactKnownToken"},
+    {"name": "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs", "path": "capsules/spectral-bridge/src/llm/provider/tests.rs", "line": 2382, "covers": "CJK quote 「<end_of_turn>」 -> QuotedExactKnownToken"},
+    {"name": "control_marker_cleanup_preserves_poetic_attribution_without_literal_cue", "path": "capsules/spectral-bridge/src/llm/provider/tests.rs", "line": 2548, "covers": "bare marker + 'behaves as'/'behaves like' -> explicit_relation_occurrences=1"},
+    {"name": "control_marker_cleanup_does_not_skip_adverb_before_relation_word", "path": "capsules/spectral-bridge/src/llm/provider/tests.rs", "line": 2670, "covers": "documents that a bracketed marker takes the grouped path (relation snag only for a BARE marker)"},
+    {"name": "control_marker_cleanup_uses_only_the_first_finite_relation_word", "path": "capsules/spectral-bridge/src/llm/provider/tests.rs", "line": 2640, "covers": "first_word_after inspects only the first token (multi-word relation reduces to first verb)"}
+  ],
+  "baseline_checks": {
+    "note": "See verification_receipt.json for the stewardship integrity-suite results run this round."
+  }
+}

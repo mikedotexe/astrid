@@ -1,0 +1,24 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1787885626_llm_marker_adverb_and_ascii_stack",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787882114.txt",
+      "sha256": "56ea74e9fc64162aa2c9d57e18b2c8aff77ae23a92d1758c29a17ff0fce72c05",
+      "bytes": 3499,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_f4992f957cb68f06abc32badb1c09e0d0904cfb5e839697f8802832ba821b7e9",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f4992f957cb68f06abc32badb1c09e0d0904cfb5e839697f8802832ba821b7e9.json",
+      "sha256": "de59dae2f832dda121071f554fa9a87302b9fb5cf8d0a8140b4b57651f06e9e5",
+      "bytes": 23933,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

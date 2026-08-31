@@ -1,0 +1,23 @@
+{
+  "schema": "round_test_results_v1",
+  "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- <7 filters>",
+  "cargo_path": "/Users/v/.cargo/bin/cargo",
+  "result": "ok",
+  "passed": 7,
+  "failed": 0,
+  "ignored": 0,
+  "filtered_out": 1894,
+  "added_test": "control_marker_cleanup_distinguishes_allowlisted_signals_from_unlisted_signifies",
+  "cited_existing_tests_run": [
+    "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts",
+    "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+    "control_marker_cleanup_stays_byte_safe_when_marker_abuts_four_byte_astral_chars",
+    "control_marker_scanner_advances_byte_exactly_across_multibyte_text",
+    "exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped",
+    "control_marker_cleanup_reports_exact_four_level_delimiter_depth"
+  ],
+  "baseline": {
+    "git_diff_check": "clean_rc0",
+    "rustfmt_check_touched_file": "clean_no_diff"
+  }
+}

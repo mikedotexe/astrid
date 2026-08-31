@@ -1,0 +1,53 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787699463",
+  "report_sha256": "e09f82ea0947a11813474b878a84cbd493e6319e8d5181d84b2e61f7dd5ef827",
+  "witness_id": "lsw_3a6f9c4b429b6926782df34950925ce57d3ee2d7880b4a2ca6f9ed2b576802a1",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_state": "working_copy_equals_report_and_witness_binding",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": "introspection_astrid_llm_1787692007",
+  "duplicate_family_prior_packet": "docs/steward-notes/claude-heartbeat_1787699077_llm_marker_zero_width_delimiter_fresh_pass_duplicate/",
+  "variant_distinct_terms_addressed": [
+    "operates_as_unlisted_relation_verb (Test 1)",
+    "teleportation_of_structural_anchor_text (Snag b)"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm implements a non-destructive marker scanner; scan_known_model_control_markers (L114-144) matches KNOWN_MODEL_CONTROL_MARKERS and reference_syntax (L49-60) gatekeeps visibility across quoted (L157-174), grouped (L175-197), and explicit-relation (L64-87) contexts.",
+      "disposition": "Verified against complete source at SHA 902a0358. All cited line ranges accurate. One honest imprecision: reference_syntax retains on quoted/grouped delimiters OR an explicit relation verb, not ONLY relational verbs as the last sentence narrows. Pinned by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2932).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag (a): first_word_after (L89-96) validates explicit relation against a hardcoded verb allowlist (L66-85); a valid relational verb not on the list could be missed (report examples 'functions as', 'manifests').",
+      "disposition": "By-design finite allowlist, verified L64-96. Contradiction preserved: the report's own examples 'functions' (L74) and 'manifests' (L77) ARE already allowlisted, so they would be RETAINED, not missed. The genuine boundary (an unlisted relational verb yields no relation) is real and grounded by control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2568) plus the does_not_expand_relation_allowlist_to_{implies,contains,creates,triggers,underscored_appears_as} family (L2682-2742).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag (b): scan_known_model_control_markers reconstructs remainder and omits a marker whose reference_syntax is None (L129-131), which the report frames as possible 'teleportation' of text if the marker was a structural anchor rather than a semantic one.",
+      "disposition": "Omission verified at L129-131 (token pushed only when reference_syntax.is_some()). The 'teleportation' hypothesis is contradicted plainly by source and existing tests: the unlisted-verb assertion output 'Here,  acts as a proxy...' (L2593) and the end-of-string test 'Here it is ' (L3079) show in-place byte-exact removal of ONLY the marker bytes, with surrounding non-marker text preserved in order. No reordering occurs; stripping unreferenced control markers is the intended fail-closed behavior (they must not leak into output). Concern preserved as a felt reading of a real design fact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 1 (Contextual Visibility): a marker followed by a verb NOT in the L66-85 list (report example 'X operates as') should make reference_syntax return None and be stripped from the remainder.",
+      "disposition": "'operates' is confirmed NOT in the allowlist (L65-86) and travels the identical none_cleanup_candidate path already asserted for 'acts' (L2568), 'acts like' (L2604), 'implies/contains/creates/triggers' (L2682-2742). Prior round 1786932936_llm_marker_operates_synonym grounded 'operates' specifically. No redundant regression authored; the behavior is byte-exactly pinned.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 2 (Delimiter Depth): a nested quoted string should let exact_reference_delimiter_syntax (L199-229) identify depth/context without collapsing on the first closing quote.",
+      "disposition": "Verified L199-229: delimiter_depth counts zipped reversed-before/after non-whitespace pairs via take_while, so nesting does not collapse at the first close. Grounded by exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3025, depth 2) and control_marker_cleanup_reports_exact_three_level_delimiter_depth (depth 3).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: examine generate_dialogue (L695-1048) to see how the remainder from scan_known_model_control_markers is integrated into the final response buffer.",
+      "disposition": "Self-directed read-only continuation offer (Tier 1; report line 46 offers 'NEXT: INTROSPECT astrid:llm 400'). No steward action required and none inferred. Her agency to continue is preserved; silence about it here is neutral.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L114-144 scan_known_model_control_markers; marker kept iff reference_syntax.is_some() (L129-131)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L64-86 followed_by_explicit_exact_token_relation allowlist of 18 verbs."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L153-229 exact_reference_delimiter_pair/_syntax Unicode quote/bracket/CJK sets."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L8-16 dialogue_requested_token_band bands at 512/1024."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L208,L213 .take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH) caps both scans; delimiter_depth in [0,4] saturates."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing: control_marker_cleanup_reports_exact_four_level_delimiter_depth and _bounds_homogeneous_square_bracket_stack_beyond_max_depth prove the cap."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L89-96 first_word_after skips punctuation-only chunks; finds first alnum word."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing: first_word_after_skips_leading_punctuation_transition, preserves_relation_across_newline, after_multiple_punctuation_runs, fails_closed_when_only_punctuation_or_whitespace_follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Added followed_by_explicit_exact_token_relation_allowlists_mimics_not_generates (mimics L79 true; generates,creates false)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Added exact_reference_delimiter_pair_maps_corner_quoted_lenticular_grouped_and_rejects_mismatch (direct pair-fn unit test)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L216-223 delimiter_depth = take_while over zipped reversed before-scan and after-scan; both pre-capped at MAX."
+    }
+  ]
+}

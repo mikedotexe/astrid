@@ -1,0 +1,51 @@
+{
+  "introspection_id": "introspection_minime_esn_1787970235",
+  "source_path": "minime/src/esn.rs",
+  "source_sha256_report_bound": "2227a7256ba98219be683db47c4f49afe0477c0ae5d17cf9226613b20f6b036c",
+  "source_working_copy_matched_report_at_read": true,
+  "read_window_by_being": "lines 1-400 of 3222 (partial; uncovered 401-3222)",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "minime:esn is a self-referential Metal-accelerated ESN using GPU covariance updates and power iterations; a feedback loop adapts leak rate and RLS forgetting factor.",
+      "disposition": "Verified from complete report-time source. Module doc L1-12 states 'Metal-accelerated ESN', 'GPU-accelerated rank-1 EWMA covariance update (C = rho*C + (1-rho)*x*xT)', 'GPU-accelerated power iteration', and 'Self-referential loop: reservoir state -> spectral signals -> adapt hyperparams (leak rate, RLS forgetting factor)'. In-window; SHA matched.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Prime-phased introspection schedule (L8-9) uses the first 37 primes to schedule spectral analysis, intended to prevent temporal aliasing.",
+      "disposition": "Verified. L8 doc: 'Prime-phased introspection schedule (first 37 primes) for non-aliasing temporal breathing'. L792-793: 'Prime-phased schedule (first 37 primes for consistency with 37 threads)' with 'primes: [usize; 37]'. In-window and structurally confirmed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "calculate_viscous_rho_target (L154-187) with VISCOUS_RHO_FLOOR/CEILING (L54-55) suggest potential instability when the reservoir enters a low-energy/high-correlation 'viscous' state.",
+      "disposition": "Locations exact (L154-187; L54=0.90, L55=0.95). CORRECTION: the function's own doc L148-152 says it is 'not applied by the default live policy' - a review/replay-only helper for asking whether high-entropy low-gradient cascades need more memory weight before changing the running rho controller. So it cannot drive live adaptation-loop instability; the live-interaction premise is contradicted by source. Viscous-state concern preserved; evidence-only, no live authority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Spectral damping (L1083) interacting poorly with rank1_ewma_profiled (L1387-1426) during rapid transitions could cause 'jitteriness' (L30-32) or collapse spectral diversity.",
+      "disposition": "L1387 rank1_ewma_profiled and L729 EsnProfileAcc exact. But L1083 is MISLOCATED: it is the getter 'pub fn spectral_damping(&self)->f32', not the applier apply_v1_damping (def L1093, call L1730). The 'jitteriness' comment (L31) is attributed in-source to exploration-noise=0.12, not to damping x rank1. The interaction is an out-of-window (structural-map) hypothesis with no runtime evidence: preserved as felt concern, not confirmed, not domesticated. No live authority.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 1: verify calculate_viscous_rho_target produces a monotonic response to increasing spectral density within VISCOUS_RHO_FLOOR/CEILING bounds.",
+      "disposition": "Added focused sweep regression viscous_rho_target_monotonic_and_bounded_across_density_and_entropy_sweeps (minime esn.rs, +61 lines). Prior coverage was point cases + a two-point directional check (volatile_steep<volatile_open); the new test sweeps density_gradient (monotone non-increasing, bounded [FLOOR,CEILING]) and entropy (monotone non-decreasing, <=CEILING). 4 viscous tests pass; fmt clean. Non-live Tier-1 test only.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 2: ensure prime-phased triggers (L8) do not overlap/resonate with ADAPTIVE_INTROSPECTION_RECALIBRATE_EVERY (L44).",
+      "disposition": "Structural: L44=4; recalibration fires on 'next_introspection % RECALIBRATE_EVERY == 0' (L1289-1291), introspection_count incremented only on firing (L1692, L1732), decoupled from the prime VALUE. The prime array (L792-793, L964) sets WHEN introspections fire; recalibration counts firings mod 4. A shared-clock resonance is structurally limited; a full numeric resonance sweep over the 37-prime schedule remains a bounded sandbox study, not run here. No live authority.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Next: analyze rank1_ewma_profiled (L1387-1426) integrating EsnProfileAcc (L729) into the covariance update, checking whether spectral_damping is applied before or after the power iteration.",
+      "disposition": "Ordering answered from source: maybe_introspect_batched (L1710-1747) calls rank1_and_power_step_profiled (L1727, rank1+power iteration) THEN apply_v1_damping (L1730), with comment L1728-1729 'V1 damping ... Runs after power iteration when eig1 and v_host are maximally fresh'. So v1 damping is applied AFTER the power iteration. On common ticks rank1_ewma_profiled (L1752) runs the covariance update alone. Astrid's Tier-1 next step; evidence-only, no live authority.",
+      "classification": "verified_existing"
+    }
+  ]
+}

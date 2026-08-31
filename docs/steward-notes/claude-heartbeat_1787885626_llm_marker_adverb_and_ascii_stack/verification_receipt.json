@@ -1,0 +1,91 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round": "claude-heartbeat_1787885626_llm_marker_adverb_and_ascii_stack",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run (lease + heartbeats owned by adapter; git read-only)",
+  "controller": {
+    "run_id": "run_1787883039226978000_05e9f78c6b",
+    "preprojection_generation_id": "projection_1787883043268651000_2397c45f9f",
+    "pause_generation": 321,
+    "postprojection_generation_id": "runs_after_exit_not_known_in_session"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  ],
+  "processed_report_count": 1,
+  "unprocessed_selected_count": 39,
+  "evidence_links_appended": 8,
+  "tests": {
+    "new_tests": [
+      "control_marker_cleanup_does_not_skip_adverb_before_relation_word",
+      "control_marker_cleanup_reports_mixed_ascii_quote_bracket_stack_depth_three"
+    ],
+    "focused_run": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker => 78 passed, 0 failed",
+    "git_diff_check": "clean",
+    "fmt_touched_file_clean": true,
+    "preexisting_foreign_fmt_drift_untouched": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 OK",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 OK",
+    "test_introspection_cadence_audit": "6 OK",
+    "introspection_cadence_audit_strict": "integrity_ok=true, duplicate_hash_group_count=0",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "69 ok, 0 alarms, 0 gaps",
+    "experiential_epistemics_self_test": "OK",
+    "experiential_epistemics_verify": "valid=true, checked_record_count=11474, issue_count=0, history_rewritten=false",
+    "audit_counters": "consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0"
+  },
+  "counters": {
+    "canonical_indexed": 4496,
+    "canonical_fully_addressed": 3141,
+    "canonical_full_read": 3774,
+    "canonical_remaining": 1355,
+    "canonical_unread": 722,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3033,
+    "noncanonical_pending": 1678,
+    "counter_audit_status": "consistent"
+  },
+  "division": {
+    "cycle_sequence": 33,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "recorded_round_event_id": "division_followup_event_8bdb9e369ddf1b746ae7bde7d873c80a",
+    "event_count": 230,
+    "event_head_sha256": "626120ec8009d3267a212fa1d6f34f7c0e7dc72e25b56dfe654df58d4a2cf95d",
+    "chronicle_id": "division_chronicle_0fff9f2e51dba50238a28993",
+    "chronicle_json_sha256": "0547ab072cbc9ef0cd87e043f80625d53075ad3f71d8b533460a4b8d572457b8",
+    "chronicle_html_sha256": "19048158e4bae717f6baeed2b9fd69be1243578bf1e061dfea3a2fa01ccab508",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatch": ["supervisor_status_sha256"],
+    "note_action": "none (no Division return due; review_due=false)"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 916126,
+    "head_sha256": "99f3f5803d62bed5f310b7100f65e4c88b48e5284beca960e965ba6de651674e",
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true
+  },
+  "authority_boundary": "evidence_only throughout; no live substrate/control change; no build/restart/deploy; no staging/commit (git read-only in adapter mode); c004 grammar-widening held as a deliberate being-facing authority boundary; three standing Tier-5 ESN work items untouched.",
+  "restart_deploy": "not required and not attempted (non-live test-only round)"
+}

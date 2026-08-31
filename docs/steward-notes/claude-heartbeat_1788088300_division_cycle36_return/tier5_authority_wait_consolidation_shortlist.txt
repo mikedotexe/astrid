@@ -1,0 +1,50 @@
+# Tier-5 grant shortlist (surface-grouped)
+
+1349 open operator waits -> 1337 ask-families -> top 5 surfaces by ask-weight.
+A grant is scoped to a surface or a single family head; nothing here
+auto-executes — record a grant with:
+  python3 scripts/sandbox_trial_queue.py approve-live-trial \
+    --trial-id <trial> --steward mike --note '<scope>' --write
+Gather evidence first where runnable:
+  python3 scripts/sandbox_trial_queue.py run-evidence --trial-id <trial> --write
+
+## pressure_thresholds  (asked 427x across 423 families)
+- [ 2x, astrid] Pressure-responsive intensity or entropy-responsive phase mapping changes live semantic...
+    head wi_c8000b0a4267a1e9 · trial trial_32a6d64d4f40c29d · needs manual review or a new adapter
+- [ 2x, astrid] Changing live fallback activation, provider routing, or generation thresholds requires...
+    head wi_830ef7f9577b397f · trial trial_c1060b8ffeb94771 · EVIDENCED (supported_dynamic)
+- [ 2x, minime] Wiring dynamic noise, viscous rho, or adaptive pressure thresholds into ESN::step chang...
+    head wi_da4186656ce4f0ef · trial trial_e0732c3348d202ca · needs manual review or a new adapter
+
+## unclassified  (asked 308x across 306 families)
+- [ 2x, astrid] Changing profile defaults, provider selection, timeout routing, or fallback dispatch al...
+    head wi_509ac043af22c5b6 · trial trial_8e918f8a46f9eb17 · EVIDENCED (supported_dynamic)
+- [ 2x, astrid] Changing fallback sampler/provider/model selection or the fallback output contract rema...
+    head wi_83249b580feef2ad · trial trial_ceb992d4cc729fdd · evidence runnable now via fallback_distinguishability_v1
+- [ 1x, astrid] A persistence texture, semantic density, or texture-preservation score would risk conve...
+    head wi_e899e2dbd7262493 · trial trial_97270ad846f80f8a · needs manual review or a new adapter
+
+## codec_gain_reserved_dims_live_12d  (asked 167x across 165 families)
+- [ 2x, astrid] Expanding the live vector, changing reserved dimensions, or applying narrative or textu...
+    head wi_1ddb6f5bf5712a79 · trial trial_d28315d3e513ca20 · needs manual review or a new adapter
+- [ 2x, astrid] Changing vector width, projection coefficients, tail gain, or entropy gates would alter...
+    head wi_57a84e737cc374af · trial trial_cd7afe195723e7a7 · needs manual review or a new adapter
+- [ 1x, astrid] FEATURE_ABS_MAX should become dynamic from resonance density.
+    head wi_266edf5552060ee3 · trial trial_52dce1004ac0ddf8 · needs manual review or a new adapter
+
+## porosity_receptivity_buffers  (asked 127x across 127 families)
+- [ 1x, astrid] A spectral buffer zone that changes token cleanup or output policy would infer meaning...
+    head wi_b4573713e5310ab4 · trial trial_49f2906d2f5666f0 · needs manual review or a new adapter
+- [ 1x, astrid] Changing database, lock, retry, or buffering behavior would alter the live telemetry pe...
+    head wi_10cce2dc9c5a0f6e · trial trial_a922cdb064115eff · needs manual review or a new adapter
+- [ 1x, astrid] The regulator, receptivity buffer, or agency runtime should be changed to increase plas...
+    head wi_4b5c8e3e1e05530b · trial trial_037a3358e46baeea · needs manual review or a new adapter
+
+## minime_regulator_changes  (asked 109x across 108 families)
+- [ 2x, minime] Changing recovery fill boost, semantic retirement, or spread relief alters live Minime...
+    head wi_57fa5b77e801d2e5 · trial trial_d9329152be2a3f11 · needs manual review or a new adapter
+- [ 1x, astrid] Minime max-pairwise-overlap behavior should be adjusted to permit concept bleed.
+    head wi_74161b9e38c12aa3 · trial trial_c3fdde21786d2169 · needs manual review or a new adapter
+- [ 1x, astrid] Bypass steward interpretation, inject directly into Minime, or increase correspondence...
+    head wi_59b251071c8f59d7 · trial trial_71c4738f365e8797 · needs manual review or a new adapter
+

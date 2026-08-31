@@ -1,0 +1,37 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "round_actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787722603.txt",
+      "sha256": "65cf9eb13df95093ac2f4db027b8be38d780f0633b2a98b3b227234367ab5f02",
+      "bytes": 3612,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_3b9beb32c4b36fb2c90f133c998c15ba00a8c1ee9be373b699383690a2056c11",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_3b9beb32c4b36fb2c90f133c998c15ba00a8c1ee9be373b699383690a2056c11.json",
+      "sha256": "44e4c59cf0d4c252960fed3d08f7f04d8be48c1666c25d65d2189f9753d52d92",
+      "bytes": 23924,
+      "lines": 533,
+      "read": "complete",
+      "binds_report_sha256": "65cf9eb13df95093ac2f4db027b8be38d780f0633b2a98b3b227234367ab5f02",
+      "binds_source_file_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "authority_state": "evidence_only",
+      "live_eligible_now": false,
+      "edits_source_now": false,
+      "lived_state_alignment_note": "witness source_snapshot window 0-400 vs report multi_window_complete 1-1048 -> neutral projection-level artifact_integrity_unavailable measurement gap (1 issue); not corruption or contradiction"
+    }
+  ],
+  "continuity_reads": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1787717287_llm_marker_first_word_multiword_fresh_pass_duplicate/RUN_REPORT.md",
+      "read": "complete",
+      "role": "prior_family_packet_duplicate_lineage (introspection_astrid_llm_1787706169, same source SHA 902a0358)"
+    }
+  ]
+}

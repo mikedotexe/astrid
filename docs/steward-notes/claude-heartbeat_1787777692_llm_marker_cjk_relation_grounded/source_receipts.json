@@ -1,0 +1,29 @@
+{
+  "schema": "source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "working_copy_matches_report_binding": true,
+      "read_scope": "lines 1-260 read in full (covers every cited line L29-L229); all report-cited symbols fall within the 1-400 window she read."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "total_lines": 1417,
+      "total_bytes": 49506,
+      "read_scope": "lines 155-199 read; KNOWN_MODEL_CONTROL_MARKERS constant L159-180 read in full for the overlap check (c006/c010)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "e5c192fd3a4878391cfb084d9594c5be331cb20cb749759d5bfc2123d0e73d3a",
+      "total_lines": 4076,
+      "total_bytes": 174630,
+      "read_scope": "lines 2920-3340 read to map existing marker-cluster coverage; +81 lines added by this round (two focused tests).",
+      "note": "post-edit hash; pre-edit was 3995 lines."
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "round_actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1787724060585129000_4a2761b6bf",
+    "preprojection_generation_id": "projection_1787724064649508000_f62543918d",
+    "pause_generation": 321,
+    "finish_outcome": "recorded_by_exit_code (0 = complete round)"
+  },
+  "processed": ["introspection_astrid_llm_1787722603"],
+  "terminal_status": "addressed_duplicate",
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "focused_tests": {
+    "control_marker_regression": "72 passed / 0 failed (1822 filtered out); 7 cited evidence tests confirmed"
+  },
+  "baseline": {
+    "git_diff_check": "clean (no whitespace/conflict markers)",
+    "cargo_fmt_all_check": "clean"
+  },
+  "stewardship_integrity": {
+    "addressing_self_test": "44 OK",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 OK",
+    "test_introspection_cadence_audit": "6 OK",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "0 alarms / 0 gaps",
+    "cadence_strict": "integrity_ok true; duplicate_hash_group_count 0; read_errors []; latest introspection_astrid_llm_1787722603",
+    "experiential_epistemics_self_test": "2 OK (valid)",
+    "experiential_epistemics_verify_final": "valid true; 0 issues; history_rewritten false"
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "proof_gap_artifact_count": 0,
+    "all_structural_checks_true": true,
+    "canonical_indexed": 4469,
+    "canonical_fully_addressed": 3125,
+    "canonical_fully_read": 3757,
+    "canonical_remaining": 1344,
+    "canonical_unread": 712,
+    "canonical_blocked": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3015,
+    "noncanonical_pending": 1671,
+    "status_counts": {
+      "addressed_change": 1905,
+      "addressed_duplicate": 1123,
+      "addressed_no_action": 97,
+      "blocked_needs_steward": 414,
+      "triaged_pending_action": 214,
+      "triaged_watch": 4,
+      "unread": 712
+    }
+  },
+  "evidence_event_store_v2": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_sequence": 895180,
+    "verified_head_sha256": "95e4d4ad9572d18bd386bea761778b71b78d9fe0f5da59e444b5fafceefa42c6",
+    "addressing_stream": 58636,
+    "steward_control_stream": 15797,
+    "steward_work_selection_stream": 526,
+    "claim_families_stream": 237550,
+    "felt_contracts_stream": 199731,
+    "note": "Full status stream-projection (events.jsonl ~6GB, minutes-slow) not run; chain verify + stream_counts from verify are authoritative for integrity."
+  },
+  "division": {
+    "cycle_sequence": 30,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due": true,
+    "round_recorded_this_session": true,
+    "round_event_id": "division_followup_event_442d285fbc86626e100d0689327cd6be",
+    "event_count": 210,
+    "event_head_sha256": "cc814d0b26242f40da93d71dc54b0f8433b051148d5a533700ac6ab62210d03f",
+    "followup_verify": "ok true",
+    "chronicle_verify": "durable source inputs changed; project before verify",
+    "chronicle_note": "EXPECTED after recording round 6 (followup event count 209->210). Not a durable-integrity failure. Chronicle reprojection + the full bounded Division return are DUE for the NEXT session, whose first return step is verify+project the Chronicle. No partial return performed in this headless budget-bounded turn; no Division note written; no review-query slot occupied.",
+    "last_followup_chronicle_id": "division_chronicle_453827288c0042a0dbf9b93b"
+  },
+  "live_change": "none — restart and deployment were not required and not attempted; no live substrate or control mutation; no Tier 4/5 authority exercised",
+  "disposition_bound_note": "All 5 claim dispositions in claims file are <=500 chars. The close --rationale was 505 chars (5 over); close succeeded (fully_addressed true, proof_missing_claims []); ingest truncates over-long metadata with a marker. Noted for honesty."
+}

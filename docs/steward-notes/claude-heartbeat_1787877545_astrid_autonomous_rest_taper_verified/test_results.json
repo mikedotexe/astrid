@@ -1,0 +1,21 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "note": "No source or test changed this round (addressed_no_action). Ran the exact existing regressions that ground each verified claim against the current working copy (orchestration.rs SHA d803d71 == report binding; craft_warmth_vector in codec/structure.rs unchanged). codec/tests.rs is dirty/foreign - executed read-only, not edited.",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- fill_responsive_rest warmth_intensity_scales warmth_vector_breathes_across_phase warmth_heartbeat_stays_smooth_across_reported_phase_32_33_boundary",
+      "lib_unittests_result": "ok",
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1896,
+      "covers": [
+        "fill_responsive_rest_keeps_critical_floor_and_band_boundaries (tests.rs L21) -> c001,c002",
+        "fill_responsive_rest_steps_at_each_band_boundary_without_hysteresis (L56) -> c001,c002",
+        "warmth_intensity_scales (codec/tests.rs L5194) -> c005 intensity is a static per-call scalar",
+        "warmth_vector_breathes_across_phase (L5147) -> c005 phase = sinusoidal breath, not decay",
+        "warmth_heartbeat_stays_smooth_across_reported_phase_32_33_boundary (L5168) -> c005 smooth contour"
+      ]
+    }
+  ]
+}

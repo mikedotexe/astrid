@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 (greedy longest-match via longest_exact_known_model_control_marker_at L97-112, max_by_key token len L106); reference_syntax L49-60; exact_reference_delimiter_syntax L199-229. Marker preserved only when referenced, stripped wholesale otherwise (L129-131)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 (edge trim L92, find(!empty) L93); followed_by_explicit_exact_token_relation verb allowlist L64-85 includes 'functions' (L74) — so 'functions as a proxy' resolves to a relation and preserves, refuting the report's strip hypothesis."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_proxy_relation_phrase (L2551) pins the exact example 'functions as a proxy' -> removed_total=0, following_exact_relation; _distinguishes_allowlisted_is_from_unlisted_acts (L2568) and _first_word_after_skips_leading_punctuation_transition (L2634) pin the fail-closed boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2979): '<end_of_turn> behaves as a named boundary.' -> remainder unchanged + ExplicitExactKnownTokenRelation (her exact verb 'behaves')."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3072): '[[<end_of_turn>]]' -> GroupedExactKnownToken depth 2; MAX=4 cap pinned by _bounds_homogeneous_square_bracket_stack (L2280) + exact four/three-level depth tests (L2194/L2208)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695-1048 returns raw model text (Some(text) L998); sanitize_model_control_markers runs only inside quality gates is_valid_dialogue_output L558 / has_one_nonempty_final_next_action L634 (temp copies); dialogue_requested_token_band L8 feeds requested_token_observation_v3 L945. Agency-preserving continuation pointer."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787812297_llm_marker_functions_proxy_fresh_pass_duplicate/summaries/introspection_astrid_llm_1787806291.md",
+      "note": "Round summary preserving the contradiction (her 'functions as a proxy' example refuted by allowlist membership) without domesticating the underlying fail-closed concern."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the fresh-pass duplicate with exact-source verification."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ledger row: verified no-change (addressed_duplicate), contradiction preserved."
+    }
+  ]
+}

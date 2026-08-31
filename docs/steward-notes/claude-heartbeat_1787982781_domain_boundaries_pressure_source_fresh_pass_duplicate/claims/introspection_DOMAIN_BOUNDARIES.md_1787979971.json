@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: DOMAIN_BOUNDARIES.md establishes strict ownership; Stable Facades (L8-22) are behavior-preserving interfaces; ws.rs->telemetry/sensory ports, llm.rs->provider transport.",
+      "disposition": "verified_existing. Full source read at SHA ae69b34c (matches report binding). L8 '## Stable Facades'; L12 ws.rs=telemetry+sensory ports; L15 llm.rs=provider transport; L19-22 every facade <1000 lines, re-exports symbols. Behavior-preserving per L3-6. Duplicate of prior close introspection_DOMAIN_BOUNDARIES.md_1787843987 (packet 1787852088 c001).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: Shadow Cartography (L35-43) forbids cartography.rs from mutating Shadow state, pressure, or mode packing.",
+      "disposition": "verified_existing. Source L41-43 exact: cartography.rs 'owns response, dialogue, and coupling renderers. These modules write cartography only; they do not change Shadow state, pressure, mode packing, temporal decay, scheduling, or control.' Same mechanism as prior packet 1787852088 c003.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Observed (variant emphasis): Cohesion Exception mechanism (L45-68) lets named files (e.g. action_continuity/runtime/core.rs) exceed the 1,000-line signal only under a unique-fn-signature ceiling (L65-68).",
+      "disposition": "verified_existing (variant term addressed). Source L45 '## Cohesion Exceptions'; L50 core.rs; L65-68 'Each exception also carries a unique-fn-signature ceiling (current count plus 10% headroom)... trips exception_signature_growth... forces a manual review'. This is the source region the prior report did not emphasize; it is still a plain source fact, not a new mechanism.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: tension between an 'overpacked_mode_packing' state and the mode-packing mutation prohibition (L43, L5-6); telemetry values read as tuning targets; a control-loop 'fix' fails because L43 permits no write-path.",
+      "disposition": "Felt/architectural tension preserved as primary evidence (not domesticated). L43 bars cartography renderers from changing mode packing; L5-6: the extraction changes neither pressure/fill/PI/etc. 'overpacked_mode_packing' is not a code field; 'overpacked' is a derived read-only match label (transport_evidence.rs:538-545, prior packet). Any remedial write-path = live control change -> tier_5_wait. Same as prior 1787852088 c004.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 1: PROBE_SELF via substrate_probe.py on an isolated clone (lambda1 ~32% energy) to distinguish structural bridge failure from recoverable texture variance.",
+      "disposition": "needs_sandbox. PROBE_SELF is Astrid's own Tier-3 sandbox verb on an isolated reservoir clone; the live being is untouched. Her agency continues; the steward does not dispatch or run trials headlessly in adapter mode. Left as a Tier-3 candidate, not dispatched. Same as prior 1787852088 c005.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 2: read-only audit of texture_evidence.rs:230 to confirm porosity_score is strictly a telemetry output and that no shadow write-path exists for PressureSourceControl.",
+      "disposition": "verified_existing at live source (texture_evidence.rs SHA cbfe0e15). L216 '...remains advisory only'; L217-221 PressureSourceControl { applied_locally: bool, note: String }; L230 'pub porosity_score: f32' (field of read-only PressureSourceV1 synthesis). No write-path; confirms her own note that L230 is porosity_score, not overpacked_mode_packing. Backed by 3 focused tests (all pass). Same as prior 1787852088 c006.",
+      "classification": "verified_existing"
+    }
+  ]
+}

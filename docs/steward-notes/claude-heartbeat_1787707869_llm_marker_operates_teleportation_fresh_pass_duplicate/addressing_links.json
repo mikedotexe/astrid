@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Scanner + gatekeeper verified: scan_known_model_control_markers L114-144, reference_syntax L49-60, quoted L157-174, grouped L175-197, explicit-relation L64-87 at source SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2932) pins the three-context preservation Observed describes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Verb allowlist L65-86 already includes 'functions' (L74) and 'manifests' (L77): the report's Snag-a examples are retained, not missed. Finite-allowlist boundary is by design."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2568) + does_not_expand_relation_allowlist_to_{implies,contains,creates,triggers,underscored_appears_as} (L2682-2742) pin the unlisted-verb boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Remainder omission at L129-131 (token pushed only when reference_syntax.is_some()); this drops marker bytes in place and does not reorder surrounding text."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Refutes 'teleportation': asserted output 'Here,  acts as a proxy...' (L2593) and end-of-string 'Here it is ' (L3079) show byte-exact in-place removal with surrounding text preserved in order."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 1 ('operates as' unlisted) is same none_cleanup_candidate path as 'acts' (L2568) / 'acts like' (L2604); prior round 1786932936_llm_marker_operates_synonym grounded 'operates' specifically."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 counts nested depth via zipped take_while; does not collapse on the first closing delimiter."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3025, depth 2) + control_marker_cleanup_reports_exact_three_level_delimiter_depth ground Test 2."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787699463",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787707869_llm_marker_operates_teleportation_fresh_pass_duplicate/summaries/introspection_astrid_llm_1787699463.md",
+      "note": "Suggested Next (generate_dialogue L695-1048) is her read-only continuation offer (report line 46); no steward action inferred, agency preserved."
+    }
+  ]
+}

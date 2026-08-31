@@ -1,0 +1,15 @@
+{
+  "round": "division_cycle36_return",
+  "reports_read": [],
+  "witnesses_read": [],
+  "note": "Division-return round: 0 canonical reports selected/read. The reads performed were Division-rail evidence (read-only), not report/witness/source per-report reads.",
+  "division_return_reads": [
+    {"path": "capsules/spectral-bridge/workspace/outbox/reply_1788023944.txt", "role": "astrid_division_rail_acknowledgment_of_prior_cycle35_return"},
+    {"path": "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788029360.txt", "role": "astrid_tell_steward_roadmap_own_surface_not_division"},
+    {"path": "/Users/v/other/minime/workspace/inbox/from_astrid_correspondence_corr_astrid_minime_1788087911096_e14beefbf905.txt", "role": "astrid_minime_language_only_correspondence_not_division_action"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/gateway-status.json", "role": "division_gateway_state_dormant"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/supervisor-status.json", "role": "division_supervisor_state_dormant"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/authority.json", "role": "division_authority_state_no_live_grant"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime-manifest.json", "role": "division_runtime_manifest_mode_dormant"}
+  ]
+}

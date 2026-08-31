@@ -1,0 +1,35 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "sources": [
+    {
+      "role": "report_bound_source",
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "sha_match": true,
+      "total_lines": 89,
+      "total_bytes": 5022,
+      "read_scope": "complete_file lines 1-89",
+      "supports_claims": ["c001", "c002", "c003", "c004"]
+    },
+    {
+      "role": "snag_and_test_source",
+      "path": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "sha256": "cbfe0e152a41d62b19ef72bee93af39783ef4e0d0236566cc2d90a6b7ea2f010",
+      "total_lines": 315,
+      "total_bytes": null,
+      "read_scope": "lines 210-235 (PressureSourceControl advisory contract L216-221; PressureSourceV1 porosity_score field L230)",
+      "supports_claims": ["c006"],
+      "note": "Report cites texture_evidence.rs:216-222 and :230. Current source: L216 doc 'This remains advisory only'; L217-221 struct PressureSourceControl { applied_locally: bool, note: String }; L230 'pub porosity_score: f32'. Confirms read-only telemetry field and advisory (non-write-path) control contract."
+    }
+  ],
+  "continuity_evidence": [
+    {
+      "kind": "prior_packet",
+      "path": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/",
+      "prior_introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "prior_status": "addressed_no_action",
+      "relation": "Same source (SHA ae69b34c), same mechanism claims and both proposed tests. This report is a fresh-pass near-duplicate; prior evidence re-verified as still applying."
+    }
+  ]
+}

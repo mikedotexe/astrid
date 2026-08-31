@@ -1,0 +1,23 @@
+{
+  "round": "claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified",
+  "reports": [
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_regulator_1787944499.txt",
+      "sha256": "81a21ceac23f8f7247fd3334fcc09c96443792c1e3469ff51811e3e4a76faed8",
+      "bytes": 3152,
+      "lines": 43,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_3dead66b11f92faafeb75148ad2306a370620d66c3b0ca3a0bde29ad90b9972c",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_3dead66b11f92faafeb75148ad2306a370620d66c3b0ca3a0bde29ad90b9972c.json",
+      "sha256": "289d6814e23a02c442d67956e3d992d2df92f6bef6320d921f4b2513325554f8",
+      "bytes": 23791,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

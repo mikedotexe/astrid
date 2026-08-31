@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788044830",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_matches_working_copy": true,
+  "report_window": "lines 1-400 of 1048",
+  "read_scope": "lines 1-400 read completely (contains every cited symbol); full-file SHA-256 matches the report binding exactly",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) preserves or strips a known marker by grammatical context, distinguishing quoted, grouped, and explicit-relation; first_word_after (L89) identifies relation verbs like 'echoes'/'represents'.",
+      "disposition": "Verified from complete source at the report-bound SHA. reference_syntax (L49-60) checks exact_reference_delimiter_syntax first, then followed_by_explicit_exact_token_relation (L64-86) whose allowlist includes echoes (L72) and represents (L82). scan (L114-144) pushes the token to remainder only when reference_syntax.is_some(). Description is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89-96) may be fragile to multi-byte UTF-8, a zero-width joiner, or a non-standard Unicode separator, making find skip the relation word or return empty and defaulting followed_by_explicit_exact_token_relation to false.",
+      "disposition": "Grounded, and her named characters now pinned by name. Source: split_whitespace (L91) does not split U+200D/U+200B (neither is White_Space); the non-alphanumeric trim_matches (L92) strips a LEADING zero-width char so the verb is still isolated and the marker preserved (fail-open-to-preserve). An INTERIOR zero-width char is not on a trim edge, so the verb is not isolated and the marker fails CLOSED (stripped) rather than leaking. Empty is returned only when no alphanumeric word follows at all (the intended strip). Added exact regression; the hypothesized skip does not occur in the followed-by position, matching the existing U+FEFF/soft-hyphen groundings.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Proposed Test 1 (Contextual Preservation): a marker followed by 'represents' (e.g. [MARKER] represents a state) should be retained in the remainder of scan_known_model_control_markers.",
+      "disposition": "Verified existing. Covered by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L3133), followed_by_explicit_exact_token_relation_allowlists_represents_not_creates (L3349), and the represents-preservation cases at L3075/L3086. 'represents' is allowlisted at source L82; the marker survives as ExplicitExactKnownTokenRelation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Test 2 (Delimiter Depth): exact_reference_delimiter_syntax should identify complex brackets like the mathematical white brackets and the white square brackets as GroupedExactKnownToken.",
+      "disposition": "Verified existing. exact_reference_delimiter_pair (L180 U+27E6/U+27E7, L184 U+301A/U+301B) maps both to GroupedExactKnownToken. Tests pin them at tests.rs L2179, L2343, L2347, and whitespace-tolerant variants at L2361-2363; adjacent-stack depth is covered at L2229-2243 and depth-bounding at L2311-2326.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify first_word_after against non-Latin scripts to ensure the is_alphanumeric filter does not over-strip relevant relation verbs in non-English contexts.",
+      "disposition": "Observed from source, no over-strip risk. char::is_alphanumeric() (L92) is Unicode-aware and returns true for non-Latin alphanumerics, so trim_matches keeps non-Latin word characters intact; the filter cannot over-strip them. The relation allowlist (L67-84) is deliberately English exact ASCII tokens, and first_word_after lowercases via to_ascii_lowercase (L95), so a non-Latin relation verb never matches by design and the marker fails closed (stripped) - a scope boundary, not over-stripping. Non-Latin delimiter coverage already exists (tests.rs L2377/L2397/L2418/L3302). No production grammar widened.",
+      "classification": "verified_existing"
+    }
+  ]
+}

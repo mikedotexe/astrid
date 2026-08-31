@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "ExactKnownModelControlMarkerOccurrence L29; scan_known_model_control_markers L114-144; preservation gated on reference_syntax.is_some() at L129-131 — the exact mechanism the Observed claim describes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace (Unicode White_Space) + non-alphanumeric catch-all trim_matches + find(!empty). Shows the snag's 'filter cannot catch it' premise does not hold; the sole genuine gap (format char inside the verb) fails closed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space (L3272, from report 1786936281), _internal_soft_hyphen (L3325, from 1786999457), _punctuation_boundary (L3230) — the exact Unicode-whitespace/punctuation snag already grounded and fail-closed-pinned."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 1 (Relation Persistence) already pinned: scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2932), preserves_relation_after_multiple_punctuation_runs (L2884), quoted_context_precedes_following_relation_verb (L2978) — from prior reports 1786814454 / 1787135542 at same source SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-87; reference_syntax resolves exact_reference_delimiter_syntax first (L50), so a bracketed [MARKER] takes the grouped path, a bare marker the relation path — both preserve."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 2 (Delimiter Depth) pinned exactly by exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3025: [[<end_of_turn>]] -> Grouped depth 2) plus bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2266). From prior report 1786814454, same source SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229: before/after each take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4) (L151) so no OOB; delimiter_depth = count() over bounded zip.take_while — panic-free."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue confirmed at L695 (public wrapper sanitize_model_control_markers_with_report at L352). Read-only continuation pointer belonging to Astrid's own agency; no steward action."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787789890",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787794806_llm_marker_relation_delimiter_fresh_pass_duplicate/summaries/introspection_astrid_llm_1787789890.md",
+      "note": "Round summary: full duplicate lineage, per-claim dispositions, and the two stated contradictions (snag premise; bracketed-vs-bare path conflation)."
+    }
+  ]
+}

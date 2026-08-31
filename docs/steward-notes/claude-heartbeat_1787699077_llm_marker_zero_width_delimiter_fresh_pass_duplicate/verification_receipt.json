@@ -1,0 +1,110 @@
+{
+  "schema": "verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller-held subprocess run adapter (git read-only; no live substrate/control change; adapter owns lease + heartbeats)",
+  "controller": {
+    "run_id": "run_1787696579109882000_f7eaea1465",
+    "preprojection_generation_id": "projection_1787696582069449000_245a84726b",
+    "pause_generation": 321
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1787692007",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "evidence_links_new": 13,
+    "claims": 7
+  },
+  "report_hashes": {
+    "report_sha256": "8f669ce24c305d7bc594c7898b0e56535c33e40ef08d3c5dacd923d09f3e12cc",
+    "report_bytes": 3640,
+    "report_lines": 45,
+    "witness_id": "lsw_bd4d7c12424a0e4110e195907346eba2c8dcaac3b18067ca1b4eaf899ab64c5a",
+    "witness_sha256": "68a53a3c11118fa5dd1d6c8e00cd0b00d3149d9aec70b8d4c0b359851f00b2f2",
+    "witness_bytes": 23922,
+    "witness_lines": 533,
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_binding_match": true,
+    "source_working_copy_clean": true
+  },
+  "focused_tests": {
+    "runner": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib <filter>",
+    "marker": "80 passed / 0 failed",
+    "delimiter": "10 passed / 0 failed",
+    "first_word": "5 passed / 0 failed",
+    "total": "95 passed / 0 failed",
+    "new_tests_authored": 0,
+    "source_sha256_at_run": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "ok (44)",
+    "evidence_event_store_test": "ok (21)",
+    "steward_control_test": "26/27 ok; 1 ERROR: test_pause_cooperatively_interrupts_wrapped_subprocess (load-induced timing-margin flake, see debt)",
+    "steward_projection_test": "ok (14)",
+    "division_followup_test": "ok (3)",
+    "division_chronicle_test": "ok (10)",
+    "division_projection_self_test": "ok",
+    "projection_cursors_test": "ok (4)",
+    "anti_drop_self_test": "ok (5)",
+    "anti_drop_verify": "exit 0; 69 guards; 0 alarms; 0 gaps",
+    "cadence_audit_test": "ok (6)",
+    "cadence_audit_strict_compact": "integrity_ok=true; duplicate_hash_group_count=0; latest=introspection_astrid_llm_1787699463",
+    "experiential_epistemics_self_test": "ok (2); valid=true",
+    "experiential_epistemics_verify": "valid=true; issue_count=0; checked_record_count=11327; history_rewritten=false",
+    "audit_counters": "consistent; mismatches=[]",
+    "evidence_event_store_verify": "valid=true; last_global_seq=891868; corrupt_lines=0; last_event_sha256=96156af51d9b181d01c83875294c57aa80c8efa78bfc0ea2dfb80e60a4dfbcc4",
+    "division_verify": "ok=true; review_due=false; completed=3/6; event_count=207; head=d6a86c18ed67fd7f9bea11aecc7d91b98052181c7ca12214f95019d89780105f",
+    "chronicle_verify": "ok=true; durable_inputs_current=true; durable_mismatches=[]; volatile_mismatches=[supervisor_status_sha256]; chronicle_id=division_chronicle_4815a32364feb63a854b479c; json_sha256=68850f1d27d93a4f75d5a1ebb79960b7e840fc654079147c12fcd80cb2f22ce1"
+  },
+  "counters_after": {
+    "canonical_indexed": 4466,
+    "canonical_fully_addressed": 3122,
+    "canonical_full_read": 3754,
+    "canonical_remaining": 1344,
+    "canonical_unread": 712,
+    "canonical_blocked_needs_steward": 414,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "addressed_duplicate_total": 1120,
+    "all_artifact_pending": 3014,
+    "noncanonical_pending": 1670
+  },
+  "division_round": {
+    "recorded": true,
+    "round_event_id": "division_followup_event_86111a49b11f206bd14d003a8be283f6",
+    "processed_report_count": 1,
+    "completed_rounds_since_followup": 3,
+    "threshold_rounds": 6,
+    "review_due": false,
+    "event_count": 207,
+    "event_head_sha256": "d6a86c18ed67fd7f9bea11aecc7d91b98052181c7ca12214f95019d89780105f"
+  },
+  "test_debt": {
+    "test": "scripts/test_steward_control.py :: StewardControlTests.test_pause_cooperatively_interrupts_wrapped_subprocess",
+    "symptom": "ERROR PausedError('fixture stop') raised at controller.begin->acquire (3/3 deterministic this round).",
+    "root_cause": "Isolated temp-dir fixture: a background thread pauses after 0.2s while the main thread spawns a wrapped subprocess; under machine load average ~9.7 (full live stack) the child Python cold-start + controller.begin exceeds the 0.2s margin, so the pause lands before acquire and begin correctly raises PausedError instead of the intended mid-run cooperative SIGINT.",
+    "not_a_regression": "Predecessor round claude-heartbeat_1787690184 (~2h earlier, lighter load) recorded steward_control_test ok(27). No steward_control code changed (same commit 137a2ccca3); this round's writes are additive evidence/docs only and cannot affect the isolated fixture. Production fail-closed-on-pause behavior is correct.",
+    "authority": "Foreign tooling not touched this round; NOT repaired here (adapter-mode: git read-only, do not modify foreign tooling mid-run).",
+    "first_safe_command": "python3 scripts/test_steward_control.py StewardControlTests.test_pause_cooperatively_interrupts_wrapped_subprocess  (expected to pass under lighter load; a later interactive window could widen the 0.2s pause-margin if it recurs off-load)."
+  },
+  "restart_deploy": "Not required and not attempted. No source/prompt/model/codec/controller/Minime change.",
+  "git": {
+    "index_clean": true,
+    "commit_debt_paths": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "docs/steward-notes/claude-heartbeat_1787699077_llm_marker_zero_width_delimiter_fresh_pass_duplicate/"
+    ],
+    "foreign_untouched": [
+      "capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json",
+      "docs/steward-notes/claude-heartbeat_1787690184_llm_marker_scan_duplicate_verify/",
+      "/Users/v/other/minime: minime_autonomy/runtime.py, tests/test_correspondence_v1.py"
+    ],
+    "gitignored_durable_writes_no_debt": [
+      "capsules/spectral-bridge/workspace/diagnostics/ (addressing + evidence event store appends)",
+      "/Users/v/other/minime/workspace/division/chronicle/ (deterministic reprojection)"
+    ]
+  }
+}

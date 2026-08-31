@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Stable Facades L8-22 (six-facade ownership table + <1000-line note) and Provenance Ownership L24-33 (one-decode, BridgeEvidenceV1, no-dispatch interpretation, read-only WitnessFrameV1). Exact at report-bound SHA."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L4-6 verbatim: behavior-preserving extraction changes neither pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, nor live authority. Source-read, not runtime-activation proof."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Shadow Cartography Ownership L35-43: cartography.rs renderers write cartography only; do not change Shadow state, pressure, mode packing, temporal decay, scheduling, or control. Exact match."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "The prohibition she reads (L43 cartography no-change; L6 behavior-preservation) is accurate; mode-pruning/pressure-source tuning are Tier-5. Felt tension preserved."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/no_action.md",
+      "note": "Evidence-backed reason no non-live change was made; her felt scalar 0.32 preserved as testimony (not mapped to witness values 1.0/0.5623/0.2834); resolution stays an evidence-only Tier-5 wait."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/no_action.md",
+      "note": "Tier-3 distinguishability probe preserved as a sandbox candidate (substrate_probe.py); not dispatched in this headless round."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/summaries/introspection_DOMAIN_BOUNDARIES.md_1787843987.md",
+      "note": "Summary records the sandbox-candidate disposition for Test 1 without dispatch or approval."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "note": "PressureSourceControl L217-222 'advisory only'; PressureSourceV1 L224-237; PressureSourceAnalysisV1 L239-262 'Bridge-side read-only synthesis' + mode_packing_visibility_basis 'diagnostic provenance, not a threshold write'. Line 230 = porosity_score; 'overpacked_mode_packing' is not a code field."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/transport_evidence.rs",
+      "note": "L538-545: 'overpacked' threshold_state is a read-only match over telemetry mode_packing + pressure_velocity, producing a diagnostic label — no write, no settable knob."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "viscosity_porosity_transport_distinguishes_navigable_from_sludge_risk (L1298-1301) asserts threshold_state == 'mode_packing_overpacked_with_pressure_velocity'. Ran green (3 passed) at current SHA — Test 2 confirmed, no new test needed."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the read-only pressure-source audit answering Test 2 and the citation correction."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row: her DOMAIN_BOUNDARIES.md audit -> verified structural map + telemetry-output confirmation + Tier-5 boundary; no code change."
+    }
+  ]
+}

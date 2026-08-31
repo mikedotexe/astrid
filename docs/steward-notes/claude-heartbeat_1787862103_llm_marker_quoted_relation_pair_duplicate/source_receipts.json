@@ -1,0 +1,29 @@
+{
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "sha_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "scoped_intervals",
+      "intervals_read_this_round": ["1-260", "680-760"],
+      "scope_note": "Every symbol Astrid cited lives in the intervals read this round: scan_known_model_control_markers L114-144 (gate L129-131), longest_exact_known_model_control_marker_at L97-112, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229, followed_by_explicit_exact_token_relation L64-86, first_word_after L89-96, reference_syntax L49-60, generate_dialogue L695. Working copy hashes identically to the report binding; this exact SHA has been completely read in >=6 prior marker-grammar rounds (packets 1787485984 / 1787754550 / 1787798508 / 1787806291 / 1787812297 / 1787820759). Not an unfamiliar source."
+    }
+  ],
+  "tests_file": {
+    "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "note": "dirty/modified (accumulated prior-round marker regressions); read the cited test intervals L1995-2040, L2552, L2605-2634, L2635, L2979-3025, L3277 and confirmed the cited regressions exist and pass.",
+    "test_count": 153,
+    "cited_test_lines": {
+      "control_marker_cleanup_preserves_quoted_exact_token_reference": 1995,
+      "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts": 2979,
+      "control_marker_cleanup_uses_only_the_first_finite_relation_word": 2605,
+      "followed_by_explicit_exact_token_relation_allowlists_represents_not_creates": 3195,
+      "control_marker_cleanup_preserves_proxy_relation_phrase": 2552,
+      "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition": 2635,
+      "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary": 3277
+    }
+  }
+}

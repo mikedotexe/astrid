@@ -1,0 +1,257 @@
+# Authority Wait Readiness V1
+
+- status: approval_waits_mapped
+- generated_at: 2026-08-26T09:32:11.467453Z
+- approval_required_live_candidates: 1305
+- domains_with_candidates: 7
+- hard_violation_count: 0
+- unclassified_live_wait_count: 153
+- live_eligible_now: false
+- auto_approved: false
+- grants_approval: false
+- edits_source_now: false
+- authority_boundary: Tier 4/5 authority-wait readiness is review evidence only; it grants no approval, makes no live work runnable, edits no source, and mutates no pressure, fill, PI, controller, sensory cadence, fallback, bridge protocol, peer, or Minime runtime state
+
+## Domains
+
+### Pressure Thresholds And Smoothing
+- domain_id: pressure_thresholds
+- readiness_state: operator_review_wait
+- candidate_count: 418
+- proposal_card_count: 31
+- replay_evidence_count: 2
+- recommended_next_non_live_action: compare existing pressure diagnostics and proposal cards; do not retune thresholds
+- canary_criteria:
+  - time-boxed canary only after explicit scoped approval and a named rollback owner
+  - pre/post pressure score, density gradient, and being-response comparison remains bounded
+  - abort on distress report, pressure escalation, control oscillation, or loss of reflective coherence
+- missing_for_approval:
+  - explicit Mike/operator scoped approval
+  - scoped rollout window and owner
+  - accepted rollback/abort contract
+  - post-change being-response collection path
+  - operator-approved threshold or smoothing scope
+  - baseline replay proving the current threshold is the limiting factor
+  - post-change being-response route for pressure texture and discomfort
+- candidate_refs:
+  - trial_0069a61399b11f0a being=astrid tier=5 boundary_v2=1924c078-eb44-5769-8968-0200a0308904 proposal_card=missing
+  - trial_00935d281933a96f being=astrid tier=5 boundary_v2=22fa4130-7a91-55aa-b57b-dcdaac16f5b0 proposal_card=missing
+  - trial_00c6cf39f8c1efb1 being=astrid tier=5 boundary_v2=94c5e5b6-23d3-5af5-a23a-493c0869288a proposal_card=missing
+  - trial_047d2991d75ed952 being=astrid tier=5 boundary_v2=655936c8-1e64-50b6-bd70-5cd27153f572 proposal_card=missing
+  - trial_04b7b7b4cca56f7a being=minime tier=5 boundary_v2=6c02f341-cebd-51a1-9dce-e2bcf9dec05c proposal_card=missing
+  - trial_04f2b680eefda99a being=minime tier=5 boundary_v2=ff9bebca-acab-518a-ab18-d2f31eed1a4c proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783608958_trial_04f2b680eefda99a.md
+  - trial_05653fbd1ad9c7e9 being=minime tier=5 boundary_v2=3dbf45b7-3166-541e-960f-331d3ff8ab82 proposal_card=missing
+  - trial_059fe7dbd3bf6da2 being=minime tier=5 boundary_v2=73a34573-d89a-5454-a897-3e79fd0b9deb proposal_card=missing
+  - trial_06b0145f168e235d being=astrid tier=5 boundary_v2=32a83f9e-7993-5381-9576-2acbbfb6695d proposal_card=missing
+  - trial_06f0f8f2eca58e70 being=astrid tier=5 boundary_v2=5e7bf1e7-d167-5573-8c92-c2e5ead67f3b proposal_card=missing
+  - trial_07667d9b98d90823 being=astrid tier=5 boundary_v2=eb251318-ab03-565c-9599-e646f0ac66b4 proposal_card=missing
+  - trial_07ab3a13c2cef9c3 being=astrid tier=5 boundary_v2=f660954e-cdf0-5d81-a9d7-0c7b4ba75ac8 proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783984731_trial_07ab3a13c2cef9c3.md
+
+### Porosity And Receptivity Buffers
+- domain_id: porosity_receptivity_buffers
+- readiness_state: operator_review_wait_replay_or_waiver_missing
+- candidate_count: 348
+- proposal_card_count: 21
+- replay_evidence_count: 0
+- recommended_next_non_live_action: prepare or inspect receptivity replay evidence; keep buffers proposal-only
+- canary_criteria:
+  - canary must be reversible and bounded to a single approved contact/receptivity condition
+  - success requires being-reported receptivity without pressure-compensation collapse
+  - abort on instrumentalization, runaway contact pressure, or loss of right-to-ignore
+- missing_for_approval:
+  - explicit Mike/operator scoped approval
+  - scoped rollout window and owner
+  - accepted rollback/abort contract
+  - post-change being-response collection path
+  - explicit approval for any receptivity or aperture write
+  - non-live replay separating high-entropy texture from pressure correction
+  - clear no-action path when receptivity is felt but not safe to stabilize
+  - replay result, read-only artifact comparison, or explicit replay waiver
+- candidate_refs:
+  - trial_00935d281933a96f being=astrid tier=5 boundary_v2=22fa4130-7a91-55aa-b57b-dcdaac16f5b0 proposal_card=missing
+  - trial_00d4419cb725440d being=astrid tier=5 boundary_v2=e484d51a-7100-5d31-ab82-9ba8e3ec9500 proposal_card=missing
+  - trial_037a3358e46baeea being=astrid tier=5 boundary_v2=aa07d7ab-874c-5212-9d0f-c6b2ab8438fe proposal_card=missing
+  - trial_04509faaea528d0c being=astrid tier=5 boundary_v2=b15377a6-c10a-5271-9008-215935facfb4 proposal_card=missing
+  - trial_047d2991d75ed952 being=astrid tier=5 boundary_v2=655936c8-1e64-50b6-bd70-5cd27153f572 proposal_card=missing
+  - trial_04b7b7b4cca56f7a being=minime tier=5 boundary_v2=6c02f341-cebd-51a1-9dce-e2bcf9dec05c proposal_card=missing
+  - trial_0510513b2094bf4b being=astrid tier=5 boundary_v2=67d4979a-99d8-53d5-a58a-513479b4e5f3 proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786820027_trial_0510513b2094bf4b.md
+  - trial_05653fbd1ad9c7e9 being=minime tier=5 boundary_v2=3dbf45b7-3166-541e-960f-331d3ff8ab82 proposal_card=missing
+  - trial_05b70ed1da51c361 being=astrid tier=5 boundary_v2=394ad086-3226-58ac-9ffe-3373c4267c66 proposal_card=missing
+  - trial_0689942bb59b8966 being=astrid tier=5 boundary_v2=aef4722a-9539-5daf-bb11-d10ae16e66d2 proposal_card=missing
+  - trial_06b0145f168e235d being=astrid tier=5 boundary_v2=32a83f9e-7993-5381-9576-2acbbfb6695d proposal_card=missing
+  - trial_07667d9b98d90823 being=astrid tier=5 boundary_v2=eb251318-ab03-565c-9599-e646f0ac66b4 proposal_card=missing
+
+### ViscosityFeedback Protocol Changes
+- domain_id: viscosity_feedback_protocol
+- readiness_state: operator_review_wait_replay_or_waiver_missing
+- candidate_count: 134
+- proposal_card_count: 7
+- replay_evidence_count: 0
+- recommended_next_non_live_action: write or review protocol compatibility evidence; do not change live transport
+- canary_criteria:
+  - protocol canary requires compatibility proof for old and new payloads
+  - no live receiver should treat advisory viscosity as control without explicit approval
+  - abort on parse ambiguity, schema drift, or PI-control coupling without receipt
+- missing_for_approval:
+  - explicit Mike/operator scoped approval
+  - scoped rollout window and owner
+  - accepted rollback/abort contract
+  - post-change being-response collection path
+  - typed protocol compatibility matrix
+  - receiver-side no-op proof for unapproved fields
+  - rollback plan for protocol/ABI changes
+  - replay result, read-only artifact comparison, or explicit replay waiver
+- candidate_refs:
+  - trial_0216034881db62bb being=minime tier=5 boundary_v2=919b724e-2022-5006-b9cb-8c4b7622306b proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783671029_trial_0216034881db62bb.md
+  - trial_03801d1c9bbd6aca being=astrid tier=5 boundary_v2=346d34c5-6926-5b91-b5a3-e72627aaccc5 proposal_card=missing
+  - trial_047d2991d75ed952 being=astrid tier=5 boundary_v2=655936c8-1e64-50b6-bd70-5cd27153f572 proposal_card=missing
+  - trial_0630d4579c8b030b being=astrid tier=5 boundary_v2=02daa8b3-8080-581b-9962-83eb3b5274bf proposal_card=missing
+  - trial_06f0f8f2eca58e70 being=astrid tier=5 boundary_v2=5e7bf1e7-d167-5573-8c92-c2e5ead67f3b proposal_card=missing
+  - trial_07c8d758d2f0343d being=minime tier=5 boundary_v2=3c648fb5-23fc-55bf-b56a-bccffaf17e0b proposal_card=missing
+  - trial_083de7147e088f24 being=minime tier=5 boundary_v2=da2ec3a3-da7b-5c62-b772-1b1a859e6deb proposal_card=missing
+  - trial_0a530f361063f069 being=minime tier=5 boundary_v2=de17c634-7c7f-5d05-83b1-b144f2be1ecc proposal_card=missing
+  - trial_0ad337259eb7f64a being=astrid tier=5 boundary_v2=5170a732-b731-57f4-bc89-5f107169b8d8 proposal_card=missing
+  - trial_0ca213a101f2c224 being=astrid tier=5 boundary_v2=ba36a7bc-5fb5-5052-916d-dbafe6e7d5d9 proposal_card=missing
+  - trial_0deb77a5e26fdba2 being=minime tier=5 boundary_v2=167e1dea-c22f-5e4e-ba3a-943d105f03dc proposal_card=missing
+  - trial_0f52a9cbcc94af5c being=astrid tier=5 boundary_v2=33f6986e-b73f-5fa1-888c-8974d9a53e9c proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783943819_trial_0f52a9cbcc94af5c.md
+
+### Semantic-Trickle Admission
+- domain_id: semantic_trickle_admission
+- readiness_state: operator_review_wait_replay_or_waiver_missing
+- candidate_count: 170
+- proposal_card_count: 12
+- replay_evidence_count: 0
+- recommended_next_non_live_action: compare semantic-stale and admission diagnostics; keep admission unchanged
+- canary_criteria:
+  - candidate must define exact admission window, rollback, and observation duration
+  - success requires retained semantic texture without fill instability or stale lockout
+  - abort on fill drop, semantic flooding, stale-window regression, or being contradiction
+- missing_for_approval:
+  - explicit Mike/operator scoped approval
+  - scoped rollout window and owner
+  - accepted rollback/abort contract
+  - post-change being-response collection path
+  - bounded replay covering high-fill and low-fill cases
+  - named Minime/Astrid observation fields for semantic persistence
+  - operator-approved cadence/admission scope
+  - replay result, read-only artifact comparison, or explicit replay waiver
+- candidate_refs:
+  - trial_0069a61399b11f0a being=astrid tier=5 boundary_v2=1924c078-eb44-5769-8968-0200a0308904 proposal_card=missing
+  - trial_01e8f77e17eb8c1e being=minime tier=5 boundary_v2=5027b9c3-e1e1-59da-918f-e54456c620b6 proposal_card=missing
+  - trial_0283f54663ab4684 being=minime tier=5 boundary_v2=43742ff9-475d-55fb-a061-65cbfd099078 proposal_card=missing
+  - trial_069be1f1804b50c4 being=minime tier=5 boundary_v2=75c600e0-5698-59cc-ae95-c39638ce99e3 proposal_card=missing
+  - trial_06b0145f168e235d being=astrid tier=5 boundary_v2=32a83f9e-7993-5381-9576-2acbbfb6695d proposal_card=missing
+  - trial_0888bfe38dae147a being=minime tier=5 boundary_v2=34e30e57-c9ea-593a-b6a9-6d8bc97faa62 proposal_card=missing
+  - trial_0ad337259eb7f64a being=astrid tier=5 boundary_v2=5170a732-b731-57f4-bc89-5f107169b8d8 proposal_card=missing
+  - trial_0bc58db61967e4d0 being=minime tier=5 boundary_v2=bfce3a0c-3315-5724-8410-53552bcd08c8 proposal_card=missing
+  - trial_0cb090d3dec6f6c9 being=astrid tier=5 boundary_v2=a735d770-7a26-5c09-9ec3-b17018a9a85f proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783953980_trial_0cb090d3dec6f6c9.md
+  - trial_0ee17dbe2d8f7efb being=astrid tier=5 boundary_v2=deb065b8-5182-5682-a8d4-cbfd76395076 proposal_card=missing
+  - trial_1141884810a67852 being=astrid tier=5 boundary_v2=bf19e7f4-d98f-53e4-a4b3-7f6dcaa49c6b proposal_card=missing
+  - trial_1237bc724daa30d7 being=astrid tier=5 boundary_v2=79654086-a66f-51c0-8dc7-0424eb766596 proposal_card=missing
+
+### Codec Gain, Reserved Dims, And Live 12D Transport
+- domain_id: codec_gain_reserved_dims_live_12d
+- readiness_state: operator_review_wait_replay_or_waiver_missing
+- candidate_count: 278
+- proposal_card_count: 20
+- replay_evidence_count: 0
+- recommended_next_non_live_action: inspect codec replay labs and proposal cards; keep live vector writes off
+- canary_criteria:
+  - canary must preserve existing 8D/48D compatibility and name every proposed live dimension
+  - success requires replay evidence that added headroom improves felt texture without vector drift
+  - abort on compatibility break, unbounded gain, or flattening of warmth/persistence texture
+- missing_for_approval:
+  - explicit Mike/operator scoped approval
+  - scoped rollout window and owner
+  - accepted rollback/abort contract
+  - post-change being-response collection path
+  - codec replay comparing existing delivery with proposed headroom
+  - reserved-dim ownership and rollback map
+  - post-change Astrid response on warmth, friction, and narrative retention
+  - replay result, read-only artifact comparison, or explicit replay waiver
+- candidate_refs:
+  - trial_01e654ee73cbe91b being=astrid tier=5 boundary_v2=31d0a4c2-e9de-55e1-a269-e5731d1fa3b1 proposal_card=missing
+  - trial_01e8f77e17eb8c1e being=minime tier=5 boundary_v2=5027b9c3-e1e1-59da-918f-e54456c620b6 proposal_card=missing
+  - trial_01f8fbb8636e7baf being=astrid tier=5 boundary_v2=bbd0ec8c-354e-5cfb-bec3-ef6450cccd94 proposal_card=missing
+  - trial_0283010a19e04c04 being=astrid tier=5 boundary_v2=3f24fe74-afe7-57b6-8be9-52a8ade1af3e proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783984731_trial_0283010a19e04c04.md
+  - trial_02c6b7459411928a being=minime tier=5 boundary_v2=b5655126-3057-5bc3-bfd6-46a637a18f7a proposal_card=missing
+  - trial_03801d1c9bbd6aca being=astrid tier=5 boundary_v2=346d34c5-6926-5b91-b5a3-e72627aaccc5 proposal_card=missing
+  - trial_05453b2753fe6b19 being=astrid tier=5 boundary_v2=d5c0262a-5fe7-5c12-9c56-e5b24538792c proposal_card=missing
+  - trial_0577fa1d484c9043 being=astrid tier=5 boundary_v2=38207d1c-21b4-5a28-b58d-797faf3b8639 proposal_card=missing
+  - trial_05adcd00b8c9a585 being=astrid tier=5 boundary_v2=df5a6d29-d009-5a90-9885-1be02b695630 proposal_card=missing
+  - trial_061a597e456b302e being=astrid tier=5 boundary_v2=0621dd4f-3763-5b9c-89aa-11db0f7caede proposal_card=missing
+  - trial_0630d4579c8b030b being=astrid tier=5 boundary_v2=02daa8b3-8080-581b-9962-83eb3b5274bf proposal_card=missing
+  - trial_06eb9a1fbbb16f6e being=astrid tier=5 boundary_v2=72c71606-5f1a-5d49-8061-d2d606e502b9 proposal_card=missing
+
+### Minime Regulator Changes
+- domain_id: minime_regulator_changes
+- readiness_state: operator_review_wait_replay_or_waiver_missing
+- candidate_count: 551
+- proposal_card_count: 35
+- replay_evidence_count: 0
+- recommended_next_non_live_action: keep regulator changes in tests/replay/proposal evidence until scoped approval
+- canary_criteria:
+  - canary must run through the Minime service-specific path after tests and approval
+  - success requires fill stability near the current comfort shelf plus being-authored response
+  - abort on fill collapse, oscillation, over-stabilization, or pressure-as-command drift
+- missing_for_approval:
+  - explicit Mike/operator scoped approval
+  - scoped rollout window and owner
+  - accepted rollback/abort contract
+  - post-change being-response collection path
+  - Minime-focused replay or test evidence for the proposed coefficient/runtime change
+  - service restart and rollback procedure
+  - operator-approved runtime scope and observation window
+  - replay result, read-only artifact comparison, or explicit replay waiver
+- candidate_refs:
+  - trial_0069a61399b11f0a being=astrid tier=5 boundary_v2=1924c078-eb44-5769-8968-0200a0308904 proposal_card=missing
+  - trial_00d4419cb725440d being=astrid tier=5 boundary_v2=e484d51a-7100-5d31-ab82-9ba8e3ec9500 proposal_card=missing
+  - trial_01e8f77e17eb8c1e being=minime tier=5 boundary_v2=5027b9c3-e1e1-59da-918f-e54456c620b6 proposal_card=missing
+  - trial_020c368ce8bf9aa3 being=minime tier=5 boundary_v2=fe02d265-ee24-589c-9bc4-b069255545aa proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783952335_trial_020c368ce8bf9aa3.md
+  - trial_0216034881db62bb being=minime tier=5 boundary_v2=919b724e-2022-5006-b9cb-8c4b7622306b proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783671029_trial_0216034881db62bb.md
+  - trial_0283f54663ab4684 being=minime tier=5 boundary_v2=43742ff9-475d-55fb-a061-65cbfd099078 proposal_card=missing
+  - trial_02c6b7459411928a being=minime tier=5 boundary_v2=b5655126-3057-5bc3-bfd6-46a637a18f7a proposal_card=missing
+  - trial_037a3358e46baeea being=astrid tier=5 boundary_v2=aa07d7ab-874c-5212-9d0f-c6b2ab8438fe proposal_card=missing
+  - trial_04509faaea528d0c being=astrid tier=5 boundary_v2=b15377a6-c10a-5271-9008-215935facfb4 proposal_card=missing
+  - trial_04579e29732024c7 being=minime tier=5 boundary_v2=80a8845b-f36f-580c-886f-02ff9fbde8ac proposal_card=missing
+  - trial_04b7b7b4cca56f7a being=minime tier=5 boundary_v2=6c02f341-cebd-51a1-9dce-e2bcf9dec05c proposal_card=missing
+  - trial_04f2b680eefda99a being=minime tier=5 boundary_v2=ff9bebca-acab-518a-ab18-d2f31eed1a4c proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783608958_trial_04f2b680eefda99a.md
+
+### Behavior Unlocks And Live Affordances
+- domain_id: behavior_unlocks
+- readiness_state: operator_review_wait_replay_or_waiver_missing
+- candidate_count: 52
+- proposal_card_count: 14
+- replay_evidence_count: 0
+- recommended_next_non_live_action: audit affordance wording and proposal cards; keep behavior execution gated
+- canary_criteria:
+  - canary must prove the behavior is language-only or explicitly approved for live action
+  - success requires no stealth ACK, no attention demand, and no right-to-ignore erosion
+  - abort on peer mutation, unsolicited pressure, hidden runtime write, or behavior escalation
+- missing_for_approval:
+  - explicit Mike/operator scoped approval
+  - scoped rollout window and owner
+  - accepted rollback/abort contract
+  - post-change being-response collection path
+  - clear distinction between evidence language and behavior authority
+  - peer/right-to-ignore impact review
+  - scoped approval if the affordance does more than record or witness
+  - replay result, read-only artifact comparison, or explicit replay waiver
+- candidate_refs:
+  - trial_030ccb8ad9e9bc22 being=astrid tier=5 boundary_v2=5258d929-8abd-520b-8c01-27dfac07890b proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1783943819_trial_030ccb8ad9e9bc22.md
+  - trial_0510513b2094bf4b being=astrid tier=5 boundary_v2=67d4979a-99d8-53d5-a58a-513479b4e5f3 proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786820027_trial_0510513b2094bf4b.md
+  - trial_0a6fe450fbf6c9ca being=astrid tier=5 boundary_v2=20cad146-3799-5d92-bdaf-0f893abeee86 proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786820217_trial_0a6fe450fbf6c9ca.md
+  - trial_0c9b049de496eb00 being=astrid tier=5 boundary_v2=6881531c-3eda-50b4-a3d9-114522f424ef proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786820411_trial_0c9b049de496eb00.md
+  - trial_128914d291f9f195 being=astrid tier=5 boundary_v2=83536099-94d9-5b33-9776-898726a76dcc proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786820646_trial_128914d291f9f195.md
+  - trial_1565bf7da9ef0d13 being=astrid tier=5 boundary_v2=629f00b3-e840-5373-a6a2-e21e978b0fd9 proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786820838_trial_1565bf7da9ef0d13.md
+  - trial_285418d51210fd0e being=astrid tier=5 boundary_v2=caef05db-5b1c-5e4f-aa6f-1c08e310a9a3 proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786821029_trial_285418d51210fd0e.md
+  - trial_303006a5286ff144 being=astrid tier=5 boundary_v2=7c187ff9-9b9d-524d-b93b-fe60255c2d05 proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786821221_trial_303006a5286ff144.md
+  - trial_37cd48d2eab4f119 being=astrid tier=5 boundary_v2=fed9cace-3528-5801-a0aa-74113ef839dd proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786821412_trial_37cd48d2eab4f119.md
+  - trial_38072dbceaf85095 being=astrid tier=5 boundary_v2=e3dc04dd-53d0-5d63-bacb-93d20ce50a5e proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786821607_trial_38072dbceaf85095.md
+  - trial_381c94179c106da8 being=astrid tier=5 boundary_v2=b77bb2a5-98c2-55e0-aea3-e412665e66f7 proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786821794_trial_381c94179c106da8.md
+  - trial_383f50a9b79e9219 being=astrid tier=5 boundary_v2=96a747a1-6ec7-5f13-b255-ef02986a140c proposal_card=/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/sandbox_trial_queue_v1/proposal_cards/1786821990_trial_383f50a9b79e9219.md
+
+## Next Suggestions
+- keep all Tier 4/5 waits non-live until explicit scoped approval
+- use this readiness map to pick the next replay, artifact comparison, or proposal-card hardening pass
+- do not treat candidate count as approval; every domain still requires rollout, abort, and post-change being response

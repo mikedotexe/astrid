@@ -1,0 +1,90 @@
+{
+  "round": "claude-heartbeat_1787690184_llm_marker_scan_duplicate_verify",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1787687238231801000_b0a3bbbed1",
+    "preprojection_generation_id": "projection_1787687241043013000_dbbf872e60",
+    "pause_generation": 321,
+    "postprojection": "runs after process exit (adapter-owned); not observed in-run"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 7,
+      "evidence_link_count": 12
+    }
+  ],
+  "focused_tests": {
+    "runner": "cargo 1.94.1 (spectral-bridge-server)",
+    "filters": {"marker": {"passed": 80, "failed": 0}, "delimiter": {"passed": 10, "failed": 0}, "first_word": {"passed": 5, "failed": 0}},
+    "total_passed": 95,
+    "total_failed": 0,
+    "note": "Exact-source verification of prior grounded regressions at source SHA 902a0358 (no new tests authored)."
+  },
+  "integrity_suites": {
+    "addressing_self_test": "ok (44)",
+    "evidence_event_store_test": "ok (21)",
+    "steward_control_test": "ok (27)",
+    "steward_projection_test": "ok (14)",
+    "division_followup_test": "ok (3)",
+    "division_chronicle_test": "ok (10)",
+    "division_projection_test": "ok",
+    "projection_cursors_test": "ok (4)",
+    "cadence_audit_test": "ok (6)",
+    "cadence_audit_strict_compact": "integrity_ok=true, duplicate_hash_group_count=0, latest=introspection_astrid_llm_1787485984",
+    "anti_drop_self_test": "ok (5)",
+    "anti_drop_verify": "problems=[], test_gap=null",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_FINAL": "valid=true, issue_count=0, history_rewritten=false, checked_record_count=11319",
+    "audit_counters": "status=consistent, mismatches=[]"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 890765,
+    "head_event_sha256": "c3f85adce99ea9cafdc98408bc9087db12e0f0e22b06673d14562c551e6267e2",
+    "verified_global_seq": 890765,
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "corrupt_lines": 0,
+    "active_store": "v2"
+  },
+  "division": {
+    "cycle_sequence": 30,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_4519bd578fa8bfad7fd9bbd282e1ebb4",
+    "event_count": 206,
+    "event_head_sha256": "66f4ab0facc740ad4258971a0b1ced341c8f8413e9a59e3c7b44715d4a7c980f",
+    "record_round_processed_report_count": 1
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_75a00ff11ac346b43faca076",
+    "json_sha256": "327acc5512b0c67750cd26e910df8e8c7553c5356aa9b23759907c43eacaf5fb",
+    "html_sha256": "502a289ec20f73ccac152b03002f92b508b180b68810e5697ce36ed7d4765847",
+    "timeline_event_count": 206,
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "Reprojected after record-round (deterministic stewardship projection to gitignored workspace/division/chronicle/, not a live/control change). Only the moving supervisor hash is volatile-mismatched; not a durable-integrity failure."
+  },
+  "canonical_counters": {
+    "indexed": 4465,
+    "fully_addressed": 3121,
+    "full_read": 3753,
+    "remaining": 1344,
+    "unread": 712,
+    "blocked_needs_steward": 414,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3012,
+    "noncanonical_pending": 1668
+  },
+  "baseline_checks": {"git_diff_check": "clean", "cargo_fmt": "not run — no Rust source touched this round"},
+  "authority_boundary": "evidence_only; no live substrate/control change; no build/restart/deploy; no git stage/commit/merge/push; foreign dirty paths preserved untouched."
+}

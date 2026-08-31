@@ -1,0 +1,21 @@
+{
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "sha_matches_report_binding": true,
+      "read_scope": "lines 1-420 read in full (marker scanner: types L18-46, reference_syntax L49-60, followed_by_explicit_exact_token_relation L64-86, first_word_after L89-96, scan L114-144, delimiter pair/syntax L153-229, placement/receipt L231-419); fn index for full file 1-1048 enumerated; generate_dialogue confirmed at L695. Claims c001-c003 rest on the fully-read L1-229 core; c006 grounded on the L695 fn index."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "3899dc0ff4d5b7faa2eee4bf5dff41552ef96b3fdccb433f92a34434f6cab585",
+      "total_lines": 4595,
+      "total_bytes": 203334,
+      "read_scope": "relation-verb + delimiter-depth regression regions read in full (L1766-2016, L2134-2454, L2540-2667); full grep index of denotes|executes|operates|delimiter_depth|reference_syntax|nested across the file. This is a pre-existing dirty file (prior-round stewardship test additions); NOT modified this round.",
+      "modified_this_round": false
+    }
+  ]
+}

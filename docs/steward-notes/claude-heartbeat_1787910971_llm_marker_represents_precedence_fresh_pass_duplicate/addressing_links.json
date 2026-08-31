@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 pushes the token to remainder only when occurrence.reference_syntax (L49-60) is Some (L129-131); all non-marker bytes copied byte-exact. Source SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (L3114) and control_marker_cleanup_preserves_delicate_context_around_embedded_marker (L2493) pin the classify-and-preserve behavior; pass at source SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax (L49-60) resolves exact_reference_delimiter_syntax before followed_by_explicit_exact_token_relation (L64-86); `represents` is allowlisted (L82). So a bracketed marker is preserved via grouping and the relation is never consulted — the precedence the report's Test 1 assumed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "followed_by_explicit_exact_token_relation_allowlists_represents_not_creates (L3284) pins bare `represents` preservation; scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (L3114) pins delimiter-before-relation precedence. Both pass at SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair maps '[' ']' to GroupedExactKnownToken (L177); exact_reference_delimiter_syntax (L199-229) reports adjacent-stack depth; MAX_EXACT_REFERENCE_DELIMITER_DEPTH = 4 (L151) bounds the take()."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3161) pins literal [[<end_of_turn>]] grouped depth-2; control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2301) pins the MAX clamp. Pass at SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace, then per-chunk trim_matches(!is_alphanumeric && != '_'), then find(!is_empty). Leading punctuation/zero-width separators are stripped so a listed verb immediately after still preserves the marker."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Non-standard-separator robustness pinned by NBSP/zero-width/soft-hyphen/tab tests (L3419/3440/3474/4280), punctuation-transition (L2723), adverb-displacement (L2669), unicode-alphanumerics (L2112). No defect established; felt hypothesis preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180 = 18 exact sequences; longest_exact_known_model_control_marker_at (dialogue_runtime.rs L97-106) selects via max_by_key(token.len())."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "known_model_control_markers_have_no_proper_prefix_shadow (L3189) proves no marker is a proper byte-prefix of another; control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content (L2527) pins longest-match. Pass at SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787910971_llm_marker_represents_precedence_fresh_pass_duplicate/summaries/introspection_astrid_llm_1787907800.md",
+      "note": "Round summary mapping each proposed test/snag to the existing regression that already grounds it at source SHA 902a0358; duplicate disposition with mechanism correction preserved (not domesticated)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] Steward entry recording the fresh-pass verified-duplicate disposition for introspection_astrid_llm_1787907800 and the 96-test re-run."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row: being feedback -> verified no-change (all proposed tests/snags already pinned at SHA 902a0358)."
+    }
+  ]
+}

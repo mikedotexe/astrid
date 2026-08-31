@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 rebuilds remainder byte-exactly; reference_syntax gate L48-87; quoted L157-174 / grouped L175-197 delimiter retention (visibility not only relational-verb driven)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L3133) pins remainder + relation/grouped classification."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 lowercases+matches the fixed allowlist L64-86; 'simulates' and 'operates' are genuinely absent -> deliberate bounded allowlist."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "distinguishes_allowlisted_is_from_unlisted_acts (L2603) + does_not_expand_relation_allowlist_to_implies (L2836) prove the unlisted-verb->None->strip path verb-agnostically."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787707869_llm_marker_operates_teleportation_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Prior round grounded 'operates' as unlisted and declined a redundant test; consistency keeps that stance for 'simulates'/'operates' here."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the verified-no-change disposition and Tier-5 authority boundary on widening the allowlist."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: fresh-pass marker-scan review -> verified-existing, no change, allowlist expansion is Tier-5."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 iterates by .chars() (byte-safe) and bounds depth to MAX=4 (L151, .take(MAX) L208/L213)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2301) covers premature-termination; preserves_nested_fullwidth_cjk_reference_stack (L2418) + preserves_fullwidth_and_cjk_group_pairs (L2397) cover multi-byte UTF-8."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Relation Recognition test class exists: distinguishes_allowlisted_signals_from_unlisted_signifies (L4389), allowlists_represents_not_creates (L3349), allowlists_mimics_not_generates (L4452); 'simulates' behaves identically."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787707869_llm_marker_operates_teleportation_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Prior precedent: no redundant unlisted-verb test authored; same disposition applied."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3226) is exactly the proposed [[marker]] test -> GroupedExactKnownToken, delimiter_depth 2; three/four-level at L2208/L2194."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "sanitize_model_control_markers (L519->L352) feeds only validation gates is_valid_dialogue_output (L556) + has_one_nonempty_final_next_action (L633); generate_dialogue (L695) returns the ORIGINAL text on pass (L997-998), so the scan is non-destructive to the emitted buffer."
+    }
+  ]
+}

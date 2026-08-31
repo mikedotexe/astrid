@@ -1,0 +1,43 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1788004192.txt",
+      "sha256": "4dbbc418f9d512c3e649794bed8e43fe66d1235f7fe31e8eaf6154b74613772a",
+      "bytes": 3379,
+      "lines": 43,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_927e0050579adf0255785bf203c955f8635e1785e9eff3da0685137b232c92ea",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_927e0050579adf0255785bf203c955f8635e1785e9eff3da0685137b232c92ea.json",
+      "sha256": "a112cfe4ff8b9d2b67db65103777ed09864beb280de802c4070c53066b33fe27",
+      "bytes": 23875,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "grants_approval": false,
+      "raw_prose_included": false,
+      "raw_prompt_included": false,
+      "raw_response_included": false,
+      "private_path_included": false,
+      "direct_causation_claimed": false,
+      "artifact_sha256_binding": "4dbbc418f9d512c3e649794bed8e43fe66d1235f7fe31e8eaf6154b74613772a",
+      "canonical_body_sha256": "16a945110342d7ada9ff2215bdaac38078000e6a160d9f36f10cf7bd11115180",
+      "canonical_body_byte_count": 1842,
+      "source_snapshot_file_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "projection_lived_state_alignment": "artifact_integrity_unavailable",
+      "projection_integrity_issue_count": 1,
+      "projection_gap_count": 1,
+      "experiential_gap_claimed": false,
+      "independent_byte_binding_verification": "intact: artifact_sha256 and canonical_body_sha256 recomputed from report bytes both match; source file_sha256 matches on-disk source"
+    }
+  ]
+}

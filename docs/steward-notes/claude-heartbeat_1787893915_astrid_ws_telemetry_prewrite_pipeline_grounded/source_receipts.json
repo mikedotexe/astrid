@@ -1,0 +1,46 @@
+{
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+    "sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+    "total_lines": 1041,
+    "total_bytes": 39749,
+    "report_declared_window": "1-400",
+    "report_declared_uncovered": "401-1041",
+    "steward_read_scope": "complete 1-1041",
+    "sha_vs_report_binding": "match",
+    "key_intervals": {
+      "spawn_telemetry_subscriber": "8-235",
+      "select_loop_message_arms": "55-179",
+      "handle_telemetry_message_inline_await": "79-81, 98-100",
+      "handle_telemetry_message / _at": "238-638",
+      "integration_health_timing_capture": "404-528",
+      "sqlite_and_snapshot_writes": "531-594"
+    }
+  },
+  "supporting_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "sha256": "8d673856ff2f63f96b92ab07a0cbf632eeb030a0c92ebd231c5d09cec51225a5",
+      "total_lines": 200,
+      "total_bytes": 6755,
+      "read_scope": "90-159",
+      "why": "definitions of record_ws_message_received (104-113) and record_ws_message_sent (115-123) — claim c004 counters"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "sha256": "0e6d0603d4b9737a8f65e56b10fcb3e17c0ba15ac9155685ed22b093db8d2117",
+      "total_lines": 1554,
+      "total_bytes": 74711,
+      "read_scope": "52-56, 88-205",
+      "why": "watch thresholds (prewrite 100 / wait 5 / hold 20) and build_telemetry_integration_health_v1 branch order + fields — claims c002, c003"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/tests.rs",
+      "sha256_post_edit": "0f8f5ebdca8debde2c57992ef43a00edb569e3995e385495f568eda97bd53912",
+      "total_lines": 4493,
+      "total_bytes": 174342,
+      "read_scope": "1-40, 170-209, 4210-4300 + new insertion",
+      "why": "existing coverage for Test 1 (L4218) and Test 2 (L173); new prewrite_pipeline_heavy regression"
+    }
+  ]
+}

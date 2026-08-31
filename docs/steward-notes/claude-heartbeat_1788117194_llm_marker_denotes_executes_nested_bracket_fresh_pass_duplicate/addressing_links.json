@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; reference_syntax L49-60 preserves iff delimiter OR relation; push at L129-131."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_proxy_relation_phrase / _preserves_quoted_exact_token_reference guard preserve-vs-strip; 59 marker tests pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 (18-verb matches!); first_word_after L89-96; operates/executes absent (intentional, comment L62-63)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_does_not_expand_relation_allowlist_to_contains L2851 (+ creates/implies/triggers) enforce strict whitelist non-widening."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records exact-source verification + deliberate design boundary (whitelist not widened for operates/executes)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 uses exact_reference_delimiter_pair L153-197 fixed set; unmapped pair -> None (L195 else, ? at L215); MAX depth 4 L151."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters / _does_not_treat_markdown_emphasis_as_exact_delimiters guard the None fall-through."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Strict-enforcement mechanism guarded by _distinguishes_allowlisted_is_from_unlisted_acts L2603, _signals_from_unlisted_signifies L4464, _does_not_expand_*_to_contains L2851; denotes exercised L2577."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788117194_llm_marker_denotes_executes_nested_bracket_fresh_pass_duplicate/summaries/introspection_astrid_llm_1788110646.md",
+      "note": "Records why denotes/executes duplicates covered strict-whitelist mechanism; operates prior-closed in 1787707869 packet."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Nested delimiter_depth covered: _reports_mixed_ascii_quote_bracket_stack_depth_three L2222, _preserves_bounded_nested_delimiter_stacks L2176, _reports_exact_four_level_delimiter_depth L2194."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue confirmed at L695 (pub async fn), outside her 1-400 window; her continuation pointer is factually correct."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row records the duplicate close + verification + grounded continuation with no code change."
+    }
+  ]
+}

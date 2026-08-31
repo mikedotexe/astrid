@@ -1,0 +1,112 @@
+{
+  "round": "claude-heartbeat_1788117194_llm_marker_denotes_executes_nested_bracket_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run",
+  "controller": {
+    "run_id": "run_1788113612780477000_d2c9ddfdc7",
+    "preprojection_generation_id": "projection_1788113615741758000_4ffaa076d5",
+    "pause_generation": 321,
+    "postprojection": "runs after process exit (adapter-owned); not captured in-run"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  ],
+  "baseline_checks": {
+    "git_diff_check": "clean",
+    "cargo_fmt_check": "clean"
+  },
+  "focused_tests": {
+    "control_marker_cleanup": {"passed": 59, "failed": 0, "filtered_out": 1849}
+  },
+  "integrity_suites": {
+    "addressing_self_test": "ok (44 tests)",
+    "test_evidence_event_store": "ok",
+    "test_steward_control": "ok",
+    "test_steward_projection": "ok",
+    "test_division_ceremony_followup": "ok",
+    "test_division_ceremony_chronicle": "ok",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "ok",
+    "test_introspection_cadence_audit": "ok",
+    "introspection_cadence_audit_strict": "integrity_ok=true, errors=[], duplicate_hash_group_count=0",
+    "anti_drop_self_test": "ok",
+    "anti_drop_verify": "total=69, alarms=0, gaps=0, rc=0",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify": "valid=true, issue_count=0"
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4541,
+    "canonical_fully_addressed": 3166,
+    "canonical_fully_read": 3799,
+    "canonical_remaining": 1375,
+    "canonical_unread": 742,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0
+  },
+  "division": {
+    "cycle_sequence": 37,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_5e7ec66fdfdcece4fac21acf6d449d07",
+    "event_count": 256,
+    "event_head_sha256": "ee754f92714177e496e5c085d799795a3cddc74263aa2897124480db35503d9a"
+  },
+  "chronicle": {
+    "id": "division_chronicle_e0b8a9f08fc2d89edb2741e6",
+    "json_sha256": "78be6955b5fb07b50ac8f307dfcc2ad62b345bdc3ea3b7e7b1bd3696efac269c",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "Durably current; only the volatile supervisor_status hash moves (documented acceptable state). Reprojected after record-round."
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "last_global_seq": 945220,
+    "head_sha256": "b91b36e96b030a3efc27247dccfab1a1a1a638ddbf4b63b2ea306e73cf16fd88",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "stream_sequences": {
+      "addressing": 59399,
+      "steward_control": 17652,
+      "claim_families": 238071,
+      "felt_contracts": 202233,
+      "lived_state_witness": 8924,
+      "reciprocal_uptake": 65214,
+      "model_qos": 253391,
+      "sandbox": 3291,
+      "signal_spine": 45245,
+      "representation_contracts": 44962,
+      "agency_commons": 6034,
+      "steward_work_selection": 604
+    }
+  },
+  "live_change": "none required or attempted; git read-only in adapter mode",
+  "commit_debt": {
+    "new_untracked": [
+      "docs/steward-notes/claude-heartbeat_1788117194_llm_marker_denotes_executes_nested_bracket_fresh_pass_duplicate/"
+    ],
+    "edited_tracked_shared_files": [
+      "CHANGELOG.md (prepended one [Unreleased] entry; file pre-dirty from prior rounds)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (appended one dated row; file pre-dirty from prior rounds)"
+    ],
+    "foreign_untouched": [
+      "capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json",
+      "capsules/spectral-bridge/src/codec/tests.rs",
+      "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "capsules/spectral-bridge/src/ws/tests.rs",
+      "minime: minime/src/esn.rs, minime_autonomy/runtime.py, tests/test_correspondence_v1.py"
+    ]
+  }
+}

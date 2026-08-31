@@ -1,0 +1,29 @@
+{
+  "round": "division_cycle34_return",
+  "actor": "claude-heartbeat",
+  "note": "0 source/test files touched (evidence-only Division return). Integrity suite run to confirm the durable Division/steward/evidence stores after record-followup.",
+  "integrity": {
+    "addressing_self_test": {"result": "OK", "tests": 44},
+    "anti_drop_self_test": {"result": "OK", "tests": 5},
+    "anti_drop_verify": {"guards": 69, "alarms": 0, "gaps": 0},
+    "experiential_epistemics_self_test": {"result": "OK", "tests": 2, "valid": true},
+    "test_division_ceremony_followup": {"result": "OK"},
+    "test_division_ceremony_chronicle": {"result": "OK"},
+    "test_division_ceremony_projection": {"result": "OK"},
+    "test_evidence_event_store": {"result": "OK"},
+    "test_projection_cursors": {"result": "OK"},
+    "test_steward_control": {"result": "OK"},
+    "test_steward_projection": {"result": "OK"},
+    "division_ceremony_followup_verify": {"ok": true, "cycle_sequence": 35, "review_due": false, "event_count": 239, "head": "3a95749af5b726e93af593f8970b062df495f632adf150f528172cbeac0418e9"},
+    "division_ceremony_chronicle_verify_return_time": {"ok": true, "chronicle_id": "division_chronicle_4eaaba69372c22cca39533bf", "json_sha256": "6170a7c2dc77d83c288d2925f90109f31c20f42c33066a45e3654c12875757c0", "followup_events": 238, "ceremony_events": 0, "durable_inputs_current": true, "volatile_mismatches": ["supervisor_status_sha256"]},
+    "division_ceremony_chronicle_verify_post_return": {"ok": true, "chronicle_id": "division_chronicle_581e9401b9600bf47df19e81", "json_sha256": "f8ba4a5dcf04007acdb9c50d18fe8e4680a2a24511b5defef24350b0cc792c53", "followup_events": 239, "ceremony_events": 0, "durable_inputs_current": true, "volatile_mismatches": ["supervisor_status_sha256"]},
+    "cadence_audit_strict": {"integrity_ok": true, "errors": []},
+    "audit_counters": {"status": "consistent", "mismatches": [], "checks_all_true": true, "check_count": 7},
+    "evidence_event_store_verify": {"valid": true, "corrupt_lines": 0, "errors": [], "gate": "PASSED", "note": "read-only verify over the full store; ran ~7min and auto-backgrounded, completed exit 0 valid=True"},
+    "deferred": {
+      "test_introspection_cadence_audit_pytest": "NOT run as a separate pytest; the substantive check `introspection_cadence_audit.py --strict --compact` ran and returned integrity_ok=true, errors=[]",
+      "experiential_epistemics_verify_full": "DEFERRED as recorded debt (macOS lacks timeout; heavy full-store scan could not be safely bounded in remaining one-shot budget after the critical evidence-store verify). 0 experiential_epistemics records written this round (0 reports), so no durable evidence depends on it. Rerun next run: python3 scripts/experiential_epistemics.py verify --json",
+      "evidence_event_store_status_stream_counts": "DEFERRED (heavy full-store scan; cycle-32 precedent). Integrity gate met by verify (valid=true, corrupt_lines=0). Rerun: python3 scripts/evidence_event_store.py --json status"
+    }
+  }
+}

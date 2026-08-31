@@ -1,0 +1,25 @@
+{
+  "round": "claude-heartbeat_1788170517_llm_relation_is_like_prefix_shadow",
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml followed_by_explicit_exact_token_relation_rejects_hyphenated_is_like_prefix_shadow",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "filtered_out": 1909,
+      "note": "New regression: is-like prefix-shadow rejected; bare allowlisted 'is' preserved."
+    }
+  ],
+  "baseline_checks": [
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "fail_preexisting_foreign",
+      "note": "Only capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs (L259, L295) is flagged. That file is committed (last touched cbf2161a7c, 2026-08-17), not dirty, and NOT touched by this round. The edited file provider/tests.rs is NOT flagged (0 mentions) and rustfmt-clean via the canonical config-aware formatter. Pre-existing fmt debt, left untouched (foreign)."
+    }
+  ]
+}

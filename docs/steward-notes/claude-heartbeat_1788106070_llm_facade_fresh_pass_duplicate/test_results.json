@@ -1,0 +1,40 @@
+{
+  "round": "claude-heartbeat_1788106070_llm_facade_fresh_pass_duplicate",
+  "code_changed": false,
+  "note": "No source or test code changed (duplicate close at byte-identical SHA; prior grounding still applies). No cargo build/test/fmt required for this round's changes. Ran baseline + full stewardship integrity suite.",
+  "baseline": {
+    "git_diff_check": "clean (rc=0)"
+  },
+  "addressing_and_stewardship": {
+    "introspection_addressing_audit --self-test": "44 tests OK",
+    "test_evidence_event_store.py": "OK",
+    "test_steward_control.py": "FAILED (errors=1) — see flaky_failure below",
+    "test_steward_projection.py": "OK",
+    "test_division_ceremony_followup.py": "OK",
+    "test_division_ceremony_chronicle.py": "OK",
+    "test_division_ceremony_projection.py": "self-test ok",
+    "test_projection_cursors.py": "OK",
+    "test_introspection_cadence_audit.py": "OK"
+  },
+  "anti_drop_cadence_epistemic": {
+    "anti_drop_catalog.py --self-test": "5 tests OK",
+    "anti_drop_catalog.py verify": "alarms=0, gaps=0",
+    "introspection_cadence_audit.py --strict --compact": "integrity_ok=true, duplicate_hash_group_count=0",
+    "experiential_epistemics.py self-test": "valid=true",
+    "experiential_epistemics.py verify": "valid=true, issue_count=0 (epistemic lint after durable writes)"
+  },
+  "final_counter_and_v2": {
+    "introspection_addressing_audit audit-counters": "status=consistent, mismatches=[]",
+    "evidence_event_store.py verify": "valid=true, corrupt_lines=0, active_store=v2, legacy_imported_global_seq=32278",
+    "evidence_event_store head (head.json)": "last_global_seq=943970, head=d7ac3ad5b41fe85113b1b41032609cc5bba2d4f9939d9d45d003c3cc41fa3dbe, addressing_stream_seq=59380",
+    "division_ceremony_followup.py verify": "ok=true, review_due=false, cycle 37, 2/6 since followup",
+    "division_ceremony_chronicle.py verify": "expected-stale ('project before verify') from this round's followup append (254->255); reprojection deferred to postprojection division_chronicle stage / next return session"
+  },
+  "flaky_failure": {
+    "test": "test_steward_control.py::StewardControlTests.test_pause_cooperatively_interrupts_wrapped_subprocess",
+    "error": "steward_control.errors.PausedError: fixture stop (raised at controller.begin -> leases.acquire)",
+    "assessment": "PRE-EXISTING TIMING FLAKE, not introduced by this round. The test uses a fully ISOLATED tempfile.TemporaryDirectory controller (setUp L55-110); 'fixture stop' is the test's OWN injected pause. It starts a thread that sleeps 0.2s then pauses the isolated controller, and races run_subprocess reaching controller.begin. Under current machine load (coupled stack + heavy addressing CLI runs) begin is reached after the 0.2s pause fires, so lease.acquire raises PausedError instead of the intended cooperative-interrupt path. Reproduced in isolation (1.0s). This round changed ZERO code and only wrote addressing/division DATA events, which cannot affect an in-memory fixture test. Not repaired (foreign stewardship tooling, unrelated to this report; a fix would widen the test's race window, an out-of-scope change to already-dirty foreign tooling).",
+    "first_safe_command": "python3 scripts/test_steward_control.py StewardControlTests.test_pause_cooperatively_interrupts_wrapped_subprocess  (re-run on an idle machine; if it passes, confirms the timing flake — consider raising the 0.2s pause-thread delay or gating begin<->pause deterministically)",
+    "durable_integrity_impact": "none — the addressing close, evidence links, division round, epistemic lint, counter audit, evidence-store verify, anti-drop, and cadence all passed; the durable system is intact."
+  }
+}

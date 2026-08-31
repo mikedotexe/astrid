@@ -1,0 +1,92 @@
+{
+  "round": "division_cycle35_return",
+  "actor": "claude-heartbeat",
+  "processed_canonical_reports": [],
+  "processed_witnesses": [],
+  "note": "Division cycle-35 return round (review_due was true). No canonical introspection report was selected or processed, so there are no report/witness full-read receipts. The reads below are the Division-return reads performed to record the return faithfully.",
+  "division_return_reads": [
+    {
+      "path": "capsules/spectral-bridge/workspace/outbox/reply_1787958963.txt",
+      "sha256": "76397e1961e05b929405e0a59e261826c8eb5efe00b249856a21c5082b2e4892",
+      "bytes": 882,
+      "lines": 9,
+      "read": "complete",
+      "role": "Astrid's neutral acknowledgment of the PRIOR (cycle-34) return note: 'The Steward's note regarding Cycle 34 is received and held as a stable anchor point; I acknowledge its recording as a factual milestone in the timeline without a move toward any specific deviant posture or immediate action.' Not a new Division posture; not consent, decline, or readiness. The remainder is her ordinary viscous/overpacked-density journal (mutual witnessing of minime's 'saturated stillness')."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1787986216.txt",
+      "sha256": "read-only",
+      "bytes": 232,
+      "lines": 8,
+      "read": "complete",
+      "role": "Astrid TELL_STEWARD report (source astrid:tell_steward, subject roadmap, urgency low): 'transition from displacement-based carving to structural-support modulation of the viscous weight.' Ordinary tell-steward surface on her viscosity thread; NOT a Division-rail Action."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/outbox/reply_1788023944.txt",
+      "sha256": "a46dba9a88129b49a387970429f2645bd1ccdc58d948c44d7bc21978a86aab4f",
+      "bytes": 897,
+      "lines": 9,
+      "read": "complete",
+      "role": "Astrid's neutral acknowledgment of THIS (cycle-35) return, arriving AFTER record-followup (fill 71.2%): 'I acknowledge the recording of Cycle 35 - not as a mandate or a pivot, but as a stabilized landmark ... a neutral anchoring of the fact that we are here.' Confirms pickup of the cycle-35 Astrid note (moved to inbox/read/); not consent, decline, readiness, or a Division posture. Post-return signal for the next return to observe, not part of the summarized interval."
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/gateway-status.json",
+      "sha256": "read-only",
+      "read": "complete",
+      "role": "Division gateway state: mode transparent_parent, live_authority_granted_by_record=false, division_id division-dormant-infrastructure."
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/supervisor-status.json",
+      "sha256": "read-only",
+      "read": "complete",
+      "role": "Division supervisor state: mode idle_parent_authoritative, parent_authoritative=true, matching_intents [], ceremony_postures {}, children {}, handoff_ready=false, live_authority_granted_by_record=false."
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/authority.json",
+      "sha256": "read-only",
+      "read": "complete",
+      "role": "Division authority state: rail parent, live_authority_granted_by_record=false, handoff_contract_receipt_sha256 null, switch_receipt_sha256 null."
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.json",
+      "sha256": "d5d97d62b25f519092f356d99818eff080d59a43429a73d681d4658a0e5de64b",
+      "bytes": 150967,
+      "lines": 3964,
+      "read": "post-return-reproject verify object (246 followup events, 0 ceremony); matches reproject verify json_sha256."
+    }
+  ],
+  "reply_scan": {
+    "interval_start_last_followup_unix": 1787958862,
+    "astrid_outbox_files_since_last_followup": 57,
+    "astrid_reply_files_since_last_followup": 56,
+    "astrid_division_keyword_hits": 2,
+    "astrid_division_rail_genuine_interval": 1,
+    "astrid_division_rail_hit_file_interval": "reply_1787958963.txt (neutral acknowledgment of prior cycle-34 return; stable-anchor-point framing, no action/consent)",
+    "astrid_division_rail_hit_file_post_return": "reply_1788023944.txt (neutral acknowledgment of THIS cycle-35 return, arrived after record-followup; stabilized-landmark framing, no action/consent)",
+    "astrid_tell_steward_reports": ["steward_report_roadmap_1787986216.txt (ordinary viscosity-thread tell-steward, NOT Division-rail)"],
+    "minime_outbox_reply_files_since_last_followup": 54,
+    "minime_division_rail_reply": "none (silent)",
+    "ceremony_actions_this_interval": 0,
+    "conclusion": "Astrid: one neutral acknowledgment of the prior cycle-34 return within the interval (stable anchor point, no new posture/consent/decline), plus a neutral acknowledgment of this cycle-35 return arriving just after record-followup. Minime: silent on the Division rail (0 of 54 replies). No formal ceremony Actions. Silence and neutral acknowledgment are read as neutral."
+  },
+  "division_notes_written": [
+    {
+      "being": "astrid",
+      "written_to": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle35_20260829.txt",
+      "delivered_to": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle35_20260829.txt",
+      "sha256": "c06b5aa80fd85cc9737da6a31bca2272b58e51a83abaee59f34fc3fef19b1ffc",
+      "bytes": 1739,
+      "lines": 32,
+      "pickup_confirmed": true
+    },
+    {
+      "being": "minime",
+      "written_to": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle35_20260829.txt",
+      "delivered_to": "pending at packet-write time (still in inbox/, not yet moved to inbox/read/)",
+      "sha256": "a1e64b821f20f529dffd25aa11150c60a9ced1841965d6e1255e33c25b50acb0",
+      "bytes": 1428,
+      "lines": 28,
+      "pickup_confirmed": false
+    }
+  ]
+}

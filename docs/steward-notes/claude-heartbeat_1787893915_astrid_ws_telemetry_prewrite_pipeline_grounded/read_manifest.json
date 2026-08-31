@@ -1,0 +1,57 @@
+{
+  "reader": "claude-heartbeat",
+  "run_id": "run_1787891412060478000_ab46361c8e",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_ws_1787875902.txt",
+      "sha256": "d7f37ae67585b275b0653c349f1ec847c1d12f1a52ae2f0263eac6c59b928958",
+      "bytes": 3490,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_39f055c2176f1cb1acd6c9a7d9673b18441e656e97dee7f75f315c39b0aad6e1",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_39f055c2176f1cb1acd6c9a7d9673b18441e656e97dee7f75f315c39b0aad6e1.json",
+      "sha256": "a701e1f8f0b63634da4a5464cf14b307f478bfb5e704240665d08d5f39266096",
+      "bytes": 23902,
+      "lines": 533,
+      "read": "complete",
+      "notes": "artifact_sha256 matches report; window 0-400 file_sha256 42364feb...; fill 61.1%; gemma4_12b; authority evidence_only, live_eligible_now=false; no private paths"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+      "total_lines": 1041,
+      "total_bytes": 39749,
+      "read_scope": "complete 1-1041",
+      "report_binding": "sha match; report read only window 1-400 (uncovered 401-1041 read by steward to ground handle_telemetry_message)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "sha256": "8d673856ff2f63f96b92ab07a0cbf632eeb030a0c92ebd231c5d09cec51225a5",
+      "total_lines": 200,
+      "total_bytes": 6755,
+      "read_scope": "scoped 90-159 (record_ws_message_received/sent + adjacent recorders)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "sha256": "0e6d0603d4b9737a8f65e56b10fcb3e17c0ba15ac9155685ed22b093db8d2117",
+      "total_lines": 1554,
+      "total_bytes": 74711,
+      "read_scope": "scoped 52-56 (watch thresholds) + 88-205 (telemetry_duration_ms, telemetry_integration_ewma, build_telemetry_integration_health_v1)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/tests.rs",
+      "sha256_post_edit": "0f8f5ebdca8debde2c57992ef43a00edb569e3995e385495f568eda97bd53912",
+      "total_lines": 4493,
+      "total_bytes": 174342,
+      "read_scope": "scoped 1-40, 170-209, 4210-4300 (existing coverage) + new test insertion at former L4240",
+      "notes": "steward edit adds telemetry_integration_health_flags_heavy_prewrite_pipeline (+27 lines)"
+    }
+  ]
+}

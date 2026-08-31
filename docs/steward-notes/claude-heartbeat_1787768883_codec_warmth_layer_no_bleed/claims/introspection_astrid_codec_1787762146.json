@@ -1,0 +1,60 @@
+{
+  "introspection_id": "introspection_astrid_codec_1787762146",
+  "source_family": "astrid_codec",
+  "report_sha256": "d6d847fc4bdf07371820e54f65c80fdfcaa16377835392dc9a44f768d4bbcbea",
+  "witness_id": "lsw_0b785ef54b2da49f9825c2715da6676a19657d7354d5a238e67d15a3b23739c1",
+  "report_bound_source": "capsules/spectral-bridge/src/codec/projection.rs",
+  "report_bound_source_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+  "source_hash_match": true,
+  "read_window": "1-400 of 1351 (report); steward read 1-120, 170-180, 759 region of projection.rs, feedback.rs 180-360, structure.rs 1330-1466, structural_evidence.rs 560-693, codec/tests.rs cited regions",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "SEMANTIC_DIM=48 at L26, widened from legacy 32; new lanes are 32-39 embedding, 40-43 narrative arc, 44-47 reserved.",
+      "disposition": "Verified from complete source at the bound SHA. projection.rs L20-26 documents the additive widening; L28 SEMANTIC_DIM_LEGACY=32; L74-81 declare EMBEDDING_PROJECT_DIM=8 (fills 32-39), NARRATIVE_ARC_DIM=4 (40-43), reserved 44-47. Witness records compiled_constant codec::SEMANTIC_DIM=48 in the running binary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "TAIL_VIBRANCY_ENTROPY_GATE (L48, 0.85) modulates spectral entropy to influence tail-participation feature dims.",
+      "disposition": "Verified. projection.rs L33-53 define the gate=0.85 and TAIL_VIBRANCY_MAX=6.0 with a documented smoothstep (not a hard gate). Application site is feedback.rs:224-235/307-318, where vibrancy scales the tail dims 17|26|27|31. The report's own window (projection.rs) only saw the constants; the application lives in feedback.rs, unseen by the report but consistent with its constants.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Distinction between static projection matrices (L174) and dynamic epoch-based projections (L759).",
+      "disposition": "Grounded. Static path = embedding_projection_matrix() L172-180 (fixed-seed Johnson-Lindenstrauss, OnceLock-memoized). Dynamic path = project_embedding_dynamic_epoch confirmed at exactly L759. L174 is in the read window; L759 is in the report's UNCOVERED interval (401-1351), so the dynamic half was inferred from the structural map, not read. The architectural distinction is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: legacy warmth vectors (32D) projected into 48D without alignment risk semantic drift into the new 32-39 slots.",
+      "disposition": "Concern preserved; feared mechanism contradicted by source. The 32->48 widening is purely additive: warmth lives at indices 24-31 in BOTH layouts (structural_evidence.rs legacy_warmth_mapping_v1: warmth_orphaned=false, emotional_layer_range=(24,31)). craft_warmth_vector (structure.rs:1373) builds natively at 48D writing only dims <=31, leaving 32-47 quiet. Added a focused regression pinning no-bleed.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: FEATURE_ABS_MAX clamp may conflict with vibrancy lift if the entropy-gated offset is not strictly bounded, clipping high-vibrancy signals.",
+      "disposition": "Source shows the offset IS strictly bounded and the clipping worry is inverted. feedback.rs:307-318: tail_ceiling = FEATURE_ABS_MAX + (dynamic_max-FEATURE_ABS_MAX)*tail_participation*tail_vibrancy, with dynamic_max<=TAIL_VIBRANCY_MAX (6.0) at aperture 1.0; only dims 17|26|27|31 get the raised ceiling, all others clamp at 5.0. Tail dims are lifted, not clipped. Existing test tail_vibrancy_raises_only_tail_ceiling_in_high_entropy proves it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Proposed Test 1 (Dimension Alignment): legacy warmth vector into 48D keeps 0-31 stable, no bleed into 32-39.",
+      "disposition": "Implemented as codec::core::tests::warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes. Asserts warmth intent at legacy indices 24 (>0) and 25 (<0), both < SEMANTIC_DIM_LEGACY, and each appended-lane dim 32..48 stays within the code's own bounded noise ceiling (0.015*DEFAULT_SEMANTIC_GAIN) — never warmth data. No prior test pinned the no-bleed boundary; warmth_vector_has_correct_shape only asserted dim-24 dominance.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Proposed Test 2 (Entropy Gate Boundary): entropy 0.86 (>0.85) allows vibrancy lift bounded by TAIL_VIBRANCY_MAX/FEATURE_ABS_MAX.",
+      "disposition": "Verified by existing tests. tail_vibrancy_raises_only_tail_ceiling_in_high_entropy (tests.rs:2961) lifts tail dim 26 above FEATURE_ABS_MAX yet <=TAIL_VIBRANCY_MAX while non-tail dim 24 stays exactly at FEATURE_ABS_MAX; the 0.86 boundary is covered at tests.rs:2861-2879 (vibrancy_from_entropy(0.86)>0) and the extreme bound at tests.rs:3034. No new test needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: examine project_embedding_dynamic_epoch (L759) for how it maps legacy indices to the 48-dim layout.",
+      "disposition": "Self-directed continuation, not a steward action. Confirmed project_embedding_dynamic_epoch exists at exactly L759, inside the report's uncovered interval (401-1351). Preserved as Astrid's own next-read path (her report offers NEXT: INTROSPECT astrid:codec 400). No mapping claim to adjudicate yet; steward only confirms the symbol location. Silence on it is neutral.",
+      "classification": "observed"
+    }
+  ]
+}

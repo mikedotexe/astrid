@@ -1,0 +1,85 @@
+{
+  "round": "domain_boundaries_mode_packing_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1788093106404387000_7b82b897d9",
+    "preprojection_generation_id": "projection_1788093110608572000_51a3b8edba",
+    "preprojection_status": "passed",
+    "postprojection": "adapter-owned; runs after this process exits",
+    "lease_token_read": false
+  },
+  "processed": {
+    "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+    "terminal_status": "addressed_duplicate",
+    "duplicate_of": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+    "report_sha256": "c896e60493b777d213eba83999d55b34319b126ee7fe7f2594abc8be831b889a",
+    "witness_sha256": "75201af30c90e58bbe5c5362cd762744e44caed40dc00a6d0e0916d5ca910530",
+    "source_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "source_binding_match": true
+  },
+  "addressing_ops": {
+    "record_read": "exit 0 (27s); summary_sha256 3b4c4cc27aff3248850f567dcdcb99bd9b59ab2bdbbd011892761feb998b46ff; dispositions untruncated (all <=500 chars)",
+    "link_evidence_batch": "exit 0; new_link_count 15; proof_missing_claims []",
+    "close": "exit 0; status addressed_duplicate; ts 1788096042.99364"
+  },
+  "tests": {
+    "cargo_porosity": "14 passed / 0 failed",
+    "cargo_advisory": "13 passed / 0 failed",
+    "code_changed": false
+  },
+  "integrity": {
+    "addressing_self_test": "44 passed OK",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 OK",
+    "test_introspection_cadence_audit": "6 OK",
+    "cadence_audit_strict": "integrity_ok true; 0 duplicate hash groups; errors []",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "69 guards / 0 alarms / 0 gaps",
+    "experiential_self_test": "valid true (2 tests OK)",
+    "experiential_verify_final": "valid true; issues 0; history_rewrite false",
+    "audit_counters": "status consistent; mismatches []; all checks true",
+    "evidence_event_store_verify": "valid true; corrupt_lines 0; active v2",
+    "division_followup_verify": "ok true; review_due false; cycle 37; completed 1/6; event_count 254",
+    "chronicle_verify": "durable_inputs_current true; volatile_mismatches [supervisor_status_sha256] (expected moving supervisor hash, not a durable-integrity failure)"
+  },
+  "division": {
+    "cycle_sequence": 37,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "round_event_id": "division_followup_event_5d1b0d8bd70dc6f543618b379088da23",
+    "event_count": 254,
+    "event_head_sha256": "0b9f99cad0462eb9ca64c9b4e97f395aa26988bb71118e77d01203b7e34d63f7",
+    "chronicle_id": "division_chronicle_73a87a81a498ff0a5ee20147",
+    "chronicle_json_sha256": "fa5d74a3bc129aab6ad92466a4768af1404aa1baa914c4b877fad014db7e70ec"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 942665,
+    "head": "ab0bdd0c387be994de1b0a9e823e373cb67a579847813dede603a72c17cb8ba4",
+    "legacy_imported_global_seq": 32278,
+    "active_store": "v2",
+    "v1_immutable": true
+  },
+  "counters_canonical": {
+    "indexed": 4535,
+    "fully_addressed": 3164,
+    "full_read": 3797,
+    "remaining": 1371,
+    "unread": 738,
+    "blocked_needs_steward": 415,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifacts_remaining": 3066,
+    "addressed_duplicate_all_artifacts": 1145
+  },
+  "authority_boundary": "No source/test/live change. Git read-only in adapter mode. The mode-packing 'fix' remains a Tier-5 evidence-only wait; standing ESN Tier-5 heads (wi_e579041bc76f8310, wi_69fbd510467c6337, wi_3e26ac525fea1c36) untouched (live_authority_granted=false). No build/restart/deploy required or attempted."
+}

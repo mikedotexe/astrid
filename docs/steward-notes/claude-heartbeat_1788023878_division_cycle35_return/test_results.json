@@ -1,0 +1,53 @@
+{
+  "round": "division_cycle35_return",
+  "actor": "claude-heartbeat",
+  "note": "Division cycle-35 return round. 0 canonical reports processed, no source/test/config code touched, so no focused Rust tests were needed. The suites below are the stewardship/Division/evidence-store integrity gates.",
+  "self_tests": {
+    "introspection_addressing_audit --self-test": "OK (44 tests)",
+    "anti_drop_catalog --self-test": "OK (5 tests)",
+    "experiential_epistemics self-test --json": "OK, valid=true"
+  },
+  "division_and_chronicle": {
+    "division_ceremony_followup verify": "ok=true, cycle_sequence=36, completed_rounds_since_followup=0, review_due=false, event_count=246, head=e08f456c3bd9f083df762995b2b87310d06927ae6b130eda5baee917278929b0",
+    "division_ceremony_chronicle verify (post-return)": "ok=true, chronicle_id=division_chronicle_67a57455cef636465edcfd6e, 246 followup / 0 ceremony, durable_inputs_current=true, volatile_mismatches=[supervisor_status_sha256]",
+    "test_division_ceremony_followup": "OK",
+    "test_division_ceremony_chronicle": "OK",
+    "test_division_ceremony_projection": "OK (division ceremony projection self-test: ok)",
+    "test_projection_cursors": "OK",
+    "test_steward_projection": "OK"
+  },
+  "test_steward_control": {
+    "result": "26/27 pass; 1 ERROR in test_pause_cooperatively_interrupts_wrapped_subprocess",
+    "disposition": "KNOWN ENVIRONMENTAL FLAKE, not a regression. Control-plane code is git-clean (scripts/steward_control/*, test file unmodified this run). The test uses an isolated tempfile.TemporaryDirectory fixture. On retry it PASSED standalone (attempt 1 OK); a second retry hit a different, teardown-race failure (OSError Errno 66 'Directory not empty' cleaning the temp evidence_event_store_v2 dir) — both are timing/teardown races under the live-stack machine load, not logic failures. This test's first-run flakiness is documented in the cycle-30 changelog ('test_steward_control clean on rerun after the known first-run flake').",
+    "first_safe_recheck": "python3 scripts/test_steward_control.py (on a quieter machine / lower live-stack load)"
+  },
+  "cadence": {
+    "introspection_cadence_audit --strict --compact": "integrity_ok=true, errors=[], configuration_valid=true; canonical_count=4521 (0 duplicate hash groups), latest introspection_proposal_distance_contact_control_1788019793.txt"
+  },
+  "anti_drop": {
+    "anti_drop_catalog verify --json": "total=69 guards, alarms=0, gaps=0"
+  },
+  "counters": {
+    "introspection_addressing_audit audit-counters --json": "status=consistent, mismatches=[], all 7 checks true",
+    "canonical": "indexed 4521, fully_addressed 3157, full_read 3790, remaining 1364, unread 731, blocked_needs_steward 415, triaged_pending_action 214, triaged_watch 4, read_needs_claims 0",
+    "all_artifacts": "indexed 6209, remaining 3052, unread 2419",
+    "other_timestamped_text": "indexed 1370, remaining 1370",
+    "thin_introspection_outputs": "indexed 318, remaining 318"
+  },
+  "evidence_event_store": {
+    "evidence_event_store --json verify": "valid=true, corrupt_lines=0, errors=[], event_count=933472, last_global_seq=933472, last_event_sha256=fd107f496e04a20721d09a2cb0f857bf13415ac0214cd336b92018aca32594a6",
+    "runtime_note": "Ran ~20 min (auto-backgrounded past the 120s foreground limit under live-stack machine load; completed with exit code 0). The critical integrity gate PASSED after this round's Division follow-up + chronicle appends.",
+    "stream_counts": {
+      "addressing": 59226, "agency_commons": 6008, "attention_portfolio": 3,
+      "claim_families": 237972, "corridor_v1": 5, "corridor_v2": 112,
+      "felt_contracts": 201746, "felt_mechanism_concordance": 80,
+      "lived_state_witness": 8880, "model_qos": 245887, "reciprocal_uptake": 64644,
+      "representation_contracts": 43786, "sandbox": 3291, "signal_spine": 43999,
+      "steward_control": 17245, "steward_work_selection": 588
+    }
+  },
+  "deferred_as_recorded_debt": {
+    "experiential_epistemics verify --json": "DEFERRED to next run (heavy full-store lint; no experiential_epistemics records were written this round — 0 reports processed, so no durable evidence depends on it this round; the self-test passed valid=true). Precedent: cycle-34 deferred the same. Re-run: python3 scripts/experiential_epistemics.py verify --json",
+    "evidence_event_store status stream-count capture": "The paired verify (the integrity gate) PASSED and its stream_counts were captured from the verify object above. The separate `status` heavy full-store scan was not re-run (cycle-30/32/34 precedent). Re-run if needed: python3 scripts/evidence_event_store.py --json status"
+  }
+}

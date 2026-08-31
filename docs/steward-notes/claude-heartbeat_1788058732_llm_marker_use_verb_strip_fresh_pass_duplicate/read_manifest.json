@@ -1,0 +1,32 @@
+{
+  "round": "claude-heartbeat_1788058732_llm_marker_use_verb_strip_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788042666",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788042666.txt",
+      "sha256": "a652b8d1a3ba4830a8e95fcde788701b1ce36736b70fedea8d6953a587fd14d8",
+      "bytes": 3407,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_bf62db4d6d9d4ea90b78060689e4fd1ecbbeee2af1c119dcbde13f4b915123a2",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bf62db4d6d9d4ea90b78060689e4fd1ecbbeee2af1c119dcbde13f4b915123a2.json",
+      "sha256": "fc39d0fe1ff5993d7235a32d14562975c730d8264ff379d3771d65262ea42e48",
+      "bytes": 23926,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "artifact_sha256_binds_report": true,
+      "model_profile": "gemma4_12b",
+      "fill_pct": 71.04853820800781,
+      "raw_prose_included": false,
+      "private_path_included": false
+    }
+  ]
+}

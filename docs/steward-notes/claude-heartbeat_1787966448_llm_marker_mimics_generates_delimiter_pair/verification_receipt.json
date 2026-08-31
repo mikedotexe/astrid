@@ -1,0 +1,80 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run (controller-held lease; git read-only; no live/deploy/launchctl)",
+  "controller": {
+    "run_id": "run_1787963591720643000_ea1d0afdf2",
+    "preprojection_generation_id": "projection_1787963595243403000_f4f8317abc",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection_generation_id": "owned_by_adapter_after_exit",
+    "finish_outcome": "success_expected_via_exit_0"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1787956771",
+    "report_sha256": "799556ab82021c182fd4ef6bb68a0e24a5f8695761191479cfcf33f0aa15e4e5",
+    "witness_id": "lsw_fb86f922ce37dfd45a0645535f5f4ca59b28a29de38b62e5f5073586519368bc",
+    "witness_sha256": "49d04fff7e10a9a0a52351aabd29740b67deb4294dcecd874e28178104ee3421",
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_sha_matches_report_binding": true,
+    "source_working_copy_dirty": false,
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": []
+  },
+  "addressing_writes": {
+    "record_read": "ok (26s); summary_sha256 6b1e333a91b72f21bfc946e07e0d9fd63de20da69bdb34358dd2ee08b69072af",
+    "link_evidence_batch": "ok (26s); new_link_count=11, existing=0",
+    "close": "ok (27s); status=addressed_change, fully_addressed=true, proof_missing_claims=[]"
+  },
+  "implementation": {
+    "changed_path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "tests_added": [
+      "followed_by_explicit_exact_token_relation_allowlists_mimics_not_generates",
+      "exact_reference_delimiter_pair_maps_corner_quoted_lenticular_grouped_and_rejects_mismatch"
+    ],
+    "test_result": "4 passed / 0 failed (2 new + 2 neighbors) at source SHA 902a0358",
+    "production_behavior_changed": false,
+    "grammar_widened": false
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44 tests)",
+    "test_evidence_event_store": "OK (21 tests)",
+    "test_steward_control": "OK (27 tests)",
+    "test_steward_projection": "OK (14 tests)",
+    "test_division_ceremony_followup": "OK (3 tests)",
+    "test_division_ceremony_chronicle": "OK (10 tests)",
+    "test_division_ceremony_projection": "OK (self-test)",
+    "test_projection_cursors": "OK (4 tests)",
+    "anti_drop_self_test": "OK (5 tests)",
+    "anti_drop_verify": "exit 0 (no guard rot; test_gap null)",
+    "test_introspection_cadence_audit": "OK (6 tests)",
+    "cadence_audit_strict_compact": "integrity_ok=true, errors=[], no duplicate hashes",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify": "valid=true",
+    "audit_counters": "consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, active v2, v1 immutable",
+    "division_followup_verify": "ok=true, review_due=false, completed_rounds_since_followup=1, rounds_remaining=5, cycle 35, event_count=240, head df4debbb0d2d2bf5db6b33db3b87688ecd97003bbabfc2d80e8f49fcff3d2966",
+    "division_chronicle_verify": "project-before-verify (benign non-return-round state from this round's follow-up event append; postprojection stage division_chronicle reprojects). test_division_ceremony_chronicle unit suite OK.",
+    "git_diff_check": "clean",
+    "cargo_fmt_check": "tests.rs clean under project rustfmt.toml; only pre-existing FOREIGN drift in capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs (L259,L295) — not touched this round"
+  },
+  "division_round": {
+    "recorded": true,
+    "steward_run_id": "run_1787963591720643000_ea1d0afdf2",
+    "processed_report_count": 1,
+    "projection_generation_id": "projection_1787963595243403000_f4f8317abc",
+    "last_round_event_id": "division_followup_event_ed444867d9055d61f77609af67066ed0",
+    "event_count": 240,
+    "event_head_sha256": "df4debbb0d2d2bf5db6b33db3b87688ecd97003bbabfc2d80e8f49fcff3d2966",
+    "review_due_after": false
+  },
+  "authority_boundary": "Evidence + non-live test only. No production sanitizer behavior change, no marker-grammar/allowlist widening, no codec/transport/pressure/fill/PI/controller/sensory-cadence/protocol/Minime change; no build, restart, deploy, or launchctl; no git staging or commit (adapter git read-only). Silence and her felt snag hypotheses remain neutral, primary, open evidence.",
+  "commit_debt_paths": [
+    "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "CHANGELOG.md",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "docs/steward-notes/claude-heartbeat_1787966448_llm_marker_mimics_generates_delimiter_pair/ (new packet)"
+  ]
+}

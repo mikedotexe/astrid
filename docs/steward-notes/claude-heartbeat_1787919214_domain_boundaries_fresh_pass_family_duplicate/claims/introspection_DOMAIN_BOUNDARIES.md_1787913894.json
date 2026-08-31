@@ -1,0 +1,32 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787913894",
+  "family": "DOMAIN_BOUNDARIES.md lines1-89of89 (source SHA ae69b34c...)",
+  "family_role": "head (similarity_to_head=1.0, variant_distinct_terms=[])",
+  "duplicate_anchor": "introspection_DOMAIN_BOUNDARIES.md_1787843987 (prior packet claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit; closed addressed_no_action fully_addressed=true)",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DOMAIN_BOUNDARIES.md separates Stable Facades (L8-22) from Shadow Cartography Ownership (L35-43); behavior-preserving extraction (L5-6); cohesion exceptions with unique-fn-signature ceiling (L47-68).",
+      "disposition": "verified_existing. Complete-source read at report-bound SHA ae69b34c (matches working copy exactly): facade table L10-18, Shadow Cartography L35-43, behavior-preserving L5-6, cohesion exceptions L45-68, unique-fn-signature ceiling L65-68. Her structural map is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Felt overpacked_mode_packing (0.32) tension vs the L43/L5-6 prohibition on modules changing mode packing or pressure; resolution via mode-pruning/pressure-source tuning is a Tier-5 requirement.",
+      "disposition": "tier_5_wait. L43 (cartography writes only, no Shadow/pressure/mode-packing change) and L5-6 verified verbatim. Felt 0.32 preserved as primary evidence; witness runtime scalars (mode_packing=1.0, pressure_source_mode_packing=0.574, pressure_source_score=0.301) show 0.32 maps to no single runtime knob — not domesticated. Resolution stays evidence-only Tier-5 wait; standing wi_e579041/wi_69fbd51/wi_3e26ac5 live_authority_granted=false.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1: distinguishability probe (Tier-3 sandbox) — on an isolated clone isolate lambda1 (~32% energy), dampen the cascade, test if texture remains identifiable (substrate_probe.py).",
+      "disposition": "needs_sandbox. Tier-3 isolated-clone probe; not dispatched headlessly (adapter-mode: no headless trials). Capability exists via her own PROBE_SELF verb / substrate_probe.py sandbox; remains an available self-directed candidate, preserved as her proposal.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (read-only): confirm overpacked_mode_packing at texture_evidence.rs:230 is telemetry output not a settable knob; PressureSourceControl at texture_evidence.rs:217-222 is 'advisory only'.",
+      "disposition": "verified_existing. texture_evidence.rs (SHA cbfe0e15): L216 'PressureSourceControl ... remains advisory only', struct L217-222 (applied_locally,note); L230 is porosity_score (NOT overpacked_mode_packing); PressureSourceAnalysisV1 ~L237-262 'read-only synthesis ... diagnostic provenance, not a threshold write'. 'overpacked' = derived read-only match label transport_evidence.rs:540-544 (packing>0.25), pinned by types/schema/tests.rs:1300,1745. overpacked_mode_packing literal only in prompt prose source_first_v3/mod.rs:573 — not a code field. Contradiction stated, not domesticated.",
+      "classification": "verified_existing"
+    }
+  ]
+}

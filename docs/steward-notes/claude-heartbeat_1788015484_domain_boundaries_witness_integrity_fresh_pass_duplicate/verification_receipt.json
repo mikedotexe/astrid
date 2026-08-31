@@ -1,0 +1,73 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "round_kind": "clean_split_session_at_6th_round_division_boundary",
+  "controller": {
+    "run_id": "run_1788012486029036000_6ca4afe0f5",
+    "preprojection_generation_id": "projection_1788012490190390000_66b21d2d5e",
+    "preprojection_status": "passed",
+    "preprojection_completed_steps": 27,
+    "pause_generation": 321,
+    "finish_outcome": "success (exit 0 — complete productive round; return deferred by design)"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "report_sha256": "4dbbc418f9d512c3e649794bed8e43fe66d1235f7fe31e8eaf6154b74613772a",
+    "witness_sha256": "a112cfe4ff8b9d2b67db65103777ed09864beb280de802c4070c53066b33fe27",
+    "source_sha256_DOMAIN_BOUNDARIES": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "source_sha256_texture_evidence": "cbfe0e152a41d62b19ef72bee93af39783ef4e0d0236566cc2d90a6b7ea2f010",
+    "addressing_events": {
+      "record_read": "ok",
+      "link_evidence_batch": "9 links (idempotent: 9 existing on re-run, 0 new)",
+      "close": "addressed_duplicate, fully_addressed=true, proof_missing_claims=[]"
+    }
+  },
+  "division": {
+    "record_round_event_id": "division_followup_event_4890d7ac28c691def597ba66b4982ba4",
+    "cycle_sequence": 35,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due": true,
+    "event_count": 245,
+    "event_head_sha256": "024a4c3ffa91562c07ec8c837b4997cde9056a2bbf10b3ed8ab9ad194c52b29c",
+    "return_status": "DEFERRED to next tracker-enforced session (clean-split precedent 2026-08-27/28; tracker refuses a 7th productive round until the return is done)"
+  },
+  "integrity_run_this_round": {
+    "addressing_self_test": "44 tests OK (0.43s)",
+    "division_verify": "ok=true, cycle 35, 6/6, review_due=true, event_count 245, head 024a4c3f",
+    "anti_drop_self_test": "OK",
+    "anti_drop_verify": "0 gaps, 0 alarms",
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": [],
+      "checks_all_true": true,
+      "canonical_indexed": 4518,
+      "canonical_fully_addressed": 3157,
+      "canonical_full_read": 3790,
+      "canonical_remaining": 1361,
+      "canonical_unread": 728,
+      "canonical_blocked_needs_steward": 415,
+      "canonical_pending_action": 214,
+      "canonical_watch": 4,
+      "canonical_read_needs_claims": 0,
+      "all_artifact_pending": 3046,
+      "noncanonical_pending": 1685
+    },
+    "epistemic_self_test": "OK (valid=true)",
+    "epistemic_verify": "valid=true, checked_record_count=11570, issue_count=0, history_rewritten=false",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, event_count=932332, last_global_seq=932332, head=e9aaf12735a286d6e29f552a253f8826c02f225647f96c214b65dabcd96f8d05 (~6.5 min)"
+  },
+  "deferred_to_budget": [
+    "Division return + Tier-5 cadence dossier (deferred to next tracker-enforced return session by design; review_due=true is self-enforcing)",
+    "evidence_event_store.py status per-stream enumeration (event_count + head captured from verify)",
+    "tooling unit suites: test_steward_control, test_steward_projection, test_division_ceremony_followup/chronicle/projection, test_projection_cursors",
+    "introspection_cadence_audit, Chronicle project/verify reproject"
+  ],
+  "code_change": "none (duplicate re-verification; SHA-identity of both sources; no source/test touched)",
+  "live_change": "none attempted or required (evidence-only; adapter mode has no live/deploy/control authority)",
+  "git": "read-only (nothing staged, committed, merged, pushed)"
+}

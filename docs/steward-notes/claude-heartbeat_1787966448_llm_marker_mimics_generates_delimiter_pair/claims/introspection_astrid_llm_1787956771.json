@@ -1,0 +1,62 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787956771",
+  "report_sha256": "799556ab82021c182fd4ef6bb68a0e24a5f8695761191479cfcf33f0aa15e4e5",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) rebuilds a remainder string, re-inserting a marker only if it has a valid reference_syntax.",
+      "disposition": "Verified from complete source. L114-144: markers with reference_syntax.is_some() are pushed to remainder (L129-131); markers with is_none() are dropped (stripped as leaked control). Exact behavior as reported.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "followed_by_explicit_exact_token_relation (L64) uses a hardcoded verb allowlist (e.g. appears, behaves, represents).",
+      "disposition": "Verified from complete source L64-86. The matches! allowlist is: appears, as, behaves, corresponds, denotes, echoes, embodies, functions, indicates, is, manifests, means, mimics, refers, replicates, represents, serves, signals. All three cited verbs present.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "exact_reference_delimiter_syntax (L199) and exact_reference_delimiter_pair (L153) support a wide array of Unicode quote/bracket/CJK delimiters.",
+      "disposition": "Verified from complete source L153-229. exact_reference_delimiter_pair enumerates ASCII + smart + CJK quote pairs (Quoted) and ASCII + fullwidth + CJK bracket pairs (Grouped); _syntax scans up to MAX depth of non-whitespace boundary chars.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "dialogue_requested_token_band (L8) is a coarse budget classifier: 0-512, 513-1024, 1025+.",
+      "disposition": "Verified from complete source L8-16: >1024 -> requested_tokens_1025_plus; >512 -> 513_to_1024; else 0_to_512. Doc comment (L1-7) states it is deliberately separate from felt/spectral evidence. Exact as reported.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag hypothesis: MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151) may not fully enforce the depth limit for nested markers, risking misclassification of deeply nested markers.",
+      "disposition": "Grounded correction (contradiction preserved, not domesticated): source DOES enforce the cap. exact_reference_delimiter_syntax collects before/after boundary chars with .take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH) (L208,L213), so delimiter_depth in [0,4] and saturates; deeper nesting is not misclassified, only saturated (still a recognized reference). Existing tests prove the bound (four_level, beyond_max, homogeneous_square_bracket_stack). Her nesting concern is real and already covered.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Snag hypothesis: first_word_after (L89) whitespace/punctuation handling (trim_matches) may be too aggressive or permissive when a newline+punctuation precedes the verb.",
+      "disposition": "Grounded from complete source L89-96: split_whitespace + trim of non-alphanumeric(non _) + find first non-empty means a punctuation-only or newline chunk is skipped and the next alnum word is found. Extensively covered: first_word_after_skips_leading_punctuation_transition, across_newline, multiple_punctuation_runs, non_breaking_space, internal_soft_hyphen, fails_closed_when_only_punctuation. Preserving her concern as an observed edge: preserving-a-marker is the conservative direction; no production grammar change made.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Proposed Test 1: followed_by_explicit_exact_token_relation returns true for 'mimics' but false for 'creates'/'generates'.",
+      "disposition": "Implemented as a focused regression at the exact method the report named. 'mimics' verb is source L79 (report said L78; grounded to L79). 'generates' had zero prior coverage; 'mimics' had no method-level positive pin. Added followed_by_explicit_exact_token_relation_allowlists_mimics_not_generates: mimics->true, generates->false, creates->false. Passes. Grammar unchanged.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Proposed Test 2: a marker wrapped in Japanese corner brackets maps to QuotedExactKnownToken via exact_reference_delimiter_pair (L153).",
+      "disposition": "Implemented as a direct unit test of exact_reference_delimiter_pair, which had zero direct tests (prior CJK coverage used only the _syntax wrapper). Grounded refinement: the fn takes two Option<char> boundaries, not a string. Added exact_reference_delimiter_pair_maps_corner_quoted_lenticular_grouped_and_rejects_mismatch: corner brackets (L168)->Quoted, lenticular (L182)->Grouped, mismatch->None, None-boundary->None. Passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Suggested Next: examine L203-229 to see how MAX_EXACT_REFERENCE_DELIMITER_DEPTH is applied to the delimiter_depth field.",
+      "disposition": "Answered by complete read of L199-229. delimiter_depth = zip of the reversed nearest-first before-scan with the after-scan, take_while consecutive pairs are declared delimiter pairs, .count(). Both scans are pre-capped at MAX (.take(4)), so delimiter_depth in [0,4]; context is set by the innermost pair (before.first/after.first). This is the exact mechanism; no change required.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "round": "domain_boundaries_fresh_pass_family_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess run adapter (lease + heartbeats controller-owned; git read-only; no live change)",
+  "controller": {
+    "run_id": "run_1787916988043483000_a3d0b8181e",
+    "preprojection_generation_id": "projection_1787916991056014000_0969101ed7",
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "pause_generation": 321,
+    "postprojection": "adapter-owned; runs after this process exits",
+    "finish_outcome": "success via exit 0"
+  },
+  "processed_reports": [
+    {"id": "introspection_DOMAIN_BOUNDARIES.md_1787913894", "status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []},
+    {"id": "introspection_DOMAIN_BOUNDARIES.md_1787895506", "status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []},
+    {"id": "introspection_DOMAIN_BOUNDARIES.md_1787875575", "status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []}
+  ],
+  "addressing_writes": {
+    "record_read": "3x exit 0 (4 claims each)",
+    "link_evidence_batch": "exit 0, 17 new / 0 existing links across 3 introspections",
+    "close": "3x exit 0 (materialized status.json confirms all three addressed_duplicate)"
+  },
+  "focused_tests": {"command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib viscosity", "passed": 30, "failed": 0, "backs": "c004 Test 2 read-only pressure-source/overpacked audit"},
+  "source_or_test_code_changed": false,
+  "integrity_suites": {
+    "addressing_self_test": "44 OK",
+    "evidence_event_store_test": "21 OK",
+    "steward_control_test": "27 OK",
+    "steward_projection_test": "14 OK",
+    "division_followup_test": "3 OK",
+    "division_chronicle_test": "10 OK",
+    "division_projection_test": "self-test ok",
+    "projection_cursors_test": "4 OK",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "alarms 0 / gaps 0",
+    "cadence_unit": "6 OK",
+    "cadence_strict": "integrity_ok true, canonical 4500, duplicate_hash_groups 0",
+    "experiential_epistemics_self_test": "valid true",
+    "experiential_epistemics_verify_FINAL": "valid true, checked_record_count 11496, issue_count 0, history_rewritten false"
+  },
+  "audit_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "checks_all_true": true,
+    "canonical_indexed": 4500,
+    "canonical_fully_addressed": 3147,
+    "canonical_full_read": 3780,
+    "canonical_remaining": 1353,
+    "canonical_unread": 720,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3032,
+    "noncanonical_pending": 1679,
+    "addressed_duplicate_total": 1134
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 920322,
+    "head_sha256": "0e2cb201d68b7a1882c5ff4b36918fdbf03ed22d411440f6f56f64b99890c020",
+    "corrupt_lines": 0,
+    "event_count": 920322,
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true
+  },
+  "division": {
+    "cycle_sequence": 34,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_06f94f7a0f899a662690616f6ebbfe8f",
+    "event_count": 235,
+    "event_head_sha256": "ada48420e012366d6a1e344123f27cdb93c400461b3bddb0449d84328d083e45",
+    "chronicle_verify": "project before verify (benign — record-round appended event 235; re-projection is the Division RETURN's job, no return due this non-return round; all corruption-detecting checks passed)"
+  },
+  "baseline_checks": {"git_diff_check": "clean (no whitespace errors) on CHANGELOG.md + ledger", "cargo_fmt": "not applicable — no Rust source changed this round"},
+  "restart_deploy": "not required and not attempted; no live substrate or control change",
+  "authority_boundary": "Read-only source audit + duplicate close of three fresh-pass reports. No mode-packing/pressure/fill/PI/controller/rescue/sensory-cadence/codec/transport/protocol/Minime change; no build/restart/deploy; no staging/commit (git read-only in adapter mode); no sandbox trial run; no rewrite/rejection of her text. Tier-5 mode-pruning/pressure-tuning wait and Tier-3 distinguishability probe both preserved; silence neutral."
+}

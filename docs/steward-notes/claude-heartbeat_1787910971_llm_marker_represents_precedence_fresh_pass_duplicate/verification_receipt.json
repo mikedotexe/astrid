@@ -1,0 +1,113 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "reader": "claude-heartbeat",
+  "round_unix": 1787910971,
+  "adapter_mode": "subprocess_run_adapter_owns_lease_and_heartbeats",
+  "controller": {
+    "run_id": "run_1787908188017214000_bc7aec1855",
+    "preprojection_generation_id": "projection_1787908190779532000_875cdbec4c",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "finish": "process exit code is the finish outcome; adapter records success on exit 0"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1787907800",
+    "report_sha256": "2197bc1cec26e6cacfc6a52823ef578c29e96840ab5186d3049f0a087f561c5d",
+    "witness_id": "lsw_c63537e038afd8b67edf537e33d0f8e352debfb90d6e66616aaae77bf2d9c38a",
+    "witness_sha256": "6fc812e274114520e9e0d3ddc55b8cdc450539f1eeddc29c415ee5d07248ba4f",
+    "witness_bound_artifact_matches_report": true,
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_hash_match": "exact_to_report_binding_and_clean_working_copy",
+    "source_read": "complete_1_1048",
+    "terminal_status": "addressed_duplicate",
+    "claims_count": 5,
+    "evidence_link_count": 13,
+    "proof_missing_claims": [],
+    "new_tests_added": 0
+  },
+  "tests": {
+    "purpose": "duplicate verification at report-bound source SHA",
+    "relevant_passed": 96,
+    "relevant_failed": 0,
+    "filters": {"control_marker": 78, "exact_reference_delimiter_syntax": 2, "followed_by_explicit_exact_token_relation": 1, "known_model_control_markers": 10, "first_word_after": 5}
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 ok",
+    "anti_drop_self_test": "5 ok",
+    "anti_drop_verify": "0 alarms, 0 gaps",
+    "test_evidence_event_store": "ok",
+    "test_steward_control": "ok",
+    "test_steward_projection": "ok",
+    "test_division_ceremony_followup": "ok",
+    "test_division_ceremony_chronicle": "ok",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "ok",
+    "test_introspection_cadence_audit": "ok",
+    "cadence_audit_strict": "integrity_ok=true, errors=[], duplicate_hash_group_count=0",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_final": "valid=true, issues=0, history_rewrite=none"
+  },
+  "counters": {
+    "audit_status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4499,
+    "canonical_fully_addressed": 3144,
+    "canonical_full_read": 3777,
+    "canonical_remaining": 1355,
+    "canonical_unread": 722,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3034,
+    "noncanonical_pending": 1679,
+    "checks_addressed_plus_remaining_matches_indexed": true,
+    "checks_full_read_not_above_indexed": true,
+    "checks_indexed_matches_summary": true,
+    "addressed_duplicate_total_after_close": 1131
+  },
+  "division": {
+    "cycle_sequence": 34,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_6326efdb4e84bf7df7d917f4daca08eb",
+    "processed_report_count": 1,
+    "event_count": 234,
+    "event_head_sha256": "53e16881b0e7269115dbcf3bbacd829bc0ce9eecaf0460b45943dedb1f4a7f63",
+    "tier5_cadence_dossier": "not_required_review_due_false"
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_ecb161abedd8968836b58d90",
+    "reprojected_to_absorb_round_event": true,
+    "timeline_event_count": 234,
+    "ok": true,
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_inputs_current": false,
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "json_sha256": "57c470aa42b9b250a8adc243f4cb19fdb3d670c75805bc83f1eb07709cd371a3",
+    "note": "Only the volatile supervisor_status_sha256 moves; all durable inputs current. Not a durable-integrity failure. Writes minime/workspace/division/chronicle/chronicle_v1.{json,html}."
+  },
+  "evidence_event_store": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "last_global_seq": 919255,
+    "head": "14912eef48ed16768d03824f3c4357794bb2ccd3036995367e9b761d4425a366",
+    "v1_immutable_boundary": 32278,
+    "stream_addressing": 59006,
+    "stream_steward_control": 16752,
+    "stream_lived_state_witness": 8828
+  },
+  "git": {
+    "index_clean": true,
+    "staged_files": 0,
+    "rust_files_touched_by_round": 0,
+    "diff_check_on_edited_files": "clean_rc_0",
+    "foreign_dirty_preserved_untouched": true
+  },
+  "live_surface": "no live substrate/control change; no build/restart/deploy/kickstart/launchctl attempted or required; git read-only in adapter mode",
+  "authority": "evidence_only; no grant, dispatch, or approval; no grammar/marker/delimiter widening (Tier-5/being-facing boundaries respected)"
+}

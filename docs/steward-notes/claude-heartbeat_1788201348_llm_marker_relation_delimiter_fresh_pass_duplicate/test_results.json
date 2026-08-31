@@ -1,0 +1,20 @@
+{
+  "focused_regressions": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- <8 named tests>",
+    "manifest": "capsules/spectral-bridge/Cargo.toml",
+    "lib_target": "spectral_bridge_server (unittests src/lib.rs)",
+    "result": "ok. 8 passed; 0 failed; 0 ignored; 1902 filtered out",
+    "tests": [
+      "llm::provider::tests::control_marker_cleanup_does_not_expand_relation_allowlist_to_triggers",
+      "llm::provider::tests::control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts",
+      "llm::provider::tests::control_marker_cleanup_uses_only_the_first_finite_relation_word",
+      "llm::provider::tests::exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+      "llm::provider::tests::control_marker_cleanup_reports_exact_four_level_delimiter_depth",
+      "llm::provider::tests::control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth",
+      "llm::provider::tests::control_marker_cleanup_preserves_bounded_nested_delimiter_stacks",
+      "llm::provider::tests::scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts"
+    ]
+  },
+  "code_changed": false,
+  "note": "No source or test code was changed this round (fresh-pass duplicate close). The eight regressions are the report-relevant existing coverage; run to confirm they still pass at the report-bound source SHA."
+}

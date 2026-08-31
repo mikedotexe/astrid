@@ -1,0 +1,27 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1787885626_llm_marker_adverb_and_ascii_stack",
+  "touched_paths": [
+    "capsules/spectral-bridge/src/llm/provider/tests.rs"
+  ],
+  "tests_added": [
+    "control_marker_cleanup_does_not_skip_adverb_before_relation_word",
+    "control_marker_cleanup_reports_mixed_ascii_quote_bracket_stack_depth_three"
+  ],
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "result": "ok",
+      "passed": 78,
+      "failed": 0,
+      "ignored": 0,
+      "note": "Includes both new regressions plus all adjacent control_marker_* tests; no neighbor broke."
+    }
+  ],
+  "fmt": {
+    "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+    "touched_file_clean": true,
+    "preexisting_foreign_drift": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs (committed, not in dirty set, not touched this round)"
+  },
+  "git_diff_check": "clean"
+}

@@ -1,0 +1,88 @@
+{
+  "round": "claude-heartbeat_1787862103_llm_marker_quoted_relation_pair_duplicate",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_lease_adapter_subprocess",
+  "controller": {
+    "run_id": "run_1787859652212677000_c863bdae9c",
+    "preprojection_generation_id": "projection_1787859655660602000_469fb7a6bf",
+    "preprojection_status": "passed",
+    "postprojection_generation_id": "runs_after_process_exit_adapter_owned",
+    "pause_generation": "adapter_owned_not_read"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1787854907",
+    "report_sha256": "5f8812a32f5216e6a93db22b9ec7dc79abe7029136385b9b3da89739b6b797d9",
+    "witness_id": "lsw_a8725b5aa8411de5a677100f77ef7b384db9715e7136278ce1659a9ce894f74c",
+    "witness_sha256": "09dd7d6840b98b2bbded93d65e964dbcc1f49eb476eb995d84f93fead866e19d",
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_sha_matches_binding": true,
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 5,
+    "evidence_links_new": 11
+  },
+  "tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- <7 cited filters>",
+    "passed": 7,
+    "failed": 0,
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "baseline": {
+    "git_diff_check": "clean",
+    "cargo_fmt_check": "only pre-existing foreign drift in grounding.rs (not touched); no stewardship .rs edits this round"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 passed OK",
+    "test_evidence_event_store": "21 passed OK",
+    "test_steward_control": "27 passed OK",
+    "test_steward_projection": "14 passed OK",
+    "test_division_ceremony_followup": "3 passed OK",
+    "test_division_ceremony_chronicle": "10 passed OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 passed OK",
+    "test_introspection_cadence_audit": "6 passed OK",
+    "introspection_cadence_audit_strict": "integrity_ok=true, 4493 canonical, 0 duplicate hash groups, latest=introspection_astrid_llm_1787854907",
+    "anti_drop_self_test": "5 passed OK",
+    "anti_drop_verify": "69 guards, 0 alarms, 0 gaps",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_final": "valid=true, issue_count=0, history_rewritten=false"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "all_checks_true": true,
+    "canonical": {
+      "indexed": 4493,
+      "fully_addressed": 3138,
+      "full_read": 3771,
+      "remaining": 1355,
+      "unread": 722,
+      "blocked_needs_steward": 415,
+      "pending_action": 214,
+      "watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": {
+      "indexed": 6171,
+      "remaining": 3033,
+      "blocked_needs_steward": 415
+    }
+  },
+  "division": {
+    "cycle_sequence": 33,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_a3004a9a0bab5a737a9f270bfd6ff663",
+    "event_count": 227,
+    "event_head_sha256": "9ebd19d2def044facc0fdfd40f9e79310be665defd257aa0defdfcd84302fa4e"
+  },
+  "evidence_event_store_v2": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "status_note": "verify confirmed valid/0-corrupt; full status stream-count scan captured in RUN_REPORT if it completed before exit"
+  },
+  "authority_boundary": "Evidence-only. No live substrate/control change; no build/restart/deploy/launchctl; no git staging/commit/merge/push (adapter-mode git read-only); no lease token read/persisted; no NDJSON ops sent (adapter owns the lease + heartbeats). Foreign dirty paths preserved untouched."
+}

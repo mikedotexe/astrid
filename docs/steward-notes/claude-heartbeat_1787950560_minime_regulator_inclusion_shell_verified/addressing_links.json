@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/summaries/introspection_minime_regulator_1787944499.md",
+      "note": "Complete 24-line source read of minime/src/regulator/core.rs (SHA 46828f4c == report binding == witness snapshot). Shell confirmed: comments 1-12, use serde 14, include! 16-24, no fn/impl/const. Recorded honestly: report named 6 of 9 include targets (omitted telemetry_types.rs L16, reviews.rs L20, tests.rs L24)."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/no_action/inclusion_shell_no_action.md",
+      "note": "Evidence-backed reason no source/test change was warranted; shell claim already true in source."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the complete-source verification and the 6-of-9 enumeration note."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row: Astrid's regulator inclusion-shell observation -> complete-source verification, no-change boundary."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/summaries/introspection_minime_regulator_1787944499.md",
+      "note": "Header lines 1-12 verified: PD rate/gate (token-bucket -> lambda1) and PI homeostasis (gate/filter -> EigenFill% and lambda1_rel); lines 4-7 assert distinct concurrent roles, not an inactive PD architecture."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/summaries/introspection_minime_regulator_1787944499.md",
+      "note": "Ghost-of-Implementation caution preserved as observed. Source confirms core.rs holds no scalars; all runtime values reside in included submodules; the included-vs-active boundary is correct and complements the source's own lines 4-7."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c003",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/no_action/inclusion_shell_no_action.md",
+      "note": "Caution not dismissed; no code obligation created from an interpretation-discipline observation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/summaries/introspection_minime_regulator_1787944499.md",
+      "note": "Structural Mapping Test's intent is a compile-time invariant (include! at L22 resolves iff core.rs compiles). Honest correction recorded: include! inlines items into core.rs's module (regulator); it does not create a rate_gate submodule (include! != mod)."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/no_action/inclusion_shell_no_action.md",
+      "note": "No new test warranted; the compiler already guarantees inclusion resolution."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/summaries/introspection_minime_regulator_1787944499.md",
+      "note": "Inclusion Integrity Test already exists and ran: introspection source binding records file_sha256 46828f4c; witness source_snapshot_v1.file_sha256 matches exactly; any added/removed include! line changes the whole-file SHA and is detected."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1787944499",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/no_action/inclusion_shell_no_action.md",
+      "note": "Proposed test duplicates the existing source-SHA binding; adds no coverage."
+    }
+  ]
+}

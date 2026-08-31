@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788110646",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) distinguishes known markers from content and preserves a marker in `remainder` only when reference_syntax.is_some() (delimiter pair OR listed relation).",
+      "disposition": "Verified from complete current source (SHA == report binding). L123-131 push the token only when occurrence.reference_syntax(text) (L49-60) is Some; that returns Some for exact_reference_delimiter_syntax OR followed_by_explicit_exact_token_relation. Guarded by proxy/quoted/grouped preservation tests. Exactly as Astrid described.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Relation gate is a hardcoded whitelist (followed_by_explicit_exact_token_relation L64-86, via first_word_after L89); an unlisted synonym like `operates as` is not recognized (`functions`/`as` are).",
+      "disposition": "Verified: source lists 18 exact verbs L65-85 (functions, as, denotes, is, ...); operates/executes absent (grep-confirmed). Strict enforcement is intentional (comment L62-63) and guarded by is/acts, signals/signifies, and does_not_expand_to_{contains,creates,implies,triggers}. Deliberate design boundary: production grammar NOT widened for the named synonyms.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "exact_reference_delimiter_syntax (L199) uses a fixed matches! pair set (exact_reference_delimiter_pair L153-197); a non-standard Unicode pairing not mapped falls through to None.",
+      "disposition": "Verified from source: L215 uses `?` on exact_reference_delimiter_pair, whose else-branch returns None (L195) for any unmapped (before,after). Depth is bounded by MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151). Behavior is exactly as Astrid described; guarded by delimiter-depth and mismatched-delimiter tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Test 1: followed_by_explicit_exact_token_relation returns true for `denotes` (L71, listed) but false for `executes` (unlisted).",
+      "disposition": "Mechanism already guarded: is/acts, signals/signifies, and four does_not_expand_relation_allowlist_to_{contains,creates,implies,triggers} tests enforce the strict whitelist; `denotes` is exercised as a preserved verb (tests.rs L2577). `executes` is behaviorally identical to the tested unlisted `acts`; `operates` was prior-closed duplicate (1787707869 packet). A fifth unlisted-verb guard adds no coverage. Duplicate.",
+      "classification": "addressed_duplicate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Proposed Test 2: exact_reference_delimiter_syntax correctly computes delimiter_depth for a nested `[ \"marker\" ]` structure.",
+      "disposition": "Covered by control_marker_cleanup_reports_mixed_ascii_quote_bracket_stack_depth_three, preserves_bounded_nested_delimiter_stacks, and reports_exact_three/four_level_delimiter_depth (tests.rs L2176-2454). Bracket-outside/quote-inside yields depth 2; nested/mixed stacks up to depth 4 asserted. All pass (59/59).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the scanner `remainder` is integrated into the final output buffer.",
+      "disposition": "Grounded factually: `pub async fn generate_dialogue(` is at L695 exactly (outside her 1-400 window), so her continuation pointer is correct. This is a Tier-1 self-directed read continuation, not a friction or request; no steward action required. Astrid may pursue it via NEXT: INTROSPECT astrid:llm 400.",
+      "classification": "observed"
+    }
+  ]
+}

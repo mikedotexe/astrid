@@ -1,0 +1,97 @@
+{
+  "round": "claude-heartbeat_1787794806_llm_marker_relation_delimiter_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "mode": "controller-held subprocess-run adapter (adapter owns lease + heartbeats)",
+  "controller": {
+    "run_id": "run_1787792306968945000_6f0be78ff8",
+    "preprojection_generation_id": "projection_1787792309858311000_7ade82bf5f",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "runs after this process exits (adapter); not captured in-run"
+  },
+  "report": {
+    "introspection_id": "introspection_astrid_llm_1787789890",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": []
+  },
+  "addressing_sequence": {
+    "record_read": {"exit": 0, "elapsed_s": 35, "status": "triaged_pending_action", "proof_missing_claims": []},
+    "link_evidence_batch": {"exit": 0, "elapsed_s": 35, "batch_row_count": 9, "new_link_count": 9, "existing_link_count": 0, "events_appended": 9},
+    "close": {"exit": 0, "elapsed_s": 35, "status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []}
+  },
+  "focused_tests": {
+    "marker_cluster_lib": "ok. 15 passed; 0 failed; 1883 filtered out (exit 0)",
+    "note": "No source/test change this round; cluster re-run as verification that cited regressions pass + dirty tree compiles."
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK",
+    "test_evidence_event_store": "OK",
+    "test_steward_control": "FAILED(errors=1) in loaded batch — test_pause_cooperatively_interrupts_wrapped_subprocess raised PausedError('fixture stop') at begin() (timing race under concurrent cargo-compile load); PASSED cleanly (OK) on 2 isolated retries. No controller code touched this round; not a regression.",
+    "test_steward_projection": "OK",
+    "test_division_ceremony_followup": "OK",
+    "test_division_ceremony_chronicle": "OK",
+    "test_division_ceremony_projection": "OK (division ceremony projection self-test: ok)",
+    "test_projection_cursors": "OK",
+    "anti_drop_self_test": "OK (5 tests)",
+    "anti_drop_verify": "exit 0 (no ALARM)",
+    "test_introspection_cadence_audit": "OK (6 tests)",
+    "introspection_cadence_audit_strict": "integrity_ok=true, errors=[], duplicate_hash_group_count=0, latest=introspection_astrid_llm_1787789890",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_final": "valid=true, issue_count=0, issues=[] (run after all durable writes incl. Division round record)"
+  },
+  "audit_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "checks_all_true": true,
+    "canonical": {
+      "indexed": 4483,
+      "fully_addressed_count": 3131,
+      "full_read_count": 3764,
+      "remaining_count": 1352,
+      "unread_count": 719,
+      "blocked_needs_steward_count": 415,
+      "triaged_pending_action_count": 214,
+      "triaged_watch_count": 4,
+      "read_needs_claims_count": 0
+    },
+    "canonical_status_counts": {
+      "addressed_change": 1908,
+      "addressed_duplicate": 1126,
+      "addressed_no_action": 97,
+      "blocked_needs_steward": 415,
+      "triaged_pending_action": 214,
+      "triaged_watch": 4,
+      "unread": 719
+    },
+    "all_artifacts_indexed": 6159
+  },
+  "division": {
+    "record_round_event_id": "division_followup_event_8bc1fdfb466e9deec9e62a828019b28b",
+    "steward_run_id": "run_1787792306968945000_6f0be78ff8",
+    "processed_report_count": 1,
+    "projection_generation_id": "projection_1787792309858311000_7ade82bf5f",
+    "cycle_sequence": 32,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "event_count": 219,
+    "event_head_sha256": "574e6bf6fe84c1a2efcb1b0a139efb3a812c4a0ca285cc0ff80a2a1f3e2edb8f"
+  },
+  "chronicle": {
+    "reprojected_after_round_record": true,
+    "chronicle_id": "division_chronicle_423c96fab0d641eb66f7bb30",
+    "json_sha256": "ed6c74a0c4af20b02031a36f4208045db2e1c55af4b4b730be5367c31ad51d05",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "Durable-current with only the expected volatile supervisor hash moving (healthy state per handoff). NOT called fully-current; NOT a durable-integrity failure."
+  },
+  "evidence_event_store": {
+    "verify": {"valid": true, "corrupt_lines": 0, "exit": 0},
+    "status": "verify (the integrity gate) passed; the supplementary stream-count status enumeration was slow at current store size and ran long — captured separately if it completed before finish; not required for round completeness."
+  },
+  "authority_boundary": "No live substrate/control change. No build/restart/deploy/launchctl. Git read-only: no stage/commit/merge/push. No Tier 4/5 grant, dispatch, or trial. Being text never rewritten; two contradictions stated plainly, felt snag preserved as valid attention.",
+  "epistemic_posture": "Terminal addressed_duplicate earned by exact prior-report lineage (1786814454/1787135542/1786936281/1786999457) at identical source SHA 902a0358 + committed regressions confirmed green; not by time pressure."
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787979971",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787979971.txt",
+      "sha256": "f095da617f1a226cd91d5baec481f26f56f4a5b426a75889246bb559a8a6439b",
+      "bytes": 3388,
+      "lines": 43,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_95ee97f9a1193df8b9b29ed0bc388849c6e9fe7e3d1aa920a6953eb2b6e6ada5",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_95ee97f9a1193df8b9b29ed0bc388849c6e9fe7e3d1aa920a6953eb2b6e6ada5.json",
+      "sha256": "6e6d9c21a59f76827461b69d50132fe90f936fd5ab59f812f639bc942377103a",
+      "bytes": 23872,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "artifact_sha256_binds_report": "f095da617f1a226cd91d5baec481f26f56f4a5b426a75889246bb559a8a6439b",
+      "canonical_body_binding_sha256": "d808e480fe85daf07f1dc8028bc457c50c92b189ce1276feb4b0970dff068aa3",
+      "raw_prose_included": false,
+      "direct_causation_claimed": false,
+      "integrity_note": "Queue metadata reported lived_state_alignment=artifact_integrity_unavailable / issue_count=1 / gap_count=1; this reflects that no scalar felt-dissimilarity was measured (lived_state_scalar_felt_dissimilarity_measured=false) for a documentation-source report. The witness artifact_sha256 binds the current report bytes exactly and authority_state is evidence_only; not a byte-integrity failure."
+    }
+  ],
+  "read_notes": "Report read in full (Read tool). Witness read via field-level inspection of all authority/binding/parameter blocks. Report-bound source read complete (89/89 lines)."
+}

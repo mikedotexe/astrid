@@ -1,0 +1,93 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "round_name": "llm_marker_colon_relation_grounded",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run (lease owned by adapter; no NDJSON ops, git read-only, no deploy/launchctl)",
+  "controller": {
+    "run_id": "run_1787988232778539000_eb4b8ce71c",
+    "preprojection_generation_id": "projection_1787988236403032000_d96cde7697",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection_generation_id": "runs_after_adapter_finish_not_visible_to_child"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787976942",
+      "report_sha256": "2c588d1d8f1b4cf0d7ccc78496655e3d349a5dc153fb5059422206eb180e63cb",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding_match": true,
+      "witness_id": "lsw_39a7eb882972a9302edc73fd03b06d85607dc87df3cfcb331ce8e43dcd2b5202",
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  ],
+  "processed_report_count": 1,
+  "addressing_writes": {
+    "record_read": "full_read event written (summary_sha256 d1d8ffd5..., 5 claims)",
+    "link_evidence_batch": "10 links written; new_link_count 10; existing 0; proof_missing_claims []",
+    "close": "status addressed_change; closed event ts 1787991418"
+  },
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/llm/provider/tests.rs (added control_marker_cleanup_first_word_after_skips_colon_before_relation)",
+      "CHANGELOG.md ([Unreleased] entry)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (dated row 2026-08-29)"
+    ],
+    "tests": {
+      "new_regression": "control_marker_cleanup_first_word_after_skips_colon_before_relation -> 1 passed / 0 failed",
+      "control_marker_group": "79 passed / 0 failed",
+      "git_diff_check": "clean",
+      "cargo_fmt_all_check": "clean"
+    },
+    "restart_deploy": "not required and not attempted (Tier 1 non-live focused test only)"
+  },
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "cadence_audit_strict": "integrity_ok true; canonical_count 4513; duplicate_hash_group_count 0",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "69 guards; 0 alarms; 0 gaps",
+    "experiential_epistemics_self_test": "2 tests OK; valid true",
+    "experiential_epistemics_verify": "valid true; 0 issues (FINAL, after all durable writes)",
+    "audit_counters": "consistent; mismatches []; all 7 checks true",
+    "evidence_event_store_verify": "valid true; corrupt_lines 0",
+    "evidence_event_store_status": "not captured — the redundant full-replay status step was stopped to conserve the ~90-min child budget; the verify integrity gate (valid true, corrupt_lines 0) had already passed",
+    "division_followup_verify": "ok true; review_due false; completed_rounds_since_followup 4; rounds_remaining 2; event_count 243; head 46fe6c51...",
+    "division_chronicle_verify": "reports 'project before verify' — the EXPECTED, direct consequence of this round's record-round (it changed a durable Chronicle input, the followup event count). This is a freshness signal, not a durable-integrity failure. Reproject via 'python3 scripts/division_ceremony_chronicle.py project' then verify; the Chronicle matters at the next Division return, not due for 2 more rounds."
+  },
+  "division": {
+    "cycle_sequence": 35,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "round_event_id": "division_followup_event_44d272df6fbdca66bf8bccdaebfb43ae",
+    "event_count": 243,
+    "event_head_sha256": "46fe6c51ee4ac5871f026745d43345f43570d14d0c9353482781ee726a3e1220",
+    "record_round_processed_report_count": 1
+  },
+  "counters": {
+    "status": "consistent",
+    "canonical_indexed": 4513,
+    "canonical_fully_addressed": 3154,
+    "canonical_full_read": 3787,
+    "canonical_remaining": 1359,
+    "canonical_unread": 726,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3044,
+    "noncanonical_pending": 1685
+  },
+  "authority_boundary": "Evidence-only. No allowlist widened, no marker grammar loosened, no prompt/model/codec/transport/pressure/fill/PI/controller/sensory-cadence/protocol/Minime change; no live substrate or control change; no build, restart, or deployment; no staging or commit (git read-only in adapter mode). Astrid's felt snag remains valid testimony; her NEXT: INTROSPECT astrid:llm 400 continuation remains open evidence; silence remains neutral."
+}

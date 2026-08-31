@@ -1,0 +1,68 @@
+{
+  "round": "claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_lease_subprocess_run_adapter (git read-only; no NDJSON ops; no lease token read/quoted/persisted; no live substrate/control change)",
+  "controller": {
+    "run_id": "run_1787948509666118000_c52765667c",
+    "preprojection_generation_id": "projection_1787948513422948000_7740e2b8fb",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "runs after this process exits (adapter-managed; not observed from inside)"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_minime_regulator_1787944499",
+    "report_sha256": "81a21ceac23f8f7247fd3334fcc09c96443792c1e3469ff51811e3e4a76faed8",
+    "report_bytes": 3152,
+    "report_lines": 43,
+    "witness_id": "lsw_3dead66b11f92faafeb75148ad2306a370620d66c3b0ca3a0bde29ad90b9972c",
+    "witness_sha256": "289d6814e23a02c442d67956e3d992d2df92f6bef6320d921f4b2513325554f8",
+    "witness_bytes": 23791,
+    "witness_lines": 533,
+    "source_path": "minime/src/regulator/core.rs",
+    "source_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+    "source_hash_match_report_and_witness": true,
+    "source_lines": 24,
+    "source_read_scope": "complete_file 1-24",
+    "terminal_status": "addressed_no_action",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "evidence_links_new": 11,
+    "claim_classifications": {
+      "c001": "verified_existing",
+      "c002": "verified_existing",
+      "c003": "observed",
+      "c004": "verified_existing",
+      "c005": "verified_existing"
+    }
+  },
+  "durable_writes_this_round": [
+    "record-read (introspection_minime_regulator_1787944499, reader claude-heartbeat)",
+    "link-evidence-batch (11 new links: steward_note/no_action/changelog/ledger)",
+    "close (addressed_no_action, fully_addressed=true, proof_missing_claims=[])",
+    "division record-round (steward-run run_1787948509666118000_c52765667c, processed-report-count 1, generation projection_1787948513422948000_7740e2b8fb)",
+    "CHANGELOG.md [Unreleased] entry (append-only, foreign edits preserved)",
+    "AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md new top row (append-only, foreign rows preserved)",
+    "round packet docs/steward-notes/claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified/",
+    "one line appended to workspace/logs/flywheel_loop.log"
+  ],
+  "integrity_verified": {
+    "addressing_self_test": "44 OK",
+    "anti_drop_verify": "0 gaps / 0 alarms",
+    "audit_counters": "consistent, mismatches []",
+    "evidence_event_store_verify": {"valid": true, "corrupt_lines": 0, "last_global_seq": 924267, "head": "eaaf092b313a253b650b37c5f3c4d8d9"},
+    "experiential_epistemics_verify": {"valid": true, "checked_record_count": 11524, "issue_count": 0, "history_rewritten": false},
+    "division_verify": {"ok": true, "cycle": 34, "completed_rounds": 6, "review_due": true, "event_count": 238, "head": "474d0a92e12301fa6c962191f3ccbf7a"},
+    "chronicle_verify": "expected-stale (project before verify) from this round's follow-up event append; reprojection deferred to postprojection / next return session"
+  },
+  "division_state_after": {
+    "cycle_sequence": 34,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due": true,
+    "round_event_id": "division_followup_event_a76454d3fa11a9399934c49fac86a117",
+    "return_deferred": "Full Division return + Tier-5 dossier deferred to the next tracker-enforced session (clean split-session per the 2026-08-27 precedent). review_due=true is left with confirmed core integrity, not a dangling mid-round state."
+  },
+  "authority_boundary": "Read-only verification of a minime-owned source. No minime code/config/controller/regulator/runtime change made, inferred, or authorized. No live substrate or control change; no build/restart/deploy; git read-only. Standing Tier-5 waits (wi_e579041bc76f8310, wi_69fbd510467c6337, wi_3e26ac525fea1c36) untouched. Silence neutral; right to reopen preserved.",
+  "index_clean": true,
+  "foreign_work_untouched": true
+}

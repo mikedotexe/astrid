@@ -1,0 +1,25 @@
+{
+  "round": "claude-heartbeat_1788170517_llm_relation_is_like_prefix_shadow",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788162779.txt",
+      "sha256": "2b0d8e166762d62c3bcf54699b121ef330e2b729dfca03c13dfa76cb23dd6da8",
+      "bytes": 3588,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_4395ecccec28313e7de52099b8a8fa68a5261e3bb95a71af7bcbf774f00b753b",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4395ecccec28313e7de52099b8a8fa68a5261e3bb95a71af7bcbf774f00b753b.json",
+      "sha256": "1193c4d80a66550d6fc77baeab7c117355e4ef94ed2cd9ff6686a4b8c09b8f82",
+      "bytes": 23917,
+      "lines": 533,
+      "read": "complete",
+      "notes": "artifact_sha256 matches the report; source file_sha256 matches working copy; the queue's 'artifact_integrity_unavailable / issue_count=1' is the standard startup_build_candidate deployment_established=false condition (startup observation, not deployment proof), not a source contradiction."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "round": "claude-heartbeat_1787936067_llm_marker_behaves_isnot_delimiter_duplicate",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787926685",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787926685.txt",
+      "sha256": "7dfe5f6083978e34d4ce0ee9c5c595d4ac369c08726118aa93244ccab458c8fd",
+      "bytes": 3500,
+      "lines": 45,
+      "read": "complete",
+      "source_path_named_by_report": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha_named_by_report": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_included_intervals": "1-1048",
+      "source_uncovered_intervals": "none",
+      "source_coverage": "complete_multi_window_complete",
+      "witness_id": "lsw_b67d83baf23329dedf939bde7da74bc0778c7828e08e842aa2eb013bab7015d4",
+      "witness_path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b67d83baf23329dedf939bde7da74bc0778c7828e08e842aa2eb013bab7015d4.json",
+      "witness_sha256": "552f0438653b5c7b1477d7850f2ef8d8fcbbeeb6ffad8cf130416748b9b66a40",
+      "witness_bytes": 23934,
+      "witness_lines": 533,
+      "witness_read": "complete",
+      "witness_bound_artifact_sha256": "7dfe5f6083978e34d4ce0ee9c5c595d4ac369c08726118aa93244ccab458c8fd",
+      "witness_artifact_binding_matches_report": true,
+      "witness_lived_state_alignment": "artifact_integrity_unavailable",
+      "witness_alignment_note": "queue flagged lived_state_alignment=artifact_integrity_unavailable, gap_count=1, artifact_integrity_issue_count=1; the witness file is intact and its bound artifact_sha256 equals the report SHA. Treated as projection-side alignment metadata, not a report-integrity failure. Felt content read completely and preserved."
+    }
+  ]
+}

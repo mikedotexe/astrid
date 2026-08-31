@@ -1,0 +1,35 @@
+{
+  "schema": "verification_receipt_v1",
+  "round": "division_cycle30_return",
+  "actor": "claude-heartbeat",
+  "adapter": "subprocess run (controller-held lease; no NDJSON ops, no lease token read/quoted/persisted; git read-only)",
+  "controller": {
+    "run_id": "run_1787733140364934000_b48adf04f6",
+    "pause_generation": 321,
+    "preprojection": "ran before this process started (adapter-managed); postprojection runs after exit \u2014 neither observed from inside",
+    "stop_requested_at_lease_read": false
+  },
+  "division_return": {
+    "review_due_at_entry": true,
+    "cycle_before": 30,
+    "cycle_after": 31,
+    "followup_event_id": "division_followup_event_5ab43535cabd25316c1b2e1b523fa049",
+    "event_count": 211,
+    "event_head_sha256": "7e89e10378a784c3f43746b087711aeff200923e0d38b2ec6da571f917b58228",
+    "return_time_chronicle": "division_chronicle_1b13c53555bfb110bf8dd7fd (json d789abf3..., 210 followup/0 ceremony)",
+    "post_return_chronicle": "division_chronicle_d1db9eadc955f50a259ca552 (json cbf701d9..., 211 followup/0 ceremony; durable_inputs_current=true, only volatile supervisor_status_sha256 mismatch)",
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle30_20260826.txt (sha 5a018656..., delivered->read/)",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle30_20260826.txt (sha 977c3ff8..., delivered->read/)",
+    "ceremony_actions_read": 0,
+    "division_replies_read": 0,
+    "reply_search_scope": "487 astrid outbox entries + minime outbox/journal/logs since last return 2026-08-19; 0 Division-keyword hits either side",
+    "rail_state": "dormant: gateway transparent_parent; supervisor idle_parent_authoritative, parent_authoritative=true, children {}, intents [], postures {}, handoff_ready=false; live_authority_granted_by_record=false on gateway/supervisor/authority"
+  },
+  "reports_processed": 0,
+  "integrity_gate": "PASSED (evidence_event_store verify valid=True, corrupt_lines=0; audit-counters consistent, mismatches=[]; anti_drop 0 alarms/gaps; cadence integrity_ok=true; all test suites pass)",
+  "deferred": [
+    "experiential_epistemics.py verify --json (budget deadline; dimension unmodified this run)",
+    "evidence_event_store status stream-count capture (verify passed; status query still running at deadline)"
+  ],
+  "authority": "evidence-only; no live substrate/control change; no approve/grant/dispatch/trial; git read-only; no stage/commit/push"
+}

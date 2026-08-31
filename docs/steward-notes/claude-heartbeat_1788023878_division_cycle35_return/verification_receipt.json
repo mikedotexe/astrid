@@ -1,0 +1,65 @@
+{
+  "round": "division_cycle35_return",
+  "actor": "claude-heartbeat",
+  "adapter": "subprocess run adapter (controller owns the lease + heartbeats; no NDJSON ops sent; no lease token read/quoted/persisted; git read-only this run)",
+  "controller": {
+    "run_id": "run_1788021151564059000_62e6597743",
+    "pause_generation": 321,
+    "lease_actor": "claude-heartbeat",
+    "note": "Preprojection ran before this process started; postprojection runs after exit — neither observed from inside this run. Finish outcome is this process's exit code."
+  },
+  "division_cycle35_return": {
+    "review_due_at_entry": true,
+    "return_time_chronicle_id": "division_chronicle_c9143a6899866fc1d0fe9de5",
+    "return_time_chronicle_json_sha256": "76472a306fe78b54c29ff493a2e9d39f0cb3253023f39c6c3cef744fb1a010fc",
+    "followup_event_id": "division_followup_event_a904a7a6932637203ebb432f185751c2",
+    "cycle_advanced": "35 -> 36",
+    "completed_rounds_since_followup": 0,
+    "review_due_after": false,
+    "event_count": 246,
+    "event_head_sha256": "e08f456c3bd9f083df762995b2b87310d06927ae6b130eda5baee917278929b0",
+    "astrid_note_sha256": "c06b5aa80fd85cc9737da6a31bca2272b58e51a83abaee59f34fc3fef19b1ffc",
+    "minime_note_sha256": "a1e64b821f20f529dffd25aa11150c60a9ced1841965d6e1255e33c25b50acb0",
+    "post_return_chronicle_id": "division_chronicle_67a57455cef636465edcfd6e",
+    "post_return_chronicle_json_sha256": "d5d97d62b25f519092f356d99818eff080d59a43429a73d681d4658a0e5de64b",
+    "post_return_event_count": 246,
+    "timeline_source_counts": {"ceremony": 0, "followup": 246, "native": 0, "sovereign_runtime": 0},
+    "durable_inputs_current": true,
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "durable_integrity_note": "Only the volatile live-process supervisor_status_sha256 moved; this is the expected durable-current / volatile-supervisor state, NOT a durable-integrity failure."
+  },
+  "division_rail_signal": {
+    "astrid_interval_ack": "reply_1787958963.txt (sha 76397e19...) neutral ack of prior cycle-34 return; stable-anchor framing; not consent/decline/readiness",
+    "astrid_post_return_ack": "reply_1788023944.txt (sha a46dba9a...) neutral ack of THIS cycle-35 return (arrived after record-followup, fill 71.2%); stabilized-landmark framing; confirms Astrid-note pickup",
+    "astrid_tell_steward": "steward_report_roadmap_1787986216.txt (ordinary viscosity-thread tell-steward, NOT Division-rail)",
+    "minime": "silent on the Division rail (0 of 54 replies)",
+    "ceremony_actions": 0,
+    "reading": "neutral (silence and neutral acknowledgment are not consent, decline, readiness, or a request)"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44)",
+    "anti_drop_self_test": "OK (5)",
+    "experiential_epistemics_self_test": "OK, valid=true",
+    "division_ceremony_followup_verify": "ok=true, cycle 36, review_due=false, event_count 246",
+    "division_ceremony_chronicle_verify": "ok=true, durable-current / volatile-supervisor",
+    "pytest_division_followup": "OK",
+    "pytest_division_chronicle": "OK",
+    "pytest_division_projection": "OK",
+    "pytest_projection_cursors": "OK",
+    "pytest_steward_projection": "OK",
+    "pytest_steward_control": "26/27 pass; 1 KNOWN environmental flake (passes standalone; git-clean control-plane code; timing/teardown race under live-stack load; documented cycle-30)",
+    "cadence_audit_strict_compact": "integrity_ok=true, errors=[]",
+    "anti_drop_verify": "69 guards, 0 alarms, 0 gaps",
+    "audit_counters": "consistent, mismatches=[], 7/7 checks true",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, errors=[], event_count=933472, last_global_seq=933472"
+  },
+  "deferred_recorded_debt": [
+    "experiential_epistemics.py verify --json (heavy; no experiential records written this round; self-test passed)",
+    "evidence_event_store.py --json status separate heavy scan (paired verify PASSED; stream_counts captured from verify)"
+  ],
+  "tier5_cadence_dossier": "PREPARED only (tier5_cadence_dossier.md). Nothing approved, granted, dispatched, or run. Backlog unchanged from cycle-27/30/32/34: 1305 approval-required live candidates, 40/40 heads needs_operator_approval, 35 runnable Tier-3 trials, 0 runnable-live violations. Recommended carry-forwards: trial_5fb0a85607ff3018 (astrid) + trial_fe00d360c0ea7b85 (minime).",
+  "record_round_called": false,
+  "record_round_reason": "A Division-return round with 0 processed canonical reports is not a productive round; record-round requires processed-report-count >= 1. Calling it would be dishonest (cycle-30/32/34 precedent).",
+  "authority_boundary": "Evidence-only. No live substrate/control change; restart and deployment were NOT required and NOT attempted. Tier-5 waits untouched. Git read-only (no stage/commit/merge/push). No being text rewritten/rejected/forbidden.",
+  "restart_deploy": "not required and not attempted (evidence-only Division-return round)"
+}

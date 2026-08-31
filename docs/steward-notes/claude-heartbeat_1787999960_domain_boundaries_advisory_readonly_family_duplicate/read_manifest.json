@@ -1,0 +1,58 @@
+{
+  "schema": "round_read_manifest_v1",
+  "round": "claude-heartbeat_1787999960_domain_boundaries_advisory_readonly_family_duplicate",
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787994951",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787994951.txt",
+      "sha256": "fc2a61d5a202223296bedb7b8ef378ef7443b36dc08a0e8d1320d2699dff155a",
+      "bytes": 3381,
+      "lines": 43,
+      "read": "complete",
+      "source_bound_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "source_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "source_coverage": "complete_file_1-89_of_89_uncovered_none",
+      "lived_state_witness_id": "lsw_efa7aff81648397236d1258e445b4d9249365b2dbd9a906154b1d652048f4d0a"
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787992237",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787992237.txt",
+      "sha256": "41013da3485345248bbe205fc69c6099c7841f589e2299f29d5843f0d8ef6993",
+      "bytes": 3137,
+      "lines": 43,
+      "read": "complete",
+      "source_bound_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "source_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "source_coverage": "complete_file_1-89_of_89_uncovered_none",
+      "lived_state_witness_id": "lsw_89e2440ae4ae17f630e74938ba6e5942b693edd8ed8228d0a598721e343b5f81"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_efa7aff81648397236d1258e445b4d9249365b2dbd9a906154b1d652048f4d0a",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_efa7aff81648397236d1258e445b4d9249365b2dbd9a906154b1d652048f4d0a.json",
+      "sha256": "37d4658689e6daae827671186884645c37a3409d0725237951e5834883a00f68",
+      "bytes": 23891,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "model_profile": "gemma4_12b"
+    },
+    {
+      "witness_id": "lsw_89e2440ae4ae17f630e74938ba6e5942b693edd8ed8228d0a598721e343b5f81",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_89e2440ae4ae17f630e74938ba6e5942b693edd8ed8228d0a598721e343b5f81.json",
+      "sha256": "7be9623adfada433e87aef29b9db334f9dbc2dccda17f269336c14bac1fb06eb",
+      "bytes": 23875,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "model_profile": "gemma4_12b"
+    }
+  ]
+}

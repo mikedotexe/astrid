@@ -1,0 +1,51 @@
+{
+  "purpose": "Exact-source verification that the prior grounded regressions for this mechanism still pass at source SHA 902a0358 (no new tests authored; addressed_duplicate).",
+  "runner": "cargo 1.94.1",
+  "manifest_path": "capsules/spectral-bridge/Cargo.toml",
+  "package": "spectral-bridge-server",
+  "runs": [
+    {
+      "filter": "marker",
+      "result": "ok",
+      "passed": 80,
+      "failed": 0,
+      "ignored": 0,
+      "key_tests_for_report": [
+        "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary",
+        "scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen",
+        "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space",
+        "scan_known_model_control_markers_grounds_first_word_after_attached_double_dash",
+        "scan_known_model_control_markers_grounds_trailing_comma_relation_verb",
+        "control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content",
+        "control_marker_cleanup_uses_longest_raw_matches_with_exact_accounting",
+        "control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows",
+        "scan_known_model_control_markers_strips_bare_marker_at_end_of_string_without_after_text",
+        "control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together",
+        "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts"
+      ]
+    },
+    {
+      "filter": "delimiter",
+      "result": "ok",
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0,
+      "key_tests_for_report": [
+        "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+        "control_marker_cleanup_reports_exact_three_level_delimiter_depth",
+        "control_marker_cleanup_reports_exact_four_level_delimiter_depth",
+        "control_marker_cleanup_preserves_bounded_nested_delimiter_stacks"
+      ]
+    },
+    {
+      "filter": "first_word",
+      "result": "ok",
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0
+    }
+  ],
+  "total_passed": 95,
+  "total_failed": 0,
+  "note": "control_marker_cleanup_reports_depth_for_repeated_parentheses and control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth are within the passing 'marker' set (both matched by the 'marker' substring)."
+}

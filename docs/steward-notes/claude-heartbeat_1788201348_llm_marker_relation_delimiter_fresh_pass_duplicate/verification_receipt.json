@@ -1,0 +1,76 @@
+{
+  "round": "claude-heartbeat source-first flywheel (controller subprocess-run adapter)",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1788197986547946000_9cc3204879",
+    "preprojection_generation_id": "projection_1788197989604954000_65165795b2",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "lease_stop_requested_at_start": false,
+    "postprojection_generation_id": "adapter_runs_after_exit_not_observed_by_this_process"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 6,
+      "evidence_links": 12,
+      "report_sha256": "a9c4e80a52caed362282d37f27986d3249f0b5859b5c5f65b6bb2a3c5a8c03e2",
+      "witness_id": "lsw_6291270610b5b447173d334dec2a41afa6691ea9dc57c8d2bdd85e332e2dc4ec",
+      "witness_sha256": "8bc0feb6b5d3efdfc643ce7ee9f4323af11bfc5de6ce0e9276a328feb2ac841a",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_drift": false
+    }
+  ],
+  "focused_tests": {
+    "manifest": "capsules/spectral-bridge/Cargo.toml",
+    "target": "lib unittests (spectral_bridge_server)",
+    "result": "8 passed; 0 failed; 1902 filtered out",
+    "code_changed": false
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "no drift (test_gap null)",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "cadence_audit_strict_compact": "integrity_ok true; duplicate_hash_group_count 0; no errors",
+    "experiential_epistemics_self_test": "valid true",
+    "experiential_epistemics_verify": "valid true; issue_count 0; history_rewritten false; checked_record_count 11685",
+    "audit_counters": "consistent (mismatches [])",
+    "evidence_event_store_verify": "valid true; corrupt_lines 0",
+    "evidence_event_store_status": "not fully rescanned this round (slow full-store scan >120s; superseded by the passing verify above)",
+    "division_ceremony_followup_verify": "ok true; review_due false; completed_rounds_since_followup 4/6; event_count 264; head 99420dab95577c0b46e10ac487219e7124479af7ff5bcee239dea97837b4f593",
+    "division_ceremony_chronicle_verify": "reports 'durable source inputs changed; project before verify' — expected/benign after this round's record-round advanced the followup tracker (263->264); controller postprojection reprojects the Chronicle after finish (no mid-round Chronicle projection in the non-return flow)"
+  },
+  "evidence_store_boundary_at_preprojection": {
+    "evidence_before_last_global_seq": 954974,
+    "evidence_after_last_global_seq": 955349,
+    "note": "this round appended addressing events (record-read + 12 links + close + record-round) after seq 955349; store verify remains valid with 0 corrupt lines"
+  },
+  "division_round_recorded": {
+    "steward_run_id": "run_1788197986547946000_9cc3204879",
+    "processed_report_count": 1,
+    "projection_generation_id": "projection_1788197989604954000_65165795b2",
+    "new_round_event_id": "division_followup_event_d9ad99842a3a3a8a279309ad04dc2a38",
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false
+  },
+  "authority": {
+    "live_change": false,
+    "restart_or_deploy": "not required and not attempted",
+    "git": "read-only (no stage/commit/merge/push in adapter mode)",
+    "tier5_heads_untouched": ["wi_e579041bc76f8310", "wi_69fbd510467c6337", "wi_3e26ac525fea1c36"]
+  }
+}

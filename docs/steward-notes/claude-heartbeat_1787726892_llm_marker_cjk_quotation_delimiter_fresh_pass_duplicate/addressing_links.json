@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; remainder pushes marker token only when reference_syntax.is_some() (L129-131); relation verbs appears L67 / represents L82."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_quoted_exact_token_reference (L1995) — non-destructive preservation of a referenced marker."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace + per-chunk alnum trim + find(!is_empty) returns first finite word; allowlist membership (L64-86) is the sole preservation gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "uses_only_the_first_finite_relation_word (L2605) and first_word_after_skips_leading_punctuation_transition (L2635) — multi-word/punctuation phrase after marker; only first finite relation word gates preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L153-197 (CJK corner bracket 「」 at L168 -> QuotedExactKnownToken) and exact_reference_delimiter_syntax L199-229."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_non_ascii_matching_quote_pairs (L2342, 「<end_of_turn>」 quoted_reference_occurrences==1), preserves_quoted_exact_tokens_across_whitespace (L2401), preserves_nested_fullwidth_cjk_reference_stack (L2383) — CJK/Unicode quotation-delimiter arm already covered."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86; 'behaves' allowlisted at L69."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_proxy_relation_phrase (L2552, 'functions as...') and uses_only_the_first_finite_relation_word (L2605, 'functions like...' retained) guarantee the proposed 'behaves as a primary signal' preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695; remainder integration chain scan L114 -> sanitize_model_control_markers_with_report L352 -> sanitize_model_control_markers L519 -> generation path L558/L634."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787717287_llm_marker_first_word_multiword_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Prior grounded family packet (introspection_astrid_llm_1787706169) at identical source SHA 902a0358; duplicate lineage for this fresh pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] bullet recording this fresh-pass re-verification (incl. CJK quotation-delimiter Test 1 grounded as covered)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787722603",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: Astrid marker-scanner fresh pass -> exact-source re-verification, no change, contradiction preserved."
+    }
+  ]
+}

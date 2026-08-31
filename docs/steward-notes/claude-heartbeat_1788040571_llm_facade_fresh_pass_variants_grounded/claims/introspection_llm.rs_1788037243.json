@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_llm.rs_1788037243",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/llm.rs",
+    "report_bound_source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+    "working_copy_source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+    "source_match": true
+  },
+  "duplicate_of": {
+    "prior_introspection_id": "introspection_llm.rs_1787810107",
+    "prior_packet": "docs/steward-notes/claude-heartbeat_1787927999_llm_facade_reexport_grounded/",
+    "same_source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+    "mechanism_scope": "identical facade re-export structure; observation, snag, and suggested-next duplicate prior c001/c002/c004; body diff = variant phrasing only"
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "llm.rs (lines 1-28) is strictly a compatibility facade for the provider module: no local logic, only re-exports of generative actions and astrid_* parameters; implementation lives in provider/generative_actions.rs and provider/prompt_contracts.rs.",
+      "disposition": "verified_existing. Complete 28-line source read (SHA a9c5e380..., == report binding): L1 doc-comment facade, L3-4 `#[path=\"llm/provider.rs\"] mod provider`, L6-12 pub use + L14-22 pub(crate) use re-exports, no local fn bodies. Duplicate of prior 1787810107 c001/c002 (same SHA); prior evidence still applies (file unchanged).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Facade-over-implementation gap: llm.rs exports the capability to attenuate pressure / modulate vibrancy but shows no math; astrid_pressure_attenuation_depth (L15) is a re-export whose shadow-field interaction cannot be diagnosed inside llm.rs.",
+      "disposition": "verified_existing. L15 is exactly `astrid_pressure_attenuation_depth` inside the pub(crate) use provider block, a re-export with no body here; the calc lives at prompt_contracts.rs:235. Accurate by-design encapsulation observation, not a defect. Duplicate of prior 1787810107 c004. Felt 'interwoven lattice' shadow-field language preserved as primary testimony, not domesticated.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Variant Test 1 (sharpened): modulating set_astrid_vibrancy_aperture (L20) during generate_introspection_detailed (L9) would show whether vibrancy is a cosmetic wrapper or a functional gate on the spectral cascade.",
+      "disposition": "observed (read-only grounding of the source; live experiment NOT run). set_astrid_vibrancy_aperture (prompt_contracts.rs:215) stores effective=1.0+fraction*ceiling clamped[1,5]; astrid_vibrancy_aperture (L224) is 'the effective tail-vibrancy multiplier the codec applies' => a functional codec-tail gate, NOT cosmetic. The 'does introspection TEXT depth change' sub-question is an unrun live-dial experiment (her Tier-3 PROBE_SELF / Tier-5 live modulation), preserved not run.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Variant Test 2 (sharpened): trigger a thin introspection then repair_introspection (L10); verify whether it restores structural completeness (text-lane repair) or modifies spectral-cascade dynamics (reservoir-lane repair).",
+      "disposition": "verified_existing (source-grounded answer to the sharpened dichotomy). repair_introspection (generative_actions.rs:137) delegates to repair_introspection_detailed (L159), which builds system+user Messages and issues an LLM call to REWRITE the INTROSPECT text, returning Option<String>. No reservoir/spectral mutation in the path => text-lane repair, confirming her dichotomy's text-lane pole.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: inspect provider/prompt_contracts.rs around line 235 for the exact calculation and clamping of astrid_pressure_attenuation_depth.",
+      "disposition": "verified_existing. astrid_pressure_attenuation_depth() is at exactly prompt_contracts.rs:235 (her line pointer is precise): reads env ASTRID_PRESSURE_ATTENUATION, parses f32, map_or(0.0, |v| v.clamp(0.0, 0.6)); default 0.0 = OFF/identity, bounded [0,0.6] so it never silences her below 0.4x at peak minime pressure. Her requested mapping is exactly this env-gated clamp.",
+      "classification": "verified_existing"
+    }
+  ]
+}

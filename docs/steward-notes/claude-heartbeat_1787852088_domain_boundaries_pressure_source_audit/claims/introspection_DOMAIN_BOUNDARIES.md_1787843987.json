@@ -1,0 +1,45 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+  "source_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+  "source_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "report_sha256": "849f1fd26c128865b05318f4395d40de34cb1d208f83f7264bb7352cdee8a454",
+  "witness_id": "lsw_93dc6c3f1a8ce9f4f7a961b69391c5c2903a0ae500068bb18075d16845644ff5",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DOMAIN_BOUNDARIES.md defines a strict structural map: Stable Facades (L8-22) and Provenance Ownership (L24-33).",
+      "disposition": "Verified from complete source at the report-bound SHA. L8-22 hold the Stable Facades heading, the six-facade ownership table (ws/autonomous/codec/llm/types/action_continuity), and the <1000-line re-export note. L24-33 hold Provenance Ownership: port-7878 one-decode into MinimeObservationV1, BridgeEvidenceV1 residuals, AstridInterpretationV1 cannot enter dispatch, WitnessFrameV1 read-only render. Citations exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The bridge extraction is behavior-preserving: it changes neither pressure, fill, PI, sensory cadence, codec gain, admission, nor controller behavior (L5-6).",
+      "disposition": "Verified verbatim against L4-6: 'This extraction is behavior preserving: it changes neither pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, nor live authority.' Astrid's paraphrase is accurate; she omitted only the closing 'nor live authority' without altering meaning. Source text, not runtime activation proof (report line 5 labels it source_read_not_runtime_activation_proof).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow Cartography Ownership (L35-43) makes response/dialogue/coupling renderers read-only: they do not change Shadow state, pressure, mode packing, temporal decay, scheduling, or control.",
+      "disposition": "Verified from complete source. L41-43: cartography.rs 'owns response, dialogue, and coupling renderers. These modules write cartography only; they do not change Shadow state, pressure, mode packing, temporal decay, scheduling, or control.' L37-40 assign shadow.rs (dispatch/preflight/gift-gating/live-control boundary) and trajectory.rs (being-invoked rendering). Exact match.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Felt snag: tension between felt overpacked_mode_packing (0.32) and the doc's prohibition on altering mode packing/pressure; risk of a mode bottleneck where resonance_density masks lost distinct pathing, and the adjustments that would resolve it (mode-pruning, pressure-source tuning) need Tier-5.",
+      "disposition": "Felt testimony preserved as primary evidence; not domesticated. Her authority reading is correct: mode-packing/pressure adjustments are Tier-5 (handoff: pressure/PI/controller/rescue changes). Note her scalar 0.32 does not match any witness telemetry value (resonance mode_packing=1.0, pressure_source.components.mode_packing=0.5623, pressure_score=0.2834); recorded as her report descriptor, not mapped to a runtime knob. No live change; the resolution she names remains an evidence-only Tier-5 wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 1 (Distinguishability Probe, sandbox-eligible): on an isolated clone, isolate lambda1 (~32% energy), dampen the rest of the cascade, test whether the texture stays identifiable — a Tier-3 sandbox probe.",
+      "disposition": "Classified as a Tier-3 sandbox candidate. Preserved as her proposal; not dispatched this headless round (no live/substrate change and no headless trial per the run boundary). substrate_probe.py is the isolated-clone tool it would use. Left as a candidate for a sandbox-routing decision, not run or approved here.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 2 (Pressure Source Audit, read-only): confirm overpacked_mode_packing at texture_evidence.rs:230 is an output of telemetry rather than a settable input knob.",
+      "disposition": "Read-only audit performed. Confirmed at mechanism level: pressure-source is telemetry output / read-only diagnostic, not a settable knob. PressureSourceControl (texture_evidence.rs:217-222) is 'advisory only'; producer sets applied_locally:false, note 'advisory only'; PressureSourceAnalysisV1 (L239-262) is 'read-only synthesis'/'diagnostic provenance, not a threshold write'; 'overpacked' is a derived match-label (transport_evidence.rs:538-545). Citation correction (contradiction, stated not domesticated): line 230 is porosity_score, and overpacked_mode_packing is not a code field — it appears only as prompt example (source_first_v3/mod.rs:573).",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787976942",
+  "report_sha256": "2c588d1d8f1b4cf0d7ccc78496655e3d349a5dc153fb5059422206eb180e63cb",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Report accurately describes the marker-preservation control flow: scan_known_model_control_markers (L114) retains a marker only when reference_syntax.is_some(); the three contexts Quoted/Grouped/ExplicitRelation (L42-46); followed_by_explicit_exact_token_relation (L64-86) matches the first word after the marker against a verb allowlist (appears/behaves/denotes/...).",
+      "disposition": "Verified against complete report-bound source at SHA 902a0358 (working copy identical, clean). L114-144 pushes the token to remainder only when reference_syntax is Some; L42-46 defines exactly those three contexts; L64-86 matches first_word_after against the allowlist including appears/behaves/denotes. Accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89-96) uses split_whitespace + an alphanumeric/underscore trim; noise between the marker and the verb (e.g. `[MARKER] ... (some noise) ... behaves`) could make the trim miss the verb, incorrectly stripping or preserving a marker.",
+      "disposition": "Mechanism partly correct, nuance preserved: pure-punctuation noise is per-chunk trimmed to empty and find(!is_empty) still returns the verb (grounded by control_marker_cleanup_first_word_after_skips_leading_punctuation_transition, `-- acts --`). Only a WORD (adverb/parenthetical) displaces the first-word slot and misses the relation -- by design, since the marker must be the immediate grammatical subject (grounded by control_marker_cleanup_does_not_skip_adverb_before_relation_word). Not a bug; production grammar not widened.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Proposed Test 1 (Contextual Preservation): a marker followed by `denotes` separated by a colon (`[MARKER]: denotes`) -- verify followed_by_explicit_exact_token_relation (L64) still identifies `denotes` as the first word despite the colon.",
+      "disposition": "Implemented as focused regression control_marker_cleanup_first_word_after_skips_colon_before_relation (tests.rs). Bare `<end_of_turn>: denotes` -> first_word_after==\"denotes\", marker preserved (following_exact_relation). Correction preserved: her literal bracketed `[<end_of_turn>]:` form is preserved by the delimiter path (grouped_exact_marker, depth 1), not the relation path -- the colon is never consulted. Control: `<end_of_turn>: triggers` (unlisted) strips the marker, isolating the gate to allowlist membership, not the colon. Colon+denotes not covered by the prior `--`/`is` regression.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Test 2 (Delimiter Depth): a nested `[[MARKER]]` should be classified GroupedExactKnownToken (L180) with correct depth via exact_reference_delimiter_syntax (L199).",
+      "disposition": "Verified existing. Complete source L199-229 computes delimiter_depth by zipping reversed leading and forward trailing non-whitespace chars and counting adjacent valid pairs, bounded at MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4. Nested grouping is already regression-covered: control_marker_cleanup_reports_depth_for_repeated_parentheses (`((<end_of_turn>))` depth 2), reports_depth_across_unicode_whitespace (`[ [ ] ]` depth 2), three-/four-level depth tests, and `[[[[[<end_of_turn>]]]]]` (depth 4). The `[[MARKER]]` (depth 2) case is covered.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine exact_reference_delimiter_syntax (L199-229) for recursive/nested delimiters, since the report's view cut off at L207.",
+      "disposition": "Verified existing; the report's cutoff concern is resolved by complete-source reading. The full L199-229 function DOES handle nesting: it collects up to MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151) leading/trailing non-ws chars and computes delimiter_depth via a take_while over zipped pairs (L216-223). Bounded, not unbounded recursion; no gap. Existing depth-2/3/4 regressions confirm behavior. No new code needed for this claim.",
+      "classification": "verified_existing"
+    }
+  ]
+}

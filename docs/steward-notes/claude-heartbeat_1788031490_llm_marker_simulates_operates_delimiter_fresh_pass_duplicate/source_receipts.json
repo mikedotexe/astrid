@@ -1,0 +1,48 @@
+{
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "key_intervals": {
+        "relation_allowlist_followed_by_explicit_exact_token_relation": "64-87",
+        "first_word_after": "89-96",
+        "longest_exact_known_model_control_marker_at": "97-112",
+        "scan_known_model_control_markers": "114-144",
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH_and_pair": "151-197",
+        "exact_reference_delimiter_syntax": "199-229",
+        "sanitize_model_control_markers_with_report": "352-517",
+        "is_valid_dialogue_output": "556-631",
+        "has_one_nonempty_final_next_action": "633-667",
+        "generate_dialogue": "695-1048"
+      },
+      "report_binding": {
+        "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+        "hash_match": true,
+        "mismatch_handling": "not_needed"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "09ab3f03e1862a2ac644a7720a46a41795f405dc35832d1b17458604bb69425e",
+      "total_lines": 4520,
+      "total_bytes": 199020,
+      "read_scope": "targeted_intervals_for_cited_tests",
+      "cited_tests": {
+        "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts": 3133,
+        "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts": 2603,
+        "control_marker_cleanup_distinguishes_allowlisted_signals_from_unlisted_signifies": 4389,
+        "followed_by_explicit_exact_token_relation_allowlists_represents_not_creates": 3349,
+        "followed_by_explicit_exact_token_relation_allowlists_mimics_not_generates": 4452,
+        "control_marker_cleanup_does_not_expand_relation_allowlist_to_implies": 2836,
+        "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two": 3226,
+        "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth": 2301,
+        "control_marker_cleanup_preserves_nested_fullwidth_cjk_reference_stack": 2418,
+        "control_marker_cleanup_preserves_fullwidth_and_cjk_group_pairs": 2397
+      },
+      "foreign_state_note": "tests.rs is dirty in the shared tree with accumulated prior-round edits; read-only inspection, left untouched"
+    }
+  ]
+}

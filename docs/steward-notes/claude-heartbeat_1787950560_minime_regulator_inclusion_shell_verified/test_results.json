@@ -1,0 +1,26 @@
+{
+  "round": "claude-heartbeat_1787950560_minime_regulator_inclusion_shell_verified",
+  "rust_tests": {
+    "run": false,
+    "reason": "addressed_no_action — no Rust source or test was changed. The report is a structural observation about minime/src/regulator/core.rs; every claim was answered by complete-source verification and existing mechanisms (compiler include! resolution; introspection source-SHA binding). No focused test was warranted, so none was added or run."
+  },
+  "baseline_checks": {
+    "git_diff_check_my_files": "clean (rc=0) on CHANGELOG.md and AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "cargo_fmt": "not applicable — no Rust files touched this round (foreign dirty Rust files exist in the shared tree and were not assessed or modified)"
+  },
+  "integrity_suites": {
+    "introspection_addressing_self_test": "44 tests OK (0.42s)",
+    "anti_drop_catalog_verify": "0 gaps, 0 alarms",
+    "audit_counters": "status=consistent, mismatches=[] (2.9s)",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=924267, head=eaaf092b313a253b650b37c5f3c4d8d9 (413s)",
+    "experiential_epistemics_verify": "valid=true, checked_record_count=11524, issue_count=0, history_rewritten=false (final lint, after all durable writes incl record-round)",
+    "division_ceremony_followup_verify": "ok=true, cycle 34, completed 6/6, review_due=true, event_count 238, head 474d0a92e12301fa6c962191f3ccbf7a, last_round_event_id division_followup_event_a76454d3fa11a9399934c49fac86a117",
+    "division_ceremony_chronicle_verify": "EXPECTED-STALE: 'chronicle durable source inputs changed; project before verify' — caused by this round's record-round appending a follow-up event (237->238). Chronicle reprojection is deferred-return work per the 2026-08-27 clean-split precedent; the adapter postprojection division_chronicle stage / the next Division return session resolves it. Not a corruption."
+  },
+  "deferred_to_budget_or_return_session": [
+    "Full Division RETURN (Chronicle project+verify, read Division replies, <=1 factual note per being, record-followup) — deferred to the next tracker-enforced return session (review_due=true forces it before any 7th round).",
+    "Tier-5 cadence dossier — obligation only attaches when a Division RETURN is completed; not this round.",
+    "Tooling python unit suites (test_steward_control.py, test_steward_projection.py, test_division_ceremony_*.py, test_projection_cursors.py, test_evidence_event_store.py) — deferred to budget; core store integrity (EES verify, audit-counters, epistemic verify) run and green.",
+    "EES status (evidence_event_store.py status) — deferred; verify (the stronger check) ran and is green."
+  ]
+}

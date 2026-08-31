@@ -1,0 +1,49 @@
+{
+  "round": "llm_marker_simulates_operates_delimiter_fresh_pass_duplicate",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788024897",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788024897.txt",
+      "sha256": "3616fa6f03fe6f8ad87cc4ce3d0002653bf1bc221a5077ff7cb1a93225874b37",
+      "bytes": 3722,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a1994694dfffff418646813650df28a2b5d5dcb9f40d131c99d4fd00df538b0a",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a1994694dfffff418646813650df28a2b5d5dcb9f40d131c99d4fd00df538b0a.json",
+      "sha256": "7c8c1f65c09fffe6306c470aa922083f97a31058ab3258b03d5124a8719e0bd4",
+      "bytes": 23928,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "live_eligible_now": false,
+      "artifact_sha256_matches_report": true,
+      "source_file_sha256_matches": true,
+      "canonical_body_sha256": "ae368609b6509a03d1539f16bf1d5be0d262eb1e35f2521cc79154e6233d6ecb",
+      "raw_prose_included": false,
+      "private_path_included": false,
+      "projection_alignment_note": "Queue reported lived_state_alignment=artifact_integrity_unavailable / issue_count=1. Witness itself is byte-complete and hash-consistent (artifact_sha256, source file_sha256, and canonical_body_sha256 all verified); the flag is a projection-time alignment field, not witness corruption, and did not block the read."
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_note": "read for existing-coverage verification only; accumulated foreign edits present (dirty in shared tree) and left untouched",
+      "total_lines": 4520,
+      "read_scope": "targeted_intervals_for_cited_tests"
+    }
+  ]
+}

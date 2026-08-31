@@ -1,0 +1,20 @@
+{
+  "focused": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- telemetry_integration_health ws_trace_records_connection_lifecycle_without_payloads",
+    "compile_secs": 113,
+    "result": "ok",
+    "passed": 3,
+    "failed": 0,
+    "ignored": 0,
+    "filtered_out": 1901,
+    "tests": [
+      "ws::runtime::tests::telemetry_integration_health_flags_heavy_prewrite_pipeline (NEW)",
+      "ws::runtime::tests::telemetry_integration_health_separates_pipeline_wait_and_hold (existing)",
+      "ws::runtime::tests::ws_trace_records_connection_lifecycle_without_payloads (existing)"
+    ]
+  },
+  "baseline_checks": {
+    "git_diff_check": "clean",
+    "cargo_fmt_touched_file": "clean (ws/tests.rs); pre-existing unrelated fmt drift in autonomous/.../grounding.rs left untouched (foreign)"
+  }
+}

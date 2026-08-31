@@ -1,0 +1,19 @@
+{
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+    "sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "match": true,
+    "total_lines": 89,
+    "total_bytes": 5022,
+    "read_scope": "complete 1-89",
+    "shared_across": ["introspection_DOMAIN_BOUNDARIES.md_1787913894", "introspection_DOMAIN_BOUNDARIES.md_1787895506", "introspection_DOMAIN_BOUNDARIES.md_1787875575"],
+    "note": "All three reports bind the identical source SHA; source verification shared per family-batch rule 3."
+  },
+  "adjacent_evidence_for_test2": [
+    {"path": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs", "sha256": "cbfe0e152a41d62b19ef72bee93af39783ef4e0d0236566cc2d90a6b7ea2f010", "total_lines": 315, "read_scope": "L210-265 (pressure-source contract region L216-262)", "findings": "L216 'PressureSourceControl ... remains advisory only'; struct L217-222 {applied_locally: bool, note: String}; L230 = 'pub porosity_score: f32,' (NOT overpacked_mode_packing); PressureSourceAnalysisV1 doc ~L237-240 'read-only synthesis', field comment 'diagnostic provenance, not a threshold write'"},
+    {"path": "capsules/spectral-bridge/src/types/schema/transport_evidence.rs", "read_scope": "grep-scoped L540-544, L648", "findings": "'overpacked' is a derived read-only match label: 'mode_packing_overpacked_with_pressure_velocity' (L540), packing>0.25 branches L542-544"},
+    {"path": "capsules/spectral-bridge/src/types/schema/tests.rs", "read_scope": "grep-scoped L1300, L1745", "findings": "pins 'mode_packing_overpacked_with_pressure_velocity' / '..._unknown' labels green"},
+    {"path": "capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/mod.rs", "read_scope": "grep-scoped L573", "findings": "the literal 'overpacked_mode_packing' appears ONLY here, as prompt example prose — not a real code field"}
+  ]
+}

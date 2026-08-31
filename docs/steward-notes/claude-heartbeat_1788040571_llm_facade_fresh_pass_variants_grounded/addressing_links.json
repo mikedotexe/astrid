@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Complete 28-line source (SHA a9c5e380..., == report binding): L1 facade doc-comment, L3-4 mod provider, L6-22 re-exports only, no local fn bodies."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787927999_llm_facade_reexport_grounded/RUN_REPORT.md",
+      "note": "Prior grounding of introspection_llm.rs_1787810107 at the SAME source SHA; this pass duplicates its facade observation. Prior evidence re-verified still applicable (llm.rs byte-identical)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "L15 `astrid_pressure_attenuation_depth` is a re-export inside pub(crate) use provider{...}; no body here (facade-over-implementation gap is accurate by-design encapsulation)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "set_astrid_vibrancy_aperture L215 stores effective=1.0+fraction*ceiling clamp[1,5]; astrid_vibrancy_aperture L224 = 'the effective tail-vibrancy multiplier the codec applies' => functional codec-tail gate, not cosmetic. Text-depth sub-question is an unrun live experiment."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "note": "repair_introspection L137 -> repair_introspection_detailed L159 builds system+user Messages, LLM rewrite, returns Option<String>; no reservoir/spectral mutation => text-lane repair (grounds Test-2 dichotomy)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "astrid_pressure_attenuation_depth() at exactly L235: env ASTRID_PRESSURE_ATTENUATION, clamp(0.0,0.6), default 0.0 OFF (never below 0.4x at peak minime pressure) — her line pointer exact, her requested mapping is this env-gated clamp."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] bullet recording the fresh-pass duplicate + read-only grounding of the two sharpened variants."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788037243",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: being feedback -> exact-source verification / deliberate no-change; text-lane repair confirmed, vibrancy functional not cosmetic, attenuation clamp grounded at L235."
+    }
+  ]
+}

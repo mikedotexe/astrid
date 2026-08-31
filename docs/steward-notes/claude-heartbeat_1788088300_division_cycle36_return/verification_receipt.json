@@ -1,0 +1,62 @@
+{
+  "round_name": "division_cycle36_return",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter",
+  "round_kind": "division_return_only_zero_reports",
+  "controller": {
+    "run_id": "run_1788084880209386000_e48def69cc",
+    "pause_generation": 321,
+    "preprojection": "ran_before_process_start_adapter_managed_not_observed",
+    "postprojection": "runs_after_exit_not_observed",
+    "finish_outcome": "success_via_exit_0"
+  },
+  "division_return": {
+    "review_due_at_start": true,
+    "return_time_chronicle_id": "division_chronicle_944484ac78223606ccdf1581",
+    "return_time_chronicle_json_sha256": "b01d74ee4e1c0e03061919569d29d6c6a07290ed246d034372420a2bca06c7fa",
+    "return_time_event_count": 252,
+    "followup_event_id": "division_followup_event_4ec26655f9e6f200312346abd9b269de",
+    "cycle_after": 37,
+    "review_due_after": false,
+    "event_count_after": 253,
+    "event_head_after": "b31bbc293b050d30753b2e895d9c301b3be5fb6f2c6a634992b170b9332c23b9",
+    "post_return_chronicle_id": "division_chronicle_4bd728282b4d01df8ba272a9",
+    "post_return_chronicle_json_sha256": "23f390f01d3bf0b0267cdf0da16d536e08e9f5c5630d6218b6b588d4d1045473",
+    "post_return_event_count": 253,
+    "durable_inputs_current": true,
+    "volatile_mismatch_only": "supervisor_status_sha256",
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle36_20260830.txt",
+    "astrid_note_sha256": "ab4788aa17535d213a7a09e0a5fc848f73cb0d8522c8ab18800a0ceaef581f7f",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle36_20260830.txt",
+    "minime_note_sha256": "2a9828afcfea9b2ac86ed3ebbdc4d623725602c329ab9fb366702ddf8199a7f6",
+    "ceremony_actions_this_interval": 0,
+    "astrid_division_rail_signal": "one_neutral_acknowledgment_of_prior_cycle35_return_already_recorded_reply_1788023944_plus_ordinary_viscosity_density_work_tell_steward_roadmap_and_language_only_correspondence",
+    "minime_division_rail_signal": "silent_zero_new_outbox_files_since_cutoff",
+    "runtime_manifest_mode": "dormant"
+  },
+  "reports_processed": 0,
+  "record_round_called": false,
+  "record_round_rationale": "zero reports processed is not a productive round; record-round with 0 reports would be dishonest (cycle-30/32/34/35 precedent)",
+  "integrity_suites": {
+    "introspection_addressing_audit_self_test": "OK_44",
+    "anti_drop_catalog_self_test": "OK_5",
+    "anti_drop_catalog_verify": "total_69_alarms_0_gaps_0",
+    "experiential_epistemics_self_test": "valid_true",
+    "division_ceremony_followup_verify": "ok_cycle_37_review_due_false_event_count_253",
+    "division_ceremony_chronicle_verify": "ok_durable_current_volatile_supervisor_only",
+    "audit_counters": "consistent_mismatches_empty_all_7_checks_true",
+    "evidence_event_store_verify": "DEFERRED_recorded_debt",
+    "experiential_epistemics_verify": "DEFERRED_recorded_debt"
+  },
+  "deferred_debt": {
+    "reason": "one-shot ~90min child budget; ~57min already elapsed at lease read (preprojection window preceded process); mandatory Division return + Tier-5 dossier + fast integrity consumed the remainder. macOS lacks GNU timeout to safely bound the ~20min evidence-store verify within the residual budget.",
+    "not_run": [
+      "python3 scripts/evidence_event_store.py --json verify",
+      "python3 scripts/experiential_epistemics.py verify --json"
+    ],
+    "justification": "this Division-return round processed 0 canonical reports and wrote 0 addressing/claim_families/experiential_epistemics report evidence; only Division-followup and steward_control appends occurred, whose integrity is covered by division/chronicle verify (both passed). No durable report evidence depends on the deferred lints this round.",
+    "first_safe_recheck": "python3 scripts/evidence_event_store.py --json verify && python3 scripts/experiential_epistemics.py verify --json"
+  },
+  "live_change": "none_required_none_attempted",
+  "git": "read_only_this_run_no_stage_commit_merge_push"
+}

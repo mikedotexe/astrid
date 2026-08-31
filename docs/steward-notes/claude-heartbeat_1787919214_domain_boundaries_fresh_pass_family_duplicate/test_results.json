@@ -1,0 +1,16 @@
+{
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib viscosity",
+      "result": "ok",
+      "passed": 30,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1874,
+      "backs_claim": "c004 (Test 2 read-only pressure-source / overpacked audit) — the derived 'overpacked'/mode-packing/viscosity labels are pinned as read-only telemetry output, not settable knobs; asserted 'without control'/'without authority'/'without felt overclaim'.",
+      "note": "No source or test code changed this round; existing coverage is sufficient (a new regression would duplicate). Same test family the prior packet used."
+    }
+  ],
+  "source_or_test_code_changed": false,
+  "baseline_checks": "git diff --check and cargo fmt --all --check run at packet finalization (see verification_receipt.json)."
+}

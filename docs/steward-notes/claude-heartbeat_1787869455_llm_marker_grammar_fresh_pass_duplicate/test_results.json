@@ -1,0 +1,24 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "note": "No source or test changed this round (addressed_duplicate). Ran the exact prior regressions cited as duplicate anchors to verify the earlier evidence still applies against the current working-copy source (SHA 902a0358, matches report binding).",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- control_marker exact_reference_delimiter",
+      "lib_unittests_result": "ok",
+      "passed": 78,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1823,
+      "covers": [
+        "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (tests.rs L2568)",
+        "control_marker_cleanup_uses_only_the_first_finite_relation_word (L2604)",
+        "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition (L2635)",
+        "control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194)",
+        "control_marker_cleanup_reports_exact_three_level_delimiter_depth (L2207)",
+        "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2265)",
+        "control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together (L2112)",
+        "exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped (L3137)"
+      ]
+    }
+  ]
+}

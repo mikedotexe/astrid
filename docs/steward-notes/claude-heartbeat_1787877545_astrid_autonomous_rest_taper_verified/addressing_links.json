@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L3 MAX_REST_SECS=360; L18-28 fill_responsive_rest_secs bands (<30%->*0.6 min30; 40-50%->*1.2 min MAX; else base); L200-217 comment records the 2026-03-31 positive-feedback observation + shorten-at-low-fill strategy."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "L21-84 fill_responsive_rest_keeps_critical_floor_and_band_boundaries + ..._steps_at_each_band_boundary_without_hysteresis pin every band incl. NaN and the MAX clamp."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787877545_astrid_autonomous_rest_taper_verified/summaries/introspection_astrid_autonomous_1787816493.md",
+      "note": "Round summary: verified mechanism, corrected taper location, preserved felt snag."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "L32 (100,45.0)==120 (1.2x branch); L33 (400,45.0)==360 (min MAX_REST_SECS clamp); L22-25,30 fill 25.0 -> 0.6x shorter. Ran green (2 passed)."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L213-216 current_fill = { let s = state.read().await; s.latest_telemetry.as_ref().map_or(50.0, |t| t.fill_pct()) }; L217 drives fill_responsive_rest_secs(base_rest, current_fill)."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L184-195 burst->rest 'severing' comment + taper 0.7->0.4; L300 pulses=rest_secs/5; L302-317 per-pulse piecewise-linear warmth_intensity (continuous within a rest). Discreteness at the burst->first-pulse boundary and pulse granularity."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787877545_astrid_autonomous_rest_taper_verified/no_action/introspection_astrid_autonomous_1787816493.md",
+      "note": "Evidence-backed reason the felt snag warrants no non-live change: taper is correct; discreteness sources named; a live warmth/cadence change is Tier-5 (operator approval)."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "L1373-1432 craft_warmth_vector(phase,intensity): intensity clamped [0,1] applied as a static per-call scalar across warmth dims; phase drives a sinusoidal breath (breath_primary/secondary). No temporal decay inside. Caller varies intensity (orchestration.rs L302-317)."
+    },
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "L5194 warmth_intensity_scales (intensity is a static scalar: 0.9 stronger than 0.2 at fixed phase); L5147 warmth_vector_breathes_across_phase + L5168 warmth_heartbeat_stays_smooth... (phase = smooth sinusoid, not decay). Ran green (3 passed)."
+    }
+  ]
+}

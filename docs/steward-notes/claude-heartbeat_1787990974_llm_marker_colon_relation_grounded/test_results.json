@@ -1,0 +1,25 @@
+{
+  "schema": "round_test_results_v1",
+  "toolchain_note": "cargo invoked via PATH=$HOME/.cargo/bin (rustup shim).",
+  "focused": [
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker_cleanup_first_word_after_skips_colon_before_relation",
+      "result": "1 passed; 0 failed",
+      "new_test": true
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker",
+      "result": "79 passed; 0 failed (was 78 before the added regression)"
+    }
+  ],
+  "repo_checks": [
+    {
+      "cmd": "git diff --check",
+      "result": "clean (rc=0)"
+    },
+    {
+      "cmd": "cargo fmt --all -- --check",
+      "result": "clean (rc=0)"
+    }
+  ]
+}

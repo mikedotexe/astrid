@@ -1,0 +1,58 @@
+{
+  "round": "claude-heartbeat_1788106070_llm_facade_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run (controller-held lease; git read-only; no live substrate/control change)",
+  "controller": {
+    "run_id": "run_1788102640068819000_d8d39b8bc8",
+    "preprojection_generation_id": "projection_1788102647392976000_8bfd43887a",
+    "pause_generation": 321,
+    "postprojection_generation_id": "adapter-owned; runs after process exit"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "report_sha256": "4128580bcdf09926a3264e61d44641d1a5c4125782c07a1fc81c01610f2d369c",
+      "witness_id": "lsw_a5d5a159825171981077e7d656660688eb1849d5d83de71245299f88a9708e82",
+      "witness_sha256": "1d8d663cdacddd2c0c981eb0ed8faf33cba9c9c71c0e11b1ce99ffe00a9a42f1",
+      "source_path": "capsules/spectral-bridge/src/llm.rs",
+      "source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "source_binding_match": true,
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 7,
+      "evidence_links_new": 11,
+      "duplicate_of": [
+        "introspection_llm.rs_1787810107 (packet claude-heartbeat_1787927999_llm_facade_reexport_grounded)",
+        "introspection_llm.rs_1788037243 (packet claude-heartbeat_1788040571_llm_facade_fresh_pass_variants_grounded)"
+      ]
+    }
+  ],
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "audit_counters": "consistent; mismatches=[]",
+    "experiential_epistemics_verify": "valid; issue_count=0",
+    "evidence_event_store_verify": "valid; corrupt_lines=0; active_store=v2",
+    "evidence_event_store_head": "last_global_seq=943970; head=d7ac3ad5b41fe85113b1b41032609cc5bba2d4f9939d9d45d003c3cc41fa3dbe",
+    "anti_drop_verify": "alarms=0; gaps=0",
+    "cadence_strict": "integrity_ok=true; duplicate_hash_group_count=0",
+    "division_followup_verify": "ok=true; review_due=false; cycle 37; 2/6 since followup",
+    "chronicle_verify": "expected-stale (project before verify) from followup append 254->255; postprojection reprojects",
+    "flaky_test": "test_steward_control::test_pause_cooperatively_interrupts_wrapped_subprocess — pre-existing 0.2s timing race in an isolated fixture; unrelated to this round's data-only writes; recorded as debt, not repaired"
+  },
+  "division_round_recorded": {
+    "round_event_id": "division_followup_event_3935c781a1698c3866f5b8544bd23da6",
+    "processed_report_count": 1,
+    "steward_run_id": "run_1788102640068819000_d8d39b8bc8",
+    "projection_generation_id": "projection_1788102647392976000_8bfd43887a",
+    "event_count": 255,
+    "event_head_sha256": "3cda77fb8af1be7030949c05a571f4f93463b73e702277d8ecbf411cf57e726f"
+  },
+  "authority_boundary": {
+    "code_changed": false,
+    "live_change": "none (no restart/deploy required or attempted)",
+    "tier_5_retained": "vibrancy-gate live modulation test needs operator approval; standing ESN Tier-5 heads wi_e579041bc76f8310 / wi_69fbd510467c6337 / wi_3e26ac525fea1c36 untouched (live_authority_granted=false)",
+    "git": "read-only (no stage/commit/merge/push in adapter mode)",
+    "being_text": "not rewritten, rejected, or forbidden; contradiction preserved not domesticated; silence neutral"
+  }
+}

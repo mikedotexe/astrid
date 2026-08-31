@@ -1,0 +1,98 @@
+{
+  "round": "claude-heartbeat_1787759477_llm_marker_first_word_multiword_verified",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run (lease owned by adapter; no session/NDJSON/pause/resume by steward)",
+  "controller": {
+    "steward_run_id": "run_1787757066149219000_90a3aaaaab",
+    "preprojection_generation_id": "projection_1787757069552008000_5251432503",
+    "pause_generation": 321
+  },
+  "processed_report": "introspection_astrid_llm_1787754550",
+  "terminal_status": "addressed_duplicate",
+  "close": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "evidence_links_new": 14,
+    "evidence_links_existing_before": 0
+  },
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+    "passed": 72,
+    "failed": 0,
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44 tests)",
+    "test_evidence_event_store": "OK (21 tests)",
+    "test_steward_control": "OK (27 tests)",
+    "test_steward_projection": "OK (14 tests)",
+    "test_division_ceremony_followup": "OK (3 tests)",
+    "test_division_ceremony_chronicle": "OK (10 tests)",
+    "test_division_ceremony_projection": "OK (self-test)",
+    "test_projection_cursors": "OK (4 tests)",
+    "test_introspection_cadence_audit": "OK (6 tests)",
+    "introspection_cadence_audit_strict": "integrity_ok=true, exit 0",
+    "anti_drop_catalog_self_test": "OK (5 tests)",
+    "anti_drop_catalog_verify": "alarms=0, exit 0",
+    "experiential_epistemics_self_test": "OK (2 tests)",
+    "experiential_epistemics_verify_final": "valid=true, issue_count=0 (run after all durable writes)"
+  },
+  "audit_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "checks_all_true": true,
+    "canonical_indexed": 4472,
+    "canonical_fully_addressed": 3127,
+    "canonical_full_read": 3760,
+    "canonical_remaining": 1345,
+    "canonical_unread": 712,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 6146,
+    "all_artifacts_pending_remaining": 3019
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 899590,
+    "head": "615803a79683116941287c6deb4581ce1774d31cee1596679ad6ec10165c88ef",
+    "errors": [],
+    "active_store": "v2",
+    "stream_counts": {
+      "addressing": 58702,
+      "agency_commons": 5575,
+      "attention_portfolio": 3,
+      "claim_families": 237593,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 199931,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 8775,
+      "model_qos": 225216,
+      "reciprocal_uptake": 62798,
+      "representation_contracts": 40733,
+      "sandbox": 3291,
+      "signal_spine": 40288,
+      "steward_control": 15956,
+      "steward_work_selection": 532
+    }
+  },
+  "division": {
+    "cycle_sequence": 31,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_1d446733c545cca98ac109b31808ea13",
+    "event_count": 214,
+    "event_head_sha256": "721e4cfba4febcc187cd62d436448a02f6a57f76787d1c4f7b60d91555052d92"
+  },
+  "restart_deploy": "not required and not attempted (no live substrate or control change; evidence-only round)",
+  "git": {
+    "index_clean": true,
+    "staged": "none",
+    "foreign_untouched": true
+  },
+  "source_hash_match": true
+}

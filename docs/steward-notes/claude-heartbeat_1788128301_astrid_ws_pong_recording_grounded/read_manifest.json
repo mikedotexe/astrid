@@ -1,0 +1,28 @@
+{
+  "round": "claude-heartbeat_1788128301_astrid_ws_pong_recording_grounded",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_ws_1788120514",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_ws_1788120514.txt",
+      "sha256": "1bc59994d6b97bcf894d0926d6be115188b9e762baa590afb48491e8a85504c1",
+      "bytes": 4047,
+      "lines": 51,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_57ad2bd24fee8d830678be3f26e56d346d7c7cf91837f8bf51a09942010aa56e",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_57ad2bd24fee8d830678be3f26e56d346d7c7cf91837f8bf51a09942010aa56e.json",
+      "sha256": "902d06dc37c7e46e040df028b0fd554e9f2368c3f2155ba68f890533da107b5b",
+      "bytes": 23867,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "live_eligible_now": false,
+      "fill_pct": 71.2046127319336,
+      "model_profile": "gemma4_12b",
+      "provider_route": "mlx"
+    }
+  ]
+}

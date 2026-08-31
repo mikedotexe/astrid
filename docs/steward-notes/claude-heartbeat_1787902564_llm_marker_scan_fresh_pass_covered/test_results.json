@@ -1,0 +1,26 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "new_tests_added": 0,
+  "production_code_changed": false,
+  "focused_runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- <9 cited marker tests>",
+      "purpose": "Confirm the report's proposed tests (C3, C4) and the snag-grounding tests (C2) exist and pass at the report-bound source SHA 902a0358...",
+      "passed": 9,
+      "failed": 0,
+      "filtered_out": 1895,
+      "tests": [
+        "control_marker_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate",
+        "control_marker_cleanup_reports_depth_for_repeated_parentheses",
+        "control_marker_cleanup_reports_depth_across_unicode_whitespace",
+        "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth",
+        "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition",
+        "control_marker_cleanup_does_not_skip_adverb_before_relation_word",
+        "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary",
+        "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space",
+        "scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen"
+      ]
+    }
+  ],
+  "note": "No source/test file was modified this round. tests.rs carries foreign accumulated edits and was read-only. Integrity-suite results are recorded in verification_receipt.json."
+}

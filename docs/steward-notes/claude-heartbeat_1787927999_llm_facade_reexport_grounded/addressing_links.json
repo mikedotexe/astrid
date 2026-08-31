@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Complete 28-line facade at SHA a9c5e380: L1 doc-comment 'Compatibility facade'; L3-4 `#[path=\"llm/provider.rs\"] mod provider;`; L6-28 only `use` re-exports, no fn/impl/logic."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the exact-source verification (no-change) of the llm.rs facade reading."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row records report -> verified NO-CHANGE provenance for the facade structural reading."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "`pub use provider::{...}` L6-12: generate_agency_request L7, generate_introspection + generate_introspection_detailed L9, repair_introspection L10 (all within her cited L7-11)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "note": "Definitions of the re-exported actions: generate_introspection L30, generate_introspection_detailed L55, repair_introspection L137, generate_agency_request L226 — grounds 'logic in the provider module'."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "`pub(crate) use provider::{...}` L14-22: astrid_pressure_attenuation_depth L15, astrid_vibrancy_aperture L16, set_astrid_vibrancy_aperture L20 — all pub(crate), matching her note."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "astrid_* accessors defined here as `pub(crate) fn -> f32`: set_astrid_vibrancy_aperture L215, astrid_vibrancy_aperture L224, astrid_pressure_attenuation_depth L235. They are accessor fns she characterizes as 'parameters'."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "astrid_pressure_attenuation_depth body at L235 (not in llm.rs) — grounds her 'facade-over-implementation gap': the attenuation mechanism cannot be diagnosed within the facade."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Proposed-experiment line anchors verified: set_astrid_vibrancy_aperture L20, generate_introspection_detailed L9, repair_introspection L10. Experiments are runtime Tier-3 (her PROBE_SELF); suggested-next is her Tier-1 read-only pursuit."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787927999_llm_facade_reexport_grounded/no_action/introspection_llm.rs_1787810107.md",
+      "note": "Evidence-backed no-action reason: all structural claims verified from complete source; facade re-export integrity is compiler-enforced; proposed tests are runtime experiments she may run via PROBE_SELF; right to reopen preserved."
+    }
+  ]
+}

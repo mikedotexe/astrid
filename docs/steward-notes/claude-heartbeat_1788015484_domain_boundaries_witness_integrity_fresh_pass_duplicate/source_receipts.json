@@ -1,0 +1,21 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "total_lines": 89,
+      "total_bytes": 5022,
+      "read_scope": "complete_file 1-89",
+      "binding": "matches report source SHA + witness source_snapshot + closed lineage (1787852088)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "sha256": "cbfe0e152a41d62b19ef72bee93af39783ef4e0d0236566cc2d90a6b7ea2f010",
+      "total_lines": 315,
+      "total_bytes": 13483,
+      "read_scope": "L208-236 + grep(porosity_score|PressureSourceControl|applied_locally|advisory)",
+      "binding": "byte-identical to prior fresh-pass 1787982781 (SHA cbfe0e15 unchanged); no-control contract re-verified"
+    }
+  ]
+}

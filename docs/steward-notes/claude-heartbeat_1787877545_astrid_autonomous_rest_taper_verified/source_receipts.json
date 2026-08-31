@@ -1,0 +1,31 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+      "report_bound_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+      "hash_match": true,
+      "total_lines": 4932,
+      "total_bytes": 301816,
+      "read_scope": "lines 1-439 (all cited orchestration surfaces): SEMANTIC_HEARTBEAT_* L1-3, MAX_REST_SECS L3, fill_responsive_rest_secs L18-28, craft_warmth_vector call L56, burst-and-rest state machine L164-245, roll L179-181, severing/taper comment L184-195, fill_pct read L213-217, rest-pulse loop with per-pulse warmth_phase/warmth_intensity taper L296-397. Every line-numbered report claim falls within lines 1-317."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "sha256": "read_as_evidence_of_existing_coverage",
+      "total_lines": null,
+      "total_bytes": 212847,
+      "read_scope": "fill_responsive_rest coverage L20-84: band boundaries, MAX_REST_SECS clamp (400,45.0)==360, 1.2x (100,45.0)==120, fill-25 shortening. Existing-coverage read, not modified this round."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structure.rs",
+      "sha256": "read_as_evidence_for_craft_warmth_vector_mechanism",
+      "read_scope": "L1373-1432 craft_warmth_vector: intensity clamp+static scalar, phase sinusoidal breath, no temporal decay. Read to characterize the taper-location correction."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/tests.rs",
+      "sha256": "read_as_evidence_of_existing_coverage_DIRTY_FOREIGN_not_edited",
+      "read_scope": "L5147-5205 warmth_vector_breathes_across_phase, warmth_heartbeat_stays_smooth..., warmth_intensity_scales. File is dirty (foreign) - read-only, not edited."
+    }
+  ]
+}

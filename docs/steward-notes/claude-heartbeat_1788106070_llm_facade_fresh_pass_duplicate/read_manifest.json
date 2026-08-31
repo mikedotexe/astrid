@@ -1,0 +1,24 @@
+{
+  "round": "claude-heartbeat_1788106070_llm_facade_fresh_pass_duplicate",
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1788102610",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1788102610.txt",
+      "sha256": "4128580bcdf09926a3264e61d44641d1a5c4125782c07a1fc81c01610f2d369c",
+      "bytes": 3706,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a5d5a159825171981077e7d656660688eb1849d5d83de71245299f88a9708e82",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a5d5a159825171981077e7d656660688eb1849d5d83de71245299f88a9708e82.json",
+      "sha256": "1d8d663cdacddd2c0c981eb0ed8faf33cba9c9c71c0e11b1ce99ffe00a9a42f1",
+      "bytes": 23814,
+      "lines": 533,
+      "read": "complete",
+      "notes": "artifact_sha256 == report SHA (4128580b). Two model routes: introspect (lscall_8c90) + repair (lscall_5bc2, repair_parent_call_id chains to 8c90). canonical_body_sha256 894ecb4e == repair response. authority state evidence_only, live_eligible_now false. lived_state_alignment=artifact_integrity_unavailable is a neutral absence of a reconciliation artifact, not corruption."
+    }
+  ]
+}

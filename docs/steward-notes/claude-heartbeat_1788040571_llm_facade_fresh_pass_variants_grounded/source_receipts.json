@@ -1,0 +1,29 @@
+{
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "total_lines": 28,
+      "total_bytes": 1287,
+      "read_scope": "complete_file (lines 1-28)",
+      "report_bound_sha_match": true,
+      "role": "the report-bound facade source; verified re-export-only, no local logic"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "sha256": "32cb19e0c4d7510f5e6dfbc8323549cd1078bb61cec94d66171315d7ed66c4bf",
+      "total_lines": 685,
+      "total_bytes": 32410,
+      "read_scope": "lines 137-196 (repair_introspection L137-156 -> repair_introspection_detailed L159+; grep-located fn boundaries L30/55/137/159)",
+      "role": "grounds Test-2 variant: repair_introspection is LLM text rewrite (Option<String>), no reservoir/spectral mutation => text-lane repair"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "3418f8d1f69d7d556fdbfe5d2c01f9866e0e8d01c6797cc10a9452ada38f833c",
+      "total_lines": 240,
+      "total_bytes": 32643,
+      "read_scope": "lines 205-241 (vibrancy_aperture_ceiling L206, set_astrid_vibrancy_aperture L215, astrid_vibrancy_aperture L224, astrid_pressure_attenuation_depth L235); grep-located accessor lines L142/149/175/184/215/224/235",
+      "role": "grounds Test-1 variant (vibrancy = codec-applied multiplier, functional gate not cosmetic) and Suggested-Next (attenuation clamp [0,0.6] default OFF at exactly L235)"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round_name": "llm_marker_operates_synonym_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1788177262169912000_90871d33ab",
+    "preprojection_generation_id": "projection_1788177267251689000_1fd04d880e",
+    "pause_generation": 321,
+    "postprojection_generation_id": "adapter_runs_postprojection_after_process_exit"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788174140",
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "duplicate_of": "introspection_astrid_llm_1787699463",
+      "evidence_links": 7,
+      "claims": 5
+    }
+  ],
+  "integrity_suites": {
+    "introspection_addressing_self_test": "44 passed",
+    "test_evidence_event_store": "21 passed",
+    "test_steward_control": "27 passed",
+    "test_steward_projection": "14 passed",
+    "test_division_ceremony_followup": "3 passed",
+    "test_division_ceremony_chronicle": "10 passed",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 passed",
+    "test_introspection_cadence_audit": "6 passed",
+    "cadence_audit_strict": "integrity_ok=true, no duplicate hashes, no read errors, latest=introspection_astrid_llm_1788174140",
+    "anti_drop_self_test": "5 passed",
+    "anti_drop_verify": "clean (test_gap null, rc=0)",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_final": "valid=true, issues=[]"
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4553,
+    "canonical_fully_addressed": 3171,
+    "canonical_remaining": 1382,
+    "read_needs_claims": 0,
+    "addressed_duplicate_total": 1149,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "blocked_needs_steward": 415,
+    "all_artifact_pending": 3081,
+    "noncanonical_pending": 1699,
+    "checks_all_true": true
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "event_count": 953078,
+    "last_global_seq": 953078,
+    "last_event_sha256": "bdfd8aa61eec43a7fde10ff097ee064c5de978eec39aa514fd89288ed177a66c",
+    "active_store": "v2"
+  },
+  "division": {
+    "cycle_sequence": 38,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_41e1d78bd00575c4fea6455e0482f7ca",
+    "event_count": 262,
+    "event_head_sha256": "4c29e9a51a972ae7afe7a99673a4946543c6119da540b06f2744176dd3f7e7d9"
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_e1f80f3fb277a47fa19d4150",
+    "json_sha256_prefix": "767f8fd17ea39d2945ec59dd",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "reprojected after record-round; only the moving supervisor hash is volatile — not a durable-integrity failure"
+  },
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup",
+    "result": "59 passed, 0 failed"
+  },
+  "live_change": "none — no build, restart, deploy, or launchctl; git read-only in adapter mode; no staging or commit",
+  "authority_boundary": "widening the production relation-verb allowlist remains a deliberate Tier-5 boundary; no source/test/prompt/codec/model/Minime change; her report never rewritten, rejected, or forbidden; silence neutral"
+}

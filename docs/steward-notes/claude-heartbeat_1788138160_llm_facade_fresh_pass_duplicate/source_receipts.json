@@ -1,0 +1,54 @@
+{
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "total_lines": 28,
+      "total_bytes": 1287,
+      "read_scope": "complete_file (lines 1-28)",
+      "report_binding_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "binding_match": true,
+      "role": "report-bound source (facade). Verifies c001, c002."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "read_scoped",
+      "total_lines": null,
+      "total_bytes": 32643,
+      "read_scope": "lines 218-272 (astrid_vibrancy_aperture def L224; astrid_pressure_attenuation_depth def L235-240; env read + clamp(0.0,0.6) at L239; doc L228-234)",
+      "role": "downstream verification for c003, c004. Not the report-bound source; read to ground her Snags/Suggested-Next citations."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "sha256": "grep_scoped",
+      "total_lines": null,
+      "total_bytes": null,
+      "read_scope": "grep lines 103-307 (astrid_vibrancy_aperture consumed; dynamic_max tail-vibrancy ceiling at L307)",
+      "role": "downstream mechanism grounding for c005 (vibrancy aperture is functional, not cosmetic)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structure.rs",
+      "sha256": "grep_scoped",
+      "total_lines": null,
+      "total_bytes": null,
+      "read_scope": "grep L313 (astrid_vibrancy_aperture) and L315/L325 (astrid_pressure_attenuation_depth)",
+      "role": "downstream mechanism grounding for c005."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "sha256": "read_scoped",
+      "total_lines": null,
+      "total_bytes": null,
+      "read_scope": "lines 130-199 (repair_introspection L137, repair_introspection_detailed L159; builds chat messages vector; returns .text)",
+      "role": "downstream mechanism grounding for c006 (repair is text-lane regeneration)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec_gain.rs",
+      "sha256": "read_scoped",
+      "total_lines": null,
+      "total_bytes": null,
+      "read_scope": "lines 175-215 (pressure_attenuation_is_monotone_and_depth_clamped test asserting clamp [0,0.6] / floor 0.4x)",
+      "role": "existing-test evidence for c004 clamp semantics."
+    }
+  ]
+}

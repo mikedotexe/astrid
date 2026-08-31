@@ -1,0 +1,27 @@
+{
+  "schema": "test_results_v1",
+  "runner": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib <filter>",
+  "source_sha256_at_run": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "new_tests_authored": 0,
+  "new_tests_rationale": "Every claim already grounded by existing exact-source regressions; a zero-width-codepoint test would duplicate scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen (identical edge-only-trim path). No redundant test authored.",
+  "filters": [
+    { "filter": "marker", "passed": 80, "failed": 0, "ignored": 0 },
+    { "filter": "delimiter", "passed": 10, "failed": 0, "ignored": 0 },
+    { "filter": "first_word", "passed": 5, "failed": 0, "ignored": 0 }
+  ],
+  "total_passed": 95,
+  "total_failed": 0,
+  "grounding_tests_confirmed_present_and_passing": [
+    "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+    "scan_known_model_control_markers_quoted_context_precedes_following_relation_verb",
+    "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+    "control_marker_cleanup_preserves_poetic_attribution_without_literal_cue",
+    "control_marker_cleanup_handles_multibyte_symbol_before_relation",
+    "control_marker_cleanup_skips_symbol_only_line_before_exact_relation",
+    "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space",
+    "scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen"
+  ],
+  "baseline": {
+    "git_diff_check": "clean (rc=0)"
+  }
+}

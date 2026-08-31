@@ -1,0 +1,22 @@
+{
+  "round": "division_cycle37_return",
+  "focused_tests": {
+    "note": "No .rs/.py source or tests were touched this run (Division-return round, 0 reports). No focused test suite was applicable."
+  },
+  "integrity_suites_run": {
+    "introspection_addressing_audit.py --self-test": {"result": "OK", "tests": 44},
+    "anti_drop_catalog.py --self-test": {"result": "OK", "tests": 5},
+    "experiential_epistemics.py self-test --json": {"valid": true},
+    "anti_drop_catalog.py verify --json": {"total_guards": 69, "alarms": 0, "gaps": 0},
+    "division_ceremony_followup.py verify": {"ok": true, "cycle_sequence": 38, "review_due": false, "completed_rounds_since_followup": 0, "event_count": 260, "event_head_sha256": "9c198524d73e7ff314e7af2609a62bb1a06ccbf534afe5d694b68cf8ec4a449d"},
+    "division_ceremony_chronicle.py verify": {"ok": true, "timeline_event_count": 260, "durable_inputs_current": true, "volatile_mismatches": ["supervisor_status_sha256"], "note": "durable-current / volatile-supervisor moving — expected, NOT a durable-integrity failure"},
+    "introspection_addressing_audit.py audit-counters --json": {"status": "consistent", "mismatches": [], "all_7_checks": true}
+  },
+  "deferred_as_recorded_debt": {
+    "reason": "macOS lacks GNU `timeout`; at current evidence-store size even `evidence_event_store.py --json status` exceeded 180s (backgrounded and abandoned unused), and the full verify (~20min) could not be safely bounded within the residual one-shot budget after the mandatory Division return + Tier-5 dossier. This round processed 0 canonical reports and wrote 0 addressing / claim_families / experiential_epistemics report evidence; only Division-followup + steward_control appends occurred, whose integrity is covered by the passing division/chronicle/followup verify + anti-drop verify + counter audit.",
+    "items": [
+      {"cmd": "python3 scripts/evidence_event_store.py --json verify", "first_safe_recheck": true},
+      {"cmd": "python3 scripts/experiential_epistemics.py verify --json", "note": "dimension not modified this run (0 reports); self-test passed (valid=true); re-run next round"}
+    ]
+  }
+}

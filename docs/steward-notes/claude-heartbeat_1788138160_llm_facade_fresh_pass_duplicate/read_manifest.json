@@ -1,0 +1,23 @@
+{
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1788126247",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1788126247.txt",
+      "sha256": "3d32c722ad75e93632a6fc2d499c25d3037f3db22cfdb6c21acc760a345a6c37",
+      "bytes": 3250,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_4b3b53ab8e4ad0d4891d4878699337288b79f90bd4077baf6136ff66bc9724a3",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4b3b53ab8e4ad0d4891d4878699337288b79f90bd4077baf6136ff66bc9724a3.json",
+      "sha256": "831ba2611e38b78c2907c5e38d36411fa0ab539e98c13e1c1f4db7bbe62440b0",
+      "bytes": 23833,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

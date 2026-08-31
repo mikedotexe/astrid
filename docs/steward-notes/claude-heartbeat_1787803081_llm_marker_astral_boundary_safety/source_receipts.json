@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "total_bytes": 38586,
+      "total_lines": 1048,
+      "read_scope": "complete; cited intervals L1-229, L288-399 read verbatim in this session; report declares multi_window_complete over 1-1048 and working copy is byte-identical to the report binding",
+      "last_commit": "aa09c413c45cc0490405867755a3a005f524c0b2 fix(llm): keep punctuation-joined words whole in first_word_after",
+      "working_copy_dirty": false
+    }
+  ],
+  "test_source": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "45ec49895bf01732d05ed4205ddd1292385e9fcc4d0a28507709ee2919eb321e",
+      "note": "pre-existing dirty (prior-round stewardship edits, +126 lines vs HEAD); this round appended one new test only, foreign edits preserved"
+    }
+  ]
+}

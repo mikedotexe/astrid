@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787706169",
+  "reader": "claude-heartbeat",
+  "report_sha256": "a30c1fad93143adfd86f6fe1da39e5fb585e7f6462c148c529b296451ce582fc",
+  "source_binding_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) rebuilds a non-destructive remainder, preserving marker bytes only when reference_syntax is present (L130); reference syntax = quoting/grouping delimiter pairs (L153-197) and a set of relational verbs (L64-86).",
+      "disposition": "Verified at report-bound SHA 902a0358. scan_known_model_control_markers (L114-144) pushes a token into remainder only when reference_syntax.is_some() (L129-131); reference_syntax = a delimiter pair (exact_reference_delimiter_pair L153-197) or a following allowlisted relation verb (L64-86). Non-destructive, exact-byte. Tests: preserves_quoted_exact_token_reference (L1995), preserves_exact_tokens_in_declared_group_delimiters (L2151).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: first_word_after (L89) uses split_whitespace + alnum filter (L92); a marker followed by a complex multi-word or punctuation-heavy phrase not resolving to a single word could make unwrap_or_default (L94) fail the relation check (L64), stripping a marker that should be preserved.",
+      "disposition": "Contradiction preserved. Source contradicts the over-strip fear: first_word_after (L89-96) treats newlines as whitespace; per-chunk trim_matches(!alnum && !'_') (L92) collapses punctuation chunks; find(!is_empty) returns the first real word. Multi-word/punctuation phrases are handled; only an un-referenced, verb-less marker strips (intended fail-closed). Locked by first_word_after_skips_leading_punctuation_transition (tests L2635) and uses_only_the_first_finite_relation_word (L2605).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Marker Preservation): a known marker followed by a recognized relation verb (e.g. 'marker behaves as...') should be included in the returned remainder.",
+      "disposition": "Already covered. 'behaves' is an allowlisted relation verb (L69); a marker followed by it yields reference_syntax=ExplicitExactKnownTokenRelation (L53-58) and is preserved. Regressions: preserves_proxy_relation_phrase (tests L2552) and uses_only_the_first_finite_relation_word (L2605: '<end_of_turn> functions like a proxy...' preserved). No new test needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): passing [[marker_name]] to exact_reference_delimiter_syntax should identify the GroupedExactKnownToken context and respect MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "Already covered. exact_reference_delimiter_syntax (L199-229) counts matching before/after pairs, capped at MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151/L208-213); '['/']' is a GroupedExactKnownToken pair (L177/L193). Regressions: preserves_bounded_nested_delimiter_stacks (tests L2176, '([<end_of_turn>])' depth 2-4), reports_exact_four_level_delimiter_depth (L2194), bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2266).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify KNOWN_MODEL_CONTROL_MARKERS contents so longest_exact_known_model_control_marker_at (L97) prioritizes the most specific match over generic ones.",
+      "disposition": "Verified. longest_exact_known_model_control_marker_at (L97-112) filters KNOWN_MODEL_CONTROL_MARKERS to tokens the tail starts_with, then selects max_by_key(token.len()) (L102-106) \u2014 longest (most specific) match wins. Regressions: uses_longest_raw_matches_with_exact_accounting (tests L1745), preserves_longest_overlapping_token_when_named_as_content (L2493).",
+      "classification": "verified_existing"
+    }
+  ]
+}

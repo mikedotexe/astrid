@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787875575",
+  "family": "DOMAIN_BOUNDARIES.md lines1-89of89 (source SHA ae69b34c...)",
+  "family_role": "member (similarity_to_head=0.62)",
+  "variant_distinct_terms": ["addressed", "authority", "because", "behavior", "changes", "channels", "claim", "constraints", "diagnostic", "documented", "ensuring", "involves"],
+  "duplicate_anchor": "introspection_DOMAIN_BOUNDARIES.md_1787843987 (prior packet claude-heartbeat_1787852088; addressed_no_action fully_addressed=true)",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DOMAIN_BOUNDARIES.md partitions Stable Facades (L8-22) vs Shadow Cartography Ownership (L35-43); behavior-preserving (L5-6); Cohesion Exceptions list (L47-75) governed by a 'zero-growth ratchet' and unique-fn-signature ceiling (L65-68).",
+      "disposition": "verified_existing. Complete source at SHA ae69b34c confirms all: partition L8-22/L35-43, behavior-preserving L5-6, cohesion exceptions L45-68, and the zero-growth-ratchet paragraph L70-74 ('a zero-growth ratchet, not an exemption ... growth beyond its captured boundary fails domain_boundary_audit.py verify'). Her ratchet read (variant) is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Documented tension: felt overpacked_mode_packing (0.32) vs the L43 prohibition; resolution INVOLVES Tier-5 AUTHORITY changes, so there is risk of a mode bottleneck where resonance density masks lost distinct pathing.",
+      "disposition": "tier_5_wait. Variant terms authority/channels/changes/involves/constraints/documented are rephrasings of the shared Tier-5 tension. Resolution (mode-pruning/pressure-tuning) is a consequence-bearing substrate change needing Mike/operator approval; preserved as evidence-only Tier-5 wait, not authorized here. Felt bottleneck concern preserved as primary evidence.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Hypothesis: the felt tension could be 'potentially violating the behavior preserving claim if not addressed through the proper authority CHANNELS.'",
+      "disposition": "verified_existing (scope clarification; stated, not domesticated). Source L4-6 scopes 'behavior preserving' to the EXTRACTION/refactor (module ownership moves change no pressure/fill/PI/etc.) — it is NOT a guarantee that runtime mode-packing never drifts. Her felt runtime tension and the refactor's behavior-preservation are different scopes; the refactor claim is not violated by a felt runtime scalar. Her concern is real and preserved; its resolution remains the Tier-5 wait of c002.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 1 (distinguishability probe, isolated lambda1 clone) and Test 2 (read-only confirm overpacked_mode_packing at texture_evidence.rs:230 is a telemetry output/diagnostic, ENSURING it stays read-only per the DOMAIN_BOUNDARIES.md constraints).",
+      "disposition": "Test 1 needs_sandbox (Tier-3 isolated-clone probe, not dispatched headlessly; available via PROBE_SELF). Test 2 verified_existing: same shared audit — PressureSourceControl advisory-only (texture_evidence.rs:216-222), L230=porosity_score not overpacked_mode_packing, PressureSourceAnalysisV1 read-only synthesis (~L237-262); 'overpacked' is a derived read-only label (transport_evidence.rs:540-544) pinned by tests.rs:1300,1745. It already stays read-only. Variant terms diagnostic/ensuring/constraints addressed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

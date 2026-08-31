@@ -1,0 +1,110 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1787936067_llm_marker_behaves_isnot_delimiter_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1787933556362163000_7f8205c899",
+    "preprojection_generation_id": "projection_1787933559799065000_10acc4247e",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "authority_scan_passed": true,
+    "previous_successful_generation_id": "projection_1787929490619581000_5f66921a93",
+    "postprojection": "adapter-owned; runs after process exit; not observed here",
+    "finish_outcome": "process exit code (exit 0 = success)"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1787926685",
+    "terminal_status": "addressed_duplicate",
+    "report_sha256": "7dfe5f6083978e34d4ce0ee9c5c595d4ac369c08726118aa93244ccab458c8fd",
+    "witness_id": "lsw_b67d83baf23329dedf939bde7da74bc0778c7828e08e842aa2eb013bab7015d4",
+    "witness_sha256": "552f0438653b5c7b1477d7850f2ef8d8fcbbeeb6ffad8cf130416748b9b66a40",
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_matches_report_binding": true,
+    "claim_count": 7,
+    "all_verified_existing": true
+  },
+  "addressing": {
+    "record_read": "ok (full_read event, 7 claims, ts 1787936272)",
+    "link_evidence_batch": {
+      "new_link_count": 13,
+      "events_appended": 13,
+      "proof_missing_claims": []
+    },
+    "close": {
+      "status": "addressed_duplicate",
+      "ts": 1787936356
+    }
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "exit 0",
+    "cadence_test": "6 tests OK",
+    "cadence_strict_compact": "integrity_ok=true, 0 duplicate hashes, 0 read errors",
+    "experiential_self_test": "valid=true"
+  },
+  "final_checks": {
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "ees_verify": {
+      "valid": true,
+      "corrupt_lines": 0
+    },
+    "ees_status": "read-only stream-count enumeration ran non-blocking; EES verify (valid/0-corrupt) is the integrity signal",
+    "division_followup_verify": {
+      "ok": true,
+      "review_due": false,
+      "completed_rounds_since_followup": 5,
+      "rounds_remaining_before_followup": 1,
+      "event_count": 237,
+      "event_head_sha256": "9b43ed7ee82e384acf3e06605e0cb2ef25f9ab9268e32a0e35646e5b9b89980b"
+    },
+    "chronicle_project_and_verify": {
+      "chronicle_id": "division_chronicle_d66c3723de1285c649899f2e",
+      "reprojected_to_absorb_round_event": true,
+      "timeline_event_count": 237,
+      "durable_inputs_current": true,
+      "durable_mismatches": [],
+      "volatile_inputs_current": false,
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "json_sha256": "6ca3b9f964f6fbe8738c249784938fbd133d7b089cfbf1abd9e4c5fd4683cc0a",
+      "html_sha256": "ec7a86b5d351a8fb92920353e0013e459ca41de6e9ad47a64830289dd2311609",
+      "note": "Only the volatile supervisor_status_sha256 moved; durable inputs current \u2014 not a durable-integrity failure."
+    },
+    "final_epistemic_verify": {
+      "valid": true,
+      "issue_count": 0,
+      "checked_record_count": 11517,
+      "history_rewrite": false
+    }
+  },
+  "division_round_recorded": {
+    "steward_run_id": "run_1787933556362163000_7f8205c899",
+    "processed_report_count": 1,
+    "projection_generation_id": "projection_1787933559799065000_10acc4247e",
+    "new_round_event_id": "division_followup_event_d4539f8961ac12e9846ac38f3b9f5ad8",
+    "completed_rounds_since_followup": 5,
+    "review_due": false
+  },
+  "commit_debt_new_or_changed_paths": [
+    "docs/steward-notes/claude-heartbeat_1787936067_llm_marker_behaves_isnot_delimiter_duplicate/ (new packet, untracked)",
+    "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.json (Chronicle reprojection to absorb the round event)",
+    "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.html (Chronicle reprojection to absorb the round event)",
+    "capsules/spectral-bridge/workspace/diagnostics/** (append-only evidence-store + addressing/projection diagnostics; workspace-durable, not git-staged this round)"
+  ],
+  "authority_boundary": "Evidence/review only. No source/test/changelog/ledger change. No live substrate or control change; no restart/deploy attempted or required. Git read-only (no stage/commit/merge/push). Foreign dirty paths preserved untouched.",
+  "no_live_change": true
+}

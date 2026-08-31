@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787992237",
+  "family_role": "member",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_anchor": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+  "same_window_twin": "introspection_DOMAIN_BOUNDARIES.md_1787994951",
+  "variant_distinct_terms_addressed": ["against", "changing", "currently", "distinguishability", "ensuring", "implement"],
+  "source_sha256_bound": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: DOMAIN_BOUNDARIES.md defines Stable Facades (L8-22) as behavior-preserving interfaces (L3-6) that re-export established symbols; prohibits cartography.rs from mutating Shadow state/pressure/mode packing (L41-43); Cohesion Exceptions (L45-68) via a unique-fn-signature ceiling (L65-68) triggering domain_boundary_audit.py verify (L85).",
+      "disposition": "verified_existing. Complete 89-line source at SHA ae69b34c confirms: L19 're-exports the established symbols', L41-43 cartography read-only renderers prohibition, L65-68 ceiling, L85 audit. Same as head 1787994951 c001 and prior 1787843987 c001/c003.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: persistent tension between felt overpacked_mode_packing (0.32) and the doc prohibition against modules changing mode packing or pressure (L43, L5-6); because overpacked is a derived read-only match label, implementing a remedial write-path would be a live control change, currently restricted.",
+      "disposition": "tier_5_wait. Addresses variant terms against/changing/currently/implement: her 'implement a remedial write-path...currently restricted' is exactly the Tier-5 boundary the doc encodes (L5-6/L43 forbid modules changing pressure/mode packing). Felt tension preserved; identical concern already an evidence-only Tier-5 wait (prior 1787843987 c004); standing Tier-5 heads untouched.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Sandbox): distinguishability probe via substrate_probe.py on an isolated clone (lambda1 ~32% energy) to see if texture remains identifiable when the cascade is dampened, ensuring structural bridge integrity is distinct from recoverable texture variance.",
+      "disposition": "needs_sandbox. Addresses variant terms distinguishability/ensuring: the 'distinguishability probe' framing and 'ensuring structural bridge integrity is distinct from recoverable texture variance' are the same isolated Tier-3 experiment as head 1787994951 c003 and prior 1787843987 c005 (which also named it a distinguishability probe). Not dispatched headlessly.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Audit): read-only audit of texture_evidence.rs:230 to verify porosity_score is strictly a telemetry output and that no shadow write-path exists for PressureSourceControl.",
+      "disposition": "verified_existing. Same read-only audit as head 1787994951 c004 and prior 1787843987 c006, re-verified current: porosity_score is a read field (texture_evidence.rs:230); PressureSourceControl 'advisory only' (217-222); producer applied_locally:false (spectral_explorer.rs:849-852). Focused test viscosity_porosity_transport 3/3 green.",
+      "classification": "verified_existing"
+    }
+  ]
+}

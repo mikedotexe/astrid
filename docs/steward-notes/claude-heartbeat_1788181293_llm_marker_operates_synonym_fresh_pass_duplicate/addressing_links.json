@@ -1,0 +1,53 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788174140",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-143; L129-131 pushes the marker to remainder iff reference_syntax.is_some(). SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788174140",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 lists 'functions' (L74), not 'operates'; first_word_after L89-96; reference_syntax None-path L59. SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788174140",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787707869_llm_marker_operates_teleportation_fresh_pass_duplicate/RUN_REPORT.md",
+      "note": "Prior packet (introspection_astrid_llm_1787699463) verified the same snag at the same source SHA; deliberate safe-default drop, no widening."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788174140",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2603) + _uses_only_the_first_finite_relation_word (L2640): unlisted relational verb -> removed_total=1, reference_syntax 'none_cleanup_candidate'. Same class as her 'operates as'. Pass at SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788174140",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194), _three_level (L2208), _mixed_ascii_quote_bracket_stack_depth_three (L2222): nested delimiters -> GroupedExactKnownToken + MAX_EXACT_REFERENCE_DELIMITER_DEPTH. Pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788174140",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L153-197 (Grouped class L193) + exact_reference_delimiter_syntax L199-229 (adjacent stack depth take(MAX=4)). SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788174140",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_does_not_expand_relation_allowlist_to_{implies,contains,triggers,creates} + _distinguishes_allowlisted_signals_from_unlisted_signifies pin the conservative non-widened allowlist. Widening is Tier-5, not done."
+    }
+  ]
+}

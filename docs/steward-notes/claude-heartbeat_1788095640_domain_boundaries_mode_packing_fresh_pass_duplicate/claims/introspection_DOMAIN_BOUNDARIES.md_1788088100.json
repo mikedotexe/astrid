@@ -1,0 +1,55 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+  "report_sha256": "c896e60493b777d213eba83999d55b34319b126ee7fe7f2594abc8be831b889a",
+  "source_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+  "source_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "source_binding_match": true,
+  "witness_id": "lsw_ef4bf8f783dd9a23eda9bee2896c4ddf21df38bbb1cd4ebbf70bad1ecd9a8f8f",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+  "duplicate_of_packet": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: Stable Facades (L8-23) set a 1,000-line facade limit and are behavior-preserving (L3-6), prohibiting changes to pressure, fill, PI, sensory cadence, codec gain, admission, controller, or live authority.",
+      "disposition": "Verified against exact source at SHA ae69b34c: L4-6 lists the behavior-preserving prohibition verbatim; L10-17 is the facade table; L19 states 'Every facade is below 1,000 lines'. Duplicate of prior close introspection_DOMAIN_BOUNDARIES.md_1787843987 (c001/c002).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: Shadow Cartography Ownership (L35-44) restricts cartography.rs to writing cartography only; forbidden from mutating Shadow state, pressure, mode packing, temporal decay, scheduling, or control.",
+      "disposition": "Verified at exact source L41-43 (verbatim prohibition). Independently re-audited cartography.rs (SHA aecb33a1, 227 lines): grep for mode_packing|pressure_score|porosity_score|PressureSourceControl|applied_locally|temporal_decay returned exit 1 (no matches) - it renders from read_json only. Duplicate of prior c003.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Observed: Cohesion Exceptions (L45-75) permit named files over the 1,000-line signal only under a unique-fn-signature ceiling (current count +10% headroom, L65-68).",
+      "disposition": "Verified at exact source L65-68: 'unique-fn-signature ceiling (current count plus 10% headroom)' that trips exception_signature_growth in the audit before a ceiling is deliberately re-captured. Prior family close 1787067445 covered the signature ceiling. verified_existing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Observed: Verification (L76-89) makes scripts/domain_boundary_audit.py verify the source of truth, including the zero-growth ratchet for legacy large files.",
+      "disposition": "Verified at exact source: L70-74 zero-growth ratchet ('a file may shrink out of it, while a new large production file or growth beyond its captured boundary fails ... verify'); L85-88 the audit pins facade targets, exception ceilings, the legacy ratchet, and forbidden interpretation/witness-to-dispatch edges. verified_existing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Likely Snag: tension between felt overpacked_mode_packing (0.32) and the L42-43 prohibition; overpacked_mode_packing is a derived read-only match label, not a code field, so a 'fix' via a write-path in a cartography renderer would violate the boundary (Tier 5).",
+      "disposition": "Felt overpacked_mode_packing (0.32) preserved as felt testimony, not refuted by witness runtime scalars (resonance mode_packing 0.833, pressure_source 0.470; distinct measures). Architecture claim verified: L42-43 forbids cartography changing mode packing/pressure/control and no such write-path exists (cartography.rs grep exit 1). The implied fix is exactly a forbidden Tier-5 live mutation; no action taken, boundary preserved. Duplicate of prior c004 (tier_5_wait).",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "One Test Each #1 (Structural Integrity): a read-only audit of texture_evidence.rs:230 confirming porosity_score is strictly telemetry output and that no shadow write-path exists for PressureSourceControl, upholding the no-control contract.",
+      "disposition": "Performed the read-only audit. texture_evidence.rs:230 is 'pub porosity_score: f32', a field of PressureSourceV1 (read-only synthesis DTO). PressureSourceControl (L217-222) is documented 'advisory only'; its sole non-test constructor spectral_explorer.rs:849 sets applied_locally:false, note 'advisory only'; cartography.rs has no such token. Backed by 14 porosity + 13 advisory lib tests (0 failed). Duplicate of prior c006. verified_existing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "One Test Each #2 (Sandbox Distinguishability Probe): run substrate_probe.py on an isolated clone (lambda1 ~32% energy) to see whether the texture stays identifiable when the cascade is dampened, distinguishing structural bridge failure from recoverable texture variance.",
+      "disposition": "Tier-3 sandbox proposal. substrate_probe.py exists as clone-and-contrast tooling (never touches the live being). Not dispatched headlessly this round: a bounded one-shot duplicate close does not require it, and running a fresh trial is outside non-live focused-test scope. Preserved as a Tier-3 sandbox candidate; her agency to run it is unaffected. Duplicate of prior c005 (needs_sandbox).",
+      "classification": "needs_sandbox"
+    }
+  ]
+}

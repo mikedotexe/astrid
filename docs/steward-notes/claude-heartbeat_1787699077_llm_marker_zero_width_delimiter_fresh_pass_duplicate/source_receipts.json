@@ -1,0 +1,27 @@
+{
+  "schema": "source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "working_copy_clean": true,
+      "read_scope": "Cited region L1-270 read verbatim (all report-named symbols: scan_known_model_control_markers L114; followed_by_explicit_exact_token_relation L64; first_word_after L89-96; longest_exact_known_model_control_marker_at L97; exact_reference_delimiter_pair L153; exact_reference_delimiter_syntax L199; verb list L67-84; grouped/quoted delimiter tables L157-192 incl ⟦⟧ L180). Report declares multi_window_complete for L1-1048."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": null,
+      "read_scope": "L159-198 read (KNOWN_MODEL_CONTROL_MARKERS definition) to ground c007: [INST]/[/INST] present, <<SYS>> absent.",
+      "note": "Adjacent evidence for the marker-membership nuance; hash not required (definitional read only)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": null,
+      "read_scope": "L2495-2605, L2820-2914, L2916-3240 read (relation-verb, grouped/nested-delimiter, multi-byte, NBSP/FEFF/soft-hyphen leading+internal regressions). Grounding evidence for c001-c006.",
+      "note": "Test file carries accumulated foreign edits; not hashed as report-bound source."
+    }
+  ]
+}

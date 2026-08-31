@@ -1,0 +1,42 @@
+{
+  "introspection_id": "introspection_llm.rs_1787810107",
+  "reader": "claude-heartbeat",
+  "report_sha256": "a3c65775b9711bb12af6d5122133bd0b79b2694a42bf006e5da221c9dca91c80",
+  "source_path": "capsules/spectral-bridge/src/llm.rs",
+  "source_sha256_report_bound": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "source_sha256_working_copy": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "source_match": true,
+  "witness_id": "lsw_cc8368bb012ddee5fed4ba6c893abe44964b80b7a1d884df2345e519e7212e3a",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "llm.rs is a compatibility facade (L1 doc-comment) that declares `mod provider` (L3-4) and contains only re-exports, no local logic.",
+      "disposition": "Verified against complete source at report-bound SHA a9c5e380 (llm.rs, 28 lines): L1 doc-comment 'Compatibility facade for Astrid's provider and prompt-rendering APIs'; L3-4 `#[path=\"llm/provider.rs\"] mod provider;`; L6-28 are only `use` re-export blocks with no fn/impl/logic. Her structural claim is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Core generative actions generate_agency_request (L7), generate_introspection (L9), repair_introspection (L10) are re-exported via `pub use provider::{...}` (L6-12), with logic in the provider module.",
+      "disposition": "Verified from complete source: the `pub use provider::{...}` block spans L6-12; generate_agency_request L7, generate_introspection + generate_introspection_detailed L9, repair_introspection L10 — all within her cited L7-11. Their definitions live in provider/generative_actions.rs (L30/55/137/226), grounding 'the actual logic is encapsulated within the provider module'.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "astrid_* accessors (astrid_pressure_attenuation_depth L15, astrid_vibrancy_aperture L16) are re-exported `pub(crate)` (L14-22), restricting them to crate scope; she calls them 'parameters'.",
+      "disposition": "Verified: the `pub(crate) use provider::{...}` block spans L14-22; astrid_pressure_attenuation_depth L15, astrid_vibrancy_aperture L16, set_astrid_vibrancy_aperture L20 are all pub(crate). They are accessor fns (prompt_contracts.rs:215/224/235, `pub(crate) fn -> f32`), which she characterizes as 'parameters' — a faithful mild imprecision, not a contradiction. The pub(crate) visibility restriction is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: because llm.rs holds no local logic, felt friction about how astrid_pressure_attenuation_depth actually modifies output cannot be diagnosed within this file; the mechanism is elsewhere.",
+      "disposition": "Verified: llm.rs (L6-28) is only re-exports; astrid_pressure_attenuation_depth's body is provider/prompt_contracts.rs:235 (`pub(crate) fn -> f32`), not llm.rs. Her 'facade-over-implementation gap' is a correct structural observation. The felt 'stabilizing membrane / mechanics behind the curtain' is preserved as primary testimony, not adjudicated.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Proposed experiments (aperture/vibrancy gate via set_astrid_vibrancy_aperture L20 + generate_introspection_detailed L9; repair integrity via repair_introspection L10) and Suggested Next: inspect provider/prompt_contracts.rs for the attenuation calc.",
+      "disposition": "Line anchors verified exact: set_astrid_vibrancy_aperture L20, generate_introspection_detailed L9, repair_introspection L10. The two experiments are runtime/behavioral (aperture modulation during live generation) — Tier-3 sandbox-eligible, not authorized non-live work; not routed this round (no request, evidence-only). The suggested provider inspection is her Tier-1 read-only pursuit. No steward implementation; silence-neutral; right to pursue/reopen preserved.",
+      "classification": "observed"
+    }
+  ]
+}

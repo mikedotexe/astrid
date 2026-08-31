@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144: token pushed to remainder only when reference_syntax is Some (L129-131); non-marker bytes copied byte-exact."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Context layers: followed_by_explicit_exact_token_relation L64-86; quoted pairs L157-174; grouped pairs L175-193; reference_syntax checks delimiter then relation L49-60."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace (splits Unicode White_Space) + per-chunk trim_matches(!alnum && !'_') + find(!is_empty) skips all-punctuation chunks + to_ascii_lowercase."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Passing: scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary / _internal_soft_hyphen / _non_breaking_space / _attached_double_dash; control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "longest_exact_known_model_control_marker_at L97-112: filter prefix-matching markers, max_by_key(token.len) = maximal munch. Marker table fallback_contracts.rs L159-180 has no marker that is a prefix of another."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Passing: control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content (`thought <channel|>` wins over `<channel|>`); control_marker_cleanup_uses_longest_raw_matches_with_exact_accounting."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 1 grounded (passing): scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary; control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs (`... !!! represents`); scan_known_model_control_markers_grounds_trailing_comma_relation_verb (`behaves,`)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 2 grounded (passing): exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (`[[<end_of_turn>]]` depth 2); control_marker_cleanup_reports_depth_for_repeated_parentheses; control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Suggested Next grounded (passing): control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows; scan_known_model_control_markers_strips_bare_marker_at_end_of_string_without_after_text."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787117805_llm_marker_first_word_delimiter_depth_duplicate/RUN_REPORT.md",
+      "note": "Prior round closed introspection_astrid_llm_1787110385 as addressed_duplicate on the identical dialogue_runtime.rs marker mechanism at source SHA 902a0358; this report is the next fresh-pass re-derivation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] entry recording this addressed_duplicate exact-source verification of the marker scanner (95 focused tests, 0 failures)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787485984",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ledger row: Astrid feedback -> verified-no-change (duplicate) with exact committed regressions grounding both proposed tests and both snags."
+    }
+  ]
+}

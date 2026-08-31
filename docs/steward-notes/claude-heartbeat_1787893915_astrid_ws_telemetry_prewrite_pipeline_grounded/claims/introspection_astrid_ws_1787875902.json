@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_ws_1787875902",
+  "reader": "claude-heartbeat",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+    "report_bound_sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+    "working_copy_sha256": "42364feb914c957d487f93c440e30837c500971b41814a219d4c3992a12addd7",
+    "sha_match": true,
+    "report_window": "lines 1-400 of 1041",
+    "steward_read_scope": "complete 1-1041"
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "astrid:ws implements spawn_telemetry_subscriber: persistent WS to minime 7878, handles Binary/Text/Ping/Pong/Close, integrates into BridgeState + SQLite, explicit pong send-error handling, tracks connect/connected/disconnect lifecycle via WsLane::Telemetry.",
+      "disposition": "Verified from complete source. spawn_telemetry_subscriber L8-235; message-type arms L64-177; pong send-error path L119-129 (record_ws_send_error then break); lifecycle via record_connect_attempt/record_connected/record_disconnected/record_reconnect_scheduled on WsLane::Telemetry. Accurate description of the running loop.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: handle_telemetry_message (L79-81, L98-100) is awaited directly in tokio::select!; if it does heavy computation or blocking I/O without yielding/spawning it blocks ws_rx.next(), delaying the next Ping/Close frame (head-of-line pressure).",
+      "disposition": "Structurally grounded: the fn is awaited inline, not spawned. Its body handle_telemetry_message_at L246-638 runs a classify pipeline (lambda_tail/edge/sticky), throttled FS artifact scan (30s), sync SQLite log_message x4 + incident writes, and snapshot file writes before/under one write lock. Code already recognizes this exact concern (comment L402-403) and instruments prewrite/wait/hold. Whether it causes overflow/timeout is NOT established: builder sets causal_attribution=not_established_by_timing_alone. Concern preserved as live, not disproven.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Latency/Blocking): measure receive->completion delta (trace_ws_receive L65 to handle_telemetry_message L81) under a large payload and confirm the loop stays responsive to Ping.",
+      "disposition": "Timing half already measured+tested: telemetry_integration_health_v1 decomposes receive->completion into prewrite_pipeline_ms + write_lock_wait_ms + write_lock_hold_ms (telemetry_port.rs L404-528), covered by telemetry_integration_health_separates_pipeline_wait_and_hold and exercised end-to-end via handle_telemetry_message in versioned_telemetry_records_current_protocol. Added focused regression telemetry_integration_health_flags_heavy_prewrite_pipeline isolating the prewrite_pipeline_heavy branch (heavy compute before the write lock = her exact case), which prior tests never hit. Concurrent ping-responsiveness-under-load assertion remains uncovered (needs harness or the Tier-5 restructure c005).",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (State Consistency): verify record_ws_message_received (L73) and record_ws_message_sent (L138) correctly increment counters during rapid Ping/Pong.",
+      "disposition": "Already tested. ws_trace_records_connection_lifecycle_without_payloads (tests.rs L173-209) drives ping+pong received then a send and asserts messages_received==2, messages_sent==1, pings_received==1, pongs_received==1 — exactly this ask; lane-aggregate totals also covered (tests.rs L2809-2829). Increment logic confirmed in health_trace.rs L104-123 (saturating_add, per-lane trace).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: investigate offloading handle_telemetry_message to a dedicated worker pool or a separate tokio::spawn to prevent head-of-line blocking in the telemetry loop.",
+      "disposition": "Offloading message processing off the connection task changes the running bridge's concurrency and telemetry ordering = Tier 5 live substrate/control mutation. Evidence-only here: not implemented, not dispatched, no operator approval sought or implied. telemetry_integration_health_v1 (watch thresholds wait 5ms / hold 20ms / prewrite 100ms) is the correct evidence path to decide if the offload is warranted; no live runtime observation of current values was taken this round, so no claim that the offload is or is not needed. Preserved as a real wait.",
+      "classification": "tier_5_wait"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787817920",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787817920.txt",
+      "sha256": "512d7d2bfa8884681e01613ad2790d286104735ed4abbd60dcbfeee7cf6995a0",
+      "bytes": 3448,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_d57c4182247cd7fc2fad3821665ed4f5ee4187e0702e91bf6832b637d520322d",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d57c4182247cd7fc2fad3821665ed4f5ee4187e0702e91bf6832b637d520322d.json",
+      "sha256": "74fcb13f97cadab83e1ed17abcfb91dba3c938b3b89ec2d2d4e7ddea1647e608",
+      "bytes": 23918,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "model_profile": "gemma4_12b",
+      "fill_pct": 66.33,
+      "canonical_body_sha256": "dcf6736bdece10c814cccb51f929ddf84970a6ffb3bf8581f302f2846ac6291f",
+      "note": "Two model routes; second (dcf6736b) is a QoS repair of the first (7c1dce3f); report body binds to the repaired output."
+    }
+  ]
+}

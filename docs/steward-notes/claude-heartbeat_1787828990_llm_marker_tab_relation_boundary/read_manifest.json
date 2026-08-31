@@ -1,0 +1,24 @@
+{
+  "round": "claude-heartbeat_1787828990_llm_marker_tab_relation_boundary",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787824358",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787824358.txt",
+      "sha256": "2eecb0b5ab60950088b2cdfe43be72b003a3e5b2f0fba841b8c5ac342072dcaa",
+      "bytes": 3304,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_f08d8975c41ee97ca2f543812d6b615406b49c06cc53908cc8955f5da466d706",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f08d8975c41ee97ca2f543812d6b615406b49c06cc53908cc8955f5da466d706.json",
+      "sha256": "b4b4ebfc68cb62cc7beaa34b1476d68d57c25c7cfc1a9e50a23b7f9a30d27d73",
+      "bytes": 23941,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

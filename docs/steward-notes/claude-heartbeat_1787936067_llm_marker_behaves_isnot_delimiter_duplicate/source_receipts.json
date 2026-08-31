@@ -1,0 +1,24 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "matches_report_binding": true,
+      "working_copy_clean_in_tree": true,
+      "note": "Report-bound source SHA 902a0358... == working-copy SHA == this receipt SHA. Full file read 1-1048."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "2c4afaaf1d85aa81013ff1dd2a8709681fed34878efcbc5ff9d4e6c27dc11e1e",
+      "total_lines": 4372,
+      "total_bytes": 190783,
+      "read_scope": "targeted_regression_regions_L2540-2769_and_L3050-3230_plus_grep_index",
+      "dirty_in_tree": true,
+      "note": "tests.rs carries prior-round stewardship edits (git status M). Read the exact regressions cited as evidence; did not modify."
+    }
+  ]
+}

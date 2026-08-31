@@ -1,0 +1,97 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_controller_held_lease",
+  "controller": {
+    "run_id": "run_1787971939282067000_be5e51300c",
+    "preprojection_generation_id": "projection_1787971942652366000_5400d8f83c",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "adapter-run after process exit (not observed by this process)"
+  },
+  "processed_reports": ["introspection_minime_esn_1787970235"],
+  "addressing": {
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claims": 7,
+    "new_evidence_links": 15
+  },
+  "integrity_suites": {
+    "introspection_addressing_self_test": "ok (44 tests)",
+    "test_evidence_event_store": "ok (21 tests)",
+    "test_steward_control": "ok (27 tests)",
+    "test_steward_projection": "ok (14 tests)",
+    "test_division_ceremony_followup": "ok (3 tests)",
+    "test_division_ceremony_chronicle": "ok (10 tests)",
+    "test_division_ceremony_projection": "ok (self-test)",
+    "test_projection_cursors": "ok (4 tests)",
+    "anti_drop_self_test": "ok (5 tests)",
+    "anti_drop_verify": "ok (verdict ok, 0 problems, 0 gaps)",
+    "test_introspection_cadence_audit": "ok (6 tests)",
+    "cadence_strict_compact": "integrity_ok=true, errors=[], 0 duplicate hashes",
+    "experiential_epistemics_self_test": "valid=true (2 tests)",
+    "experiential_epistemics_verify": "valid=true, 0 issues (final, after all durable writes)",
+    "division_ceremony_chronicle_verify": "ok; only volatile supervisor_status_sha256 mismatch; durable inputs current",
+    "division_ceremony_followup_verify": "ok"
+  },
+  "audit_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4511,
+    "canonical_fully_addressed": 3152,
+    "canonical_full_read": 3785,
+    "canonical_remaining": 1359,
+    "canonical_unread": 726,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3044,
+    "noncanonical_pending": 1685,
+    "invariants_all_true": true
+  },
+  "evidence_event_store": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "last_global_sequence": 927113,
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "stream_sequences": {
+      "addressing": 59137,
+      "steward_control": 17042,
+      "claim_families": 237906,
+      "felt_contracts": 201423,
+      "model_qos": 241870,
+      "reciprocal_uptake": 64337,
+      "representation_contracts": 43176,
+      "signal_spine": 43322,
+      "lived_state_witness": 8858,
+      "sandbox": 3291,
+      "agency_commons": 5973,
+      "steward_work_selection": 578,
+      "corridor_v2": 112,
+      "corridor_v1": 5,
+      "attention_portfolio": 3,
+      "felt_mechanism_concordance": 80
+    }
+  },
+  "division": {
+    "cycle_sequence": 35,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_2a66fd5611f759ba05de258ddeb3b34c",
+    "event_count": 241,
+    "event_head_sha256": "a49b33d4d666f261cc2ded86a71fcd88e87a88bd0c5cce7609df0f4d0e4e8311",
+    "processed_report_count_recorded": 1
+  },
+  "tests_touched_surface": {
+    "minime_viscous_rho_target": "4 pass / 0 fail (lib + bin)",
+    "minime_rustfmt_check": "clean"
+  },
+  "live_change": "none — no bridge build, deploy, launchctl, or substrate/control mutation made or authorized (Tier 1 focused test only)",
+  "git": "read-only (adapter mode) — no stage/commit/merge/push"
+}

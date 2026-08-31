@@ -1,0 +1,25 @@
+{
+  "schema": "round_source_receipts_v1",
+  "sources": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787956771",
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "sha_match": true,
+      "working_copy_dirty": false,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "1-1048 complete",
+      "note": "Report-bound source SHA equals working-copy SHA; file not in dirty set. Full read is report-time source."
+    }
+  ],
+  "test_surface": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_after_edit": "37e5f0809ae24da6a5f0aec2b068018a774ba6ea9d09131c761f328ad30d9fec",
+      "lines_after_edit": 4455,
+      "note": "Accumulating flywheel test surface (pre-existing M/dirty). Two regressions appended before module close."
+    }
+  ]
+}

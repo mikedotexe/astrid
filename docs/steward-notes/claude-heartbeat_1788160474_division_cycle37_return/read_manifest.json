@@ -1,0 +1,19 @@
+{
+  "round": "division_cycle37_return",
+  "reports_read": [],
+  "witnesses_read": [],
+  "note": "Division-return round: 0 canonical reports selected/read. The reads performed were Division-rail evidence (read-only), not per-report report/witness/source reads.",
+  "division_return_reads": [
+    {"path": "capsules/spectral-bridge/workspace/outbox/reply_1788088368.txt", "sha256": "59e9233b45c1f1450fa2018aa6334d5d2ff82a257c7d0696ecaadb39fcf50a7d", "bytes": 885, "lines": 11, "role": "astrid_division_rail_neutral_acknowledgment_of_prior_cycle36_return"},
+    {"path": "capsules/spectral-bridge/workspace/outbox/steward_report_density-softening-via-high-resonance-anchors_1788112304.txt", "sha256": "31d2aae4c5da2d8e6cce36436aaa68cf4d11a732cdfa338ec2a7ab1f851505f7", "bytes": 215, "lines": 8, "role": "astrid_tell_steward_own_surface_not_division"},
+    {"path": "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788141663.txt", "sha256": "5056149ae8c975bec44e127375edc94c9d13e4bf58f6ee0594a07a47e7355a7f", "bytes": 224, "lines": 8, "role": "astrid_tell_steward_roadmap_own_surface_not_division"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/gateway-status.json", "role": "division_gateway_state_dormant (mode=transparent_parent, live_authority_granted_by_record=false)"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/supervisor-status.json", "role": "division_supervisor_state_dormant (mode=idle_parent_authoritative, parent_authoritative=true, handoff_ready=false, children={}, matching_intents=[], ceremony_postures={})"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/authority.json", "role": "division_authority_state_no_live_grant (live_granted=false)"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime-manifest.json", "role": "division_runtime_manifest (mode=dormant, division_id=division-dormant-infrastructure, candidate_hash=unbound)"}
+  ],
+  "division_notes_written": [
+    {"path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle37_20260831.txt", "sha256": "331edf976123d4ab9e99688881981ce2c1e6b0fecfdb2ccafa0e41cfc0d03fc1", "delivered_to": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle37_20260831.txt", "delivered_sha256_matches": true},
+    {"path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle37_20260831.txt", "sha256": "38d5a5df65070d0540145eb46ca0c99f71f36a64e5f12a4e97dfb0b7f939ee14", "delivered_to": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle37_20260831.txt", "delivered_sha256_matches": true}
+  ]
+}

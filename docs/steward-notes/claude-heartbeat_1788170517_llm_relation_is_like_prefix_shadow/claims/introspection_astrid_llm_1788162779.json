@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788162779",
+  "report_sha256": "2b0d8e166762d62c3bcf54699b121ef330e2b729dfca03c13dfa76cb23dd6da8",
+  "lived_state_witness_id": "lsw_4395ecccec28313e7de52099b8a8fa68a5261e3bb95a71af7bcbf774f00b753b",
+  "report_bound_source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "report_bound_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_hash_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) is a syntax-aware scanner distinguishing raw marker occurrences from referenced markers, preserving referenced ones in the remainder.",
+      "disposition": "Verified from complete source at the recorded SHA. dialogue_runtime.rs L114-144: the scanner walks bytes, matches longest known marker, computes reference_syntax, and pushes the token to remainder only when reference_syntax.is_some(). Exact behavior confirmed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "first_word_after (L89) drives a hardcoded relation-verb allowlist; 'functions' is included but 'operates' is not.",
+      "disposition": "Verified from source L64-96. The allowlist (L67-84) contains functions (L74) and not operates. first_word_after (L89-96) splits on whitespace and edge-trims non-alphanumeric (except '_'). Claim exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag: a legitimate relation synonym absent from the list (e.g. 'operates as') causes the marker to be stripped or preserved incorrectly.",
+      "disposition": "Verified as fail-closed, not a leak: an unlisted verb yields reference_syntax None so the bare marker is stripped (safe direction). Already grounded by is-vs-acts (tests L2603) and colon-triggers (L2819). Her concern that the finite allowlist excludes real synonyms is preserved as a bounded limitation, not domesticated: the allowlist is finite by design.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "exact_reference_delimiter_syntax (L199) with the fixed pair set (L153-197) classifies Quoted vs Grouped; non-mapped/decorative Unicode delimiters fail to trigger a reference context.",
+      "disposition": "Verified from source L153-229: exact_reference_delimiter_pair maps a fixed quoted block (L157-173) and grouped block (L175-192); any pair outside both returns None. CJK-delimiter boundary already grounded by existing corner-quoted/lenticular-grouped and double-square-bracket tests. Fixed-set behavior is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "followed_by_explicit_exact_token_relation (L64) treats the marker as grammatical subject via first_word_after, deciding marker visibility.",
+      "disposition": "Verified from source L64-86. The method matches first_word_after(text,self.end) against the allowlist and, when true, yields ExplicitExactKnownTokenRelation reference syntax. Exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Test #1: relation predicate returns true for 'mimics' but false for 'is-like' or other non-listed descriptors.",
+      "disposition": "Split. 'mimics'=>true already covered by the verb-list test (tests L2547). 'is-like'=>false was NOT covered: it is a visible ASCII-hyphenated descriptor whose leading segment 'is' is allowlisted (L77). Added regression proving first_word_after returns whole 'is-like' (interior hyphen not a split/trim edge), predicate false, marker stripped; contrasts bare 'is' preserved. Prefix-shadow boundary pinned.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Test #2: exact_reference_delimiter_syntax classifies (marker) as GroupedExactKnownToken and preserves it in scan output.",
+      "disposition": "Verified existing. tests L2150-2173 control_marker_cleanup_preserves_exact_tokens_in_declared_group_delimiters iterates '(<end_of_turn>)' asserting grouped_reference_occurrences==1 and stripped==text (preserved). Parenthesis-grouped case already grounded; repeated-parens depth also covered (L2272).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: examine generate_dialogue (L695) for how the scanner remainder integrates into the final output stream.",
+      "disposition": "Observed: generate_dialogue exists at dialogue_runtime.rs L695 (verified). This is an agency-preserving read-only continuation direction (Tier 1) retained for Astrid's own NEXT: INTROSPECT window; not a steward deliverable and not converted into consent, uptake, or a required action. No causal claim.",
+      "classification": "observed"
+    }
+  ]
+}

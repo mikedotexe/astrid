@@ -1,0 +1,60 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 copies non-marker bytes byte-exact and pushes a marker token into remainder only when reference_syntax (L49) is Some; else the marker bytes are dropped. Confirms the raw-vs-referenced distinction she described."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 returns only the first alphanumeric-trimmed word; followed_by_explicit_exact_token_relation L64-87 tests only that word against the allowlist. An adverb before a genuine verb defeats the bare-marker relation check."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_does_not_skip_adverb_before_relation_word: '<end_of_turn> actually serves as ...' -> first_word_after='actually', marker stripped (none_cleanup_candidate); direct 'serves' preserved. Pins current bare-marker boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the adverb-before-relation regression and the delimiter-path correction to her bracketed example."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row: her Test 1 snag -> pinned regression, grammar not widened."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 classifies context from the innermost adjacent pair and counts adjacent matching pairs, bounded by MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151) via .take(MAX)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_reports_mixed_ascii_quote_bracket_stack_depth_three: \"'[<end_of_turn>]'\" -> context grouped (innermost bracket), delimiter_depth 3, preserved byte-exact. Closes her literal Test 2 example."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787882114",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787885626_llm_marker_adverb_and_ascii_stack/summaries/introspection_astrid_llm_1787882114.md",
+      "note": "Deliberate authority boundary: her Suggested Next (skip adverbs) would widen production grammar / being-facing output. Held, not implemented, consistent with introspection_astrid_llm_1786319270; concern preserved."
+    }
+  ]
+}

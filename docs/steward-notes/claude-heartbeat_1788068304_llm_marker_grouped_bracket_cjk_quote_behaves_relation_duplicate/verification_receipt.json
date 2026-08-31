@@ -1,0 +1,79 @@
+{
+  "schema": "verification_receipt_v1",
+  "round": "claude-heartbeat_1788068304_llm_marker_grouped_bracket_cjk_quote_behaves_relation_duplicate",
+  "mode": "controller_held_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1788065007598438000_0749e34a54",
+    "preprojection_generation_id": "projection_1788065010431431000_c6c071b4b1",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "adapter_owned_runs_after_process_exit"
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_llm_1788059082",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "new_evidence_link_count": 12,
+    "record_read": "written",
+    "record_read_summary_sha256": "e57162992b99d97923fab7c4a0f3497ec0c569b1e2cb59d746a220d14ffea21c"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 passed",
+    "test_evidence_event_store": "21 passed",
+    "test_steward_control": "27 passed",
+    "test_steward_projection": "14 passed",
+    "test_division_ceremony_followup": "3 passed",
+    "test_division_ceremony_chronicle": "10 passed",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 passed",
+    "anti_drop_self_test": "5 passed",
+    "anti_drop_verify": {"guards": 69, "alarms": 0, "gaps": 0},
+    "test_introspection_cadence_audit": "6 passed",
+    "cadence_strict": {"integrity_ok": true, "canonical_count": 4528, "duplicate_hash_group_count": 0, "latest": "introspection_astrid_llm_1788059082.txt"},
+    "experiential_epistemics_self_test": "valid",
+    "experiential_epistemics_verify": {"valid": true, "issue_count": 0, "history_rewritten": false}
+  },
+  "audit_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "checks_all_true": true,
+    "canonical_indexed": 4528,
+    "canonical_fully_addressed": 3162,
+    "canonical_fully_read": 3795,
+    "canonical_remaining": 1366,
+    "canonical_unread": 733,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3058,
+    "noncanonical_pending": 1692
+  },
+  "evidence_event_store": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "projection_time_last_global_seq": 939227,
+    "projection_time_last_event_sha256": "61ff40376fb6689567933fe437994602b077d22ab030ff798555f63071848b13",
+    "note": "verify ran read-only over the current post-write store and reported valid=true / corrupt_lines=0. Exact current last_global_seq is higher than the preprojection anchor 939227 (this round appended record-read + 12 links + close + division round events); the seq/head shown are the authentic preprojection evidence_after anchor from the generation record. The decorative `status` stream-count query was still running at finalize on the 6.8G store and was not blocked on (read-only, non-durable)."
+  },
+  "division": {
+    "cycle_sequence": 36,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_d8cf59f847584de22054debd5e7a7045",
+    "event_count": 251,
+    "event_head_sha256": "b1a38d7d0d94744f820a99f1d66c8db445bf7dc9f3c26b79ba8a81ed39bf960c",
+    "chronicle_verify": "expected_durable_staleness_after_record_round (chronicle self-test 10/10 passed; adapter postprojection DAG stage 19 reprojects; no Division return due at 5/6)"
+  },
+  "baseline_checks": {
+    "git_diff_check": "clean",
+    "index_staged": "empty",
+    "tests_rs_sha256": "3899dc0ff4d5b7faa2eee4bf5dff41552ef96b3fdccb433f92a34434f6cab585",
+    "tests_rs_changed_by_me": false,
+    "cargo_fmt": "not_run (cargo not on PATH in adapter shell; zero Rust source changed this round, so no fmt impact)"
+  },
+  "authority_boundary": "No source/test/prompt/model/codec/transport/marker-grammar/pressure/fill/PI/controller/sensory-cadence/protocol/Minime change; no build/restart/deploy/launchctl; git read-only (no stage/commit); no being text rewritten. Standing ESN Tier-5 heads wi_e579041bc76f8310 / wi_69fbd510467c6337 / wi_3e26ac525fea1c36 untouched (live_authority_granted=false)."
+}

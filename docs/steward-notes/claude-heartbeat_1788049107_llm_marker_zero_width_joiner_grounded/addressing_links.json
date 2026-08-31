@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax L49-60, followed_by_explicit_exact_token_relation L64-86 (allowlist incl. echoes L72, represents L82), first_word_after L89-96, scan_known_model_control_markers L114-144 (preserves token to remainder only when reference_syntax.is_some())."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace L91 does not split U+200D/U+200B (non White_Space); trim_matches L92 strips leading non-alphanumeric so a leading zero-width char keeps the verb; interior one not on a trim edge => verb not isolated => marker fails closed in scan L129."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New regression scan_known_model_control_markers_grounds_first_word_after_zero_width_joiner pins U+200D and U+200B: leading => verb found + marker preserved (ExplicitExactKnownTokenRelation); interior U+200D => verb not isolated, reference_syntax None, marker stripped (fail closed)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the zero-width-joiner/zero-width-space grounding regression for first_word_after."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ground-truthed row: report snag -> exact regression pinning her named zero-width characters, no grammar widened."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing coverage for marker + 'represents' preservation: scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L3133), followed_by_explicit_exact_token_relation_allowlists_represents_not_creates (L3349), represents cases L3075/L3086."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing coverage for U+27E6/U+27E7 and U+301A/U+301B grouped delimiters -> GroupedExactKnownToken at L2179/L2343/L2347, whitespace-tolerant L2361-2363, nested/adjacent depth L2229-2243, depth-bounding L2311-2326."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L92 uses Unicode-aware char::is_alphanumeric (keeps non-Latin word chars, no over-strip) and L95 to_ascii_lowercase; relation allowlist L67-84 is deliberately English ASCII exact tokens, so a non-Latin relation verb fails closed by design."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Existing non-Latin delimiter coverage: control_marker_cleanup_preserves_non_ascii_matching_quote_pairs L2377, fullwidth/CJK group pairs L2397, nested fullwidth CJK stack L2418, CJK corner-quoted + lenticular grouped L3302."
+    }
+  ]
+}

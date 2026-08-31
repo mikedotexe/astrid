@@ -1,0 +1,45 @@
+{
+  "round": "claude-heartbeat_1787786300_llm_marker_prefix_shadow_invariant",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787782248.txt",
+      "sha256": "8c33afe098fb9e18f70e28acbe2a085f476b12ff3dff85c15c7a58ac053d08d5",
+      "bytes": 4137,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_d5f368474311bc184741645061f6c98f05fcbec7ef29ab0c489a4b4e06f93c22",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d5f368474311bc184741645061f6c98f05fcbec7ef29ab0c489a4b4e06f93c22.json",
+      "sha256": "01ac0dc0a6373cd2f6c627c4428137f22c15908318687e6f1ee1579a94bba811",
+      "bytes": 23933,
+      "lines": 533,
+      "read": "complete",
+      "notes": "artifact_authority_state=evidence_only, live_eligible_now=false; fill 73.03%; model gemma4_12b via mlx; source_snapshot binds dialogue_runtime.rs window 0-400 file_sha256 902a0358; deployment_established=false (this is the queue's lived_state_alignment=artifact_integrity_unavailable, a build-provenance observation, not a report contradiction)."
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true,
+      "read_scope": "lines 1-260 read in full (covers every report-cited function: followed_by_explicit_exact_token_relation L64-86, first_word_after L89-96, longest_exact_known_model_control_marker_at L97-112, scan_known_model_control_markers L114-144, MAX_EXACT_REFERENCE_DELIMITER_DEPTH L151, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229). L261-1048 not re-read this round: the only claim referencing that region (c007, generate_dialogue L695-1048) is the report's self-directed Tier-1 Suggested Next, not a steward-closed technical claim.",
+      "read": "scoped_complete_for_addressed_claims"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "total_lines": 1417,
+      "total_bytes": 49506,
+      "read_scope": "lines 159-198 read in full: KNOWN_MODEL_CONTROL_MARKERS definition (L159-180) and the trailing-boundary case-variant stripper (L182-198). Needed to ground snag b (c004): no marker in the set is a proper byte-prefix of another.",
+      "read": "scoped_complete_for_addressed_claims"
+    }
+  ]
+}

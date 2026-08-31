@@ -1,0 +1,75 @@
+{
+  "round": "claude-heartbeat_1787768883_codec_warmth_layer_no_bleed",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller-held subprocess run; lease + heartbeats + finish owned by the adapter; postprojection runs after exit",
+  "controller": {
+    "run_id": "run_1787765944982929000_fc9fe2e660",
+    "preprojection_generation_id": "projection_1787765948576025000_e03b14f51e",
+    "pause_generation": 321
+  },
+  "processed_report": "introspection_astrid_codec_1787762146",
+  "addressing_close": {
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "evidence_links_new": 14
+  },
+  "focused_rust_tests": "3 passed (1 new regression + 2 cited existing); 0 failed",
+  "baseline": { "git_diff_check": "clean", "cargo_fmt_all_check": "clean" },
+  "integrity_suites": {
+    "introspection_addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "alarms=0 gaps=0 total=69",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "introspection_cadence_audit_strict": "integrity_ok=true, errors=[], duplicate_hash_group_count=0, latest=introspection_astrid_codec_1787762146.txt",
+    "experiential_epistemics_self_test": "2 tests OK, valid=true",
+    "experiential_epistemics_verify": "valid=true, issue_count=0, checked_record_count=11378, history_rewritten=false"
+  },
+  "audit_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical": {
+      "indexed": 4474,
+      "fully_addressed_count": 3128,
+      "full_read_count": 3761,
+      "remaining_count": 1346,
+      "unread_count": 713,
+      "blocked_needs_steward_count": 415,
+      "triaged_pending_action_count": 214,
+      "triaged_watch_count": 4,
+      "read_needs_claims_count": 0
+    },
+    "all_artifacts_pending": 3020
+  },
+  "evidence_event_store_v2": {
+    "valid": true,
+    "last_global_seq": 900821,
+    "last_event_sha256": "8b59e115faca3afcff244148167d3a2c48fb794aee643fd68b748f62277a93a9",
+    "corrupt_lines": 0,
+    "active_store": "v2"
+  },
+  "division": {
+    "ok": true,
+    "review_due": false,
+    "cycle_sequence": 31,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "event_count": 215,
+    "event_head_sha256": "1b829fb10552f042a375234e2a0e93cdb70a04b371e3ee3cd1a59fee84345dfa",
+    "recorded_round_event_id": "division_followup_event_35a6094ae2b193cbdf23f5dd663b35ed",
+    "processed_report_count": 1
+  },
+  "chronicle": {
+    "verify": "durable source inputs changed; project before verify",
+    "interpretation": "EXPECTED and self-resolving — record-round appended follow-up event 215, so the Chronicle's durable input changed. Projection stage 19 (division_ceremony_chronicle.py, checkpoint steward_division_chronicle_v1.json) re-projects it in the adapter's postprojection. NOT a durable-integrity failure; not a mere volatile supervisor-hash mismatch either."
+  },
+  "live_change": "none — no bridge build, deploy, launchctl, or substrate/control change. Only a non-live focused test was added.",
+  "authority_state": "evidence_only; live_eligible_now=false; grants_approval=false"
+}

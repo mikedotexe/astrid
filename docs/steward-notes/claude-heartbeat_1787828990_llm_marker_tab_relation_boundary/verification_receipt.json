@@ -1,0 +1,76 @@
+{
+  "round": "claude-heartbeat_1787828990_llm_marker_tab_relation_boundary",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_held_subprocess_lease",
+  "controller": {
+    "run_id": "run_1787825837642046000_7a85e17c8b",
+    "preprojection_generation_id": "projection_1787825842199787000_a568b15f9b",
+    "preprojection_status": "passed",
+    "preprojection_completed_step_count": 27,
+    "pause_generation": 321,
+    "postprojection": "runs after this process exits (adapter-owned); not observed by this run"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787824358",
+      "close_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "report_sha256": "2eecb0b5ab60950088b2cdfe43be72b003a3e5b2f0fba841b8c5ac342072dcaa",
+      "witness_sha256": "b4b4ebfc68cb62cc7beaa34b1476d68d57c25c7cfc1a9e50a23b7f9a30d27d73",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding_match": true,
+      "evidence_links_added": 10,
+      "evidence_links_existing": 0
+    }
+  ],
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/llm/provider/tests.rs (appended 1 regression: scan_known_model_control_markers_grounds_tab_between_marker_and_relation)",
+      "CHANGELOG.md ([Unreleased] entry)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (1 dated row)"
+    ],
+    "tests": {
+      "new_regression": {"filter": "scan_known_model_control_markers_grounds_tab_between_marker_and_relation", "passed": 1, "failed": 0},
+      "cited_existing": {"passed": 4, "failed": 0},
+      "control_marker_family": {"passed": 75, "failed": 0},
+      "scan_delimiter_first_word_relation_family": {"passed": 13, "failed": 0},
+      "fmt": "cargo fmt --check flags only pre-existing foreign grounding.rs (committed/clean, not this round's paths); tests.rs not flagged; git diff --check clean on tests.rs"
+    }
+  },
+  "integrity_suites": {
+    "addressing_self_test_exit": 0,
+    "test_evidence_event_store_exit": 0,
+    "test_steward_control": "27 tests ok",
+    "test_steward_projection": "14 tests ok",
+    "test_division_ceremony_followup": "3 tests ok",
+    "test_division_ceremony_chronicle": "10 tests ok",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 tests ok",
+    "test_introspection_cadence_audit": "6 tests ok",
+    "anti_drop_self_test": "ok",
+    "anti_drop_verify": {"alarms": 0, "gaps": 0, "total_guards": 69},
+    "cadence_strict": {"integrity_ok": true, "duplicate_hash_group_count": 0, "errors": 0, "canonical_count": 4490},
+    "experiential_epistemics_self_test": "ok",
+    "experiential_epistemics_verify": {"valid": true, "issue_count": 0, "history_rewritten": false, "checked_record_count": 11435},
+    "audit_counters": {"status": "consistent", "mismatches": []},
+    "evidence_event_store_verify": {"valid": true, "corrupt_lines": 0, "last_global_seq": 908995, "head": "9a30adc58c6565581d5c91b86d22c196d5c78b6305646b22d547b16e555d8b27"},
+    "evidence_event_store_status": "deferred: stream-count recompute over ~909k events exceeded 300s; verify (above) is the authoritative integrity check and passed",
+    "division_followup_verify": {"ok": true, "cycle_sequence": 32, "completed_rounds_since_followup": 5, "review_due": false, "event_count": 223},
+    "division_chronicle_verify": "durable source inputs advanced by this round's record-round (followup events 222->223); reprojection deferred to the controller postprojection (DAG stage division_chronicle); NOT a corruption and NOT a due Division return (review_due=false), so not manually projected mid-round"
+  },
+  "division_round_recorded": {
+    "steward_run_id": "run_1787825837642046000_7a85e17c8b",
+    "processed_report_count": 1,
+    "projection_generation_id": "projection_1787825842199787000_a568b15f9b",
+    "cycle_sequence": 32,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_3d0badb4bdad7857534b4a123674cd98",
+    "event_count": 223,
+    "event_head_sha256": "a36085283c6f7f25c8412750630482700075e6a8a0e4984a2151224491abe965"
+  },
+  "authority_boundary": "evidence-only; no live substrate/control change; no deploy/restart/build; no stage/commit/merge/push; marker-list exhaustiveness (c005) left Tier-5 for Mike/operator; foreign dirty paths preserved untouched",
+  "restart_deploy": "not required and not attempted"
+}

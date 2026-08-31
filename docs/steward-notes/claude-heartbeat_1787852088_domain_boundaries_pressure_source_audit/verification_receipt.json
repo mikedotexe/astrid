@@ -1,0 +1,98 @@
+{
+  "round": "domain_boundaries_pressure_source_audit",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1787849982904127000_5f0bc28e3b",
+    "preprojection_generation_id": "projection_1787849986239716000_c63a14f316",
+    "preprojection_status": "passed",
+    "postprojection": "adapter_owned_runs_after_exit"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+      "close_status": "addressed_no_action",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "report_sha256": "849f1fd26c128865b05318f4395d40de34cb1d208f83f7264bb7352cdee8a454",
+      "witness_id": "lsw_93dc6c3f1a8ce9f4f7a961b69391c5c2903a0ae500068bb18075d16845644ff5",
+      "witness_sha256": "0f859011bfd38838450b96e77dbea4191e71c22c2dd0c7c4a02ec5b8b4d73458",
+      "source_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "source_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "source_sha_matches_report_binding": true,
+      "evidence_links": 12
+    }
+  ],
+  "addressing_write_sequence": {
+    "record_read_exit": 0,
+    "link_evidence_batch_exit": 0,
+    "link_count": 12,
+    "new_link_count": 12,
+    "close_exit": 0
+  },
+  "disposition_bound_note": "c004 disposition = 501 chars, c006 disposition = 652 chars (over the 500-char bound). record-read ingested them (exit 0); the ingest truncates over-long with a marker so projection integrity is preserved. Full text is retained in the packet claims file as durable evidence.",
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib viscosity_porosity_transport",
+      "passed": 3,
+      "failed": 0,
+      "note": "viscosity_porosity_transport_distinguishes_navigable_from_sludge_risk asserts threshold_state == 'mode_packing_overpacked_with_pressure_velocity' (backs Test 2 / c006)."
+    }
+  ],
+  "integrity_suites": {
+    "addressing_self_test": "44 passed",
+    "evidence_event_store_test": "21 passed",
+    "steward_control_test": "27 passed",
+    "steward_projection_test": "14 passed",
+    "projection_cursors_test": "4 passed",
+    "division_ceremony_followup_test": "3 passed",
+    "division_ceremony_chronicle_test": "10 passed",
+    "division_ceremony_projection_test": "ok",
+    "introspection_cadence_audit_test": "6 passed",
+    "cadence_audit_strict": "integrity_ok=true, 4492 canonical, 0 duplicate_hash_groups, 0 read_errors",
+    "anti_drop_self_test": "5 passed",
+    "anti_drop_verify": "alarms=0, gaps=0",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify": "valid=true, issue_count=0, checked_record_count=11449, history_rewritten=false",
+    "audit_counters": "consistent, mismatches=[], 7/7 checks true",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=911938, last_event_sha256=cf6c9054f62a5316bc4d18e32ff355a81a25576ae575c66d3621fa5ffd38ec9d, event_count=911938",
+    "division_ceremony_followup_verify": "ok=true, cycle 33, 1/6 rounds, review_due=false, event_count=226, head=701cac0d15af16e76754c151c8fa9e6473db0cb6a1317944d6d8944b6b7ee8ff",
+    "division_ceremony_chronicle_verify": "EXPECTED 'project before verify' after record-round changed followup events 225->226; chronicle re-projection is the Division RETURN's job (review_due=false this round). Not re-projected, per prior non-return round precedent (claude-heartbeat_1787837144). No corruption; all corruption-detecting checks passed after writes.",
+    "evidence_event_store_status": "stream-count computation exceeded the 10-min foreground cap; validity/head confirmed via verify above."
+  },
+  "division": {
+    "record_round_exit": 0,
+    "round_event_id": "division_followup_event_7843807a9dcb5ed384fd7b03cd1888cc",
+    "processed_report_count": 1,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "event_count": 226,
+    "event_head_sha256": "701cac0d15af16e76754c151c8fa9e6473db0cb6a1317944d6d8944b6b7ee8ff"
+  },
+  "counters": {
+    "canonical_indexed": 4492,
+    "canonical_fully_addressed": 3137,
+    "canonical_fully_read": 3770,
+    "canonical_remaining": 1355,
+    "canonical_unread": 722,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_remaining": 3033,
+    "noncanonical_indexed": 1370,
+    "audit_status": "consistent"
+  },
+  "baseline_checks": {
+    "git_diff_check": "clean (rc=0)",
+    "modified_rs_files": "codec/tests.rs and llm/provider/tests.rs are pre-existing foreign-dirty; not touched this round"
+  },
+  "restart_deploy": "not required and not attempted; no live substrate or control change",
+  "git_authority": "read-only in adapter mode; no stage/commit/merge/push",
+  "commit_debt": [
+    "CHANGELOG.md (my [Unreleased] bullet, co-mingled with prior foreign [Unreleased] edits)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (my appended 2026-08-27 section, co-mingled with foreign edits)",
+    "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/ (entirely mine; new directory)"
+  ]
+}

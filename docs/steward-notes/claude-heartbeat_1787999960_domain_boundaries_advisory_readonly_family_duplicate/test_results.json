@@ -1,0 +1,21 @@
+{
+  "schema": "round_test_results_v1",
+  "note": "No source or test code was changed this round (pure duplicate re-verification). The focused test below re-anchors the porosity/pressure-source read-only claim (c004) at the current working tree.",
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib viscosity_porosity_transport",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1904,
+      "tests": [
+        "types::schema::tests::viscosity_porosity_transport_derives_coherence_density_without_component_contract_change",
+        "types::schema::tests::viscosity_porosity_transport_distinguishes_navigable_from_sludge_risk",
+        "ws::runtime::tests::bridge_surfaces_viscosity_porosity_transport_review_without_control"
+      ],
+      "backs_claim": "c004 (porosity_score / PressureSourceControl are read-only diagnostic surfaces, not settable control)"
+    }
+  ],
+  "restart_deploy": "not required and not attempted; no live substrate or control change"
+}

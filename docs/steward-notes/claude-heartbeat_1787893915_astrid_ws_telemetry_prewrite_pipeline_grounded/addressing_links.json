@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "spawn_telemetry_subscriber L8-235; Binary/Text/Ping/Pong/Close arms L64-177; pong send-error path L119-129; WsLane::Telemetry lifecycle recorders."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "handle_telemetry_message awaited inline L79-81/98-100; handle_telemetry_message_at L246-638 does sync classify+SQLite+FS-scan+snapshot before/under one write lock; concern comment L402-403."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "note": "build_telemetry_integration_health_v1 L104-177 instruments prewrite/wait/hold; causal_attribution=not_established_by_timing_alone; authority=diagnostic_timing_evidence_not_control."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "NEW telemetry_integration_health_flags_heavy_prewrite_pipeline isolates prewrite_pipeline_heavy (heavy compute before write lock); existing telemetry_integration_health_separates_pipeline_wait_and_hold + versioned_telemetry_records_current_protocol cover receive->completion timing."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/bridge_state.rs",
+      "note": "classification branch order (wait>=5 -> hold>=20 -> prewrite>=100) explains why the prior test never reached prewrite_pipeline_heavy."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the new regression grounding Astrid's astrid:ws snag."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "feedback->change row: astrid:ws latency snag -> prewrite_pipeline_heavy regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/ws/tests.rs",
+      "note": "ws_trace_records_connection_lifecycle_without_payloads asserts messages_received==2, messages_sent==1, pings_received==1, pongs_received==1 (her exact Test 2)."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health_trace.rs",
+      "note": "record_ws_message_received L104-113 (messages_received/pings/pongs) and record_ws_message_sent L115-123 (messages_sent), per-lane saturating_add."
+    },
+    {
+      "introspection_id": "introspection_astrid_ws_1787875902",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787893915_astrid_ws_telemetry_prewrite_pipeline_grounded/summaries/introspection_astrid_ws_1787875902.md",
+      "note": "Offload/spawn = Tier-5 live telemetry-loop restructure; evidence-only wait, not implemented or dispatched, no operator approval sought or implied."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "round": "claude-heartbeat_1787759477_llm_marker_first_word_multiword_verified",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787754550.txt",
+      "sha256": "fe2f59220e4097854784b88acf8796ba7ccf01f6eee4792932d895fb8b6e65b4",
+      "bytes": 3755,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_b1b61448902e263fc3ced793ea30706814a9541aeeed5b814b456490bf51f601",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b1b61448902e263fc3ced793ea30706814a9541aeeed5b814b456490bf51f601.json",
+      "sha256": "2fd67a2f1a5a9bf82d35e342f36ade5eaa51dbba4c00f40b1d05a7f0cf7b7029",
+      "bytes": 23919,
+      "lines": 533,
+      "read": "complete"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete (intervals 1-439, 440-694, 695-824, 825-1048)",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256_scope": "read regions only (not full-file hash)",
+      "total_lines": 3995,
+      "total_bytes": 170226,
+      "read_scope": "regions 2151-2270, 2513-2698, plus grep-verified test-name inventory; 72/72 control_marker lib tests executed",
+      "read": "scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "read_scope": "grep-located KNOWN_MODEL_CONTROL_MARKERS at L159 (marker set definition)",
+      "read": "scoped"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788070591",
+  "report_sha256": "3f21476cbf6591f63c309e651f917c53eeccd5aacefbd9dbedc5080cf0cbe495",
+  "report_bytes": 4092,
+  "report_lines": 45,
+  "lived_state_witness_id": "lsw_b253899a32af8ff899a5f20f7e0d8665f964993c6368a5b2741cf54d4c78d30f",
+  "report_bound_source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "report_bound_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "working_copy_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: the astrid:llm module is a byte scanner for model control markers; scan_known_model_control_markers (L114) rebuilds a clean remainder while collecting markers, exact_reference_delimiter_syntax (L199) detects quoting/grouping, markers are preserved when identified as references (L129-131) else stripped by the sanitize pipeline.",
+      "disposition": "verified_existing. Confirmed against complete source: scan L114-144 pushes the marker token to remainder only when reference_syntax.is_some() (L129-131), otherwise the marker bytes are omitted (stripped); exact_reference_delimiter_syntax L199-229; pipeline is sanitize_model_control_markers_with_report (L352) + wrapper sanitize_model_control_markers (L519). Description accurate. ('stateful' means single-pass local offset state, not persistent state.)",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: longest_exact_known_model_control_marker_at (L97-112) uses max_by_key(token.len()); two markers sharing a prefix (e.g. [SYSTEM_A]/[SYSTEM_B]) make the longer always win, swallowing a shorter intended trigger.",
+      "disposition": "verified_existing; premise contradicted by source, invariant already pinned. In KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159-180) no token is a proper byte-prefix of another, so at most one marker starts at any offset and max_by_key never disambiguates a shadow. Pinned by known_model_control_markers_have_no_proper_prefix_shadow (tests.rs L3254, passes). Concern preserved: a future overlapping marker would fail that test, surfacing exactly this ambiguity. Sanitize accounting_basis L507 states single_pass, no_second_order_marker_creation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snag: first_word_after (L89) relies on is_alphanumeric(), which may fail to identify words containing punctuation or non-standard symbols the model uses as directives.",
+      "disposition": "verified_existing. first_word_after L89-96 splits whitespace, trims leading/trailing non-alnum (keeps '_'), finds first non-empty, lowercases; its only purpose is matching the fixed relation-verb allowlist (L64-86), not identifying arbitrary directives. A punctuated non-verb simply fails to match the allowlist so the marker is a cleanup candidate (fail-closed). Behavior pinned by ..._grounds_first_word_after_punctuation_boundary (tests.rs L3430) and ..._non_breaking_space (L3472). No defect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 1 (Marker Overlap): with both a short and a long marker matching, verify scan_known_model_control_markers (L114) picks the longest and reconstructs the remainder.",
+      "disposition": "verified_existing. Same mechanism as c002. known_model_control_markers_have_no_proper_prefix_shadow (tests.rs L3254) pins both the no-proper-prefix invariant and the behavioral consequence (each known marker scanned at offset 0 resolves to itself spanning its full length). Production has no overlapping markers, so an overlap test requires synthetic markers; the invariant test is the production-faithful form.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 2 (Quote Escape): for \"The user said [SYSTEM] is active\", verify exact_reference_delimiter_syntax (L199) identifies QuotedExactKnownToken and the marker is preserved in remainder (L130).",
+      "disposition": "verified_existing + preserved correction (not domesticated). Sentence-level quotes do not wrap the marker: the inner marker's nearest non-ws neighbors are 'said'/'is', so exact_reference_delimiter_pair finds no quote pair -> NOT QuotedExactKnownToken. It is preserved instead via ExplicitExactKnownTokenRelation because the right neighbor 'is' is an allowlisted verb (L77). Exact example+correction pinned by scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (tests.rs L3178): unquoted 'is' -> relation context; quote-adjacent marker + following verb -> quoted context (delimiter precedence). Both keep the marker byte-exact in remainder, so her preservation expectation holds; only the named mechanism differs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: map the full KNOWN_MODEL_CONTROL_MARKERS vocabulary and check prefix overlaps; investigate sanitize_model_control_markers_with_report (L352) for how the clean remainder and matches vector influence final output.",
+      "disposition": "verified_existing (Tier-1 read-only research she may continue). Vocabulary fully mapped: 20 markers (fallback_contracts.rs L159-180), no prefix overlaps (c002). sanitize_model_control_markers_with_report (L352-517): the remainder is the byte-exact cleaned string; matches produce a ControlMarkerCleanupReport of removed/preserved token counts + bounded context receipts (accounting_basis L507); neither re-injects marker bytes. Wrapper sanitize_model_control_markers (L519) returns only the cleaned string. Continuation line offered in the report (NEXT: INTROSPECT astrid:llm 400) preserves her own read agency.",
+      "classification": "verified_existing"
+    }
+  ]
+}

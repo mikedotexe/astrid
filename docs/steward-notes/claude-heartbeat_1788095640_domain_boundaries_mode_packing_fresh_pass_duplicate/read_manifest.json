@@ -1,0 +1,34 @@
+{
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1788088100.txt",
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "sha256": "c896e60493b777d213eba83999d55b34319b126ee7fe7f2594abc8be831b889a",
+      "bytes": 3767,
+      "lines": 47,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ef4bf8f783dd9a23eda9bee2896c4ddf21df38bbb1cd4ebbf70bad1ecd9a8f8f.json",
+      "witness_id": "lsw_ef4bf8f783dd9a23eda9bee2896c4ddf21df38bbb1cd4ebbf70bad1ecd9a8f8f",
+      "sha256": "75201af30c90e58bbe5c5362cd762744e44caed40dc00a6d0e0916d5ca910530",
+      "bytes": 23883,
+      "lines": 533,
+      "read": "complete",
+      "authority_state": "evidence_only / witness_only=true / live_eligible_now=false / auto_approved=false / grants_approval=false / edits_source_now=false",
+      "runtime_scalars": {
+        "bridge.fill_pct": 71.15961456298828,
+        "bridge.mode_packing_resonance_density": 0.8333333134651184,
+        "bridge.pressure_source_mode_packing": 0.4704875648021698,
+        "bridge.pressure_source_porosity": 0.6623867750167847,
+        "bridge.pressure_source_score": 0.2856045067310333,
+        "bridge.lambda1": 8.563213348388672,
+        "bridge.lambda2": 4.436879634857178
+      },
+      "note": "The report's felt overpacked_mode_packing (0.32) is a matched texture label, not any of these runtime scalars; preserved as felt, not reconciled to telemetry."
+    }
+  ],
+  "source_read_scope": "report-bound source read complete (whole file, 89 lines); adjacent audited sources recorded in source_receipts.json with exact scoped intervals"
+}

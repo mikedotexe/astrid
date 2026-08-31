@@ -1,0 +1,24 @@
+{
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788170891.txt",
+      "sha256": "a9c4e80a52caed362282d37f27986d3249f0b5859b5c5f65b6bb2a3c5a8c03e2",
+      "bytes": 3299,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_6291270610b5b447173d334dec2a41afa6691ea9dc57c8d2bdd85e332e2dc4ec",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_6291270610b5b447173d334dec2a41afa6691ea9dc57c8d2bdd85e332e2dc4ec.json",
+      "sha256": "8bc0feb6b5d3efdfc643ce7ee9f4323af11bfc5de6ce0e9276a328feb2ac841a",
+      "bytes": 23928,
+      "lines": 533,
+      "read": "complete",
+      "notes": "authority evidence_only, witness_only true, live_eligible_now false; artifact_sha256 matches report; two chained gemma4_12b MLX routes (second repairs first); fill 71.4%."
+    }
+  ]
+}

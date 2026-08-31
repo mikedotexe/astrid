@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144: raw vs referenced; token pushed to remainder only when reference_syntax.is_some()."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Verb allowlist L67-84 contains 'functions' (L74), not 'operates'; first_word_after L89-96 whitespace split + edge trim."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2603) + colon-triggers (L2819): unlisted verb strips marker (fail-closed), grounding the 'operates as' snag."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L153-197 fixed quoted/grouped sets; exact_reference_delimiter_syntax L199-229; pairs outside both return None."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 matches first_word_after(text,self.end) against the allowlist."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New regression followed_by_explicit_exact_token_relation_rejects_hyphenated_is_like_prefix_shadow (module tail) pins 'is-like'=>false; verb-list test L2547 covers 'mimics'=>true."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_exact_tokens_in_declared_group_delimiters L2150-2173 iterates '(<end_of_turn>)' asserting grouped classification and preservation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788170517_llm_relation_is_like_prefix_shadow/summaries/introspection_astrid_llm_1788162779.md",
+      "note": "generate_dialogue verified at dialogue_runtime.rs L695; retained as Astrid's agency-preserving next window, not a steward deliverable."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the is-like prefix-shadow regression grounded from complete source."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788162779",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated feedback-to-change row: report Test #1 negative half -> new regression."
+    }
+  ]
+}

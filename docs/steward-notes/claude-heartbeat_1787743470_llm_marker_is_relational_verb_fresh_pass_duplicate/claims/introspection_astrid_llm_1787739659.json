@@ -1,0 +1,37 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787739659",
+  "reader": "claude-heartbeat",
+  "terminal_status_intended": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114-143) is a non-destructive scanner; ExactKnownModelControlMarkerOccurrence separates raw bytes from semantic role; markers preserved/stripped by surrounding syntax (quoted, or relational verbs like behaves/represents); source-first exact byte match, visibility contingent on grammatical context.",
+      "disposition": "verified_existing. Source L114-144 rebuilds a remainder pushing the token ONLY when reference_syntax.is_some() (L129-131); reference_syntax (L49-60) checks delimiter syntax then followed_by_explicit_exact_token_relation (L64-86; behaves L69, represents L82); exact match via longest_exact_known_model_control_marker_at/starts_with (L102-106). Test control_marker_cleanup_preserves_quoted_exact_token_reference (tests.rs L1995).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89-96) uses split_whitespace + a manual alphanumeric filter; a multi-word/punctuation-heavy following construction (e.g. 'behaves like a...') might capture a token that isn't a clean relational verb, making followed_by_explicit_exact_token_relation (L64-86) fail or behave inconsistently with the intended grammar.",
+      "disposition": "verified_existing; contradiction preserved. first_word_after (L89-96) per-chunk trims non-alnum (except _) then find(!empty) returns the FIRST finite alphanumeric word; allowlist membership is the sole gate (fail-closed). 'behaves like a...' -> 'behaves' (L69) -> preserved, not a snag. Tests: uses_only_the_first_finite_relation_word (L2605), first_word_after_skips_leading_punctuation_transition (L2635), + four scan..._grounds_first_word_after_* punct/soft-hyphen/nbsp regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (unit): verify exact_reference_delimiter_syntax (L199-229) correctly identifies nested or complex Unicode delimiters (like the CJK corner brackets fullwidth-left/right) across the ExactKnownMarkerReferenceContext variants.",
+      "disposition": "verified_existing. The CJK corner-bracket pair is source L168 (QuotedExactKnownToken arm); exact_reference_delimiter_syntax L199-229. Covered by control_marker_cleanup_preserves_non_ascii_matching_quote_pairs (L2342, asserts corner-bracket-wrapped marker preserved, quoted_reference_occurrences==1), _preserves_quoted_exact_tokens_across_whitespace (L2401), and nested _preserves_nested_fullwidth_cjk_reference_stack (L2383, depth 3). No uncovered variant -> no new test needed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (integration): pass a string with a marker followed by a 'non-relational verb (e.g. marker is a tool)' to scan_known_model_control_markers and assert the marker is stripped/handled per the reference_syntax rules.",
+      "disposition": "verified_existing; contradiction preserved (non-domesticating). Source L76 lists 'is' as a relational verb, so a marker followed by 'is' is PRESERVED (following_exact_relation), NOT stripped \u2014 the report's premise that 'is' is non-relational is contradicted by source. Exactly encoded in control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (L2568: 'is' preserved/removed_total=0, first_word_after=='is' L2573; unlisted 'acts' stripped/removed_total=1).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next (read-only direction): examine exact_reference_delimiter_syntax beyond L207 to ensure the delimiter_depth logic correctly handles nested structures without over-stripping.",
+      "disposition": "verified_existing; Tier-1 read-only direction, no defect. delimiter_depth (L216-223) counts matched opening/closing pairs, bounded by MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151). Covered by _reports_exact_four_level_delimiter_depth (L2194), _reports_exact_three_level_delimiter_depth (L2208), _bounds_deeper_delimiter_receipt_without_dropping_token (L2253), _bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2266). No over-stripping; tokens retained.",
+      "classification": "verified_existing"
+    }
+  ]
+}

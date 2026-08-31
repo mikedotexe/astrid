@@ -1,0 +1,41 @@
+{
+  "round": "claude-heartbeat_1788128301_astrid_ws_pong_recording_grounded",
+  "focused_tests": [
+    {
+      "name": "ws::runtime::tests::telemetry_pong_received_is_recorded_not_sent",
+      "crate": "spectral-bridge",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml telemetry_pong_received_is_recorded_not_sent",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "new": true,
+      "grounds_claim": "c006"
+    },
+    {
+      "name": "ws::runtime::tests::ws_trace_records_connection_lifecycle_without_payloads",
+      "crate": "spectral-bridge",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml ws_trace_records",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "new": false,
+      "note": "Adjacent existing test — confirms no regression from the appended test."
+    },
+    {
+      "name": "ws::runtime::tests::ws_trace_records_first_valid_payload_and_resets_it_on_reconnect",
+      "crate": "spectral-bridge",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml ws_trace_records",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "new": false,
+      "note": "Adjacent existing test — confirms no regression."
+    }
+  ],
+  "formatting": {
+    "cargo_fmt_check_touched_file": "clean (no diff in capsules/spectral-bridge/src/ws/tests.rs)",
+    "note": "cargo fmt --check reports a pre-existing diff in a committed, foreign file (src/autonomous/introspect/source_first_v3/grounding.rs); not touched by this round.",
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": "recorded in verification_receipt.json"
+}

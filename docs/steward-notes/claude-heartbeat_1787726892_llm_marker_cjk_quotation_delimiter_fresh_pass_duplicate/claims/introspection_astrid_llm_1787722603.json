@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787722603",
+  "source_family": "astrid_llm",
+  "report_sha256": "65cf9eb13df95093ac2f4db027b8be38d780f0633b2a98b3b227234367ab5f02",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) rebuilds a non-destructive remainder, preserving marker bytes only when the marker has reference syntax; distinguishes transport-only markers from grammatical-subject markers (quoting/grouping or a following relation verb like appears/represents).",
+      "disposition": "verified_existing. Source L114-144: remainder pushes the marker token only at L129-131 when reference_syntax.is_some(); relation verbs appears (L67) / represents (L82) are in the allowlist. Locked by preserves_quoted_exact_token_reference (tests.rs L1995). 72/72 control_marker tests green at SHA 902a0358.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89) uses split_whitespace + per-chunk alnum trim (L92) to find the verb; a multi-word phrase after a marker (e.g. 'represents a specific type of...') might set reference_syntax=None and strip/retain the marker incorrectly.",
+      "disposition": "verified_existing, contradiction preserved. first_word_after (L89-96) returns the first finite alphanumeric word; allowlist membership is the sole preservation gate. 'represents a specific type of...' -> 'represents' (L82, allowlisted) -> preserved. Only-first-finite-word is intended fail-closed, not a bug. Regressions uses_only_the_first_finite_relation_word (tests L2605) and first_word_after_skips_leading_punctuation_transition (L2635).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Syntax Validation): verify exact_reference_delimiter_syntax (L199) identifies nested/complex Unicode delimiters (e.g. the CJK corner bracket 「...」 cited at L169) and returns the correct ExactKnownMarkerReferenceContext.",
+      "disposition": "verified_existing; no uncovered variant. 「」 is source L168 (report says L169; L169 is 『』) in the QuotedExactKnownToken arm; exact_reference_delimiter_syntax is L199-229. Existing tests: preserves_non_ascii_matching_quote_pairs (tests L2342) asserts 「<end_of_turn>」 preserved with quoted_reference_occurrences==1; whitespace variant preserves_quoted_exact_tokens_across_whitespace (L2401); nested CJK stack depth 3 preserves_nested_fullwidth_cjk_reference_stack (L2383).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Grammar Persistence): provide 'marker behaves as a primary signal' and assert scan_known_model_control_markers (L114) preserves the marker based on the first word 'behaves' (cited L70).",
+      "disposition": "verified_existing. 'behaves' is allowlisted at source L69 (report says L70, off-by-one). Preservation by a leading relation verb is locked by preserves_proxy_relation_phrase (tests L2552, 'functions as...') and uses_only_the_first_finite_relation_word (L2605, 'functions like...' retained / 'acts like...' stripped). The proposed 'behaves' assertion follows from allowlist membership plus these regressions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder produced by scan_known_model_control_markers integrates into the final output buffer.",
+      "disposition": "verified_existing; read-only Tier-1 direction, no defect. generate_dialogue is exactly at L695. The remainder flows scan_known_model_control_markers (L114) -> sanitize_model_control_markers_with_report (L352) -> sanitize_model_control_markers (L519) -> generation path (L558/L634). Integration point exists; no change requested or needed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "round": "claude-heartbeat_1787794806_llm_marker_relation_delimiter_fresh_pass_duplicate",
+  "report_bound_source": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "matches_report_binding": true,
+      "working_tree_state": "clean (not in git status; committed content == report-bound SHA)",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "L1-270 read complete (covers every cited function: ExactKnownModelControlMarkerOccurrence L29, ExactKnownMarkerReferenceSyntax.delimiter_depth L38, followed_by_explicit_exact_token_relation L64, first_word_after L89, longest_exact_known_model_control_marker_at L97, scan_known_model_control_markers L114, MAX_EXACT_REFERENCE_DELIMITER_DEPTH L151, exact_reference_delimiter_pair L153, exact_reference_delimiter_syntax L199). Additionally grep-located sanitize_model_control_markers_with_report L352 and generate_dialogue L695 (c005 pointer); their bodies not fully read this round as no claim requires it."
+    }
+  ],
+  "evidence_source": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "a3df0fa3ec7e5ee6cec25f99743f947b050d098289cf174ecd873d492931a4ea",
+      "working_tree_state": "dirty (M) — accumulated foreign/prior-round stewardship edits, preserved untouched; NOT modified this round",
+      "total_lines": 4121,
+      "total_bytes": 177092,
+      "read_scope": "Cited regression cluster read: L2873-2956 (relation across newline / multiple punctuation runs / fails_closed / grouped+explicit relation), L2956-3062 (quoted precedes relation, double_square_bracket_depth_two, no_proper_prefix_shadow), L3230-3359 (punctuation boundary, non_breaking_space/ZWNBSP, internal soft hyphen). Test-function index surveyed across whole file by grep."
+    }
+  ]
+}

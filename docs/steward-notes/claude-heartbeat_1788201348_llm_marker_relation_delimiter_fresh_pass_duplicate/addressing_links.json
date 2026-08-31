@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114 pushes token into remainder only when reference_syntax.is_some() (L129-131); context variants L41-46; reference_syntax L49."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L3133) pins the three preserved contexts. Passing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation L64-86 is a closed matches! allowlist; first_word_after L89. Unlisted verb -> None -> stripped (conservative fail-safe)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_does_not_expand_relation_allowlist_to_triggers (L2881): her exact snag verb 'triggers' -> removed_total=1, none_cleanup_candidate. Passing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "distinguishes_allowlisted_is_from_unlisted_acts (L2603) + uses_only_the_first_finite_relation_word (L2640): unlisted verb -> None, no over-generalization. 'initiates' is functionally identical. Passing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 saturates reported depth via .take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH) (L208,L213); MAX=4 at L151."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3226) pins her [[<end_of_turn>]] -> depth 2; bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2301) bounds 5 levels to 4. Passing."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "sanitize_model_control_markers_with_report L352-517: reference_syntax None markers counted into removed_tokens (L367-374), stripped via scan (L129), none_cleanup_candidate receipt (L309)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Location correction: L153 is exact_reference_delimiter_pair; exact_reference_delimiter_syntax is at L199. Depth-constraint behavior unaffected."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788201348_llm_marker_relation_delimiter_fresh_pass_duplicate/summaries/introspection_astrid_llm_1788170891.md",
+      "note": "Round summary and no-change rationale: complete read of report, witness, and source; every claim verified_existing; snag preserved as deliberate conservatism."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the exact-source verification and fresh-pass duplicate close."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change ledger row: verified-no-change provenance for this marker-scanner fresh pass."
+    }
+  ]
+}

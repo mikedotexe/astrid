@@ -1,0 +1,51 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787692007",
+  "report_sha256": "8f669ce24c305d7bc594c7898b0e56535c33e40ef08d3c5dacd923d09f3e12cc",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: `scan_known_model_control_markers` (report L114) identifies known control markers and classifies each as grammatical-subject/reference; markers followed by allowlisted verbs (e.g. `appears`, `represents`) via `followed_by_explicit_exact_token_relation` (L64) are preserved, purely structural ones are not.",
+      "disposition": "Verified against identical source SHA 902a0358 (scan L114-144; relation fn L64-87; verb list L67-84; retention gate L129-131). Behavior pinned at the exact fn by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2932).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: `exact_reference_delimiter_syntax` (L199) detects citation-vs-invocation across many quotation/grouping styles including multi-byte Unicode brackets.",
+      "disposition": "Verified in source L153-229 (quoted pairs L157-173; grouped pairs L175-192 incl the cited multi-byte pair ⟦⟧ at L180). Grounded by ⟦⟧/【】/⟨⟩ grouped regressions (tests.rs L2306-2338) and nested multibyte-grouped depth tests (L2195, L2254).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snags (hypothesis): `first_word_after` (L89, trim L92) `split_whitespace`+`trim_matches` might mishandle complex punctuation, Unicode whitespace, or zero-width chars, fail to identify the relation verb, and strip or retain the marker incorrectly.",
+      "disposition": "Concern preserved, not domesticated. Complete source + passing regressions show leading format chars (NBSP U+00A0, ZWNBSP U+FEFF, soft hyphen U+00AD, multibyte emoji) are edge-trimmed so the verb is found and marker preserved; an INTERNAL format char is not on a trim edge, so the exact allowlist match fails and the marker fails CLOSED (stripped, never leaked). No incorrect retention path exists. A mid-verb zero-width char travels the identical edge-only-trim code path already pinned by _internal_soft_hyphen (tests.rs L3199-3240).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #1 (Relation Verification): a known marker followed by `mimics` (L79) should stay in scan_known_model_control_markers' returned remainder.",
+      "disposition": "Already grounded: control_marker_cleanup_preserves_poetic_attribution_without_literal_cue (tests.rs L2513-2537) iterates the verb set INCLUDING `mimics` (L2520) and asserts removed_total=0 / preserved_explicit_reference_total=1; scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2932) pins ExplicitExactKnownTokenRelation retention at the exact scan fn.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "One Test Each #2 (Delimiter Depth): a nested `⟦...⟧` (L180) structure passed to exact_reference_delimiter_syntax should classify as GroupedExactKnownToken with correct depth.",
+      "disposition": "Already grounded: ⟦<end_of_turn>⟧ (and ⟨⟩/【】) classified Grouped (tests.rs L2306-2338); nested multibyte “【([<end_of_turn>])】” at depth 3-4 (L2195, L2254); exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3025) pins depth=2 Grouped at the exact fn; depth-across-unicode-whitespace covered (L2222).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: verify multi-byte UTF-8 handling in first_word_after so relation verbs are captured consistently across locales.",
+      "disposition": "Already grounded: control_marker_cleanup_handles_multibyte_symbol_before_relation (U+1F9E9, tests.rs L2834), _skips_symbol_only_line_before_exact_relation (U+1F30A, L2852), _grounds_first_word_after_non_breaking_space (U+00A0/U+FEFF, L3146), _internal_soft_hyphen (U+00AD leading+internal, L3199), depth-across-unicode-whitespace (U+2003/U+3000, L2222/L2328).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Observed cites markers `like [INST], <<SYS>>, etc.` as examples handled by the scanner.",
+      "disposition": "`[INST]`/`[/INST]` are exact entries in KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L178-179). `<<SYS>>` is NOT in the 20-entry table and would not be byte-matched. The report frames these as illustrative category examples (`like ... etc.`), not an exact-membership assertion, so this is a nuance recorded honestly, not a source contradiction.",
+      "classification": "verified_existing"
+    }
+  ]
+}

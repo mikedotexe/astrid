@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; retention gate L129-131 pushes marker bytes only when reference_syntax.is_some(). Source SHA 902a0358 == report binding."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2932) — passes at SHA 902a0358 (72/72 control_marker lib tests)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "ExactKnownMarkerReferenceContext enum L41-46; followed_by_explicit_exact_token_relation L64-86; exact_reference_delimiter_pair/_syntax L153-229 (quoted vs grouped)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_exact_tokens_in_declared_group_delimiters (L2151), preserves_quoted_exact_token_reference (L1995), preserves_exact_token_relation_without_preceding_vocabulary_gate (L2540)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 returns the FIRST non-empty alnum-trimmed word; for 'behaves like a ghost' that is 'behaves' (allowlisted L69) -> preserved. Doc L62-63: marker is grammatical subject; single-word lookahead is deliberate, fails closed for off-allowlist leading word."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_poetic_attribution_without_literal_cue iterates 'behaves like' (L2524) -> marker preserved; uses_only_the_first_finite_relation_word (L2605); first_word_after_skips_leading_punctuation_transition (L2635); distinguishes_allowlisted_is_from_unlisted_acts (L2568)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787759477_llm_marker_first_word_multiword_verified/duplicate_basis.md",
+      "note": "Contradiction preserved not domesticated: report's 'captures like' prediction is the opposite of code behavior; underlying single-word-lookahead concern retained as forward evidence."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "followed_by_explicit_exact_token_relation inspects the word AFTER the marker via first_word_after(text, self.end) (L64/L89). Literal 'behaves as [MARKER]' (relation before marker) would strip; intended '[MARKER] behaves as ...' is the tested form."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_proxy_relation_phrase (L2552, '<end_of_turn> functions as a proxy' preserved); scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L2932, '<end_of_turn> behaves as ...' L2945)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151); 「」 Quoted arm (L168); ⟦⟧ Grouped arm (L180); exact_reference_delimiter_syntax depth L199-229 (.take(MAX) L208/L213, count L216-223)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "preserves_bounded_nested_delimiter_stacks (L2176, incl. ⟦<end_of_turn>⟧ L2179); reports_exact_four_level_delimiter_depth (L2194); bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2266); preserves_fullwidth_and_cjk_group_pairs (L2362, 「」 L2347); exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3025)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695-1048 returns raw model text Some(text) L998 when gate passes; sanitize_model_control_markers used only in validators is_valid_dialogue_output (L558) + has_one_nonempty_final_next_action (L634) on a temp copy; truncation is input-only (L823-913). No secondary sanitization of delivered output."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] claude-heartbeat entry recording the verified no-change duplicate closure and the preserved contradiction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787754550",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-08-26 row: fresh-pass marker snag verified_existing, mechanism contradicted, addressed_duplicate, 72/72 tests."
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L20-26 SEMANTIC_DIM=48 additive-widening doc; L28 SEMANTIC_DIM_LEGACY=32; L74-81 embedding(32-39)/narrative(40-43)/reserved(44-47) lane declarations."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L33-53 TAIL_VIBRANCY_ENTROPY_GATE=0.85 and TAIL_VIBRANCY_MAX=6.0 with documented smoothstep onset."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "L224-235 vibrancy_from_entropy_and_density_gradient application to tail dims — the gate's actual behavioral site (separate file, unseen by the report window)."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "Static path embedding_projection_matrix() L172-180 (fixed-seed JL, OnceLock); dynamic path project_embedding_dynamic_epoch at L759 (uncovered interval)."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "note": "legacy_warmth_mapping_v1() L587-598: emotional_layer_range=(24,31), warmth_orphaned=false — warmth index-stable across the 32->48 widening."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "craft_warmth_vector() L1373-1451 builds a native 48D vector writing only dims <=31; appended lanes 32-47 left at zero + bounded noise. No projection of a 32D vector into 48D occurs."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "New regression warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes pins the no-bleed invariant."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "L292-324 clamp loop: tail_ceiling bounded in [FEATURE_ABS_MAX, dynamic_max<=TAIL_VIBRANCY_MAX]; only dims 17|26|27|31 raised, all others clamp at FEATURE_ABS_MAX. Offset is strictly bounded; tail dims lifted not clipped."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "tail_vibrancy_raises_only_tail_ceiling_in_high_entropy (L2961) proves bounded lift; non-tail dim 24 clamped exactly to FEATURE_ABS_MAX."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes — implements the report's Dimension Alignment Test; passes."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Entropy Gate Boundary already covered: tail_vibrancy_raises_only_tail_ceiling_in_high_entropy (L2961), the 0.86 boundary at L2861-2879, extreme bound at L3034."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "project_embedding_dynamic_epoch confirmed at L759 (report's uncovered 401-1351 interval); preserved as Astrid's self-directed next-read, no steward action."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the codec no-bleed regression driven by this report."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1787762146",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row: codec fresh-read snag -> source-verified additive widening + new no-bleed regression."
+    }
+  ]
+}

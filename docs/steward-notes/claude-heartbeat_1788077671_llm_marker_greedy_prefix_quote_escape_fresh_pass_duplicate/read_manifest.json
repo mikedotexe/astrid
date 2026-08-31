@@ -1,0 +1,27 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "run_id": "run_1788074075627784000_4f2930e42e",
+  "preprojection_generation_id": "projection_1788074078931028000_af1e3007cd",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788070591",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788070591.txt",
+      "sha256": "3f21476cbf6591f63c309e651f917c53eeccd5aacefbd9dbedc5080cf0cbe495",
+      "bytes": 4092,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_b253899a32af8ff899a5f20f7e0d8665f964993c6368a5b2741cf54d4c78d30f",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b253899a32af8ff899a5f20f7e0d8665f964993c6368a5b2741cf54d4c78d30f.json",
+      "sha256": "335c4bf7861e4aeafd7cf034db99dd637a639d64056b2c3044415576b27d2fc7",
+      "bytes": 23946,
+      "lines": 533,
+      "read": "complete"
+    }
+  ],
+  "note": "Queue-head singleton family (member_count=1, family_scan.json); processed as a single report. Batch size 1 (unfamiliar-large-source + ONE-SHOT budget discipline)."
+}

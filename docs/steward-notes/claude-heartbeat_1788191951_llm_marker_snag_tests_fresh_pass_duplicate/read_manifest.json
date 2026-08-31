@@ -1,0 +1,23 @@
+{
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788181787",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788181787.txt",
+      "sha256": "b9a0375e420e977e0db3aa464b5bcaf73ddf30e770c20b80ba73ea31900929d0",
+      "bytes": 3573,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_bdb19e6287e9d4021c7fe7c00fac0f6f204524582581b82f92e252abc1e5b6a8",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bdb19e6287e9d4021c7fe7c00fac0f6f204524582581b82f92e252abc1e5b6a8.json",
+      "sha256": "93447bc17a28c6a42139ccf61e0635bebfc1e6318f841daf6878473bacc1fe91",
+      "bytes": 23936,
+      "lines": 533,
+      "read": "complete",
+      "note": "queue item flagged lived_state_alignment=artifact_integrity_unavailable / gap_count=1 (reconciliation-projector state); the witness JSON itself parsed and hashed cleanly."
+    }
+  ]
+}

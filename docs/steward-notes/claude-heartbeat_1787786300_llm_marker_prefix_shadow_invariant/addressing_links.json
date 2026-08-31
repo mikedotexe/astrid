@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144: non-destructive remainder/matches; marker bytes preserved only when reference_syntax.is_some() (L129-131)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L153-197 (CJK corner L168 = quoted block; lenticular L182 = grouped) called by exact_reference_delimiter_syntax L199-229."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped pins the corner-vs-lenticular classification at source SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace + trim non-alnum/underscore + find(non-empty) handles newline/tab/punctuation clusters uniformly."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary and preserves_relation_across_newline already pin first_word_after robustness."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180: no element is a proper byte-prefix of another; longest_exact_known_model_control_marker_at L97-112 max_by_key(len) therefore never disambiguates a prefix shadow."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "NEW: known_model_control_markers_have_no_proper_prefix_shadow asserts the no-proper-prefix invariant + isolated-marker-resolves-to-itself; grounds the greedy-shadowing snag as structurally unreachable and guards against a future prefix-overlapping marker."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c004",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry recording the added invariant test grounding snag b."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row: snag b -> no-proper-prefix invariant test."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "reference_syntax L49-60 checks exact_reference_delimiter_syntax before the relation fallback; relation allowlist L64-86 includes `denotes` (L71)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (committed) pins the delimiter-before-relation precedence her Test 1 assumed, at source SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (committed) asserts [[<marker>]] -> GroupedExactKnownToken, delimiter_depth==2 vs MAX==4 (L151) — her Test 2 verbatim."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787782248",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787786300_llm_marker_prefix_shadow_invariant/summaries/introspection_astrid_llm_1787782248.md",
+      "note": "c007 recorded as Astrid's self-directed Tier-1 continuation (report L46 NEXT: INTROSPECT astrid:llm 400); agency-preserving, no steward action, no live change."
+    }
+  ]
+}

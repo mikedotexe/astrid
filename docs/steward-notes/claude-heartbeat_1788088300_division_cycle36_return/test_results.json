@@ -1,0 +1,17 @@
+{
+  "round": "division_cycle36_return",
+  "note": "Division-return round; 0 canonical reports; no .rs/.py source touched, so no focused code tests. Integrity suites below.",
+  "suites": {
+    "introspection_addressing_audit.py --self-test": {"result": "OK", "tests": 44},
+    "anti_drop_catalog.py --self-test": {"result": "OK", "tests": 5},
+    "anti_drop_catalog.py verify --json": {"total_guards": 69, "alarms": 0, "gaps": 0},
+    "experiential_epistemics.py self-test --json": {"valid": true},
+    "division_ceremony_followup.py verify": {"ok": true, "cycle": 37, "review_due": false, "event_count": 253},
+    "division_ceremony_chronicle.py verify": {"ok": true, "durable_inputs_current": true, "volatile_mismatches": ["supervisor_status_sha256"], "timeline_event_count": 253, "ceremony": 0, "followup": 253},
+    "introspection_addressing_audit.py audit-counters --json": {"status": "consistent", "mismatches": [], "checks_all_true": true}
+  },
+  "deferred_recorded_debt": {
+    "evidence_event_store.py --json verify": "not run — ~20min heavy scan could not be safely bounded (no GNU timeout on macOS) in residual one-shot budget; 0 report evidence written this round so no durable report evidence depends on it; recheck next run",
+    "experiential_epistemics.py verify --json": "not run — dimension not modified this round (0 reports); self-test passed; recheck next run"
+  }
+}

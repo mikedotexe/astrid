@@ -1,0 +1,17 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "reader": "claude-heartbeat",
+  "purpose": "Duplicate verification: confirm the existing regressions that ground this report still pass at the report-bound source SHA 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee.",
+  "cargo": "capsules/spectral-bridge/Cargo.toml (--lib)",
+  "runs": [
+    {"filter": "control_marker", "passed": 78, "failed": 0, "filtered_out": 1826},
+    {"filter": "exact_reference_delimiter_syntax", "passed": 2, "failed": 0, "filtered_out": 1902},
+    {"filter": "followed_by_explicit_exact_token_relation", "passed": 1, "failed": 0, "filtered_out": 1903},
+    {"filter": "known_model_control_markers", "passed": 10, "failed": 0, "filtered_out": 1894},
+    {"filter": "first_word_after", "passed": 5, "failed": 0, "filtered_out": 1899}
+  ],
+  "relevant_total_passed": 96,
+  "relevant_total_failed": 0,
+  "new_tests_added": 0,
+  "note": "No new test added — every proposed test/snag is already pinned by an existing regression at this SHA; a new test would duplicate followed_by_explicit_exact_token_relation_allowlists_represents_not_creates (L3284), scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (L3114), and exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3161)."
+}

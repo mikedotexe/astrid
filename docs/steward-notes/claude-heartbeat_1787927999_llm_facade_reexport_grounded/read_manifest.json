@@ -1,0 +1,26 @@
+{
+  "round": "claude-heartbeat_1787927999_llm_facade_reexport_grounded",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1787810107.txt",
+      "sha256": "a3c65775b9711bb12af6d5122133bd0b79b2694a42bf006e5da221c9dca91c80",
+      "bytes": 3811,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_cc8368bb012ddee5fed4ba6c893abe44964b80b7a1d884df2345e519e7212e3a",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_cc8368bb012ddee5fed4ba6c893abe44964b80b7a1d884df2345e519e7212e3a.json",
+      "sha256": "48982608c38e8c6802cbe0fddad6037c32c5064af7202c71ff2a662ed80a2bd2",
+      "bytes": 23805,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_binds_report": "a3c65775b9711bb12af6d5122133bd0b79b2694a42bf006e5da221c9dca91c80",
+      "authority_state": "evidence_only / witness_only / live_eligible_now:false / edits_source_now:false / direct_causation_claimed:false / raw_prose:false"
+    }
+  ]
+}

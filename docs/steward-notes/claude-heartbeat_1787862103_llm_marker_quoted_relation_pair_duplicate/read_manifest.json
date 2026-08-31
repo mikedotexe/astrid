@@ -1,0 +1,25 @@
+{
+  "round": "claude-heartbeat_1787862103_llm_marker_quoted_relation_pair_duplicate",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787854907",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787854907.txt",
+      "sha256": "5f8812a32f5216e6a93db22b9ec7dc79abe7029136385b9b3da89739b6b797d9",
+      "bytes": 3658,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a8725b5aa8411de5a677100f77ef7b384db9715e7136278ce1659a9ce894f74c",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a8725b5aa8411de5a677100f77ef7b384db9715e7136278ce1659a9ce894f74c.json",
+      "sha256": "09dd7d6840b98b2bbded93d65e964dbcc1f49eb476eb995d84f93fead866e19d",
+      "bytes": 23934,
+      "lines": 533,
+      "read": "complete",
+      "integrity_note": "Witness bytes are internally self-consistent: witness.artifact_sha256 == report SHA (5f8812a3), source_snapshot.file_sha256 == working-copy source (902a0358), canonical_body_binding.canonical_body_sha256 (8a5a774d) == model_routes_v1[1].response_sha256. The queue item's lived_state_alignment=artifact_integrity_unavailable / gap_count=1 is a lived-state ALIGNMENT-MEASUREMENT classification (this is a source-structure introspection with no felt scalar to align: lived_state_scalar_felt_dissimilarity_measured=false), NOT witness byte corruption. Neutral, not a defect."
+    }
+  ]
+}

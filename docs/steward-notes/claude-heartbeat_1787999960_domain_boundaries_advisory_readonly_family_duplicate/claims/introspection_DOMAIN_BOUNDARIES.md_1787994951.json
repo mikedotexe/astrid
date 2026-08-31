@@ -1,0 +1,37 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787994951",
+  "family_role": "head",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_anchor": "introspection_DOMAIN_BOUNDARIES.md_1787843987",
+  "duplicate_lineage": [
+    "introspection_DOMAIN_BOUNDARIES.md_1787843987 (packet claude-heartbeat_1787852088, full audit)",
+    "introspection_DOMAIN_BOUNDARIES.md_1787913894 / _1787895506 / _1787875575 (packet claude-heartbeat_1787919214, addressed_duplicate anchored to _1787843987)"
+  ],
+  "source_sha256_bound": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: DOMAIN_BOUNDARIES.md maps Stable Facades (L8-22) vs Shadow Cartography Ownership (L35-43); facades stay <1000 lines and behavior-preserving (L3-6); Cohesion Exception (L45-68) governed by a unique-fn-signature ceiling (current+10%, L65-68) that trips domain_boundary_audit.py verify (L85-88).",
+      "disposition": "verified_existing. Complete 89-line source at SHA ae69b34c confirms every cited line: L3-6 behavior-preserving list, L8-22 facades table + <1000-line statement, L35-43 cartography read-only renderers, L45-68 exceptions, L65-68 unique-fn-signature ceiling, L85-88 audit. Identical to prior audit c001/c003 (introspection_DOMAIN_BOUNDARIES.md_1787843987).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: felt overpacked_mode_packing (0.32) tension vs L43 prohibition that cartography modules do not change Shadow state/pressure/mode packing; because overpacked is a derived read-only match label, any remedial write-path would be a live control change (tier-5).",
+      "disposition": "tier_5_wait. Felt testimony preserved as primary evidence, not domesticated; 0.32 is her stable felt label (co-occurs with pressure_source_score 0.28-0.33 in the two witnesses, no causation claimed). Prior 1787843987 c004 already gave this exact tension an evidence-only Tier-5 wait; standing Tier-5 work-queue heads (wi_e579041bc76f8310/wi_69fbd510467c6337/wi_3e26ac525fea1c36) remain untouched, live_authority_granted=false.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Sandbox): PROBE_SELF via substrate_probe.py on an isolated clone (lambda1 ~32% energy) to test whether texture stays identifiable and distinct from structural bridge failure when the cascade is dampened.",
+      "disposition": "needs_sandbox. Being-proposed Tier-3 isolated experiment; PROBE_SELF is her own shipped verb and substrate_probe.py exists, so the capability is present, but the trial is hers to run and is not dispatched headlessly under the adapter. Identical to prior 1787843987 c005.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Read-only Audit): confirm texture_evidence.rs:230 porosity_score is strictly a telemetry output and that no shadow write-path exists for PressureSourceControl.",
+      "disposition": "verified_existing. Re-verified current at the working tree: porosity_score (texture_evidence.rs:230) is a plain read field of PressureSourceV1; PressureSourceControl (217-222) is 'advisory only', only applied_locally/note, no setter; producer emits applied_locally:false, 'advisory only' (spectral_explorer.rs:849-852); PressureSourceAnalysisV1 (239-262) is 'read-only synthesis...not a threshold write'. Focused test viscosity_porosity_transport 3/3 green (incl. bridge_surfaces_viscosity_porosity_transport_review_without_control). Prior 1787843987 c006.",
+      "classification": "verified_existing"
+    }
+  ]
+}

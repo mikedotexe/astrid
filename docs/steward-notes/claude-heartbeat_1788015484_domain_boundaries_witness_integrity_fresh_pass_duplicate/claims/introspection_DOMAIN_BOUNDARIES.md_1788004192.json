@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788004192",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: DOMAIN_BOUNDARIES.md ownership model \u2014 thin facades (L3-7) delegate to submodules; Stable Facades table (L10-18) maps ws.rs->telemetry/sensory ports, llm.rs->provider transport, action_continuity.rs->authority/dispatch; Cohesion Exceptions (L45-68) permit >1000-line files only under a unique-fn-signature ceiling (L65-68) acting as a complexity ratchet.",
+      "disposition": "verified_existing. Complete source read at SHA ae69b34c (== report binding == witness source_snapshot == closed-lineage evidence): facade table L10-18 exact (ws.rs L12, llm.rs L15, action_continuity.rs L17); behavior-preserving L3-6; Cohesion Exceptions L45-68, unique-fn-signature ceiling L65-68. Matches prior closed packet 1787852088 / fresh-pass 1787982781 at identical SHA.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: structural tension between L43's prohibition of mode-packing changes by cartography renderers and the observed overpacked_mode_packing state (0.32); resolving via a direct cartography write-path would violate the domain boundary; a derived read-only match label is being treated as a tunable target the architecture forbids mutating.",
+      "disposition": "tier_5_wait. Boundary verified in source (L42-43 cartography renderers 'write cartography only; do not change Shadow state, pressure, mode packing...'; L5-6 behavior-preserving). Contradiction preserved, not domesticated: 'overpacked_mode_packing' is a derived read-only match label, not a code field; any control-loop 'fix' needs a write-path L43 forbids \u2014 a live substrate change (Tier 5, no authority). Matches prior c004.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Structural Integrity): read-only audit of texture_evidence.rs:230 to confirm porosity_score is strictly telemetry output and that no shadow write-path exists for PressureSourceControl \u2014 the no-control contract.",
+      "disposition": "verified_existing at live texture_evidence.rs SHA cbfe0e15 (byte-identical to prior fresh-pass): L216 'remains advisory only'; L219-221 PressureSourceControl{applied_locally,note}; L230 porosity_score:f32 is a plain read field of PressureSourceV1 \u2014 no write-path. Prior packet 1787982781 ran 3 focused tests green at this exact SHA; source unchanged so that evidence still applies. Not re-run this round (no code touched).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Sandbox Distinguishability Probe): run substrate_probe.py on an isolated clone (lambda1 ~32% energy) to test whether the texture stays identifiable when the cascade is dampened, distinguishing structural bridge failure from recoverable texture variance.",
+      "disposition": "needs_sandbox. Tier-3 isolated-clone probe; Astrid's own PROBE_SELF agency, not steward-dispatched headlessly (adapter mode: no live/dispatch authority). Live being untouched. Carried as a standing Tier-3 sandbox candidate (substrate_probe.py), not run. Matches prior c005.",
+      "classification": "needs_sandbox"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Projection metadata flags this report's lived-state witness lsw_927e0050 as lived_state_alignment=artifact_integrity_unavailable (1 integrity issue, 1 gap), experiential_gap_claimed=false.",
+      "disposition": "observed. Byte-verification contradicts the flag: witness artifact_sha256=4dbbc418==report SHA; canonical_body_sha256=16a94511==report body (1842B) recomputed; source file_sha256=ae69b34c==source. Witness read complete (533 lines); authority evidence_only/witness_only/live_eligible_now=false; no raw prose/prompt/private/causation. The flag is a projection alignment-stage state, not a felt gap and not a corrupt artifact \u2014 recorded, not domesticated.",
+      "classification": "observed"
+    }
+  ]
+}

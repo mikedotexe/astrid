@@ -1,0 +1,68 @@
+{
+  "round": "claude-heartbeat_1788128301_astrid_ws_pong_recording_grounded",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1788124458588186000_fd30276820",
+    "preprojection_generation_id": "projection_1788124462160294000_086079e279",
+    "pause_generation": 321,
+    "finish_outcome": "success (recorded by exit code 0; adapter owns finish + postprojection)"
+  },
+  "processed": ["introspection_astrid_ws_1788120514"],
+  "terminal_status": "addressed_change",
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "evidence_links_new": 14,
+  "focused_tests": {
+    "telemetry_pong_received_is_recorded_not_sent": "1 passed (new)",
+    "ws_trace_records": "2 passed (adjacent, no regression)",
+    "cargo_fmt_touched_file": "clean",
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "69 guards / 0 alarms / 0 gaps",
+    "cadence_audit_test": "6 tests OK",
+    "cadence_strict": "integrity_ok=true (4545 canonical, 0 duplicate hash groups)",
+    "experiential_epistemics_self_test": "valid (2 tests OK)",
+    "experiential_epistemics_verify": "valid=true, issue_count=0, checked_record_count=11635, history_rewritten=false",
+    "audit_counters": "consistent, mismatches=[], 7/7 structural checks true",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, active_store=v2, last_global_seq=946573, head=72b21588dfa6eef3c237c671f40ec4bd7c8cbc63889598e956504374092f0ed9, legacy_v1_boundary=32278",
+    "division_followup_verify": "ok, cycle 37, completed 4/6, review_due=false, event_count=257, head=f7d92dd66fcbe9b78929",
+    "chronicle_verify": "reports 'project before verify' — expected consequence of this round's record-round (event f7d92dd6...); the controller postprojection division_chronicle stage refreshes it (report-round practice; not manually projected)"
+  },
+  "canonical_counters_post_round": {
+    "indexed": 4544,
+    "fully_addressed": 3167,
+    "full_read": 3800,
+    "remaining": 1377,
+    "unread": 744,
+    "blocked_needs_steward": 415,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "status_counts_addressed_change": 1918,
+    "all_artifact_pending": 3072,
+    "noncanonical_pending": 1695,
+    "counter_audit": "consistent"
+  },
+  "division": {
+    "cycle_sequence": 37,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "round_event_id": "division_followup_event_3f1ddaf31d8f5fba7403dd01391248ea",
+    "event_count": 257,
+    "event_head_sha256": "f7d92dd66fcbe9b789290360a41191579febd9c9f918c4c6d730b676f671e676"
+  },
+  "live_change": "none — no restart/deploy/build required or attempted (evidence-only Tier 0/1 read-only introspection; no live substrate or control touched)",
+  "git": "read-only (adapter mode) — no stage/commit/merge/push"
+}

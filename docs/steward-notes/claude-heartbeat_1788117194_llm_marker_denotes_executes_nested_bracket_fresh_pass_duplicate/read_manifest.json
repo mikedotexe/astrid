@@ -1,0 +1,24 @@
+{
+  "round": "claude-heartbeat_1788117194_llm_marker_denotes_executes_nested_bracket_fresh_pass_duplicate",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788110646",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788110646.txt",
+      "sha256": "28baaa34bb539e4812d08dd145365b95746f055c239930ff222e81b3fe551991",
+      "bytes": 3393,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_3757758d20072596c52099efbe122b73dc068784d32d36e24991d85e1fe3c69a",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_3757758d20072596c52099efbe122b73dc068784d32d36e24991d85e1fe3c69a.json",
+      "sha256": "60a23af2233129441e9befd3b2483967ca76dcbf72714498093feccd539cc186",
+      "bytes": 23937,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

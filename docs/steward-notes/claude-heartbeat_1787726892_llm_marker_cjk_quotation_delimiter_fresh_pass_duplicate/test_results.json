@@ -1,0 +1,23 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml control_marker",
+      "result": "ok",
+      "lib_unit_summary": "72 passed; 0 failed; 0 ignored; 1822 filtered out",
+      "evidence_tests_confirmed": [
+        "control_marker_cleanup_preserves_quoted_exact_token_reference",
+        "control_marker_cleanup_preserves_non_ascii_matching_quote_pairs",
+        "control_marker_cleanup_preserves_quoted_exact_tokens_across_whitespace",
+        "control_marker_cleanup_preserves_nested_fullwidth_cjk_reference_stack",
+        "control_marker_cleanup_uses_only_the_first_finite_relation_word",
+        "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition",
+        "control_marker_cleanup_preserves_proxy_relation_phrase"
+      ],
+      "purpose": "Duplicate-standard current verification: prove the earlier evidence still applies at source SHA 902a0358 (unchanged working copy)."
+    }
+  ],
+  "source_change": false,
+  "test_change": false,
+  "note": "Verified duplicate: no source or test edit. Focused suite run only to confirm the cited regressions still pass at the current SHA. Integrity/stewardship suites recorded in verification_receipt.json."
+}

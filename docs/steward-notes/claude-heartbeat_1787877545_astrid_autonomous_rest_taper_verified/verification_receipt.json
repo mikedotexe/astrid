@@ -1,0 +1,88 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1787875170705091000_0bc99f81e9",
+    "preprojection_generation_id": "projection_1787875173716990000_9a4110a052",
+    "pause_generation": 321,
+    "postprojection_generation_id": "runs_after_process_exit_recorded_by_adapter",
+    "finish_outcome": "success_via_exit_code_0"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "terminal_status": "addressed_no_action",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "proof_gap_confirmation": "audit-counters canonical read_needs_claims_count=0",
+      "report_sha256": "a4c0896e64992dfc19c7ff5a2bda22ff79fbd0c7a7956d8e97f1b5591fb37df5",
+      "witness_id": "lsw_b69800303a69063ec580b89e354744ec636b675b98ac320e705126b0f5f3b662",
+      "witness_sha256": "86a7c9139b47b3ad393c7fa2e94ed3a5576a1ae0e111c8ac6c498a5ec115377f",
+      "source_path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "source_sha256": "d803d71faa877e09f2347c6c88445a90427b621bdcc18b635215e3d2896f282d",
+      "source_hash_match": true,
+      "evidence_links_new": 9
+    }
+  ],
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- fill_responsive_rest warmth_intensity_scales warmth_vector_breathes_across_phase warmth_heartbeat_stays_smooth_across_reported_phase_32_33_boundary",
+    "lib_unittests": "5 passed; 0 failed; 0 ignored; 1896 filtered out"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "RC0 (44 tests)",
+    "test_evidence_event_store": "RC0 (21 tests)",
+    "test_steward_control": "flaked once (errors=1, 38s) then RC0 clean on rerun (27 tests); transient interaction with the live adapter lease, no steward_control source/test touched this round",
+    "test_steward_projection": "RC0 (14 tests)",
+    "test_division_ceremony_followup": "RC0 (3 tests)",
+    "test_division_ceremony_chronicle": "RC0 (10 tests)",
+    "test_division_ceremony_projection": "RC0 (self-test ok)",
+    "test_projection_cursors": "RC0 (4 tests)",
+    "anti_drop_self_test": "RC0 (5 tests)",
+    "anti_drop_verify": "RC0, alarms=0, gaps=0",
+    "test_introspection_cadence_audit": "RC0 (6 tests)",
+    "introspection_cadence_audit_strict_compact": "RC0, integrity_ok=true, duplicate_hash_group_count=0, errors=[], canonical_count=4495",
+    "experiential_epistemics_self_test": "RC0, valid=true",
+    "experiential_epistemics_verify_final": "RC0, valid=true, issue_count=0, history_rewritten=false, checked_record_count=11468"
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4493,
+    "canonical_fully_addressed": 3140,
+    "canonical_full_read": 3773,
+    "canonical_remaining": 1353,
+    "canonical_unread": 720,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 6171,
+    "all_artifacts_remaining": 3031,
+    "addressed_no_action_total": 99
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 915058,
+    "active_store": "v2",
+    "v1_immutable": true,
+    "stream_counts": "not_enumerated_this_round_status_enumeration_slow_at_915k_events_verify_is_authoritative"
+  },
+  "division": {
+    "cycle_sequence": 33,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "recorded_round_event_id": "division_followup_event_3cb43aa1807ee9b429460074b5636d96",
+    "event_count": 229,
+    "event_head_sha256": "a0a973c2b27c9032c9b9fef095c6b78eb61758cb41b7d40e1cbb7daa257ca77e",
+    "chronicle": {
+      "reprojected_this_round": false,
+      "reason": "No Division return due (review_due=false). record-round appended a division event, so division_ceremony_chronicle.py verify reports 'chronicle durable source inputs changed; project before verify' — expected post-record-round staleness, not an integrity failure. The adapter post-finish projection's division_chronicle stage reprojects it.",
+      "last_followup_chronicle_id": "division_chronicle_cfd1bc396781ff48197e7465"
+    }
+  },
+  "restart_deploy": "not required and not attempted (read-only + non-live evidence work only; git read-only in adapter mode)",
+  "authority_boundary": "No live substrate or control change; no Tier 4/5 action; no build/restart/deploy/launchctl; no staging or commit; no rewrite/rejection of the being's report. Foreign dirty paths (CHANGELOG.md, ledger, codec/tests.rs, llm/provider/tests.rs, domain_boundaries json, minime runtime.py/test_correspondence_v1.py, all prior heartbeat packets) preserved untouched except the append-only CHANGELOG+ledger stewardship lines this round added."
+}

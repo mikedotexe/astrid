@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144 preserves marker in remainder only when reference_syntax.is_some() (L124-131); reference_syntax L49-60 = delimiter-syntax OR followed_by_explicit_exact_token_relation L64-87 (allowlist incl. appears L68, represents L82, denotes L71, is L76); non-marker bytes copied byte-exact L134-139."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace + per-chunk trim of non-alphanumeric (except _) + find first non-empty + lowercase + unwrap_or_default(''). Leading punctuation collapses per-chunk; empty-default only when no alphanumeric word follows."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Snag grounded (passing): control_marker_cleanup_first_word_after_skips_leading_punctuation_transition (L2723), scan_known_model_control_markers_grounds_first_word_after_non_breaking_space (L3408), _internal_soft_hyphen (L3461), _punctuation_boundary empty-default (L3366), control_marker_cleanup_does_not_skip_adverb_before_relation_word (L2669)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "C3 already exists verbatim + passes: control_marker_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate (L2574-2584) uses 'The {prefix} <end_of_turn> denotes the primary key.' asserting stripped==text, removed_total==0, preserved==1."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229 counts consecutive valid delimiter pairs (zips reversed-before with after non-whitespace chars) => real nesting depth, bounded to MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151); not just outermost."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "C4 already covered + passes: reports_depth_for_repeated_parentheses (((<end_of_turn>)) depth 2, L2271), reports_depth_across_unicode_whitespace ([ [<end_of_turn>] ] depth 2, L2256), bounds_homogeneous_square_bracket_stack_beyond_max_depth ([[[[[<end_of_turn>]]]]] depth->4, L2300)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695-1048 never substitutes a scan remainder into output; sanitize_model_control_markers runs only in the quality gate (is_valid_dialogue_output L558, has_one_nonempty_final_next_action L634) to MEASURE shape; returned value L997-998 is the raw model text unmodified. Remainder = validation artifact within this file."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1787902564_llm_marker_scan_fresh_pass_covered/no_action_introspection_astrid_llm_1787899208.md",
+      "note": "Evidence-backed no-action artifact: all claims already grounded by exact source + passing tests; c005 answered as a factual read-only clarification; right to reopen preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry: exact-source verification of dialogue_runtime.rs marker scanner at SHA 902a0358; no code/test change; C5 clarified."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787899208",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Verified no-change row (2026-08-28): fresh-pass re-read; proposed tests C3/C4 already exist and pass; snag C2 already grounded."
+    }
+  ]
+}

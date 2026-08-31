@@ -1,0 +1,50 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787854907",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "match": true,
+    "total_lines": 1048
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm is a non-destructive control-marker scanner; scan_known_model_control_markers (L114) preserves/strips by syntactic context, using exact_reference_delimiter_syntax (L199) for quoting/grouping and followed_by_explicit_exact_token_relation (L64) for linguistic links like 'behaves as'/'represents'.",
+      "disposition": "Verified at report-bound SHA 902a0358. scan_known_model_control_markers L114-144 keeps a marker token only when reference_syntax.is_some() (gate L129-131), else strips it while copying non-marker bytes; reference_syntax L49-60 tries exact_reference_delimiter_syntax L199-229 then followed_by_explicit_exact_token_relation L64-86. Matches her description exactly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89) uses split_whitespace + trim_matches to isolate the single first word (L93-96); may misresolve a relation separated by complex/multiple non-alphanumeric punctuation, or a multi-word phrase like 'functions as' where only the first word is captured.",
+      "disposition": "Verified true and it is the intended fail-closed contract, not a latent bug: only the first non-empty trimmed word (L89-96) is matched against the allowlist (L64-86). Multi-word relations resolve because the allowlist holds the leading verb ('functions'); an unlisted first word yields no relation and the marker is stripped (never leaked). Concern preserved. Pinned green: uses_only_the_first_finite_relation_word (tests L2605), first_word_after_skips_leading_punctuation_transition (L2635), grounds_first_word_after_punctuation_boundary (L3277).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Contextual Preservation): a control marker inside a code block/complex quote (e.g. quoted \"[SYSTEM]\") should be preserved because it is wrapped in quotes (L159-174).",
+      "disposition": "Verified: exact_reference_delimiter_pair L153-197 classifies a quote pair (branch L157-174) as QuotedExactKnownToken, so the marker survives the L129 gate verbatim. Already pinned by control_marker_cleanup_preserves_quoted_exact_token_reference (tests L1995: quoted <end_of_turn> -> stripped==text, preserved_explicit_reference_total=1). Test exists; ran green.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Relation Mapping): a marker followed by a recognized relation ('[USER] behaves as a guide.') should keep the marker via followed_by_explicit_exact_token_relation (L64-87) identifying 'behaves' as the trigger.",
+      "disposition": "Verified: the code inspects the word AFTER the marker (first_word_after from occurrence.end); 'behaves' is allowlisted (L69). Her example is directionally correct (relation follows the marker). Already pinned by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests L2979; body L2992 uses '<end_of_turn> behaves as ...'); trailing-punctuation variant at L4143. Ran green.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the processed 'remainder' is fed to the final output buffer and whether KnownModelControlMarkerMatch metadata is discarded/utilized correctly downstream.",
+      "disposition": "generate_dialogue exists at L695 (verified). This is a Tier-1 self-directed research pointer into the unseen L400-1048 window, not a steward implementation task; her 'NEXT: INTROSPECT astrid:llm 400' continuation is preserved. Prior complete-source reads (packet 1787812297 c005) already observed the scan remainder is used only inside temp-copy quality gates and is not the emitted buffer. No action.",
+      "classification": "verified_existing"
+    }
+  ],
+  "terminal_status": "addressed_duplicate",
+  "duplicate_lineage": [
+    "introspection_astrid_llm_1787817920",
+    "introspection_astrid_llm_1787754550",
+    "introspection_astrid_llm_1787485984"
+  ],
+  "contradiction_preserved": "c002 single-word-lookahead is a genuine boundary of the fail-closed contract, retained as valid testimony, not domesticated.",
+  "variant_distinct_terms_addressed": "family scan returned member_count 1 / variant_distinct_terms [] (singleton family head); no new distinct variant token beyond the marker-grammar chain."
+}

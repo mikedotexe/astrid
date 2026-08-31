@@ -1,0 +1,22 @@
+{
+  "round": "claude-heartbeat_1787794806_llm_marker_relation_delimiter_fresh_pass_duplicate",
+  "source_or_test_change_this_round": false,
+  "rationale": "Terminal status addressed_duplicate: every claim already grounded by committed regressions at the report-bound source SHA 902a0358. No new source/test written. The focused cluster was re-run as verification evidence that the cited regressions currently pass and the shared dirty tree compiles.",
+  "focused_marker_cluster": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- scan_known_model_control_markers exact_reference_delimiter_syntax first_word_after control_marker_cleanup_preserves_relation control_marker_cleanup_fails_closed",
+    "lib_result": "ok. 15 passed; 0 failed; 0 ignored; 0 measured; 1883 filtered out",
+    "exit_code": 0,
+    "compiled": true,
+    "cited_regressions_confirmed_green": [
+      "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+      "scan_known_model_control_markers_quoted_context_precedes_following_relation_verb",
+      "control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs",
+      "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+      "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space",
+      "scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen",
+      "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary",
+      "control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows"
+    ]
+  },
+  "integrity_suites": "recorded in verification_receipt.json (run after all durable evidence writes)"
+}

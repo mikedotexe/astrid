@@ -1,0 +1,49 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "role": "report_bound_source",
+      "binding_match": true,
+      "key_intervals": {
+        "ExactKnownMarkerReferenceSyntax_struct": "36-46",
+        "reference_syntax_dispatch": "49-60",
+        "followed_by_explicit_exact_token_relation_allowlist": "64-87",
+        "first_word_after": "89-96",
+        "scan_known_model_control_markers": "114-144",
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": "151",
+        "exact_reference_delimiter_pair_quote_and_group": "153-197",
+        "exact_reference_delimiter_syntax_depth_count": "199-229",
+        "sanitize_model_control_markers_with_report": "352-517",
+        "is_valid_dialogue_output_quality_gate_uses_sanitize": "556-631",
+        "has_one_nonempty_final_next_action_uses_sanitize": "633-667",
+        "generate_dialogue": "695-1048",
+        "generate_dialogue_returns_raw_text_after_validation": "997-998"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "2c4afaaf1d85aa81013ff1dd2a8709681fed34878efcbc5ff9d4e6c27dc11e1e",
+      "total_lines": 4372,
+      "total_bytes": 190783,
+      "read_scope": "coverage_inspection_of_cited_intervals_only",
+      "role": "existing_test_coverage_continuity_evidence_read_only",
+      "note": "Dirty/foreign accumulated stewardship edits; NOT modified this round. Inspected intervals: 2100-2130, 2255-2344, 2560-2779, 2870-2960, plus targeted greps for first_word_after / denotes / delimiter_depth / nested / empty-default.",
+      "cited_tests": {
+        "control_marker_cleanup_preserves_exact_token_relation_without_preceding_vocabulary_gate": "2574-2584",
+        "control_marker_cleanup_reports_depth_for_repeated_parentheses": "2271-2285",
+        "control_marker_cleanup_reports_depth_across_unicode_whitespace": "2256-2269",
+        "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth": "2300-2338",
+        "control_marker_cleanup_first_word_after_skips_leading_punctuation_transition": "2723-2768",
+        "control_marker_cleanup_does_not_skip_adverb_before_relation_word": "2669-2721",
+        "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary": "2366-2393",
+        "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space": "3408-3433",
+        "scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen": "3461-3489"
+      }
+    }
+  ]
+}

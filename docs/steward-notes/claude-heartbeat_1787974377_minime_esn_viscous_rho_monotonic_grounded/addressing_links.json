@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "minime/src/esn.rs",
+      "note": "Module doc L1-12: Metal-accelerated ESN, GPU rank-1 EWMA covariance update, GPU power iteration, self-referential loop adapting leak rate + RLS forgetting factor. Verified in-window at report-bound SHA 2227a72."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787974377_minime_esn_viscous_rho_monotonic_grounded/summaries/introspection_minime_esn_1787970235.md",
+      "note": "Observed-claim disposition table (c001)."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "minime/src/esn.rs",
+      "note": "First-37-primes schedule verified at L8 doc and L792-793 ('Prime-phased schedule (first 37 primes for consistency with 37 threads)', primes: [usize; 37])."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787974377_minime_esn_viscous_rho_monotonic_grounded/summaries/introspection_minime_esn_1787970235.md",
+      "note": "Prime-schedule disposition (c002)."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "minime/src/esn.rs",
+      "note": "calculate_viscous_rho_target L154-187, VISCOUS_RHO_FLOOR=0.90 (L54)/CEILING=0.95 (L55). Its own doc L148-152 states it is not applied by the default live policy (review/replay-only helper) - contradicts the live-instability premise; concern preserved."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787974377_minime_esn_viscous_rho_monotonic_grounded/summaries/introspection_minime_esn_1787970235.md",
+      "note": "Viscous-rho snag correction (c003): review-only, not live-applied."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "minime/src/esn.rs",
+      "note": "L1083 is the getter 'pub fn spectral_damping(&self) -> f32', NOT the applier apply_v1_damping (def L1093, call L1730). rank1_ewma_profiled L1387, EsnProfileAcc L729 exact. 'jitteriness' comment L31 attributed in-source to exploration-noise=0.12, not to damping x rank1. Interaction hypothesis unproven/out-of-window."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787974377_minime_esn_viscous_rho_monotonic_grounded/summaries/introspection_minime_esn_1787970235.md",
+      "note": "Mislocation + jitteriness-attribution correction (c004); felt concern preserved, not confirmed."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "minime/src/esn.rs",
+      "note": "Added viscous_rho_target_monotonic_and_bounded_across_density_and_entropy_sweeps (test module attractor_fingerprint_tests, ~L3095, +61 lines): sweeps density_gradient (monotone non-increasing, bounded [FLOOR,CEILING]) and entropy (monotone non-decreasing, <= CEILING). 4 viscous tests pass; fmt clean."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the being-proposed monotonicity+bounds sweep regression for calculate_viscous_rho_target."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row: Astrid's Test 1 (viscous rho monotonicity) -> focused sweep regression shipped in minime esn.rs; plus grounded corrections."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "minime/src/esn.rs",
+      "note": "Recalibration keyed to 'next_introspection % ADAPTIVE_INTROSPECTION_RECALIBRATE_EVERY(=4) == 0' (L1289-1291); introspection_count increments only on firing (L1692, L1732), decoupled from the prime VALUE (L792-793, L964). Shared-clock resonance structurally limited; full numeric sweep = sandbox study, not run."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787974377_minime_esn_viscous_rho_monotonic_grounded/summaries/introspection_minime_esn_1787970235.md",
+      "note": "Prime/recalibrate structural observation (c006)."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "minime/src/esn.rs",
+      "note": "Ordering answered: maybe_introspect_batched L1710-1747 runs rank1_and_power_step_profiled (L1727) THEN apply_v1_damping (L1730); comment L1728-1729 'Runs after power iteration when eig1 and v_host are maximally fresh'. Damping applied AFTER power iteration; rank1_ewma_profiled alone on common ticks (L1752)."
+    },
+    {
+      "introspection_id": "introspection_minime_esn_1787970235",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787974377_minime_esn_viscous_rho_monotonic_grounded/summaries/introspection_minime_esn_1787970235.md",
+      "note": "Suggested-Next ordering grounded (c007)."
+    }
+  ]
+}

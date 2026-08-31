@@ -1,0 +1,21 @@
+{
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": "exact (working_copy == report_bound == witness.file_sha256)",
+      "read_scope": "Lines 40-249 read in full this round (covers followed_by_explicit_exact_token_relation L64-86, first_word_after L89-96, longest_exact_known_model_control_marker_at L97-112, scan_known_model_control_markers L114-144, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229). Complete file 1-1048 available; full-source verification for this SHA reused from prior same-SHA rounds (claude-heartbeat_1787812297 and earlier marker-scanner family packets)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "45ec49895bf01732d05ed4205ddd1292385e9fcc4d0a28507709ee2919eb321e",
+      "total_lines": 4168,
+      "total_bytes": 179822,
+      "read_scope": "Test-index grep across the file; full read of L2540-2679 and L2979-3108 covering the report's Test 1, Test 2, and snag pins. NOTE: tests.rs carries prior-round uncommitted edits (foreign/mixed) and was READ ONLY this round — not modified.",
+      "dirty_in_tree": true
+    }
+  ]
+}

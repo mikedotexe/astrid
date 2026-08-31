@@ -1,0 +1,80 @@
+{
+  "round": "claude-heartbeat_1787820759_llm_marker_first_word_relation_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "mode": "headless controller-held subprocess lease (adapter owns lease/heartbeats; git read-only; no deploy/launchctl)",
+  "controller": {
+    "run_id": "run_1787818307086550000_b8e13fe81f",
+    "preprojection_generation_id": "projection_1787818309901634000_9f4834072a",
+    "preprojection_status": "passed (27 steps, authority_scan_passed)",
+    "pause_generation": 321,
+    "postprojection": "runs after process exit (adapter mode) — not observed in-session"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1787817920",
+    "report_sha256": "512d7d2bfa8884681e01613ad2790d286104735ed4abbd60dcbfeee7cf6995a0",
+    "witness_id": "lsw_d57c4182247cd7fc2fad3821665ed4f5ee4187e0702e91bf6832b637d520322d",
+    "witness_sha256": "74fcb13f97cadab83e1ed17abcfb91dba3c938b3b89ec2d2d4e7ddea1647e608",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_binding": "working_copy == report_bound == witness.file_sha256",
+    "close_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": []
+  },
+  "addressing_writes": {
+    "record_read": "write=true, 5 claims, proof_missing_claims=[], 34s",
+    "link_evidence_batch": "new_link_count=7, existing=0, write=true, 38s",
+    "close": "status=addressed_duplicate, fully_addressed=true, proof_missing_claims=[], 35s"
+  },
+  "tests": {
+    "marker_scanner_focused": "67 passed, 0 failed at source SHA 902a0358 (control_marker_cleanup + scan_known_model_control_markers + exact_reference_delimiter + followed_by_explicit_exact_token_relation + known_model_control_markers_have_no_proper_prefix_shadow)",
+    "git_diff_check": "clean",
+    "new_tests_added": 0,
+    "rust_source_changed": false
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 tests OK",
+    "evidence_store_test": "21 tests OK",
+    "steward_control_test": "27 tests OK",
+    "steward_projection_test": "14 tests OK",
+    "division_followup_test": "3 tests OK",
+    "division_chronicle_test": "10 tests OK",
+    "division_projection_test": "OK",
+    "projection_cursors_test": "4 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "69 guards, 0 alarms, 0 gaps",
+    "cadence_test": "6 tests OK",
+    "cadence_strict_audit": "integrity_ok=true, errors=[], read_only=true",
+    "experiential_epistemics_self_test": "exit 0",
+    "experiential_epistemics_verify": "valid=true, issue_count=0",
+    "audit_counters": "consistent, mismatches=[], all checks.* true",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=908044, head=3553bece..., errors=[] (539s)",
+    "division_followup_verify": "ok=true, review_due=false, 4/6, remaining 2",
+    "division_chronicle_verify": "durable source inputs changed; project before verify (BENIGN — expected consequence of record-round; division_chronicle stage reprojects in postprojection; not a durable-integrity failure; not manually reprojected in adapter mode)"
+  },
+  "counters": {
+    "canonical_indexed": 4488,
+    "canonical_fully_addressed": 3134,
+    "canonical_full_read": 3767,
+    "canonical_remaining": 1354,
+    "canonical_unread": 721,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "addressed_duplicate_total": 1128,
+    "all_artifact_pending": 3031,
+    "noncanonical_pending": 1677,
+    "counter_audit_status": "consistent"
+  },
+  "division": {
+    "cycle_sequence": 32,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_366e5fa302eb5395bcdb468570100d8a",
+    "event_count": 222,
+    "event_head_sha256": "a2b7cc1dca8223510192aa025df5552ca5cdf4a45b9138428308244d5b01b681"
+  },
+  "authority_boundary": "Evidence-only duplicate close. No source/test/config change. No live substrate or control change. No restart or deploy required or attempted. Git read-only (no stage/commit). Standing Tier-5 esn waits untouched. Report's felt concern preserved as valid testimony, not domesticated.",
+  "exit_intent": "exit 0 — complete round (report closed, integrity suites run, Division round recorded, packet + verification_receipt written)"
+}

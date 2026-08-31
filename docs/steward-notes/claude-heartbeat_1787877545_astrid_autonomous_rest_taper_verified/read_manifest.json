@@ -1,0 +1,23 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_autonomous_1787816493",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_autonomous_1787816493.txt",
+      "sha256": "a4c0896e64992dfc19c7ff5a2bda22ff79fbd0c7a7956d8e97f1b5591fb37df5",
+      "bytes": 3680,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_b69800303a69063ec580b89e354744ec636b675b98ac320e705126b0f5f3b662",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b69800303a69063ec580b89e354744ec636b675b98ac320e705126b0f5f3b662.json",
+      "sha256": "86a7c9139b47b3ad393c7fa2e94ed3a5576a1ae0e111c8ac6c498a5ec115377f",
+      "bytes": 23966,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "reader": "claude-heartbeat",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete (1-1048)",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "hash_match": "exact",
+      "dirty": false,
+      "note": "Report-bound source verified byte-identical to the working copy; complete file read. Report window was lines 1-400 but declared multi_window_complete; the cited functions (first_word_after L89, followed_by_explicit_exact_token_relation L64, scan_known_model_control_markers L114, exact_reference_delimiter_syntax L199, MAX_EXACT_REFERENCE_DELIMITER_DEPTH L151, longest_exact_known_model_control_marker_at L97) all fall within the read window."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "total_lines": 1417,
+      "total_bytes": 49506,
+      "read_scope": "lines 155-204 (KNOWN_MODEL_CONTROL_MARKERS constant L159-180 + strip_trailing helper)",
+      "dirty": false,
+      "note": "Adjacent evidence for the report's Suggested Next (the exact marker list, referenced from dialogue_runtime.rs L102). 18 exact byte sequences; none is a proper byte-prefix of another."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "2c4afaaf1d85aa81013ff1dd2a8709681fed34878efcbc5ff9d4e6c27dc11e1e",
+      "total_lines": 4372,
+      "total_bytes": 190783,
+      "read_scope": "intervals 2095-2354, 2470-2600, 2560-2770, 3095-3175, 3180-3210, 3276-3315 plus targeted greps for represents / bracket / precedence / delimiter coverage",
+      "dirty": true,
+      "note": "Evidence file holding the existing regressions that ground this report's proposed tests. Git status M (foreign accumulated stewardship edits from prior flywheel rounds) — preserved untouched; no edit made by this round."
+    }
+  ]
+}

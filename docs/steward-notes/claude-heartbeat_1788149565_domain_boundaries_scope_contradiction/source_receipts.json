@@ -1,0 +1,45 @@
+{
+  "round": "claude-heartbeat_1788149565_domain_boundaries_scope_contradiction",
+  "sources": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "repository_relative_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "owner": "astrid",
+      "sha256_working_copy": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "sha256_report_bound": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "sha256_witness_snapshot": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "hash_match": true,
+      "total_lines": 89,
+      "total_bytes": 5022,
+      "read_scope": "complete_file lines 1-89",
+      "included_intervals": "1-89",
+      "uncovered_intervals": "none",
+      "structural_facts": {
+        "document_kind": "code_module_ownership_architecture_boundary_doc",
+        "line_6_disclaimer": "extraction changes neither pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, nor live authority",
+        "sections": ["Stable Facades", "Provenance Ownership", "Shadow Cartography Ownership", "Cohesion Exceptions", "Verification"],
+        "verification_gate": "scripts/domain_boundary_audit.py verify (+ compile-fail, telemetry/parity, prompt-distinction tests)",
+        "spectral_permission_terms_present": false,
+        "terms_absent_from_source": ["Territory", "Permeability", "Friction", "permeability_coefficient", "Shadow-v3", "DYNAMIC_RESONANCE_RECOVERY", "semantic_trickle_min"]
+      }
+    }
+  ],
+  "corroborating_code_evidence": {
+    "note": "Read-only grep of capsules/spectral-bridge/src to ground-truth report snags/suggestions against real symbols. Not report-bound source; evidence for claim dispositions only.",
+    "regulator_participation": {
+      "src_files": 3,
+      "files": ["codec/feedback.rs", "types/schema.rs", "types/schema/regulator_participation.rs"]
+    },
+    "runtime_path_not_exported_in_telemetry": {
+      "src_files": 1,
+      "exact_site": "types/schema/regulator_participation.rs:59 (None => \"runtime_path_not_exported_in_telemetry\"), also :251",
+      "meaning": "telemetry schema emits an explicit not-exported sentinel when the regulator runtime path value is None"
+    },
+    "semantic_trickle": {"src_files": 31, "meaning": "real admission concept; 0.000 idle trickle plausible"},
+    "fissure_tendency": {"src_files": 8, "meaning": "source_ref backing astrid_shadow.dispersal_potential (witness value 0.0721)"},
+    "permeability_coefficient": {"src_files": 0, "meaning": "no tunable coefficient exists"},
+    "stable_core_permeability_review_v1": {"present": true, "meaning": "read-only permeability review; test stable_core_permeability_review_names_sieve_leakage_without_control asserts it names leakage WITHOUT control"},
+    "shadow_v3": {"present": true, "meaning": "astrid_shadow_v3.json snapshot schema filename, not a permeability target"}
+  }
+}

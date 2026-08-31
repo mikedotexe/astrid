@@ -1,0 +1,32 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "sources": [
+    {
+      "path": "minime/src/esn.rs",
+      "repo": "minime",
+      "report_bound_sha256": "2227a7256ba98219be683db47c4f49afe0477c0ae5d17cf9226613b20f6b036c",
+      "working_copy_sha256_at_read": "2227a7256ba98219be683db47c4f49afe0477c0ae5d17cf9226613b20f6b036c",
+      "matched_report_binding_before_edit": true,
+      "total_lines": 3222,
+      "total_bytes": 121161,
+      "read_scope": [
+        {"interval": "1-70", "purpose": "prime-schedule doc L8-9, jitteriness comment L30-32, RECALIBRATE_EVERY L44, VISCOUS_RHO_FLOOR/CEILING L54-55, module overview"},
+        {"interval": "148-202", "purpose": "calculate_viscous_rho_target definition + review-only doc L148-152"},
+        {"interval": "1086-1130", "purpose": "spectral_damping getter L1083 vs apply_v1_damping application L1093+"},
+        {"interval": "1680-1754", "purpose": "maybe_introspect/maybe_introspect_batched tick: power-iter then apply_v1_damping ordering (L1727/L1730), rank1_ewma_profiled on common ticks L1752"},
+        {"interval": "3030-3099", "purpose": "existing viscous_rho_target test coverage + test module imports"}
+      ],
+      "grep_verified_symbol_lines": {
+        "struct EsnProfileAcc": 729,
+        "fn rank1_ewma_profiled": 1387,
+        "pub fn spectral_damping (getter)": 1083,
+        "fn apply_v1_damping (def)": 1093,
+        "apply_v1_damping (call)": 1730,
+        "power_iter_profiled (call in tick)": 1690,
+        "recalibrate counter (introspection_count % RECALIBRATE_EVERY)": 1291
+      },
+      "post_edit_sha256": "98e8fe727e9908e8939d5317d23e954425748edb45b2a737e5624a42166dfe92",
+      "post_edit_note": "Working copy modified only by the additive focused test at L3095 (+61 lines). Source conclusions were fixed against the report-bound SHA prior to editing."
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/codec/projection.rs",
+    "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "total_lines": 1351,
+    "total_bytes": 53462,
+    "report_bound_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "hash_match": true,
+    "read_scope": "report window 1-400; steward read 1-120 (all constants), 170-180 (static embedding_projection_matrix), and confirmed project_embedding_dynamic_epoch symbol at L759 (in the report's uncovered 401-1351 interval)"
+  },
+  "adjacent_evidence_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "sha256": "bd0e682d7cb6fe611225e72a9391702fdabe37cd74d7ad49a58f129460c9f447",
+      "total_lines": 720,
+      "total_bytes": 33992,
+      "read_scope": "180-360 — apply_spectral_feedback_inner_with_gate: vibrancy gate, tail_ceiling clamp loop (307-318), grounds c002 and c005"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structure.rs",
+      "sha256": "757d4a3578e6be3fb5890a2d3d28fc3e809dcaf29087fcfcbc7a25969236f719",
+      "total_lines": 1466,
+      "total_bytes": 71413,
+      "read_scope": "1330-1466 — craft_warmth_vector (native 48D build, writes only dims <=31) and blend_warmth; grounds c004"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "sha256": "7ff0afba01a47691517340c01acfcf27cda4a950fa8c34b3d6b9936d04bc53e0",
+      "total_lines": 860,
+      "total_bytes": 31809,
+      "read_scope": "560-693 — legacy_warmth_mapping_v1 (warmth_orphaned=false, emotional_layer_range=(24,31)); grounds c004"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec_gain.rs",
+      "sha256": "37092dc71ff2e08b257869f54ead8bdd6a1eb9a13741151a314a96deda0f218a",
+      "total_lines": 220,
+      "total_bytes": 9741,
+      "read_scope": "19 — DEFAULT_SEMANTIC_GAIN=2.0, the constant the new test's noise ceiling is derived from"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/tests.rs",
+      "sha256": "7426930d58da0770bd9a7dcc421c559aeb735db395dbf0ad3c41b6e08dc6c99b",
+      "total_lines": 5274,
+      "total_bytes": 214843,
+      "read_scope": "cited existing tests (2861-2879, 2940, 2961-3037, 3055-3128, 3615-3649, 5072-5176) and the newly added regression; hash is post-edit current working copy"
+    }
+  ]
+}

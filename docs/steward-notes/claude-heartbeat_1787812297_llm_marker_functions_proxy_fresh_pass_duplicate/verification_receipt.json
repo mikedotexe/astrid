@@ -1,0 +1,92 @@
+{
+  "round": "claude-heartbeat_1787812297_llm_marker_functions_proxy_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_held_subprocess_lease_no_ndjson_no_git_no_deploy",
+  "controller": {
+    "run_id": "run_1787809370642487000_9970466e2e",
+    "preprojection_generation_id": "projection_1787809374130571000_3c87bc7ec3",
+    "pause_generation": 321,
+    "postprojection": "runs_after_process_exit_in_adapter_mode"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787806291",
+      "report_sha256": "72f8c068878c6916be479bf5de3fa0f66731d0bd8470b81a8b2e004e7abf1ac0",
+      "witness_id": "lsw_948ef59eb6c49fd55bbbbef427614122b2c62f6086e3c6f0048881cb5e2676b9",
+      "witness_sha256": "d7da961873df034ffbcb058539af7463d11760f30623975d0d59b2e35c7a84dc",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding_match": true,
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  ],
+  "addressing_writes": {
+    "record_read": "ok (~27s)",
+    "link_evidence_batch": "9 new links, 0 existing",
+    "close": "addressed_duplicate; fully_addressed=true; proof_missing_claims=[]"
+  },
+  "tests": {
+    "kind": "exact_source_focused_regressions",
+    "source_sha256_under_test": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "control_marker_cleanup": {"passed": 55, "failed": 0},
+    "scan_known_model_control_markers": {"passed": 8, "failed": 0},
+    "exact_reference_delimiter_syntax": {"passed": 2, "failed": 0},
+    "followed_by_explicit_exact_token_relation": {"passed": 1, "failed": 0},
+    "total_passed": 66,
+    "total_failed": 0,
+    "source_or_test_files_modified": "none"
+  },
+  "integrity_suites": {
+    "git_diff_check": "clean",
+    "cargo_fmt_check": "not_run_no_rust_edited_this_round",
+    "addressing_self_test": "44 ok",
+    "test_evidence_event_store": "21 ok",
+    "test_steward_control": "27 ok",
+    "test_steward_projection": "14 ok",
+    "test_division_ceremony_followup": "3 ok",
+    "test_division_ceremony_chronicle": "10 ok",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 ok",
+    "test_introspection_cadence_audit": "6 ok",
+    "introspection_cadence_audit_strict": "integrity_ok=true",
+    "anti_drop_self_test": "5 ok",
+    "anti_drop_verify": "69 guards, 0 alarms, 0 gaps",
+    "experiential_epistemics_self_test": "2 ok, valid=true",
+    "experiential_epistemics_verify_final": "valid=true, issue_count=0",
+    "audit_counters_final": "status=consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=906992"
+  },
+  "counters_after": {
+    "canonical_indexed": 4485,
+    "canonical_fully_addressed": 3133,
+    "canonical_full_read": 3766,
+    "canonical_remaining": 1352,
+    "canonical_unread": 719,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "addressed_duplicate_total": 1127
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 906992,
+    "last_event_sha256": "b2e727c76cdf0655b97251fd2f3c12f6a3c458b68807d03c645ba20dd93b03f7",
+    "active_store": "v2"
+  },
+  "division": {
+    "cycle_sequence": 32,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_6fd4efb3f6217cbe767a5835bc381050",
+    "event_count": 221,
+    "event_head_sha256": "7cca96a1cee1afff2226a3c9b6e42131bb6e23774c7831ce21411b3a8c515087",
+    "chronicle_verify": "durable_source_inputs_changed_by_this_round_record_round; postprojection stage division_chronicle reprojects after exit (benign, not a durable-integrity failure)"
+  },
+  "authority_boundary": "evidence_only; no live substrate/control change; no build/restart/deploy; no staging/commit/merge/push; no source-behavior or allowlist change; being text neither rewritten nor rejected; silence neutral.",
+  "restart_deploy": "not required and not attempted"
+}

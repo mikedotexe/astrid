@@ -1,0 +1,65 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "round": "claude-heartbeat_1787999960_domain_boundaries_advisory_readonly_family_duplicate",
+  "actor": "claude-heartbeat",
+  "mode": "controller subprocess run adapter (lease + heartbeats adapter-owned; git read-only; no NDJSON; no live change)",
+  "controller": {
+    "run_id": "run_1787997006523727000_3ebc8806f4",
+    "preprojection_generation_id": "projection_1787997010699539000_4b697168a8",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "finish_outcome": "success (exit 0)"
+  },
+  "processed_reports": [
+    {"introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787994951", "terminal_status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []},
+    {"introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787992237", "terminal_status": "addressed_duplicate", "fully_addressed": true, "proof_missing_claims": []}
+  ],
+  "duplicate_anchor": "introspection_DOMAIN_BOUNDARIES.md_1787843987 (packet claude-heartbeat_1787852088); lineage continued in 1787919214 and 1787982781",
+  "evidence_links": {"new": 20, "existing": 0, "introspection_count": 2},
+  "focused_tests": {"command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib viscosity_porosity_transport", "passed": 3, "failed": 0},
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "evidence_event_store_test": "21 tests OK",
+    "steward_control_test": "27 tests OK (first invocation showed 2 transient/flaky errors under active lease; clean re-run passed)",
+    "steward_projection_test": "14 tests OK",
+    "projection_cursors_test": "4 tests OK",
+    "division_followup_test": "3 tests OK",
+    "division_chronicle_test": "10 tests OK",
+    "division_projection_test": "ok",
+    "cadence_unit_test": "6 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "RC0, 0 alarms",
+    "cadence_strict_compact": "integrity_ok=true, duplicate_hash_group_count=0, canonical_count=4516",
+    "epistemic_self_test": "valid=true",
+    "epistemic_verify_final": {"valid": true, "issue_count": 0, "history_rewritten": false, "checked_record_count": 11561},
+    "audit_counters": {"status": "consistent", "mismatches": [], "checks_all_true": true},
+    "evidence_event_store_verify": {"valid": true, "corrupt_lines": 0, "last_global_seq": 930382, "head": "c08a175cc821cc93131f687985650eac900f4f66dc81aa8c2315cb1368dd74eb", "active_store": "v2"}
+  },
+  "counters_post_round": {
+    "canonical_indexed": 4515,
+    "canonical_fully_addressed": 3156,
+    "canonical_full_read": 3789,
+    "canonical_remaining": 1359,
+    "canonical_unread": 726,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "addressed_duplicate_total": 1138,
+    "all_artifact_remaining": 3044,
+    "noncanonical_pending": 1370
+  },
+  "division": {
+    "cycle_sequence": 35,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_969a1f95804c3aea5d602091e2742e4a",
+    "event_count": 244,
+    "event_head_sha256": "36b92494a6312c12ba7d49e1348fd7b7481bcb7b9ab17a7c8aa5f22462b5acee",
+    "chronicle_verify": "RC1 'project before verify' — EXPECTED staleness after record-round (events 243->244); not corruption; reprojection is the Division-return job + adapter post-finish projection; no return due this round"
+  },
+  "authority_boundary": "Read-only source audit + duplicate re-verification only. No mode-packing/pressure/fill/PI/controller/rescue/sensory-cadence/codec/transport/marker-grammar/protocol/Minime change; no build/restart/deploy; no staging/commit/merge/push; no sandbox trial dispatched; no rewrite or rejection of the being's text. Felt Tier-5 wait preserved; Test 1 sandbox candidate preserved; silence neutral.",
+  "restart_deploy_required": false
+}

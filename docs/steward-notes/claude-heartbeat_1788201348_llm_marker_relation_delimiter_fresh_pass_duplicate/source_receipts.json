@@ -1,0 +1,37 @@
+{
+  "source_receipts": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "drift": false,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete L1-1048 (report window was L1-400; full file read to cover sanitize_model_control_markers_with_report L352 and confirm no marker logic beyond L521)",
+      "git_tracked": true,
+      "git_dirty": false,
+      "cited_symbols": {
+        "reference_syntax": "L49 (verified)",
+        "followed_by_explicit_exact_token_relation_allowlist": "L64-86 (report cited L66-85; verified approx)",
+        "first_word_after": "L89 (verified)",
+        "scan_known_model_control_markers": "L114 (verified)",
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": "L151 = 4 (verified)",
+        "exact_reference_delimiter_pair": "L153 (report mislabeled this as exact_reference_delimiter_syntax)",
+        "exact_reference_delimiter_syntax": "L199 (actual location; report said L153)",
+        "sanitize_model_control_markers_with_report": "L352 (verified)"
+      }
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788170891",
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "working_copy_sha256": "acf50837482b17d94cbd4062a7ae6329d65740241a6bae4c334ae5f394395b1e",
+      "total_lines": 4683,
+      "total_bytes": 208310,
+      "read_scope": "scoped intervals: L2176-2338 (delimiter depth), L2603-2667 (allowlist is vs acts / first finite relation), L2881-2908 (triggers/underscored allowlist), L3226-3255 (double-square-bracket depth two). Verified the eight cited regressions exist and pass.",
+      "git_tracked": true,
+      "git_dirty": true,
+      "dirty_note": "tests.rs carries accumulated flywheel edits from prior heartbeat rounds; NOT modified by this round (no code change made)."
+    }
+  ]
+}

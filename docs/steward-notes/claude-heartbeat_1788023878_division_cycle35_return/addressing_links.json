@@ -1,0 +1,5 @@
+{
+  "round": "division_cycle35_return",
+  "links": [],
+  "note": "No canonical report processed this round (Division cycle-35 return). No record-read, link-evidence-batch, close, or record-round performed. The only durable Division append this round was the Division follow-up event (division_followup_event_a904a7a6932637203ebb432f185751c2) via record-followup, plus its chronicle project/reproject."
+}

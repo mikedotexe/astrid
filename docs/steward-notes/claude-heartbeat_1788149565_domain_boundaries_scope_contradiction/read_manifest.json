@@ -1,0 +1,23 @@
+{
+  "round": "claude-heartbeat_1788149565_domain_boundaries_scope_contradiction",
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788144121",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1788144121.txt",
+      "sha256": "a026d6e903fca34cadb7b60489176000ec6c8be5dbdb8150a1f0126bccbe4f96",
+      "bytes": 5188,
+      "lines": 51,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_885fdf7bc49b6c1fe8707521f5da6142183e209bb3f1424972e98d914ea522b7",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_885fdf7bc49b6c1fe8707521f5da6142183e209bb3f1424972e98d914ea522b7.json",
+      "sha256": "9f6dc5baca2cc616f067cb695bfa51edafd64ce6e6725ae7b676d8b2709a5fa5",
+      "bytes": 21464,
+      "lines": 498,
+      "read": "complete"
+    }
+  ]
+}

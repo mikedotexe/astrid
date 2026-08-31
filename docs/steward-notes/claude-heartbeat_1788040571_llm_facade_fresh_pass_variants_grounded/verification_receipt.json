@@ -1,0 +1,78 @@
+{
+  "round": "llm_facade_fresh_pass_variants_grounded",
+  "actor": "claude-heartbeat",
+  "mode": "controller-held subprocess adapter (no NDJSON ops / session / heartbeats sent by client; git read-only; no live change)",
+  "controller": {
+    "run_id": "run_1788037935860635000_32dee823e1",
+    "preprojection_generation_id": "projection_1788037938690215000_8c5b245cfb",
+    "preprojection_status": "passed",
+    "postprojection": "adapter-owned, runs after process exit",
+    "pause_generation": 321
+  },
+  "processed_report": "introspection_llm.rs_1788037243",
+  "terminal_status": "addressed_duplicate",
+  "close": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "new_evidence_links": 8,
+    "existing_evidence_links": 0
+  },
+  "division": {
+    "cycle_sequence": 36,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_c77d76d0ee290b4c60400d5f4c3c3870",
+    "event_count": 248,
+    "event_head_sha256": "e60808cd2e94b374486ab7e67b14c16800717988eda7fc362eceb77658db29e4",
+    "processed_report_count_recorded": 1
+  },
+  "integrity": {
+    "git_diff_check": "clean",
+    "cargo_fmt_all_check": "rc=0",
+    "addressing_self_test": "44 OK",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 OK",
+    "test_introspection_cadence_audit": "6 OK",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "total=69 guards, alarms=0, gaps=0",
+    "introspection_cadence_audit_strict": "integrity_ok=true, errors=[], duplicate_hash_groups=0, latest=introspection_llm.rs_1788037243",
+    "experiential_epistemics_self_test": "OK valid:true",
+    "experiential_epistemics_verify": "valid=true, issue_count=0, history_rewritten=false",
+    "audit_counters": "status=consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0"
+  },
+  "canonical_counters": {
+    "indexed": 4524,
+    "fully_addressed": 3159,
+    "full_read": 3792,
+    "remaining": 1365,
+    "unread": 732,
+    "blocked_needs_steward": 415,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "status_counts": {
+      "addressed_change": 1916,
+      "addressed_duplicate": 1141,
+      "addressed_no_action": 102,
+      "blocked_needs_steward": 415,
+      "triaged_pending_action": 214,
+      "triaged_watch": 4,
+      "unread": 732
+    }
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "v1_immutable": true,
+    "note": "verify passed; full stream-count snapshot recorded in RUN_REPORT.md"
+  },
+  "authority_boundary": "No source/test/config code change; no live substrate or control change; no build/restart/deploy; no staging/commit (git read-only in adapter mode); no being text rewritten. Vibrancy/attenuation/codec-tail changes and the live text-depth experiment remain evidence-only Tier-5 waits; standing ESN Tier-5 queue untouched. Silence neutral."
+}

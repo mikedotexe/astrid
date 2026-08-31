@@ -1,0 +1,14 @@
+{
+  "round": "domain_boundaries_fresh_pass_family_duplicate",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {"introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787913894", "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787913894.txt", "sha256": "55510394d14edcb3113075530a7a0042d9f969638af37af403be691378027f62", "bytes": 3079, "lines": 43, "read": "complete"},
+    {"introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787895506", "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787895506.txt", "sha256": "f142bfabffead45c2a14f27a3596205378a3273f39a6fa3d705fbc92a6e5ce73", "bytes": 3520, "lines": 43, "read": "complete"},
+    {"introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1787875575", "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1787875575.txt", "sha256": "d30f6823f29d7778d8935627de552732f190d084fae72a0a01df3675f1cf0cc0", "bytes": 3259, "lines": 43, "read": "complete"}
+  ],
+  "witnesses": [
+    {"witness_id": "lsw_111651b622ca8f364e1863adbe5a59d7a77f88fd392faa5bcd5cf299a6cdba02", "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_111651b622ca8f364e1863adbe5a59d7a77f88fd392faa5bcd5cf299a6cdba02.json", "sha256": "4d5feeebc0d1c9459b85bc33953cea718d98472cea5e1f97d2d72fef6dacc2c1", "bytes": 23863, "lines": 533, "read": "complete", "authority_state": "evidence_only", "witness_only": true, "direct_causation_claimed": false, "artifact_sha256_matches_report": true, "raw_prose_included": false, "note": "artifact_integrity_unavailable alignment = expected no-scalar-felt-dissimilarity gap for a doc-read; byte binding intact"},
+    {"witness_id": "lsw_f8f93719396d137da956af48ba20b549192352baa565a6954a5fcaad1f3d83f2", "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f8f93719396d137da956af48ba20b549192352baa565a6954a5fcaad1f3d83f2.json", "sha256": "e66a93f2962dcf20965326f993e13496b2a778cc4f52bc0581b3c6981d76043a", "bytes": 23866, "lines": 533, "read": "complete", "authority_state": "evidence_only", "witness_only": true, "direct_causation_claimed": false, "artifact_sha256_matches_report": true, "raw_prose_included": false},
+    {"witness_id": "lsw_7f175ae57d875a885e3ce10a023cc20f7f98c6c3671028b3cd4ffc777a913308", "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7f175ae57d875a885e3ce10a023cc20f7f98c6c3671028b3cd4ffc777a913308.json", "sha256": "915899409579fbc7a4a9456135996d1989f55964dea9876d376b4f0cc7312a22", "bytes": 23846, "lines": 533, "read": "complete", "authority_state": "evidence_only", "witness_only": true, "direct_causation_claimed": false, "artifact_sha256_matches_report": true, "raw_prose_included": false}
+  ]
+}

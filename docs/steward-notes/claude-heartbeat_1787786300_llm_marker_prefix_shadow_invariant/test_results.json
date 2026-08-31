@@ -1,0 +1,36 @@
+{
+  "environment": {
+    "cargo": "1.94.1 (29ea6fb6a 2026-03-24)",
+    "manifest": "capsules/spectral-bridge/Cargo.toml",
+    "note": "spectral-bridge is a standalone crate (not a member of the astrid workspace)."
+  },
+  "focused": [
+    {
+      "test": "llm::provider::tests::known_model_control_markers_have_no_proper_prefix_shadow",
+      "kind": "new_this_round",
+      "result": "ok",
+      "counts": "1 passed; 0 failed; 1897 filtered out"
+    },
+    {
+      "test": "llm::provider::tests::scan_known_model_control_markers_* (regression group)",
+      "kind": "existing",
+      "result": "ok",
+      "counts": "8 passed; 0 failed (includes quoted_context_precedes_following_relation_verb, first_word_after robustness set)"
+    },
+    {
+      "test": "llm::provider::tests::exact_reference_delimiter_* (regression group)",
+      "kind": "existing",
+      "result": "ok",
+      "counts": "2 passed; 0 failed (double_square_bracket_depth_two, cjk_corner_quoted_and_lenticular_grouped)"
+    }
+  ],
+  "format": {
+    "command": "rustfmt --edition 2024 --check capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "added_region_clean": true,
+    "note": "The remaining rustfmt hunks (import block + prior-round test regions at L1885/1928/1948/2566/2580/2932/2944/3024) are pre-existing foreign/prior-round drift in this shared dirty file and were left untouched. No rustfmt hunk references the newly added test."
+  },
+  "git_diff_check": {
+    "command": "git diff --check -- capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "result": "clean"
+  }
+}

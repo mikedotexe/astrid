@@ -1,0 +1,18 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "code_changed": false,
+  "tests_run_this_round": [],
+  "rationale": "No source or test code touched (duplicate re-verification round). Report-bound source DOMAIN_BOUNDARIES.md (ae69b34c) and snag/test source texture_evidence.rs (cbfe0e15) are both byte-identical to the prior closed fresh-pass 1787982781; current re-verification is SHA-identity, so the prior same-day green run of the 3 focused tests still applies.",
+  "current_applicable_evidence": [
+    {
+      "kind": "prior_focused_tests",
+      "packet": "claude-heartbeat_1787982781_domain_boundaries_pressure_source_fresh_pass_duplicate",
+      "tests": [
+        "status_explains_advisory_pressure_source_without_pi_mutation",
+        "permeability_shift_names_porosity_without_live_authority",
+        "pressure_source_audit_formats_unavailable_and_typed_metric"
+      ],
+      "result": "3 passed / 0 failed at texture_evidence.rs SHA cbfe0e15 (unchanged this round)"
+    }
+  ]
+}

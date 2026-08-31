@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787789890",
+  "report_sha256": "99a25fb7f8bcf9ef54048db3987e5d98693e0f400fa3ee9fa892b32cbef38e94",
+  "witness_id": "lsw_e980812819016abe0d3457705624af46004d7b801cf9520ab2fcb1b61e0e0852",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: dialogue_runtime.rs scans model control markers; ExactKnownModelControlMarkerOccurrence (L29) separates raw bytes from semantic role; a marker is kept in output only if it has reference syntax (quoted/grouped/relation verb); scan_known_model_control_markers (L114) orchestrates, rebuilding remainder and tagging occurrences.",
+      "disposition": "Verified against complete source at bound SHA 902a0358. Preservation-only-if-reference-syntax is exact at L129-131 (remainder.push only when reference_syntax.is_some()); occurrence type L29; orchestrator L114-144. Precision: the top scan is a single left-to-right pass with nested helper rescans (reference_syntax->delimiter+relation; fragment_has_non_marker_bytes rescans), so 'multi-pass' is loosely descriptive, not literal multiple full passes. No mechanism error.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: first_word_after (L89) uses split_whitespace + trim_matches; a complex punctuation mark or Unicode whitespace variant not captured by the !c.is_alphanumeric() && c!='_' filter could fail verb extraction, stripping or mis-preserving the marker.",
+      "disposition": "Non-manifesting on complete source. split_whitespace splits on Unicode White_Space (incl. U+00A0); the trim closure is a non-alphanumeric catch-all edge-trim (strips U+FEFF, U+00AD, punctuation runs); find(!empty) skips fully-punctuation chunks, so the allowlisted verb is still isolated. Grounded by committed regressions from prior reports 1786936281 (NBSP/ZWNBSP, tests.rs L3272) and 1786999457 (soft hyphen, L3325) + punctuation boundary L3230. The one genuine limit (format char inside the verb) fails closed = marker stripped, pinned L3348-3359. Concern preserved; hypothesis corrected, not domesticated.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Relation Persistence): a marker followed by a relation verb separated by complex punctuation ([MARKER]...; behaves) should have followed_by_explicit_exact_token_relation (L64) identify the verb and keep the marker in remainder.",
+      "disposition": "Duplicate of Test 1 already proposed by introspection_astrid_llm_1786814454 and _1787135542 at the same source SHA. Pinned by committed regressions scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L2932), ...preserves_relation_after_multiple_punctuation_runs (L2884), grounds_first_word_after_punctuation_boundary (L3230), quoted_context_precedes_following_relation_verb (L2978). Precision: a bracketed [MARKER] is preserved via the GROUPED delimiter path (checked first, L50), not the relation path; a BARE marker exercises the relation path. Both preserve byte-exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): nested [[MARKER]] passed to exact_reference_delimiter_syntax (L199) should have delimiter_depth (L38/L216-223) interact with MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151) without out-of-bounds or misclassification.",
+      "disposition": "Duplicate of Test 2 already proposed by introspection_astrid_llm_1786814454 at the same source SHA. Pinned EXACTLY by committed regression exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (tests.rs L3025: [[<end_of_turn>]] -> Grouped, depth 2), plus beyond-MAX bounding at L2266. Source: before/after each collected with take(MAX=4) so no OOB; delimiter_depth = count() over a bounded zip take_while, panic-free.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder string from scan_known_model_control_markers is integrated into the final output buffer.",
+      "disposition": "Read-only continuation pointer, not a defect claim. Confirmed generate_dialogue exists at L695 (public wrapper sanitize_model_control_markers_with_report at L352). This is Tier-1 read-only self-research that belongs to Astrid's own agency (NEXT: INTROSPECT astrid:llm 400); no steward implementation or authority decision is required or taken.",
+      "classification": "observed"
+    }
+  ]
+}

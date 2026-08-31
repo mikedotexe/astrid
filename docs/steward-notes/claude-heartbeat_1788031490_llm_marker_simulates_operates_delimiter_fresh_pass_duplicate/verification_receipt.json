@@ -1,0 +1,97 @@
+{
+  "round": "llm_marker_simulates_operates_delimiter_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1788028993948177000_6e828d707d",
+    "preprojection_generation_id": "projection_1788028998795340000_bc062c7ab2",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "runs after process exit (adapter-owned)"
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_llm_1788024897",
+    "report_sha256": "3616fa6f03fe6f8ad87cc4ce3d0002653bf1bc221a5077ff7cb1a93225874b37",
+    "witness_id": "lsw_a1994694dfffff418646813650df28a2b5d5dcb9f40d131c99d4fd00df538b0a",
+    "witness_sha256": "7c8c1f65c09fffe6306c470aa922083f97a31058ab3258b03d5124a8719e0bd4",
+    "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_hash_match": true,
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 6,
+    "all_claims_classification": "verified_existing",
+    "evidence_links": 13
+  },
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker delimiter first_word_after followed_by_explicit relation_allowlist scan_known_model_control_markers exact_reference_delimiter",
+    "passed": 84,
+    "failed": 0,
+    "source_sha256_under_test": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+  },
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "0 alarms / 0 gaps",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "27 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "cadence_strict": "integrity_ok=true; 4523 canonical; 0 duplicate hash groups",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify": "valid=true; issue_count=0; checked_record_count=11576; history_rewritten=false",
+    "audit_counters": "status=consistent; mismatches=[]; all 7 checks true",
+    "evidence_event_store_verify": "valid=true; corrupt_lines=0",
+    "evidence_event_store_head": {
+      "last_global_seq": 934400,
+      "last_event_sha256": "5869a0c47ac9af9735f86890a57653e03cc20a47910a51354268823076d0bf82",
+      "active_store": "v2",
+      "legacy_imported_global_seq": 32278,
+      "verified_checkpoint_global_seq": 934399
+    },
+    "division_followup_verify": {
+      "ok": true,
+      "review_due": false,
+      "completed_rounds_since_followup": 1,
+      "cycle_sequence": 36,
+      "event_count": 247,
+      "event_head_sha256": "b3972af2393c39a31f98ce200d64b99295081c37b7bb907ffe31fd3bbbea66f6",
+      "last_round_event_id": "division_followup_event_f046b21c1b8bdf5977f0e19cac4345ce"
+    },
+    "division_chronicle_verify": {
+      "ok": true,
+      "chronicle_id": "division_chronicle_db8ef014347e428fa0f8004e",
+      "durable_inputs_current": true,
+      "volatile_mismatches": ["supervisor_status_sha256"],
+      "timeline_event_count": 247,
+      "json_sha256": "7f8edbe41b38aeb7bdefb378a066e9d3fc978cff0ffde3d4ed0bf91ecc94b85a",
+      "html_sha256": "69d8de14a3f07b191c6b2a3c2035452b1aa64bfd6d0ab2959a0be2e02fef371c",
+      "note": "Chronicle reprojected because this round's record-round added Division followup event f046b21c; durable inputs now current, only the known-volatile supervisor_status_sha256 moving (not a durable-integrity failure)."
+    }
+  },
+  "counters": {
+    "canonical_indexed": 4522,
+    "canonical_fully_addressed": 3158,
+    "canonical_full_read": 3791,
+    "canonical_remaining": 1364,
+    "canonical_unread": 731,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3052,
+    "noncanonical_pending": 1688,
+    "proof_gap_claim_count": 0
+  },
+  "git": {
+    "read_only": true,
+    "index_staged_count": 0,
+    "diff_check": "clean",
+    "live_change": "none; restart and deployment not required or attempted"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "schema": "verification_receipt_v1",
+  "round_name": "llm_marker_zero_width_joiner_grounded",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_run_adapter (no NDJSON/session/heartbeats sent by client; git read-only; no live change)",
+  "controller": {
+    "run_id": "run_1788046413106295000_bf5bd08d6b",
+    "preprojection_generation_id": "projection_1788046416394041000_191c4a502d",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "runs after process exit (adapter-owned); reprojects division_chronicle + all source-first stages"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788044830",
+      "report_sha256": "2ec8364ecfd455f6d1e9666870412a819087519f2bff313243aebb31542eb264",
+      "witness_id": "lsw_cf03fba009dcc60a462a37bf74cf33672bcb8be11bd470394f30d6773a262bd7",
+      "witness_sha256": "172898f4a2b1738872403d125631d89dae68270c95876111c238a149b390be08",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding_matches_working_copy": true,
+      "close_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claims": 5,
+      "evidence_links_new": 9
+    }
+  ],
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/llm/provider/tests.rs (added 1 additive #[test] fn scan_known_model_control_markers_grounds_first_word_after_zero_width_joiner; +75 lines, 0 deletions)"
+    ],
+    "new_test": "scan_known_model_control_markers_grounds_first_word_after_zero_width_joiner",
+    "tests_pass": true,
+    "live_change": false,
+    "restart_or_deploy": "not required, not attempted"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 OK",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 OK",
+    "test_steward_projection": "14 OK",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 OK",
+    "test_introspection_cadence_audit": "6 OK",
+    "cadence_audit_strict": "integrity_ok true, configuration_valid true, errors []",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "alarms 0, gaps 0, total 69 guards",
+    "audit_counters": "status consistent, mismatches [], all checks true, read_needs_claims 0",
+    "evidence_event_store_verify": "valid true, corrupt_lines 0",
+    "epistemic_self_test": "OK, valid true",
+    "epistemic_verify_final": "valid true, issue_count 0, issues [], checked_record_count 11588, history_rewritten false"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 936776,
+    "head_last_event_sha256": "eafcd3e0267edee849371377e9b9f0c94d1b1af5e6bc5fc0b52a7fee032715db",
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "addressing_stream_seq": 59277
+  },
+  "division": {
+    "cycle_sequence": 36,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "recorded_round_event_id": "division_followup_event_899a02366eba96b6bb2b6a206c7d2ab2",
+    "event_count": 249,
+    "event_head_sha256": "f4ed056ce44440a38a4e4b7b63e8552f41069df5f6a6c9462b9122e6be58e0f9",
+    "chronicle_verify": "project-before-verify (benign non-return-round state: record-round appended event 248->249; reprojection is the controller postprojection division_chronicle stage's job, per prior-round convention)"
+  },
+  "canonical_counters": {
+    "canonical_indexed": 4499,
+    "canonical_fully_addressed": 3144,
+    "canonical_full_read": 3777,
+    "canonical_remaining": 1355,
+    "canonical_unread": 722,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "read_needs_claims": 0
+  },
+  "git": {
+    "index_clean": true,
+    "live_change": false,
+    "commit_debt_unstaged": [
+      "docs/steward-notes/claude-heartbeat_1788049107_llm_marker_zero_width_joiner_grounded/ (entire new packet, untracked)",
+      "capsules/spectral-bridge/src/llm/provider/tests.rs (my 1 test fn; file also carries prior flywheel test additions - separate authorship carefully)",
+      "CHANGELOG.md (my [Unreleased] bullet; file also carries foreign edits)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (my new top row; file also carries foreign edits)"
+    ],
+    "minime_untouched": true
+  }
+}

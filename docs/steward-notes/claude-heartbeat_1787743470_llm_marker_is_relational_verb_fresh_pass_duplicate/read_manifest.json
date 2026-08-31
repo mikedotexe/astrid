@@ -1,0 +1,40 @@
+{
+  "schema": "introspection_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787739659",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787739659.txt",
+      "sha256": "fea8c33c78f79c43529079d013614f001337a2ce91a965f6ccc2dd933a70fe70",
+      "bytes": 3609,
+      "lines": 45,
+      "read": "complete",
+      "source_path_named": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha_named": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_included_intervals": "1-1048",
+      "source_uncovered_intervals": "none",
+      "source_coverage_state": "multi_window_complete",
+      "lived_state_witness_id": "lsw_ef1d1174a4e3bb79c66ea453863ed9a7ef7f2d95063839608c7a61dd6791cc6d",
+      "source_coverage": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_ef1d1174a4e3bb79c66ea453863ed9a7ef7f2d95063839608c7a61dd6791cc6d",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ef1d1174a4e3bb79c66ea453863ed9a7ef7f2d95063839608c7a61dd6791cc6d.json",
+      "sha256": "4ea1ead6cc72ecd3ede7ff6a7fa8d65570f1721851756fc7de44fa1fd8bdc6ee",
+      "bytes": 23929,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_binds_report": "fea8c33c78f79c43529079d013614f001337a2ce91a965f6ccc2dd933a70fe70",
+      "source_window": "0-400_of_1048",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "edits_source_now": false,
+      "model_profile": "gemma4_12b",
+      "fill_pct": 71.03,
+      "note": "witness source_snapshot_v1 window is 0-400 (partial) while report asserts multi_window_complete 1-1048 — the neutral family-wide measurement-gap; witness parses cleanly, binds the verified report SHA, no mechanism/causation claimed."
+    }
+  ]
+}

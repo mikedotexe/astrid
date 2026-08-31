@@ -1,0 +1,56 @@
+{
+  "round": "claude-heartbeat_1788058732_llm_marker_use_verb_strip_fresh_pass_duplicate",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1788055494118647000_30978bcecc",
+    "preprojection_generation_id": "projection_1788055499036147000_00520455cc",
+    "pause_generation": 321
+  },
+  "processed_report": "introspection_astrid_llm_1788042666",
+  "terminal_status": "addressed_duplicate",
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "evidence_links_appended": 10,
+  "source_change": "none (drafted triggers/activates regression reverted; tests.rs byte-restored to SHA 3899dc0f…)",
+  "integrity_suites": {
+    "addressing_self_test": "44 passed",
+    "evidence_store_test": "21 passed",
+    "steward_control_test": "27 passed",
+    "steward_projection_test": "14 passed",
+    "division_followup_test": "3 passed",
+    "division_projection_test": "self-test ok",
+    "division_chronicle_test": "10 passed",
+    "projection_cursors_test": "4 passed",
+    "cadence_unit_test": "6 passed",
+    "cadence_audit_strict": "integrity_ok=true, 0 duplicate hash groups, 0 errors, canonical_count 4528",
+    "anti_drop_self_test": "5 passed",
+    "anti_drop_verify": "0 alarms",
+    "epistemics_self_test": "valid",
+    "final_epistemic_verify": "valid=true, issue_count=0, checked_record_count=11594, history_rewritten=false",
+    "audit_counters": "consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=938010, head=0355ae42bfa8352b3f970983908e4bed78ad4d5e220d147b8a458a2e95712c79, active_store=v2, legacy_imported_boundary=32278, V1 immutable (verified_checkpoint verified_global_seq==938010)",
+    "division_verify": "review_due=false, completed_rounds_since_followup=4, rounds_remaining=2, event_count=250",
+    "chronicle_verify": "reports 'durable source inputs changed; project before verify' — EXPECTED staleness after record-round (round event appended); NOT corruption (chronicle self-test 10/10 passed); adapter postprojection (DAG stage 19 division_chronicle) reprojects post-finish; no return due at 4/6"
+  },
+  "focused_tests": "control_marker/exact_reference_delimiter/first_word_after/followed_by_explicit/relation_allowlist/scan_known_model_control = 85 passed / 0 failed at source SHA 902a0358",
+  "format_checks": {
+    "git_diff_check_tests_rs": "clean",
+    "cargo_fmt_check": "pre-existing drift only in grounding.rs (foreign, untouched); tests.rs reported no diff (edit reverted)"
+  },
+  "git": "read-only (adapter mode); no stage/commit/merge/push; index clean; foreign dirty work untouched",
+  "live_change": "none; no build/restart/deploy/launchctl attempted or required (review round)",
+  "counters": {
+    "canonical_indexed": 4526,
+    "canonical_fully_addressed": 3161,
+    "canonical_fully_read": 3794,
+    "canonical_remaining": 1365,
+    "canonical_unread": 732,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3056,
+    "noncanonical_pending": 1691
+  }
+}

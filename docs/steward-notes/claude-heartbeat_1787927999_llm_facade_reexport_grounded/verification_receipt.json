@@ -1,0 +1,67 @@
+{
+  "round": "claude-heartbeat_1787927999_llm_facade_reexport_grounded",
+  "actor": "claude-heartbeat",
+  "mode": "controller-held subprocess adapter (lease owned by division_ceremony/steward_control run adapter; no NDJSON ops, no heartbeats sent by client, git read-only)",
+  "controller": {
+    "run_id": "run_1787925649373769000_df11023f40",
+    "preprojection_generation_id": "projection_1787925654353192000_79d8d22b1d",
+    "preprojection_status": "passed",
+    "pause_generation": 321,
+    "postprojection": "runs after process exit (adapter-owned); reprojects division_chronicle + all source-first stages"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_llm.rs_1787810107",
+      "report_sha256": "a3c65775b9711bb12af6d5122133bd0b79b2694a42bf006e5da221c9dca91c80",
+      "report_bytes": 3811,
+      "report_lines": 45,
+      "witness_id": "lsw_cc8368bb012ddee5fed4ba6c893abe44964b80b7a1d884df2345e519e7212e3a",
+      "witness_sha256": "48982608c38e8c6802cbe0fddad6037c32c5064af7202c71ff2a662ed80a2bd2",
+      "witness_bytes": 23805,
+      "witness_lines": 533,
+      "source_path": "capsules/spectral-bridge/src/llm.rs",
+      "source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "source_match_to_report_binding": true,
+      "source_read_scope": "complete_file L1-28 (1287 bytes)",
+      "terminal_status": "addressed_no_action",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 5,
+      "classifications": "c001-c004 verified_existing, c005 observed",
+      "evidence_links_added": 10
+    }
+  ],
+  "selected_count": 40,
+  "processed_count": 1,
+  "unprocessed_count": 39,
+  "batch_stop_reason": "ONE-SHOT single-report round; head fully read/verified/closed; sized so the record-read->link->close->integrity->record-round sequence fit budget with margin; head family partner introspection_llm.rs_1787300840 (sim 0.355) deferred rather than risk a half-processed batch",
+  "durable_writes": [
+    "docs/steward-notes/claude-heartbeat_1787927999_llm_facade_reexport_grounded/ (packet: RUN_REPORT.md, claims/, summaries/, no_action/, read_manifest.json, source_receipts.json, addressing_links.json, test_results.json, unprocessed_selected.json, verification_receipt.json)",
+    "CHANGELOG.md ([Unreleased] entry appended)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (row appended)",
+    "addressing event store: record-read + link-evidence-batch(10) + close(addressed_no_action) for introspection_llm.rs_1787810107",
+    "division_ceremony_followup: record-round (round 4/6, event division_followup_event_567397239feaacc2b0f72b13d1de6821)"
+  ],
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "audit_counters": "consistent, mismatches [], read_needs_claims 0",
+    "epistemic_verify_final": "valid true, issues []",
+    "evidence_event_store_verify": "valid true, corrupt_lines 0, last_global_seq 921502",
+    "division_followup_verify": "ok true, review_due false, event_count 236, head 7f0207a899f08162c47b9a0ea2723ddbdf69daf92ccd9ec40ffddd761cb6cb89",
+    "division_chronicle_verify": "project-before-verify (benign non-return-round state; postprojection reprojects)"
+  },
+  "canonical_counters": {
+    "indexed": 4500,
+    "fully_addressed": 3148,
+    "fully_read": 3781,
+    "remaining": 1352,
+    "unread": 719,
+    "blocked_needs_steward": 415,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "read_needs_claims": 0
+  },
+  "live_change": "none — no build, restart, deployment, or live substrate/control change attempted or required; astrid_* accessors + codec tail untouched (Tier-5)",
+  "git": "read-only in adapter mode; no stage/commit/merge/push; foreign dirty paths preserved untouched",
+  "authority_boundary": "evidence_only; silence neutral; felt testimony preserved not adjudicated; proposed runtime experiments left as her Tier-3 PROBE_SELF pursuits; no authority granted or inferred"
+}

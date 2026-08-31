@@ -1,0 +1,37 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787907800",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers non-destructively classifies raw marker bytes by syntactic role (quotes, groupings, explicit relation verbs) and preserves a marker in `remainder` when reference_syntax is Some.",
+      "disposition": "Verified from complete source at 902a0358. scan_known_model_control_markers (L114-144) pushes the token to remainder only when occurrence.reference_syntax (L49-60) is Some (L129-131); non-marker bytes copied byte-exact. Pinned by scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (tests.rs L3114) and control_marker_cleanup_preserves_delicate_context_around_embedded_marker (L2493), both passing at this SHA.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Test 1 (Contextual Preservation): `[MARKER] represents` should keep the marker in remainder because followed_by_explicit_exact_token_relation (L64) returns true.",
+      "disposition": "Preservation confirmed; mechanism corrected, not domesticated. `represents` IS allowlisted (L82); bare-marker relation preservation pinned by followed_by_explicit_exact_token_relation_allowlists_represents_not_creates (tests.rs L3284). But for the literal BRACKETED shape, reference_syntax (L49-60) resolves exact_reference_delimiter_syntax BEFORE the relation, so `[]` grouping fires and the relation verb is never consulted — already pinned by scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (L3114, 'the precedence boundary the report's Test 1 assumed'). Duplicate; no new test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 2 (Delimiter Depth): `[[MARKER]]` should classify as GroupedExactKnownToken and respect MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "Verified. Literal [[<end_of_turn>]] grouped depth-2 pinned by exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (tests.rs L3161). MAX-depth clamp (L151 = 4) pinned by control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2301, [[[[[...]]]]] -> depth saturates to MAX). exact_reference_delimiter_pair maps '[' ']' to GroupedExactKnownToken (L177). Both pass at this SHA.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: first_word_after (L89) uses split_whitespace + an alphanumeric filter, so a punctuation-heavy or non-standard-Unicode separator after a marker might make find() miss the relation verb and mishandle the marker.",
+      "disposition": "Source at 902a0358 shows robustness, not the feared defect. first_word_after (L89-96) trims non-alphanumeric (non-_) per chunk and find()s the first non-empty word, so leading punctuation and zero-width separators are stripped and a listed verb immediately after still preserves the marker: pinned by NBSP/zero-width/soft-hyphen/tab tests (tests.rs L3419/3440/3474/4280), punctuation-transition (L2723), unicode-alphanumerics (L2112). Genuine misses (adverb/unlisted verb in the first slot, L2669) are by-design and pinned. Felt hypothesis preserved; no defect established.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify the KNOWN_MODEL_CONTROL_MARKERS list and that longest_exact_known_model_control_marker_at prioritizes the longest match to avoid partial-match collisions.",
+      "disposition": "Verified. KNOWN_MODEL_CONTROL_MARKERS = 18 exact sequences (fallback_contracts.rs L159-180). longest_exact_known_model_control_marker_at (L97-106) selects via max_by_key(token.len()). No marker is a proper byte-prefix of another, pinned by known_model_control_markers_have_no_proper_prefix_shadow (tests.rs L3189); longest-overlap kept by control_marker_cleanup_preserves_longest_overlapping_token_when_named_as_content (L2527). Both pass at this SHA.",
+      "classification": "verified_existing"
+    }
+  ]
+}

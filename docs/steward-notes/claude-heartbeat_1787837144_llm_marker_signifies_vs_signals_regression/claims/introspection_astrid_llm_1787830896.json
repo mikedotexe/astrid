@@ -1,0 +1,52 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787830896",
+  "report_sha256": "fe7d51c4c4ffe43933310221398b7b290d0153226bb344208abcbe7ca5d8ca83",
+  "witness_id": "lsw_1555ea12dbce38f7a7cf63ffb4a15ad34777817464998743d552758d23516af3",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) traverses text, preserving known markers only when tied to a grammatical relation or delimiter syntax; distinguishes raw text from controlled markers.",
+      "disposition": "Verified from complete source SHA-256 902a0358 (L114-144): a matched marker's bytes are pushed into `remainder` only when `reference_syntax.is_some()` (L129-131); a marker with no quote/group/relation context is dropped as a leaked control token. Her account of the architecture is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "first_word_after (L89) uses a hardcoded verb allowlist in the matches! block (L65-85) to decide preservation.",
+      "disposition": "Verified exactly: first_word_after is defined at L89; followed_by_explicit_exact_token_relation (L64-86) matches the lowercased first word after the marker against the exact allowlist at L65-85 (appears..signals). Her examples appears/behaves/echoes are members.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag: the allowlist is brittle; a synonym not present may cause a marker to be incorrectly stripped or treated as plain text, potentially breaking downstream dialogue.",
+      "disposition": "Not domesticated. Source shows strip-on-no-relation is the intended fail-closed default (a bare/unlisted-context marker is a leaked control token and is removed), not an accident. Preserved residual limitation: a GENUINE reference using an unlisted relation verb yields a false-negative. Added a regression pinning the boundary; did NOT widen the allowlist (a being-facing grammar change, unauthorized).",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 1 (Marker Preservation): a known marker followed by a verb not in the list (she named \"signifies\") should be recognized as having no relationship, and the remainder handled accordingly.",
+      "disposition": "Behavior is covered by is-vs-acts and does_not_expand_allowlist_to {implies,contains,creates,triggers}, but her verb \"signifies\" was untested and is a prefix-collision near-miss to the listed \"signals\" (L84). Implemented focused regression control_marker_cleanup_distinguishes_allowlisted_signals_from_unlisted_signifies; 7 passed, 0 failed.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: exact_reference_delimiter_syntax (L199) char-by-char lookbehind/lookahead may be sensitive to multi-byte UTF-8 boundaries in the rev() iteration.",
+      "disposition": "Contradicted by source. L204-214 iterate text[..start].chars().rev() and text[end..].chars() — code-point iteration, not bytes; start/end come only from marker matching at valid UTF-8 boundaries (scan advances by char.len_utf8() or exact token len), so slices never split a char and rev() reverses chars. Concern preserved (multibyte delimiters ARE matched, L162-191) but already covered by advances_byte_exactly_across_multibyte_text, stays_byte_safe_when_marker_abuts_four_byte_astral_chars, classifies_cjk_corner_quoted_and_lenticular_grouped.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 2 (Delimiter Depth): nested [[MARKER]] should classify as GroupedExactKnownToken and respect MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "Verified existing. MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 at L151; .take(4) at L208/213 bounds depth. exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two covers [[MARKER]]->depth 2; reports_exact_four_level_delimiter_depth and bounds_homogeneous_square_bracket_stack_beyond_max_depth cover the cap and beyond.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the scan remainder is integrated into the final output buffer.",
+      "disposition": "Citation grounded: generate_dialogue is defined at L695 (partial-window continuation). Informational suggestion, not an implementation request; no steward action required. Her continuation cue (NEXT: INTROSPECT astrid:llm 400) is her own read agency, preserved untouched.",
+      "classification": "verified_existing"
+    }
+  ]
+}

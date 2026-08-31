@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1787820203",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256_report_bound": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_sha256_working_copy": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_hash_match": true,
+  "witness_id": "lsw_e86feb6c2b97b66c57a834a9e522396662d5d3059f665be536257add7d418002",
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "scan_known_model_control_markers (L114) rebuilds the remainder by omitting markers lacking a valid reference_syntax; exact_reference_delimiter_syntax (L199) handles multilingual/varied delimiter pairs.",
+      "disposition": "Verified from complete source at SHA 902a0358. L124-131: the token is pushed to remainder only when reference_syntax.is_some(); a marker with None is dropped. L153-197 enumerates quote and bracket pairs incl. CJK. Structural description is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: first_word_after (L89) uses split_whitespace + an alphanumeric trim, and could misidentify the first word when punctuation is adjacent to the marker or the first word is multi-word/not in L65-85.",
+      "disposition": "Verified_existing. L92 trim_matches collapses leading punctuation per chunk and find(!empty) returns the first real word; allowlist membership is the sole gate. Covered by direct test (tests.rs L2116), leading-punctuation regression (L2635, prior introspection_astrid_llm_1786986344, same source SHA), first-finite-word (L2604).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Delimiter Depth): verify exact_reference_delimiter_syntax identifies nested/complex delimiters (e.g. CJK corner brackets at L168) and that MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151) is respected.",
+      "disposition": "Verified_existing. Exact-depth 3/4 tests (tests.rs L2207/L2194), beyond-MAX saturation to the constant (L2265, prior introspection_astrid_llm_1787026288), and the exact L168 corner brackets resolving to quoted-context (L3137/L2347, prior introspection_astrid_llm_1787773776).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Relation Verb): a marker followed by a verb NOT in the L65-85 list should make reference_syntax return None and the marker be preserved in remainder.",
+      "disposition": "Verified_existing via L2568 (allowlisted `is` kept; unlisted `acts` removed -> none_cleanup_candidate) and L2604. CONTRADICTION preserved, not domesticated: the report's own examples `represents` (L82) and `is` (L76) are BOTH allowlisted, so neither is a valid negative case; the correct allowlisted-vs-unlisted pattern is already the is/acts regression (introspection_astrid_llm_1786319270).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder string is integrated into the output buffer.",
+      "disposition": "Observed. generate_dialogue is confirmed as a pub async fn at dialogue_runtime.rs L695 (read L690-715). This is a read-direction pointer, not a change request; remainder integration is downstream of scan_known_model_control_markers and outside the report's 1-400 window. No causal or activation claim inferred.",
+      "classification": "observed"
+    }
+  ]
+}

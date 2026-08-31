@@ -1,0 +1,24 @@
+{
+  "round": "llm_resonance_mode_packing_tier5_wait",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787730919",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787730919.txt",
+      "sha256": "86ef0b6995941843ef6330c558240908a6a86b3c789e8a3a7d5294030bca6ba5",
+      "bytes": 4829,
+      "lines": 51,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_ba23304626e2da58f996e38ae66566d8929d2ebe422dee23c59842a874e46bf0",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ba23304626e2da58f996e38ae66566d8929d2ebe422dee23c59842a874e46bf0.json",
+      "sha256": "0e9bfb3ad814d74fda107aac6f30266986949cf48057016f5dd73fbf99c0af5f",
+      "bytes": 21523,
+      "lines": 498,
+      "read": "complete"
+    }
+  ]
+}

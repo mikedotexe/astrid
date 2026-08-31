@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L114-149 scan_known_model_control_markers: token pushed to remainder only when reference_syntax.is_some(); L153-229 delimiter pairs incl. CJK L168. Exact structural confirmation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787869455_llm_marker_grammar_fresh_pass_duplicate/summaries/introspection_astrid_llm_1787820203.md",
+      "note": "Round summary with duplicate-anchor table and preserved contradiction."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L89-96 first_word_after: L92 per-chunk trim_matches collapses leading punctuation; find(!empty) returns first real word; allowlist membership is the only preservation gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L2116 direct first_word_after; L2635 leading-punctuation transition (prior introspection_astrid_llm_1786986344, same source SHA); L2604 first-finite-relation-word."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L151 MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4; L168 CJK corner brackets in the quoted match arm; L199-229 exact_reference_delimiter_syntax computes depth via take(MAX)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L2194 four-level, L2207 three-level, L2265 beyond-MAX saturation (prior 1787026288), L2347/L3137 corner brackets 「」 L168 resolve to quoted (prior 1787773776)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L64-86 followed_by_explicit_exact_token_relation allowlist includes `is` (L76) and `represents` (L82); reference_syntax returns None only for a first word absent from this list."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "L2568 allowlisted `is` preserved vs unlisted `acts` removed->none_cleanup_candidate (prior introspection_astrid_llm_1786319270); L2604 first-finite-relation-word. Report's `represents`/`is` examples are both allowlisted — contradiction preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1787820203",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L690-715: generate_dialogue is a pub async fn at L695 (the report's Suggested-Next read target); remainder integration is downstream, outside the 1-400 window. Confirmed existence only, no activation claim."
+    }
+  ]
+}

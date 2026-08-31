@@ -1,0 +1,15 @@
+{
+  "round": "division_cycle35_return",
+  "report_bound_source_receipts": [],
+  "note": "No canonical report was processed, so there is no report-bound source to receipt. The Division-return runtime-state reads (gateway/supervisor/authority JSON) and the return-time and post-return chronicle_v1.json are recorded in read_manifest.json.",
+  "chronicle_source_freshness": {
+    "return_time_chronicle_id": "division_chronicle_c9143a6899866fc1d0fe9de5",
+    "return_time_chronicle_json_sha256": "76472a306fe78b54c29ff493a2e9d39f0cb3253023f39c6c3cef744fb1a010fc",
+    "post_return_chronicle_id": "division_chronicle_67a57455cef636465edcfd6e",
+    "post_return_chronicle_json_sha256": "d5d97d62b25f519092f356d99818eff080d59a43429a73d681d4658a0e5de64b",
+    "post_return_event_count": 246,
+    "durable_inputs_current": true,
+    "volatile_mismatches": ["supervisor_status_sha256"],
+    "note": "Expected durable-current / volatile-supervisor state; the moving supervisor_status_sha256 is a live-process hash, NOT a durable-integrity failure."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "round_unix": 1787910971,
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1787907800",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1787907800.txt",
+      "bytes": 3733,
+      "lines": 45,
+      "sha256": "2197bc1cec26e6cacfc6a52823ef578c29e96840ab5186d3049f0a087f561c5d",
+      "read": "complete",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_window": "lines 1-400 of 1048",
+      "source_coverage_state": "multi_window_complete",
+      "source_claim_support": "complete_source_available",
+      "witness_id": "lsw_c63537e038afd8b67edf537e33d0f8e352debfb90d6e66616aaae77bf2d9c38a",
+      "fill_pct_reported": 72.9,
+      "model_profile": "gemma4_12b"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_c63537e038afd8b67edf537e33d0f8e352debfb90d6e66616aaae77bf2d9c38a",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c63537e038afd8b67edf537e33d0f8e352debfb90d6e66616aaae77bf2d9c38a.json",
+      "bytes": 23949,
+      "lines": 533,
+      "sha256": "6fc812e274114520e9e0d3ddc55b8cdc450539f1eeddc29c415ee5d07248ba4f",
+      "read": "complete",
+      "bound_artifact_sha256": "2197bc1cec26e6cacfc6a52823ef578c29e96840ab5186d3049f0a087f561c5d",
+      "bound_artifact_matches_report": true,
+      "canonical_body_sha256": "67371b2881289531c4267a5967707d295411a4e82ffd63d98e74ff9d2b399f55",
+      "canonical_body_byte_count": 2161,
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "projection_alignment_flag": "queue reported lived_state_alignment=artifact_integrity_unavailable with gap_count=1 and artifact_integrity_issue_count=1; the witness file itself is intact and its artifact_sha256 matches the report exactly, so this is treated as projection-side alignment metadata, not a report-integrity failure; felt content preserved and read completely"
+    }
+  ]
+}

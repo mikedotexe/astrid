@@ -1,0 +1,32 @@
+{
+  "round": "claude-heartbeat_1787828990_llm_marker_tab_relation_boundary",
+  "source_receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "read_scope": "complete cited region lines 1-280 (covers first_word_after L89-96, followed_by_explicit_exact_token_relation L64-87 incl 'echoes' L72, scan_known_model_control_markers L114-144, longest_exact_known_model_control_marker_at L97-112 incl KNOWN_MODEL_CONTROL_MARKERS use at L102, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229, control_marker_placement_counts L231-255); full 1048-line file hash-matched to report binding, no uncovered interval affects the cited claims"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "total_lines": 1417,
+      "total_bytes": 49506,
+      "report_bound_sha256": null,
+      "binding_match": null,
+      "read_scope": "KNOWN_MODEL_CONTROL_MARKERS definition L159-180 (20 markers) and strip_trailing_control_marker_case_variants L182-200; read for claim c005 (constant referenced at dialogue_runtime.rs L102 usage site)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": null,
+      "total_lines": 4239,
+      "total_bytes": null,
+      "report_bound_sha256": null,
+      "binding_match": null,
+      "read_scope": "existing-coverage verification: L2494-2653, L2742-2796, L2920-2961, L2979-2989, L3072-3201, L4142-4167; new regression appended at end of module (pre-edit file was 4168 lines / 179822 bytes at SHA-256 not pinned here because it is a dirty accumulator file this round mutates)"
+    }
+  ]
+}

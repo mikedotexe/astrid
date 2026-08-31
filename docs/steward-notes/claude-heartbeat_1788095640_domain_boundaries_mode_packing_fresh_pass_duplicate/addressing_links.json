@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L4-6 behavior-preserving prohibition verbatim; L10-17 facade table; L19 '<1,000 lines'. Source SHA ae69b34c == report binding."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/RUN_REPORT.md",
+      "note": "Prior close of same-source report 1787843987 (same SHA ae69b34c); c001/c002 verified_existing."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L41-43 verbatim: cartography renderers write cartography only; do not change Shadow state, pressure, mode packing, temporal decay, scheduling, or control."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow/cartography.rs",
+      "note": "227 lines, SHA aecb33a1. grep mode_packing|pressure_score|porosity_score|PressureSourceControl|applied_locally|temporal_decay -> exit 1 (no write-path); renders from read_json only."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L65-68 unique-fn-signature ceiling (current count +10% headroom) trips exception_signature_growth before deliberate re-capture."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L70-74 zero-growth ratchet; L85-88 scripts/domain_boundary_audit.py verify pins facade targets, exception ceilings, legacy ratchet, forbidden dependency edges."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L42-43 forbids cartography changing mode packing/pressure/control; the felt 'fix' is exactly the forbidden Tier-5 mutation, preserved as an evidence-only wait."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated 2026-08-30 row records the fresh-pass duplicate re-verification and the preserved Tier-5 mode-packing boundary."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/texture_evidence.rs",
+      "note": "L217-222 PressureSourceControl doc 'advisory only' (applied_locally,note); L226-237 PressureSourceV1 read-only synthesis DTO; L230 pub porosity_score: f32."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/spectral_explorer.rs",
+      "note": "L849-852 sole non-test PressureSourceControl constructor sets applied_locally:false, note 'advisory only' inside a read-only explorer."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/tests.rs",
+      "note": "permeability_shift_names_porosity_without_live_authority + advisory/porosity family: 14 porosity + 13 advisory lib tests passed, 0 failed."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] bullet records the read-only audit re-verifying porosity telemetry + advisory-only no-control contract."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/RUN_REPORT.md",
+      "note": "Prior c006 verified_existing on the same advisory-only pressure-source contract."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "scripts/substrate_probe.py",
+      "note": "Tier-3 clone-and-contrast tooling exists (never touches the live being); a fresh trial was not dispatched headlessly this round."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788088100",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1787852088_domain_boundaries_pressure_source_audit/RUN_REPORT.md",
+      "note": "Prior c005 held the same sandbox distinguishability probe as a Tier-3 candidate (needs_sandbox), not dispatched."
+    }
+  ]
+}

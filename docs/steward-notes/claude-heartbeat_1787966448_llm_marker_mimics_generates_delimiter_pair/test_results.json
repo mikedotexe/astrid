@@ -1,0 +1,33 @@
+{
+  "schema": "round_test_results_v1",
+  "runner": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml",
+  "tests": [
+    {
+      "name": "followed_by_explicit_exact_token_relation_allowlists_mimics_not_generates",
+      "status": "pass",
+      "added": true
+    },
+    {
+      "name": "exact_reference_delimiter_pair_maps_corner_quoted_lenticular_grouped_and_rejects_mismatch",
+      "status": "pass",
+      "added": true
+    },
+    {
+      "name": "followed_by_explicit_exact_token_relation_allowlists_represents_not_creates",
+      "status": "pass",
+      "added": false,
+      "note": "neighbor regression, re-run green"
+    },
+    {
+      "name": "exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped",
+      "status": "pass",
+      "added": false,
+      "note": "neighbor regression, re-run green"
+    }
+  ],
+  "summary": "4 passed; 0 failed; 1902 filtered out (lib crate).",
+  "fmt": {
+    "cargo_fmt_check": "clean for touched tests.rs; only pre-existing foreign drift in src/autonomous/introspect/source_first_v3/grounding.rs (L259,L295) \u2014 not touched this round",
+    "git_diff_check": "clean"
+  }
+}

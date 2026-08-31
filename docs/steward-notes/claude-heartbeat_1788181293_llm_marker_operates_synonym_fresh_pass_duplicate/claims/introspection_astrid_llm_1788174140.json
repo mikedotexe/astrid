@@ -1,0 +1,45 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788174140",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "working_copy_equals_report_binding": true
+  },
+  "variant_distinct_terms": [],
+  "family_head": "introspection_astrid_llm_1788174140",
+  "duplicate_of": "introspection_astrid_llm_1787699463",
+  "duplicate_prior_packet": "docs/steward-notes/claude-heartbeat_1787707869_llm_marker_operates_teleportation_fresh_pass_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm implements a non-destructive scanner for known model control markers; scan_known_model_control_markers (L114-143) keeps a marker in `remainder` only if it has a valid reference_syntax (L129-131), filtering bare markers while preserving referenced ones.",
+      "disposition": "verified_existing. Source at SHA 902a0358 L114-143: for each occurrence, L124 computes reference_syntax; L129-131 pushes occurrence.token to remainder iff reference_syntax.is_some(); otherwise the marker bytes are omitted from remainder (still recorded in `matches`). Exactly her mechanism. Same finding as prior packet introspection_astrid_llm_1787699463 c001.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: first_word_after (L89-96) + hardcoded verb list in followed_by_explicit_exact_token_relation (L64-86); 'functions' is listed but 'operates' is not, so `marker operates as` yields reference_syntax None and the marker is stripped from remainder — a brittle dependency on the model's word choice.",
+      "disposition": "verified_existing. L64-86 list contains 'functions' (L74) and NOT 'operates'; L89-96 lowercases the first alnum word after the marker; unmatched + no delimiter => reference_syntax()=None (L59) => L129 skips the push => marker omitted. Confirmed. The drop is the deliberate safe-default scrub (bare/unlisted-relation markers removed as live control sequences). Widening the allowlist is a Tier-5 production marker-grammar change, not authorized and not done. Same as prior packet c002.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Relation Validation): a known marker followed by a verb NOT in the L64-86 list (e.g. 'marker operates as') should be excluded from remainder because reference_syntax is None.",
+      "disposition": "verified_existing. Behavior proven live by control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts (tests.rs L2603): unlisted 'acts' -> removed_total=1, preserved_explicit_reference_total=0, reference_syntax 'none_cleanup_candidate'; allowlisted 'is' retained. _uses_only_the_first_finite_relation_word (L2640) covers 'acts like'. 'operates' is the same unlisted-verb class; no operates-specific test added (redundant; prior operates packet also declined). 59/59 marker tests pass at SHA 902a0358.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): a nested structure like [[marker]] passed to the delimiter logic should be classified GroupedExactKnownToken and respect MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "verified_existing. exact_reference_delimiter_pair (L153-197) classifies bracket pairs incl. [] as GroupedExactKnownToken (L193); exact_reference_delimiter_syntax (L199-229) counts adjacent stack depth with take(MAX=4). Proven live by control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194), _three_level (L2208), _mixed_ascii_quote_bracket_stack_depth_three (L2222). Minor citation offset: she named exact_reference_delimiter_syntax at L153-197; that range is exact_reference_delimiter_pair, the syntax fn is L199-229 — the Grouped+MAX logic spans both.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: expand the verb list in followed_by_explicit_exact_token_relation to include functional synonyms, or move it to a configurable block.",
+      "disposition": "verified_existing / deliberate authority boundary. Expanding the production relation-verb allowlist changes live marker-scrub grammar (Tier-5: model behavior / codec-adjacent transport grammar). The standing design keeps the conservative safe-default drop of bare/unlisted markers, pinned by control_marker_cleanup_does_not_expand_relation_allowlist_to_{implies,contains,triggers,creates} and _distinguishes_allowlisted_signals_from_unlisted_signifies (all pass). Preserved as Astrid's design preference; not authorized and not inferred as consent to widen. Same posture as prior packet.",
+      "classification": "verified_existing"
+    }
+  ]
+}
