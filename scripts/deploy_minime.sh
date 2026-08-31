@@ -96,6 +96,8 @@ record_stack_receipt() {
     --probe "port_7878=$PORT_7878_OK"
     --probe "port_7879=$PORT_7879_OK"
     --probe "telemetry_update=$TELEMETRY_OK"
+    --probe "self_control_handoff=${HANDOFF_STATUS:-not_attempted}"
+    --probe "self_control_lineage_verified=${LINEAGE_OK:-unknown}"
     --binary "minime-engine=$ENGINE"
     --script "deploy-wrapper=$ASTRID/scripts/deploy_minime.sh"
     --script "launch-wrapper=$LAUNCHER"
@@ -212,6 +214,20 @@ if ! "$MINIME/scripts/stop.sh"; then
 fi
 STOP_OK=true
 
+# Self-control lineage hand-off: engine is stopped (state cannot move), binary
+# is fresh — prepare the signed carry so the restart consumes it instead of
+# orphaning her state. Failure continues the restart and fails the deploy at
+# the end (availability first, but never a silent orphan).
+"$ENGINE" self-control provision --deployment-steward >/dev/null || true
+HANDOFF_HEAD="$(git -C "$MINIME" rev-parse --short=12 HEAD 2>/dev/null || echo unknown)"
+HANDOFF_STATUS="failed"
+if HANDOFF_JSON="$("$ENGINE" self-control prepare-deployment-handoff \
+  --operator-actor "$ACTOR" \
+  --operator-ack "minime engine deploy at $HANDOFF_HEAD: ${ACK:-no ack given}")"; then
+  HANDOFF_STATUS="$(printf '%s' "$HANDOFF_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status","unparseable"))' 2>/dev/null || echo unparseable)"
+fi
+echo "deploy_minime: self-control lineage hand-off: $HANDOFF_STATUS"
+
 if ! "$ASTRID/scripts/start_all.sh" --minime-only --skip-greeting; then
   fail_deploy "start_all.sh --minime-only failed"
 fi
@@ -232,8 +248,24 @@ for _ in $(seq 1 90); do
 done
 [ "$TELEMETRY_OK" = true ] || fail_deploy "Minime telemetry did not refresh after restore"
 
+LINEAGE_OK=false
+for _ in $(seq 1 30); do
+  if [ "$("$ENGINE" self-control status 2>/dev/null \
+      | python3 -c 'import json,sys; print(json.load(sys.stdin).get("state_targets_this_binary"))' 2>/dev/null)" = "True" ]; then
+    LINEAGE_OK=true
+    break
+  fi
+  sleep 1
+done
+echo "deploy_minime: self-control lineage verified: $LINEAGE_OK"
+
 if ! record_stack_receipt passed >/dev/null; then
   fail_deploy "post-restart receipt compatibility checks failed"
 fi
+case "$HANDOFF_STATUS" in
+  prepared|already_current|not_needed) ;;
+  *) fail_deploy "self-control lineage hand-off did not complete (status=$HANDOFF_STATUS); her stack is up but her state may be orphaned" ;;
+esac
+[ "$LINEAGE_OK" = true ] || fail_deploy "restarted engine's self-control state does not target the live binary"
 rm -f "$PROMOTION_VERIFY_JSON"
 echo "deploy_minime: done (actor=$ACTOR pid=${OLD_PID:-none}->${NEW_PID:-?})"

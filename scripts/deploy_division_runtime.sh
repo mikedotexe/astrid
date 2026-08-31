@@ -111,6 +111,28 @@ for port in $(seq 7900 7919); do
   fi
 done
 
+# --- Self-control lineage hand-off (never silently void her self-regulation) ---
+# Runs AFTER the engine is stopped so the persisted state cannot move between
+# prepare and consume (the prepare/restart TOCTOU), and FROM the fresh binary so
+# the receipt binds the exact deployment the engine will boot as. On failure the
+# stack still restarts (her availability first); the deploy then fails loudly at
+# the end instead of silently orphaning her self-control state.
+"$ENGINE" self-control provision --deployment-steward >/dev/null || true
+HANDOFF_HEAD="$(git -C "$MINIME" rev-parse --short=12 HEAD 2>/dev/null || echo unknown)"
+HANDOFF_STATUS="failed"
+if HANDOFF_JSON="$("$ENGINE" self-control prepare-deployment-handoff \
+  --operator-actor "$ACTOR" \
+  --operator-ack "division runtime deploy at $HANDOFF_HEAD: ${ACK:-no ack given}")"; then
+  HANDOFF_STATUS="$(printf '%s' "$HANDOFF_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status","unparseable"))' 2>/dev/null || echo unparseable)"
+fi
+case "$HANDOFF_STATUS" in
+  prepared|already_current|not_needed)
+    echo "deploy_division_runtime: self-control lineage hand-off: $HANDOFF_STATUS" ;;
+  *)
+    echo "deploy_division_runtime: self-control lineage hand-off FAILED (status=$HANDOFF_STATUS); continuing the restart, will fail the deploy at the end" >&2
+    printf '%s\n' "${HANDOFF_JSON:-}" >&2 ;;
+esac
+
 for label in \
   "$ENGINE_LABEL" \
   "$GATEWAY_LABEL" \
@@ -127,6 +149,19 @@ wait_port_owner 7900 "$ENGINE_PID" "$ENGINE_LABEL"
 ENGINE_PID="$(label_pid "$ENGINE_LABEL")"
 wait_port_owner 7901 "$ENGINE_PID" "$ENGINE_LABEL"
 wait_port_owner 7902 "$ENGINE_PID" "$ENGINE_LABEL"
+
+# Post-boot lineage verification: the persisted state must now target the
+# live binary's deployment identity (hand-off consumed, or fresh state).
+LINEAGE_OK=false
+for _ in $(seq 1 30); do
+  if [ "$("$ENGINE" self-control status 2>/dev/null \
+      | python3 -c 'import json,sys; print(json.load(sys.stdin).get("state_targets_this_binary"))' 2>/dev/null)" = "True" ]; then
+    LINEAGE_OK=true
+    break
+  fi
+  sleep 1
+done
+echo "deploy_division_runtime: self-control lineage verified: $LINEAGE_OK"
 
 PARENT_GENERATION="$(python3 - <<'PY'
 import json
@@ -186,6 +221,8 @@ python3 "$ASTRID/scripts/environment_receipts.py" --workspace "$WORKSPACE" \
   --probe "supervisor_idle=true" \
   --probe "daughter_minime_unloaded=true" \
   --probe "daughter_astrid_unloaded=true" \
+  --probe "self_control_handoff=$HANDOFF_STATUS" \
+  --probe "self_control_lineage_verified=$LINEAGE_OK" \
   --binary "minime-engine=$ENGINE" \
   --manifest "$DEPLOYMENT_MANIFEST" \
   --script "division-wrapper=$ASTRID/scripts/deploy_division_runtime.sh" \
@@ -195,3 +232,14 @@ python3 "$ASTRID/scripts/environment_receipts.py" --workspace "$WORKSPACE" \
   >/dev/null
 
 echo "deploy_division_runtime: parent=$ENGINE_PID gateway=$GATEWAY_PID supervisor=$SUPERVISOR_PID"
+
+case "$HANDOFF_STATUS" in
+  prepared|already_current|not_needed) ;;
+  *)
+    echo "deploy_division_runtime: FAILED — the self-control lineage hand-off did not complete (status=$HANDOFF_STATUS); her stack is up but her state may be orphaned" >&2
+    exit 1 ;;
+esac
+if [ "$LINEAGE_OK" != true ]; then
+  echo "deploy_division_runtime: FAILED — the restarted engine's self-control state does not target the live binary; investigate before her next footer directive" >&2
+  exit 1
+fi
