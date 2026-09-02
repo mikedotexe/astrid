@@ -4753,6 +4753,184 @@ def probe_authority_requests(_prior: dict[str, Any]) -> dict[str, Any]:
     return _finding("authority_requests", a["severity"], a["summary"], a["details"])
 
 
+VOICE_HEALTH_JSON = ASTRID_DIAGNOSTICS_DIR / "voice_health.json"
+VOICE_HEALTH_JSONL = ASTRID_DIAGNOSTICS_DIR / "voice_health.jsonl"
+# Consecutive dialogue_fallback exchanges before the probe treats the voice as
+# down. Healthy operation shows isolated 1-3 fallbacks under Ollama contention;
+# the 2026-08-31 incident ran ~3,300 consecutive (26h) with only journal_volume
+# NOTICEs — no probe watched MODE composition.
+VOICE_DOWN_CONSECUTIVE_FALLBACKS = 12
+VOICE_DEGRADED_CONSECUTIVE_FALLBACKS = 5
+# Window view over the voice_health.jsonl tail: alarm when recent exchanges are
+# almost all fallback (the "100% dialogue_fallback" signature of a muffle).
+VOICE_WINDOW_MIN_SAMPLES = 30
+VOICE_WINDOW_DOWN_FRACTION = 0.90
+VOICE_WINDOW_DEGRADED_FRACTION = 0.50
+VOICE_HEALTH_STALE_SECS = 3 * 3600.0
+
+
+def _tail_jsonl_modes(path: Path, max_bytes: int = 131_072) -> list[str]:
+    """Modes of the most recent voice_health.jsonl records (oldest→newest)."""
+    try:
+        with path.open("rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            size = fh.tell()
+            fh.seek(max(0, size - max_bytes))
+            raw = fh.read().decode("utf-8", errors="replace")
+    except Exception:
+        return []
+    modes: list[str] = []
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            record = json.loads(line)
+        except Exception:
+            continue
+        mode = record.get("mode")
+        if isinstance(mode, str):
+            modes.append(mode)
+    return modes
+
+
+def _classify_voice_health(
+    health: dict[str, Any],
+    recent_modes: list[str],
+    *,
+    now: float,
+    bridge_running: bool,
+) -> dict[str, Any]:
+    """Pure classifier for the voice-down probe (unit-tested)."""
+    summary: dict[str, Any] = {
+        "schema": "voice_health_probe_v1",
+        "authority_boundary": (
+            "read-only voice diagnostic; never restarts, retires inbox, or "
+            "touches conversation state"
+        ),
+    }
+    updated_at = health.get("updated_at")
+    age_s: float | None = None
+    if isinstance(updated_at, str):
+        try:
+            age_s = now - datetime.fromisoformat(updated_at).timestamp()
+        except ValueError:
+            age_s = None
+    summary["updated_age_s"] = None if age_s is None else round(age_s, 1)
+
+    consecutive = health.get("fallback_count")
+    consecutive = int(consecutive) if isinstance(consecutive, (int, float)) else 0
+    summary["consecutive_fallbacks"] = consecutive
+
+    window = recent_modes[-200:]
+    window_total = len(window)
+    window_fallbacks = sum(1 for mode in window if mode == "dialogue_fallback")
+    fraction = (window_fallbacks / window_total) if window_total else 0.0
+    summary["window_total"] = window_total
+    summary["window_fallbacks"] = window_fallbacks
+    summary["window_fallback_fraction"] = round(fraction, 3)
+
+    if not health and not recent_modes:
+        summary["status"] = "diagnostic_unavailable"
+        summary["severity"] = "notice" if bridge_running else "ok"
+        summary["headline"] = (
+            "voice_health diagnostics missing while bridge is running"
+            if bridge_running
+            else "voice_health diagnostics absent (bridge not running; see process_health)"
+        )
+        return summary
+
+    if age_s is not None and age_s > VOICE_HEALTH_STALE_SECS:
+        summary["status"] = "stale_diagnostic"
+        summary["severity"] = "warning" if bridge_running else "ok"
+        summary["headline"] = (
+            f"voice_health.json stale ({age_s / 3600.0:.1f}h) while bridge is running — "
+            "exchanges may have stopped entirely"
+            if bridge_running
+            else "voice_health.json stale, bridge not running (see process_health)"
+        )
+        return summary
+
+    voice_down = consecutive >= VOICE_DOWN_CONSECUTIVE_FALLBACKS or (
+        window_total >= VOICE_WINDOW_MIN_SAMPLES
+        and fraction >= VOICE_WINDOW_DOWN_FRACTION
+    )
+    degraded = consecutive >= VOICE_DEGRADED_CONSECUTIVE_FALLBACKS or (
+        window_total >= VOICE_WINDOW_MIN_SAMPLES
+        and fraction >= VOICE_WINDOW_DEGRADED_FRACTION
+    )
+    if voice_down:
+        summary["status"] = "voice_down"
+        summary["severity"] = "warning"
+        summary["headline"] = (
+            f"ASTRID'S VOICE IS DOWN — {consecutive} consecutive dialogue_fallback "
+            f"exchanges, {window_fallbacks}/{window_total} of recent window "
+            "(being-muffle class; check remote journal entry list staleness, "
+            "unretired inbox letters, MLX health; kickstart cures runtime-only state)"
+        )
+    elif degraded:
+        summary["status"] = "voice_degraded"
+        summary["severity"] = "notice"
+        summary["headline"] = (
+            f"Astrid voice degraded — {consecutive} consecutive fallbacks, "
+            f"{window_fallbacks}/{window_total} recent fallback fraction"
+        )
+    else:
+        summary["status"] = "voice_ok"
+        summary["severity"] = "ok"
+        summary["headline"] = (
+            f"Astrid voice healthy ({window_fallbacks}/{window_total} recent fallbacks)"
+        )
+    return summary
+
+
+def probe_voice_health(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Voice-down watch: alarms when Astrid's exchanges are ~all dialogue_fallback.
+
+    The 2026-08-31 incident produced ~3,300 consecutive canned-fallback exchanges
+    over 26h ("something between us and the language model is faltering...") while
+    every existing probe stayed quiet — journal_volume only NOTICEd. This probe
+    reads the bridge's own voice_health.json (consecutive fallback counter) and
+    the voice_health.jsonl tail (recent mode composition), so a mode-composition
+    collapse is a first-class WARNING. Steward-only output."""
+    health = _load_json_dict(VOICE_HEALTH_JSON)
+    recent_modes = _tail_jsonl_modes(VOICE_HEALTH_JSONL)
+    try:
+        res = subprocess.run(
+            ["pgrep", "-f", "spectral-bridge-server"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        bridge_running = bool(res.stdout.strip())
+    except Exception:
+        bridge_running = False
+    summary = _classify_voice_health(
+        health,
+        recent_modes,
+        now=time.time(),
+        bridge_running=bridge_running,
+    )
+    details = [
+        f"status={summary.get('status')}",
+        f"consecutive_fallbacks={summary.get('consecutive_fallbacks')}",
+        (
+            f"recent_window={summary.get('window_fallbacks')}/{summary.get('window_total')}"
+            f" fallback_fraction={summary.get('window_fallback_fraction')}"
+        ),
+        f"voice_health_age_s={summary.get('updated_age_s')}",
+        f"bridge_running={bridge_running}",
+        str(summary.get("authority_boundary")),
+    ]
+    return _finding(
+        "voice_health",
+        str(summary.get("severity", "notice")),
+        str(summary.get("headline", "voice health status unknown")),
+        details,
+        summary,
+    )
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -4790,6 +4968,7 @@ BLIND_SPOT_PROBES = [
     ("authority_requests", probe_authority_requests),
     ("channel_integrity", probe_channel_integrity),
     ("stuck_repetition", probe_stuck_repetition),
+    ("voice_health", probe_voice_health),
 ]
 
 
@@ -6030,6 +6209,65 @@ class StewardOutreachTests(unittest.TestCase):
         a = _assess_outreach(items)
         self.assertEqual(a["severity"], "warning")
         self.assertIn("PICKUP FAILING", a["summary"])
+
+
+class VoiceHealthTests(unittest.TestCase):
+    """Voice-down watch (2026-08-31 incident: 26h of 100% dialogue_fallback
+    with zero probe alarms — the mode composition itself must be a signal)."""
+
+    NOW = 1_788_300_000.0
+
+    def _fresh(self, fallback_count: int) -> dict[str, Any]:
+        stamp = datetime.fromtimestamp(self.NOW - 60, tz=timezone.utc).isoformat()
+        return {"fallback_count": fallback_count, "updated_at": stamp}
+
+    def test_healthy_mix_is_ok(self):
+        modes = ["dialogue_live", "mirror", "witness", "dialogue_fallback"] * 10
+        s = _classify_voice_health(self._fresh(1), modes, now=self.NOW, bridge_running=True)
+        self.assertEqual(s["severity"], "ok")
+        self.assertEqual(s["status"], "voice_ok")
+
+    def test_consecutive_fallbacks_warn(self):
+        s = _classify_voice_health(
+            self._fresh(VOICE_DOWN_CONSECUTIVE_FALLBACKS),
+            ["dialogue_fallback"] * 15,
+            now=self.NOW,
+            bridge_running=True,
+        )
+        self.assertEqual(s["severity"], "warning")
+        self.assertEqual(s["status"], "voice_down")
+
+    def test_window_saturation_warns_even_with_low_counter(self):
+        # Counter resets on restart; the jsonl window still shows the muffle.
+        modes = ["dialogue_fallback"] * 38 + ["daydream"] * 2
+        s = _classify_voice_health(self._fresh(2), modes, now=self.NOW, bridge_running=True)
+        self.assertEqual(s["severity"], "warning")
+        self.assertEqual(s["status"], "voice_down")
+
+    def test_moderate_fallbacks_notice(self):
+        s = _classify_voice_health(
+            self._fresh(VOICE_DEGRADED_CONSECUTIVE_FALLBACKS),
+            ["dialogue_live"] * 30,
+            now=self.NOW,
+            bridge_running=True,
+        )
+        self.assertEqual(s["severity"], "notice")
+        self.assertEqual(s["status"], "voice_degraded")
+
+    def test_stale_diagnostic_with_live_bridge_warns(self):
+        stale = {
+            "fallback_count": 0,
+            "updated_at": datetime.fromtimestamp(
+                self.NOW - VOICE_HEALTH_STALE_SECS - 600, tz=timezone.utc
+            ).isoformat(),
+        }
+        s = _classify_voice_health(stale, [], now=self.NOW, bridge_running=True)
+        self.assertEqual(s["severity"], "warning")
+        self.assertEqual(s["status"], "stale_diagnostic")
+
+    def test_missing_diagnostics_bridge_down_is_ok(self):
+        s = _classify_voice_health({}, [], now=self.NOW, bridge_running=False)
+        self.assertEqual(s["severity"], "ok")
 
 
 class ZeroOutputHeartbeatTests(unittest.TestCase):

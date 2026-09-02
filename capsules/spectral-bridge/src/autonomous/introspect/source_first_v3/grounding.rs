@@ -259,7 +259,9 @@ fn challenge_claim(
 const FELT_STYLE_MARKERS: [&str; 2] = ["i see the ", "i can see the "];
 
 fn matched_only_by_felt_style(lower: &str) -> bool {
-    let felt = FELT_STYLE_MARKERS.iter().any(|marker| lower.contains(marker));
+    let felt = FELT_STYLE_MARKERS
+        .iter()
+        .any(|marker| lower.contains(marker));
     if !felt {
         return false;
     }
@@ -287,16 +289,19 @@ fn detected_claims(response: &str) -> Vec<(ClaimKindV2, String)> {
         if new_implementation {
             claims.push((ClaimKindV2::NewImplementation, line.to_string()));
         }
+        let source_attribution = SOURCE_ATTRIBUTION_MARKERS
+            .iter()
+            .any(|marker| lower.contains(marker));
+        let hypothetical = HYPOTHETICAL_MARKERS
+            .iter()
+            .any(|marker| lower.contains(marker));
+        let felt_style_only =
+            matched_only_by_felt_style(&lower) && backticked_identifiers(line).is_empty();
         if !absence
             && !new_implementation
-            && SOURCE_ATTRIBUTION_MARKERS
-                .iter()
-                .any(|marker| lower.contains(marker))
-            && !HYPOTHETICAL_MARKERS
-                .iter()
-                .any(|marker| lower.contains(marker))
-            && !(matched_only_by_felt_style(&lower)
-                && backticked_identifiers(line).is_empty())
+            && source_attribution
+            && !hypothetical
+            && !felt_style_only
         {
             claims.push((ClaimKindV2::SourceAttribution, line.to_string()));
         }

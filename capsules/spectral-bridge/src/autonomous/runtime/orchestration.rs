@@ -769,7 +769,14 @@ pub fn spawn_autonomous_loop(
                     // should support DEFER — "I heard you, I'm processing" without
                     // forced immediate response. When defer_inbox is set, inbox
                     // content is visible but doesn't override mode selection.
-                    let inbox_forces_dialogue = inbox_content.is_some() && !conv.defer_inbox;
+                    // Bounded forcing: after INBOX_FORCED_FALLBACK_LIMIT consecutive
+                    // forced exchanges that all fell back to canned text, stop forcing
+                    // so other modes can run (the letter stays visible in the prompt
+                    // and is retired by the next non-fallback exchange). Without this
+                    // bound one unretired letter forced 100% dialogue_fallback for 26h
+                    // (2026-08-31 voice-down incident).
+                    let inbox_forces_dialogue =
+                        inbox_content.is_some() && !conv.defer_inbox && conv.inbox_may_force_dialogue();
                     let mode = if inbox_forces_dialogue {
                         next_action::introspection_cadence::observe_due(&mut conv);
                         next_action::introspection_cadence::defer_pending(
@@ -951,6 +958,7 @@ pub fn spawn_autonomous_loop(
                             if conv.pending_remote_self_study.is_some() && journal_context.is_none() {
                                 warn!("pending minime self-study could not be parsed; clearing queue");
                                 conv.pending_remote_self_study = None;
+                                conv.pending_self_study_failed_exchanges = 0;
                             }
                             // Read Ising shadow from minime's workspace for viz.
                             let ising_shadow = conv.remote_workspace.as_deref()
@@ -2030,6 +2038,22 @@ pub fn spawn_autonomous_loop(
                                     }
                                 }
                             } else {
+                                // Previously a SILENT None: no journal context meant no
+                                // generation attempt, no log line, and an instant canned
+                                // fallback. During the 2026-08-31 voice-down incident this
+                                // path ran ~3,300 times in a row without a single warning.
+                                let newest = conv.remote_journal_entries.first();
+                                warn!(
+                                    remote_journal_entries = conv.remote_journal_entries.len(),
+                                    pending_self_study = conv.pending_remote_self_study.is_some(),
+                                    newest_entry = %newest
+                                        .map(|entry| entry.path.display().to_string())
+                                        .unwrap_or_else(|| "<none>".to_string()),
+                                    newest_entry_readable = newest
+                                        .is_some_and(|entry| entry.path.is_file()),
+                                    "dialogue_live skipped: no journal context — falling back \
+                                     to canned text (stale entry list after an archive sweep?)"
+                                );
                                 None
                             };
                             // One-shot — clear after use.
@@ -2138,10 +2162,14 @@ pub fn spawn_autonomous_loop(
                                     if used_pending_self_study {
                                         conv.pending_remote_self_study = None;
                                     }
+                                    conv.note_dialogue_generation_succeeded();
 
                                     ("dialogue_live", text, dialogue_source)
                                 }
                                 None => {
+                                    // Age out a pending self-study after repeated failures
+                                    // so it can never pin Mode::Dialogue forever.
+                                    conv.note_dialogue_generation_failed();
                                     // Fall back to emergency pool — LLM unavailable.
                                     let idx = conv.dialogue_cursor % DIALOGUES.len();
                                     conv.dialogue_cursor = idx + 1;
@@ -4898,6 +4926,10 @@ pub fn spawn_autonomous_loop(
                             ),
                         );
                     }
+
+                    // Track how long an unretired inbox letter has been forcing
+                    // fallback exchanges (bounds the dialogue-forcing above).
+                    conv.note_inbox_exchange_outcome(inbox_content.is_some(), mode_name);
 
                     // Resume perception after exchange completes.
                     if !perception_was_paused {

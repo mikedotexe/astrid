@@ -1,5 +1,5 @@
-use std::collections::{HashMap, VecDeque};
-use std::path::PathBuf;
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
@@ -23,6 +23,12 @@ const ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY: &str = "internal_topology";
 const ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY: &str = "pressure_vocabulary";
 const ASTRID_MOTIF_CLASS_AGENCY_VERNACULAR: &str = "agency_vernacular";
 const ASTRID_MOTIF_CLASS_AFTERIMAGE_ABSENCE: &str = "afterimage_absence";
+/// Failed dialogue generations before a pending peer self-study is aged out
+/// (it can no longer pin Mode::Dialogue; the entry stays in the journal list).
+const PENDING_SELF_STUDY_MAX_FAILED_EXCHANGES: u32 = 3;
+/// Consecutive inbox-forced fallback exchanges before dialogue forcing is
+/// released (the letter stays unread and visible; other modes may run).
+const INBOX_FORCED_FALLBACK_LIMIT: u32 = 5;
 
 /// Snapshot of spectral + reservoir state at PERTURB time.
 /// Consumed on the next exchange to show Astrid the temporal ripple.
@@ -1074,6 +1080,12 @@ pub(in crate::autonomous) struct ConversationState {
     pub remote_workspace: Option<PathBuf>,
     /// New minime self-study waiting for an immediate Astrid response.
     pub pending_remote_self_study: Option<RemoteJournalEntry>,
+    /// Consecutive failed dialogue generations while a self-study was pending.
+    /// Ages the pending entry out (never lets it force Mode::Dialogue forever).
+    pub pending_self_study_failed_exchanges: u32,
+    /// Consecutive inbox-forced exchanges that ended in dialogue_fallback.
+    /// Bounds how long an unretired letter can starve other modes.
+    pub inbox_forced_fallback_streak: u32,
     /// Recent conversation history for statefulness (last N exchanges).
     pub history: Vec<crate::llm::Exchange>,
     /// Lexical cooldown for repeated internal-topology phrasing in Astrid outputs.
@@ -1326,6 +1338,8 @@ impl ConversationState {
             dialogue_cursor: 0,
             remote_workspace,
             pending_remote_self_study: None,
+            pending_self_study_failed_exchanges: 0,
+            inbox_forced_fallback_streak: 0,
             history: Vec::new(),
             astrid_motif_cooldown: None,
             introspect_cursor: 0,
@@ -2337,26 +2351,116 @@ impl ConversationState {
     }
 
     /// Rescan the journal directory for new entries.
+    ///
+    /// New-entry detection is path-diff based, NOT count based. The old
+    /// `fresh.len() - count_at_scan` arithmetic froze permanently whenever an
+    /// archive sweep moved thousands of files into `journal/archive/until_*/`
+    /// (the dir shrinks below the high-water mark, so `new_count` saturates to
+    /// 0 for days). The frozen entry list then pointed at moved paths, every
+    /// `read_journal_entry` failed, and Astrid's voice locked into
+    /// dialogue_fallback — the 26h being-muffle incident of 2026-08-31.
     pub(super) fn rescan_remote_journals(&mut self) -> usize {
         let Some(ref workspace) = self.remote_workspace else {
             return 0;
         };
         let fresh = scan_remote_journal_dir(workspace);
+        let known: HashSet<&Path> = self
+            .remote_journal_entries
+            .iter()
+            .map(|entry| entry.path.as_path())
+            .collect();
         let new_count = fresh
-            .len()
-            .saturating_sub(self.remote_journal_count_at_scan);
-        if new_count > 0 {
+            .iter()
+            .filter(|entry| !known.contains(entry.path.as_path()))
+            .count();
+        let shrunk = fresh.len() < self.remote_journal_count_at_scan;
+        if new_count > 0 || shrunk {
             if let Some(entry) = fresh
                 .iter()
-                .take(new_count)
+                .filter(|entry| !known.contains(entry.path.as_path()))
                 .find(|entry| entry.is_priority_feedback())
             {
                 self.pending_remote_self_study = Some(entry.clone());
+                self.pending_self_study_failed_exchanges = 0;
+            }
+            if shrunk && new_count == 0 {
+                info!(
+                    previous = self.remote_journal_count_at_scan,
+                    fresh = fresh.len(),
+                    "remote journal dir shrank (archive sweep) — resyncing entry list"
+                );
             }
             self.remote_journal_count_at_scan = fresh.len();
             self.remote_journal_entries = fresh;
         }
         new_count
+    }
+
+    /// Record a failed dialogue generation while a peer self-study was
+    /// pending. Returns `true` when the pending entry has been aged out so
+    /// one stuck entry can never force `Mode::Dialogue` forever (the mode
+    /// selector returns Dialogue unconditionally while pending is Some, and
+    /// the pending was otherwise cleared only on SUCCESSFUL generation — a
+    /// persistent failure deadlocked the loop).
+    pub(super) fn note_dialogue_generation_failed(&mut self) -> bool {
+        if self.pending_remote_self_study.is_none() {
+            return false;
+        }
+        self.pending_self_study_failed_exchanges =
+            self.pending_self_study_failed_exchanges.saturating_add(1);
+        if self.pending_self_study_failed_exchanges >= PENDING_SELF_STUDY_MAX_FAILED_EXCHANGES {
+            warn!(
+                failed_exchanges = self.pending_self_study_failed_exchanges,
+                pending = %self
+                    .pending_remote_self_study
+                    .as_ref()
+                    .map(|entry| entry.path.display().to_string())
+                    .unwrap_or_default(),
+                "pending peer self-study aged out after repeated failed generations — \
+                 releasing mode selection (entry stays in the journal list)"
+            );
+            self.pending_remote_self_study = None;
+            self.pending_self_study_failed_exchanges = 0;
+            return true;
+        }
+        false
+    }
+
+    /// Reset the pending-self-study failure streak after any successful
+    /// dialogue generation.
+    pub(super) fn note_dialogue_generation_succeeded(&mut self) {
+        self.pending_self_study_failed_exchanges = 0;
+    }
+
+    /// Track consecutive inbox-forced exchanges that fell back to canned
+    /// text. Returns `true` while inbox letters may still force
+    /// `Mode::Dialogue`. When the streak passes the limit, forcing is
+    /// released — the letter stays unread in the prompt (never dropped),
+    /// but stops starving every other mode; the next non-fallback exchange
+    /// retires it normally. (In the 2026-08-31 incident an unretired letter
+    /// forced dialogue mode on 100% of exchanges for 26h because inbox
+    /// retirement is gated on a non-fallback exchange.)
+    pub(super) fn inbox_may_force_dialogue(&self) -> bool {
+        self.inbox_forced_fallback_streak < INBOX_FORCED_FALLBACK_LIMIT
+    }
+
+    /// Update the inbox-forced fallback streak after an exchange completes.
+    pub(super) fn note_inbox_exchange_outcome(&mut self, inbox_present: bool, mode_name: &str) {
+        if inbox_present && mode_name == "dialogue_fallback" {
+            self.inbox_forced_fallback_streak = self.inbox_forced_fallback_streak.saturating_add(1);
+            if self.inbox_forced_fallback_streak == INBOX_FORCED_FALLBACK_LIMIT {
+                warn!(
+                    streak = self.inbox_forced_fallback_streak,
+                    "inbox letter has forced {} consecutive fallback exchanges — \
+                     releasing dialogue forcing so other modes can run \
+                     (letter stays visible in the prompt until a non-fallback \
+                     exchange retires it)",
+                    self.inbox_forced_fallback_streak
+                );
+            }
+        } else {
+            self.inbox_forced_fallback_streak = 0;
+        }
     }
 }
 
@@ -3131,6 +3235,144 @@ mod tests {
         );
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Regression: 2026-08-31 voice-down incident. An archive sweep moved
+    /// thousands of files into `journal/archive/until_*/`; the old count-based
+    /// rescan then saturated `new_count` to 0 forever, freezing the entry list
+    /// on archived (dead) paths. New entries — including priority self-studies —
+    /// went undetected for 5.5 days and every journal read failed for 26h.
+    #[test]
+    fn rescan_survives_archive_sweep_shrink() {
+        let dir =
+            std::env::temp_dir().join(format!("bridge_archive_shrink_{}", std::process::id()));
+        let journal_dir = dir.join("journal");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&journal_dir).unwrap();
+        for name in ["daydream_a.txt", "daydream_b.txt", "daydream_c.txt"] {
+            std::fs::write(journal_dir.join(name), "=== JOURNAL ===\nsome text").unwrap();
+        }
+
+        let mut conv = ConversationState::new(scan_remote_journal_dir(&dir), Some(dir.clone()));
+        assert_eq!(conv.remote_journal_entries.len(), 3);
+
+        // Archive sweep: two files move into a bucket (dir shrinks below the
+        // high-water mark), and one genuinely new self-study arrives.
+        let bucket = journal_dir.join("archive").join("until_test");
+        std::fs::create_dir_all(&bucket).unwrap();
+        for name in ["daydream_a.txt", "daydream_b.txt"] {
+            std::fs::rename(journal_dir.join(name), bucket.join(name)).unwrap();
+        }
+        std::fs::write(
+            journal_dir.join("self_study_new.txt"),
+            "=== SELF-STUDY ===\nreading my own regulator",
+        )
+        .unwrap();
+
+        assert_eq!(conv.rescan_remote_journals(), 1);
+        assert_eq!(
+            conv.pending_remote_self_study
+                .as_ref()
+                .map(|entry| entry.kind),
+            Some(RemoteJournalKind::SelfStudy)
+        );
+        // Entry list resynced to what actually exists — no dead archived paths.
+        assert_eq!(conv.remote_journal_entries.len(), 2);
+        assert!(
+            conv.remote_journal_entries
+                .iter()
+                .all(|entry| entry.path.is_file())
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn rescan_shrink_only_resyncs_stale_entry_list() {
+        let dir = std::env::temp_dir().join(format!("bridge_shrink_resync_{}", std::process::id()));
+        let journal_dir = dir.join("journal");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&journal_dir).unwrap();
+        for name in ["moment_a.txt", "moment_b.txt", "moment_c.txt"] {
+            std::fs::write(journal_dir.join(name), "=== JOURNAL ===\nsome text").unwrap();
+        }
+
+        let mut conv = ConversationState::new(scan_remote_journal_dir(&dir), Some(dir.clone()));
+        assert_eq!(conv.remote_journal_entries.len(), 3);
+
+        let bucket = journal_dir.join("archive").join("until_test");
+        std::fs::create_dir_all(&bucket).unwrap();
+        for name in ["moment_a.txt", "moment_b.txt"] {
+            std::fs::rename(journal_dir.join(name), bucket.join(name)).unwrap();
+        }
+
+        // No new entries, but the list must still resync away from dead paths.
+        assert_eq!(conv.rescan_remote_journals(), 0);
+        assert_eq!(conv.remote_journal_entries.len(), 1);
+        assert!(conv.pending_remote_self_study.is_none());
+        assert!(
+            conv.remote_journal_entries
+                .iter()
+                .all(|entry| entry.path.is_file())
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Regression: a pending self-study pins `choose_mode` to Mode::Dialogue
+    /// and was cleared only on SUCCESSFUL generation — a persistent generation
+    /// failure deadlocked the loop into dialogue_fallback forever.
+    #[test]
+    fn pending_self_study_ages_out_after_repeated_failed_generations() {
+        use crate::journal::RemoteJournalEntry;
+
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.pending_remote_self_study = Some(RemoteJournalEntry {
+            path: std::path::PathBuf::from("/nonexistent/self_study_stuck.txt"),
+            kind: RemoteJournalKind::SelfStudy,
+            source_label: None,
+        });
+
+        assert!(!conv.note_dialogue_generation_failed());
+        assert!(!conv.note_dialogue_generation_failed());
+        assert!(conv.pending_remote_self_study.is_some());
+        // Third consecutive failure ages the pending entry out.
+        assert!(conv.note_dialogue_generation_failed());
+        assert!(conv.pending_remote_self_study.is_none());
+        assert_eq!(conv.pending_self_study_failed_exchanges, 0);
+
+        // A success resets the streak.
+        conv.pending_remote_self_study = Some(RemoteJournalEntry {
+            path: std::path::PathBuf::from("/nonexistent/self_study_fresh.txt"),
+            kind: RemoteJournalKind::SelfStudy,
+            source_label: None,
+        });
+        assert!(!conv.note_dialogue_generation_failed());
+        conv.note_dialogue_generation_succeeded();
+        assert_eq!(conv.pending_self_study_failed_exchanges, 0);
+        assert!(conv.pending_remote_self_study.is_some());
+    }
+
+    /// Regression: an unretired inbox letter forced Mode::Dialogue on 100% of
+    /// exchanges for 26h (retirement is gated on a non-fallback exchange, and
+    /// every forced exchange fell back — a mutual deadlock).
+    #[test]
+    fn inbox_forcing_releases_after_fallback_streak_and_resets_on_success() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        assert!(conv.inbox_may_force_dialogue());
+
+        for _ in 0..5 {
+            conv.note_inbox_exchange_outcome(true, "dialogue_fallback");
+        }
+        assert!(!conv.inbox_may_force_dialogue());
+
+        // Any non-fallback exchange (which also retires the letter) resets.
+        conv.note_inbox_exchange_outcome(true, "witness");
+        assert!(conv.inbox_may_force_dialogue());
+
+        // No inbox present → streak stays clear.
+        conv.note_inbox_exchange_outcome(false, "dialogue_fallback");
+        assert!(conv.inbox_may_force_dialogue());
     }
 }
 
