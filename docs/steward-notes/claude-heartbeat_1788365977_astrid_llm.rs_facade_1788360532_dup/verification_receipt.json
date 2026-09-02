@@ -1,0 +1,76 @@
+{
+  "schema": "steward_flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller subprocess run adapter (lease + heartbeats adapter-owned; no NDJSON/session/pause-resume; no lease token read/quoted/persisted; git read-only; no build/deploy/launchctl; no live substrate or control change)",
+  "controller": {
+    "run_id": "run_1788361874713392000_772a346369",
+    "preprojection_generation_id": "projection_1788361883810771000_140d6a46ad",
+    "preprojection_status": "passed",
+    "pause_generation": 323,
+    "postprojection": "controller-owned; runs after this adapter process exits (not observed in-run)",
+    "finish_outcome": "success (exit 0) — complete round: 1 report closed with 0 proof gaps, 6th productive Division round recorded, integrity suites run, packet + receipt written; Division RETURN + Tier-5 dossier deferred to next tracker-enforced session per clean-split precedent"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "report_sha256": "445ebdb56dbfd6008165c47f0f6696f2f56f84d9cd27eff21f6a351c90c20491",
+      "witness_id": "lsw_e62e4740e9232e3ec93d8dbf393b610e84bd4a4bd4769e2dfb923c15ed0747fe",
+      "witness_sha256": "11e037431d216af148755e74ac295148dcd4a0d8bf49368eff703faa3b778220",
+      "report_bound_source": "capsules/spectral-bridge/src/llm.rs",
+      "source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "source_binding_match": true,
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "duplicate_of": ["introspection_llm.rs_1788298121", "introspection_llm.rs_1788101279"],
+      "evidence_links": 9,
+      "claim_classifications": {
+        "c001": "verified_existing",
+        "c002": "verified_existing",
+        "c003": "verified_existing",
+        "c004": "tier_5_wait",
+        "c005": "tier_5_wait",
+        "c006": "observed"
+      }
+    }
+  ],
+  "division": {
+    "cycle_sequence": 40,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due": true,
+    "round_recorded_event_id": "division_followup_event_474b57237e9a0c494c0a6438c4f353c4",
+    "event_count": 280,
+    "event_head_sha256": "1d31f6afa9c4c854ccd4df4f3ace08a00a19624019ea0436848f330571ac7e1e",
+    "return_disposition": "DEFERRED to next tracker-enforced session (clean-split precedent, cycles 34-37). The tracker refuses a 7th productive round before the due return; next session starts review_due=true and completes the return + Tier-5 cadence dossier return-first."
+  },
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "anti_drop": "self-test 5 OK; verify 71 guards / 0 gaps / 0 alarms",
+    "audit_counters": "consistent; 0 mismatches; 7/7 checks True",
+    "epistemic_verify": "ok; 0 issues; no history rewrite",
+    "evidence_event_store": "verified_checkpoint seq 976819 head b4191a4f == live head; unit test 21 OK; standalone full re-verify deferred (covered)",
+    "division_verify": "ok; review_due=true; completed=6; head 1d31f6af",
+    "cadence_audit_strict": "integrity_ok=true; 0 errors; 0 duplicate hashes",
+    "steward_control_tests": "26/27; 1 flaky env error (subprocess pause-interrupt fixture, PausedError 'fixture stop'); not a regression (no code changed)"
+  },
+  "counters": {
+    "canonical_indexed": 4570,
+    "canonical_fully_addressed": 3186,
+    "canonical_full_read": 3820,
+    "canonical_remaining": 1384,
+    "canonical_unread": 750,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "counter_audit_status": "consistent"
+  },
+  "authority_boundary": "Evidence only. No live substrate/control change. Vibrancy Gate (c004) and Repair Integrity live run (c005) preserved as Tier-5 Mike/operator approval waits, not run or domesticated. Astrid's pressure-attenuation governor confirmed as her own co-design (self_study_1781734524), default OFF; not altered. Restart/deploy not required or attempted.",
+  "commit_debt_unstaged": [
+    "docs/steward-notes/claude-heartbeat_1788365977_astrid_llm.rs_facade_1788360532_dup/ (new packet)",
+    "CHANGELOG.md ([Unreleased] bullet; file also carries foreign accumulated edits)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (one dated row; file also carries foreign accumulated edits)",
+    "capsules/spectral-bridge/workspace/logs/flywheel_loop.log (one appended line; runtime log)"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "round_unprocessed_selected_v1",
+  "selected_count": 1,
+  "processed_count": 1,
+  "unprocessed_count": 0,
+  "stop_reason": "Single-report honest batch: queue head binds a large unfamiliar 1048-line source; family scan members sit at the 0.35-0.39 threshold with 26-32 variant_distinct_terms (not tight duplicates). One report fully closed within one-shot budget.",
+  "processed": [
+    "introspection_astrid_llm_1788139420.txt"
+  ],
+  "unprocessed_selected_in_queue_order": []
+}

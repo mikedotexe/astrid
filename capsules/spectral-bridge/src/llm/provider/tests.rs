@@ -2833,6 +2833,149 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_first_word_after_skips_period_and_newline_before_relation() {
+        // Astrid (introspection_astrid_llm_1788347252, report SHA-256
+        // cfddd3fb5fadd7670b529b6d90e780dde343c0cf50a5fe168e42e819baf29a5c)
+        // proposed a "Contextual Preservation Test": a marker followed by
+        // "behaves" but "separated by a period or a newline" (her example
+        // `[MARKER]. behaves as...`), asking whether
+        // `scan_known_model_control_markers` (dialogue_runtime.rs L114) still
+        // identifies the relation and keeps the marker. Her "Likely Snag" was
+        // that `first_word_after` (L89) "might skip the intended verb or return
+        // an empty string," stripping a marker that should be preserved. Complete
+        // source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee
+        // contradicts the skip: `first_word_after` splits on whitespace (L91) and
+        // per-chunk trims non-alphanumeric chars (L92), so a standalone `.` chunk
+        // collapses to empty and `find(!is_empty)` (L93) returns the verb; a
+        // newline is Unicode White_Space, so `split_whitespace` separates it and
+        // the verb is the first chunk. Her non-breaking-space case is already
+        // pinned by scan_known_model_control_markers_grounds_first_word_after_non_breaking_space;
+        // this regression grounds the two remaining separators she named (period,
+        // newline) without widening grammar. Allowlist membership, not the
+        // separator, is the sole preservation gate.
+        let period = "Here, <end_of_turn>. behaves as the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(period, "Here, <end_of_turn>".len()),
+            "behaves",
+            "the standalone period chunk is skipped; the allowlisted verb is captured"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(period);
+        assert_eq!(stripped, period);
+        let report = report.expect("period-separated allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        // Newline separator: U+000A is Unicode White_Space, so split_whitespace
+        // separates it and the allowlisted verb is the first non-empty chunk.
+        let newline = "Here, <end_of_turn>\nbehaves as the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(newline, "Here, <end_of_turn>".len()),
+            "behaves",
+            "a newline is whitespace, so the verb is still the first word"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(newline);
+        assert_eq!(stripped, newline);
+        let report = report.expect("newline-separated allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        // Correction preserved (as in the colon regression): her literal bracketed
+        // `[MARKER].` form is preserved by the *delimiter* path
+        // (GroupedExactKnownToken, L44), not the relation path — the period after
+        // the closing bracket is never consulted for the relation decision.
+        let bracketed = "Here, [<end_of_turn>]. behaves as the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(bracketed);
+        assert_eq!(stripped, bracketed);
+        let report = report.expect("bracketed period relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+
+        // Control: the same period before an UNLISTED verb strips the bare marker,
+        // isolating the gate to allowlist membership rather than the period.
+        let unlisted = "Here, <end_of_turn>. triggers the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(unlisted, "Here, <end_of_turn>".len()),
+            "triggers"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(unlisted);
+        assert_eq!(stripped, "Here, . triggers the boundary I am naming.");
+        let report = report.expect("period-separated unlisted relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_first_word_after_trims_fused_leading_parenthesis() {
+        // Astrid (introspection_astrid_llm_1788308998, report SHA-256
+        // 0758a81176a842b28c076dee9920ce8691e4c43b57157a88347c4ff077a17b0d)
+        // raised a "Likely Snag": for a marker followed by a punctuation-heavy
+        // parenthetical (her example `[MARKER] (as a test)`), `first_word_after`
+        // (dialogue_runtime.rs L89) "might fail to identify 'as' as the primary
+        // relation if the `trim_matches` doesn't account for the specific nested
+        // structure of the parenthetical." Complete source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee shows
+        // the snag does not manifest: unlike the `--` and `:` regressions above —
+        // where the punctuation is a SEPARATE whitespace chunk that collapses to
+        // empty and is skipped by `find(!is_empty)` — here the `(` is FUSED to the
+        // word inside one chunk (`(as`). The per-chunk
+        // `trim_matches(|c| !c.is_alphanumeric() && c != '_')` strips that leading
+        // `(` (and the trailing `)` of `test)`), so the chunk yields "as". No
+        // existing test placed a delimiter character fused to the relation word,
+        // so this pins the trim path her snag actually questioned. Allowlist
+        // membership, not the parenthesis, remains the sole preservation gate.
+        let listed = "The <end_of_turn> (as a test) still names a boundary.";
+        assert_eq!(
+            super::first_word_after(listed, "The <end_of_turn>".len()),
+            "as",
+            "the leading `(` fused to `as` is trimmed within the chunk"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(listed);
+        assert_eq!(stripped, listed, "allowlisted `as` keeps the marker byte-exact");
+        let report = report.expect("fused-parenthesis allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        // Control: the same fused parenthetical before an UNLISTED verb strips the
+        // bare marker, isolating the gate to allowlist membership, not the `(`.
+        let unlisted = "The <end_of_turn> (acts a test) still names a boundary.";
+        assert_eq!(
+            super::first_word_after(unlisted, "The <end_of_turn>".len()),
+            "acts"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(unlisted);
+        assert_eq!(stripped, "The  (acts a test) still names a boundary.");
+        let report = report.expect("fused-parenthesis unlisted relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_does_not_expand_relation_allowlist_to_implies() {
         let text = "Here, <end_of_turn> implies the boundary I am naming.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -2937,6 +3080,60 @@ mod tests {
                 "none_cleanup_candidate"
             );
         }
+    }
+
+    #[test]
+    fn control_marker_cleanup_rejects_interior_double_hyphen_joined_relation_suffix() {
+        // Astrid's introspection_astrid_llm_1788118438 proposed a "Grammar
+        // Recognition Test" with a marker followed by a complex non-alphanumeric
+        // relation (`[MARKER] acts--as`), expecting `first_word_after`
+        // (dialogue_runtime.rs L89) to "correctly identify `acts`" so
+        // `followed_by_explicit_exact_token_relation` (L64) returns `true`.
+        // Source contradicts that expectation: `first_word_after` trims
+        // non-alphanumeric characters only from the ENDS of each whitespace
+        // chunk (L92), so an interior `--` is kept and the whole chunk
+        // `acts--as` is returned — neither the unlisted prefix `acts` nor the
+        // listed suffix `as`. The whole chunk is not on the exact relation
+        // allowlist, so the marker is a cleanup candidate and removed. This
+        // grounds her exact interior double-hyphen shape, distinct from interior
+        // single-punct `is-not`/`is/not` (L2920, listed prefix) and
+        // whitespace-separated ` -- acts as -- ` (L2735, leading-punct chunk).
+        let rejected = "Here, <end_of_turn> acts--as a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(rejected);
+
+        assert_eq!(
+            super::first_word_after(rejected, "Here, <end_of_turn>".len()),
+            "acts--as"
+        );
+        assert_eq!(
+            stripped,
+            "Here,  acts--as a proxy for the boundary I am naming."
+        );
+        let report = report.expect("interior double-hyphen non-relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+
+        // Control: the bare listed relation word `as` immediately after the
+        // marker IS preserved, proving the rejection above is the double-hyphen
+        // joining, not the word `as` being absent from the allowlist (L68).
+        let retained = "Here, <end_of_turn> as a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(retained);
+        assert_eq!(
+            super::first_word_after(retained, "Here, <end_of_turn>".len()),
+            "as"
+        );
+        assert_eq!(stripped, retained);
+        let report = report.expect("bare listed `as` relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
     }
 
     #[test]

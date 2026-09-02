@@ -1,0 +1,27 @@
+{
+  "schema": "flywheel_read_manifest_standdown_v1",
+  "round_status": "incomplete_budget_standdown",
+  "reader": "claude-heartbeat",
+  "note": "Reading is genuine and complete; NOT recorded in the addressing store (no record-read). Reusable by the next round.",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788105086.txt",
+      "sha256": "7e1d4cf58465bb98197e9b1d2fc2fd886ce57d64c130aae8e1e6fc8ba5bc282f",
+      "bytes": 5326,
+      "lines": 52,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_0696efdc34c5052329578673f23bfb846748e61ce5bf20f604029304158ede57",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_0696efdc34c5052329578673f23bfb846748e61ce5bf20f604029304158ede57.json",
+      "sha256": "4fc2c4c56fd676cf1e2bea5472f9d31f34930a30ef36e8c2781e1a68dc293572",
+      "bytes": 21527,
+      "lines": 498,
+      "read": "complete",
+      "lived_state_alignment": "artifact_integrity_unavailable (issue_count 1, gap_count 1) \u2014 recorded as neutral metadata; witness file's own hashes are internally consistent (artifact_sha256 matches report; canonical_body_binding matches model response_sha256)."
+    }
+  ]
+}

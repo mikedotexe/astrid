@@ -1,0 +1,24 @@
+{
+  "schema": "steward_source_receipts_v1",
+  "round": "claude-heartbeat_1788331883_domain_boundaries_structural_read",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "total_lines": 89,
+      "total_bytes": 5022,
+      "read_scope": "complete_file lines 1-89",
+      "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+      "hash_match": true,
+      "role": "report-bound source"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "sha256": "fca5d5562a3c560659c18e6cb35f09e7b782754b0bc50b20a763f04e34a2d5d4",
+      "total_lines": 329,
+      "total_bytes": 12956,
+      "read_scope": "complete_file lines 1-329",
+      "role": "secondary evidence for c004 (Ghost Authority Gap): runtime_path_not_exported_in_telemetry state + effect-receipt guard test"
+    }
+  ]
+}

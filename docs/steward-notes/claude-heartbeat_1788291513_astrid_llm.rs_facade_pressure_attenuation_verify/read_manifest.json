@@ -1,0 +1,23 @@
+{
+  "schema": "round_read_manifest_v1",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1788101279.txt",
+      "sha256": "b0246a341cefaee4684405012e143b1601db3b6b77c6073080a91ce7843e6237",
+      "bytes": 3243,
+      "lines": 46,
+      "read": "complete",
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "witness_id": "lsw_42bc71b2a9d26a01817826d85e341bfe7d25813fbd0f02694e2d1ff83898c21a"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_42bc71b2a9d26a01817826d85e341bfe7d25813fbd0f02694e2d1ff83898c21a.json",
+      "sha256": "7335eb251d333cbe4bae51591f5444b9b15b44953dc96c37cec445a3fd2e6ebd",
+      "bytes": 23821,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

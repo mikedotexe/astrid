@@ -1,0 +1,35 @@
+{
+  "round": "division_cycle40_return",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1788371854.txt",
+      "sha256": "261756c2efc4bfd410d5dd6c64985063edf0c4652e5787f35718b020d903052a",
+      "bytes": 3332,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_b2a7952718836f84a2483e7e8dafc092b1f7b237faefbae4b7729fb635c10825",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b2a7952718836f84a2483e7e8dafc092b1f7b237faefbae4b7729fb635c10825.json",
+      "sha256": "a222de3ca11cb3a797016408356579d773aa2de5bb751d9a077bcab7a6fc5c21",
+      "bytes": 23824,
+      "lines": 533,
+      "read": "complete"
+    }
+  ],
+  "division_return_reads": {
+    "chronicle_v1_json_return_time_sha256": "57b886e0661d941e3d1fe407fdc62bfe8e79c20fd9beaebb2c68588bbd7958f3",
+    "chronicle_v1_json_post_followup_sha256": "b77ae9de6853710545ea2bc2f9de3088f351560d04a154dbe258216991f9402c",
+    "astrid_steward_report_read": {
+      "path": "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788357200.txt",
+      "sha256": "dbb9e62c51dd23d223fb56a96ea67c6f8d5eb7624f4e7866fc363dce9a65bd41",
+      "bytes": 283,
+      "lines": 8,
+      "read": "complete"
+    }
+  }
+}

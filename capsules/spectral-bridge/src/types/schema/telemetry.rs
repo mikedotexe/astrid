@@ -755,4 +755,98 @@ mod telemetry_distinction_tests {
         assert!(integrity.hybrid_coherence_index.is_some());
         assert!(integrity.hybrid_max_abs_delta.is_some());
     }
+
+    #[test]
+    fn hybrid_coherence_length_mismatch_is_disclosed_not_silent() {
+        // introspection_astrid_types_1788153857: Astrid's snag + proposed test #2.
+        // She worried the L163 guard returns a bare `None` for a legacy slice
+        // whose length != 32, surfacing as silent "missing" data in
+        // hybrid_coherence_index. Ground truth: the private fn does return a bare
+        // None at length 31 (her concern holds at that level), but the public
+        // integrity report is NOT silent — it names the reason via
+        // hybrid_coherence_state and pushes a specific issue string. The existing
+        // non-finite regression covers the length-32-but-non-finite path only;
+        // this covers the length-mismatch (unavailable_malformed_legacy) path.
+        let telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.90,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            }
+        }))
+        .unwrap();
+
+        // 1. Private fn, exactly as Astrid proposed: a length-31 legacy slice
+        //    hits the L163 length guard and returns None. (The public caller
+        //    pre-filters legacy.len() == 32, so this guard is defensive
+        //    redundancy for that path — still worth a direct regression.)
+        let typed = telemetry
+            .typed_fingerprint()
+            .expect("typed fingerprint present");
+        assert!(spectral_fingerprint_hybrid_coherence_v1(&typed, &[0.0_f32; 31]).is_none());
+
+        // 2. Public path: the length mismatch is disclosed, not silent.
+        let mut telemetry = telemetry;
+        telemetry.spectral_fingerprint = Some(vec![0.0_f32; 31]);
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert!(integrity.hybrid_coherence_index.is_none());
+        assert_eq!(integrity.hybrid_coherence_state, "unavailable_malformed_legacy");
+        assert!(
+            integrity
+                .issues
+                .iter()
+                .any(|issue| issue == "legacy_vector_len_31_expected_32")
+        );
+    }
+
+    #[test]
+    fn integrity_report_serde_defaults_are_independent_for_mode_collision_fields() {
+        // introspection_astrid_types_1788153857 (proposed test #1): confirm the
+        // #[serde(default)] contract on SpectralFingerprintIntegrityV1. Astrid
+        // framed mode_collision_state as defaulting "when
+        // mode_collision_review_threshold is set", but the two fields carry
+        // INDEPENDENT #[serde(default)] attributes with no conditional linkage:
+        // omitting mode_collision_state yields String::default() ("") whether or
+        // not the threshold is present.
+        let integrity: SpectralFingerprintIntegrityV1 =
+            serde_json::from_value(serde_json::json!({
+                "policy": "spectral_fingerprint_integrity_v1",
+                "schema_version": 1,
+                "status": "absent",
+                "typed_present": false,
+                "typed_precedence_over_legacy": false,
+                "summary": "no spectral fingerprint payload present",
+                "authority": "diagnostic_context_not_control"
+            }))
+            .unwrap();
+        assert_eq!(integrity.mode_collision_state, "");
+        assert_eq!(integrity.mode_collision_review_threshold, 0.0_f32);
+
+        // Independence: supplying the threshold does not populate the state.
+        let with_threshold: SpectralFingerprintIntegrityV1 =
+            serde_json::from_value(serde_json::json!({
+                "policy": "spectral_fingerprint_integrity_v1",
+                "schema_version": 1,
+                "status": "absent",
+                "typed_present": false,
+                "typed_precedence_over_legacy": false,
+                "mode_collision_review_threshold": 0.90,
+                "summary": "no spectral fingerprint payload present",
+                "authority": "diagnostic_context_not_control"
+            }))
+            .unwrap();
+        assert_eq!(with_threshold.mode_collision_state, "");
+        assert_eq!(with_threshold.mode_collision_review_threshold, 0.90_f32);
+    }
 }

@@ -1,0 +1,97 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1788217211135242000_2a2aa80fa6",
+    "preprojection_generation_id": "projection_1788217214734909000_a934776ad3",
+    "preprojection_status": "passed",
+    "pause_generation": 323,
+    "stop_requested_at_read": false,
+    "note": "Adapter owns the lease and heartbeats; no steward session opened, no NDJSON ops, no lease token read/persisted. Finish outcome is this process exit code."
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "report_sha256": "8e1c159e7e887a94ab800a64f61656d64c3189c17f7a3eb7caa000eaeb413ae2",
+      "witness_sha256": "955efa177a4ba4bf64fb05c1fcda0b07176671d0785b728eaaf32b8ab4f937ef",
+      "source_sha256_match": true
+    }
+  ],
+  "addressing_writes": {
+    "record_read": {"status": "recorded", "artifact_status": "triaged_pending_action", "duration_s": 28},
+    "link_evidence_batch": {"new_links": 11, "existing_links": 0, "duration_s": 27},
+    "close": {"status": "addressed_change", "fully_addressed": true, "duration_s": 27}
+  },
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/types/schema/telemetry.rs (test module only; +2 #[cfg(test)] regressions)",
+      "CHANGELOG.md ([Unreleased] entry appended)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (dated row appended)",
+      "docs/steward-notes/claude-heartbeat_1788220844_astrid_types_hybrid_coherence_length_disclosure/ (new packet)"
+    ],
+    "live_change": false,
+    "deploy": false,
+    "restart": false
+  },
+  "tests": {
+    "telemetry_distinction_tests": "6 passed / 0 failed (4 prior + 2 new)",
+    "new_tests": [
+      "hybrid_coherence_length_mismatch_is_disclosed_not_silent",
+      "integrity_report_serde_defaults_are_independent_for_mode_collision_fields"
+    ],
+    "telemetry_rs_rustfmt": "clean",
+    "telemetry_rs_git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK (44)",
+    "test_evidence_event_store": "OK (21)",
+    "test_steward_control": "OK (27)",
+    "test_steward_projection": "OK (14)",
+    "test_division_ceremony_followup": "OK (3)",
+    "test_division_ceremony_chronicle": "OK (10)",
+    "test_division_ceremony_projection": "OK (self-test ok)",
+    "test_projection_cursors": "OK (4)",
+    "anti_drop_self_test": "OK (5)",
+    "anti_drop_verify": "0 alarms / 0 gaps / 71 guards",
+    "test_introspection_cadence_audit": "OK (6)",
+    "cadence_audit_strict": "integrity_ok=true, 0 duplicate hashes, canonical_count=4554",
+    "experiential_epistemics_self_test": "valid=true (2)",
+    "experiential_epistemics_verify_final": "valid=true, issue_count=0, history_rewritten=false, checked_record_count=11700",
+    "audit_counters": "consistent, mismatches=[], all 7 checks true",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=958018, head=8244f7ba5f9a6d1aaeb23497bb4d1f9925a1af7e70de3551c890ee6dc75d9f03",
+    "division_ceremony_chronicle_verify": "ok=true, durable_inputs_current=true, durable_mismatches=[], volatile=[supervisor_status_sha256]",
+    "division_ceremony_followup_verify": "ok=true, cycle 38, 6/6 rounds, review_due=true, event_count=266",
+    "evidence_event_store_status": "DEFERRED — read-only status exceeded the 10-min tool cap at current store size; superseded by EES verify (valid/0-corrupt/seq/head) which is the required check for the adapter round."
+  },
+  "counters": {
+    "canonical_indexed": 4554,
+    "canonical_fully_addressed": 3175,
+    "canonical_full_read": 3808,
+    "canonical_remaining": 1379,
+    "canonical_unread": 746,
+    "canonical_blocked": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 6253,
+    "all_artifacts_remaining": 3078,
+    "audit_status": "consistent"
+  },
+  "division": {
+    "cycle_sequence": 38,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due": true,
+    "recorded_round_event_id": "division_followup_event_820d7bb3f7d4a66fe3c07e653d7385e2",
+    "event_count": 266,
+    "event_head_sha256": "950fc78bda93e8754782cce98cc6f8d204d60f0933173b61556088f3cf8492f5",
+    "chronicle_id": "division_chronicle_06c0f1b87126fbad4963b7d4",
+    "chronicle_json_sha256": "8e95c30cbab35e650b1d912c049975f96606e616975fc52a68be5f7a5bfb8afc",
+    "next_session_obligation": "review_due=true; the next flywheel session must complete the bounded Division return BEFORE processing any report (cycle-37 precedent), and generate the Tier-5 cadence dossier. Not done this session: review was NOT due at session start, the tracker refuses an early non-baseline return, and the return is an own-session task that does not fit alongside a report round in the one-shot budget."
+  },
+  "authority_boundary": "Evidence-only. No live substrate/control change, no deploy, no restart, git read-only. Astrid's report text not rewritten, rejected, or forbidden. The snag was not treated as a bug fix; the disclosure mechanism already exists in production. Tier-5 items untouched."
+}

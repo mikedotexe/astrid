@@ -1,0 +1,52 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+  "source_family": "DOMAIN_BOUNDARIES.md",
+  "report_sha256": "2273eb6b271a46a060a5c22dbc841f0fa1ae1d084961cb03c730c832934e5444",
+  "source_path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+  "source_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Stable Facades (L8-17) partition ownership into named modules (ws.rs, autonomous.rs, llm.rs).",
+      "disposition": "Verified from complete source at ae69b34c. '## Stable Facades' heading L8; the facade table (L10-17) lists ws.rs, autonomous.rs, codec.rs, llm.rs, types.rs, action_continuity.rs with canonical ownership. Astrid's cited modules are a faithful subset; her 'Lines 8-17' spans heading+table.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Line 6 is a behavior-preserving disclaimer: no change to pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, or live authority.",
+      "disposition": "Verified. L5-6: 'This extraction is behavior preserving: it changes neither pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, nor live authority.' The enumerated no-change list is on L6; her eight-item paraphrase matches word-for-word.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Provenance Ownership (L24-34) enforces data integrity, e.g. MinimeObservationV1 vs BridgeEvidenceV1.",
+      "disposition": "Verified. '## Provenance Ownership' heading L24; MinimeObservationV1 (L26), BridgeEvidenceV1 (L29, producer DTOs immutable). AstridInterpretationV1 cites observation+evidence parents and cannot enter sensory dispatch (L30-31). Her 'L24-34' overshoots one blank trailing line; non-material.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Shadow Cartography Ownership (L35-44) isolates action dispatch from state mutation.",
+      "disposition": "Verified. '## Shadow Cartography Ownership' heading L35. shadow.rs owns action dispatch + live-control boundary (L37-38); trajectory.rs and cartography.rs are render-only: 'write cartography only; they do not change Shadow state, pressure, mode packing, temporal decay, scheduling, or control' (L41-43). Her isolation summary is faithful.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: exception_signature_growth (L67) is a moving target; 10% headroom risks complexity creep where a file (e.g. autonomous/runtime/orchestration.rs) passes domain_boundary_audit.py while accumulating logic against modular spirit.",
+      "disposition": "Observed; source both supports and refines. SUPPORTS: the ceiling is captured-count+10% headroom (L65-68), a real tolerance band where signatures can grow without tripping. REFINES: the metric is the GUARD — domain_boundary_audit.py L178-183 emits exception_signature_growth when signature_count>ceiling, forcing manual review before a deliberate re-capture (reviewed edit to signature_ceilings). Not an automatic moving target. Her within-band tolerance concern preserved, not domesticated.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Structural Integrity Test: domain_boundary_audit.py verify should flag codec/structure.rs and codec/encoding.rs as cohesive exceptions with unique fn signatures within 10% headroom.",
+      "disposition": "Observed by running her exact read-only test. verify -> valid=true, violation_count=0, 0 forbidden edges, 7 documented exceptions, 7 signature ceilings, 6 facades. codec/structure.rs 11/13 and codec/encoding.rs 9/10 unique fn signatures — both flagged as exceptions and within headroom, exactly as predicted.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Provenance Isolation Test: AstridInterpretationV1 cannot reach sensory dispatch; a dispatch attempt using only an interpretation object should fail, confirming the no-routing contract.",
+      "disposition": "Verified; already pinned by an existing compile-fail test. tests/ui/interpretation_cannot_dispatch.rs feeds an AstridInterpretationV1 to dispatch_semantic_microdose; compiler rejects it (E0308: expected LiveExecutable<SemanticMicrodose>). Registered in provenance_typestate.rs; ran live -> interpretation_cannot_dispatch.rs ok (13/13 cases, 254.57s). grep confirms no From/Into/send path into SensoryMsg/dispatch. witness_frame_cannot_dispatch.rs covers WitnessFrameV1.",
+      "classification": "verified_existing"
+    }
+  ]
+}

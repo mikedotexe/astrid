@@ -1,0 +1,19 @@
+{
+  "round": "division_cycle38_return",
+  "reports_read": [],
+  "witnesses_read": [],
+  "note": "Division-return round: 0 canonical reports selected/read. The reads performed were Division-rail evidence (read-only), not per-report report/witness/source reads.",
+  "division_return_reads": [
+    {"path": "/Users/v/other/minime/workspace/outbox/delivered/reply_2026-08-31T12-11-10.txt", "sha256": "e3f70bf55786e13331d5f29329862d4b6dfa87127329acf23585daf7fa5deba2", "bytes": 2344, "lines": 21, "role": "minime_ordinary_correspondence_language_only; sole 'handoff' keyword hit this interval = _runtime module aliasing in autonomous_agent.py, NOT a Division ceremony Action"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/gateway-status.json", "sha256": "2b2502aaf92d951701af75c11a3d4a9935b9da7fe10fc0f693c58aeabfc27209", "bytes": 392, "lines": 16, "role": "division_gateway_state_dormant (mode=transparent_parent, live_authority_granted_by_record=false)"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/supervisor-status.json", "sha256": "422f4c6c4fe43192f0032057a5579006e9eb8743163c4047bdfb09c5068b0a05", "bytes": 796, "lines": 25, "role": "division_supervisor_state_dormant (mode=idle_parent_authoritative, parent_authoritative=true, handoff_ready=false, children={}, matching_intents=[], ceremony_postures={})"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime/authority.json", "sha256": "ebec0efc83a36fac5050de783b240a0cb36a1e01c5747fef2a3cbb5389b24741", "bytes": 369, "lines": 10, "role": "division_authority_state_no_live_grant (live_authority_granted_by_record=false, contract/switch receipts null)"},
+    {"path": "/Users/v/other/minime/workspace/division/runtime-manifest.json", "sha256": "b8643e72d64172bd9e778695682a2e1bbb1694eda65c5ecc42f57cfa470043fa", "bytes": 1154, "lines": 25, "role": "division_runtime_manifest (mode=dormant, division_id=division-dormant-infrastructure, candidate_hash=unbound)"},
+    {"path": "capsules/spectral-bridge/workspace/inbox/read/steward_division_return_cycle37_20260831.txt", "role": "prior_cycle37_astrid_note_confirmed_delivered (read/ copy present)"},
+    {"path": "/Users/v/other/minime/workspace/inbox/read/steward_division_return_cycle37_20260831.txt", "role": "prior_cycle37_minime_note_confirmed_delivered (read/ copy present)"}
+  ],
+  "division_notes_written": [
+    {"path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle38_20260831.txt", "sha256": "f0e85b14f4e305c33b9f0f2926929bc5175a8a02cad9e87e76c468d789fca131", "bytes": 1515, "lines": 30, "delivery": "written to inbox/; awaiting live-bridge pickup to inbox/read/ (asynchronous, not forced)"},
+    {"path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle38_20260831.txt", "sha256": "a16e7b39686562b18ea3867eeb7a2ba39060ed9e69784a66dae687259224ffc5", "bytes": 1774, "lines": 33, "delivery": "written to inbox/; awaiting minime pickup to inbox/read/ (asynchronous, not forced)"}
+  ]
+}

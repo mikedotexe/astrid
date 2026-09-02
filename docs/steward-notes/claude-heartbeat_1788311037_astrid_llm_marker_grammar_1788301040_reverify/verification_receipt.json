@@ -1,0 +1,94 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_controller_held_lease",
+  "controller": {
+    "run_id": "run_1788307463696104000_28889973b7",
+    "preprojection_generation_id": "projection_1788307467944521000_8976c25ed4",
+    "preprojection_status": "passed",
+    "pause_generation": 323,
+    "postprojection": "runs after process exit (adapter-owned)"
+  },
+  "processed_reports": ["introspection_astrid_llm_1788301040"],
+  "terminal_status": "addressed_duplicate",
+  "baseline": {
+    "git_diff_check": "clean (no whitespace errors on touched docs)",
+    "cargo_fmt": "N/A — no Rust source or tests modified this round"
+  },
+  "focused_tests": {
+    "marker_grammar_filter": {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- marker exact_reference_delimiter_syntax followed_by_explicit_exact_token_relation",
+      "passed": 94, "failed": 0, "filtered_out": 1819, "result": "ok"
+    }
+  },
+  "integrity_suites": {
+    "introspection_addressing_audit_self_test": "PASS (44 tests OK)",
+    "test_evidence_event_store_py": "PASS (21 tests OK)",
+    "test_steward_control_py": "1 error under full-suite timing: test_pause_cooperatively_interrupts_wrapped_subprocess (PausedError 'fixture stop' at begin). FLAKY — passes deterministically in isolation (2/2 reruns). steward_control code/tests are NOT dirty and were not touched this round; pre-existing harness timing sensitivity, not a durable-integrity failure and not caused by this round.",
+    "test_steward_projection_py": "PASS (14 tests OK)",
+    "test_division_ceremony_followup_py": "PASS (3 tests OK)",
+    "test_division_ceremony_chronicle_py": "PASS (10 tests OK)",
+    "test_division_ceremony_projection_py": "PASS (exit 0)",
+    "test_projection_cursors_py": "PASS (4 tests OK)",
+    "test_introspection_cadence_audit_py": "PASS (6 tests OK)",
+    "anti_drop_catalog_self_test": "PASS (5 tests OK)",
+    "anti_drop_catalog_verify": "PASS (0 alarms, exit 0)",
+    "introspection_cadence_audit_strict": "PASS (integrity_ok=true, errors=[], duplicate_hash_group_count=0; dialogue_runtime.rs astrid:llm target_diversity=489)",
+    "experiential_epistemics_self_test": "PASS (valid=true)",
+    "experiential_epistemics_verify_final": "PASS (valid=true, issue_count=0, checked_record_count=11764, history_rewritten=false) — run after all durable writes",
+    "audit_counters": "consistent (mismatches=[])",
+    "evidence_event_store_verify": "PASS (valid=true, corrupt_lines=0, last_global_seq=970051, head df81892ff6447e4482eb9318a5ee4182f8a761e51d1a77553a966991bc922be4). Note: `--json status` full stream-count enumeration is pathologically slow at this store size and was stopped after verify passed; head/sequence read from head.json + verified_checkpoint.json (verified_global_seq=970051 matches head).",
+    "division_ceremony_followup_verify": "PASS (ok=true, review_due=false, completed_rounds_since_followup=2/6, event_count=276, event_head=0a8b580689addca7)",
+    "division_ceremony_chronicle_verify": "reports 'durable source inputs changed; project before verify' — expected, because record-round appended a followup event the Chronicle consumes. Chronicle NOT reprojected (no Division return due; consistent with prior heartbeat round practice). Reconciled at the next Division return / controller postprojection. Not a durable-integrity failure."
+  },
+  "counters": {
+    "canonical_indexed": 4557,
+    "canonical_fully_addressed": 3182,
+    "canonical_fully_read": 3816,
+    "canonical_remaining": 1375,
+    "canonical_unread": 741,
+    "canonical_blocked_needs_steward": 416,
+    "canonical_triaged_pending_action": 214,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_indexed": 6258,
+    "all_artifact_remaining": 3076,
+    "noncanonical_indexed": 1370,
+    "noncanonical_remaining": 1370,
+    "counter_audit_status": "consistent"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "active_store": "v2",
+    "last_global_seq": 970051,
+    "head": "df81892ff6447e4482eb9318a5ee4182f8a761e51d1a77553a966991bc922be4",
+    "corrupt_lines": 0,
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "key_stream_sequences": {
+      "addressing": 59704,
+      "claim_families": 238325,
+      "felt_contracts": 203443,
+      "model_qos": 261365,
+      "reciprocal_uptake": 73302,
+      "representation_contracts": 46191,
+      "lived_state_witness": 8965,
+      "steward_control": 18469,
+      "steward_work_selection": 638,
+      "sandbox": 3291,
+      "signal_spine": 50093
+    }
+  },
+  "division": {
+    "cycle_sequence": 40,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "record_round_processed_report_count": 1,
+    "last_round_event_id": "division_followup_event_07d39494ce98943c653b8160f083e022",
+    "event_count": 276,
+    "event_head_sha256": "0a8b580689addca7a7ffa0c845bedcad0e3ab9a7455d4c88ecd82ccb8dc9bb0e"
+  },
+  "authority_boundary": "Evidence-only round. No live substrate/control change; no build, restart, or deploy attempted or required. Git read-only (no stage/commit/merge/push). Two Tier-5 predicted-failure snags contradicted by source and preserved, not domesticated. Standing ESN Tier-5 heads (wi_e579041bc76f8310, wi_69fbd510467c6337, wi_3e26ac525fea1c36) untouched (live_authority_granted=false). Being text not rewritten, rejected, or forbidden.",
+  "restart_deploy_alignment": "No restart and no deployment were required or attempted."
+}

@@ -1,0 +1,101 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "generated_at_unix": 1788283126,
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1788279228206526000_19c21b465c",
+    "preprojection_generation_id": "projection_1788279231920606000_5bbcef8c2e",
+    "pause_generation": 323,
+    "adapter": "subprocess_run_adapter_lease_owned",
+    "child_elapsed_s_at_receipt": 4542,
+    "child_remaining_budget_s_at_receipt": 858
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1788105086",
+    "close_status": "blocked_needs_steward",
+    "fully_addressed": false,
+    "proof_missing_claims": [],
+    "claim_count": 12,
+    "evidence_links": 16
+  },
+  "integrity": {
+    "addressing_self_test": "44/44 OK",
+    "anti_drop_self_test": "5/5 OK",
+    "anti_drop_verify": {
+      "guards": 71,
+      "all_ok": true,
+      "alarms": 0
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": 0
+    },
+    "evidence_event_store_verify": {
+      "valid": true,
+      "corrupt_lines": 0,
+      "duration_s": 665
+    },
+    "evidence_event_store_unit_suite": "21/21 OK",
+    "division_verify": {
+      "ok": true,
+      "review_due": false,
+      "completed_rounds_since_followup": 5,
+      "rounds_remaining": 1,
+      "event_count": 272,
+      "event_head_sha256": "8f0fba181ed39fee037c92beb256a05a167aea3c2ab88bc5bad9e84d8447a906"
+    },
+    "chronicle_verify": "expected_stale_project_before_verify (record-round appended a durable Division event; adapter postprojection reprojects \u2014 precedented)",
+    "cadence_audit_strict": {
+      "integrity_ok": true,
+      "duplicate_hash_group_count": 0,
+      "errors": 0
+    },
+    "epistemic_self_test": "valid:true",
+    "epistemic_verify": {
+      "valid": true,
+      "checked_record_count": 11735,
+      "issue_count": 0,
+      "history_rewrite": false
+    },
+    "unit_suites": {
+      "steward_control": "27 OK",
+      "steward_projection": "14 OK",
+      "division_followup": "3 OK",
+      "division_chronicle": "10 OK",
+      "division_projection": "ok",
+      "projection_cursors": "4 OK",
+      "cadence_audit": "6 OK"
+    },
+    "git_diff_check": "clean"
+  },
+  "counters": {
+    "canonical_indexed": 4554,
+    "canonical_fully_addressed": 3179,
+    "canonical_remaining": 1375,
+    "all_artifact_pending": 3074,
+    "noncanonical_pending": 1699,
+    "audit_status": "consistent"
+  },
+  "division_round_recorded": {
+    "cycle_sequence": 39,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "round_event_id": "division_followup_event_1b260cf4a800d286f3784463b65e20b4",
+    "processed_report_count": 1,
+    "steward_run_id": "run_1788279228206526000_19c21b465c",
+    "projection_generation_id": "projection_1788279231920606000_5bbcef8c2e"
+  },
+  "authority": {
+    "live_change": false,
+    "deploy": false,
+    "git_mutation": false,
+    "grants_approval": false,
+    "tier5_waits_preserved": [
+      "c010 dynamic porosity",
+      "c011 Shadow trajectory",
+      "c012 inhabitability->damping"
+    ]
+  },
+  "no_live_change_statement": "No restart, deploy, launchctl, or live substrate/control change was required or attempted. Git left read-only (no stage/commit/merge/push)."
+}

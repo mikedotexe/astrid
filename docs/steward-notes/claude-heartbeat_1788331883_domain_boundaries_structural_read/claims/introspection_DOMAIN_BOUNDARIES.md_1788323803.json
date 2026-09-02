@@ -1,0 +1,45 @@
+{
+  "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+  "report_sha256": "437a660eb533bc308b66a8827ca0e5da4396f13e672cd6f1178802c972d10e4d",
+  "source_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "source_working_copy_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "source_hash_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "DOMAIN_BOUNDARIES.md maps Stable Facades (lines 8-17); llm.rs owns provider transport and prompt rendering.",
+      "disposition": "Verified against complete source at report-bound SHA ae69b34c. '## Stable Facades' heads line 8; table rows 12-17 list ws.rs, autonomous.rs, codec.rs, llm.rs, types.rs, action_continuity.rs. Line 15: llm.rs owns 'provider transport, prompt/dialogue rendering, fallback evidence and budgets, research, embeddings'. Astrid's 'provider transport and prompt rendering' is a faithful subset.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Line 6 behavioral disclaimer: extraction changes neither pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, nor live authority.",
+      "disposition": "Verified. Lines 3-6 state the extraction is behavior-preserving; the enumerated boundary 'changes neither pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, nor live authority' spans lines 5-6 and closes on line 6. Word-for-word match; attribution to 'Line 6' is exact for the enumeration's terminal line.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Cohesion Exceptions (lines 45-75) cover files above the 1000-line signal, governed by a unique-fn-signature ceiling.",
+      "disposition": "Verified. '## Cohesion Exceptions' heads line 45; body 47-74 (line 75 blank before ## Verification at 76 -- minor tail off-by-one in Astrid's '45-75'). Seven exception files named; lines 65-68 define the unique-fn-signature ceiling (current count +10% headroom) that trips 'exception_signature_growth'. domain_boundary_audit.py verify reports the ceilings intact, 0 violations.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Ghost Authority Gap: regulator_participation is present in source but runtime_path_not_exported_in_telemetry is active, risking assumed active oversight where only static permission exists.",
+      "disposition": "Verified as an already-encoded distinction, not an oversight. regulator_participation.rs (SHA fca5d556) sets runtime_path_state='runtime_path_not_exported_in_telemetry' when stable_core_enabled is None (L56-60); machine_effect_established and felt_effect_established are always false (L168-169); doc comment L21-25 states it 'preserves that uncertainty instead of presenting applied_locally as proof'. Test descriptor_and_declared_control_do_not_become_effect_receipts pins it. Her risk is exactly what the code guards against.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 1 (Structural Integrity): run domain_boundary_audit.py verify to confirm shadow.rs dispatch ownership and no forbidden interpretation-to-dispatch edges.",
+      "disposition": "Observed by running her proposed Test 1 read-only: valid=true, violation_count=0, forbidden_edge_match_count=0, stable_facade_count=6, resolved_large_file_debt_count=1. Confirms DOMAIN_BOUNDARIES L37 (shadow.rs owns action dispatch) and L85-88 (audit pins forbidden interpretation/witness-to-dispatch edges). No forbidden edge active. Bounded observation; no runtime routing or control implied.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Test 2 (Friction): dispersal_potential observed at 0.0721; the fixed boundary may bottleneck how cartography.rs renders coupling.",
+      "disposition": "Mechanism contradicted by source: DOMAIN_BOUNDARIES L41-43 -- cartography.rs modules 'write cartography only; they do not change Shadow state, pressure, mode packing, temporal decay, scheduling, or control.' Rendering ownership (cartography.rs) is distinct from dispersal-state ownership (shadow.rs Shadow/fissure_tendency), so cartography cannot create a dispersal bottleneck. Cited 0.0721 also diverges from witness dispersal_potential 0.1269 (fissure_tendency, stale 31s). Felt concern re fixedness preserved; any dispersal change is Tier 5 (intentional Shadow movement), not authorized here.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "source_receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "bytes": 1287,
+      "total_lines": 28,
+      "read_scope": "complete_file lines 1-28",
+      "report_bound_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "working_copy_matches_binding": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "3418f8d1f69d7d556fdbfe5d2c01f9866e0e8d01c6797cc10a9452ada38f833c",
+      "bytes": 32643,
+      "total_lines": 240,
+      "read_scope": "adjacent: L225-245 (pressure attenuation governor)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "sha256": "32cb19e0c4d7510f5e6dfbc8323549cd1078bb61cec94d66171315d7ed66c4bf",
+      "bytes": 32410,
+      "total_lines": 685,
+      "read_scope": "adjacent: L137-210 (repair_introspection / repair_introspection_detailed)"
+    }
+  ]
+}

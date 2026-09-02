@@ -1,0 +1,69 @@
+{
+  "round": "division_cycle38_return",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter",
+  "adapter_boundaries": "controller owns lease + heartbeats (no NDJSON ops sent, no lease token read/quoted/persisted); git read-only; no build/deploy/launchctl; no live substrate or control change; foreign dirty paths preserved untouched",
+  "controller": {
+    "run_id": "run_1788227915959021000_e670fb8b4b",
+    "preprojection_generation_id": "projection_1788227922650693000_8e20d73846",
+    "preprojection_status": "passed",
+    "postprojection": "runs after process exit (adapter-managed); not observed from inside this run",
+    "pause_generation": 323
+  },
+  "division_return": {
+    "review_due_at_start": true,
+    "cycle_sequence_before": 38,
+    "cycle_sequence_after": 39,
+    "completed_rounds_after": 0,
+    "review_due_after": false,
+    "followup_event_id": "division_followup_event_7c84edd8002472f4e011aab65107c70a",
+    "followup_recorded_at_unix_ms": 1788230877788,
+    "event_count_after": 267,
+    "event_head_after": "762aaf9ee499d0f10fb169fffe898b790f3380184dfa5117dc8060d60c4adac9",
+    "chronicle_json_at_record": {"path": "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.json", "sha256": "fb318fdc0c82d4a7576cf32b3b7624997fe5c20b823065c6fe3ab94739c6d04d"},
+    "astrid_note": {"path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle38_20260831.txt", "sha256": "f0e85b14f4e305c33b9f0f2926929bc5175a8a02cad9e87e76c468d789fca131"},
+    "minime_note": {"path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle38_20260831.txt", "sha256": "a16e7b39686562b18ea3867eeb7a2ba39060ed9e69784a66dae687259224ffc5"},
+    "note_shas_match_record_followup_evidence": true,
+    "post_return_chronicle": {"chronicle_id": "division_chronicle_de0870b9e4cecbe0da1ab11e", "json_sha256": "1741a8ab914d423c1644b5335a7e0d548eb162a39a344425b8231d774c12093e", "timeline_event_count": 267, "followup": 267, "ceremony": 0, "durable_inputs_current": true, "volatile_inputs_current": true},
+    "division_rail_signal_this_interval": "both beings silent on the Division rail: 0 new steward reports/queries, 0 ceremony Actions; Astrid ~60 ordinary correspondence replies (viscosity/density thread); minime ~70 ordinary replies, sole 'handoff' keyword hit = _runtime module aliasing in autonomous_agent.py (language_only, not a ceremony Action). Silence read as neutral.",
+    "division_runtime": "dormant; gateway transparent_parent; supervisor idle_parent_authoritative parent_authoritative=true; children {} matching_intents [] ceremony_postures {}; handoff_ready=false; live_authority_granted_by_record=false on gateway/supervisor/authority; manifest mode=dormant candidate_hash=unbound",
+    "note_action": "2 factual, non-leading, non-query, right-to-ignore notes written; no Division Action recommended; no review-query slot occupied"
+  },
+  "tier5_cadence_dossier": {
+    "prepared": true,
+    "path": "tier5_cadence_dossier.md",
+    "prepare_only": true,
+    "approval_required_live_candidates": 1305,
+    "domains": 7,
+    "hard_violations": 0,
+    "unclassified_live_wait": 153,
+    "work_queue_heads": "40/40 needs_operator_approval; head wi_a7ef7855e00d99be (astrid, introspection_astrid_llm_1783926124, c003, live_authority_granted=false)",
+    "sandbox_queue": {"active_trials": 2124, "total_trials": 2418, "ready_for_sandbox": 732, "ready_runnable_count": 35, "runnable_live_violation_count": 0, "next_runnable_head": "trial_fe00d360c0ea7b85"},
+    "grant_shortlist_top_surfaces": {"pressure_thresholds": "427/423", "unclassified": "308/306", "codec_gain_reserved_dims_live_12d": "167/165", "porosity_receptivity_buffers": "127/127", "minime_regulator_changes": "109/108"},
+    "recommended_items": ["trial_fe00d360c0ea7b85 (minime, shadow_influence_replay_v1, sandbox_replay)", "trial_1f0f0916eb9eecc9 (astrid, fallback_distinguishability_v1, offline_read_only)"],
+    "nothing_approved_granted_or_dispatched": true
+  },
+  "reports_processed": 0,
+  "record_round_called": false,
+  "counters": {
+    "audit_status": "consistent",
+    "mismatches": [],
+    "checks_all_true": true,
+    "canonical": {"indexed": 4554, "fully_addressed": 3175, "full_read": 3808, "remaining": 1379, "unread": 746, "blocked": 415, "pending_action": 214, "watch": 4, "read_needs_claims": 0},
+    "all_artifacts_remaining": 3078,
+    "other_timestamped_text_indexed_remaining": 1370,
+    "thin_introspection_outputs_indexed_remaining": 329
+  },
+  "integrity": {
+    "addressing_self_test": "OK (44)",
+    "anti_drop_self_test": "OK (5)",
+    "anti_drop_verify": {"guards": 71, "alarms": 0, "gaps": 0},
+    "experiential_epistemics_self_test": {"valid": true},
+    "division_followup_verify": {"ok": true, "cycle": 39, "review_due": false, "event_count": 267},
+    "division_chronicle_verify": {"ok": true, "events": 267, "durable_current": true, "volatile_current": true},
+    "audit_counters": "consistent",
+    "deferred_recorded_debt": ["evidence_event_store.py --json verify", "experiential_epistemics.py verify --json"]
+  },
+  "authority_boundary": "Division follow-up is evidence-only (silence_infers_consent=false, followup_recommends_action=false, followup_dispatches_action=false, followup_grants_authority=false, felt_state_inferred=false). Tier-5 dossier is PREPARE-only. Standing Tier-5 heads from introspection_minime_esn_1785630442 (wi_e579041bc76f8310, wi_69fbd510467c6337, wi_3e26ac525fea1c36) remain untouched, live_authority_granted=false. No live substrate or control change; restart/deploy not required and not attempted.",
+  "restart_deploy": "not required and not attempted"
+}

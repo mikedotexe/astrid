@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Stable Facades heading L8, ownership table L10-17 (ws.rs/autonomous.rs/llm.rs/codec.rs/types.rs/action_continuity.rs). Complete source SHA ae69b34c."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "L5-6 behavior-preserving disclaimer: no change to pressure, fill, PI, sensory cadence, codec gain, admission, controller behavior, live authority — word-for-word."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Provenance Ownership heading L24; MinimeObservationV1 L26, BridgeEvidenceV1 immutable L29, AstridInterpretationV1 cannot enter dispatch L30-31."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Shadow Cartography Ownership heading L35; shadow.rs owns dispatch L37-38; trajectory.rs/cartography.rs render-only, change no Shadow state L41-43."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "scripts/domain_boundary_audit.py",
+      "note": "exception_signature_growth emitted when signature_count > signature_ceiling (L178-183); ceiling = captured count + 10% headroom (DOMAIN_BOUNDARIES.md L65-68). Metric is the guard; re-capture is a reviewed edit to signature_ceilings (L104/L169)."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788344340_domain_boundaries_signature_headroom_provenance_dispatch/no_action_domain_boundaries_1788335079.md",
+      "note": "Evidence-backed no-action rationale; her within-headroom tolerance concern preserved as valid signal, not dismissed. Signature-ceiling re-capture stays a reviewed edit; no live change."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788344340_domain_boundaries_signature_headroom_provenance_dispatch/source_receipts.json",
+      "note": "Ran her Structural Integrity Test read-only: domain_boundary_audit.py verify valid=true, 0 violations; codec/structure.rs 11/13 and codec/encoding.rs 9/10 within headroom."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/ui/interpretation_cannot_dispatch.rs",
+      "note": "Existing compile-fail case: AstridInterpretationV1 -> dispatch_semantic_microdose rejected (E0308). Grounds her Provenance Isolation Test."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/tests/provenance_typestate.rs",
+      "note": "Registers interpretation_cannot_dispatch.rs (L7). Ran live: provenance_domains_cannot_be_forged_or_dispatched ok, 13/13 compile-fail cases pass, 254.57s."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/witness/provenance.rs",
+      "note": "AstridInterpretationV1 (L405) exposes only provenance/distinction/authorship_gradient accessors — no From/Into/send path into SensoryMsg/dispatch, so the no-routing contract holds by construction."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the read-only verification of DOMAIN_BOUNDARIES.md structural claims + Astrid's two proposed tests."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: Astrid's DOMAIN_BOUNDARIES snag + tests -> verified/observed, no code change, snag refined with source evidence."
+    }
+  ]
+}

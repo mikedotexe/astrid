@@ -1,0 +1,46 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788308998",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan L114; reference_syntax L49; delimiter_pair L153-197; relation allowlist L64-86 at SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788308998",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 per-chunk trim_matches strips fused leading '('."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788308998",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_first_word_after_trims_fused_leading_parenthesis (new) \u2014 passes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788308998",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two L3280; four_level L2194; beyond_max L2301."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788308998",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts L3200-3210."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788308998",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L530 line-filter on input vs L558/L997 byte-scan on output; disjoint."
+    }
+  ]
+}

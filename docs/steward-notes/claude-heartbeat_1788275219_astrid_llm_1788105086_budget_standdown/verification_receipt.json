@@ -1,0 +1,35 @@
+{
+  "schema": "flywheel_verification_receipt_standdown_v1",
+  "round_status": "incomplete_budget_standdown",
+  "productive_round_recorded": false,
+  "addressing_store_mutated": false,
+  "division_round_recorded": false,
+  "live_or_deploy_change": false,
+  "git_staged_or_committed": false,
+  "durable_system_checks_run": {
+    "division_ceremony_followup_verify": {
+      "ran": true,
+      "ok": true,
+      "event_count": 271,
+      "event_head_sha256": "af3ec1b996c568eab36bdd65c3d540435ec86957641497acd41b831618379f02",
+      "review_due": false,
+      "cycle": 39,
+      "completed_rounds": "4/6"
+    },
+    "evidence_event_store_status": {
+      "ran": "attempted",
+      "ok": "did_not_return_within_240s",
+      "note": "read-only calibration; confirms store slowness; left running in background, harmless"
+    },
+    "addressing_self_test": {
+      "ran": false,
+      "reason": "budget standdown"
+    },
+    "audit_counters": {
+      "ran": false,
+      "reason": "budget standdown"
+    }
+  },
+  "next_round_recommended_disposition": "blocked_needs_steward (Tier-5 authority boundary on 3 substrate proposals)",
+  "honesty": "No integrity suite is claimed as passing beyond division verify (ok=true at round start). This round is recorded as failed/incomplete."
+}

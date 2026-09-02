@@ -1,0 +1,63 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788301040",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "report_sha256": "e5e46e8f79839709f3935417bc79228b4a3416f0a45c24bbfa059c3fa400d9f6",
+  "witness_id": "lsw_2a0fbc0cd1d8f1692fedcc999d04e83e63a545b7e8aec06446ac5a71ff9b7c53",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The astrid:llm module is a stateful scanner distinguishing raw marker bytes from functional role: referenced-as-string vs acting-as-command.",
+      "disposition": "verified_existing. Complete source at 902a0358: KnownModelControlMarkerMatch (L19-22) pairs an occurrence with an Option<reference_syntax>; scan_known_model_control_markers (L114-144) rebuilds a remainder, pushing the token back only when reference_syntax.is_some() (L129-131), i.e. a referenced marker is preserved and an acting/unreferenced marker is stripped. Her distinction is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "exact_reference_delimiter_syntax (L199) and followed_by_explicit_exact_token_relation (L64) determine whether a marker is a literal or a directive.",
+      "disposition": "verified_existing. L199 defines exact_reference_delimiter_syntax; L64 defines followed_by_explicit_exact_token_relation; reference_syntax (L49-60) calls delimiter syntax first, then the relation check. Citations are byte-exact against complete source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "scan_known_model_control_markers (L114) reconstructs a clean dialogue string while preserving identified-marker metadata in a KnownModelControlMarkerMatch vector.",
+      "disposition": "verified_existing. L114-144 builds (String remainder, Vec<KnownModelControlMarkerMatch> matches); each match carries occurrence + reference_syntax metadata. Exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151) and CONTROL_MARKER_CONTEXT_WINDOW_CHARS (L257) bound the look-ahead/look-behind scope.",
+      "disposition": "verified_existing. L151 = 4, applied via .take(MAX_EXACT_REFERENCE_DELIMITER_DEPTH) on before/after char scans (L208, L213). L257 = 64, applied in trailing_bounded_chars/leading_bounded_chars (L272-286). Both bounds are exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Snag: char-by-char delimiter inspection may return None for a multibyte-UTF-8-adjacent or uncovered delimiter, causing the marker to be treated as a raw command not a quoted string.",
+      "disposition": "verified_existing with correction. Consequence is real: unrecognized delimiter -> reference_syntax None -> not preserved -> stripped (the intended fail-closed cleanup, not a bug). But the mechanism is imprecise: the scan uses .chars() (Unicode-scalar-aware, L206-214), so multibyte UTF-8 never splits; many listed delimiters ARE multibyte and are preserved. Grounded by control_marker_scanner_advances_byte_exactly_across_multibyte_text, ..._abuts_four_byte_astral_chars, ..._preserves_non_ascii_matching_quote_pairs, cjk_corner_quoted_and_lenticular_grouped, ..._does_not_preserve_unclosed_or_mismatched_delimiters.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Snag: longest_exact_known_model_control_marker_at (L97) max_by_key(len) might prioritize a longer string that is a fragment of a different command if not validated against the full vocabulary.",
+      "disposition": "verified_existing; contradiction preserved. Source contradicts the mechanism: candidates are filtered to tokens in KNOWN_MODEL_CONTROL_MARKERS that the tail starts_with (L102-106), so every candidate is a COMPLETE vocabulary token, never an unvalidated fragment. known_model_control_markers_have_no_proper_prefix_shadow (tests L3309) proves no marker is a proper prefix of another, so the prefix-shadow overlap she anticipates is unreachable. That regression was authored to answer the identical greedy-shadow snag in prior report introspection_astrid_llm_1787782248. Concern preserved: the invariant test fails loudly if a future prefix-overlapping marker is added.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test proposal: verify a quoted marker resolves to QuotedExactKnownToken and a marker followed by a relation verb resolves to ExplicitExactKnownTokenRelation.",
+      "disposition": "verified_existing. The distinction is covered: control_marker_cleanup_preserves_quoted_exact_token_reference (quoted->Quoted), scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (relation->ExplicitRelation), and ..._quoted_context_precedes_following_relation_verb (both present -> quoted precedence, matching source L50-53). Note: her example STOP is not in KNOWN_MODEL_CONTROL_MARKERS (real markers e.g. <end_of_turn>, [INST]); the existing tests use real markers, so no gap remains.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Test proposal: a nested structure exceeding MAX_EXACT_REFERENCE_DELIMITER_DEPTH should make the parser fail to identify the inner-most marker as a reference, preventing hallucinated context.",
+      "disposition": "verified_existing; contradiction preserved. Actual behavior differs from the predicted failure: context is set from the innermost adjacent delimiter regardless of depth; only the reported delimiter_depth saturates at 4 via .take(MAX). control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (tests L2301, [[[[[<end_of_turn>]]]]]) and ..._bounds_deeper_delimiter_receipt_without_dropping_token (L2288) show the token stays byte-exact and preserved, context still grouped, depth bounded to 4 — it does not fail to classify. L2301 was authored to answer the identical proposal in prior report introspection_astrid_llm_1787026288.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the matches vector is consumed to influence output.",
+      "disposition": "verified_existing / her own agency. Pointer is accurate: generate_dialogue is at L695. Consumption path is via sanitize_model_control_markers(_with_report) (L352-521) used by is_valid_dialogue_output (L558) and has_one_nonempty_final_next_action (L634). This is a Tier-1 self-activated continuation she can pursue (NEXT: INTROSPECT astrid:llm 400); no steward implementation is required or authorized by it.",
+      "classification": "verified_existing"
+    }
+  ]
+}

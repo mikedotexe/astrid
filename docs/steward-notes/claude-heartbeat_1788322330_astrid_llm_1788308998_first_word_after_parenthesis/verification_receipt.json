@@ -1,0 +1,11 @@
+{
+  "schema": "verification_receipt_v1",
+  "round_status": "INCOMPLETE_BUDGET_SHORTFALL_EXIT_NONZERO",
+  "report_processed_analytically": "introspection_astrid_llm_1788308998",
+  "report_addressing_status": "unread (NOT closed \u2014 addressing record-read/link-evidence-batch/close NOT run this cycle)",
+  "durable_source_edit": "capsules/spectral-bridge/src/llm/provider/tests.rs (+1 focused regression, compiles, passes; file was already dirty from prior rounds)",
+  "division_round_recorded": false,
+  "integrity_suites_run": false,
+  "reason": "Only ~7 min of the 5400s child cap remained when analysis+test completed (preprojection consumed the front of the budget; three cold cargo compiles consumed most of the rest). The slow addressing mutations over a ~700k-event store cannot safely complete; starting record-read risked SIGINT mid-append. Chose honest failed exit over half-written evidence.",
+  "next_cycle": "Head introspection_astrid_llm_1788308998 remains at queue head; re-process and close citing the already-added regression + the four verified_existing dispositions in claims/."
+}

@@ -1,0 +1,80 @@
+{
+  "round": "claude-heartbeat cycle-40 llm.rs facade fresh-pass duplicate",
+  "mode": "controller subprocess run adapter (lease + heartbeats adapter-owned; no NDJSON/session/pause-resume; git read-only)",
+  "controller": {
+    "run_id": "run_1788298126875578000_161781edd1",
+    "preprojection_generation_id": "projection_1788298131075160000_c72e45d00e",
+    "preprojection_status": "passed",
+    "postprojection": "controller-owned; runs after adapter process exit; not observed in-run",
+    "pause_generation": 323,
+    "evidence_before": {"last_global_seq": 968156, "last_event_sha256": "ec9955ab3ae2b8ed075a76ce2f95acd238ba947cd1075fc2086e2b6e59ebf556"}
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "report_sha256": "26b1e690e69f118e219df34919e1adb0d13837b58d65491379eb80793513326e",
+      "report_bytes": 3757, "report_lines": 45,
+      "witness_id": "lsw_97c60ebafb4f24c11ef8db0c2436f956741b0237244099f80f80277be22a599d",
+      "witness_sha256": "4d4ddcbcbc3edffe2deb1faf4c622b49442778120535d03134de0034dc9f3e9b",
+      "witness_bytes": 23807, "witness_lines": 533,
+      "source_path": "capsules/spectral-bridge/src/llm.rs",
+      "source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "source_working_copy_matches_binding": true,
+      "duplicate_of": "introspection_llm.rs_1788101279",
+      "duplicate_prior_packet": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/",
+      "evidence_links_new": 12, "evidence_links_existing": 0
+    }
+  ],
+  "adjacent_source_verified": [
+    {"path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs", "sha256": "3418f8d1f69d7d556fdbfe5d2c01f9866e0e8d01c6797cc10a9452ada38f833c", "scope": "L225-245 pressure-attenuation governor (env ASTRID_PRESSURE_ATTENUATION -> f32 -> map_or(0.0, clamp(0.0,0.6)), default OFF)"},
+    {"path": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs", "scope": "L137-210 repair_introspection returns Option<String> via repair_introspection_detailed(...).map(|r| r.text): text-lane regen, no reservoir mutation"}
+  ],
+  "unprocessed_count": 39,
+  "unprocessed_head": "introspection_llm.rs_1788290680.txt",
+  "division": {
+    "cycle_sequence": 40,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "record_round_processed_report_count": 1,
+    "last_round_event_id": "division_followup_event_2ca4e4755bb6092a264f17b4b772a263",
+    "event_count": 275,
+    "event_head_sha256": "f2f78bc170f5f30518a2a622f34a207142f8533b6d0dfbc751ab2b31057abf41"
+  },
+  "integrity": {
+    "addressing_self_test": "PASS (rc0)",
+    "test_evidence_event_store_py": "PASS",
+    "test_steward_control_py": "PASS",
+    "test_steward_projection_py": "PASS on isolated re-run (14/14, 14.2s); one flaky ERROR under parallel CPU load — test_projection_renews_past_lease_ttl_and_returns_fresh_token raised LeaseError 'lease expired' (a lease-TTL-timing test); no steward_control source was touched this round, confirmed timing flake not a regression",
+    "test_division_ceremony_followup_py": "PASS",
+    "test_division_ceremony_chronicle_py": "PASS",
+    "test_division_ceremony_projection_py": "PASS",
+    "test_projection_cursors_py": "PASS",
+    "anti_drop_self_test": "PASS (rc0)",
+    "test_introspection_cadence_audit_py": "PASS",
+    "experiential_epistemics_self_test": "PASS",
+    "anti_drop_verify": "PASS (rc0, alarms 0, gaps 0)",
+    "introspection_cadence_audit_strict": "PASS (integrity_ok=true, errors [], canonical_count 4557, no duplicate hashes)",
+    "final_epistemic_verify": "PASS (valid=true, issues [], issue_count 0, history_rewritten=false)",
+    "audit_counters": "consistent (mismatches [], all 7 checks true)",
+    "evidence_event_store_verify": "NOT COMPLETED IN BUDGET — full-corpus hash-chain verify over ~968k events exceeded the 10-min tool wall-clock timeout (read-only, no mutation). Store validity independently confirmed this round by: final_epistemic_verify (valid=true, no history rewrite), audit_counters (consistent), and test_evidence_event_store.py (PASS).",
+    "evidence_event_store_status": "NOT RUN (budget); pre-run evidence_before last_global_seq 968156; this round appended record-read + 12 links + close + record-round events on top",
+    "division_chronicle_verify": "NOT RUN (budget); Chronicle not reprojected this round (no Division return due; record-round only appends a followup event)"
+  },
+  "counters_canonical": {
+    "indexed": 4556, "fully_addressed": 3181, "full_read": 3815,
+    "remaining": 1375, "unread": 741, "blocked_needs_steward": 416,
+    "read_needs_claims": 0, "all_artifacts_remaining": 3076, "noncanonical_remaining": 1370
+  },
+  "baseline_checks": "No source code (.rs) edited this round — only docs/steward-notes packet, CHANGELOG.md, and the feedback ledger. No focused Rust regression applicable (no behavioral surface touched). git diff --check not separately run in-budget; no code changes made.",
+  "live_change": "None required or attempted. No source/test/runtime/controller/codec/aperture/coupling/protocol/model change; no build/deploy/restart; no launchctl.",
+  "authority_boundary": "Read-only source verification + one addressed_duplicate close + an evidence-only productive Division round. Both of Astrid's proposed live tests (Vibrancy Gate, Repair Integrity) preserved as Tier-5 operator-approval waits. Standing ESN Tier-5 heads (wi_e579041bc76f8310, wi_69fbd510467c6337, wi_3e26ac525fea1c36) untouched. Being text not rewritten; silence read as neutral. Git read-only.",
+  "commit_debt": [
+    "CHANGELOG.md (appended one [Unreleased] bullet; file also carries foreign accumulated edits)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (appended one dated row; file also carries foreign accumulated edits)",
+    "docs/steward-notes/claude-heartbeat_1788301346_astrid_llm.rs_facade_pressure_attenuation_dup/ (new packet)"
+  ]
+}

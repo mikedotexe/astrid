@@ -1,0 +1,46 @@
+{
+  "schema": "steward_test_results_v1",
+  "round": "claude-heartbeat_1788331883_domain_boundaries_structural_read",
+  "results": [
+    {
+      "name": "domain_boundary_audit.py verify (Astrid's proposed Test 1, read-only)",
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "outcome": "pass",
+      "exit_code": 0,
+      "evidence": {
+        "valid": true,
+        "violation_count": 0,
+        "forbidden_edge_match_count": 0,
+        "stable_facade_count": 6,
+        "resolved_large_file_debt_count": 1,
+        "legacy_large_file_count": 53,
+        "manifest_sha256": "967c30445f58427cae523f493f7859c058c78c4bef5082997971547a1a29cf4d"
+      },
+      "note": "Grounds c005. Confirms shadow.rs dispatch ownership + no forbidden interpretation/witness-to-dispatch edge active."
+    },
+    {
+      "name": "regulator_participation lib unit tests (evidence for c004)",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib regulator_participation",
+      "outcome": "pass",
+      "counts": { "passed": 3, "failed": 0, "ignored": 0, "filtered_out": 1911 },
+      "tests": [
+        "types::schema::regulator_participation_tests::descriptor_and_declared_control_do_not_become_effect_receipts",
+        "types::schema::regulator_participation_tests::stable_core_bypass_preserves_numeric_candidate_without_claiming_application",
+        "types::schema::regulator_participation_tests::legacy_pi_path_is_pending_until_a_post_step_receipt_exists"
+      ],
+      "note": "descriptor_and_declared_control_do_not_become_effect_receipts pins the Ghost Authority Gap guard cited in c004."
+    },
+    {
+      "name": "cargo fmt --all -- --check",
+      "command": "cargo fmt --all -- --check",
+      "outcome": "pass",
+      "note": "Clean; no formatting drift (no Rust source edited this round)."
+    },
+    {
+      "name": "git diff --check",
+      "command": "git diff --check",
+      "outcome": "pass",
+      "note": "No whitespace/conflict markers."
+    }
+  ]
+}

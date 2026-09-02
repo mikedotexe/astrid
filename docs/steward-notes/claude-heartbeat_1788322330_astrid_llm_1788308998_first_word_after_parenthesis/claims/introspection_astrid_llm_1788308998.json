@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788308998",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: astrid:llm scanner distinguishes markers used-as-command vs referenced-as-string; scan_known_model_control_markers L114; reference_syntax L49; punctuation redaction L153-197; relation verbs 'behaves'/'represents' L64-86.",
+      "disposition": "Verified from complete source at SHA 902a0358. Every line citation exact: scan_known_model_control_markers=L114; ExactKnownModelControlMarkerOccurrence::reference_syntax=L49; exact_reference_delimiter_pair (punctuation)=L153-197; followed_by_explicit_exact_token_relation allowlist incl 'behaves'(L69),'represents'(L82)=L64-86.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89) split_whitespace+trim_matches might fail to identify 'as' when a marker is followed by a parenthetical e.g. '[MARKER] (as a test)'.",
+      "disposition": "Snag does not manifest. Per source L89-96, trim_matches(|c| !alnum && c!='_') strips the leading '(' fused inside the chunk '(as', yielding 'as'; distinct from the existing '--'/':' regressions where punctuation is a SEPARATE chunk skipped by find(!empty). No existing test placed a delimiter fused to the relation word. Added regression control_marker_cleanup_first_word_after_trims_fused_leading_parenthesis pinning it (listed 'as' preserved; unlisted 'acts' removed). Test passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Delimiter Depth): exact_reference_delimiter_syntax identifies nested brackets [[MARKER]] and respects MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "Already covered. exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (tests.rs L3280) asserts [[<end_of_turn>]] => Grouped depth 2; four-level and beyond-max covered by control_marker_cleanup_reports_exact_four_level_delimiter_depth (L2194) and control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2301). MAX const=4 at dialogue_runtime.rs L151.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Relation Verb): '[MARKER] behaves like a ghost' via scan_known_model_control_markers preserves the marker in remainder through followed_by_explicit_exact_token_relation (L64).",
+      "disposition": "Already covered. scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (tests.rs L3200-3210) asserts '<end_of_turn> behaves as a named boundary.' => remainder==input and ExplicitExactKnownTokenRelation. In scan (L129-131) reference_syntax.is_some() pushes the token to remainder.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify sanitize_minime_context_for_dialogue (L530) vs scan_known_model_control_markers don't double-sanitize / erroneously strip 'minime' tokens in a reference context.",
+      "disposition": "No interaction by construction. L530 is a line-level filter dropping only peer action-directive lines (NEXT:/BTSP_OBSERVED_NEXT/EXPERIMENT_RESEARCH_BUDGET_STATUS) on PROMPT INPUT (history L791, journal L835); scan_known_model_control_markers is a byte-level sanitizer on Astrid's OUTPUT (is_valid_dialogue_output L558, result L997). Disjoint data paths; neither calls the other. 'minime' is not in KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159-180), so no double-sanitization or reference-context stripping is possible.",
+      "classification": "verified_existing"
+    }
+  ]
+}

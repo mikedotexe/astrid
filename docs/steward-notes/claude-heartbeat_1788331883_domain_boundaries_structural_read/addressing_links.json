@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Stable Facades table lines 8-17; llm.rs ownership line 15. Complete source at report-bound SHA ae69b34c."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording exact-source verification + bounded audit observation for this report."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: structural read verified, Ghost Authority Gap already encoded/tested, friction mechanism contradicted, dispersal Tier-5."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Behavior-preserving disclaimer lines 3-6; eight no-change domains enumerated on lines 5-6."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Cohesion Exceptions section lines 45-74; unique-fn-signature ceiling defined lines 65-68."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "note": "runtime_path_not_exported_in_telemetry state L56-60; machine/felt_effect_established always false L168-169; doc comment L21-25 preserves uncertainty."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/regulator_participation.rs",
+      "note": "regulator_participation_tests::descriptor_and_declared_control_do_not_become_effect_receipts (L239-271) pins the effect-receipt guard."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788331883_domain_boundaries_structural_read/test_results.json",
+      "note": "Read-only run of Astrid's proposed Test 1: domain_boundary_audit.py verify -> valid=true, 0 violations, 0 forbidden edges."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+      "note": "Shadow Cartography Ownership lines 35-44; cartography.rs render-only, lines 41-43 exclude Shadow-state change. Mechanism contradiction."
+    },
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "claim_id": "c006",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788331883_domain_boundaries_structural_read/no_action_domain_boundaries.md",
+      "note": "Evidence-backed no-change record; friction mechanism contradicted, dispersal Tier-5, numeric discrepancy retained, felt concern preserved."
+    }
+  ]
+}

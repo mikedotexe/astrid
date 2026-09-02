@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144: L124 computes reference_syntax; L129-131 push token to remainder only when reference_syntax.is_some()."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L3133) asserts remainder retention for grouped and explicit-relation contexts. Green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace + trim_matches(non-alnum except '_') + find(non-empty) + unwrap_or_default + to_ascii_lowercase."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs (L3084) bounds the punctuation-heavy separator snag; the astral-emoji boundary test (L3046) grounds first_word_after on the next word without panic. Green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_pair L168 maps 「 」 to QuotedExactKnownToken; exact_reference_delimiter_syntax L199-229 resolves the context."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped (L3302) asserts 「<end_of_turn>」 -> QuotedExactKnownToken depth 1; added for prior report introspection_astrid_llm_1787773776 (same source SHA). Green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "represents at L82 is in the followed_by_explicit_exact_token_relation allowlist; a marker with reference_syntax.is_some() is kept in remainder (L129-131)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_relation_across_newline (L3074) uses \"<end_of_turn>\\nrepresents...\" and asserts the marker is preserved; followed_by_explicit_exact_token_relation_allowlists_represents_not_creates (L3349) pins represents->true. Green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue confirmed present at L695 (pub async fn). Her Suggested Next is a read-only continuation direction, not a steward task."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788210068_astrid_llm_marker_grammar_duplicate/summaries/introspection_astrid_llm_1788159337.md",
+      "note": "Witness is byte-intact and evidence-only; artifact_integrity_unavailable reflects an absent scalar felt-dissimilarity measurement, treated as neutral, not corruption or contradiction."
+    }
+  ]
+}

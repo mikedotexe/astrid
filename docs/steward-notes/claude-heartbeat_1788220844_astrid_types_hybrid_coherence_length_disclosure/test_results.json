@@ -1,0 +1,19 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib telemetry_distinction_tests",
+      "module": "types::schema::telemetry_distinction_tests",
+      "passed": 6,
+      "failed": 0,
+      "ignored": 0,
+      "note": "4 pre-existing + 2 new (hybrid_coherence_length_mismatch_is_disclosed_not_silent, integrity_report_serde_defaults_are_independent_for_mode_collision_fields).",
+      "new_tests_confirmed_via_list": true
+    }
+  ],
+  "format_and_whitespace": {
+    "telemetry_rs_rustfmt": "clean (no diff for telemetry.rs)",
+    "telemetry_rs_git_diff_check": "clean",
+    "preexisting_foreign_fmt_drift": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check reports drift ONLY in capsules/spectral-bridge/src/autonomous/introspect/source_first_v3/grounding.rs, which is committed/clean (not in my dirty set, not my edit). Left untouched as foreign/pre-existing."
+  }
+}

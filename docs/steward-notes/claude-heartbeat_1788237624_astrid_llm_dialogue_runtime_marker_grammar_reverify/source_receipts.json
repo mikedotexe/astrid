@@ -1,0 +1,26 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "sha_match": true,
+      "git_state": "clean_committed",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "lines 1-309 (every cited free function: enum L42-46, reference_syntax L49-60, followed_by_explicit_exact_token_relation L64-86, first_word_after L89-96, longest_exact_known_model_control_marker_at L97-112, scan_known_model_control_markers L114-144, MAX_EXACT_REFERENCE_DELIMITER_DEPTH L151, exact_reference_delimiter_pair L153-197, exact_reference_delimiter_syntax L199-229, control_marker_placement_counts + context receipt L231-309); lines 695-754 (generate_dialogue entrypoint, suggested-next)",
+      "read_scope_intervals": [[1, 309], [695, 754]],
+      "uncovered_intervals": [[310, 694], [755, 1048]],
+      "uncovered_note": "Cited symbols and the suggested-next entrypoint read in full. Remaining intervals not required for a duplicate close: every concrete claim is grounded by existing exact regressions pinned against this same whole-file SHA (see tests.rs docstrings citing SHA 902a0358)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "acf50837482b17d94cbd4062a7ae6329d65740241a6bae4c334ae5f394395b1e",
+      "total_lines": 4683,
+      "total_bytes": 208310,
+      "read_scope": "evidence read of the grounding regressions: L2280-2349 (delimiter-depth MAX cap), L3120-3529 (context-preservation, quoted-vs-relation precedence, double-bracket depth-two, prefix-shadow invariant, CJK delimiter, relation whitelist, bare-marker/suggested-next, punctuation-boundary, non-breaking-space, soft-hyphen); plus grep index of all first_word_after / scan_known_model_control_markers / exact_reference_delimiter / MAX_EXACT_REFERENCE_DELIMITER_DEPTH sites",
+      "role": "grounding_evidence_and_verification_target"
+    }
+  ]
+}

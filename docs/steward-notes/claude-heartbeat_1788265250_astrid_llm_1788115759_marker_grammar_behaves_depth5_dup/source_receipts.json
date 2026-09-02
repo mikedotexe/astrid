@@ -1,0 +1,35 @@
+{
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "report_binding_match": true,
+      "git_dirty": false,
+      "key_intervals": {
+        "reference_syntax": "L49-60",
+        "followed_by_explicit_exact_token_relation_allowlist_17_verbs": "L64-86 ('behaves' L69)",
+        "longest_exact_known_model_control_marker_at (KNOWN_MODEL_CONTROL_MARKERS use)": "L97-112 (L102)",
+        "scan_known_model_control_markers": "L114-144 (preservation gate L129-131)",
+        "fragment_has_non_marker_bytes": "L146-149",
+        "MAX_EXACT_REFERENCE_DELIMITER_DEPTH": "L151 (=4)",
+        "exact_reference_delimiter_pair (quote/bracket/CJK)": "L153-197",
+        "exact_reference_delimiter_syntax": "L199-229",
+        "sanitize_model_control_markers_with_report (consumer)": "L352-517"
+      }
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "read_scope": "scoped_L155_182",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS = 20 exact transport tokens, L159-179."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "scoped_name_index_plus_L2288_2362_and_L2540_2599",
+      "note": "Both proposed tests present: depth-5 L2301/L2315; behaves L2547/L2558-2559; proxy relation L2587."
+    }
+  ]
+}

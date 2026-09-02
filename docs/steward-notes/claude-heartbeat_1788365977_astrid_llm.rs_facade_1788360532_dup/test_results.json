@@ -1,0 +1,34 @@
+{
+  "round_touched_surface": "documentation + durable addressing/Division evidence only; no Rust/source/test code changed (git read-only)",
+  "stewardship_integrity": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "71 guards, 0 gaps, 0 alarms",
+    "audit_counters": "status=consistent, mismatches=[], all 7 checks True",
+    "experiential_epistemics_verify": "ok=true, issues=[], history_rewrite=false",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "introspection_cadence_audit_strict": "integrity_ok=true, errors=[], duplicate_hash_group_count=0"
+  },
+  "known_nonblocking": {
+    "test_steward_control": "26/27 pass; 1 error test_pause_cooperatively_interrupts_wrapped_subprocess (steward_control.errors.PausedError 'fixture stop' at lease.py:146 inside the test's OWN temp-controller fixture). Flaky/timing-sensitive subprocess test: error count varied 2->1 across two runs this round. NOT a regression — this round changed no code (git read-only) and does not touch the live adapter lease. Re-verify next session."
+  },
+  "evidence_event_store": {
+    "verified_checkpoint_global_seq": 976819,
+    "verified_event_sha256": "b4191a4fd645b27d2b7daa124dfbcb74e134e7b1b4268029f60f29c239112b8e",
+    "head_matches_verified_checkpoint": true,
+    "active_store": "v2",
+    "addressing_stream_seq": 59783,
+    "standalone_full_hashchain_verify": "deferred to budget (read-only; independently covered by the durable verified_checkpoint attesting head 976819, the epistemic verify, and the EES unit test)"
+  },
+  "rust_tests": "none — no Rust source or test touched this round",
+  "baseline_repo_checks": {
+    "git_diff_check": "not run as a mutation gate; no code edits staged. See RUN_REPORT commit debt.",
+    "note": "Only documentation/evidence artifacts written; no compile-affecting change."
+  }
+}

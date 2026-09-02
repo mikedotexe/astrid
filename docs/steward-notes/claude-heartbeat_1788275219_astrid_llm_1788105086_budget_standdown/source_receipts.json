@@ -1,0 +1,54 @@
+{
+  "schema": "flywheel_source_receipts_standdown_v1",
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "hash_match": true,
+    "dirty": false,
+    "total_lines": 1048,
+    "total_bytes": 38586,
+    "read_scope": "Full-file identity hash-verified equal to report binding. Targeted construct verification (grep) for every report-referenced symbol; line 347 read verbatim. NOT a line-by-line read of all 1048 lines \u2014 deferred to the closing round.",
+    "findings": {
+      "semantic_trickle_line_347": "spectral_relation: \"not_connected_to_semantic_trickle_pressure_or_live_control\"",
+      "constructs_absent_in_report_source": [
+        "pressure_source",
+        "SHADOW_TRAJECTORY",
+        "settled_habitable",
+        "porosity",
+        "mode_packing",
+        "inhabitability",
+        "damping"
+      ],
+      "constructs_present_in_report_source": {
+        "semantic_trickle": 1,
+        "dispersal_potential": 2
+      }
+    }
+  },
+  "supporting_sources_grounding_proposals": [
+    {
+      "path": "capsules/spectral-bridge/src/spectral_viz.rs",
+      "line": 554,
+      "fact": "SHADOW_TRAJECTORY suggested route 'observer with memory' (present)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/state.rs",
+      "line": 257,
+      "fact": "'observer with memory' route (present)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/resonance_stability.rs",
+      "line": 93,
+      "fact": "'Read-only composite context for interpreting whether density is inhabitable' \u2014 inhabitability/settled_habitable is a descriptor"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/resonance_stability.rs",
+      "line": 459,
+      "fact": "'settled_habitable_range_visible' label; no control coupling to damping"
+    },
+    {
+      "note": "'observer with active synthesis' is ABSENT across bridge src (0 matches). No porosity-auto-increase-on-mode_packing coupling exists (mode_packing thresholds 0.25/0.35 are descriptive only). telemetry.rs is FOREIGN-DIRTY \u2014 cited only for construct existence, not report-time bytes."
+    }
+  ]
+}

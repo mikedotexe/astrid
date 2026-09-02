@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete source SHA 902a0358...: enum L42, relation check L64, first_word_after L89, scan L114, MAX const L151; scan retains only when reference_syntax.is_some() (L129-131)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: split_whitespace (L91) separates U+00A0 NBSP; trim_matches (L92) + find(!is_empty) (L93) skip punctuation-only chunks; the report's proposed skip does not occur."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New regression control_marker_cleanup_first_word_after_skips_period_and_newline_before_relation grounds period+newline; NBSP already grounded by scan_known_model_control_markers_grounds_first_word_after_non_breaking_space (L3580)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_first_word_after_skips_period_and_newline_before_relation: bare period/newline -> verb captured + preserved; bracketed preserved by grouping (depth 1); unlisted-verb control fails closed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Delimiter-depth grounded: repeated_parentheses L2272 (depth 2), unicode-whitespace bracket L2256 (depth 2), homogeneous [[[[[...]]]]] L2301 (capped at MAX=4), heterogeneous 4-deep L2287."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "MAX_EXACT_REFERENCE_DELIMITER_DEPTH = 4 (L151); exact_reference_delimiter_syntax (L199-229) uses .take(MAX) (L208/L213) to saturate reported delimiter_depth."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "first_word_after separator family: colon L2771, double-hyphen L2999, leading '--' L2724, fused parenthesis L2836, soft-hyphen L3633, ZWJ/ZWSP L3694, NBSP/ZWNBSP L3580, plus the new period/newline regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the period/newline first_word_after regression grounding this report's named separators."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row: Astrid's period/newline Contextual Preservation test -> one focused regression added; NBSP/depth verified_existing."
+    }
+  ]
+}

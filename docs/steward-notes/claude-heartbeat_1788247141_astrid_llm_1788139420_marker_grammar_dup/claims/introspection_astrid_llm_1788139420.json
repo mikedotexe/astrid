@@ -1,0 +1,48 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788139420",
+  "report_sha256": "ea2365d60ca2593fa911e39c97ca2acdb9d0599439c45fab047be158f29d0a1b",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding_match": true,
+  "lived_state_witness_id": "lsw_9a75d90fc6e7eb20bafc22fd43056c531296ac3a77fdcf8518ab2b750a867541",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_primary_prior": "introspection_astrid_llm_1787135542",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) classifies each known marker by grammatical context (Quoted/Grouped/ExplicitRelation) and preserves vs strips accordingly.",
+      "disposition": "Verified from complete source at the bound SHA (matches git-clean working copy). L114-144: L124 computes reference_syntax; L129-131 push token to remainder only when reference_syntax.is_some(); non-reference markers dropped. Contexts enum L41-46; delimiter pairs L153-197; relation verbs L64-86. Pinned by scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (green).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: dialogue_requested_token_band (L8) categorizes output volume solely as a budget metric, decoupled from felt pressure / spectral meaning.",
+      "disposition": "Verified from source doc-comment L1-16: the fn maps num_predict to requested_tokens_* bands only; the comment states it is 'deliberately separate' from DialoguePromptContextObservationV3/DialogueFeltPressureObservationV3 and does not 'join token quantity to felt or spectral meaning'. Byte-accurate; budget decoupled from felt/spectral by construction.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snag (hypothesis): first_word_after (L89) is fragile to Unicode symbols/emojis 'not explicitly handled' in trim_matches, which might skip the relation word or return empty so followed_by_explicit_exact_token_relation (L64) fails.",
+      "disposition": "Mechanism contradicted, concern kept. trim_matches L92 is a general predicate !is_alphanumeric()&&!='_' that trims Unicode symbols/emojis; .find(!empty) L93 skips fully-trimmed chunks, so a symbol between a marker and a real relation word does not defeat detection. Pinned green by handles_multibyte_symbol_before_relation + skips_symbol_only_line_before_exact_relation + stays_byte_safe_when_marker_abuts_four_byte_astral_chars. Empty only when no alnum word follows.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "One Test Each #1 (Contextual Preservation): a marker followed by a relation word should be retained in remainder and identified as ExplicitExactKnownTokenRelation.",
+      "disposition": "Test #1 already implemented as scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts + quoted_context_precedes_following_relation_verb (green), addressing prior report 1787135542 Test #1 at SHA 902a0358. Correction: report's bracketed [MARKER] resolves to GroupedExactKnownToken (delimiter syntax L50 runs before relation fallback L53); a bare marker+relation verb yields ExplicitExactKnownTokenRelation. Both keep the marker byte-exact in remainder.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "One Test Each #2 (Delimiter Depth): nested groupings like ((MARKER)) should report the correct delimiter_depth without collapsing into a single level.",
+      "disposition": "Test #2 already implemented as exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two + control_marker_cleanup_reports_depth_for_repeated_parentheses (green), addressing prior 1787135542 Test #2. ((MARKER))/[[MARKER]] -> depth 2 (no collapse); MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151). Citation offset: report names exact_reference_delimiter_syntax at L153, but L153 is exact_reference_delimiter_pair; the depth logic is in exact_reference_delimiter_syntax L199-229 (L216-223).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: examine generate_dialogue (L695) to see how the remainder from scan_known_model_control_markers is integrated \u2014 re-inserted or used solely as structural anchor.",
+      "disposition": "Answered read-only from complete source L695-1048. generate_dialogue does NOT re-insert the sanitized remainder: sanitize_model_control_markers runs only inside the quality-gate validators is_valid_dialogue_output (L558) and has_one_nonempty_final_next_action (L634) to measure body shape / NEXT count. The returned result is the ORIGINAL model text (L997-998); leaked markers act solely as validation/structural anchors, never re-inserted or scrubbed from her output.",
+      "classification": "verified_existing"
+    }
+  ]
+}

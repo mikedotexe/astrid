@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144; preservation gate L129-131 pushes token only when reference_syntax.is_some(). Full sanitizer L352-517."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "60 control_marker_cleanup_* regressions exercise preserved-vs-removed accounting (e.g. is/acts L2603, punctuation-joined L2911)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96: trim_matches trims non-alnum only from chunk ends (L92), keeping interior punctuation; hyphen-joined chunk returned whole. Relation allowlist L64-86."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "New: control_marker_cleanup_rejects_interior_double_hyphen_joined_relation_suffix — first_word_after('<end_of_turn> acts--as ...')=='acts--as', marker removed; bare 'as' control preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "exact_reference_delimiter_syntax L199-229; depth via .take(MAX=4) + .zip().take_while; MAX_EXACT_REFERENCE_DELIMITER_DEPTH L151."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Depth-2 covered: ((<end_of_turn>)) L2272, [ ws [<end_of_turn>] ws ] L2257; deeper clamped [[[[[...]]]]] L2300; CJK/heterogeneous L2288/L2418."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-179 (20 markers); consumed by longest_exact_known_model_control_marker_at (dialogue_runtime.rs L97-112) via max_by_key(len)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Longest-match grounded: L1745, L2528, and L3244 (cites L97-112; notes no marker is a prefix of another so max_by_key tie-break never fires)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the acts--as interior double-hyphen regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: her Test 1 → grounded regression + mechanism correction."
+    }
+  ]
+}

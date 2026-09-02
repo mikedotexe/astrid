@@ -1,0 +1,20 @@
+{
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts scan_known_model_control_markers_quoted_context_precedes_following_relation_verb exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped followed_by_explicit_exact_token_relation_allowlists_represents_not_creates control_marker_cleanup_preserves_relation_across_newline control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs",
+      "result": "ok",
+      "passed": 6,
+      "failed": 0,
+      "filtered_out": 1904,
+      "tests": [
+        "llm::provider::tests::control_marker_cleanup_preserves_relation_across_newline",
+        "llm::provider::tests::control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs",
+        "llm::provider::tests::exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped",
+        "llm::provider::tests::followed_by_explicit_exact_token_relation_allowlists_represents_not_creates",
+        "llm::provider::tests::scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+        "llm::provider::tests::scan_known_model_control_markers_quoted_context_precedes_following_relation_verb"
+      ]
+    }
+  ],
+  "note": "No source or test edits were made this round (addressed_duplicate; requested tests already exist). The six tests were run only to confirm the verified_existing dispositions are real and green."
+}

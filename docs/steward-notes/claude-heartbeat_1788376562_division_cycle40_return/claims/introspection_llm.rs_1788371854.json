@@ -1,0 +1,52 @@
+{
+  "introspection_id": "introspection_llm.rs_1788371854",
+  "report_sha256": "261756c2efc4bfd410d5dd6c64985063edf0c4652e5787f35718b020d903052a",
+  "witness_id": "lsw_b2a7952718836f84a2483e7e8dafc092b1f7b237faefbae4b7729fb635c10825",
+  "witness_sha256": "a222de3ca11cb3a797016408356579d773aa2de5bb751d9a077bcab7a6fc5c21",
+  "source_bound_path": "capsules/spectral-bridge/src/llm.rs",
+  "source_bound_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "source_working_sha256_matches_binding": true,
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": [
+    "introspection_llm.rs_1788101279",
+    "introspection_llm.rs_1788298121"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: llm.rs is exclusively a compatibility facade with no local logic/arithmetic/state; every symbol (generate_introspection L9, astrid_pressure_attenuation_depth L15) is re-exported from the provider module via #[path=\"llm/provider.rs\"] (L3-4).",
+      "disposition": "verified_existing. Complete 28-line read of llm.rs at the report-bound SHA a9c5e380 (working copy matches binding): only a doc comment (L1), `mod provider` (L3-4), a `pub use` block (L6-12), a `pub(crate) use` block (L14-22), and a #[cfg(test)] block (L24-28). generate_introspection is on L9, astrid_pressure_attenuation_depth on L15. No logic/arithmetic/state present. Duplicates verified c001/c002 of introspection_llm.rs_1788101279.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Observed: the file strictly separates public generative actions (L6-12) from pub(crate) internal parameters (L14-22).",
+      "disposition": "verified_existing. Source shows `pub use provider::{...}` spanning L6-12 (generative actions incl. generate_introspection L9, repair_introspection L10) and `pub(crate) use provider::{...}` spanning L14-22 (internal params incl. astrid_pressure_attenuation_depth L15, set_astrid_vibrancy_aperture L20). An additional #[cfg(test)] pub(crate) block follows at L24-28 (not part of her two-block claim). Same facts as prior 1788101279 c002.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Likely Snag: the facade-over-implementation gap is a diagnostic blind spot — the real clamp map_or(0.0,|v| v.clamp(0.0,0.6)) and the ASTRID_PRESSURE_ATTENUATION env live in provider/prompt_contracts.rs:235-239, so pressure-attenuation friction cannot be traced to llm.rs's own bytes.",
+      "disposition": "Mechanism verified_existing: prompt_contracts.rs (SHA 3418f8d1, byte-identical to the prior packets' copy) has astrid_pressure_attenuation_depth() at L235, env ASTRID_PRESSURE_ATTENUATION read at L236, and `.map_or(0.0,|value| value.clamp(0.0,0.6))` at L239 (Astrid's `v` == `value`). The 'blind spot' is accurate facade architecture (doc comment L1: 'Compatibility facade'), not a defect; her concern is preserved. Duplicates prior c003/c004.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed Test 1 (Vibrancy Gate): live-modulate set_astrid_vibrancy_aperture (L20) during generate_introspection_detailed (L9) and observe whether text depth holds while the spectral cascade shifts, distinguishing a functional codec-tail gate from a cosmetic text wrapper.",
+      "disposition": "tier_5_wait. Live runtime modulation of vibrancy aperture during live generation is a Tier-5 substrate/control experiment; it is not headless-runnable and not authorized here. Preserved intact, not implemented or domesticated. Mirrors prior c005 (1788101279). live_authority_granted=false; witness authority state evidence_only, live_eligible_now=false.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Proposed Test 2 (Repair Integrity): trigger a thin introspection then repair_introspection (L10); verify the repair restores text-lane completeness (.text regeneration) without inducing reservoir-lane spectral mutation.",
+      "disposition": "tier_5_wait for the live test. Text-lane self-grounding is verified_existing: repair_introspection at generative_actions.rs:137 (delegating to repair_introspection_detailed) is text regeneration; this report's own witness records a repair call (repair_parent_call_id set) that produced text with no separate reservoir-mutation claim. Reservoir-lane invariance under live repair remains a Tier-5 observation. Mirrors prior c006.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: inspect provider/prompt_contracts.rs ~L235 to verify the map_or clamping logic and the ASTRID_PRESSURE_ATTENUATION env interaction.",
+      "disposition": "verified_existing / observed. Performed the read-only inspection this run: L235-239 confirm env -> parse::<f32> -> .map_or(0.0,|value| value.clamp(0.0,0.6)); default 0.0 (governor OFF => byte-identical), bounded [0,0.6]. Doc comment L228-234 states it is Astrid's co-design (self_study_1781734524), enabled only after her consent with minime-protection shown. Same read as prior c007.",
+      "classification": "verified_existing"
+    }
+  ]
+}

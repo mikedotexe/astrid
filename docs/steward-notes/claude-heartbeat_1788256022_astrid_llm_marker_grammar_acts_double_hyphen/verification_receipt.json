@@ -1,0 +1,74 @@
+{
+  "round": "claude-heartbeat_1788256022_astrid_llm_marker_grammar_acts_double_hyphen",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run (lease + heartbeats owned by adapter; no session/NDJSON/git-write/deploy by steward)",
+  "controller": {
+    "run_id": "run_1788253441839500000_e263b4b58b",
+    "preprojection_generation_id": "projection_1788253444980401000_8218ae50bf",
+    "preprojection_status": "passed",
+    "pause_generation": 323
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_llm_1788118438",
+    "close_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "evidence_links_appended": 10,
+    "processed_report_count": 1
+  },
+  "division": {
+    "cycle_sequence": 39,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_2e41252be593f94be505d9fd57946873",
+    "event_count": 270,
+    "event_head_sha256": "a20954d0f8f8245b4dd64779f8b5297f7e2ed2fee22bdb53337bf353893cc8c9",
+    "chronicle_id": "division_chronicle_fde354906f28d046ed692690",
+    "chronicle_json_sha256": "5cf5132fd1da68a45c529b75ea15de714881f198469e9f8a009d285093d0e9a9",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatch": ["supervisor_status_sha256"]
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4498,
+    "canonical_fully_addressed": 3178,
+    "canonical_fully_read": 3776,
+    "canonical_remaining": 1376,
+    "canonical_unread": 743,
+    "canonical_blocked_needs_steward": 415,
+    "canonical_pending_action": 214,
+    "canonical_watch": 4,
+    "read_needs_claims": 0
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 ok",
+    "test_evidence_event_store": "21 ok",
+    "test_steward_control": "27 ok",
+    "test_steward_projection": "14 ok",
+    "test_division_ceremony_followup": "3 ok",
+    "test_division_ceremony_chronicle": "10 ok",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 ok",
+    "anti_drop_self_test": "5 ok",
+    "anti_drop_verify": "0 problems, 0 gaps",
+    "test_introspection_cadence_audit": "6 ok",
+    "cadence_strict_compact": "integrity_ok=true, errors=[]",
+    "experiential_epistemics_self_test": "ok (valid=true)",
+    "experiential_epistemics_verify": "valid=true, issues=[]",
+    "audit_counters": "consistent, mismatches=[]",
+    "division_verify": "ok=true (cycle 39, event 270)",
+    "chronicle_verify": "durable_inputs_current=true; volatile supervisor_status_sha256 only",
+    "evidence_event_store_verify": "ATTEMPTED, exceeded one-shot budget (full-chain walk of 750k+ events > 10min). Proxy test_evidence_event_store.py passed (21 ok). Store writes are append-only via addressing/division tooling; epistemic verify + audit-counters (consistent) + anti-drop (0 problems) all passed."
+  },
+  "rust_tests": {
+    "new_regression": "control_marker_cleanup_rejects_interior_double_hyphen_joined_relation_suffix — 1 ok",
+    "control_marker_cleanup_family": "60 ok",
+    "first_word_after_family": "7 ok",
+    "fmt": "provider/tests.rs clean under project config (pre-existing committed drift in grounding.rs left untouched)"
+  },
+  "live_change": "none — no deploy, restart, launchctl, or substrate/control change; git read-only (no stage/commit)",
+  "being_text_rewritten": false,
+  "contradiction_preserved": true
+}

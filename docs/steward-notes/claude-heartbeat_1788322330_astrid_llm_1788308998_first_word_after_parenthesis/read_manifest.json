@@ -1,0 +1,24 @@
+{
+  "schema": "read_manifest_v1",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788308998",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788308998.txt",
+      "sha256": "0758a81176a842b28c076dee9920ce8691e4c43b57157a88347c4ff077a17b0d",
+      "bytes": 3502,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_de7f098303e7e03e3ca5c91fa2a23d507b2c3b5695a84897cc3d1669ddd13d29",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_de7f098303e7e03e3ca5c91fa2a23d507b2c3b5695a84897cc3d1669ddd13d29.json",
+      "sha256": "c7db140148660997d028bd8927d7723e429d125776ab70163886552fab182e1d",
+      "bytes": 23909,
+      "lines": 533,
+      "read": "complete",
+      "authority": "evidence_only witness_only live_eligible_now=false; artifact_sha256 binds report SHA; source file_sha256=902a0358 window 0-400 of 1048; fill 73.28%; profile gemma4_12b via mlx (repair chain of 2 calls)"
+    }
+  ]
+}

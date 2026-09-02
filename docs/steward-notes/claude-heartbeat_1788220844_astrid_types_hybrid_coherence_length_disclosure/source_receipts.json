@@ -1,0 +1,24 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "cf3be429aba23dc6975ec970f076fe661357b984e4e0b38073b7fdf509f6503d",
+      "report_bound_sha256": "cf3be429aba23dc6975ec970f076fe661357b984e4e0b38073b7fdf509f6503d",
+      "hash_match_report_binding": true,
+      "total_lines": 758,
+      "total_bytes": 33983,
+      "read_scope": "complete_file_lines_1_758",
+      "report_window": "1-400",
+      "note": "Report read window 1-400 only; steward read the complete file including the uncovered 401-758 (suggested-next pointer at L601/L605 and the test module). Included: telemetry.rs is include!()'d into src/types/schema.rs:25, placing spectral_fingerprint_hybrid_coherence_v1 and SpectralFingerprintV1 in the schema module scope reachable from the test submodule via super::*.",
+      "key_intervals_verified": {
+        "L3-105": "TelemetryHeartbeatDeltaV1 (rolling entropy L28-51, inter-arrival L71-95)",
+        "L52-56": "shape-evidence-not-felt-state comment on rolling_spectral_density_gradient_sample_count",
+        "L127-157": "SpectralFingerprintIntegrityV1 fields (mode_collision_review_threshold L148, mode_collision_state L150, hybrid_coherence_index L136)",
+        "L159-165": "spectral_fingerprint_hybrid_coherence_v1 length!=32 || non-finite -> None",
+        "L356-553": "spectral_fingerprint_integrity_v1 builder: pre-filter len==32 (L367-377), hybrid_coherence_state (L380-403), issues push legacy_vector_len_{len}_expected_32 (L447-451)",
+        "L601-758": "telemetry_distinction_tests module; L605 disclosure test; L686 non-finite None test; L728 populate test; +2 new tests appended"
+      }
+    }
+  ]
+}

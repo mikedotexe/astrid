@@ -1,0 +1,90 @@
+{
+  "round": "claude-heartbeat marker-grammar behaves + depth-5 (addressed_duplicate)",
+  "controller": {
+    "run_id": "run_1788262598674607000_406836b781",
+    "preprojection_generation_id": "projection_1788262602163871000_a96cf1d375",
+    "preprojection_status": "passed",
+    "pause_generation": 323,
+    "adapter_mode": "controller subprocess run adapter owns lease + heartbeats; steward sent no NDJSON/session ops, no git writes, no deploy/launchctl"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_astrid_llm_1788115759",
+    "terminal_status": "addressed_duplicate",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "report_sha256": "804e21a2ab6ebce37cda9991e72fce7c2ebcf43653e82afacf91be8071076adc",
+    "witness_sha256": "bd13c9571869e442d5df6c208a72f3e035b89f07978dfbcc37f46499624e2b56",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_report_binding_match": true,
+    "evidence_links_appended": 12
+  },
+  "tests": {
+    "marker_grammar_suite": {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- control_marker exact_reference_delimiter scan_known_model_control_markers followed_by_explicit",
+      "passed": 87,
+      "failed": 0,
+      "proposed_test_1_behaves_present_ok": "control_marker_cleanup_preserves_poetic_attribution_without_literal_cue",
+      "proposed_test_2_depth5_present_ok": "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth"
+    },
+    "new_tests_added": 0
+  },
+  "integrity_suites": {
+    "introspection_addressing_self_test": "44 ok",
+    "test_evidence_event_store": "21 ok",
+    "test_steward_control": "27 ok",
+    "test_steward_projection": "14 ok",
+    "test_division_ceremony_followup": "3 ok",
+    "test_division_ceremony_chronicle": "10 ok",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 ok",
+    "test_introspection_cadence_audit": "6 ok",
+    "introspection_cadence_audit_strict": "integrity_ok=true, configuration_valid=true, 0 duplicate hashes, 0 errors",
+    "anti_drop_self_test": "5 ok",
+    "anti_drop_verify": "71 guards, 0 alarms, 0 gaps, 0 failing",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify": "valid=true, issue_count=0, history_rewritten=false (final, after durable writes)",
+    "audit_counters": "consistent, mismatches=[]"
+  },
+  "counters_canonical": {
+    "indexed": 4554,
+    "fully_addressed": 3179,
+    "full_read": 3812,
+    "remaining": 1375,
+    "unread": 742,
+    "blocked_needs_steward": 415,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "addressed_duplicate_status_count": 1155
+  },
+  "counters_all_artifacts": {
+    "all_artifact_pending": 3074,
+    "noncanonical_pending": 1699
+  },
+  "division": {
+    "cycle_sequence": 39,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "new_round_event_id": "division_followup_event_9ac738b0d5568ce777da7f1e1f39babe",
+    "event_count": 271,
+    "event_head_sha256": "af3ec1b996c568eab36bdd65c3d540435ec86957641497acd41b831618379f02",
+    "processed_report_count": 1
+  },
+  "evidence_event_store": {
+    "active_store": "v2",
+    "v1_immutable_boundary_global_seq": 32278,
+    "head_last_global_seq": 963821,
+    "head_last_event_sha256": "1380d02c9bc44168c6b42e6cd1cf4c89ed03b3cce0e8087eeac5198d8b9e8c46",
+    "verified_checkpoint_global_seq": 963821,
+    "verified_checkpoint_matches_head": true,
+    "verified_checkpoint_expires_at_unix": 1788352809.202718,
+    "standalone_full_chain_verify_status": "exceeded one-shot budget (>10 min) walking the 7.02 GB events.jsonl; NOT completed inline. Integrity corroborated by: fresh verified_checkpoint at the current head (seq+SHA match), test_evidence_event_store.py (21 ok), experiential_epistemics verify (valid, 0 issues, no history rewrite), audit-counters (consistent), anti_drop verify (0 gaps). All this round's EES writes were append-only via the addressing and division tooling."
+  },
+  "live_change": "none — read-only source verification + one non-live packet/docs round; no runtime/controller/codec/protocol/model change; no deploy/restart; git read-only",
+  "foreign_work_preserved": [
+    "capsules/spectral-bridge/src/types/schema/telemetry.rs (Astrid, prior/foreign)",
+    "capsules/spectral-bridge/src/llm/provider/tests.rs (Astrid, prior-round unstaged edits)",
+    "/Users/v/other/minime: minime/src/esn.rs, minime_autonomy/runtime.py, tests/test_correspondence_v1.py"
+  ]
+}

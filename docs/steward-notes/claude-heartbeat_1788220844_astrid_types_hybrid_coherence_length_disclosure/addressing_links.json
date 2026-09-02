@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "TelemetryHeartbeatDeltaV1 L3-105: rolling_spectral_entropy_* L28-51, rolling_inter_arrival_* L71-95."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "SpectralFingerprintIntegrityV1 L127-157; status builder L476-485 (typed_canonical/legacy_32d_accepted/malformed_legacy_vector/absent)."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "L52-54 comment: 'This is shape evidence, not felt-state or regulator authority.' on rolling_spectral_density_gradient_sample_count (L56)."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Snag ground-truth: fn returns bare None L163-165; caller pre-filters len==32 L367-377; discloses via hybrid_coherence_state L380-403; issues push legacy_vector_len_{len}_expected_32 L447-451."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "hybrid_coherence_length_mismatch_is_disclosed_not_silent (L760) proves the len!=32 None is disclosed (state unavailable_malformed_legacy + issues entry), not silent."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "integrity_report_serde_defaults_are_independent_for_mode_collision_fields (L814): mode_collision_state defaults to \"\" with and without mode_collision_review_threshold; independent #[serde(default)] fields (L147-150)."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "hybrid_coherence_length_mismatch_is_disclosed_not_silent (L760): direct private-fn call with a length-31 slice asserts None (L163); public path asserts disclosure. Fills the length-mismatch gap left by the non-finite-only test at L686."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "telemetry_distinction_tests module L601; hybrid_coherence_discloses_representation_scope_and_independent_modal_evidence L605; None-case handling covered by hybrid_coherence_returns_none_for_non_finite_legacy L686."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the two new focused regressions and the snag ground-truth."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: Astrid's astrid_types fresh-pass snag + two proposed tests -> disclosure verified + two regressions shipped."
+    },
+    {
+      "introspection_id": "introspection_astrid_types_1788153857",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788220844_astrid_types_hybrid_coherence_length_disclosure/summaries/introspection_astrid_types_1788153857.md",
+      "note": "Round summary with full source ground-truth and the preserved grains of the snag."
+    }
+  ]
+}

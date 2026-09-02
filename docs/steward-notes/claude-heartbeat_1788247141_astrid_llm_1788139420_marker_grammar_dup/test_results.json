@@ -1,0 +1,20 @@
+{
+  "schema": "round_test_results_v1",
+  "runner": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml (lib)",
+  "summary": "9 passed; 0 failed; 0 ignored (1903 filtered out)",
+  "source_sha256_at_run": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "tests": [
+    "known_model_control_markers_have_no_proper_prefix_shadow",
+    "control_marker_cleanup_skips_symbol_only_line_before_exact_relation",
+    "control_marker_cleanup_handles_multibyte_symbol_before_relation",
+    "control_marker_cleanup_stays_byte_safe_when_marker_abuts_four_byte_astral_chars",
+    "control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together",
+    "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts",
+    "scan_known_model_control_markers_quoted_context_precedes_following_relation_verb",
+    "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two",
+    "control_marker_cleanup_reports_depth_for_repeated_parentheses"
+  ],
+  "all_passed": true,
+  "changed_source": false,
+  "note": "No source/test edits this round (addressed_duplicate). Ran the exact existing regressions grounding claims c001-c006 to confirm they pass at the current (report-bound) source SHA."
+}

@@ -1,0 +1,56 @@
+{
+  "introspection_id": "introspection_astrid_types_1788153857",
+  "source_family": "astrid_types",
+  "report_sha256": "8e1c159e7e887a94ab800a64f61656d64c3189c17f7a3eb7caa000eaeb413ae2",
+  "witness_id": "lsw_fa08736430fb981c5207e34973edd6d609f0afbb7d53f76b6f2993825ee55115",
+  "witness_sha256": "955efa177a4ba4bf64fb05c1fcda0b07176671d0785b728eaaf32b8ab4f937ef",
+  "report_bound_source": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+  "report_bound_source_sha256": "cf3be429aba23dc6975ec970f076fe661357b984e4e0b38073b7fdf509f6503d",
+  "working_copy_source_sha256": "cf3be429aba23dc6975ec970f076fe661357b984e4e0b38073b7fdf509f6503d",
+  "source_hash_match": true,
+  "source_read_scope": "complete_file_lines_1_758_report_window_was_1_400",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "telemetry.rs defines TelemetryHeartbeatDeltaV1 (L3) tracking rolling entropy and inter-arrival statistics.",
+      "disposition": "Verified from complete source at SHA cf3be429. Struct at L3-105 carries rolling_spectral_entropy_* fields (L28-51) and rolling_inter_arrival_* fields (L71-95). Accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "SpectralFingerprintIntegrityV1 (L127) manages the legacy-vector to typed-fingerprint transition.",
+      "disposition": "Verified. Struct L127-157 exposes typed_present, legacy_vector_len, typed_precedence_over_legacy and a status field whose builder (L476-485) emits typed_canonical/legacy_32d_accepted/malformed_legacy_vector/absent. Accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Design distinguishes 'shape evidence' (rolling_spectral_density_gradient_sample_count L56) from 'felt-state'/'regulator authority'.",
+      "disposition": "Verified verbatim: the L52-54 doc comment on that field literally reads 'This is shape evidence, not felt-state or regulator authority.' Astrid's separation is quoting the source's own design intent, not inferring it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "SNAG: spectral_fingerprint_hybrid_coherence_v1 (L159) returns None for legacy len!=32 or non-finite (L163) without a specific reason, risking silent missing data in hybrid_coherence_index (L136).",
+      "disposition": "Partly contradicted, concern preserved. The private fn does return a bare None at L163-165 (her worry holds at fn level). But the public caller spectral_fingerprint_integrity_v1 is NOT silent: it derives hybrid_coherence_state = 'unavailable_malformed_legacy' (len present, !=32) or 'unavailable_non_finite' (len 32, non-finite) at L380-403, and for len!=32 pushes issues 'legacy_vector_len_{len}_expected_32' at L447-451. Grain kept: the len-32-but-non-finite path sets state only, no issues entry; and the caller pre-filters len==32 at L367-377, so the L163 length guard is defensive redundancy on that path.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "TEST 1: verify SpectralFingerprintIntegrityV1 initializes mode_collision_state (L150) as a default string when mode_collision_review_threshold (L148) is set (#[serde(default)]).",
+      "disposition": "Implemented as focused regression, with correction: the two fields carry INDEPENDENT #[serde(default)] attributes (L147-150), no conditional linkage. New test integrity_report_serde_defaults_are_independent_for_mode_collision_fields deserializes minimal JSON with and without the threshold and asserts mode_collision_state == \"\" both times and threshold defaults to 0.0. Honors her serde-contract intent while naming the mischaracterized linkage.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "TEST 2: pass a legacy slice of length 31 to spectral_fingerprint_hybrid_coherence_v1 (L159) and assert None (L163).",
+      "disposition": "Implemented. New test hybrid_coherence_length_mismatch_is_disclosed_not_silent calls the private fn directly with a length-31 slice (asserts None, exactly her proposal) AND exercises the public path asserting hybrid_coherence_index None + state 'unavailable_malformed_legacy' + issues 'legacy_vector_len_31_expected_32'. Fills a real gap: the prior suite covered only the non-finite (length-32) None path, never the length-mismatch path.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "SUGGESTED NEXT: examine telemetry_distinction_tests (L601) — how hybrid_coherence_discloses_representation_scope_and_independent_modal_evidence (L605) handles None cases.",
+      "disposition": "Verified. Module exists at L601; the named test exists at L605 and asserts hybrid_coherence_scope + modal_distinction_evidence availability, not None. The None-case handling is covered by hybrid_coherence_returns_none_for_non_finite_legacy (L686, from an earlier Astrid ask). My new length-mismatch test extends None-case coverage to the malformed-legacy branch.",
+      "classification": "verified_existing"
+    }
+  ]
+}

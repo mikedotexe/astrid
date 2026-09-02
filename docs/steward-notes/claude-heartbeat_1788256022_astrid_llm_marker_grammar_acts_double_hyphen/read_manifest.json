@@ -1,0 +1,23 @@
+{
+  "round": "claude-heartbeat_1788256022_astrid_llm_marker_grammar_acts_double_hyphen",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788118438",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788118438.txt",
+      "sha256": "372858b09ecbb85b1f0eb0b57e27caf592069e69adccb40be5124e57bb65955b",
+      "bytes": 3846,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_4013dbe95eb1f2f38565057fe76b774c12a9c703a7833fe4d29657e755025985",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4013dbe95eb1f2f38565057fe76b774c12a9c703a7833fe4d29657e755025985.json",
+      "sha256": "5cbfe892ab134d0064c62ecb7c8bfbaefa6e0bebfde473856960c4f50c6c1a4c",
+      "bytes": 23929,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

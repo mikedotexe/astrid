@@ -1,0 +1,40 @@
+{
+  "round": "claude-heartbeat_1788256022_astrid_llm_marker_grammar_acts_double_hyphen",
+  "toolchain": "cargo (~/.cargo/bin), rustfmt edition 2024",
+  "runs": [
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup_rejects_interior_double_hyphen_joined_relation_suffix",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "filtered_out": 1912,
+      "note": "New regression passes."
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker_cleanup",
+      "result": "ok",
+      "passed": 60,
+      "failed": 0,
+      "filtered_out": 1853,
+      "note": "Full marker-cleanup family (59 prior + 1 new) green; no regression from insertion."
+    },
+    {
+      "cmd": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib first_word_after",
+      "result": "ok",
+      "passed": 7,
+      "failed": 0,
+      "filtered_out": 1906,
+      "note": "first_word_after family green."
+    },
+    {
+      "cmd": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "tests.rs clean",
+      "note": "0 diffs in provider/tests.rs. Pre-existing committed drift in autonomous/introspect/source_first_v3/grounding.rs (L259, L295) is unrelated foreign/committed drift, not modified this round and left untouched."
+    },
+    {
+      "cmd": "git diff --check -- capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "result": "clean",
+      "note": "No whitespace errors in the touched file."
+    }
+  ]
+}

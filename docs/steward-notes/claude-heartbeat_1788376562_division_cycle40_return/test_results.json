@@ -1,0 +1,30 @@
+{
+  "round": "division_cycle40_return",
+  "code_touched": false,
+  "rust_tests_run": "none — no .rs source touched this round (addressed_duplicate; prior packets carry the regressions)",
+  "baseline": {
+    "git_diff_check": "clean (no whitespace errors)",
+    "cargo_fmt_check": "not run — no Rust source edited this round; pre-existing foreign drift (telemetry.rs, tests.rs, grounding.rs) not touched"
+  },
+  "integrity_suites": {
+    "introspection_addressing_audit --self-test": "OK (44 tests)",
+    "anti_drop_catalog --self-test": "OK (5 tests)",
+    "anti_drop_catalog verify --json": "71 guards, 0 alarms, 0 gaps",
+    "experiential_epistemics self-test --json": "valid=true",
+    "experiential_epistemics verify --json (FINAL epistemic, after all durable writes)": "valid=true, issues=[], issue_count=0",
+    "division_ceremony_followup verify": "ok=true, cycle 41, completed 1/6, review_due=false, event_count 282",
+    "division_ceremony_chronicle verify (after record-round reproject)": "ok=true, 282 events (282 followup, 0 ceremony), durable_inputs_current=true, volatile mismatch only supervisor_status_sha256 (expected), json_sha256 3b760b17…",
+    "test_evidence_event_store.py": "OK (21 tests)",
+    "test_steward_projection.py": "OK (14 tests)",
+    "test_division_ceremony_followup.py": "OK (3 tests)",
+    "test_division_ceremony_chronicle.py": "OK (10 tests)",
+    "test_division_ceremony_projection.py": "self-test ok",
+    "test_projection_cursors.py": "OK (4 tests)",
+    "test_introspection_cadence_audit.py": "OK (6 tests)",
+    "test_steward_control.py": "26/27 pass; 1 KNOWN-FLAKY error: test_pause_cooperatively_interrupts_wrapped_subprocess (PausedError: fixture stop) — cooperative-interrupt subprocess timing/race in the fixture, documented in prior round 1788365977; no steward_control code touched this run, not a regression",
+    "introspection_cadence_audit --strict --compact": "integrity_ok=true, errors=[], duplicate_hash_group_count=0, canonical_count 4573 (newest introspection_DOMAIN_BOUNDARIES.md_1788376687 arrived after preprojection cutoff — correctly not injected)",
+    "audit-counters --json": "status=consistent, mismatches=[], all 7 checks True",
+    "evidence_event_store.py --json verify": "valid=true, corrupt_lines=0, errors=[], event_count 978120, last_global_seq 978120, head 39f91cb0350a2e49b5f83a42eac127b64f0d2cd3335c034fffd3b12e7fa8f2b5 (full hash-chain re-verify of the whole store; ~14 min). Streams: addressing 59803, agency_commons 6083, attention_portfolio 3, claim_families 238396, corridor_v1 5, corridor_v2 112, felt_contracts 203789, felt_mechanism_concordance 80, lived_state_witness 8992, model_qos 266569, reciprocal_uptake 73685, representation_contracts 46989, sandbox 3291, signal_spine 50946, steward_control 18729, steward_work_selection 648. All grown consistently from the pause baseline (752234→978120); V1 legacy boundary unchanged; V2 active, V1 immutable (not rewritten this run).",
+    "evidence_event_store.py --json status": "redundant with verify (same store state); verify's event_count/last_global_seq/head/stream_counts already establish it. Status subprocess still computing at finalize; not awaited (integrity already confirmed by verify valid=true / corrupt_lines=0)."
+  }
+}

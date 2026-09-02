@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788115759",
+  "source_family": "astrid_llm",
+  "report_bound_source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "report_bound_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "current_source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_hash_match": true,
+  "terminal_status": "addressed_duplicate",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Descriptive source structure: scan_known_model_control_markers (L114), reference_syntax (L49), 'non-marker bytes' fragment_has_non_marker_bytes (L146), exact_reference_delimiter_syntax (L199), international/standard delimiter support, followed_by_explicit_exact_token_relation (L64-85), KNOWN_MODEL_CONTROL_MARKERS ref (L102).",
+      "disposition": "verified_existing — every named symbol confirmed at report-bound SHA 902a0358 via complete read (L1-1048): scan_known_model_control_markers L114, reference_syntax L49, fragment_has_non_marker_bytes L146, exact_reference_delimiter_syntax L199, KNOWN_MODEL_CONTROL_MARKERS use L102, 17-verb relation allowlist L64-86; quote/bracket/CJK delimiter pairs L157-192. No drift.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: over-aggressive sanitization — if 'reference' is too broad, marker pushed into remainder (L124-131) might inadvertently expose internal control tokens meant to be suppressed.",
+      "disposition": "verified_existing; contradiction preserved — a marker is pushed to remainder ONLY when reference_syntax.is_some() (quoted/grouped/explicit-relation) at L129-131; non-reference markers are stripped. The relation allowlist is deliberately narrow (17 verbs, L64-86) and guard-tested against broadening (rejects implies/contains/creates/triggers/generates). Feared over-exposure does not occur under the current allowlist; her boundary concern is real but bounded, not a defect.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Snag: delimiter depth limit MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 (L151) — nesting beyond 4 might fail to identify context, leading to incorrect marker visibility.",
+      "disposition": "verified_existing; contradiction stated plainly — for depth-5 [[[[[MARKER]]]]] exact_reference_delimiter_syntax classifies context from the innermost non-ws delimiter pair (Some(GroupedExactKnownToken)) and only saturates the *reported* depth via take(MAX=4) (L199-229); token stays byte-exact and preserved. Grounded by control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (tests.rs L2301). No incorrect visibility occurs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 1 (Contextual Visibility): marker followed by 'behaves' => scan includes marker in remainder (L130) because followed_by_explicit_exact_token_relation (L64) returns true.",
+      "disposition": "verified_existing — 'behaves' is allowlisted at L69; a bare marker followed by 'behaves as/like' preserves the token via ExplicitExactKnownTokenRelation. Already a named passing regression: control_marker_cleanup_preserves_poetic_attribution_without_literal_cue (tests.rs L2547; 'behaves as'/'behaves like' L2558-2559; explicit_relation_occurrences==1) plus reference_syntax=='following_exact_relation' (proxy test L2587). Note: her bracketed [MARKER] example would fire the grouped-delimiter path first, but the verb path she names is grounded.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 2 (Delimiter Exhaustion): five-level [[[[[MARKER]]]]] => verify GroupedExactKnownToken context or MAX_EXACT_REFERENCE_DELIMITER_DEPTH (4) constraint (L151/L199).",
+      "disposition": "verified_existing — her exact [[[[[MARKER]]]]] shape is a named passing regression control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (tests.rs L2315): asserts grouped_exact_marker context, reported depth clamped to MAX=4, token preserved byte-exact. The test comment (tests.rs L2302) records that prior introspection_astrid_llm_1787026288 drove this exact case. Passing at current SHA.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: verify the KNOWN_MODEL_CONTROL_MARKERS list (L102) and the behavioral verbs in followed_by_explicit_exact_token_relation (L64-85) are sufficient for all intended control types.",
+      "disposition": "verified_existing/observed — marker list = 20 exact transport tokens in fallback_contracts.rs L159-179 (SHA 23fb26a1); relation verbs = 17-entry allowlist dialogue_runtime L67-84. Both are deliberately conservative and guarded by rejection regressions. 'Sufficiency' is an open design judgment; the report names no concrete missing marker/verb, so no expansion is warranted absent a demonstrated gap.",
+      "classification": "verified_existing"
+    }
+  ]
+}

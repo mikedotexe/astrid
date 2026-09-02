@@ -1,0 +1,21 @@
+{
+  "schema": "source_receipts_v1",
+  "sources": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788308998",
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "sha_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete 1-1048 (multi_window_complete; report intervals 1-1048, uncovered none)",
+      "git_state": "clean/committed",
+      "aux_source": {
+        "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+        "interval": "159-180",
+        "note": "KNOWN_MODEL_CONTROL_MARKERS list; 'minime' not present"
+      }
+    }
+  ]
+}

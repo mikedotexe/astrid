@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L18-22 KnownModelControlMarkerMatch; L114-144 scan reconstructs remainder, pushes token back only when reference_syntax.is_some() (L129-131) — the referenced-vs-acting distinction she names."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L199 exact_reference_delimiter_syntax and L64 followed_by_explicit_exact_token_relation; reference_syntax (L49-60) tries delimiter syntax first then relation. Byte-exact citations."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L114-144 returns (String remainder, Vec<KnownModelControlMarkerMatch>) preserving occurrence+reference_syntax metadata."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L151 MAX_EXACT_REFERENCE_DELIMITER_DEPTH=4 applied via .take() at L208/L213; L257 CONTROL_MARKER_CONTEXT_WINDOW_CHARS=64 applied in trailing/leading_bounded_chars L272-286."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_scanner_advances_byte_exactly_across_multibyte_text, control_marker_cleanup_stays_byte_safe_when_marker_abuts_four_byte_astral_chars, exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped, control_marker_cleanup_does_not_preserve_unclosed_or_mismatched_delimiters — .chars() is Unicode-scalar-aware; None->strip is intended fail-closed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788311037_astrid_llm_marker_grammar_1788301040_reverify/steward_note/duplicate_rationale_introspection_astrid_llm_1788301040.md",
+      "note": "Records the mechanism correction and preserved concern for c005."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "known_model_control_markers_have_no_proper_prefix_shadow (L3309) proves no marker is a proper prefix of another; greedy shadow unreachable. Authored for prior report introspection_astrid_llm_1787782248."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "L159-180 KNOWN_MODEL_CONTROL_MARKERS vocabulary; longest_...at (dialogue_runtime L102-106) filters to tokens the tail starts_with, so candidates are always complete vocabulary tokens, never fragments."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788311037_astrid_llm_marker_grammar_1788301040_reverify/steward_note/duplicate_rationale_introspection_astrid_llm_1788301040.md",
+      "note": "Records preserved contradiction #1 (greedy shadow structurally unreachable)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_quoted_exact_token_reference (quoted->Quoted); scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (relation->ExplicitRelation); scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (both present -> quoted precedence). STOP is not a real marker; tests use real markers."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (L2301, [[[[[<end_of_turn>]]]]]) and control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token (L2288): token preserved byte-exact, context still grouped, reported depth saturates at 4. Authored for prior report introspection_astrid_llm_1787026288."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788311037_astrid_llm_marker_grammar_1788301040_reverify/steward_note/duplicate_rationale_introspection_astrid_llm_1788301040.md",
+      "note": "Records preserved contradiction #2 (depth cap bounds reported depth, does not drop/misclassify the marker)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788301040",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue at L695 (pointer accurate); the matches vector is consumed via sanitize_model_control_markers path (L352-521) used by is_valid_dialogue_output (L558) and has_one_nonempty_final_next_action (L634). Her own Tier-1 continuation."
+    }
+  ]
+}

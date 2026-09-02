@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Enum ExactKnownMarkerReferenceContext L42-46; reference_syntax L49-60; followed_by_explicit_exact_token_relation L64-86; scan_known_model_control_markers L114-144 keeps marker in remainder iff reference_syntax.is_some(). SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts + followed_by_explicit_exact_token_relation_allowlists_represents_not_creates (both pass at current SHA)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L89-96 uses .find(|w| !w.is_empty()) which skips punctuation-only chunks (trim to empty); scan strip path L129-131. Punctuation before verb does not skip the relation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary: `<end_of_turn> ... !!! represents ...` preserves; only-punctuation strips (fail-closed). Passes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L91 split_whitespace treats U+00A0 (Unicode White_Space) as a separator, so a non-breaking space between marker and verb does not hide the verb."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_grounds_first_word_after_non_breaking_space (grounds prior report 1786936281): `<end_of_turn>\\u{a0}denotes ...` preserves marker; U+FEFF/soft-hyphen/ZWJ/tab variants also pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 1 pinned: preserves_grouped_and_explicit_relation_contexts asserts `<end_of_turn> behaves as a named boundary.` retained (ExplicitExactKnownTokenRelation); mid-sentence via quoted_context_precedes_following_relation_verb. Passes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "MAX_EXACT_REFERENCE_DELIMITER_DEPTH = 4 (L151); exact_reference_delimiter_syntax L199-229 takes at most MAX chars each side and counts matched pairs, saturating reported depth."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Test 2 pinned: exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (`[[<end_of_turn>]]` depth 2) + control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (5 levels saturate at 4; grounds prior 1787026288). Pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695-754 is the prompt-assembly entrypoint; marker cleanup runs on model OUTPUT via sanitize_model_control_markers_with_report (wraps scan), so `remainder` is sanitized generated text, not re-fed into this builder. Read-only observation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788237624_astrid_llm_dialogue_runtime_marker_grammar_reverify/summaries/introspection_astrid_llm_1788151222.md",
+      "note": "Round summary recording the read of generate_dialogue and the output-vs-prompt distinction for the suggested-next."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the verification-only duplicate re-read of dialogue_runtime.rs marker grammar at SHA 902a0358."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788151222",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: Astrid fresh-pass re-read -> all claims already grounded+tested at identical SHA; 20/20 regressions verified; addressed_duplicate, no change."
+    }
+  ]
+}

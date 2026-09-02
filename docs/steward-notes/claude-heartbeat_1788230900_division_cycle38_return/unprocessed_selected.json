@@ -1,0 +1,10 @@
+{
+  "round": "division_cycle38_return",
+  "selected_count": 0,
+  "processed_count": 0,
+  "unprocessed_count": 0,
+  "unprocessed_filenames": [],
+  "stop_reason": "Division-return round (review_due=true at start, cycle_sequence 38, 6/6 rounds completed). Per the round instructions the bounded Division return was completed BEFORE any report, and the Tier-5 cadence dossier was prepared. Under the one-shot ~90min child budget (~57min already elapsed at lease read; the preprojection window preceded this process, leaving ~33min), the mandatory return + Tier-5 dossier + fast integrity suite consumed the remainder. Under the ONE-SHOT rule a report's record-read -> link -> close -> record-round sequence (each addressing CLI call up to 20+ min at current store size) could NOT be guaranteed to complete without risking a half-processed close, so the canonical queue was NOT re-queried (next --limit 40 / family_scan). No report was partially read. Next run must query the queue fresh after its own preprojection. Precedent: cycle-30/32/34/35/36/37 returns.",
+  "record_round_called": false,
+  "record_round_note": "record-round deliberately NOT called: a Division-return round with 0 processed reports is not a productive round; recording it would be dishonest. The Division follow-up (record-followup) is the durable unit of this round and resets the cycle 38 -> 39."
+}

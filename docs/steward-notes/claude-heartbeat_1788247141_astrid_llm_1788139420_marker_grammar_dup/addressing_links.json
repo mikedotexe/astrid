@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L114-144: reference_syntax L124; remainder retention L129-131; contexts enum L41-46; delimiter pairs L153-197; relation verbs L64-86."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts (L3133): grouped [<end_of_turn>] and '<end_of_turn> behaves as' both retained. Green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "dialogue_requested_token_band L8 + doc-comment L1-16: bands from num_predict only; explicitly decoupled from felt/spectral observation types."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_handles_multibyte_symbol_before_relation (L2988): '<end_of_turn> [emoji]behaves' -> first_word_after='behaves', relation preserved. Green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_skips_symbol_only_line_before_exact_relation (L3007) + stays_byte_safe_when_marker_abuts_four_byte_astral_chars (L3027): symbol/emoji chunks skipped, byte-safe. Green."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "scan_known_model_control_markers_quoted_context_precedes_following_relation_verb (L3178): delimiter syntax precedes relation fallback; unquoted marker+`is` -> ExplicitExactKnownTokenRelation. Green. Addresses prior 1787135542 Test #1."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two (L3226) + control_marker_cleanup_reports_depth_for_repeated_parentheses (L2272): nested depth 2, MAX depth 4. Green. Addresses prior 1787135542 Test #2."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L695-1048: sanitize_model_control_markers used only in validators (L558, L634); returned result is original model text (L997-998), markers not re-inserted/scrubbed."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] [claude-heartbeat] bullet recording the addressed_duplicate close of introspection_astrid_llm_1788139420."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Row: verified-no-change (duplicate) provenance for report 1788139420 marker-grammar re-read."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788139420",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788247141_astrid_llm_1788139420_marker_grammar_dup/summaries/introspection_astrid_llm_1788139420.md",
+      "note": "Round summary: duplicate rationale, prior anchors 1787135542 / 1788151222 / 1788159337, 9/9 grounding regressions green."
+    }
+  ]
+}

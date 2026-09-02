@@ -1,0 +1,56 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788105086.txt",
+      "sha256": "7e1d4cf58465bb98197e9b1d2fc2fd886ce57d64c130aae8e1e6fc8ba5bc282f",
+      "bytes": 5326,
+      "lines": 52,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_0696efdc34c5052329578673f23bfb846748e61ce5bf20f604029304158ede57.json",
+      "sha256": "4fc2c4c56fd676cf1e2bea5472f9d31f34930a30ef36e8c2781e1a68dc293572",
+      "bytes": 21527,
+      "lines": 498,
+      "read": "complete",
+      "artifact_sha256_matches_report": true
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "match": true
+    }
+  ],
+  "grounding_reads": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/witness_texture.rs",
+      "scope": "witness_stability_effort_v1 L1-134",
+      "read": "complete_function"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "scope": "stability_effort_names_settled_shadow_load_under_low_pressure L4396-4496",
+      "read": "complete_test"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/health.rs",
+      "scope": "silt_noise_separation_v1 semantic_trickle labels L147-230",
+      "read": "scoped"
+    },
+    {
+      "path": "crates/astrid-minime-protocol/src/telemetry.rs",
+      "scope": "ResonanceDensityComponents/PressureSourceComponents/PressureSourceV1 mode_packing struct fields",
+      "read": "scoped"
+    }
+  ]
+}

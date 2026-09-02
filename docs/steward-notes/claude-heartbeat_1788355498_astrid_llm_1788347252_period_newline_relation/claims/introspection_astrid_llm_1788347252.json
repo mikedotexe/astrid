@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788347252",
+  "report_sha256": "cfddd3fb5fadd7670b529b6d90e780dde343c0cf50a5fe168e42e819baf29a5c",
+  "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+  "source_binding": "working_copy_matches_report_bound_sha_exact",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) classifies markers by grammatical context (quoted/grouped/explicit relation); ExactKnownMarkerReferenceContext enum (L42) is the primary classification.",
+      "disposition": "All 5 cited lines exact vs complete source (SHA 902a0358...): enum L42; followed_by_explicit_exact_token_relation L64; first_word_after L89; scan L114; MAX_EXACT_REFERENCE_DELIMITER_DEPTH L151. scan retains a marker only when reference_syntax.is_some() (L129-131); reference_syntax checks delimiter (quoted/grouped) first, then explicit relation (L49-60). Verified.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: first_word_after (L89) with split_whitespace + alphanumeric filter may skip the verb or return empty when a marker is followed by a punctuation-heavy string or a non-breaking space before the relation verb, stripping a marker that should be preserved.",
+      "disposition": "Source contradicts the skip. split_whitespace (L91) treats U+00A0 NBSP as White_Space so it separates; per-chunk trim_matches (L92) collapses a standalone '.'/':' to empty and find(!is_empty) (L93) returns the verb; a newline is White_Space. NBSP already grounded (tests.rs L3580). Added a regression for her named period+newline separators. Marker preserved; underlying concern kept, not domesticated.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 Contextual Preservation: a known marker followed by 'behaves' separated by a period or newline (her example [MARKER]. behaves as...) should keep the marker and identify the relation.",
+      "disposition": "Implemented as control_marker_cleanup_first_word_after_skips_period_and_newline_before_relation: bare '<end_of_turn>. behaves'/newline -> first_word_after='behaves', removed_total=0, reference_syntax=following_exact_relation; bracketed '[<end_of_turn>].' preserved by grouping (depth 1); unlisted-verb control strips the bare marker (fail-closed). Passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 Delimiter Depth: nested [[MARKER]] should compute depth correctly and respect MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "verified_existing. MAX=4 (L151). Depth-2 grounded: repeated_parentheses ((<end_of_turn>)) tests.rs L2272; unicode-whitespace bracket depth-2 L2256. Over-MAX cap grounded: homogeneous [[[[[<end_of_turn>]]]]] bounded to 4 L2301; heterogeneous 4-deep L2287. exact_reference_delimiter_syntax .take(MAX) (L208/L213) saturates reported depth.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify first_word_after against various punctuation-heavy delimiters so relation verbs are captured reliably.",
+      "disposition": "Covered. New period/newline regression plus existing family: colon L2771, double-hyphen L2999, leading '--' L2724, fused parenthesis L2836, tab, trailing-comma, soft-hyphen L3633, ZWJ/ZWSP L3694, NBSP/ZWNBSP L3580. Edge-only trim limit pinned (internal format char fails closed, not a leak). No grammar widened.",
+      "classification": "verified_existing"
+    }
+  ]
+}

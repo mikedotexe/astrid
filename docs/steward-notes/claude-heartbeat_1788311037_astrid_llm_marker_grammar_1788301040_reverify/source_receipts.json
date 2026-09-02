@@ -1,0 +1,32 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "report_bound_source": {
+    "introspection_id": "introspection_astrid_llm_1788301040",
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "total_lines": 1048,
+    "total_bytes": 38586,
+    "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "sha_match": true,
+    "read_scope": "Lines 1-740 read completely (two ranges: 1-400, 400-740). This covers every symbol Astrid cites: KnownModelControlMarkerMatch (L19), followed_by_explicit_exact_token_relation (L64), longest_exact_known_model_control_marker_at (L97), scan_known_model_control_markers (L114), MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151), exact_reference_delimiter_pair (L153-197), exact_reference_delimiter_syntax (L199), CONTROL_MARKER_CONTEXT_WINDOW_CHARS (L257), sanitize path (L352-521), generate_dialogue (L695). Lines 741-1048 not line-read; no report claim depends on them.",
+    "coverage_relation": "report_declared_multi_window_complete_intervals_1-1048; steward read covers all cited intervals 1-740"
+  },
+  "adjacent_evidence": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "total_lines": 1417,
+      "total_bytes": 49506,
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "read_scope": "Lines 155-224 read completely — KNOWN_MODEL_CONTROL_MARKERS vocabulary (L159-180) grounding c006/c007, plus ControlMarkerCleanupReport fields (L204-224).",
+      "why": "The marker vocabulary is required to ground the greedy-overlap (c006) and contextual-distinction (c007) claims; STOP is confirmed absent from the vocabulary."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "total_lines": 4737,
+      "total_bytes": 211116,
+      "sha256": "746975b3b13394c7e59dec3f207112b28ff21fc48eebcdb4bdc09640a9703f0a",
+      "read_scope": "fn-name survey (grep) of all marker/reference/delimiter/relation/quoted/grouped/depth tests; full read of L3280-3379 (no_proper_prefix_shadow + cjk_corner_quoted_and_lenticular_grouped) and L2288-2362 (bounds_deeper / bounds_homogeneous_beyond_max_depth / declared group delimiters).",
+      "why": "Establishes that c005-c008 already carry named, passing regressions, two authored to answer prior reports (1787782248 greedy; 1787026288 depth)."
+    }
+  ]
+}

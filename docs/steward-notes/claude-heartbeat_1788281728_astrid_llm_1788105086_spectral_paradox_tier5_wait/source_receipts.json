@@ -1,0 +1,35 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_1_to_1048",
+      "report_binding_match": true,
+      "note": "report-bound source; working copy hash equals report binding; file clean (not in git dirty set)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/witness_texture.rs",
+      "total_lines": 592,
+      "read_scope": "witness_stability_effort_v1 L1-134 (complete function)",
+      "note": "grounds c005 Stability Paradox"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "read_scope": "L4396-4496 (complete test fn)",
+      "note": "existing regression covering settled_habitable_shadow_effort"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/health.rs",
+      "read_scope": "L140-230 scoped (silt_noise_separation_v1 semantic_trickle labels)",
+      "note": "grounds c007"
+    },
+    {
+      "path": "crates/astrid-minime-protocol/src/telemetry.rs",
+      "read_scope": "struct-field scoped (mode_packing at ResonanceDensityComponents/PressureSourceComponents/PressureSourceV1)",
+      "note": "grounds c003 two-scalar distinction"
+    }
+  ]
+}

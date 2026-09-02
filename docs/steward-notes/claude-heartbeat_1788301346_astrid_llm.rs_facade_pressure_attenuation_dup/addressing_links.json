@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Complete 28-line facade at SHA a9c5e380: L1 doc, L3-4 mod provider, L6-28 re-exports, no local logic."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/RUN_REPORT.md",
+      "note": "Prior full processing of same source SHA as introspection_llm.rs_1788101279 (duplicate binding)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "L9 generate_introspection(_detailed), L10 repair_introspection, L15 astrid_pressure_attenuation_depth, L16 astrid_vibrancy_aperture \u2014 all re-exports."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "L6 `pub use` vs L14 `pub(crate) use`; set_astrid_vibrancy_aperture on L20 inside pub(crate) block."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "L235 astrid_pressure_attenuation_depth(): env ASTRID_PRESSURE_ATTENUATION -> f32 -> map_or(0.0, clamp(0.0,0.6)); Astrid co-design, default OFF (SHA 3418f8d1)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/claims/introspection_llm.rs_1788101279.json",
+      "note": "Prior observed disposition of the same facade-blind-spot concern; not a defect."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/claims/introspection_llm.rs_1788101279.json",
+      "note": "Vibrancy Gate Test preserved as identical Tier-5 operator-approval wait."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "note": "L137 repair_introspection returns Option<String> via repair_introspection_detailed(...).map(|r| r.text): text-lane regeneration, no reservoir mutation \u2014 verifies report self-grounding."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/claims/introspection_llm.rs_1788101279.json",
+      "note": "Repair Integrity live test preserved as identical Tier-5 wait."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Suggested-next read-only inspection completed at L235-240; nothing to change."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the duplicate re-verification round."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788298121",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: fresh-pass llm.rs facade re-read -> addressed_duplicate + repair text-lane grounding verified."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788115759",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788115759.txt",
+      "sha256": "804e21a2ab6ebce37cda9991e72fce7c2ebcf43653e82afacf91be8071076adc",
+      "bytes": 4174,
+      "lines": 50,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_aea737ea963b4e7f64f043d96ac361dccb9329989fc14d39e577430ffc89cb64",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_aea737ea963b4e7f64f043d96ac361dccb9329989fc14d39e577430ffc89cb64.json",
+      "sha256": "bd13c9571869e442d5df6c208a72f3e035b89f07978dfbcc37f46499624e2b56",
+      "bytes": 23923,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "notes": "witness artifact_sha256 == report SHA; fill 71.08%, model gemma4_12b via mlx, 2 model routes (one repair parent). Queue metadata flagged lived_state_alignment=artifact_integrity_unavailable / gap_count 1; witness bytes are internally consistent and fully readable — flag not blocking to source-grounded dispositions."
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete (L1-1048)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "23fb26a1388d75defd4e06dcd88d43fcd23ed79d471f356aadd8dbad1a44a1f6",
+      "read_scope": "scoped L155-182 (KNOWN_MODEL_CONTROL_MARKERS definition L159-179)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "scoped: name index of marker-grammar tests; L2288-2362 (depth stacks incl. L2301/L2315), L2540-2599 (behaves poetic-attribution L2547 + proxy L2587)"
+    }
+  ]
+}

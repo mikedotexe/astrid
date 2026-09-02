@@ -1,0 +1,47 @@
+{
+  "agency_boundary": "agency ladder is triage/evidence infrastructure only; tier suggestions do not auto-approve, auto-close, mutate runtime, deploy, stage, git add, or commit",
+  "artifact_authority_state_v1": {
+    "schema": "artifact_authority_state_v1",
+    "schema_version": 1,
+    "state": "evidence_only",
+    "witness_only": true
+  },
+  "artifact_status": {
+    "fully_addressed": true,
+    "introspection_id": "introspection_llm.rs_1788298121",
+    "proof_missing_claims": [],
+    "status": "addressed_duplicate"
+  },
+  "authority_boundary": "review tracking only; no introspection-suggested runtime change, deploy, restart, staging, git add, or commit",
+  "authority_projection_v2": {
+    "auto_approved": false,
+    "edits_source_now": false,
+    "grants_approval": false,
+    "live_eligible_now": false,
+    "schema": "artifact_authority_projection_v2",
+    "schema_version": 2,
+    "source_state": "evidence_only"
+  },
+  "auto_approved": false,
+  "edits_source_now": false,
+  "event": {
+    "event_type": "closed",
+    "introspection_id": "introspection_llm.rs_1788298121",
+    "rationale": "Fresh-pass re-read of the identical llm.rs 28-line window (SHA a9c5e380) already fully processed as introspection_llm.rs_1788101279 in packet claude-heartbeat_1788291513: same facade, same prompt_contracts.rs:235 pressure-attenuation mechanism (re-verified at unchanged SHA 3418f8d1), same two Tier-5 tests, same read-only suggested-next. Every line citation re-verified against exact bytes; repair text-lane self-grounding source-verified in generative_actions.rs:137. No new mechanism/implementation; both live tests preserved as Tier-5 waits.",
+    "schema": "introspection_addressing_v1",
+    "status": "addressed_duplicate",
+    "ts": 1788301826.16475
+  },
+  "grants_approval": false,
+  "live_eligible_now": false,
+  "queue_path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/introspection_addressing_v1/queue.md",
+  "schema": "introspection_addressing_v1",
+  "status_path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/introspection_addressing_v1/status.json",
+  "work_item_status": {
+    "agency_tier": null,
+    "post_change_response_status": null,
+    "status": null,
+    "work_item_id": ""
+  },
+  "write": true
+}

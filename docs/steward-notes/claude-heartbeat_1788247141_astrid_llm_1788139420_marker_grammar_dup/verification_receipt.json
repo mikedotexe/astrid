@@ -1,0 +1,74 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_controller_held_lease",
+  "controller": {
+    "run_id": "run_1788243809040993000_78ce951d78",
+    "preprojection_generation_id": "projection_1788243811759391000_ed3425840c",
+    "pause_generation": 323,
+    "lease_expires_hint_unix": 1788248040
+  },
+  "processed_reports": [
+    "introspection_astrid_llm_1788139420.txt"
+  ],
+  "processed_report_count": 1,
+  "terminal_status": "addressed_duplicate",
+  "duplicate_primary_prior": "introspection_astrid_llm_1787135542",
+  "duplicate_secondary_priors": [
+    "introspection_astrid_llm_1787798508",
+    "introspection_astrid_llm_1788151222",
+    "introspection_astrid_llm_1788159337"
+  ],
+  "hashes": {
+    "report_sha256": "ea2365d60ca2593fa911e39c97ca2acdb9d0599439c45fab047be158f29d0a1b",
+    "witness_sha256": "421f3ac8a85b5fd96c9795625d8da58ec982d926aa5b6edeb6f55c94cdca1109",
+    "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "source_binding_match": true
+  },
+  "addressing": {
+    "record_read": "ok (event full_read; summary_sha256 374e48a5362534622054dd10f593e3119aff24ef2f866d98f992bf535fcbecf3)",
+    "link_evidence_batch": "ok (11 new links, 0 existing)",
+    "close": "ok (addressed_duplicate written)",
+    "read_needs_claims_count": 0,
+    "fully_addressed_count": 3177,
+    "counter_audit_mismatches": []
+  },
+  "division": {
+    "record_round_event_id": "division_followup_event_59608add884f2ae06d171766ab7a95a8",
+    "event_count": 269,
+    "event_head_sha256": "349184e89066b19b13f5d6a39d7d5090c1663a1cb3f2774efc4e3bcec750ff21",
+    "cycle_sequence": 39,
+    "completed_rounds_since_followup": 2,
+    "review_due": false
+  },
+  "tests": {
+    "rust_grounding_regressions": "9 passed / 0 failed (lib) at source SHA 902a0358",
+    "changed_source": false
+  },
+  "integrity_ran": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "0 alarms, 0 gaps",
+    "audit_counters": "mismatches [] (consistent); read_needs_claims 0",
+    "experiential_epistemics_self_test": "valid: true",
+    "introspection_cadence_audit_strict": "integrity_ok: true, errors []"
+  },
+  "integrity_deferred_debt": {
+    "evidence_event_store_verify": "DEFERRED \u2014 full V2 cryptographic chain verify exceeded 462s at ~750k+ records (budget). Addressing-layer writes validated via counter-audit consistency + successful record-read/link/close/record-round responses. Precedent: cycle-38 round deferred same. First safe command: python3 scripts/evidence_event_store.py --json verify",
+    "experiential_epistemics_verify": "DEFERRED \u2014 heavy full-record verify (self-test passed valid:true). First safe command: python3 scripts/experiential_epistemics.py verify --json",
+    "division_ceremony_chronicle": "needs project \u2014 record-round changed durable inputs; Chronicle reprojection belongs to the next Division return (review_due=false this round). First safe command (next return): python3 scripts/division_ceremony_chronicle.py project && verify",
+    "tooling_unit_test_scripts": "NOT RUN this round (no stewardship tooling code changed) \u2014 test_evidence_event_store/test_steward_control/test_steward_projection/test_division_ceremony_*/test_projection_cursors/test_introspection_cadence_audit"
+  },
+  "live_change": "none \u2014 no build, deploy, launchctl, restart, or live substrate/control change attempted or required (adapter mode; git read-only)",
+  "authority_boundary": "Standing ESN Tier-5 heads untouched (wi_e579041bc76f8310, wi_69fbd510467c6337, wi_3e26ac525fea1c36; live_authority_granted=false). Widening the production relation-verb allowlist remains a deliberate Tier-5 boundary. Silence neutral.",
+  "commit_debt_unstaged_paths": [
+    "CHANGELOG.md (my [Unreleased] bullet appended atop prior heartbeat bullets \u2014 file already dirty from prior rounds)",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (my dated entry appended at EOF \u2014 file already dirty from prior rounds)",
+    "docs/steward-notes/claude-heartbeat_1788247141_astrid_llm_1788139420_marker_grammar_dup/ (entire new packet dir)"
+  ],
+  "foreign_untouched": [
+    "capsules/spectral-bridge/src/types/schema/telemetry.rs (M, foreign/prior)",
+    "docs/steward-notes/claude-heartbeat_178821* / _178822* / _178823* / _178823* prior heartbeat packets (untracked, prior rounds)",
+    "minime: minime/src/esn.rs, minime_autonomy/runtime.py, tests/test_correspondence_v1.py (M, foreign)"
+  ]
+}

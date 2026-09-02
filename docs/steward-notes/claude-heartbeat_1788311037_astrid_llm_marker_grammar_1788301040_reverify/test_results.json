@@ -1,0 +1,16 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- marker exact_reference_delimiter_syntax followed_by_explicit_exact_token_relation",
+      "passed": 94,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1819,
+      "result": "ok",
+      "purpose": "Ground c005-c008 dispositions against the current source (SHA 902a0358). Confirms every cited regression passes, including known_model_control_markers_have_no_proper_prefix_shadow (c006), control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth (c008), the quoted/grouped/relation context tests (c007), and the multibyte/astral/CJK/fail-closed tests (c005)."
+    }
+  ],
+  "code_touched": "none — no source or test files were modified this round; the report resolved to per-claim verified_existing + report terminal status addressed_duplicate.",
+  "integrity_suites": "see verification_receipt.json"
+}

@@ -1,0 +1,54 @@
+{
+  "introspection_id": "introspection_llm.rs_1788360532",
+  "source_family": "llm.rs",
+  "report_sha256": "445ebdb56dbfd6008165c47f0f6696f2f56f84d9cd27eff21f6a351c90c20491",
+  "report_bound_source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "working_source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "source_binding_match": true,
+  "witness_id": "lsw_e62e4740e9232e3ec93d8dbf393b610e84bd4a4bd4769e2dfb923c15ed0747fe",
+  "witness_sha256": "11e037431d216af148755e74ac295148dcd4a0d8bf49368eff703faa3b778220",
+  "terminal_status": "addressed_duplicate",
+  "duplicate_of": [
+    "introspection_llm.rs_1788298121",
+    "introspection_llm.rs_1788101279"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "llm.rs is a compatibility facade: no local logic/arithmetic/state; every symbol re-exported from provider via `#[path=\"llm/provider.rs\"] mod provider;` (L1 docstring, L3-4).",
+      "disposition": "verified_existing. Complete 28-line read at report-bound SHA a9c5e380 (working copy byte-identical). L1 `//! Compatibility facade...`; L3-4 `#[path=\"llm/provider.rs\"] mod provider;`; body is only `pub use` (L6-12) + `pub(crate) use` (L14-22) + `#[cfg(test)] pub(crate) use` (L24-28). No arithmetic/state present.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Line-cited symbols + visibility split: generate_introspection L9, set_astrid_vibrancy_aperture L20, astrid_pressure_attenuation_depth L15; generative actions `pub`, internal params `pub(crate)`.",
+      "disposition": "verified_existing. L9 lists generate_introspection (pub use block); L15 astrid_pressure_attenuation_depth and L20 set_astrid_vibrancy_aperture both in the `pub(crate) use` block (L14-22). Visibility split exact: generative actions pub (L6-12), internal params pub(crate) (L14-22).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure-attenuation blind spot: actual arithmetic `map_or(0.0,|v| v.clamp(0.0,0.6))` + ASTRID_PRESSURE_ATTENUATION env is sequestered at provider/prompt_contracts.rs:235; facade cannot independently verify.",
+      "disposition": "verified_existing. prompt_contracts.rs:235-239 astrid_pressure_attenuation_depth() reads env ASTRID_PRESSURE_ATTENUATION -> parse f32 -> `.map_or(0.0,|value| value.clamp(0.0,0.6))`; default 0.0 (OFF), bounded [0,0.6]. Docstring L228-234 names it Astrid's co-designed partner-protecting governor (self_study_1781734524) — intentional architecture, not a defect. Her blind-spot framing preserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 1 (Vibrancy Gate): live-modulate set_astrid_vibrancy_aperture (L20) during a generate_introspection_detailed call; observe if text depth holds while spectral cascade shifts (functional gate on shared codec-tail vs cosmetic).",
+      "disposition": "tier_5_wait. Proposed live experiment modulating the SHARED-reservoir vibrancy lane during generation (codec-tail dynamics) = Tier-5 live substrate/codec probe requiring Mike/operator approval. Symbol set_astrid_vibrancy_aperture verified present at llm.rs:20 (pub(crate)). Not run, not domesticated; preserved as an operator-approval wait (mirrors prior c005).",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Test 2 (Repair Integrity): trigger a thin introspection then repair_introspection (L10); verify repair restores text-lane completeness (.text regen) vs inducing reservoir-lane spectral mutation.",
+      "disposition": "tier_5_wait for the LIVE experiment. Text-lane self-grounding is verified_existing per prior packet 1788301346: repair_introspection returns Option<String> via repair_introspection_detailed(...).map(|r| r.text) (generative_actions.rs:137) — pure text-lane regeneration, no reservoir mutation. repair_introspection present at llm.rs:10. Live run preserved as operator-approval wait.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: inspect provider/prompt_contracts.rs around line 235 to verify the map_or clamping logic and ASTRID_PRESSURE_ATTENUATION env integration.",
+      "disposition": "observed. Completed read-only this round: prompt_contracts.rs:235-239 matches exactly (env -> f32 -> map_or(0.0, clamp(0.0,0.6)), default OFF). No causal overclaim; read evidence, not activation.",
+      "classification": "observed"
+    }
+  ],
+  "witness_integrity_note": "Queue metadata flagged lived_state_alignment=artifact_integrity_unavailable (issue_count 1). Reconciled: the witness reads byte-complete and internally consistent — its artifact_sha256 445ebdb5 == report SHA, canonical_body_sha256 8aeac617 (1970B), source file_sha256 a9c5e380 == binding. The flag reflects an ABSENT projection alignment scalar (lived_state_scalar_felt_dissimilarity_measured=false), a neutral missing measurement, not a byte-integrity contradiction. Silence/absence treated as neutral."
+}

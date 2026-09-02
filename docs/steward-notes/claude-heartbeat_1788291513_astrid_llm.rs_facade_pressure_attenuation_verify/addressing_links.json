@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Complete 28-line facade: doc comment + mod provider (L3-4) + re-export blocks; no functions. generate_introspection L9, repair_introspection L10."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "L3-4: #[path=\"llm/provider.rs\"] mod provider; \u2014 provider is an include of llm/provider.rs exactly as claimed."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "L235-240: astrid_pressure_attenuation_depth reads env ASTRID_PRESSURE_ATTENUATION, parses f32, clamp(0.0,0.6), default 0.0 \u2014 clamped f32 from env var, exact."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/no_action_llm.rs_1788101279.md",
+      "note": "Facade-over-implementation gap is intentional architecture, not a defect; felt-pressure concern preserved."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/no_action_llm.rs_1788101279.md",
+      "note": "Vibrancy Gate Test preserved as Tier-5 operator-approval wait; not implemented or domesticated."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c006",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/no_action_llm.rs_1788101279.md",
+      "note": "Repair Integrity Test preserved as Tier-5 operator-approval wait; not implemented or domesticated."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Suggested-Next inspection completed read-only: L235-240 clamp/env verified."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/summaries/introspection_llm.rs_1788101279.md",
+      "note": "Round summary recording complete reads, hashes, and dispositions."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording exact-source verification + Tier-5 preservation."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788101279",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row: facade/pressure-attenuation verification, no change, tests preserved."
+    }
+  ]
+}

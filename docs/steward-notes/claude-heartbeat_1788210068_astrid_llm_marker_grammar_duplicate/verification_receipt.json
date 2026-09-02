@@ -1,0 +1,80 @@
+{
+  "round": "claude-heartbeat introspection source-first flywheel (adapter-held lease)",
+  "controller": {
+    "run_id": "run_1788207323071734000_8d732321b0",
+    "preprojection_generation_id": "projection_1788207326151342000_5400a6f9fe",
+    "pause_generation": 323,
+    "actor": "claude-heartbeat",
+    "adapter_kind": "subprocess"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788159337",
+      "report_sha256": "a0130b2d4faab3f57fbaad4a0a46af8994ae7779bd95bc4c8ebd288c5becceed",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding_match": true,
+      "witness_id": "lsw_89e102619c3a73458421920213f47568f94fa8be6c9507750a34f1c11e41f47a",
+      "witness_sha256": "f7bb25fad5b8cebd44c5b3088a822a7cfb899ae98f58c57d63c8d0a3986121a4",
+      "terminal_status": "addressed_duplicate",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "duplicate_of_prior": "introspection_astrid_llm_1787773776",
+      "record_read": "ok",
+      "evidence_links": {"new": 10, "existing": 0}
+    }
+  ],
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- <6 cited marker-grammar tests>",
+    "passed": 6,
+    "failed": 0,
+    "filtered_out": 1904,
+    "source_edited": false
+  },
+  "integrity_suites": {
+    "addressing_self_test": "ok (44)",
+    "test_evidence_event_store": "ok (21)",
+    "test_steward_control": "ok (27); first run had 1 transient error at 40s during concurrent addressing writes, clean on immediate re-run with no intervening change; no controller source touched this round",
+    "test_steward_projection": "ok (14)",
+    "test_division_ceremony_followup": "ok (3)",
+    "test_division_ceremony_chronicle": "ok (10)",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "ok (4)",
+    "anti_drop_self_test": "ok (5)",
+    "anti_drop_verify": "0 alarms",
+    "test_introspection_cadence_audit": "ok (6)",
+    "introspection_cadence_audit_strict": "integrity_ok true; 0 duplicate hash groups; canonical_count 4554",
+    "experiential_epistemics_self_test": "ok (2)",
+    "experiential_epistemics_verify": "valid true; issue_count 0 (final epistemic verify, after all durable writes)",
+    "audit_counters": "consistent; mismatches []",
+    "evidence_event_store_verify": "valid true; corrupt_lines 0",
+    "division_followup_verify": "ok true; review_due false",
+    "chronicle_verify": "durable_inputs_current true; durable_mismatches []; volatile_mismatches [supervisor_status_sha256] (benign moving supervisor hash)"
+  },
+  "counters": {
+    "indexed": 4554,
+    "fully_addressed": 3174,
+    "full_read": 3807,
+    "remaining": 1380,
+    "unread": 747,
+    "blocked_needs_steward": 415,
+    "triaged_pending_action": 214,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "status_counts_addressed_duplicate": 1152
+  },
+  "division": {
+    "cycle_sequence": 38,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "processed_report_count_this_round": 1,
+    "last_round_event_id": "division_followup_event_ab6770abcea7d16099052792847a0dcf",
+    "event_count": 265,
+    "event_head_sha256": "36f44b5fa36f19bd575524b263fce80d067bb5746c9b73cd48aa66bbf7348733",
+    "chronicle_id": "division_chronicle_72bc6584e87dc6f5aa263b18",
+    "chronicle_json_sha256": "c8db73225cf5b1bbf920a55a72ddc79471f504d8da6d4876ef736b2411ee734a"
+  },
+  "live_change": "none — no build, deploy, restart, or launchctl; git read-only; no source or test edit; Tier-5 items remain explicit waits",
+  "authority_boundary": "evidence-only; no consent, relief, uptake, or live authority inferred; silence neutral; right to reopen preserved"
+}

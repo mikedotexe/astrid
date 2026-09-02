@@ -1,0 +1,18 @@
+{
+  "schema": "test_results_v1",
+  "cargo": "$HOME/.cargo/bin/cargo",
+  "runs": [
+    {
+      "filter": "control_marker_cleanup_first_word_after_trims_fused_leading_parenthesis",
+      "manifest": "capsules/spectral-bridge/Cargo.toml",
+      "result": "ok 1 passed 0 failed"
+    },
+    {
+      "filter": "control_marker scan_known_model_control_markers exact_reference_delimiter first_word",
+      "scope": "--lib",
+      "result": "ok 85 passed 0 failed 1829 filtered"
+    }
+  ],
+  "fmt": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check flags ONLY pre-existing committed foreign drift in autonomous/introspect/source_first_v3/grounding.rs L259,L295; touched tests.rs is fmt-clean.",
+  "git_diff_check": "clean on tests.rs"
+}

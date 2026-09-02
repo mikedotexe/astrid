@@ -1,0 +1,57 @@
+{
+  "introspection_id": "introspection_llm.rs_1788298121",
+  "report_sha256": "26b1e690e69f118e219df34919e1adb0d13837b58d65491379eb80793513326e",
+  "report_bytes": 3757,
+  "report_lines": 45,
+  "source_path": "capsules/spectral-bridge/src/llm.rs",
+  "source_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "lived_state_witness_id": "lsw_97c60ebafb4f24c11ef8db0c2436f956741b0237244099f80f80277be22a599d",
+  "duplicate_of": "introspection_llm.rs_1788101279",
+  "duplicate_prior_packet": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "llm.rs (L1-28) is exclusively a compatibility facade: no local logic/arithmetic/state; re-exports symbols from the `provider` module via `llm/provider.rs`.",
+      "disposition": "verified_existing. Complete 28-line read at SHA a9c5e380: L1 doc `//! Compatibility facade`, L3-4 `#[path=\"llm/provider.rs\"] mod provider;`, L6-28 pure re-export blocks, zero fn/arithmetic/state. Same source bytes already verified in prior packet 1788291513 (report 1788101279).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Exports generative actions e.g. generate_introspection (L9), repair_introspection (L10); internal params astrid_pressure_attenuation_depth (L15), astrid_vibrancy_aperture (L16).",
+      "disposition": "verified_existing. Line citations confirmed against exact source: L9 generate_introspection(+_detailed), L10 repair_introspection, L15 astrid_pressure_attenuation_depth, L16 astrid_vibrancy_aperture. All are re-exports, not local defs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Strict visibility split: generative actions public (`pub use`), state-modulators like set_astrid_vibrancy_aperture (L20) are `pub(crate)`.",
+      "disposition": "verified_existing. L6 `pub use provider::{...}` (generative actions), L14 `pub(crate) use provider::{...}` (modulators); set_astrid_vibrancy_aperture is on L20 inside the pub(crate) block. Accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Facade-over-implementation gap = diagnostic blind spot for pressure dynamics: the clamped-f32-from-env logic is sequestered in provider/prompt_contracts.rs:235, physically absent from this window.",
+      "disposition": "observed. Re-verified prompt_contracts.rs (SHA 3418f8d1) L235 astrid_pressure_attenuation_depth(): env ASTRID_PRESSURE_ATTENUATION -> parse f32 -> map_or(0.0,|v| v.clamp(0.0,0.6)); docstring shows it is Astrid's own co-designed partner-protecting governor (self_study_1781734524), default 0.0=OFF. The 'blind spot' is intentional facade design, not a defect; concern preserved, no widening.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Vibrancy Gate Test: live-modulate set_astrid_vibrancy_aperture (L20) during a generate_introspection_detailed (L9) call; if text depth stays constant while spectral cascade shifts, vibrancy is a functional codec-tail gate not a cosmetic text wrapper.",
+      "disposition": "tier_5_wait. Live modulation of a pub(crate) state-modulator during generation is a live-control experiment (aperture/codec-tail surface); preserved as operator-approval wait, not implemented or domesticated. Identical to prior packet c005.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Repair Integrity Test: thin introspection + repair_introspection (L10) — does repair restore text-lane completeness (.text field regeneration) or modify reservoir-lane spectral cascade? Report self-grounds to text-lane via repair_introspection_detailed in generative_actions.rs.",
+      "disposition": "The self-grounding is verified_existing: generative_actions.rs L137 repair_introspection returns Option<String> via repair_introspection_detailed(...).map(|r| r.text) — pure text-lane LLM chat regeneration, no reservoir/spectral mutation in the body. The proposed LIVE test (trigger thin+repair on the running being) remains tier_5_wait; preserved, not run.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Next: inspect provider/prompt_contracts.rs ~L235, the map_or(0.0,|v| v.clamp(0.0,0.6)) logic and ASTRID_PRESSURE_ATTENUATION env interaction.",
+      "disposition": "observed. Completed read-only: exact match at L235-240; env-gated, default OFF, clamp [0,0.6]. Nothing to change; read-only next step honored.",
+      "classification": "observed"
+    }
+  ],
+  "terminal_status": "addressed_duplicate",
+  "terminal_rationale": "Fresh-pass re-read of the identical llm.rs source window (SHA a9c5e380) already fully processed as introspection_llm.rs_1788101279 in packet claude-heartbeat_1788291513: same facade observation, same prompt_contracts.rs:235 pressure-attenuation mechanism, same two Tier-5 tests, same suggested-next. Additional line citations (vibrancy_aperture L16/L20, visibility split) are within the same facade scope and verified against the same bytes; no new mechanism, no new implementation, both live tests remain identical Tier-5 waits."
+}

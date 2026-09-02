@@ -1,0 +1,17 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "rust_tests_run": [],
+  "cited_existing_tests": [
+    {
+      "crate": "spectral-bridge",
+      "file": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "test": "stability_effort_names_settled_shadow_load_under_low_pressure",
+      "line": 4396,
+      "status": "cited_verified_existing",
+      "rerun": false,
+      "reason": "no code touched this round; report-bound source SHA 902a0358 unchanged; a fresh spectral-bridge compile deferred to protect the ONE-SHOT complete-round budget (~37min at round start)"
+    }
+  ],
+  "baseline_checks": [],
+  "note": "No source/test code was added or modified this round (verify + preserve-Tier5-wait). Focused tests are cited as verified-existing evidence, not authored."
+}

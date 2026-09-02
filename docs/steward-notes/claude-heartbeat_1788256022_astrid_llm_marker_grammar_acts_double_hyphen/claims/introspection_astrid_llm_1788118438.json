@@ -1,0 +1,42 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788118438",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "working_copy_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+    "sha_match": true,
+    "read_scope": "complete 1-1048"
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: scan_known_model_control_markers (L114) rebuilds `remainder`, preserving a marker only when it has valid reference_syntax (L129-131); transparent processing that keeps control signals unless they are specific reference types.",
+      "disposition": "Verified from complete source. L123-132: each longest exact marker is matched; L129-131 pushes the token to remainder only when reference_syntax.is_some(); a marker with no reference_syntax is dropped (cleanup candidate). Confirmed by the full sanitizer (L352-517: removed_total counts is_none matches) and downstream validity use (L558). Covered by 60 control_marker_cleanup tests.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely snag: first_word_after (L89) split_whitespace + alphanumeric filter (L92) mishandles contractions/hyphenated terms, so relations like 'is-equivalent-to'/'acts-as' fail followed_by_explicit_exact_token_relation (L64), treating a valid marker as plain text.",
+      "disposition": "Mechanism partly contradicted, then grounded. L92 trim_matches strips non-alnum only from chunk ENDS, keeping interior punctuation, so a hyphen-joined chunk returns WHOLE (not split). Her expectation it isolates a sub-word is wrong; the underlying fact (a hyphen-joined compound is not an exact single-word relation, so the marker is removed) is true and by design. Grounded by new regression (see c003).",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Grammar Recognition): '[MARKER] acts--as' should verify first_word_after (L89) identifies 'acts' and lets followed_by_explicit_exact_token_relation (L64) return true.",
+      "disposition": "Implemented as a contradiction-preserving regression: control_marker_cleanup_rejects_interior_double_hyphen_joined_relation_suffix. first_word_after('<end_of_turn> acts--as ...') == 'acts--as' (neither unlisted 'acts' nor listed 'as'); marker removed (removed_total=1, none_cleanup_candidate). Positive control: bare listed 'as' preserved. Distinct from is-not/is/not (L2920) and ' -- acts as -- ' (L2735).",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Delimiter Depth): '[[MARKER]]' should confirm exact_reference_delimiter_syntax (L199) computes delimiter_depth without exceeding MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).",
+      "disposition": "Verified existing. L199-229 computes depth via .take(MAX=4) + .zip().take_while(). 2-level nesting is directly covered: ((<end_of_turn>)) depth 2 (tests L2272), [ ws [<end_of_turn>] ws ] depth 2 (L2257); deeper stacks incl homogeneous [[[[[...]]]]] clamped to 4 (L2300) and CJK/heterogeneous. '[[MARKER]]' adds no distinct behavior beyond these.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: verify KNOWN_MODEL_CONTROL_MARKERS list (L102) so longest_exact_known_model_control_marker_at (L97) prioritizes longest matches without incorrect overlap.",
+      "disposition": "Verified existing. List defined in fallback_contracts.rs:159-179 (20 markers). L97-112 selects via max_by_key(|token| token.len()). Longest-match already grounded by tests: L1745 (longest raw match), L2528 (longest overlapping token as content), and L3244 which cites L97-112 and notes no marker is a prefix of another, so the tie-break never fires. No new test needed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

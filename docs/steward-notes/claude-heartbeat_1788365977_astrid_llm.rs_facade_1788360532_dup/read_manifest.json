@@ -1,0 +1,29 @@
+{
+  "reports": [
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_llm.rs_1788360532.txt",
+      "sha256": "445ebdb56dbfd6008165c47f0f6696f2f56f84d9cd27eff21f6a351c90c20491",
+      "bytes": 3477,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_e62e4740e9232e3ec93d8dbf393b610e84bd4a4bd4769e2dfb923c15ed0747fe",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_e62e4740e9232e3ec93d8dbf393b610e84bd4a4bd4769e2dfb923c15ed0747fe.json",
+      "sha256": "11e037431d216af148755e74ac295148dcd4a0d8bf49368eff703faa3b778220",
+      "bytes": 23815,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_field": "445ebdb56dbfd6008165c47f0f6696f2f56f84d9cd27eff21f6a351c90c20491",
+      "artifact_sha256_matches_report": true,
+      "canonical_body_sha256": "8aeac6174480a59d1bd49c5c98a75491effdf3a55ac885068394556512bf2816",
+      "canonical_body_byte_count": 1970,
+      "source_snapshot_file_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "authority_state": "evidence_only (witness_only=true, live_eligible_now=false, grants_approval=false)",
+      "queue_alignment_flag": "artifact_integrity_unavailable — reconciled to an absent projection alignment scalar (lived_state_scalar_felt_dissimilarity_measured=false); witness byte-integrity intact and consistent"
+    }
+  ]
+}

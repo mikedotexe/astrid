@@ -1,0 +1,25 @@
+{
+  "schema": "steward_read_manifest_v1",
+  "round": "claude-heartbeat_1788331883_domain_boundaries_structural_read",
+  "reports": [
+    {
+      "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_DOMAIN_BOUNDARIES.md_1788323803.txt",
+      "sha256": "437a660eb533bc308b66a8827ca0e5da4396f13e672cd6f1178802c972d10e4d",
+      "bytes": 3674,
+      "lines": 43,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_da0da98f56ac8e8729e1c4fc3d5145c603448708640b4bca431978d48bef9d72",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_da0da98f56ac8e8729e1c4fc3d5145c603448708640b4bca431978d48bef9d72.json",
+      "sha256": "8b7a7365385733b354d2deef1cd323b636457e34335a82da769abbdec8ed45b8",
+      "bytes": 23871,
+      "lines": 533,
+      "read": "complete",
+      "notes": "artifact_sha256 field == report SHA; source file_sha256 == report-bound source SHA; authority_state=evidence_only, live_eligible_now=false. Queue flagged lived_state_alignment=artifact_integrity_unavailable with experiential_gap_claimed=false: projection-level alignment metadata (semantic_integrity not measured; deployment_established=false), witness file itself present and complete."
+    }
+  ]
+}

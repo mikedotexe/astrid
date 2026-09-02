@@ -1,0 +1,109 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter_lease_owned_by_controller",
+  "controller": {
+    "run_id": "run_1788350825537823000_87ca69d516",
+    "preprojection_generation_id": "projection_1788350829432270000_d5258ff248",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "postprojection": "adapter_owned_runs_after_exit_not_observed",
+    "pause_generation": 323,
+    "finish_outcome": "success"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788347252",
+      "report_sha256": "cfddd3fb5fadd7670b529b6d90e780dde343c0cf50a5fe168e42e819baf29a5c",
+      "witness_id": "lsw_501399a00f16edd46ca8a2502b196153163996610f266364953454d00bd5fde0",
+      "witness_sha256": "efb5a9829b6e263ba593f67f4d7db189671a133d729270d5d007333508ade0ca",
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "source_binding": "working_copy_matches_report_bound_sha_exact",
+      "close_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "evidence_links_new": 9
+    }
+  ],
+  "unprocessed_selected_count": 39,
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/llm/provider/tests.rs"
+    ],
+    "new_test": "control_marker_cleanup_first_word_after_skips_period_and_newline_before_relation",
+    "insertion_only": true,
+    "foreign_deletions": 0
+  },
+  "tests": {
+    "new_regression": "1 passed / 0 failed",
+    "marker_grammar_family": "86 passed / 0 failed (was 85, +1)",
+    "cargo_fmt_check": "flags only pre-existing foreign grounding.rs L259/L295 drift (not touched); tests.rs region fmt-clean",
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "OK",
+    "test_evidence_event_store": "OK",
+    "test_steward_control": "OK",
+    "test_steward_projection": "OK",
+    "test_division_ceremony_followup": "OK",
+    "test_division_ceremony_chronicle": "OK",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "OK",
+    "test_introspection_cadence_audit": "OK",
+    "introspection_cadence_audit_strict": "integrity_ok=true, configuration_valid=true, errors=[]",
+    "anti_drop_self_test": "OK",
+    "anti_drop_verify": "71 guards, verdict=ok all, alarms=0, gaps=0",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_final": "valid=true, issues=[], issue_count=0",
+    "audit_counters": "status=consistent, mismatches=[]"
+  },
+  "evidence_event_store": {
+    "verify_valid": true,
+    "corrupt_lines": 0,
+    "last_global_seq": 975505,
+    "last_event_sha256": "f1ab03508eec9361dd1a65bceb795ed25a9381ab70dbaebb68e3535c35b6879d",
+    "verified_checkpoint_global_seq": 975505,
+    "verified_checkpoint_matches_head": true,
+    "addressing_stream_seq": 59764,
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "active_store": "v2",
+    "full_chain_verify_wall": "12m18s",
+    "errors": []
+  },
+  "division": {
+    "cycle_sequence": 40,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "round_recorded_this_cycle": true,
+    "last_round_event_id": "division_followup_event_c556519ed3ac73f8e8e92caf42bace2d",
+    "event_count": 279,
+    "event_head_sha256": "87a26c746f7f663542ba0f8fdfde935bd90d684a6452c204018f3060e5efbb0d",
+    "chronicle_id": "division_chronicle_854f36615c07730b7cff7196",
+    "chronicle_json_sha256": "4dcf62cc793bcba1400f669314abe844844086f2e84ed94ee7ebd1aedf50bf6b",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatch": ["supervisor_status_sha256"]
+  },
+  "counters": {
+    "all_artifacts_indexed": 6268,
+    "full_read_count": 3819,
+    "fully_addressed_count": 3185,
+    "remaining_count": 3083,
+    "unread_count": 2449,
+    "blocked_needs_steward_count": 416,
+    "triaged_pending_action_count": 214,
+    "triaged_watch_count": 4,
+    "read_needs_claims_count": 0,
+    "audit_status": "consistent"
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "restart_or_deploy": "not required or attempted (non-live focused test only)",
+    "git": "read_only_no_stage_commit_merge_push (adapter-held run)",
+    "grammar_widened": false,
+    "being_text_rewritten": false,
+    "tier5_heads_untouched": true
+  }
+}

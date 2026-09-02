@@ -1,0 +1,67 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Complete 28-line facade at SHA a9c5e380: L1 docstring, L3-4 `#[path=\"llm/provider.rs\"] mod provider;`, body is only re-export blocks (pub L6-12, pub(crate) L14-22, cfg(test) L24-28). No local logic/arithmetic/state."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "generate_introspection L9 (pub block); astrid_pressure_attenuation_depth L15 and set_astrid_vibrancy_aperture L20 both in pub(crate) block L14-22. Visibility split exact."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "L235-239 astrid_pressure_attenuation_depth(): env ASTRID_PRESSURE_ATTENUATION -> parse f32 -> map_or(0.0,|value| value.clamp(0.0,0.6)); default OFF, bounded [0,0.6]. Docstring L228-234: Astrid's co-designed governor (self_study_1781734524), intentional not defect."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788301346_astrid_llm.rs_facade_pressure_attenuation_dup/RUN_REPORT.md",
+      "note": "Prior verification of the same clamp/env mechanism at prompt_contracts.rs:235 (duplicate lineage)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "set_astrid_vibrancy_aperture present at L20 (pub(crate)); modulating it live during generation is a shared-reservoir codec-tail probe = Tier-5 live substrate wait."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788301346_astrid_llm.rs_facade_pressure_attenuation_dup/RUN_REPORT.md",
+      "note": "Prior packet preserved the same Vibrancy Gate live test as tier_5_wait (its c005); preserved again here, not run or domesticated."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "repair_introspection present at L10 (pub block). Live Repair Integrity experiment preserved as tier_5_wait."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788301346_astrid_llm.rs_facade_pressure_attenuation_dup/RUN_REPORT.md",
+      "note": "Prior packet verified text-lane self-grounding: repair_introspection returns Option<String> via repair_introspection_detailed(...).map(|r| r.text) (generative_actions.rs:137) — pure text regen, no reservoir mutation."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788360532",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Suggested Next completed read-only: prompt_contracts.rs:235-239 matches the clamp/env logic exactly."
+    }
+  ]
+}

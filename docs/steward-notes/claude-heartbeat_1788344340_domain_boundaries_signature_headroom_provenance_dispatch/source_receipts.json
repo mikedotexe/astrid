@@ -1,0 +1,35 @@
+{
+  "report_bound_source": {
+    "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788335079",
+    "path": "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+    "report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "working_copy_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "binding_match": true,
+    "total_lines": 89,
+    "total_bytes": 5022,
+    "read_scope": "complete_file (lines 1-89)",
+    "report_declared_window": "lines 1-89 of 89, complete_file, uncovered intervals: none",
+    "note": "Working copy IS the report-time source (exact SHA match). No snapshot reconstruction needed."
+  },
+  "section_anchors_verified": {
+    "stable_facades_heading": "L8",
+    "stable_facades_table": "L10-17",
+    "provenance_ownership_heading": "L24",
+    "shadow_cartography_heading": "L35",
+    "cohesion_exceptions_heading": "L45",
+    "verification_heading": "L76",
+    "exception_signature_growth_token": "L67"
+  },
+  "audit_snapshot": {
+    "command": "python3 scripts/domain_boundary_audit.py verify --json",
+    "valid": true,
+    "violation_count": 0,
+    "forbidden_edge_match_count": 0,
+    "documented_cohesion_exception_count": 7,
+    "exception_signature_ceiling_count": 7,
+    "stable_facade_count": 6,
+    "legacy_large_file_count": 53,
+    "codec_structure_rs_unique_fn_signatures": "11/13 (within headroom)",
+    "codec_encoding_rs_unique_fn_signatures": "9/10 (within headroom)"
+  }
+}

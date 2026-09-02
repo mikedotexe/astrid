@@ -1,0 +1,99 @@
+{
+  "schema": "steward_verification_receipt_v1",
+  "round": "claude-heartbeat_1788331883_domain_boundaries_structural_read",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_controller_held_lease",
+  "controller": {
+    "run_id": "run_1788327810957150000_7108ed6b24",
+    "preprojection_generation_id": "projection_1788327813975310000_af6ed2a01f",
+    "preprojection_status": "passed",
+    "previous_successful_generation_id": "projection_1788322666702688000_ea0c4fa07f",
+    "pause_generation": 323,
+    "postprojection": "adapter-owned; runs after process exit",
+    "finish_outcome": "adapter-owned (process exit code == finish outcome; exit 0 == success)"
+  },
+  "processed_report": {
+    "introspection_id": "introspection_DOMAIN_BOUNDARIES.md_1788323803",
+    "terminal_status": "addressed_no_action",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "report_sha256": "437a660eb533bc308b66a8827ca0e5da4396f13e672cd6f1178802c972d10e4d",
+    "report_bytes": 3674,
+    "report_lines": 43,
+    "witness_id": "lsw_da0da98f56ac8e8729e1c4fc3d5145c603448708640b4bca431978d48bef9d72",
+    "witness_sha256": "8b7a7365385733b354d2deef1cd323b636457e34335a82da769abbdec8ed45b8",
+    "source_report_bound_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "source_working_copy_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+    "source_hash_match": true,
+    "evidence_links_new": 10,
+    "claims": {
+      "c001": "verified_existing",
+      "c002": "verified_existing",
+      "c003": "verified_existing",
+      "c004": "verified_existing",
+      "c005": "observed",
+      "c006": "verified_existing"
+    }
+  },
+  "tests": {
+    "domain_boundary_audit_verify": "valid=true, violation_count=0, forbidden_edge_match_count=0, stable_facade_count=6",
+    "regulator_participation_lib": "3 passed / 0 failed",
+    "cargo_fmt_all_check": "clean",
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 OK",
+    "test_evidence_event_store": "21 OK",
+    "test_steward_control": "27 tests; 1 flaky failure (test_pause_cooperatively_interrupts_wrapped_subprocess -> PausedError 'fixture stop'); passed on isolated retry; timing-sensitive; no steward_control code touched this round",
+    "test_steward_projection": "14 OK (1 flaky failure on first run, clean on re-run)",
+    "test_division_ceremony_followup": "3 OK",
+    "test_division_ceremony_chronicle": "10 OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 OK",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "71 guards, 0 alarms, 0 gaps",
+    "cadence_audit_test": "6 OK",
+    "cadence_audit_strict_compact": "integrity_ok=true, duplicate_hash_group_count=0, errors=[]",
+    "experiential_epistemics_self_test": "valid=true",
+    "experiential_epistemics_verify_final": "valid=true, issue_count=0, checked_record_count=11774, history_rewritten=false",
+    "audit_counters": "status=consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_line_count=0"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_line_count": 0,
+    "last_global_seq": 972572,
+    "last_event_sha256": "baa1a743303d29d8f98e4bdf12e75c5269c75f48c192869ece1d15a00798960a",
+    "addressing_stream_seq": 59727,
+    "legacy_imported_global_seq": 32278,
+    "active_store": "v2",
+    "note": "events.jsonl is ~7.1GB; full status/verify is slow. Fast verify confirmed valid + 0 corrupt lines; head read from head.json."
+  },
+  "division": {
+    "cycle_sequence": 40,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_5182a081d9f33e4ed7186f194281ba5c",
+    "event_count": 277,
+    "event_head_sha256": "e1893a1968a3db47cffce5d6b593d354e89a47dba25ec080a3da46ce4075498e",
+    "chronicle_state": "durable source inputs changed after record-round (round #277 postdates last chronicle projection); expected; controller postprojection division_chronicle stage reconciles; NOT a durable-integrity failure",
+    "last_durable_followup_chronicle_id": "division_chronicle_9d690692445344ffafc5f983"
+  },
+  "canonical_counters": {
+    "indexed": 4561,
+    "fully_addressed_count": 3183,
+    "full_read_count": 3817,
+    "remaining_count": 1378,
+    "unread_count": 744,
+    "blocked_needs_steward_count": 416,
+    "triaged_pending_action_count": 214,
+    "triaged_watch_count": 4,
+    "read_needs_claims_count": 0,
+    "addressed_no_action_count": 105,
+    "all_artifacts_indexed": 6262,
+    "all_artifacts_remaining": 3079
+  },
+  "live_change": "none — no build, restart, deploy, launchctl, or live substrate/control change attempted or required (adapter mode; git read-only)",
+  "authority_boundary": "evidence_only; live_eligible_now=false; grants_approval=false. Shadow-dispersal change (c006) remains Tier 5; standing ESN Tier-5 heads untouched."
+}

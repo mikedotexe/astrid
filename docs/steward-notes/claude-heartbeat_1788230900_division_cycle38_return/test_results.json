@@ -1,0 +1,22 @@
+{
+  "round": "division_cycle38_return",
+  "focused_tests": {
+    "note": "No .rs/.py source touched this run (Division-return round, 0 reports). No focused code tests were required or run."
+  },
+  "integrity_suites_run": {
+    "introspection_addressing_audit.py --self-test": {"result": "OK", "tests": 44},
+    "anti_drop_catalog.py --self-test": {"result": "OK", "tests": 5},
+    "anti_drop_catalog.py verify --json": {"guards": 71, "alarms": 0, "gaps": 0},
+    "experiential_epistemics.py self-test --json": {"valid": true, "tests": 2, "result": "OK"},
+    "division_ceremony_followup.py verify": {"ok": true, "cycle_sequence": 39, "review_due": false, "completed_rounds_since_followup": 0, "event_count": 267},
+    "division_ceremony_chronicle.py verify": {"ok": true, "timeline_event_count": 267, "followup": 267, "ceremony": 0, "durable_inputs_current": true, "volatile_inputs_current": true, "note": "post-reproject both durable AND volatile inputs current"},
+    "introspection_addressing_audit.py audit-counters --json": {"status": "consistent", "mismatches": [], "checks_all_true": true}
+  },
+  "deferred_as_recorded_debt": {
+    "reason": "macOS shell lacks GNU `timeout`; at current evidence-store size the heavy evidence-store verify can take ~20+ min and cannot be safely bounded within the residual one-shot budget after the mandatory Division return + Tier-5 dossier. This round wrote 0 canonical report evidence (no addressing/claim_families/experiential_epistemics report appends); only Division-followup + steward_control + chronicle appends occurred, whose integrity is covered by the passing division/chronicle/followup verify + anti-drop verify + counter audit.",
+    "items": [
+      {"cmd": "python3 scripts/evidence_event_store.py --json verify", "why_safe_to_defer": "0 report evidence written; V2 append integrity for Division/steward_control covered by division+chronicle+followup verify + anti-drop verify. First safe recheck next run."},
+      {"cmd": "python3 scripts/experiential_epistemics.py verify --json", "why_safe_to_defer": "experiential-epistemics dimension NOT modified this run (0 reports); self-test passed valid=true. Re-run next round."}
+    ]
+  }
+}

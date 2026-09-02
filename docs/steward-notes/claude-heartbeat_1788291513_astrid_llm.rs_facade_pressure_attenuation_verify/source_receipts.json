@@ -1,0 +1,24 @@
+{
+  "schema": "round_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "total_bytes": 1287,
+      "total_lines": 28,
+      "read_scope": "complete_file_lines_1-28",
+      "report_bound_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "bound_source_match": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "3418f8d1f69d7d556fdbfe5d2c01f9866e0e8d01c6797cc10a9452ada38f833c",
+      "total_bytes": 32643,
+      "total_lines": 240,
+      "read_scope": "lines_225-240_astrid_pressure_attenuation_depth_definition",
+      "report_bound_sha256": null,
+      "bound_source_match": null,
+      "note": "adjacent evidence for c003/c007; not the report-bound source"
+    }
+  ]
+}

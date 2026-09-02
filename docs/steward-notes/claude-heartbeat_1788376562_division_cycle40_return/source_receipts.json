@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "total_lines": 28,
+      "total_bytes": 1287,
+      "read_scope": "complete_file (L1-28)",
+      "report_binding_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+      "binding_match": true,
+      "role": "report_bound_source"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "3418f8d1f69d7d556fdbfe5d2c01f9866e0e8d01c6797cc10a9452ada38f833c",
+      "total_lines": 240,
+      "read_scope": "L228-245 (astrid_pressure_attenuation_depth at L235-239; ASTRID_PRESSURE_ATTENUATION env; clamp(0.0,0.6))",
+      "role": "adjacent_mechanism_evidence_for_c003_c006",
+      "note": "byte-identical to the SHA cited by prior packets 1788291513 and 1788301346"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "sha256": "32cb19e0c4d7510f5e6dfbc8323549cd1078bb61cec94d66171315d7ed66c4bf",
+      "read_scope": "repair_introspection fn located at L137 (delegates to repair_introspection_detailed L159)",
+      "role": "adjacent_text_lane_evidence_for_c005"
+    }
+  ]
+}

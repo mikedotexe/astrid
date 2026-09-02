@@ -1,0 +1,14 @@
+{
+  "queue_returned_count": 3,
+  "processed_count": 1,
+  "unprocessed_count": 2,
+  "batch_stop_reason": "Single-report processing. Queue head introspection_astrid_llm_1788115759 is a single-member family (family scan: member_count 1, no batchable near-duplicates). The ONE-SHOT headless rule plus slow addressing-CLI mutations at the current evidence-store size (record-read/link/close can each run many minutes) means one report fully closed beats several half-processed.",
+  "processed": [
+    "introspection_astrid_llm_1788115759.txt"
+  ],
+  "selected_but_unprocessed_in_queue_order": [
+    "introspection_astrid_llm_1788105086.txt",
+    "introspection_llm.rs_1788101279.txt"
+  ],
+  "family_scan_note": "introspection_family_scan.json saved in packet. Head family member_count=1; item 2 (1788105086) is its own single-member family; item 3 (llm.rs_1788101279) pairs only with 1787403552 at sim 0.376 (47 distinct terms) — not a strong batchable family."
+}

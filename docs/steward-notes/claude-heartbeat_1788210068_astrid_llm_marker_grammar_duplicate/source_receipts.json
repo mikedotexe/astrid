@@ -1,0 +1,21 @@
+{
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "read_scope": "complete; module is assembled by provider.rs via include! at L32 (dialogue_runtime.rs). Verified cited symbols: first_word_after L89, longest_exact_known_model_control_marker_at L97, scan_known_model_control_markers L114-144, exact_reference_delimiter_pair L153-197 (CJK corner 「」 at L168 -> QuotedExactKnownToken; lenticular 【】 at L182 -> GroupedExactKnownToken), exact_reference_delimiter_syntax L199-229, followed_by_explicit_exact_token_relation L64-86 (represents at L82), reference_syntax L49-60, generate_dialogue L695."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "READ_SCOPE_ONLY_not_report_bound",
+      "total_lines": null,
+      "total_bytes": 208310,
+      "read_scope": "scoped: verified existing regressions that satisfy the report's two requested tests and snag hypothesis. Intervals read: L1766, L2037-2116, L2228-2306, L2597-2900 (first_word_after / represents wrappers), L3034-3220 (scan preserve + quoted-vs-relation precedence), L3283-3372 (CJK corner/lenticular delimiter test + represents allowlist), L3045-3098 (astral boundary + represents preservation across newline/punctuation), L4449-4572 (direct QuotedExactKnownToken assertions).",
+      "note": "provider.rs L39 include!(\"provider/tests.rs\"); the mod tests reaches dialogue_runtime symbols via super::."
+    }
+  ]
+}

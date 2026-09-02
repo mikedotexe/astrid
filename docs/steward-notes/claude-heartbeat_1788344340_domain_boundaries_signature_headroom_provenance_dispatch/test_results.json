@@ -1,0 +1,27 @@
+{
+  "round": "domain_boundaries_signature_headroom_provenance_dispatch",
+  "focused": [
+    {
+      "name": "domain_boundary_audit.py verify --json (Astrid's Structural Integrity Test, read-only)",
+      "command": "python3 scripts/domain_boundary_audit.py verify --json",
+      "result": "pass",
+      "valid": true,
+      "violation_count": 0,
+      "forbidden_edge_match_count": 0,
+      "codec_structure_rs": "11/13 unique fn signatures (within headroom)",
+      "codec_encoding_rs": "9/10 unique fn signatures (within headroom)"
+    },
+    {
+      "name": "provenance_typestate trybuild suite (Astrid's Provenance Isolation Test, live)",
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --test provenance_typestate",
+      "result": "pass",
+      "detail": "provenance_domains_cannot_be_forged_or_dispatched ... ok; 13/13 compile-fail cases pass incl. interpretation_cannot_dispatch.rs ... ok; 254.57s"
+    }
+  ],
+  "baseline_repository_checks": {
+    "note": "git diff --check and cargo fmt --check recorded in verification_receipt.json"
+  },
+  "integrity_suites": "See verification_receipt.json (addressing self-test, evidence store, controller, projection, division, chronicle, cursor, cadence, anti-drop, epistemic, audit-counters, EES verify).",
+  "no_behavioral_or_source_code_changed": true,
+  "restart_or_deploy": "none required or attempted (non-live round; adapter mode; git read-only)"
+}

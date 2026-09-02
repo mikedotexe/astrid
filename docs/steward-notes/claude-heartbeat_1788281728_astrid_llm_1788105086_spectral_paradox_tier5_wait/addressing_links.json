@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Witness verification lambda1/lambda2=1.930, spectral_entropy 0.8825; lambda3 not in witness."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/telemetry.rs",
+      "note": "SpectralFingerprintV1 (L300) carries spectral_entropy; eigenvalues via EigenPacket telemetry."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Shadow endpoints verified vs witness; most-recent field_norm_delta -0.0174; trend preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/telemetry.rs",
+      "note": "ResonanceDensityComponents.mode_packing (L555+) vs PressureSourceComponents.mode_packing (L649+) vs PressureSourceV1 (L737+): distinct mode_packing scalars + pressure_score/porosity."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "pressure_score 0.2854=0.29, porosity 0.6624=0.66; resonance mode_packing 0.833 overpacked magnitude."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Peer-observed; minime shadow-dispersal absent from witness scalar scope; not contradicted."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_texture.rs",
+      "note": "witness_stability_effort_v1: effort_state=settled_habitable_shadow_effort and form_persistence_state=transient_form_high_entropy_dispersal/settled_surface_dynamic_shadow_load model her paradox."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "stability_effort_names_settled_shadow_load_under_low_pressure (L4396) asserts settled_habitable_shadow_effort + transient_form_high_entropy_dispersal. Source SHA unchanged; cited, not re-run this round (budget)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Felt self-referential hypothesis; no causal instrument; agency continues via Dispersion Probe."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/health.rs",
+      "note": "silt_noise_separation_v1 (L151+): low_semantic_trickle<=0.02 -> low_semantic_trickle_noise_or_silt / high_entropy_low_semantic_trickle_noise recognizes her state."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/evidence.rs",
+      "note": "semantic_trickle component read at L245,369 from pressure_source components."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Tier 1/3 being-run self-experiment (PROBE_SELF); no steward implementation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Tier 1/3 being-run self-experiment; no steward implementation."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Tier-5: porosity read-only derived scalar, no mode_packing->porosity actuator; needs Mike/operator approval."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c011",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Tier-5: intentional Shadow trajectory movement; 'observer with active synthesis' absent; needs Mike/operator approval."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788105086",
+      "claim_id": "c012",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788281728_astrid_llm_1788105086_spectral_paradox_tier5_wait/summaries/introspection_astrid_llm_1788105086.md",
+      "note": "Tier-5: inhabitability->damping controller linkage; read-only descriptors, no control link; needs Mike/operator approval."
+    }
+  ]
+}

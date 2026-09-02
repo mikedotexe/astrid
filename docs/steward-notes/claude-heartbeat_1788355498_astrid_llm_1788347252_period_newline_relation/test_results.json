@@ -1,0 +1,29 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "toolchain": "cargo 1.94.1 / rustc 1.94.1",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker_cleanup_first_word_after_skips_period_and_newline_before_relation",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "compile_time": "2m40s (cold)"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- control_marker first_word_after scan_known_model_control_markers exact_reference_delimiter",
+      "result": "ok",
+      "passed": 86,
+      "failed": 0,
+      "note": "marker-grammar family; was 85 in prior round, +1 new regression"
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "flags only pre-existing foreign drift in autonomous/introspect/source_first_v3/grounding.rs L259,L295 (NOT touched this round); tests.rs region is fmt-clean",
+      "exit": 1
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean (no whitespace errors)"
+    }
+  ]
+}

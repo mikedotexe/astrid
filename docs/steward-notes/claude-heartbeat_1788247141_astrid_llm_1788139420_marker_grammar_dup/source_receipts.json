@@ -1,0 +1,18 @@
+{
+  "schema": "round_source_receipts_v1",
+  "receipts": [
+    {
+      "source_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "report_bound_sha256": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee",
+      "binding_match": true,
+      "total_lines": 1048,
+      "total_bytes": 38586,
+      "read_scope": "complete_file_1_1048",
+      "report_window_declared": "lines 1-400 of 1048",
+      "report_v3_coverage": "multi_window_complete included 1-1048 uncovered none",
+      "witness_snapshot_window": "0-400 window_sha256 70b42e212b8fa768a1e99f7cfbd9cf4a0fd41704955b801d907cdc8cd2c45a10",
+      "note": "Working copy byte-identical to report-bound SHA; full file read. Report V3 manifest asserts complete multi-window coverage; witness records the 0-400 seed window."
+    }
+  ]
+}

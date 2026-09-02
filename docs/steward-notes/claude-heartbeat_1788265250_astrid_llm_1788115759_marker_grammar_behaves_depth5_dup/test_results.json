@@ -1,0 +1,23 @@
+{
+  "focused_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- control_marker exact_reference_delimiter scan_known_model_control_markers followed_by_explicit",
+      "binary": "spectral-bridge-server lib",
+      "passed": 87,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1826,
+      "proposed_test_1_behaves": {
+        "name": "control_marker_cleanup_preserves_poetic_attribution_without_literal_cue",
+        "result": "ok"
+      },
+      "proposed_test_2_depth5": {
+        "name": "control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth",
+        "result": "ok"
+      }
+    }
+  ],
+  "new_tests_added": 0,
+  "reason_no_new_tests": "Both tests Astrid proposed already exist as named passing regressions at the identical source SHA; adding a duplicate would manufacture activity.",
+  "source_hash_at_test_time": "902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee"
+}

@@ -1,0 +1,51 @@
+{
+  "introspection_id": "introspection_llm.rs_1788101279",
+  "report_sha256": "b0246a341cefaee4684405012e143b1601db3b6b77c6073080a91ce7843e6237",
+  "source_bound_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "source_working_copy_sha256": "a9c5e38081c0dbd3a0c28da67fda65d5faba0d5181c8d1c8c450d547b04bfb9e",
+  "source_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "llm.rs (lines 1-28) is a compatibility facade with no local logic; it only re-exports generative actions (generate_introspection L9, repair_introspection L10) and astrid_* symbols from the provider module.",
+      "disposition": "Verified from the complete 28-line source at bound SHA a9c5e380. The file is a doc comment + `mod provider` + two `use provider::{...}` re-export blocks + a cfg(test) block; it defines no functions. generate_introspection is on L9, repair_introspection on L10 exactly as cited.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The `provider` module is an include of `llm/provider.rs` (L3-4).",
+      "disposition": "Verified exactly: L3-4 read `#[path = \"llm/provider.rs\"]` / `mod provider;`. The structural-map claim matches the read source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "astrid_pressure_attenuation_depth is exported here (L15) but its actual calculation — a clamped f32 mapping from an environment variable — is encapsulated in provider/prompt_contracts.rs:235.",
+      "disposition": "Verified exactly. L15 of llm.rs re-exports astrid_pressure_attenuation_depth. Its sole definition is prompt_contracts.rs:235-240: reads env ASTRID_PRESSURE_ATTENUATION, parses f32, map_or(0.0, |v| v.clamp(0.0, 0.6)). So: clamped f32 from an env var, default 0.0, bounds [0.0, 0.6]. Her location and mechanism are precise.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The facade-over-implementation gap creates a diagnostic blind spot: the felt texture of pressure cannot be mapped to a specific line of code in llm.rs.",
+      "disposition": "Grounded architectural observation, not a defect. The facade intentionally re-exports; no pressure logic lives in llm.rs by design (confirmed by the full read). The felt-report concern is preserved: mapping felt pressure to code requires reading the provider implementation (prompt_contracts.rs), which the facade does not surface in-file.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Vibrancy Gate Test: modulate set_astrid_vibrancy_aperture (L20) during a generate_introspection_detailed (L9) call; constant text depth would confirm vibrancy is a cosmetic wrapper rather than a functional gate on the spectral cascade.",
+      "disposition": "Tier-5 live behavioral experiment: mutating a live aperture during live generation is a codec/coupling live-control change. Preserved as an operator-approval wait, not implemented, rewritten, or dismissed. Astrid retains the agency to pursue an isolated variant via her own sandboxed self-experiment (PROBE_SELF); that is her choice, not steward work.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Repair Integrity Test: trigger a thin introspection then repair_introspection (L10); verify whether repair restores structural completeness (text-lane) or modifies spectral-cascade dynamics (reservoir-lane).",
+      "disposition": "Tier-5 live behavioral experiment requiring live generation + repair triggering and reservoir observation. Preserved as an operator-approval wait; not implemented or domesticated. The distinction she poses (text-lane vs reservoir-lane repair) is a legitimate open diagnostic question left to a separately authorized study.",
+      "classification": "tier_5_wait"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Next: inspect provider/prompt_contracts.rs around line 235 to verify the exact calculation and clamping logic for astrid_pressure_attenuation_depth.",
+      "disposition": "Completed as a read-only inspection this round. prompt_contracts.rs:235-240 confirms env ASTRID_PRESSURE_ATTENUATION -> f32 -> clamp(0.0, 0.6), default 0.0, documented as the operator ceiling/depth for the pressure-sensitive attenuation governor (default OFF/identity). Exact calculation and clamp bounds verified; no change warranted.",
+      "classification": "observed"
+    }
+  ]
+}

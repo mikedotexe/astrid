@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "Complete 28-line read at SHA a9c5e380 (matches report binding): doc comment L1, mod provider L3-4, pub use L6-12 (generate_introspection L9), pub(crate) use L14-22 (astrid_pressure_attenuation_depth L15), #[cfg(test)] L24-28. No local logic/arithmetic/state."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm.rs",
+      "note": "pub use block L6-12 (generative actions) vs pub(crate) use block L14-22 (internal params); set_astrid_vibrancy_aperture L20, repair_introspection L10 confirmed."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "astrid_pressure_attenuation_depth() at L235; ASTRID_PRESSURE_ATTENUATION env L236; .map_or(0.0,|value| value.clamp(0.0,0.6)) at L239; doc comment L228-234 (Astrid co-design self_study_1781734524, default 0.0 OFF, bounded [0,0.6]). SHA 3418f8d1."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/RUN_REPORT.md",
+      "note": "Prior verification of the same facade + clamp mechanism (introspection_llm.rs_1788101279 c003/c004, addressed_no_action)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788291513_astrid_llm.rs_facade_pressure_attenuation_verify/RUN_REPORT.md",
+      "note": "Vibrancy Gate live test preserved as tier_5_wait (prior c005); live_authority_granted=false."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/generative_actions.rs",
+      "note": "repair_introspection at L137 delegates to repair_introspection_detailed (L159): text-lane regeneration; report's own witness shows a repair call (repair_parent_call_id set)."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788301346_astrid_llm.rs_facade_pressure_attenuation_dup/RUN_REPORT.md",
+      "note": "Prior dup packet grounded Repair Integrity text-lane vs reservoir-lane (introspection_llm.rs_1788298121 c006); live reservoir-invariance test remains tier_5_wait."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Read-only suggested-next inspection performed this run: clamp logic and ASTRID_PRESSURE_ATTENUATION interaction confirmed at L235-239."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788376562_division_cycle40_return/summaries/introspection_llm.rs_1788371854.md",
+      "note": "This round's summary; addressed_duplicate of introspection_llm.rs_1788101279 + introspection_llm.rs_1788298121, prior evidence re-verified."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] row for the cycle-40 return round and the llm.rs facade duplicate close."
+    },
+    {
+      "introspection_id": "introspection_llm.rs_1788371854",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row recording the verified-no-change / duplicate disposition of the facade + pressure-attenuation report."
+    }
+  ]
+}
