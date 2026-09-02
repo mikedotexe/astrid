@@ -111,7 +111,15 @@ record_stack_receipt() {
   [ -f "$TELEMETRY" ] && args+=(--telemetry "$TELEMETRY")
   [ -f "$PROMOTION_HANDOFF" ] && args+=(--script "self-change-promotion=$PROMOTION_HANDOFF")
   [ -n "$PROMOTE_CANDIDATE" ] && args+=(--probe "self_change_candidate=$PROMOTE_CANDIDATE")
-  [ -n "${SELF_CONTROL_HANDOFF:-}" ] && args+=(--probe "self_control_handoff=$SELF_CONTROL_HANDOFF")
+  # record-deploy probes must be NAME=BOOL (b3491d14b7); the 4-state hand-off
+  # string killed the first post-restart receipt of the 2026-09-02 deploy.
+  if [ -n "${SELF_CONTROL_HANDOFF:-}" ]; then
+    local handoff_ok=false
+    case "$SELF_CONTROL_HANDOFF" in
+      prepared|already_current|skipped) handoff_ok=true ;;
+    esac
+    args+=(--probe "self_control_handoff_ok=$handoff_ok")
+  fi
   RECEIPT_WRITTEN=1
   python3 "$ASTRID/scripts/environment_receipts.py" "${args[@]}"
 }
