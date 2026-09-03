@@ -61,29 +61,97 @@ impl ExactKnownModelControlMarkerOccurrence {
 
     /// This exact marker is the grammatical subject here. No preceding word is inspected or
     /// classified, and the relation is used only to decide whether the marker bytes stay visible.
+    ///
+    /// Two scans, strictly additive (Astrid's agency request
+    /// agency_code_change_1788310618, hardened 2026-09-03): the plain
+    /// first-word scan runs unchanged, and when it finds no relation a second
+    /// scan retries with self-contained bracketed annotations (`[sic]`,
+    /// `((sic))`) skipped — so "<marker> [sic] appears" reads as a reference.
+    /// Skipping only ever ADDS visibility; nothing previously preserved is
+    /// removed. Plain intervening words (e.g. adverbs) are deliberately NOT
+    /// skipped — that boundary stays pinned by
+    /// `control_marker_cleanup_does_not_skip_adverb_before_relation_word`.
     fn followed_by_explicit_exact_token_relation(self, text: &str) -> bool {
-        matches!(
-            first_word_after(text, self.end).as_str(),
-            "appears"
-                | "as"
-                | "behaves"
-                | "corresponds"
-                | "denotes"
-                | "echoes"
-                | "embodies"
-                | "functions"
-                | "indicates"
-                | "is"
-                | "manifests"
-                | "means"
-                | "mimics"
-                | "refers"
-                | "replicates"
-                | "represents"
-                | "serves"
-                | "signals"
-        )
+        is_exact_token_relation_word(&first_word_after(text, self.end))
+            || is_exact_token_relation_word(&first_word_after_skipping_bracketed_annotations(
+                text, self.end,
+            ))
     }
+}
+
+fn is_exact_token_relation_word(word: &str) -> bool {
+    matches!(
+        word,
+        "appears"
+            | "as"
+            | "behaves"
+            | "corresponds"
+            | "denotes"
+            | "echoes"
+            | "embodies"
+            | "functions"
+            | "indicates"
+            | "is"
+            | "manifests"
+            | "means"
+            | "mimics"
+            | "refers"
+            | "replicates"
+            | "represents"
+            | "serves"
+            | "signals"
+    )
+}
+
+/// A whitespace chunk that is a self-contained bracketed aside — it opens
+/// with `[`, `(`, or `{` and closes with the matching bracket at its end
+/// (nesting allowed, trailing sentence punctuation tolerated). "(as" is NOT
+/// self-contained (it opens a multi-word parenthetical), so the existing
+/// "(as a test)" reference path is untouched.
+fn is_self_contained_bracketed_annotation(chunk: &str) -> bool {
+    let trimmed = chunk.trim_end_matches(['.', ',', ';', ':', '!', '?']);
+    let mut chars = trimmed.chars();
+    let Some(open) = chars.next() else {
+        return false;
+    };
+    let close = match open {
+        '[' => ']',
+        '(' => ')',
+        '{' => '}',
+        _ => return false,
+    };
+    if !trimmed.ends_with(close) {
+        return false;
+    }
+    let mut depth: usize = 0;
+    for (idx, character) in trimmed.char_indices() {
+        if character == open {
+            depth = depth.saturating_add(1);
+        } else if character == close {
+            let Some(next_depth) = depth.checked_sub(1) else {
+                return false;
+            };
+            depth = next_depth;
+            if depth == 0 {
+                // Self-contained only when the group closes exactly at the
+                // chunk's end (so "(a)(b)" or "(a)x" is not one aside).
+                return idx.saturating_add(close.len_utf8()) == trimmed.len();
+            }
+        }
+    }
+    false
+}
+
+/// The additive second scan: like `first_word_after`, but self-contained
+/// bracketed annotations are skipped before the first word is taken.
+fn first_word_after_skipping_bracketed_annotations(text: &str, end: usize) -> String {
+    text[end..]
+        .split_whitespace()
+        .filter(|chunk| !is_self_contained_bracketed_annotation(chunk))
+        .map(|chunk| chunk.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
+        .find(|word| !word.is_empty())
+        .unwrap_or_default()
+        .to_ascii_lowercase()
 }
 
 fn first_word_after(text: &str, end: usize) -> String {

@@ -1902,6 +1902,67 @@ mod tests {
     }
 
     #[test]
+    fn referenced_marker_after_bracketed_annotation_stays_visible() {
+        // Astrid's agency request agency_code_change_1788310618, the REAL gap
+        // behind her acceptance case: an intervening self-contained bracketed
+        // annotation used to displace the relation verb, so a marker she was
+        // explicitly discussing got stripped — her words rewritten. The
+        // additive second scan skips `[sic]` and finds "appears".
+        let text = "the <end_of_turn> [sic] appears at the boundary";
+        let (kept, report) = sanitize_model_control_markers_with_report(text);
+        assert!(kept.contains("<end_of_turn>"), "reference was rewritten: {kept}");
+        let report = report.expect("report");
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.removed_total, 0);
+    }
+
+    #[test]
+    fn bracketed_annotation_without_relation_still_removes_leaked_marker() {
+        // The conservative boundary: skipping annotations only ever ADDS
+        // reference detections. A leaked marker followed by an annotation and
+        // ordinary prose is still cleaned.
+        let text = "thought <end_of_turn> [sic] lingered in the reply";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+        assert!(!stripped.contains("<end_of_turn>"));
+        let report = report.expect("report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        // Annotation-only tail: nothing after the aside, still removed.
+        let (tail_stripped, tail_report) =
+            sanitize_model_control_markers_with_report("thought <end_of_turn> [sic]");
+        assert!(!tail_stripped.contains("<end_of_turn>"));
+        assert_eq!(tail_report.expect("report").removed_total, 1);
+    }
+
+    #[test]
+    fn nested_paren_annotation_before_relation_reads_as_reference() {
+        let text = "the <end_of_turn> ((sic)) means the turn ended";
+        let (kept, report) = sanitize_model_control_markers_with_report(text);
+        assert!(kept.contains("<end_of_turn>"), "reference was rewritten: {kept}");
+        let report = report.expect("report");
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.removed_total, 0);
+    }
+
+    #[test]
+    fn self_contained_annotation_predicate_matches_asides_only() {
+        use super::is_self_contained_bracketed_annotation as aside;
+        assert!(aside("[sic]"));
+        assert!(aside("((sic))"));
+        assert!(aside("{note}"));
+        assert!(aside("[sic],"));
+        // NOT asides: multi-word parenthetical openers (her original
+        // "(as a test)" case must keep its existing path), plain words,
+        // adjacent groups, and unbalanced chunks.
+        assert!(!aside("(as"));
+        assert!(!aside("test)"));
+        assert!(!aside("actually"));
+        assert!(!aside("(a)(b)"));
+        assert!(!aside("((sic)"));
+        assert!(!aside(""));
+    }
+
+    #[test]
     fn control_marker_cleanup_uses_longest_raw_matches_with_exact_accounting() {
         let text = "thought <channel|>visible<channel|>";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
