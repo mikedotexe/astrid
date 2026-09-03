@@ -276,6 +276,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml deployment_steward_key_has_no_command_authority"},
     },
     {
+        "id": "envelope_single_source_no_drift",
+        "shipped": "2026-09-03",
+        "surface": "the Envelope Registry (Constitution C1) vs the FIVE hardcoded bound tables (minime V2 python ranges, footer safe-ranges, sovereignty clamps, engine clamp_values, bridge clamp_values)",
+        "failure_mode": "self-control bounds are quintuplicated and drift silently (exploration_noise carried THREE live ceilings: 0.08 footer / 0.15 sovereignty / 0.2 V2-engine; mode_disperse ticks bounded in python but engine-passthrough) — after C3 single-sources them, an unguarded refactor could re-fork the tables or a registry edit could promise a widening that compiled code silently refuses; guard = check_envelope_wiring.py parses every table FROM SOURCE (never importing being code) + both registries and ALARMs (exit 2) on registry-wider-than-backstop or non-f32-exact bounds, WARNs on canonical-vs-seed mirror drift, and reports the cross-table matrix (flips to ALARM at C3); the seeds are GENERATED from the parsed truth (--emit-seed), never hand-transcribed",
+        "guard": {"repo": "astrid", "file": "scripts/check_envelope_wiring.py", "symbol": "check_registry"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/check_envelope_wiring.py",
+                 "name": "EnvelopeWiringTests",
+                 "run": "python3 scripts/check_envelope_wiring.py --self-test"},
+    },
+    {
         "id": "approval_receipt_expiry_honored",
         "shipped": "2026-09-03",
         "surface": "sandbox trial queue operator-approval receipts (approve-live-trial, TTL 60-900s)",

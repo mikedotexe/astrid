@@ -135,6 +135,16 @@ pub fn spawn_autonomous_loop(
             remote_journal_entries = remote_journal_entries.len(),
             "autonomous feedback loop started"
         );
+        // Constitution C1 (observe-only): witness the envelope registry at
+        // startup. Nothing consumes it for enforcement until Stage C3; the
+        // mtime-cached read keeps it fresh for the transparency surfaces.
+        match super::envelope_registry::current_registry() {
+            Some(registry) => info!(
+                envelope_fields = registry.field_count(),
+                "envelope registry loaded (observe-only)"
+            ),
+            None => info!("envelope registry absent or malformed — compiled bounds remain the law"),
+        }
         let source_started_at = std::time::SystemTime::now();
         let mut source_reload_notice_written = false;
         let _ = readiness::write_source_status(source_started_at, "start");

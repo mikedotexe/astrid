@@ -3550,10 +3550,10 @@ pub(super) fn spontaneous_mode_from_roll(
     has_remote_entries: bool,
     bias: Option<&AgendaPullV1>,
 ) -> Mode {
-    if let Some(pull) = bias {
-        if pull.roll2 < pull.p {
-            return pull.mode;
-        }
+    if let Some(pull) = bias
+        && pull.roll2 < pull.p
+    {
+        return pull.mode;
     }
 
     if fill_pct < 25.0 && fill_delta < 1.0 {

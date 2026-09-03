@@ -29,6 +29,8 @@ mod contact_capacity;
 mod correspondence_v1;
 #[path = "delegated_capability.rs"]
 mod delegated_capability;
+#[path = "envelope_registry.rs"]
+pub(crate) mod envelope_registry;
 #[path = "division_ceremony.rs"]
 mod division_ceremony;
 #[path = "hebbian.rs"]

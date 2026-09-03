@@ -137,6 +137,9 @@ const GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS: u64 = 180;
 const GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP: f32 = 0.65;
 const DIALOGUE_JOURNAL_CAP: usize = 2_400;
 const DIALOGUE_SPECTRAL_CAP: usize = 2_000;
+// Retained for the prompt-pressure tests as the historical combined cap;
+// live assembly uses the split DIRECT + AMBIENT caps below.
+#[cfg(test)]
 const DIALOGUE_PERCEPTION_CAP: usize = 2_400;
 const DIALOGUE_DIRECT_PERCEPTION_CAP: usize = 1_800;
 const DIALOGUE_AMBIENT_PERCEPTION_CAP: usize = 700;
