@@ -29,15 +29,10 @@ pub(crate) struct EnvelopeRegistry {
     fields: BTreeMap<String, EnvelopeField>,
 }
 
-// Bound fields are dormant until Stage C3 wires `envelope_for` into
-// `clamp_values`; the allows come off with that stage.
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct EnvelopeField {
-    #[allow(dead_code)]
     floor: Option<f64>,
-    #[allow(dead_code)]
     ceiling: Option<f64>,
-    #[allow(dead_code)]
     #[serde(default)]
     engine_backstop: Option<EngineBackstop>,
     #[allow(dead_code)]
@@ -55,10 +50,8 @@ pub(crate) struct DurabilityPolicy {
 
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct EngineBackstop {
-    #[allow(dead_code)]
     #[serde(default)]
     floor: Option<f64>,
-    #[allow(dead_code)]
     #[serde(default)]
     ceiling: Option<f64>,
 }
@@ -72,7 +65,6 @@ impl EnvelopeRegistry {
     /// `(floor, ceiling)` for a field in the wire's f32 domain, or `None`
     /// when uncovered / malformed / wider than the engine backstop —
     /// callers fall back to their compiled table.
-    #[allow(dead_code)] // C1 observe-only; Stage C3 consumes this.
     pub(crate) fn envelope_for(&self, field: &str) -> Option<(f32, f32)> {
         let entry = self.fields.get(field)?;
         let floor = entry.floor? as f32;

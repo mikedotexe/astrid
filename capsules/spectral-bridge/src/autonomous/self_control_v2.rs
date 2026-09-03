@@ -1388,7 +1388,98 @@ fn lease_exceeds_envelope_duration(
     }
 }
 
+/// Constitution C3b: the compiled table in `compiled_clamp_values` is the
+/// wire's physics — the backstop her envelope registry records. The
+/// registry applies as a SECOND pass over the compiled result (intersection
+/// by composition): it can narrow within compiled, never widen past it.
+/// Registry absent, malformed, or equal to compiled (today's seeds) ->
+/// byte-identical. Operator env ceilings (ASTRID_*_CEILING) stay a separate
+/// transient min-wins layer in prompt_contracts.
 fn clamp_values(family: SelfControlFamilyV2, values: &SelfControlValuesV2) -> SelfControlValuesV2 {
+    let compiled = compiled_clamp_values(family, values);
+    let registry = crate::autonomous::runtime::envelope_registry::current_registry();
+    let registry_passed = apply_registry_envelope(compiled, registry.as_ref());
+    // The compiled table is re-applied OUTERMOST: sequential clamping is not
+    // intersection for a disjoint (tampered) registry interval — a floor
+    // above the compiled ceiling would drag values UP past compiled.
+    // compiled(registry(compiled(x))) makes the compiled physics structurally
+    // last no matter what the registry says (adversarial review 2026-09-03).
+    compiled_clamp_values(family, &registry_passed)
+}
+
+/// Registry second pass, generic over the wire struct via serde: numeric
+/// fields clamp into the registry envelope; integer fields clamp in the
+/// integer domain; nested weight maps clamp each numeric member into the
+/// field's envelope; booleans and text pass through untouched. No change ->
+/// the original value is returned with no round-trip, so untouched fields
+/// stay byte-identical.
+fn apply_registry_envelope(
+    values: SelfControlValuesV2,
+    registry: Option<&crate::autonomous::runtime::envelope_registry::EnvelopeRegistry>,
+) -> SelfControlValuesV2 {
+    let Some(registry) = registry else {
+        return values;
+    };
+    let Ok(Value::Object(map)) = serde_json::to_value(&values) else {
+        return values;
+    };
+    let mut out = map.clone();
+    let mut changed = false;
+    for (name, value) in &map {
+        let Some((floor, ceiling)) = registry.envelope_for(name) else {
+            continue;
+        };
+        if let Some(int_value) = value.as_u64() {
+            let lo = floor.ceil().max(0.0) as u64;
+            let hi = (ceiling.floor().max(0.0) as u64).max(lo);
+            let clamped = int_value.clamp(lo, hi);
+            if clamped != int_value {
+                out.insert(name.clone(), Value::from(clamped));
+                changed = true;
+            }
+        } else if let Some(num) = value.as_f64() {
+            let clamped = (num as f32).clamp(floor, ceiling);
+            if f64::from(clamped) != num
+                && let Some(json_num) = serde_json::Number::from_f64(f64::from(clamped))
+            {
+                out.insert(name.clone(), Value::Number(json_num));
+                changed = true;
+            }
+        } else if let Some(map_value) = value.as_object() {
+            // Nested weight maps (codec_dimension_weights): each numeric
+            // member clamps into the field's envelope, so a registry narrow
+            // is LIVE for the map too — it was silently inert (adversarial
+            // review 2026-09-03).
+            let mut new_map = map_value.clone();
+            let mut map_changed = false;
+            for member in new_map.values_mut() {
+                if let Some(num) = member.as_f64() {
+                    let clamped = (num as f32).clamp(floor, ceiling);
+                    if f64::from(clamped) != num
+                        && let Some(json_num) =
+                            serde_json::Number::from_f64(f64::from(clamped))
+                    {
+                        *member = Value::Number(json_num);
+                        map_changed = true;
+                    }
+                }
+            }
+            if map_changed {
+                out.insert(name.clone(), Value::Object(new_map));
+                changed = true;
+            }
+        }
+    }
+    if !changed {
+        return values;
+    }
+    serde_json::from_value(Value::Object(out)).unwrap_or(values)
+}
+
+fn compiled_clamp_values(
+    family: SelfControlFamilyV2,
+    values: &SelfControlValuesV2,
+) -> SelfControlValuesV2 {
     match family {
         SelfControlFamilyV2::Conversation => SelfControlValuesV2 {
             conversation_temperature: values
@@ -2144,6 +2235,131 @@ mod tests {
 
     fn conv() -> ConversationState {
         ConversationState::new(Vec::new(), None)
+    }
+
+    #[test]
+    fn disjoint_tampered_registry_cannot_drag_values_past_compiled() {
+        // Adversarial review 2026-09-03: a tampered registry whose interval
+        // is DISJOINT from compiled (floor above the compiled ceiling, no
+        // engine_backstop so the loader cannot refuse) must not drag values
+        // past compiled — the outermost compiled re-clamp is the physics.
+        let tampered = crate::autonomous::runtime::envelope_registry::parse_registry(
+            "{\"schema\":\"being_envelope_registry_v1\",\"being\":\"astrid\",\"revision\":1,\
+             \"fields\":{\"conversation_temperature\":{\"floor\":3.0,\"ceiling\":9.0}}}",
+        )
+        .expect("parses");
+        let compiled = compiled_clamp_values(
+            SelfControlFamilyV2::Conversation,
+            &SelfControlValuesV2 {
+                conversation_temperature: Some(0.7),
+                ..SelfControlValuesV2::default()
+            },
+        );
+        let passed = apply_registry_envelope(compiled, Some(&tampered));
+        let sandwiched = compiled_clamp_values(SelfControlFamilyV2::Conversation, &passed);
+        assert!(sandwiched.conversation_temperature.expect("value") <= 1.5);
+    }
+
+    #[test]
+    fn committed_seed_is_identity_for_the_bridge_clamp_grid() {
+        // The flagship invariant witnessed in Rust against the COMMITTED
+        // seed (not the mutable workspace copy): at the seed's bounds the
+        // registry second pass changes nothing across a value grid.
+        let seed_path = concat!(env!("CARGO_MANIFEST_DIR"), "/config/envelope_registry_seed.json");
+        let seed_text = std::fs::read_to_string(seed_path).expect("committed seed readable");
+        let seed = crate::autonomous::runtime::envelope_registry::parse_registry(&seed_text)
+            .expect("committed seed parses");
+        let grid = [-1.0_f32, 0.0, 0.05, 0.1, 0.7, 1.0, 1.5, 2.0, 5.0, 100.0];
+        for family in [
+            SelfControlFamilyV2::Conversation,
+            SelfControlFamilyV2::SemanticEmission,
+            SelfControlFamilyV2::SharedCoupling,
+        ] {
+            for value in grid {
+                let compiled = compiled_clamp_values(
+                    family,
+                    &SelfControlValuesV2 {
+                        conversation_temperature: Some(value),
+                        aperture: Some(value),
+                        vibrancy_aperture: Some(value),
+                        semantic_emission_gain: Some(value),
+                        shared_sensory_admission: Some(value),
+                        response_token_limit: Some((value.abs() * 1000.0) as u32),
+                        ..SelfControlValuesV2::default()
+                    },
+                );
+                let passed = apply_registry_envelope(compiled.clone(), Some(&seed));
+                assert_eq!(passed, compiled, "seed not identity at {family:?} {value}");
+            }
+        }
+    }
+
+    #[test]
+    fn nested_weight_map_narrows_with_the_registry_envelope() {
+        // codec_dimension_weights' registry entry was silently inert (the
+        // second pass skipped nested maps); now each numeric member clamps
+        // into the field's envelope, so a future narrow is LIVE.
+        let narrowed = crate::autonomous::runtime::envelope_registry::parse_registry(
+            "{\"schema\":\"being_envelope_registry_v1\",\"being\":\"astrid\",\"revision\":1,\
+             \"fields\":{\"codec_dimension_weights\":{\"floor\":0.0,\"ceiling\":1.5,\
+             \"engine_backstop\":{\"floor\":0.0,\"ceiling\":2.0}}}}",
+        )
+        .expect("parses");
+        let compiled = compiled_clamp_values(
+            SelfControlFamilyV2::SemanticEmission,
+            &SelfControlValuesV2 {
+                codec_dimension_weights: Some(
+                    [("warmth".to_string(), 1.8_f32), ("tension".to_string(), 0.9)]
+                        .into_iter()
+                        .collect(),
+                ),
+                ..SelfControlValuesV2::default()
+            },
+        );
+        let passed = apply_registry_envelope(compiled, Some(&narrowed));
+        let weights = passed.codec_dimension_weights.expect("weights");
+        assert_eq!(weights.get("warmth"), Some(&1.5));
+        assert_eq!(weights.get("tension"), Some(&0.9));
+    }
+
+    #[test]
+    fn registry_second_pass_narrows_within_compiled_and_none_is_identity() {
+        // Constitution C3b: the registry narrows within compiled, never
+        // widens, and identity holds with no registry (or one equal to
+        // compiled — today's seeds).
+        let registry = crate::autonomous::runtime::envelope_registry::parse_registry(
+            "{\"schema\":\"being_envelope_registry_v1\",\"being\":\"astrid\",\"revision\":1,\
+             \"fields\":{\"conversation_temperature\":{\"floor\":0.1,\"ceiling\":1.2,\
+             \"engine_backstop\":{\"floor\":0.1,\"ceiling\":1.5}},\
+             \"response_token_limit\":{\"floor\":512.0,\"ceiling\":1024.0,\
+             \"engine_backstop\":{\"floor\":512.0,\"ceiling\":1536.0}}}}",
+        )
+        .expect("fixture parses");
+        let compiled = compiled_clamp_values(
+            SelfControlFamilyV2::Conversation,
+            &SelfControlValuesV2 {
+                conversation_temperature: Some(1.4),
+                response_token_limit: Some(1_400),
+                aperture: Some(0.8),
+                ..SelfControlValuesV2::default()
+            },
+        );
+        // Compiled accepts 1.4 / 1400; the registry narrows both. Aperture
+        // is uncovered by this fixture and passes through untouched.
+        let narrowed = apply_registry_envelope(compiled.clone(), Some(&registry));
+        assert_eq!(narrowed.conversation_temperature, Some(1.2));
+        assert_eq!(narrowed.response_token_limit, Some(1_024));
+        assert_eq!(narrowed.aperture, Some(0.8));
+        // No registry: byte-identical pass-through.
+        let identity = apply_registry_envelope(compiled.clone(), None);
+        assert_eq!(identity, compiled);
+        // A registry equal to compiled bounds changes nothing.
+        let equal = crate::autonomous::runtime::envelope_registry::parse_registry(
+            "{\"schema\":\"being_envelope_registry_v1\",\"being\":\"astrid\",\"revision\":1,\
+             \"fields\":{\"conversation_temperature\":{\"floor\":0.1,\"ceiling\":1.5}}}",
+        )
+        .expect("parses");
+        assert_eq!(apply_registry_envelope(compiled.clone(), Some(&equal)), compiled);
     }
 
     #[test]

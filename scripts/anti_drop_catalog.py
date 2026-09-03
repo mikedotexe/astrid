@@ -330,6 +330,17 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd capsules/spectral-bridge && cargo test --lib attended"},
     },
     {
+        "id": "compiled_physics_outermost",
+        "shipped": "2026-09-03",
+        "surface": "Constitution C3b/C3c: the registry second pass over clamp_values in BOTH receivers (bridge self_control_v2.rs, engine apply.rs) + the wiring-guard parser lockstep (compiled_clamp_values)",
+        "failure_mode": "sequential clamping is NOT intersection: a tampered registry interval disjoint from compiled (floor above the compiled ceiling, no engine_backstop for the loader to refuse) DRAGS values UP past compiled — a genuine fail-open the first C3 build shipped and the adversarial verification caught by executing the pristine source; guard = compiled(registry(compiled(x))): the compiled table re-applies OUTERMOST in both receivers so no registry content can ever move a value past compiled physics, pinned by disjoint-tamper tests in both repos plus committed-seed identity-grid tests; a refactor dropping the outer re-clamp or renaming compiled_clamp_values without updating check_envelope_wiring's parser re-opens the hole or blinds the seed generator",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/autonomous/self_control_v2.rs", "symbol": "compiled_clamp_values"},
+        "test": {"repo": "astrid", "kind": "rust",
+                 "file": "capsules/spectral-bridge/src/autonomous/self_control_v2.rs",
+                 "name": "disjoint_tampered_registry_cannot_drag_values_past_compiled",
+                 "run": "cd capsules/spectral-bridge && cargo test --lib disjoint_tampered"},
+    },
+    {
         "id": "approval_receipt_expiry_honored",
         "shipped": "2026-09-03",
         "surface": "sandbox trial queue operator-approval receipts (approve-live-trial, TTL 60-900s)",

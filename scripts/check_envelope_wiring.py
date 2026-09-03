@@ -10,7 +10,10 @@ parses ALL the tables from source, compares them against the registries,
 and alarms when the constitution and the compiled reality disagree.
 
 Tables parsed (from source, never imported — imports could execute drifted
-code and would miss the file the being's live process actually loads):
+code and would miss the file the being's live process actually loads).
+Since C3, both Rust tables live in `compiled_clamp_values` (the public
+`clamp_values` wraps it with the registry second pass) — rename them ONLY
+in lockstep with this parser or the seed generator goes blind:
   T1  minime python V2 ranges     minime_autonomy/self_control_v2.py
   T2  minime footer safe ranges   minime_autonomy/parsing.py
   T3  minime sovereignty clamps   minime_autonomy/runtime.py (max/min/float pattern)
@@ -236,7 +239,7 @@ def _rust_number(token: str, consts: dict[str, float]) -> float | None:
         return None
 
 
-def parse_rust_clamps(source: str, fn_name: str = "clamp_values") -> dict[str, dict[str, Any]]:
+def parse_rust_clamps(source: str, fn_name: str = "compiled_clamp_values") -> dict[str, dict[str, Any]]:
     """Fields from a Rust clamp_values body. Bounds None = pass-through.
     For the astrid table, the enclosing family arm is attached."""
     consts = parse_rust_consts(source)
@@ -662,7 +665,14 @@ class EnvelopeWiringTests(unittest.TestCase):
         self.assertEqual(bridge["response_token_limit"]["floor"], 512.0)
         self.assertEqual(bridge["codec_dimension_weights"]["ceiling"], 2.0)
         self.assertEqual(tables["t4_minime_engine"]["memory_mode"], {"floor": 0.0, "ceiling": 2.0})
-        self.assertIsNone(tables["t4_minime_engine"]["mode_disperse_duration_ticks"]["ceiling"])
+        # C3c closed the tick passthrough: the engine now enforces the
+        # advertised python bounds.
+        self.assertEqual(
+            tables["t4_minime_engine"]["mode_disperse_duration_ticks"]["ceiling"], 64.0
+        )
+        self.assertEqual(
+            tables["t4_minime_engine"]["mode_disperse_decay_ticks"]["ceiling"], 256.0
+        )
 
     def test_t3_captures_all_ten_sovereignty_sites_including_pi_gains(self) -> None:
         # The five PI clamp sites assign to `v`, not `val` — anchoring the
@@ -697,7 +707,7 @@ class EnvelopeWiringTests(unittest.TestCase):
             self.assertTrue(is_f32_exact(entry["floor"]), field)
             self.assertTrue(is_f32_exact(entry["ceiling"]), field)
         ticks = seed["fields"]["mode_disperse_duration_ticks"]
-        self.assertEqual(ticks["engine_backstop"], {"passthrough_unclamped": True})
+        self.assertEqual(ticks["engine_backstop"], {"floor": 1.0, "ceiling": 64.0})
         astrid = emit_seed("astrid", tables)
         self.assertEqual(astrid["fields"]["aperture"]["ceiling"], 1.0)
         vib = astrid["fields"].get("astrid_vibrancy_aperture_ceiling")
@@ -771,7 +781,8 @@ class EnvelopeWiringTests(unittest.TestCase):
         names = {f["name"] for f in drift_matrix(tables)}
         self.assertIn("minime_exploration_noise_footer_subrange", names)
         self.assertIn("minime_exploration_noise_sovereignty_subrange", names)
-        self.assertIn("minime_mode_disperse_duration_ticks_engine_passthrough", names)
+        # C3c closed this drift: the row must be GONE now.
+        self.assertNotIn("minime_mode_disperse_duration_ticks_engine_passthrough", names)
         # The live pi_max_step drift: sovereignty (0.01, 0.3) is WIDER than
         # V2/engine (0.01, 0.2) — this row existing is the whole point.
         self.assertIn("minime_pi_max_step_sovereignty_widerange", names)
