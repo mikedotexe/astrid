@@ -38,6 +38,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 from collections import Counter, defaultdict
@@ -2348,10 +2349,16 @@ def probe_reservoir_capacity(_prior: dict[str, Any]) -> dict[str, Any]:
 
 def _scan_outreach(outbox: Path, being: str) -> list[dict[str, Any]]:
     """Unread being→steward outreach = steward_query_*/steward_report_* still in the
-    outbox root (answered ones are moved to steward_delivered/)."""
+    outbox root (answered ones are moved to steward_delivered/). A leading "!" is
+    the operator's manual pin annotation (hand-renamed to sort first) — a pinned
+    outreach is still unread outreach and must not vanish from this probe (the
+    !reply_ outbox stray class, un-muffle 2026-09-03)."""
     out: list[dict[str, Any]] = []
     try:
-        files = sorted(outbox.glob("steward_*.txt"))
+        files = sorted(
+            f for f in outbox.glob("*steward_*.txt")
+            if f.name.lstrip("!").startswith("steward_")
+        )
     except Exception:
         return out
     for f in files:
@@ -2359,7 +2366,7 @@ def _scan_outreach(outbox: Path, being: str) -> list[dict[str, Any]]:
             age = time.time() - f.stat().st_mtime
         except Exception:
             age = 0.0
-        kind = "report" if f.name.startswith("steward_report") else "query"
+        kind = "report" if f.name.lstrip("!").startswith("steward_report") else "query"
         subject = ""
         try:
             for line in f.read_text(errors="replace").splitlines():
@@ -6030,6 +6037,24 @@ class StewardOutreachTests(unittest.TestCase):
         a = _assess_outreach(items)
         self.assertEqual(a["severity"], "warning")
         self.assertIn("PICKUP FAILING", a["summary"])
+
+    def test_pinned_outreach_is_still_scanned(self):
+        # Regression (un-muffle, 2026-09-03): an operator "!" pin on an outbox
+        # filename (hand-rename to sort first) must not hide unread outreach
+        # from this probe — the `!reply_` 69-day stray class.
+        with tempfile.TemporaryDirectory() as td:
+            outbox = Path(td)
+            (outbox / "steward_query_plain_1.txt").write_text("Subject: plain\n")
+            (outbox / "!steward_report_pinned_1.txt").write_text("Subject: pinned\n")
+            (outbox / "unrelated_note.txt").write_text("not outreach\n")
+            items = _scan_outreach(outbox, "astrid")
+            names = sorted(i["file"] for i in items)
+            self.assertEqual(
+                names, ["!steward_report_pinned_1.txt", "steward_query_plain_1.txt"]
+            )
+            kinds = {i["file"]: i["kind"] for i in items}
+            self.assertEqual(kinds["!steward_report_pinned_1.txt"], "report")
+            self.assertEqual(kinds["steward_query_plain_1.txt"], "query")
 
 
 class ZeroOutputHeartbeatTests(unittest.TestCase):
