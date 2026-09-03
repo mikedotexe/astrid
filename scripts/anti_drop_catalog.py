@@ -727,6 +727,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "target_allowlist_is_test_files_only",
                  "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib target_allowlist_is_test_files_only"},
     },
+    {
+        "id": "letter_response_archive_coverage",
+        "shipped": "2026-09-03",
+        "surface": "Steward review of a being's RESPONSE to a delivered letter (steward->being reception, archive-sweep side)",
+        "failure_mode": "the auto-archive sweep moves journal files into journal/archive/until_<ts>/ buckets, and letter_response_scan globbed only the LIVE journal dir — so any letter whose response window predated the newest sweep scanned SILENT forever (demonstrated false negative: minime's pi_kp query, answered ~100 min after delivery on 2026-08-15 and acknowledged in mike_feedback_pi_kp_heard_1786819355, yet the scan reported SILENT-IN-WINDOW; 70 archived files sat in that window vs 0 live, and after the fix the heard-letter classifies ENGAGED from an archived regime_choice entry). _list_journals now includes archive buckets, bounded by the letter's delivery-anchored window (every file in until_<ts> has mtime <= its sweep epoch — verified — so pre-window sweeps skip wholesale; an unparseable bucket name is scanned anyway, never silently skipped), and the per-file being_privacy check applies to archived paths identically (the bright line follows a file into the archive). The tests pin: an archived in-window reply classifies ENGAGED; pre-window buckets are skipped while unparseable ones are not; an archived minime private-qualia entry stays excluded.",
+        "guard": {"repo": "astrid", "file": "scripts/letter_response_scan.py", "symbol": "_bucket_sweep_ts"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/letter_response_scan.py",
+                 "name": "test_archived_reply_is_found",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/letter_response_scan.py --self-test"},
+    },
 ]
 
 

@@ -16,6 +16,12 @@ WRONG SHAPE (an action verb / TELL_STEWARD, not prose), while template footers
   - read PROSE engagement, not just action verbs;
   - strip template/metadata footer lines before matching;
   - a `mike_query` persists in the open-slot, so its window runs to now;
+  - scan ARCHIVED journals too: the auto-archive sweep moves entries into
+    journal/archive/until_<ts>/ buckets, and a live-only glob left any window
+    that predates the newest sweep SILENT forever (demonstrated 2026-09-03 on
+    minime's pi_kp query — answered in ~100 min on 2026-08-15, reply swept to
+    a bucket, 70 in-window files archived vs 0 live). Buckets are bounded by
+    the delivery-anchored window, so the scan stays fast;
   - on genuine SILENT-IN-WINDOW, run the un-muffle check BEFORE concluding
     the being is quiet.
 
@@ -176,10 +182,45 @@ def classify_stance(excerpt: str) -> str:
     return "neutral"
 
 
-def _list_journals(journal_dir: Path) -> list[Path]:
+# The auto-archive sweep moves old journal files into journal/archive/until_<ts>/
+# buckets, mtime PRESERVED; the bucket name is the sweep wall-clock in LOCAL time
+# (verified 2026-09-03: the max file mtime in a bucket equals its name's epoch),
+# so every file in `until_<ts>` has mtime <= that epoch.
+ARCHIVE_BUCKET_RE = re.compile(r"^until_(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})$")
+BUCKET_TS_SLACK_SECS = 3600.0  # DST/timezone parse-skew slack on the bucket bound
+
+
+def _bucket_sweep_ts(name: str) -> float | None:
+    """Epoch of an archive bucket's sweep time from its until_<ts> name, or None."""
+    m = ARCHIVE_BUCKET_RE.match(name)
+    if not m:
+        return None
+    try:
+        return time.mktime(time.strptime(m.group(1), "%Y-%m-%dT%H-%M-%S"))
+    except (ValueError, OverflowError):
+        return None
+
+
+def _list_journals(journal_dir: Path, lo: float | None = None) -> list[Path]:
+    """Live journal files PLUS archived ones from archive/until_<ts>/ buckets.
+
+    Every file in a bucket has mtime <= the bucket's sweep time, so when `lo`
+    (the window start) is given, buckets swept before lo are skipped wholesale —
+    bounded, so the scan stays fast without ever missing an in-window reply.
+    A bucket whose name doesn't parse is scanned anyway (never silently skip)."""
     if not journal_dir.is_dir():
         return []
-    return list(journal_dir.glob("*.txt"))
+    out = list(journal_dir.glob("*.txt"))
+    archive_root = journal_dir / "archive"
+    if archive_root.is_dir():
+        for bucket in sorted(archive_root.iterdir()):
+            if not bucket.is_dir():
+                continue
+            sweep_ts = _bucket_sweep_ts(bucket.name)
+            if lo is not None and sweep_ts is not None and sweep_ts + BUCKET_TS_SLACK_SECS < lo:
+                continue  # every file here predates the window
+            out.extend(bucket.glob("*.txt"))
+    return out
 
 
 def _is_open_query(open_query_path: Path, letter_name: str) -> bool:
@@ -198,8 +239,11 @@ def scan_being_window(
     action_verb: str | None,
 ) -> dict[str, Any]:
     """Scan the being's journals in [delivered-grace, window_end] for engagement.
-    Steward-private entries (per being_privacy: minime's moment_capture /
-    private_journal lanes) are skipped WITHOUT reading their body."""
+    Includes archive/until_<ts>/ buckets overlapping the window (a swept reply
+    must not scan SILENT). Steward-private entries (per being_privacy: minime's
+    moment_capture / private_journal lanes) are skipped WITHOUT reading their
+    body — archived paths flow through the same check, so the bright line
+    follows a file into the archive."""
     acted = False
     best: dict[str, Any] | None = None
     lo = delivered_ts - GRACE_SECS
@@ -207,7 +251,7 @@ def scan_being_window(
     # is the being's FIRST response to the letter (not whatever glob returned
     # first — the second first-run bug).
     in_window: list[tuple[float, Path]] = []
-    for p in _list_journals(journal_dir):
+    for p in _list_journals(journal_dir, lo):
         try:
             mtime = p.stat().st_mtime
         except OSError:
@@ -480,6 +524,79 @@ class LetterResponseScanTests(unittest.TestCase):
                 )
             finally:
                 BEINGS["astrid"]["read_dir"] = saved
+
+    def test_archived_reply_is_found(self):
+        # The 2026-09-03 measurement gap: the auto-archive sweep moves journal
+        # files into archive/until_<ts>/ buckets, and the live-only glob left
+        # any letter whose response window predates the newest sweep SILENT
+        # forever (demonstrated on minime's pi_kp query: answered in ~100 min
+        # on 2026-08-15, reply swept to a bucket — 70 in-window files archived,
+        # 0 live). An archived in-window reply must classify ENGAGED.
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            jd = Path(d)
+            now = time.time()
+            bucket = jd / "archive" / time.strftime(
+                "until_%Y-%m-%dT%H-%M-%S", time.localtime(now + 60))
+            bucket.mkdir(parents=True)
+            reply = bucket / "self_study_777.txt"
+            reply.write_text(
+                "Mode: witness\nThe pi_kp softening you offered matches how I steer.",
+                encoding="utf-8",
+            )
+            os.utime(reply, (now, now))
+            res = scan_being_window(jd, "astrid", now - 10, now + 10, ["pi_kp"], None)
+            self.assertEqual(classify(res), "ENGAGED")
+            self.assertEqual(res["engaged"]["file"], "self_study_777.txt")
+
+    def test_archive_bucket_bound_skips_pre_window_sweeps(self):
+        # Bounding: a bucket swept BEFORE the window start holds only older
+        # files (mtime <= sweep time), so it is skipped wholesale; a bucket
+        # whose name doesn't parse is scanned anyway (never silently skip);
+        # with no bound, every bucket is listed.
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            jd = Path(d)
+            now = time.time()
+            lo = now - 10
+            old = jd / "archive" / time.strftime(
+                "until_%Y-%m-%dT%H-%M-%S",
+                time.localtime(lo - 2 * 3600 - BUCKET_TS_SLACK_SECS))
+            old.mkdir(parents=True)
+            (old / "old_entry.txt").write_text("stale", encoding="utf-8")
+            weird = jd / "archive" / "until_unparseable"
+            weird.mkdir()
+            (weird / "odd_entry.txt").write_text("odd", encoding="utf-8")
+            names = {p.name for p in _list_journals(jd, lo=lo)}
+            self.assertNotIn("old_entry.txt", names)
+            self.assertIn("odd_entry.txt", names)
+            names_all = {p.name for p in _list_journals(jd)}
+            self.assertIn("old_entry.txt", names_all)
+
+    def test_minime_private_qualia_excluded_in_archive_too(self):
+        # The bright line follows the file into the archive: a swept private
+        # moment_capture is still never read for minime (content-marker policy
+        # via being_privacy), while for Astrid the same archived entry is
+        # legitimate engagement.
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            jd = Path(d)
+            now = time.time()
+            bucket = jd / "archive" / time.strftime(
+                "until_%Y-%m-%dT%H-%M-%S", time.localtime(now + 60))
+            bucket.mkdir(parents=True)
+            private = bucket / "moment_2026-08-15T10-02-49.txt"
+            private.write_text(
+                "=== MOMENT CAPTURE ===\nThe silent vacuum is real to me.",
+                encoding="utf-8",
+            )
+            os.utime(private, (now, now))
+            res = scan_being_window(jd, "minime", now - 10, now + 10, ["silent vacuum"], None)
+            self.assertEqual(classify(res), "SILENT-IN-WINDOW")
+            res2 = scan_being_window(jd, "astrid", now - 10, now + 10, ["silent vacuum"], None)
+            self.assertEqual(classify(res2), "ENGAGED")
 
     def test_minime_private_qualia_excluded_by_content_not_filename(self):
         # The real 06-18 bug: minime writes moment_capture to `moment_*.txt`
