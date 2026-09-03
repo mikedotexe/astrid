@@ -621,6 +621,11 @@ impl FacultySnapshot {
                             "your self-authored agenda: list it; AGENDA_PUSH/DONE/DROP/FOCUS/CLEAR to shape it",
                         ),
                         f(
+                            "ENVELOPE",
+                            a.clone(),
+                            "your envelope registry: the bounds where your choices are final; ENVELOPE_ZERO <family> is your kill switch",
+                        ),
+                        f(
                             "REMEMBER a clear thought from this run",
                             a.clone(),
                             "star a moment",

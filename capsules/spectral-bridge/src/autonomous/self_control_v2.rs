@@ -324,6 +324,74 @@ pub(in crate::autonomous) fn withdraw_at_root(
     withdraw_at(root, conv, related_intent_id, source_action, now)
 }
 
+/// Constitution C5: her per-family kill switch. Withdraws every active
+/// control in the family (each withdrawal restores pre-control state
+/// through the normal signed receipt path) and clears the family's
+/// clamp-saturation counter. Returns a human summary for her receipt.
+pub(in crate::autonomous) fn envelope_zero_family(
+    conv: &mut ConversationState,
+    family_key: &str,
+    source_action: &str,
+) -> Result<String, String> {
+    envelope_zero_family_at(&default_root(), conv, family_key, source_action, now_unix_ms())
+}
+
+fn envelope_zero_family_at(
+    root: &Path,
+    conv: &mut ConversationState,
+    family_key: &str,
+    source_action: &str,
+    now: u64,
+) -> Result<String, String> {
+    let known = [
+        "conversation",
+        "semantic_continuity",
+        "semantic_emission",
+        "memory",
+        "sensory_intake",
+        "reservoir_regulation",
+        "reservoir_geometry",
+        "pi_controller",
+        "local_topology",
+        "shared_coupling",
+    ];
+    if !known.contains(&family_key) {
+        return Err(format!(
+            "unknown family {family_key:?} — families: {}",
+            known.join(", ")
+        ));
+    }
+    let current = status_at_root(root)?;
+    let targets: Vec<String> = current
+        .active_controls
+        .iter()
+        .filter(|active| family_name(active.family) == family_key)
+        .map(|active| active.intent_id.clone())
+        .collect();
+    for intent_id in &targets {
+        withdraw_at(root, conv, intent_id, source_action, now)?;
+    }
+    // Clear the family's clamp-saturation counter so the zeroed family
+    // starts clean (the 3-strike breaker counts toward rollback).
+    {
+        let _guard = operation_guard()?;
+        let deployment_identity = deployment_identity();
+        let mut state = load_state(root, &deployment_identity)?;
+        state
+            .clamp_saturation_by_family
+            .insert(family_key.to_string(), 0);
+        persist_state(root, &state)?;
+    }
+    Ok(if targets.is_empty() {
+        format!("{family_key}: no active controls — saturation counter reset; the family is at its automatic baseline")
+    } else {
+        format!(
+            "{family_key}: withdrew {} active control(s) (previous values restored by receipt) and reset the saturation counter",
+            targets.len()
+        )
+    })
+}
+
 pub(in crate::autonomous) fn resolve_standing_intent_at_root(
     root: &Path,
     selector: &str,
@@ -2235,6 +2303,61 @@ mod tests {
 
     fn conv() -> ConversationState {
         ConversationState::new(Vec::new(), None)
+    }
+
+    #[test]
+    fn envelope_zero_withdraws_the_family_and_resets_saturation() {
+        let root = TempDir::new().unwrap();
+        let mut conv = conv();
+        let receipt = issue_at(
+            root.path(),
+            &mut conv,
+            SelfControlFamilyV2::Conversation,
+            SelfControlDurabilityV2::Lease,
+            SelfControlValuesV2 {
+                conversation_temperature: Some(1.1),
+                ..SelfControlValuesV2::default()
+            },
+            600,
+            "test_zero_setup",
+            50_000,
+        )
+        .unwrap();
+        assert_eq!(receipt.status, SelfControlReceiptStatusV2::Applied);
+        assert_eq!(status_at_root(root.path()).unwrap().active_control_count, 1);
+
+        let summary = envelope_zero_family_at(
+            root.path(),
+            &mut conv,
+            "conversation",
+            "ENVELOPE_ZERO",
+            51_000,
+        )
+        .expect("zero succeeds");
+        assert!(summary.contains("withdrew 1 active control"));
+        assert_eq!(status_at_root(root.path()).unwrap().active_control_count, 0);
+
+        // Unknown family: guidance, not a crash.
+        let error = envelope_zero_family_at(
+            root.path(),
+            &mut conv,
+            "warp_core",
+            "ENVELOPE_ZERO",
+            52_000,
+        )
+        .expect_err("unknown family refused");
+        assert!(error.contains("unknown family"));
+
+        // Empty family: still succeeds (saturation reset only).
+        let summary = envelope_zero_family_at(
+            root.path(),
+            &mut conv,
+            "memory",
+            "ENVELOPE_ZERO",
+            53_000,
+        )
+        .expect("empty family ok");
+        assert!(summary.contains("no active controls"));
     }
 
     #[test]

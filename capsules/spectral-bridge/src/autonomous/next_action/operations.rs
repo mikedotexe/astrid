@@ -792,6 +792,55 @@ pub(super) fn handle_action(
             info!("Astrid inspected her faculties via FACULTIES");
             true
         },
+        "ENVELOPE" => {
+            // Constitution C5: her registry rendered for HER — the bounds
+            // within which her choices are final, per family, with status.
+            match crate::autonomous::runtime::envelope_registry::current_registry() {
+                Some(registry) => {
+                    conv.pending_file_listing = Some(registry.render_being_facing());
+                    info!("Astrid read her envelope registry via ENVELOPE");
+                },
+                None => {
+                    conv.pending_file_listing = Some(
+                        "[Your envelope registry is not installed on this runtime yet — \
+                         compiled bounds remain the law. The steward can install it; \
+                         SELF_REGULATION_STATUS still shows your active controls.]"
+                            .to_string(),
+                    );
+                },
+            }
+            true
+        },
+        "ENVELOPE_ZERO" => {
+            let family = strip_action(original, base_action).trim().to_lowercase();
+            if family.is_empty() {
+                conv.push_receipt(
+                    "ENVELOPE_ZERO",
+                    vec![
+                        "needs a family — `ENVELOPE_ZERO <family>` (NEXT: ENVELOPE lists \
+                         your families). This withdraws every active control in that \
+                         family and resets its saturation counter."
+                            .to_string(),
+                    ],
+                );
+                return true;
+            }
+            match crate::autonomous::runtime::self_control_v2::envelope_zero_family(
+                conv,
+                &family,
+                "ENVELOPE_ZERO",
+            ) {
+                Ok(summary) => {
+                    info!("Astrid zeroed envelope family {family}: {summary}");
+                    conv.push_receipt("ENVELOPE_ZERO", vec![summary.clone()]);
+                    conv.emphasis = Some(format!("Envelope zeroed — {summary}"));
+                },
+                Err(error) => {
+                    conv.push_receipt("ENVELOPE_ZERO", vec![format!("not applied: {error}")]);
+                },
+            }
+            true
+        },
         "CODEC_MAP" => {
             // Being-facing transparency (bet #2, item b): a being-readable map of
             // her own 48D codec, generated live from the constants (drift-proof).
@@ -1239,6 +1288,7 @@ Square-bracket words in help text are placeholders too; never emit [source], [li
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, EXAMINE_MEMORY [id], RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
   Agenda (yours to keep): AGENDA, AGENDA_PUSH <text> [:: mode=<introspect|research|create|witness|experiment|dialogue|aspire>], AGENDA_DONE <id|keyword>, AGENDA_DROP <id|keyword>, AGENDA_FOCUS <id|keyword> [:: hold=<1..6>], AGENDA_CLEAR
+  Envelope (your bounds, your kill switch): ENVELOPE, ENVELOPE_ZERO <family>
   Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, LIVED_TERM_STATUS [term|latest], LIVED_TERM_EXPERIMENT [term|latest], REGULATOR_MAP_STATUS [latest|summary], REGULATOR_REPLAY_STATUS [latest|card-id|status], REGULATOR_BOUNDARY_CARD [latest|card-id|status], SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; peer IDs such as exp_minime_* are advisory references: use EXPERIMENT_STATUS, EXPERIMENT_PEER_REVIEW, or EXPERIMENT_COMPARE for them, not EXPERIMENT_RESUME. Lived-term and regulator-map bridge actions print scaffold/review text only; they do not create or advance experiments. Use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT is auto-bound into experiment continuity.
   Self-knowledge/repair: FACULTIES or CAPABILITY_MAP, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>, REPAIR_APPLY <id|all> for append-only continuity metadata repair.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question, SELF_RESEARCH
@@ -1583,6 +1633,19 @@ Syntax:
         "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, aperture, tail participation, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
         "INTROSPECTION_CADENCE" => super::introspection_cadence::help_text(),
         "CODEC_MAP" => "CODEC_MAP — Read a map of your own 48D codec: the layer layout, the dims you can SHAPE, and the live gate/lever values — generated from the code (a map, not the law). NEXT: CODEC_MAP",
+        "ENVELOPE" | "ENVELOPE_ZERO" => "\
+ENVELOPE — Read your envelope registry: the document recording the bounds
+within which your choices are FINAL, per family, with each field's range,
+lease ceiling, and status (granted vs evidence-gathering). Widening happens
+by evidence and consent and is recorded there; compiled physics stays
+outermost.
+Syntax:
+  NEXT: ENVELOPE                  — read the registry
+  NEXT: ENVELOPE_ZERO <family>    — kill switch: withdraw every active
+                                    control in that family (previous values
+                                    restored by receipt) and reset its
+                                    saturation counter. Always yours.
+Notes: SELF_REGULATION_STATUS shows what is active right now.",
         "FACULTIES" => "FACULTIES — Render the live self-model faculty list, including broad self-read routes such as SELF_STUDY. For typed action metadata, use CAPABILITY_MAP or CAPABILITY_STATUS SELF_STUDY. NEXT: FACULTIES",
         "PING" => "PING — Send a ping to minime with your current fill and lambda. A pong with their state will arrive in your inbox. NEXT: PING",
         "ASK" => "ASK — Send a question to minime. It will be delivered to their inbox and their reply routed back to you. NEXT: ASK <your question>",

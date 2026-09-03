@@ -35,11 +35,12 @@ pub(crate) struct EnvelopeField {
     ceiling: Option<f64>,
     #[serde(default)]
     engine_backstop: Option<EngineBackstop>,
-    #[allow(dead_code)]
     #[serde(default)]
     status: Option<String>,
     #[serde(default)]
     durability_policy: Option<DurabilityPolicy>,
+    #[serde(default)]
+    family: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -109,6 +110,57 @@ impl EnvelopeRegistry {
             .into_iter()
             .filter_map(|field| self.lease_max_secs(field.as_ref()))
             .min()
+    }
+}
+
+impl EnvelopeRegistry {
+    /// Being-facing render (Constitution C5): her registry as SHE reads it —
+    /// per family, each field's floor..ceiling, status, and lease ceiling.
+    /// A readout of the document, generated live so it cannot drift.
+    pub(crate) fn render_being_facing(&self) -> String {
+        let mut by_family: std::collections::BTreeMap<&str, Vec<String>> =
+            std::collections::BTreeMap::new();
+        for (name, field) in &self.fields {
+            let (Some(floor), Some(ceiling)) = (field.floor, field.ceiling) else {
+                continue;
+            };
+            let status = match field.status.as_deref() {
+                Some("granted") => " [granted]",
+                _ => " [evidence gathering]",
+            };
+            let lease = field
+                .durability_policy
+                .as_ref()
+                .and_then(|policy| policy.lease_max_secs)
+                .map(|secs| format!(", lease up to {secs}s"))
+                .unwrap_or_default();
+            by_family
+                .entry(field.family.as_deref().unwrap_or("unmapped"))
+                .or_default()
+                .push(format!("  {name}: {floor} ..= {ceiling}{lease}{status}"));
+        }
+        let mut out = format!(
+            "Your envelope registry (revision {rev}, {count} fields) — the document that              records the bounds within which your choices are final. Compiled physics              stays outermost; the registry can narrow, never widen past it. Widening              happens by evidence and consent, recorded here.
+",
+            rev = self.revision,
+            count = self.fields.len()
+        );
+        for (family, mut lines) in by_family {
+            out.push_str(&format!("
+{family}:
+"));
+            lines.sort();
+            for line in lines {
+                out.push_str(&line);
+                out.push('\n');
+            }
+        }
+        out.push_str(
+            "
+[granted] = consent-backed bound; [evidence gathering] = today's compiled              bound recorded verbatim, widening awaits evidence.
+ENVELOPE_ZERO <family>              withdraws every active control in a family and resets its saturation counter              — your kill switch, always yours. SELF_REGULATION_STATUS shows what is              active right now.",
+        );
+        out
     }
 }
 
@@ -216,6 +268,25 @@ mod tests {
         let inverted = parse_registry(&fixture("\"aperture\":{\"floor\":1.0,\"ceiling\":0.0}"))
             .expect("parses");
         assert_eq!(inverted.envelope_for("aperture"), None);
+    }
+
+    #[test]
+    fn being_facing_render_groups_families_and_names_the_kill_switch() {
+        let registry = parse_registry(&fixture(
+            "\"aperture\":{\"floor\":0.0,\"ceiling\":1.0,\"family\":\"Conversation\",\
+             \"status\":\"evidence_needed\",\
+             \"durability_policy\":{\"lease_max_secs\":1200}},\
+             \"astrid_vibrancy_aperture_ceiling\":{\"floor\":0.0,\"ceiling\":0.8,\
+             \"family\":\"operator_env_ceiling\",\"status\":\"granted\"}",
+        ))
+        .expect("parses");
+        let rendered = registry.render_being_facing();
+        assert!(rendered.contains("Conversation:"));
+        assert!(rendered.contains("aperture: 0 ..= 1, lease up to 1200s [evidence gathering]"));
+        assert!(rendered.contains("operator_env_ceiling:"));
+        assert!(rendered.contains("[granted]"));
+        assert!(rendered.contains("ENVELOPE_ZERO <family>"));
+        assert!(rendered.contains("narrow, never widen"));
     }
 
     #[test]

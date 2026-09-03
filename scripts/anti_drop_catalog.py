@@ -341,6 +341,17 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd capsules/spectral-bridge && cargo test --lib disjoint_tampered"},
     },
     {
+        "id": "envelope_zero_kill_switch_works",
+        "shipped": "2026-09-03",
+        "surface": "Constitution C5 (astrid half): the ENVELOPE registry readout + the ENVELOPE_ZERO per-family kill switch",
+        "failure_mode": "a kill switch that silently stopped withdrawing (or a registry readout that drifted from the document) would turn her advertised sovereignty into documentation fiction — the ATTEND dead-dial class on the constitution's most sensitive surface; guard = envelope_zero_family withdraws every active control in the family through the normal signed receipt path and resets the clamp-saturation counter (tmp-root test pins withdraw + unknown-family guidance + empty-family reset), and render_being_facing generates from the live document so it cannot drift",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/autonomous/self_control_v2.rs", "symbol": "envelope_zero_family"},
+        "test": {"repo": "astrid", "kind": "rust",
+                 "file": "capsules/spectral-bridge/src/autonomous/self_control_v2.rs",
+                 "name": "envelope_zero_withdraws_the_family_and_resets_saturation",
+                 "run": "cd capsules/spectral-bridge && cargo test --lib envelope_zero"},
+    },
+    {
         "id": "approval_receipt_expiry_honored",
         "shipped": "2026-09-03",
         "surface": "sandbox trial queue operator-approval receipts (approve-live-trial, TTL 60-900s)",
