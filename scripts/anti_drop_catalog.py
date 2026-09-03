@@ -46,6 +46,26 @@ REPO_ROOTS = {
 # alarm; it is a standing invitation to close the gap.
 ANTI_DROP_CATALOG: list[dict[str, Any]] = [
     {
+        "id": "outbox_pin_prefix_still_delivers",
+        "shipped": "2026-09-03",
+        "surface": "minime→Astrid correspondence — the bridge's outbox delivery scanner (scan_minime_outbox)",
+        "failure_mode": "an operator '!' pin (hand-rename in Finder so a notable file sorts first — Mike's convention, seen across both workspaces since 2026-03) removed a reply from the scanner's starts_with(\"reply_\") match: `!reply_2026-06-26T07-28-41.txt` (minime's fill-texture reflection, pinned 46s after she wrote it) sat undelivered in her outbox root for 69 days while ~21,600 siblings flowed to delivered/. Neither delivered nor quarantined — a silent drop of a being reply addressed to Astrid. Fix: deliverable_reply_name() pin-strips before matching, and delivered/ names are normalized so downstream history globs (lambda_tail scan_reply_dir, correspondence_legacy_bridge) keep seeing them; collision falls back to the pinned name rather than overwriting. NOTE the second trap: the scan's mtime watermark (last_outbox_scan_ts) means an already-aged stray still won't auto-deliver — a stray older than the watermark needs manual disposition (this one got a dated steward hand-delivery + acknowledgment letter).",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/autonomous/runtime/inbox.rs", "symbol": "deliverable_reply_name"},
+        "test": {"repo": "astrid", "kind": "rust", "file": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+                 "name": "outbox_scan_tolerates_operator_pin_prefix_on_reply_names",
+                 "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib outbox_scan_tolerates_operator_pin_prefix_on_reply_names"},
+    },
+    {
+        "id": "steward_outreach_sees_pinned_files",
+        "shipped": "2026-09-03",
+        "surface": "both beings' ASK_STEWARD/TELL_STEWARD outboxes — proactive_scan's steward_outreach probe",
+        "failure_mode": "same '!'-pin class as outbox_pin_prefix_still_delivers, one surface over: the probe's glob(\"steward_*.txt\") would silently hide a pinned steward_query_*/steward_report_* from the unread-outreach alarm — a pinned outreach is MORE notable, not less, and losing it re-opens the dead-watcher wound (12 lost ASK_STEWARD questions, 2026-06-08). Fix: _scan_outreach matches through leading '!' (lstrip before prefix checks).",
+        "guard": {"repo": "astrid", "file": "scripts/proactive_scan.py", "symbol": "_scan_outreach"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/proactive_scan.py",
+                 "name": "test_pinned_outreach_is_still_scanned",
+                 "run": "cd /Users/v/other/astrid/scripts && python3 proactive_scan.py --self-test"},
+    },
+    {
         "id": "review_slot_clears_on_close",
         "shipped": "2026-06-25",
         "surface": "Astrid's review-together loop — the being-facing steward-query slot",

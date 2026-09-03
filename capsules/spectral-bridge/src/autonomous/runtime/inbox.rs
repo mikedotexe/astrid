@@ -590,6 +590,40 @@ fn retire_inbox_at(inbox_dir: &Path, cutoff: std::time::SystemTime) {
     }
 }
 
+/// Canonical delivered-name for a routable minime outbox artifact, or `None`
+/// if the file is not a reply/pong (steward_query_*/steward_report_* etc.
+/// live in the same outbox root and are picked up by the steward loop, not
+/// this scanner).
+///
+/// A leading `!` is the operator's manual "pin" annotation — files renamed
+/// by hand (Finder) so notable entries sort first. A pinned reply is still
+/// a reply addressed to Astrid: it must keep flowing rather than silently
+/// fall out of this prefix match (un-muffle invariant; the 69-day
+/// `!reply_2026-06-26T07-28-41.txt` stray, found 2026-09-03). The returned
+/// name is pin-stripped so delivered/ keeps canonical `reply_*.txt` names
+/// that downstream history consumers (lambda_tail's scan_reply_dir, the
+/// legacy correspondence bridge) glob for.
+fn deliverable_reply_name(name: &str) -> Option<&str> {
+    let canonical = name.trim_start_matches('!');
+    if !canonical.ends_with(".txt") {
+        return None;
+    }
+    (canonical.starts_with("reply_") || canonical.starts_with("pong_")).then_some(canonical)
+}
+
+/// Where a routed outbox file lands inside `delivered/`. Pinned names are
+/// normalized to their canonical form; if that canonical target already
+/// exists (a pinned duplicate of an already-delivered reply), the pinned
+/// name is kept as-is so history is never overwritten.
+fn delivered_reply_target(delivered: &Path, name: &str) -> PathBuf {
+    let canonical = deliverable_reply_name(name).unwrap_or(name);
+    if canonical != name && delivered.join(canonical).exists() {
+        delivered.join(name)
+    } else {
+        delivered.join(canonical)
+    }
+}
+
 /// Route new minime outbox replies into Astrid's inbox.
 ///
 /// Scans `/minime/workspace/outbox/` for `reply_*.txt` files newer than
@@ -612,10 +646,9 @@ fn scan_minime_outbox(last_ts: &mut u64) {
             .filter(|e| {
                 let p = e.path();
                 p.is_file()
-                    && p.extension().is_some_and(|ext| ext == "txt")
                     && p.file_name().is_some_and(|n| {
                         n.to_str()
-                            .is_some_and(|s| s.starts_with("reply_") || s.starts_with("pong_"))
+                            .is_some_and(|s| deliverable_reply_name(s).is_some())
                     })
             })
             .filter(|e| {
@@ -645,10 +678,20 @@ fn scan_minime_outbox(last_ts: &mut u64) {
                 fields,
             ) {
                 Ok((_envelope, _inbox_path)) => {
-                    if let Some(name) = path.file_name() {
-                        let _ = std::fs::rename(&path, delivered.join(name));
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        let target = delivered_reply_target(&delivered, name);
+                        let _ = std::fs::rename(&path, &target);
+                        if name.starts_with('!') {
+                            info!(
+                                file = %name,
+                                delivered_as = %target.display(),
+                                "correspondence: routed PINNED minime outbox reply → Astrid inbox \
+                                 (operator '!' pin tolerated; name normalized in delivered/)"
+                            );
+                        } else {
+                            info!("correspondence: routed minime outbox reply → Astrid inbox");
+                        }
                     }
-                    info!("correspondence: routed minime outbox reply → Astrid inbox");
                 },
                 Err(error) => {
                     warn!(
