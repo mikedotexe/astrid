@@ -88,6 +88,8 @@ struct SavedState {
     #[serde(default)]
     introspect_target: Option<state::IntrospectTargetV2>,
     #[serde(default)]
+    agenda: next_action::agenda::AgendaV1,
+    #[serde(default)]
     introspection_cadence: next_action::introspection_cadence::IntrospectionCadenceV1,
     /// Condition change receipts — persist across restarts so Astrid sees
     /// recent changes even after bridge restart.
@@ -253,6 +255,7 @@ fn save_state(conv: &mut ConversationState) {
         burst_target: conv.burst_target,
         rest_range: conv.rest_range,
         interests: conv.interests.clone(),
+        agenda: conv.agenda.clone(),
         last_remote_glimpse_12d: conv.last_remote_glimpse_12d.clone(),
         last_remote_memory_id: conv.last_remote_memory_id.clone(),
         last_remote_memory_role: conv.last_remote_memory_role.clone(),
@@ -345,6 +348,10 @@ fn restore_state(conv: &mut ConversationState) {
         .map(|interest| crate::autonomous::state::sanitize_interest_text(&interest))
         .filter(|interest| !interest.is_empty())
         .collect();
+    // Her agenda heals like her interests: transport markers stripped,
+    // empties dropped, focus cleared if its item vanished.
+    conv.agenda = state.agenda;
+    conv.agenda.resanitize();
     conv.last_remote_glimpse_12d = state.last_remote_glimpse_12d;
     conv.last_remote_memory_id = state.last_remote_memory_id;
     conv.last_remote_memory_role = state.last_remote_memory_role;

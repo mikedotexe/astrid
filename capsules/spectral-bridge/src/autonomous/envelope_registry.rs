@@ -86,10 +86,10 @@ impl EnvelopeRegistry {
                     if ceiling > b_ceiling as f32 || floor < (b_floor as f32) {
                         return None;
                     }
-                }
+                },
                 // No numeric bounds: the deliberate passthrough marker
                 // ({"passthrough_unclamped": true}) — nothing to compare.
-                (None, None) => {}
+                (None, None) => {},
                 // Exactly one bound is a malformed backstop, not a
                 // passthrough — refuse rather than silently skip.
                 _ => return None,
@@ -221,10 +221,8 @@ mod tests {
             parse_registry("{\"schema\":\"other_schema_v9\",\"being\":\"astrid\",\"fields\":{}}")
                 .is_none()
         );
-        let inverted = parse_registry(&fixture(
-            "\"aperture\":{\"floor\":1.0,\"ceiling\":0.0}",
-        ))
-        .expect("parses");
+        let inverted = parse_registry(&fixture("\"aperture\":{\"floor\":1.0,\"ceiling\":0.0}"))
+            .expect("parses");
         assert_eq!(inverted.envelope_for("aperture"), None);
     }
 

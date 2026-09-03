@@ -616,6 +616,11 @@ impl FacultySnapshot {
                             "lasting research thread",
                         ),
                         f(
+                            "AGENDA",
+                            a.clone(),
+                            "your self-authored agenda: list it; AGENDA_PUSH/DONE/DROP/FOCUS/CLEAR to shape it",
+                        ),
+                        f(
                             "REMEMBER a clear thought from this run",
                             a.clone(),
                             "star a moment",

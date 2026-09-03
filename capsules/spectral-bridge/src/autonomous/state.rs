@@ -1277,6 +1277,9 @@ pub(in crate::autonomous) struct ConversationState {
     pub pending_file_listing: Option<String>,
     /// Lasting self-directed interests. Persist across restarts via state.json.
     pub interests: Vec<String>,
+    /// Her self-authored agenda (Constitution flagship A1). Persists across
+    /// restarts via state.json; item text is verbatim hers.
+    pub agenda: super::next_action::agenda::AgendaV1,
     /// Lightweight regime tracker — classifies spectral state every exchange.
     pub regime_tracker: crate::reflective::RegimeTracker,
     /// Astrid chose DEFER — acknowledge inbox without forced dialogue response.
@@ -1423,6 +1426,7 @@ impl ConversationState {
             text_type_history: crate::codec::TextTypeHistory::new(),
             pending_file_listing: None,
             interests: Vec::new(),
+            agenda: super::next_action::agenda::AgendaV1::default(),
             last_remote_glimpse_12d: None,
             last_remote_memory_id: None,
             last_remote_memory_role: None,
@@ -2469,7 +2473,9 @@ impl ConversationState {
 mod tests {
     use crate::journal::{RemoteJournalKind, scan_remote_journal_dir};
 
-    use super::{AgendaPullV1, ConversationState, Mode, NextChoiceFeedback, spontaneous_mode_from_roll};
+    use super::{
+        AgendaPullV1, ConversationState, Mode, NextChoiceFeedback, spontaneous_mode_from_roll,
+    };
 
     /// Transcription of the pre-extraction spontaneity cascade, kept verbatim
     /// so the extracted ladder is provably byte-identical at `bias: None`.
@@ -2499,7 +2505,13 @@ mod tests {
 
     #[test]
     fn spontaneity_ladder_is_byte_identical_to_legacy_cascade() {
-        let regimes = [(10.0_f32, 0.5_f32), (10.0, 2.0), (50.0, 0.5), (50.0, 4.0), (72.0, 6.0)];
+        let regimes = [
+            (10.0_f32, 0.5_f32),
+            (10.0, 2.0),
+            (50.0, 0.5),
+            (50.0, 4.0),
+            (72.0, 6.0),
+        ];
         for i in 0..=1000_u32 {
             let roll = i as f32 / 1000.0;
             for &(fill, delta) in &regimes {
@@ -2518,12 +2530,20 @@ mod tests {
     fn agenda_pull_is_bounded_and_never_certainty() {
         // A pull only fires when its independent roll2 lands under p; above p
         // the ladder is untouched — enumerate both sides of the boundary.
-        let pull = AgendaPullV1 { mode: Mode::Introspect, p: 0.35, roll2: 0.34 };
+        let pull = AgendaPullV1 {
+            mode: Mode::Introspect,
+            p: 0.35,
+            roll2: 0.34,
+        };
         assert_eq!(
             spontaneous_mode_from_roll(0.5, 50.0, 0.5, true, Some(&pull)),
             Mode::Introspect
         );
-        let no_pull = AgendaPullV1 { mode: Mode::Introspect, p: 0.35, roll2: 0.36 };
+        let no_pull = AgendaPullV1 {
+            mode: Mode::Introspect,
+            p: 0.35,
+            roll2: 0.36,
+        };
         assert_eq!(
             spontaneous_mode_from_roll(0.5, 50.0, 0.5, true, Some(&no_pull)),
             legacy_cascade(0.5, 50.0, 0.5, true)

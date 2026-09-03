@@ -297,6 +297,17 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd capsules/spectral-bridge && cargo test --lib self_control_v2::tests::lease"},
     },
     {
+        "id": "agenda_survives_restart",
+        "shipped": "2026-09-02",
+        "surface": "Astrid's self-authored agenda (flagship A1): conv.agenda in SavedState, agenda_archive.jsonl + agenda.md beside her journal",
+        "failure_mode": "her agenda is HER canon — a restart that dropped it, a refactor that silently FIFO-dropped items at the cap, or an archive that vanished retired items would erase her own authored intentions; guard = SavedState round-trips the agenda (serde default; restore re-sanitizes transport markers like interests), the 12-item cap REJECTS with guidance instead of dropping, and every done/dropped/cleared item appends to agenda_archive.jsonl before leaving the live list",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/autonomous/runtime/state_persistence.rs", "symbol": "resanitize"},
+        "test": {"repo": "astrid", "kind": "rust",
+                 "file": "capsules/spectral-bridge/src/autonomous/next_action/agenda.rs",
+                 "name": "overflow_rejects_with_guidance_and_never_drops_her_items",
+                 "run": "cd capsules/spectral-bridge && cargo test --lib agenda"},
+    },
+    {
         "id": "approval_receipt_expiry_honored",
         "shipped": "2026-09-03",
         "surface": "sandbox trial queue operator-approval receipts (approve-live-trial, TTL 60-900s)",

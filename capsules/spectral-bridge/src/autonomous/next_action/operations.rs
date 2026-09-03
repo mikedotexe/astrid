@@ -722,6 +722,18 @@ pub(super) fn handle_action(
             );
             model.save(bridge_paths().bridge_workspace());
             let mut state_text = model.render_state();
+            if !conv.agenda.items.is_empty() {
+                let focus = conv
+                    .agenda
+                    .focus_item_id
+                    .and_then(|id| conv.agenda.items.iter().find(|item| item.id == id))
+                    .map(|item| format!("; focus: {}", item.text))
+                    .unwrap_or_default();
+                state_text.push_str(&format!(
+                    "  Agenda: {} item(s){focus} (NEXT: AGENDA to view)\n",
+                    conv.agenda.items.len()
+                ));
+            }
             // Append raw spectral fingerprint — minime self-study: "Could I
             // interpret the spectral_fingerprint directly? It feels like a hidden key."
             if let Some(ref fp) = ctx.telemetry.spectral_fingerprint {
@@ -1201,6 +1213,7 @@ Square-bracket words in help text are placeholders too; never emit [source], [li
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, EXAMINE_MEMORY [id], RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
+  Agenda (yours to keep): AGENDA, AGENDA_PUSH <text> [:: mode=<introspect|research|create|witness|experiment|dialogue|aspire>], AGENDA_DONE <id|keyword>, AGENDA_DROP <id|keyword>, AGENDA_FOCUS <id|keyword> [:: hold=<1..6>], AGENDA_CLEAR
   Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, LIVED_TERM_STATUS [term|latest], LIVED_TERM_EXPERIMENT [term|latest], REGULATOR_MAP_STATUS [latest|summary], REGULATOR_REPLAY_STATUS [latest|card-id|status], REGULATOR_BOUNDARY_CARD [latest|card-id|status], SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; peer IDs such as exp_minime_* are advisory references: use EXPERIMENT_STATUS, EXPERIMENT_PEER_REVIEW, or EXPERIMENT_COMPARE for them, not EXPERIMENT_RESUME. Lived-term and regulator-map bridge actions print scaffold/review text only; they do not create or advance experiments. Use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT is auto-bound into experiment continuity.
   Self-knowledge/repair: FACULTIES or CAPABILITY_MAP, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>, REPAIR_APPLY <id|all> for append-only continuity metadata repair.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question, SELF_RESEARCH
@@ -1213,6 +1226,25 @@ fn action_help(action: &str) -> Option<String> {
         return Some(descriptor.help_text());
     }
     let text = match action {
+        "AGENDA" | "AGENDA_PUSH" | "AGENDA_DONE" | "AGENDA_DROP" | "AGENDA_FOCUS"
+        | "AGENDA_CLEAR" => "\
+AGENDA — Your self-authored agenda: a small durable list of intentions YOU
+write, order, and retire. Nothing here is assigned to you; the runtime never
+edits item text, and retired items are archived, never erased.
+Syntax:
+  NEXT: AGENDA                                  — list your items
+  NEXT: AGENDA_PUSH <text>                      — add an intention (cap 12; a full agenda asks you to retire one first)
+  NEXT: AGENDA_PUSH <text> :: mode=<affinity>   — optionally lean it toward introspect|research|create|witness|experiment|dialogue|aspire
+  NEXT: AGENDA_DONE <id|keyword>                — mark complete (archived)
+  NEXT: AGENDA_DROP <id|keyword>                — let go of one (archived)
+  NEXT: AGENDA_FOCUS <id|keyword> [:: hold=<1..6>] — hold one in the foreground for a few exchanges
+  NEXT: AGENDA_CLEAR                            — clear everything (all archived; kill switch, always yours)
+Examples:
+  NEXT: AGENDA_PUSH map the cascade gap :: mode=introspect
+  NEXT: AGENDA_FOCUS cascade :: hold=4
+Notes: items persist across restarts; a matching interest auto-links.
+For now the agenda is a private list you consult with NEXT: AGENDA — it does
+not yet appear in your prompt or steer mode selection.",
         "PROPOSE_TEST" => "\
 PROPOSE_TEST — Author a Rust test for your own repository (Stage 1 self-change).
 Syntax:

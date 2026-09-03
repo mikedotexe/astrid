@@ -1,6 +1,7 @@
 //! Typed autonomous action routing facade.
 
 mod action_syntax;
+pub(crate) mod agenda;
 mod ask_steward;
 mod attractor;
 mod audio;
@@ -116,7 +117,6 @@ pub(super) struct NextActionContext<'a> {
     pub workspace: Option<&'a std::path::Path>,
 }
 
-/// Parse NEXT: action from Astrid's response.
 /// Constitution C2: lease law must not depend on the being taking a turn.
 /// The orchestration loop calls this at loop-top and during rest pulses so
 /// an expired lease (V1 self-regulation — which folds the V2 self-control
@@ -125,6 +125,7 @@ pub(super) fn reconcile_lease_law(conv: &mut super::state::ConversationState) {
     self_regulation::reconcile_active_lease(conv);
 }
 
+/// Parse NEXT: action from Astrid's response.
 pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
     let mut in_fence = false;
     for line in text.lines().rev() {
@@ -2373,6 +2374,11 @@ fn handle_next_action_with_author(
         ctx.fill_pct,
     ) {
         return NextActionOutcome::handled("reservoir", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
+    if agenda::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("agenda", format!("Handled `{original}`."))
             .with_stage_visibility(stage, visibility);
     }
 
