@@ -123,6 +123,10 @@ pub(super) struct NextActionContext<'a> {
 /// reconcile inside it) reverts on time even while she rests.
 pub(super) fn reconcile_lease_law(conv: &mut super::state::ConversationState) {
     self_regulation::reconcile_active_lease(conv);
+    // Constitution C6: active V2 controls must stay fixed-points of the
+    // envelope clamp — a legitimate registry narrow withdraws (with receipt)
+    // rather than letting the saturation breaker strike.
+    super::self_control_v2::reconcile_envelope_conformance(conv);
 }
 
 /// Parse NEXT: action from Astrid's response.

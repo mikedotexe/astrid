@@ -2579,12 +2579,18 @@ mod tests {
             spontaneous_mode_from_roll(0.93, 50.0, 0.5, true, Some(&hold)),
             Mode::Dialogue
         );
-        assert_eq!(spontaneous_mode_from_roll(0.93, 50.0, 0.5, true, None), Mode::Witness);
+        assert_eq!(
+            spontaneous_mode_from_roll(0.93, 50.0, 0.5, true, None),
+            Mode::Witness
+        );
         assert_eq!(
             spontaneous_mode_from_roll(0.10, 50.0, 0.5, true, Some(&hold)),
             Mode::Daydream
         );
-        assert_eq!(spontaneous_mode_from_roll(0.10, 50.0, 0.5, true, None), Mode::Mirror);
+        assert_eq!(
+            spontaneous_mode_from_roll(0.10, 50.0, 0.5, true, None),
+            Mode::Mirror
+        );
         // The damped bands still exist — extreme rolls reach them.
         assert_eq!(
             spontaneous_mode_from_roll(0.97, 50.0, 0.5, true, Some(&hold)),
@@ -3654,7 +3660,10 @@ pub(super) fn choose_mode(
     );
     if fired {
         conv.agenda_pull_cooldown = AGENDA_PULL_COOLDOWN_EXCHANGES;
-        tracing::info!(mode = mode_label(mode), "agenda pull fired (bounded, cooldown armed)");
+        tracing::info!(
+            mode = mode_label(mode),
+            "agenda pull fired (bounded, cooldown armed)"
+        );
     }
     record_agenda_mode_health(conv, mode, pull.is_some());
     mode
@@ -3687,7 +3696,9 @@ fn record_agenda_mode_health(conv: &mut ConversationState, mode: Mode, pulls_act
     let witness_mirror_share = share("witness") + share("mirror");
     let alert = if pulls_active && conv.recent_mode_choices.len() >= 50 {
         if dialogue_share < 0.35 {
-            Some(format!("dialogue share {dialogue_share:.2} below 0.35 while agenda pulls active"))
+            Some(format!(
+                "dialogue share {dialogue_share:.2} below 0.35 while agenda pulls active"
+            ))
         } else if witness_mirror_share < 0.05 {
             Some(format!(
                 "witness+mirror share {witness_mirror_share:.2} below 0.05 while agenda pulls active"
@@ -3717,7 +3728,9 @@ fn record_agenda_mode_health(conv: &mut ConversationState, mode: Mode, pulls_act
         "alert": alert,
         "diagnostic_runtime_effect": false,
     });
-    let dir = crate::paths::bridge_paths().bridge_workspace().join("diagnostics");
+    let dir = crate::paths::bridge_paths()
+        .bridge_workspace()
+        .join("diagnostics");
     let _ = std::fs::create_dir_all(&dir);
     if let Ok(mut file) = std::fs::OpenOptions::new()
         .create(true)
@@ -3788,7 +3801,12 @@ pub(super) fn agenda_mode_pull(conv: &ConversationState, roll2: f32) -> Option<A
         return None;
     }
     let p = if pull_allowed {
-        let base = AGENDA_PULL_BASE_P + if hold_active { AGENDA_PULL_HOLD_BONUS } else { 0.0 };
+        let base = AGENDA_PULL_BASE_P
+            + if hold_active {
+                AGENDA_PULL_HOLD_BONUS
+            } else {
+                0.0
+            };
         base.min(AGENDA_PULL_MAX_P)
     } else {
         0.0

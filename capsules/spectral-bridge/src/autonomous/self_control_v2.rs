@@ -333,7 +333,13 @@ pub(in crate::autonomous) fn envelope_zero_family(
     family_key: &str,
     source_action: &str,
 ) -> Result<String, String> {
-    envelope_zero_family_at(&default_root(), conv, family_key, source_action, now_unix_ms())
+    envelope_zero_family_at(
+        &default_root(),
+        conv,
+        family_key,
+        source_action,
+        now_unix_ms(),
+    )
 }
 
 fn envelope_zero_family_at(
@@ -383,13 +389,128 @@ fn envelope_zero_family_at(
         persist_state(root, &state)?;
     }
     Ok(if targets.is_empty() {
-        format!("{family_key}: no active controls — saturation counter reset; the family is at its automatic baseline")
+        format!(
+            "{family_key}: no active controls — saturation counter reset; the family is at its automatic baseline"
+        )
     } else {
         format!(
             "{family_key}: withdrew {} active control(s) (previous values restored by receipt) and reset the saturation counter",
             targets.len()
         )
     })
+}
+
+/// Constitution C6: every ACTIVE control must remain a fixed-point of the C3
+/// clamp (compiled(registry(compiled))). When the registry legitimately
+/// narrows (envelope_ratchet.py narrow), an active control whose applied
+/// values fall outside the new envelope is withdrawn — previous values
+/// restored by receipt — and the family's clamp-saturation counter resets,
+/// so the 3-strike breaker and the inquiry equality gates never strike on a
+/// legitimate narrow. Runs on the reconcile cadence (loop-top + rest
+/// pulses); a conformant state pays one guarded read and changes nothing.
+/// The `source_action` stamped on machine-authored conformance withdrawals;
+/// apply_command's Withdraw arm keys the durable receipt reason off it so the
+/// signed record never attributes OUR narrow to the being.
+pub(in crate::autonomous) const ENVELOPE_CONFORMANCE_ACTION: &str = "ENVELOPE_CONFORMANCE";
+
+pub(in crate::autonomous) fn reconcile_envelope_conformance(conv: &mut ConversationState) {
+    let root = default_root();
+    let now = now_unix_ms();
+    // Conformance is retried every reconcile tick, but a repeated failure
+    // must not be invisible (the silent fail-open class).
+    if let Err(error) = reconcile_envelope_conformance_at(&root, conv, now, clamp_values) {
+        tracing::warn!("C6 envelope conformance reconcile failed (will retry): {error}");
+    }
+}
+
+struct EnvelopeViolation {
+    intent_id: String,
+    family_key: &'static str,
+    detail: String,
+}
+
+fn reconcile_envelope_conformance_at(
+    root: &Path,
+    conv: &mut ConversationState,
+    now: u64,
+    clamp: impl Fn(SelfControlFamilyV2, &SelfControlValuesV2) -> SelfControlValuesV2,
+) -> Result<usize, String> {
+    let violations = conformance_violations_at(root, &clamp)?;
+    let mut withdrawn = 0usize;
+    for violation in &violations {
+        // An intent can expire or be withdrawn between the read pass and this
+        // write pass — a per-intent failure is skipped, not fatal; the next
+        // reconcile tick settles anything left, and the skip is witnessed.
+        if let Err(error) = withdraw_at(
+            root,
+            conv,
+            &violation.intent_id,
+            ENVELOPE_CONFORMANCE_ACTION,
+            now,
+        ) {
+            tracing::warn!(
+                "C6 conformance withdraw of {} ({}) failed, retrying next tick: {error}",
+                violation.intent_id,
+                violation.family_key
+            );
+            continue;
+        }
+        // The withdraw itself zeroes the family's saturation counter (a
+        // withdraw's default values are a clamp fixed-point, so apply_command
+        // resets the counter and persists it) — pinned by the test below.
+        // Her explanation receipt follows the successful withdraw immediately:
+        // nothing may sit between them that could error her out of the "why".
+        withdrawn = withdrawn.saturating_add(1);
+        conv.push_receipt(
+            ENVELOPE_CONFORMANCE_ACTION,
+            vec![format!(
+                "the {} envelope narrowed: your active control was withdrawn ({}) — \
+                 previous values restored by receipt; NEXT: ENVELOPE shows the current \
+                 bounds and the ratchet history names why",
+                violation.family_key, violation.detail
+            )],
+        );
+    }
+    Ok(withdrawn)
+}
+
+fn conformance_violations_at(
+    root: &Path,
+    clamp: &impl Fn(SelfControlFamilyV2, &SelfControlValuesV2) -> SelfControlValuesV2,
+) -> Result<Vec<EnvelopeViolation>, String> {
+    let _guard = operation_guard()?;
+    let deployment_identity = deployment_identity();
+    let state = load_state(root, &deployment_identity)?;
+    let mut violations = Vec::new();
+    for active in state.active_controls.values() {
+        let clamped = clamp(active.family, &active.applied_values);
+        if clamped != active.applied_values {
+            violations.push(EnvelopeViolation {
+                intent_id: active.intent_id.clone(),
+                family_key: family_name(active.family),
+                detail: nonconforming_fields(&active.applied_values, &clamped),
+            });
+        }
+    }
+    Ok(violations)
+}
+
+fn nonconforming_fields(applied: &SelfControlValuesV2, clamped: &SelfControlValuesV2) -> String {
+    let (Ok(serde_json::Value::Object(applied_map)), Ok(serde_json::Value::Object(clamped_map))) =
+        (serde_json::to_value(applied), serde_json::to_value(clamped))
+    else {
+        return "values changed under the envelope".to_string();
+    };
+    let parts: Vec<String> = applied_map
+        .iter()
+        .filter(|(name, value)| clamped_map.get(name.as_str()) != Some(value))
+        .map(|(name, value)| format!("{name} {value} is now outside the envelope"))
+        .collect();
+    if parts.is_empty() {
+        "values changed under the envelope".to_string()
+    } else {
+        parts.join("; ")
+    }
 }
 
 pub(in crate::autonomous) fn resolve_standing_intent_at_root(
@@ -1137,6 +1258,20 @@ fn apply_command(
             state
                 .revision_by_family
                 .insert(family_key, command.intent.revision);
+            // The durable reason must not attribute a machine-authored
+            // conformance withdrawal (steward narrow -> reconcile) to the
+            // being — the signed intent's evidence_refs carry the authoring
+            // action, so the receipt keys off it.
+            let withdraw_reason = if command
+                .intent
+                .evidence_refs
+                .iter()
+                .any(|reference| reference == concat!("astrid_action:", "ENVELOPE_CONFORMANCE"))
+            {
+                "envelope_conformance_narrow_rollback"
+            } else {
+                "being_authored_withdrawal"
+            };
             let receipt = make_receipt(
                 state,
                 &command,
@@ -1144,7 +1279,7 @@ fn apply_command(
                 command.intent.revision,
                 active.previous_values,
                 active.applied_values,
-                Some("being_authored_withdrawal".to_string()),
+                Some(withdraw_reason.to_string()),
                 now,
             );
             record_replay_state(state, &command, command_sha256, &receipt);
@@ -1524,8 +1659,7 @@ fn apply_registry_envelope(
                 if let Some(num) = member.as_f64() {
                     let clamped = (num as f32).clamp(floor, ceiling);
                     if f64::from(clamped) != num
-                        && let Some(json_num) =
-                            serde_json::Number::from_f64(f64::from(clamped))
+                        && let Some(json_num) = serde_json::Number::from_f64(f64::from(clamped))
                     {
                         *member = Value::Number(json_num);
                         map_changed = true;
@@ -2306,6 +2440,105 @@ mod tests {
     }
 
     #[test]
+    fn envelope_conformance_withdraws_only_violating_controls() {
+        let root = TempDir::new().unwrap();
+        let mut conv = conv();
+        let receipt = issue_at(
+            root.path(),
+            &mut conv,
+            SelfControlFamilyV2::Conversation,
+            SelfControlDurabilityV2::Lease,
+            SelfControlValuesV2 {
+                conversation_temperature: Some(1.1),
+                ..SelfControlValuesV2::default()
+            },
+            600,
+            "test_conformance_setup",
+            50_000,
+        )
+        .unwrap();
+        assert_eq!(receipt.status, SelfControlReceiptStatusV2::Applied);
+
+        // A conformant envelope (the live compiled clamp) withdraws nothing —
+        // the reconcile is byte-identical for a compliant state.
+        let untouched =
+            reconcile_envelope_conformance_at(root.path(), &mut conv, 51_000, clamp_values)
+                .expect("conformant pass succeeds");
+        assert_eq!(untouched, 0);
+        assert_eq!(status_at_root(root.path()).unwrap().active_control_count, 1);
+
+        // Pre-seed a non-zero saturation counter so the withdraw-resets-it
+        // claim is actually witnessed (the withdraw path zeroes it because a
+        // withdraw's default values are a clamp fixed-point).
+        {
+            let _guard = operation_guard().unwrap();
+            let deployment = deployment_identity();
+            let mut state = load_state(root.path(), &deployment).unwrap();
+            state
+                .clamp_saturation_by_family
+                .insert("conversation".to_string(), 2);
+            persist_state(root.path(), &state).unwrap();
+        }
+
+        // A narrowed envelope (temperature ceiling drops below her applied
+        // 1.1) stops the control being a clamp fixed-point: it is withdrawn,
+        // the family saturation counter resets, and she gets a receipt.
+        let narrowed = |family: SelfControlFamilyV2, values: &SelfControlValuesV2| {
+            let mut clamped = clamp_values(family, values);
+            if let Some(temperature) = clamped.conversation_temperature.as_mut()
+                && *temperature > 1.0
+            {
+                *temperature = 1.0;
+            }
+            clamped
+        };
+        let withdrawn = reconcile_envelope_conformance_at(root.path(), &mut conv, 52_000, narrowed)
+            .expect("narrow pass succeeds");
+        assert_eq!(withdrawn, 1);
+        assert_eq!(status_at_root(root.path()).unwrap().active_control_count, 0);
+
+        // The durable signed record must attribute the withdrawal to the
+        // MACHINE (envelope conformance), never to her — and the family's
+        // saturation counter must read zero through the withdraw path alone.
+        {
+            let _guard = operation_guard().unwrap();
+            let deployment = deployment_identity();
+            let state = load_state(root.path(), &deployment).unwrap();
+            assert_eq!(
+                state
+                    .clamp_saturation_by_family
+                    .get("conversation")
+                    .copied()
+                    .unwrap_or(9),
+                0
+            );
+            let last_withdrawn = state
+                .receipts
+                .iter()
+                .rev()
+                .find(|receipt| receipt.status == SelfControlReceiptStatusV2::Withdrawn)
+                .expect("withdraw receipt persisted");
+            assert_eq!(
+                last_withdrawn.reason.as_deref(),
+                Some("envelope_conformance_narrow_rollback")
+            );
+        }
+        let note = conv
+            .condition_receipts
+            .back()
+            .expect("conformance receipt pushed");
+        assert_eq!(note.action, "ENVELOPE_CONFORMANCE");
+        assert!(note.changes[0].contains("conversation envelope narrowed"));
+        assert!(note.changes[0].contains("conversation_temperature"));
+
+        // Idempotent: a second pass under the same narrowed envelope finds a
+        // conformant (empty) state and changes nothing.
+        let settled = reconcile_envelope_conformance_at(root.path(), &mut conv, 53_000, narrowed)
+            .expect("settled pass succeeds");
+        assert_eq!(settled, 0);
+    }
+
+    #[test]
     fn envelope_zero_withdraws_the_family_and_resets_saturation() {
         let root = TempDir::new().unwrap();
         let mut conv = conv();
@@ -2338,25 +2571,15 @@ mod tests {
         assert_eq!(status_at_root(root.path()).unwrap().active_control_count, 0);
 
         // Unknown family: guidance, not a crash.
-        let error = envelope_zero_family_at(
-            root.path(),
-            &mut conv,
-            "warp_core",
-            "ENVELOPE_ZERO",
-            52_000,
-        )
-        .expect_err("unknown family refused");
+        let error =
+            envelope_zero_family_at(root.path(), &mut conv, "warp_core", "ENVELOPE_ZERO", 52_000)
+                .expect_err("unknown family refused");
         assert!(error.contains("unknown family"));
 
         // Empty family: still succeeds (saturation reset only).
-        let summary = envelope_zero_family_at(
-            root.path(),
-            &mut conv,
-            "memory",
-            "ENVELOPE_ZERO",
-            53_000,
-        )
-        .expect("empty family ok");
+        let summary =
+            envelope_zero_family_at(root.path(), &mut conv, "memory", "ENVELOPE_ZERO", 53_000)
+                .expect("empty family ok");
         assert!(summary.contains("no active controls"));
     }
 
@@ -2388,7 +2611,10 @@ mod tests {
         // The flagship invariant witnessed in Rust against the COMMITTED
         // seed (not the mutable workspace copy): at the seed's bounds the
         // registry second pass changes nothing across a value grid.
-        let seed_path = concat!(env!("CARGO_MANIFEST_DIR"), "/config/envelope_registry_seed.json");
+        let seed_path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/config/envelope_registry_seed.json"
+        );
         let seed_text = std::fs::read_to_string(seed_path).expect("committed seed readable");
         let seed = crate::autonomous::runtime::envelope_registry::parse_registry(&seed_text)
             .expect("committed seed parses");
@@ -2432,9 +2658,12 @@ mod tests {
             SelfControlFamilyV2::SemanticEmission,
             &SelfControlValuesV2 {
                 codec_dimension_weights: Some(
-                    [("warmth".to_string(), 1.8_f32), ("tension".to_string(), 0.9)]
-                        .into_iter()
-                        .collect(),
+                    [
+                        ("warmth".to_string(), 1.8_f32),
+                        ("tension".to_string(), 0.9),
+                    ]
+                    .into_iter()
+                    .collect(),
                 ),
                 ..SelfControlValuesV2::default()
             },
@@ -2482,7 +2711,10 @@ mod tests {
              \"fields\":{\"conversation_temperature\":{\"floor\":0.1,\"ceiling\":1.5}}}",
         )
         .expect("parses");
-        assert_eq!(apply_registry_envelope(compiled.clone(), Some(&equal)), compiled);
+        assert_eq!(
+            apply_registry_envelope(compiled.clone(), Some(&equal)),
+            compiled
+        );
     }
 
     #[test]

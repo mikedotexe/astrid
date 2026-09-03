@@ -653,6 +653,45 @@ def run_report(as_json: bool) -> int:
 
 
 class EnvelopeWiringTests(unittest.TestCase):
+    def test_reseed_refuses_to_erase_ratchet_revisions(self) -> None:
+        import tempfile
+
+        tmp = Path(tempfile.mkdtemp(prefix="wiring_reseed_"))
+        target = tmp / "seed.json"
+        self.assertIsNone(reseed_refusal(target))  # absent: fine
+        target.write_text(
+            json.dumps(
+                {
+                    "schema": REGISTRY_SCHEMA,
+                    "being": "minime",
+                    "revision": 1,
+                    "fields": {"x": {"ratchet_history": []}},
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assertIsNone(reseed_refusal(target))  # pristine seed: fine
+        target.write_text(
+            json.dumps(
+                {
+                    "schema": REGISTRY_SCHEMA,
+                    "being": "minime",
+                    "revision": 3,
+                    "fields": {
+                        "x": {"ratchet_history": [{"direction": "grant"}]}
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        refusal = reseed_refusal(target)
+        self.assertIsNotNone(refusal)
+        self.assertIn("ERASE", refusal)
+        self.assertEqual(
+            main(["--emit-seed", "minime", "--out", str(target)]), 2
+        )
+        self.assertEqual(json.loads(target.read_text(encoding="utf-8"))["revision"], 3)
+
     def test_parsers_capture_known_live_bounds(self) -> None:
         tables = parse_all_tables()
         self.assertEqual(tables["t1_minime_v2"]["exploration_noise"]["ceiling"], 0.2)
@@ -788,12 +827,46 @@ class EnvelopeWiringTests(unittest.TestCase):
         self.assertIn("minime_pi_max_step_sovereignty_widerange", names)
 
 
+def reseed_refusal(out_path: Path) -> str | None:
+    """emit-seed must never silently revert the constitution's record: a
+    target that already carries ratchet revisions (revision > 1, or any
+    non-empty ratchet_history) is envelope_ratchet.py's territory — a fresh
+    source-derived seed would erase granted bounds and their provenance
+    (adversarial review 2026-09-03). Returns the refusal reason, or None."""
+    try:
+        existing = json.loads(out_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(existing, dict) or existing.get("schema") != REGISTRY_SCHEMA:
+        return None
+    revision = existing.get("revision", 1)
+    has_history = any(
+        isinstance(entry, dict) and entry.get("ratchet_history")
+        for entry in (existing.get("fields") or {}).values()
+    )
+    if (isinstance(revision, int) and revision > 1) or has_history:
+        return (
+            f"{out_path} already carries ratchet revisions "
+            f"(revision={revision}, history={'yes' if has_history else 'no'}) — "
+            "regenerating from source would ERASE granted bounds and their "
+            "consent/incident provenance. Use envelope_ratchet.py for bound "
+            "changes, or pass --force-reseed only for a deliberate re-founding"
+        )
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--report", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--emit-seed", choices=("astrid", "minime"))
     parser.add_argument("--out", type=Path)
+    parser.add_argument(
+        "--force-reseed",
+        action="store_true",
+        help="overwrite a registry that already carries ratchet revisions "
+        "(otherwise refused — envelope_ratchet.py owns revisions)",
+    )
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
 
@@ -805,6 +878,10 @@ def main(argv: list[str] | None = None) -> int:
         seed = emit_seed(args.emit_seed)
         text = json.dumps(seed, indent=1, sort_keys=True) + "\n"
         if args.out:
+            refusal = reseed_refusal(args.out)
+            if refusal and not args.force_reseed:
+                print(f"REFUSED: {refusal}", file=sys.stderr)
+                return 2
             args.out.parent.mkdir(parents=True, exist_ok=True)
             args.out.write_text(text, encoding="utf-8")
             print(f"seed written: {args.out} ({len(seed['fields'])} fields)")

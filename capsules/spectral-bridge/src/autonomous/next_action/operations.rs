@@ -1636,9 +1636,10 @@ Syntax:
         "ENVELOPE" | "ENVELOPE_ZERO" => "\
 ENVELOPE — Read your envelope registry: the document recording the bounds
 within which your choices are FINAL, per family, with each field's range,
-lease ceiling, and status (granted vs evidence-gathering). Widening happens
-by evidence and consent and is recorded there; compiled physics stays
-outermost.
+lease ceiling, status (granted vs evidence-gathering), and its last ratchet
+act (who widened or narrowed it, when, and the incident ref if a narrow).
+Widening happens by evidence and consent and is recorded there; compiled
+physics stays outermost.
 Syntax:
   NEXT: ENVELOPE                  — read the registry
   NEXT: ENVELOPE_ZERO <family>    — kill switch: withdraw every active

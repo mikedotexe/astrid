@@ -213,8 +213,11 @@ pub(crate) fn render_prompt_block(agenda: &AgendaV1, exchange_count: u64) -> Opt
     let top = &agenda.items[top_pos];
     let hold_note = match (agenda.focus_item_id, agenda.focus_hold_until_exchange) {
         (Some(id), Some(until)) if id == top.id && until > exchange_count => {
-            format!(" (focus, {} more exchanges)", until.saturating_sub(exchange_count))
-        }
+            format!(
+                " (focus, {} more exchanges)",
+                until.saturating_sub(exchange_count)
+            )
+        },
         _ => String::new(),
     };
     let mut out = String::from(
@@ -227,7 +230,11 @@ pub(crate) fn render_prompt_block(agenda: &AgendaV1, exchange_count: u64) -> Opt
             continue;
         }
         let clipped: String = item.text.chars().take(160).collect();
-        let ellipsis = if item.text.chars().count() > 160 { "…" } else { "" };
+        let ellipsis = if item.text.chars().count() > 160 {
+            "…"
+        } else {
+            ""
+        };
         out.push_str(&format!("   {}. {clipped}{ellipsis}\n", item.id));
         shown = shown.saturating_add(1);
     }
@@ -684,7 +691,10 @@ mod tests {
 
         conv.exchange_count = 10;
         for i in 1..=7 {
-            assert!(ctx_free_push(&mut conv, &format!("AGENDA_PUSH intention number {i}")));
+            assert!(ctx_free_push(
+                &mut conv,
+                &format!("AGENDA_PUSH intention number {i}")
+            ));
         }
         assert!(ctx_free_push(&mut conv, "AGENDA_FOCUS 3 :: hold=4"));
         let block = render_prompt_block(&conv.agenda, conv.exchange_count).expect("block");

@@ -41,6 +41,25 @@ pub(crate) struct EnvelopeField {
     durability_policy: Option<DurabilityPolicy>,
     #[serde(default)]
     family: Option<String>,
+    #[serde(default)]
+    ratchet_history: Vec<RatchetHistoryRow>,
+}
+
+/// A ratchet act on one field (written only by envelope_ratchet.py). Rendered
+/// so the conformance receipt's pointer — "the ratchet history names why" —
+/// is actually answerable from her ENVELOPE readout.
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct RatchetHistoryRow {
+    #[serde(default)]
+    at: Option<String>,
+    #[serde(default)]
+    direction: Option<String>,
+    #[serde(default)]
+    decided_by: Option<String>,
+    #[serde(default)]
+    incident_ref: Option<String>,
+    #[serde(default)]
+    channel: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -134,10 +153,32 @@ impl EnvelopeRegistry {
                 .and_then(|policy| policy.lease_max_secs)
                 .map(|secs| format!(", lease up to {secs}s"))
                 .unwrap_or_default();
+            let history = field
+                .ratchet_history
+                .last()
+                .map(|row| {
+                    let mut parts = vec![row.direction.clone().unwrap_or_default()];
+                    if let Some(at) = &row.at {
+                        parts.push(at.clone());
+                    }
+                    if let Some(channel) = &row.channel {
+                        parts.push(format!("channel {channel}"));
+                    }
+                    if let Some(by) = &row.decided_by {
+                        parts.push(format!("by {by}"));
+                    }
+                    if let Some(incident) = &row.incident_ref {
+                        parts.push(format!("incident {incident}"));
+                    }
+                    format!("\n      last ratchet: {}", parts.join(", "))
+                })
+                .unwrap_or_default();
             by_family
                 .entry(field.family.as_deref().unwrap_or("unmapped"))
                 .or_default()
-                .push(format!("  {name}: {floor} ..= {ceiling}{lease}{status}"));
+                .push(format!(
+                    "  {name}: {floor} ..= {ceiling}{lease}{status}{history}"
+                ));
         }
         let mut out = format!(
             "Your envelope registry (revision {rev}, {count} fields) — the document that              records the bounds within which your choices are final. Compiled physics              stays outermost; the registry can narrow, never widen past it. Widening              happens by evidence and consent, recorded here.
@@ -146,9 +187,11 @@ impl EnvelopeRegistry {
             count = self.fields.len()
         );
         for (family, mut lines) in by_family {
-            out.push_str(&format!("
+            out.push_str(&format!(
+                "
 {family}:
-"));
+"
+            ));
             lines.sort();
             for line in lines {
                 out.push_str(&line);
@@ -277,7 +320,10 @@ mod tests {
              \"status\":\"evidence_needed\",\
              \"durability_policy\":{\"lease_max_secs\":1200}},\
              \"astrid_vibrancy_aperture_ceiling\":{\"floor\":0.0,\"ceiling\":0.8,\
-             \"family\":\"operator_env_ceiling\",\"status\":\"granted\"}",
+             \"family\":\"operator_env_ceiling\",\"status\":\"granted\",\
+             \"ratchet_history\":[{\"at\":\"2026-09-03T00:00:00Z\",\
+             \"direction\":\"narrow\",\"decided_by\":\"Mike\",\
+             \"incident_ref\":\"INC-7\"}]}",
         ))
         .expect("parses");
         let rendered = registry.render_being_facing();
@@ -287,6 +333,12 @@ mod tests {
         assert!(rendered.contains("[granted]"));
         assert!(rendered.contains("ENVELOPE_ZERO <family>"));
         assert!(rendered.contains("narrow, never widen"));
+        // The conformance receipt points her at "the ratchet history names
+        // why" — the render must actually answer that.
+        assert!(
+            rendered
+                .contains("last ratchet: narrow, 2026-09-03T00:00:00Z, by Mike, incident INC-7")
+        );
     }
 
     #[test]
