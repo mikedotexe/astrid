@@ -1886,6 +1886,22 @@ mod tests {
     }
 
     #[test]
+    fn referenced_marker_with_parenthetical_relation_stays_visible() {
+        // Astrid's agency request agency_code_change_1788310618, acceptance
+        // signal pinned verbatim: a marker followed by a parenthetical
+        // relation — "[MARKER] (as a test)" — reads as a REFERENCE, so her
+        // words ABOUT the marker are never rewritten. Ground-truthed
+        // 2026-09-03: the current trim_matches scan already finds "as"
+        // through the opening paren; this test keeps it that way.
+        let text = "the <end_of_turn> (as a test) marks the boundary";
+        let (kept, report) = sanitize_model_control_markers_with_report(text);
+        assert!(kept.contains("<end_of_turn>"), "reference was rewritten: {kept}");
+        let report = report.expect("report");
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.removed_total, 0);
+    }
+
+    #[test]
     fn control_marker_cleanup_uses_longest_raw_matches_with_exact_accounting() {
         let text = "thought <channel|>visible<channel|>";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
