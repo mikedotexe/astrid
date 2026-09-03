@@ -227,6 +227,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
 
         assert!(pressure >= DIALOGUE_JOURNAL_CAP + DIALOGUE_PERCEPTION_CAP);
@@ -442,6 +443,105 @@ mod tests {
         );
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn attended_helpers_return_exact_constants_at_default_attention() {
+        // A4's byte-identity contract: `None` (profile at defaults) must
+        // reproduce every compiled constant exactly.
+        assert_eq!(
+            super::attended_journal_caps(None),
+            (DIALOGUE_JOURNAL_CAP, DIALOGUE_JOURNAL_MIN_CHARS)
+        );
+        assert_eq!(super::attended_web_cap(None), DIALOGUE_WEB_CAP);
+        assert_eq!(super::attended_agenda_cap(None), DIALOGUE_AGENDA_CAP);
+        assert_eq!(super::attended_continuity_cap(None), DIALOGUE_CONTINUITY_CAP);
+        assert_eq!(
+            super::attended_perception_caps(None),
+            (
+                DIALOGUE_DIRECT_PERCEPTION_CAP,
+                DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
+                DIALOGUE_AMBIENT_PERCEPTION_CAP
+            )
+        );
+        assert_eq!(
+            super::attended_history_limit(super::MlxProfile::Gemma4Canary, None),
+            6
+        );
+        assert_eq!(super::attended_history_limit(super::MlxProfile::Production, None), 8);
+        for idx in 0..8 {
+            assert_eq!(
+                super::attended_history_trim_len(super::MlxProfile::Gemma4Canary, idx, 6),
+                super::dialogue_history_trim_len(super::MlxProfile::Gemma4Canary, idx)
+            );
+        }
+    }
+
+    #[test]
+    fn attended_helpers_bound_ratios_floors_and_history_depth() {
+        let attention = super::PromptAttentionV1 {
+            minime_live: 0.05, // ratio 0.09 -> clamps to 0.5
+            self_history: 0.45, // +6 entries -> clamps to 8
+            interests: 0.80,   // ratio 10 -> clamps to 1.6
+            research: 0.0,     // ratio 0 -> clamps to 0.5
+            memory_bank: 0.05, // exactly default -> ratio 1.0
+            perception: 0.01,  // ratio ~0.14 -> clamps to 0.5
+        };
+        let (journal_cap, journal_min) = super::attended_journal_caps(Some(&attention));
+        assert_eq!(journal_cap, DIALOGUE_JOURNAL_CAP / 2);
+        // She can halve the journal share but never starve it.
+        assert_eq!(journal_min, 350);
+        assert_eq!(
+            super::attended_agenda_cap(Some(&attention)),
+            (DIALOGUE_AGENDA_CAP as f32 * 1.6) as usize
+        );
+        assert_eq!(super::attended_web_cap(Some(&attention)), DIALOGUE_WEB_CAP / 2);
+        assert_eq!(
+            super::attended_continuity_cap(Some(&attention)),
+            DIALOGUE_CONTINUITY_CAP
+        );
+        let (direct_cap, direct_min, ambient_cap) =
+            super::attended_perception_caps(Some(&attention));
+        assert_eq!(direct_cap, DIALOGUE_DIRECT_PERCEPTION_CAP / 2);
+        assert_eq!(direct_min, 450);
+        assert_eq!(ambient_cap, DIALOGUE_AMBIENT_PERCEPTION_CAP / 2);
+        // History depth clamps at both ends.
+        assert_eq!(
+            super::attended_history_limit(super::MlxProfile::Gemma4Canary, Some(&attention)),
+            8
+        );
+        let shallow = super::PromptAttentionV1 {
+            self_history: 0.0,
+            ..attention
+        };
+        assert_eq!(
+            super::attended_history_limit(super::MlxProfile::Gemma4Canary, Some(&shallow)),
+            3
+        );
+        // Deeper-than-native canary history tightens each entry ~40 chars.
+        assert_eq!(
+            super::attended_history_trim_len(super::MlxProfile::Gemma4Canary, 0, 8),
+            super::dialogue_history_trim_len(super::MlxProfile::Gemma4Canary, 0).saturating_sub(40)
+        );
+    }
+
+    #[test]
+    fn parse_attend_vocabulary_clamps_and_reset_path() {
+        use crate::self_model::{AttentionProfile, parse_attend};
+        let base = AttentionProfile::default_profile();
+        // Vocabulary + clamps.
+        let profile =
+            parse_attend(&base, "minime=0.0 self=0.95 memory=0.2 perception=0.1").expect("parses");
+        assert!((profile.minime_live - 0.05).abs() < f32::EPSILON); // floors at 0.05
+        assert!((profile.self_history - 0.80).abs() < f32::EPSILON); // clamps to 0.80
+        assert!((profile.memory_bank - 0.2).abs() < f32::EPSILON);
+        assert!((profile.perception - 0.1).abs() < f32::EPSILON);
+        // Unknown keys are ignored; untouched fields keep their values.
+        let profile = parse_attend(&base, "warp=0.9 research=0.2").expect("parses");
+        assert!((profile.research - 0.2).abs() < f32::EPSILON);
+        assert!((profile.interests - base.interests).abs() < f32::EPSILON);
+        // Empty args parse to None (the handler then shows usage).
+        assert!(parse_attend(&base, "   ").is_none());
     }
 
     #[test]

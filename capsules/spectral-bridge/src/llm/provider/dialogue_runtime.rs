@@ -708,6 +708,7 @@ pub async fn generate_dialogue(
     topline_hint: Option<&str>,
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
+    attention: Option<&PromptAttentionV1>,
     overflow_dir: &std::path::Path,
 ) -> (Option<String>, Option<crate::prompt_budget::PromptOverflow>) {
     let mlx_profile = configured_mlx_profile();
@@ -773,7 +774,7 @@ pub async fn generate_dialogue(
     //   Middle 3:  250 chars — substantial excerpt
     //   Newest 2:  400 chars — near-full detail
     // Total budget: ~3400 chars (was ~2240). Well within gemma-3-4b-it 8k ctx.
-    let history_limit = dialogue_history_limit(mlx_profile);
+    let history_limit = attended_history_limit(mlx_profile, attention);
     for (idx, exchange) in recent_history
         .iter()
         .rev()
@@ -788,7 +789,7 @@ pub async fn generate_dialogue(
         // longest message, perhaps prioritize retaining the most relevant
         // information from earlier exchanges — a decaying attention mechanism."
         // 8 exchanges: idx 0=oldest→150, idx 7=newest→1200.
-        let trim_len = dialogue_history_trim_len(mlx_profile, idx);
+        let trim_len = attended_history_trim_len(mlx_profile, idx, history_limit);
         let minime_history = sanitize_minime_context_for_dialogue(&exchange.minime_said);
         let minime_excerpt: String = minime_history.chars().take(trim_len).collect();
         let minime_excerpt = if mlx_profile.is_gemma4_canary() {
@@ -834,6 +835,14 @@ pub async fn generate_dialogue(
 
     use crate::prompt_budget::{PromptBlock, assemble_within_budget};
     let journal_text_for_dialogue = sanitize_minime_context_for_dialogue(journal_text);
+    // A4: her ATTEND dial modulates block caps/minimums through the shared
+    // attended_* helpers; `None` (profile at defaults) returns the compiled
+    // constants exactly, so the default path stays byte-identical.
+    let (journal_cap, journal_min) = attended_journal_caps(attention);
+    let (direct_cap, direct_min, ambient_cap) = attended_perception_caps(attention);
+    let web_cap = attended_web_cap(attention);
+    let continuity_cap = attended_continuity_cap(attention);
+    let agenda_cap = attended_agenda_cap(attention);
     let blocks = vec![
         PromptBlock {
             label: "spectral",
@@ -846,20 +855,20 @@ pub async fn generate_dialogue(
             content: cap_dialogue_block(
                 "journal",
                 &format!("Minime wrote: {journal_text_for_dialogue}"),
-                DIALOGUE_JOURNAL_CAP,
+                journal_cap,
             ),
             priority: 1,
-            min_chars: DIALOGUE_JOURNAL_MIN_CHARS,
+            min_chars: journal_min,
         },
         PromptBlock {
             label: "direct_perception",
             content: cap_dialogue_block(
                 "direct_perception",
                 &direct_perception_block,
-                DIALOGUE_DIRECT_PERCEPTION_CAP,
+                direct_cap,
             ),
             priority: 2,
-            min_chars: DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
+            min_chars: direct_min,
         },
         PromptBlock {
             label: "topline",
@@ -872,7 +881,7 @@ pub async fn generate_dialogue(
             content: cap_dialogue_block(
                 "ambient_perception",
                 &ambient_perception_block,
-                DIALOGUE_AMBIENT_PERCEPTION_CAP,
+                ambient_cap,
             ),
             priority: 5,
             min_chars: 0,
@@ -885,13 +894,13 @@ pub async fn generate_dialogue(
         },
         PromptBlock {
             label: "web",
-            content: cap_dialogue_block("web", &web_block, DIALOGUE_WEB_CAP),
+            content: cap_dialogue_block("web", &web_block, web_cap),
             priority: 6,
             min_chars: 0,
         },
         PromptBlock {
             label: "continuity",
-            content: cap_dialogue_block("continuity", &continuity_block, DIALOGUE_CONTINUITY_CAP),
+            content: cap_dialogue_block("continuity", &continuity_block, continuity_cap),
             priority: 7,
             min_chars: 0,
         },
@@ -899,7 +908,7 @@ pub async fn generate_dialogue(
         // and feedback all evict before this block trims below its minimum.
         PromptBlock {
             label: "agenda",
-            content: cap_dialogue_block("agenda", &agenda_block, DIALOGUE_AGENDA_CAP),
+            content: cap_dialogue_block("agenda", &agenda_block, agenda_cap),
             priority: 3,
             min_chars: DIALOGUE_AGENDA_MIN_CHARS,
         },

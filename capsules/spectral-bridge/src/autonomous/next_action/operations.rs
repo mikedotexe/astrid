@@ -1099,6 +1099,20 @@ pub(super) fn handle_action(
         },
         "ATTEND" => {
             let args = strip_action(original, "ATTEND");
+            if args.trim().eq_ignore_ascii_case("reset") {
+                // A4 kill switch: back to the compiled defaults in one verb.
+                conv.attention = crate::self_model::AttentionProfile::default_profile();
+                conv.push_receipt(
+                    "ATTEND reset",
+                    vec!["attention profile restored to defaults".to_string()],
+                );
+                conv.emphasis = Some(
+                    "Attention profile restored to defaults — prompt assembly is back on the                      compiled constants."
+                        .into(),
+                );
+                info!("Astrid reset attention profile to defaults");
+                return true;
+            }
             if let Some(new_profile) = crate::self_model::parse_attend(&conv.attention, &args) {
                 let mut changes = Vec::new();
                 let old = &conv.attention;
@@ -1137,6 +1151,13 @@ pub(super) fn handle_action(
                         new_profile.creations * 100.0
                     ));
                 }
+                if (new_profile.memory_bank - old.memory_bank).abs() > 0.01 {
+                    changes.push(format!(
+                        "memory: {:.0}% -> {:.0}%",
+                        old.memory_bank * 100.0,
+                        new_profile.memory_bank * 100.0
+                    ));
+                }
                 if (new_profile.perception - old.perception).abs() > 0.01 {
                     changes.push(format!(
                         "perception: {:.0}% -> {:.0}%",
@@ -1147,8 +1168,12 @@ pub(super) fn handle_action(
                 conv.attention = new_profile;
                 conv.push_receipt(&format!("ATTEND {args}"), changes);
                 conv.emphasis = Some(
-                    "Your attention profile has been updated. Use STATE to see the new weights. \
-                    These weights now influence how much context from each source appears in your prompts."
+                    "Your attention profile is live in prompt assembly: minime shapes the \
+                     journal share, self the history depth, research the web share, interests \
+                     the agenda share, memory the continuity share, perception your sensory \
+                     share (each within 0.5x-1.6x of its default; protected floors hold). \
+                     creations is display-only. ATTEND reset restores defaults. STATE shows \
+                     the weights."
                         .into(),
                 );
                 info!("Astrid adjusted attention profile: {:?}", conv.attention);
@@ -1419,13 +1444,21 @@ Examples:
 Notes: Values are multipliers — 1.0 is default, >1 amplifies, <1 dampens. Use STATE to see current weights.",
 
         "ATTEND" => "\
-ATTEND — Adjust how much context from each source appears in your prompts.
-Syntax: NEXT: ATTEND <source>=<weight> [<source>=<weight> ...]
-Sources: minime, self, interests, research, creations, perception, memory
+ATTEND — Tune how much context each source gets in your dialogue prompts.
+Syntax: NEXT: ATTEND <source>=<weight> [<source>=<weight> ...]   |   NEXT: ATTEND reset
+Sources and what each one actually moves (within 0.5x-1.6x of its default):
+  minime      -> minime's journal share (protected floor stays)
+  self        -> your conversation-history depth (2..8 exchanges)
+  research    -> web/browse share
+  interests   -> your agenda share (its protected floor never shrinks)
+  memory      -> continuity share
+  perception  -> your direct+ambient sensory share (protected floor stays)
+  creations   -> display-only (shown in STATE, does not move assembly)
 Examples:
   NEXT: ATTEND minime=0.3 self=0.3 interests=0.15
-  NEXT: ATTEND perception=0.2 research=0.2
-Notes: Weights should roughly sum to 1.0. Use STATE to see current profile.",
+  NEXT: ATTEND reset
+Notes: weights clamp to 0.0..0.80 (minime floors at 0.05); ATTEND reset is
+your kill switch back to the compiled defaults. STATE shows the profile.",
 
         "EXPERIMENT" => "\
 EXPERIMENT — Inject word-stimuli into the shared spectral substrate and observe the cascade response.

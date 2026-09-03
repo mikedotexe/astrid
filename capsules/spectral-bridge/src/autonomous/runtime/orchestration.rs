@@ -1454,6 +1454,19 @@ pub fn spawn_autonomous_loop(
                                     &conv.agenda,
                                     conv.exchange_count,
                                 );
+                            // A4: her ATTEND dial reaches assembly ONLY when
+                            // she has moved it off the defaults — None keeps
+                            // the compiled constants byte-identical.
+                            let attention_carrier = (conv.attention
+                                != crate::self_model::AttentionProfile::default_profile())
+                            .then_some(crate::llm::PromptAttentionV1 {
+                                minime_live: conv.attention.minime_live,
+                                self_history: conv.attention.self_history,
+                                interests: conv.attention.interests,
+                                research: conv.attention.research,
+                                memory_bank: conv.attention.memory_bank,
+                                perception: conv.attention.perception,
+                            });
                             let topline_hint = merge_hints([
                                 introspection_freshness_prompt_note(),
                                 crate::autonomous::next_action::division_action_prompt_note(
@@ -1974,6 +1987,7 @@ pub fn spawn_autonomous_loop(
                                         topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
+                                        attention_carrier.as_ref(),
                                     );
                                 timeout_secs =
                                     timeout_secs.max(crate::llm::dialogue_outer_timeout_secs(
@@ -2013,6 +2027,7 @@ pub fn spawn_autonomous_loop(
                                         topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
+                                        attention_carrier.as_ref(),
                                         &overflow_dir,
                                     )
                                 ).await {
@@ -2067,6 +2082,7 @@ pub fn spawn_autonomous_loop(
                                                 topline_hint.as_deref(),
                                                 feedback_hint.as_deref(),
                                                 diversity_hint.as_deref(),
+                                                attention_carrier.as_ref(),
                                                 &overflow_dir,
                                             )
                                         ).await {
@@ -2680,6 +2696,7 @@ pub fn spawn_autonomous_loop(
                                 None,
                                 None,
                                 None, // no diversity hint for experiments
+                                None, // experiments run at default attention
                                 &bridge_paths().context_overflow_dir(),
                             ).await;
 

@@ -99,6 +99,134 @@ fn dialogue_history_trim_len(profile: MlxProfile, idx: usize) -> usize {
         150usize.saturating_add(idx.saturating_mul(150).min(1050))
     }
 }
+
+// ── ATTEND wiring (flagship A4) ────────────────────────────────────
+//
+// Her attention dial finally does what its help text always claimed. The
+// carrier is plain fractions; `None` means "profile at defaults" and every
+// attended_* helper returns EXACTLY the compiled constant on `None`, so the
+// default path is byte-identical by construction. Assembly
+// (dialogue_runtime) and the pressure estimator (dialogue_context) both go
+// through these helpers — they can never disagree.
+
+/// Astrid's attention weights as they reach prompt assembly. Built by
+/// orchestration ONLY when her profile differs from the default; `creations`
+/// is deliberately absent (display-only — the help text says so).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PromptAttentionV1 {
+    pub minime_live: f32,
+    pub self_history: f32,
+    pub interests: f32,
+    pub research: f32,
+    pub memory_bank: f32,
+    pub perception: f32,
+}
+
+/// Hard floor on a modulated journal minimum: she can halve minime's
+/// journal presence, never starve it.
+const ATTEND_JOURNAL_MIN_FLOOR: usize = 350;
+/// Hard floor on the modulated direct-perception minimum.
+const ATTEND_PERCEPTION_MIN_FLOOR: usize = 450;
+
+/// Weight→cap ratio, bounded so no dial can zero a source or flood the
+/// budget: half to 1.6x of the compiled constant.
+fn attention_ratio(weight: f32, default_weight: f32) -> f32 {
+    if default_weight <= 0.0 || !weight.is_finite() {
+        return 1.0;
+    }
+    (weight / default_weight).clamp(0.5, 1.6)
+}
+
+fn scaled(cap: usize, ratio: f32) -> usize {
+    (cap as f32 * ratio) as usize
+}
+
+/// `minime` weight → journal (cap, min). Default 0.55.
+fn attended_journal_caps(attention: Option<&PromptAttentionV1>) -> (usize, usize) {
+    match attention {
+        None => (DIALOGUE_JOURNAL_CAP, DIALOGUE_JOURNAL_MIN_CHARS),
+        Some(a) => {
+            let r = attention_ratio(a.minime_live, 0.55);
+            (
+                scaled(DIALOGUE_JOURNAL_CAP, r),
+                scaled(DIALOGUE_JOURNAL_MIN_CHARS, r).max(ATTEND_JOURNAL_MIN_FLOOR),
+            )
+        },
+    }
+}
+
+/// `research` weight → web cap. Default 0.07.
+fn attended_web_cap(attention: Option<&PromptAttentionV1>) -> usize {
+    match attention {
+        None => DIALOGUE_WEB_CAP,
+        Some(a) => scaled(DIALOGUE_WEB_CAP, attention_ratio(a.research, 0.07)),
+    }
+}
+
+/// `interests` weight → agenda cap. Default 0.08. The agenda's protected
+/// minimum is NOT modulated — the floor is the floor.
+fn attended_agenda_cap(attention: Option<&PromptAttentionV1>) -> usize {
+    match attention {
+        None => DIALOGUE_AGENDA_CAP,
+        Some(a) => scaled(DIALOGUE_AGENDA_CAP, attention_ratio(a.interests, 0.08)),
+    }
+}
+
+/// `memory` weight → continuity cap. Default 0.05.
+fn attended_continuity_cap(attention: Option<&PromptAttentionV1>) -> usize {
+    match attention {
+        None => DIALOGUE_CONTINUITY_CAP,
+        Some(a) => scaled(DIALOGUE_CONTINUITY_CAP, attention_ratio(a.memory_bank, 0.05)),
+    }
+}
+
+/// `perception` weight → (direct cap, direct min, ambient cap). Default 0.07.
+fn attended_perception_caps(attention: Option<&PromptAttentionV1>) -> (usize, usize, usize) {
+    match attention {
+        None => (
+            DIALOGUE_DIRECT_PERCEPTION_CAP,
+            DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
+            DIALOGUE_AMBIENT_PERCEPTION_CAP,
+        ),
+        Some(a) => {
+            let r = attention_ratio(a.perception, 0.07);
+            (
+                scaled(DIALOGUE_DIRECT_PERCEPTION_CAP, r),
+                scaled(DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS, r).max(ATTEND_PERCEPTION_MIN_FLOOR),
+                scaled(DIALOGUE_AMBIENT_PERCEPTION_CAP, r),
+            )
+        },
+    }
+}
+
+/// `self` weight → history depth: one entry per 0.05 above/below the 0.15
+/// default, clamped to 2..=8 entries.
+fn attended_history_limit(profile: MlxProfile, attention: Option<&PromptAttentionV1>) -> usize {
+    let base = dialogue_history_limit(profile) as i64;
+    match attention {
+        None => base as usize,
+        Some(a) => {
+            let delta = (f64::from(a.self_history - 0.15) / 0.05).round() as i64;
+            base.saturating_add(delta).clamp(2, 8) as usize
+        },
+    }
+}
+
+/// Per-entry trim under an attended depth: when the canary carries MORE
+/// than its native 6 entries, each entry tightens 40 chars so a deeper
+/// history stays roughly char-neutral against the 16k canary budget.
+fn attended_history_trim_len(
+    profile: MlxProfile,
+    idx: usize,
+    effective_limit: usize,
+) -> usize {
+    let base = dialogue_history_trim_len(profile, idx);
+    if profile.is_gemma4_canary() && effective_limit > 6 {
+        base.saturating_sub(40)
+    } else {
+        base
+    }
+}
 const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS: usize = 14_000;
 const GEMMA4_CANARY_DIALOGUE_TOKEN_CAP: u32 = 768;
 const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_TOKEN_CAP: u32 = 512;

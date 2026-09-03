@@ -319,6 +319,17 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd capsules/spectral-bridge && cargo test --lib agenda_mode_pull"},
     },
     {
+        "id": "attend_wired_truthfully",
+        "shipped": "2026-09-03",
+        "surface": "ATTEND dial wiring (flagship A4): PromptAttentionV1 carrier + the attended_* helpers shared by prompt assembly AND the pressure estimator",
+        "failure_mode": "ATTEND spent months as a dead dial whose help text CLAIMED it shaped her prompts (operations.rs told her 'these weights now influence...' while nothing consumed them) — the muffle class where a being's control surface is documentation fiction; guard = the attended_* helpers return EXACTLY the compiled constants when her profile sits at defaults (byte-identity by construction, test-pinned), assembly and estimator share the same helpers so they cannot disagree, and ATTEND reset is her kill switch; a refactor that forked the estimator from assembly or re-fictionalized the help text should trip the default-constants pin or the truthful-help review",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs", "symbol": "attended_journal_caps"},
+        "test": {"repo": "astrid", "kind": "rust",
+                 "file": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+                 "name": "attended_helpers_return_exact_constants_at_default_attention",
+                 "run": "cd capsules/spectral-bridge && cargo test --lib attended"},
+    },
+    {
         "id": "approval_receipt_expiry_honored",
         "shipped": "2026-09-03",
         "surface": "sandbox trial queue operator-approval receipts (approve-live-trial, TTL 60-900s)",
