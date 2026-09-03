@@ -801,11 +801,21 @@ def approval_receipt_v2_for_trial(trial: dict[str, Any], boundary_id: str) -> di
     if not isinstance(approval, dict) or str(approval.get("status") or "") not in {"approved", "active"}:
         return None
     trial_id = str(trial.get("trial_id") or "")
+    # The writer (record_live_trial_approval) records `steward`/`recorded_at`;
+    # older drafts imagined `approved_by`/`issued_at`. Read both, writer keys
+    # first, so the V2 receipt witnesses who actually approved and when.
+    approved_by = str(approval.get("steward") or approval.get("approved_by") or "Mike/operator")
+    recorded_at = approval.get("recorded_at")
+    issued_at = (
+        iso(float(recorded_at))
+        if isinstance(recorded_at, (int, float))
+        else str(approval.get("issued_at") or iso())
+    )
     scoped = {
-        "approval_id": stable_uuid("sandbox_trial_scoped_approval_v2", trial_id, approval.get("approved_by")),
+        "approval_id": stable_uuid("sandbox_trial_scoped_approval_v2", trial_id, approved_by),
         "scope_kind": "one_shot",
-        "issued_by": str(approval.get("approved_by") or "Mike/operator"),
-        "issued_at": str(approval.get("issued_at") or iso()),
+        "issued_by": approved_by,
+        "issued_at": issued_at,
         "expires_at": approval.get("expires_at"),
         "resources": [trial_id],
         "telemetry_conditions": [
@@ -1420,9 +1430,15 @@ def gate(name: str, status: str, detail: str) -> dict[str, str]:
 
 def approval_receipt_status(trial: dict[str, Any]) -> str:
     approval = trial.get("operator_approval")
-    if isinstance(approval, dict) and str(approval.get("status") or "") in {"approved", "active"}:
-        return "present"
-    return "missing"
+    if not isinstance(approval, dict) or str(approval.get("status") or "") not in {"approved", "active"}:
+        return "missing"
+    # An approval receipt carries a 60-900s TTL (record_live_trial_approval);
+    # honoring it here keeps the ladder honest — an expired approval regresses
+    # the lifecycle to operator_approval_wait instead of standing forever.
+    expires_at = approval.get("expires_at")
+    if isinstance(expires_at, (int, float)) and now_s() > float(expires_at):
+        return "expired"
+    return "present"
 
 
 def consentful_ladder_entry(trial: dict[str, Any]) -> dict[str, Any]:
@@ -1488,7 +1504,13 @@ def consentful_ladder_entry(trial: dict[str, Any]) -> dict[str, Any]:
                 gate(
                     "explicit_mike_operator_approval",
                     approval_status,
-                    "explicit approval recorded" if approval_status == "present" else "no Mike/operator approval recorded in queue state",
+                    "explicit approval recorded"
+                    if approval_status == "present"
+                    else (
+                        "operator approval expired (TTL passed); a fresh approve-live-trial is required"
+                        if approval_status == "expired"
+                        else "no Mike/operator approval recorded in queue state"
+                    ),
                 ),
                 gate(
                     "live_runnable_flag",
@@ -3626,6 +3648,48 @@ class SandboxTrialQueueTests(unittest.TestCase):
             self.assertFalse(entry.get("live_eligible_now", False))
             # Mode and status untouched — execution stays manual.
             self.assertEqual(trial["trial_mode"], "approval_required_live_trial")
+
+    def test_approval_receipt_expiry_regresses_lifecycle(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_dir = Path(tmp)
+            trial_id = self._seed_live_trial(state_dir)
+            record_live_trial_approval(
+                state_dir, trial_id, steward="mike", note="ttl test", write=True, ttl_secs=60
+            )
+            status = replay_status(state_dir)
+            trial = status["trials"][trial_id]
+            self.assertEqual(approval_receipt_status(trial), "present")
+            # Freeze the clock past expiry: rewrite expires_at into the past.
+            trial["operator_approval"]["expires_at"] = now_s() - 1.0
+            self.assertEqual(approval_receipt_status(trial), "expired")
+            # An expired approval must never read as approved anywhere:
+            self.assertNotEqual(
+                authority_lifecycle_state_for_trial(trial), "approved_manual_only"
+            )
+            entry = consentful_ladder_entry(trial)
+            self.assertNotEqual(entry["current_rung"], "approved_live_trial_still_manual")
+            gate_details = {g["gate"]: g["detail"] for g in entry.get("gates", [])}
+            self.assertIn("expired", gate_details.get("explicit_mike_operator_approval", ""))
+
+    def test_approval_v2_receipt_witnesses_actual_steward_and_time(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_dir = Path(tmp)
+            trial_id = self._seed_live_trial(state_dir)
+            record_live_trial_approval(
+                state_dir, trial_id, steward="mike-actual", note="key test", write=True
+            )
+            status = replay_status(state_dir)
+            trial = status["trials"][trial_id]
+            receipt = approval_receipt_v2_for_trial(trial, "boundary_test")
+            self.assertIsNotNone(receipt)
+            assert receipt is not None
+            self.assertEqual(receipt["issued_by"], "mike-actual")
+            recorded_at = trial["operator_approval"]["recorded_at"]
+            self.assertEqual(receipt["issued_at"], iso(float(recorded_at)))
 
     def test_approve_live_trial_refuses_non_live_trials(self) -> None:
         import tempfile

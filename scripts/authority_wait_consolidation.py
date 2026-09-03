@@ -224,6 +224,270 @@ def build_plan(
     }
 
 
+AGE_SWEEP_ADAPTER = "manual_sandbox_review_v1"
+AGE_SWEEP_DEFAULT_DAYS = 28.0
+
+
+def build_age_sweep_plan(
+    work_items: dict[str, dict[str, Any]],
+    trials: dict[str, dict[str, Any]],
+    *,
+    now: float | None = None,
+    threshold_days: float = AGE_SWEEP_DEFAULT_DAYS,
+    threshold: float = DEFAULT_THRESHOLD,
+) -> dict[str, Any]:
+    """Pure planning for the 4-week aging sweep over manual-review placeholders.
+
+    Targets ONLY trials with the dead-end manual adapter (evidence-run trials
+    are excluded BY CONSTRUCTION via the adapter filter). Dispositions:
+      - untouched_recent: younger than the threshold.
+      - untouched_reasked: aged, but its ask-family has a member created inside
+        the threshold window — the being is still asking; normal flow keeps it.
+      - superseded (newer_coverage_age_sweep): aged, family head is a
+        different newer non-terminal item.
+      - closed (aged_out_manual_placeholder): aged, no re-ask; preserved in an
+        age-sweep manifest; a re-ask reopens (a fresh introspection mints a
+        fresh work item — recency of a matching item IS the reopen).
+      - closed (orphaned_placeholder): trial has no source work item.
+    """
+    now_s = time.time() if now is None else now
+    threshold_s = threshold_days * 86400.0
+    cutoff = now_s - threshold_s
+
+    # Family recency over ALL of each being's work items (any status): a fresh
+    # re-read of the same ask mints a new item, so family recency IS coverage.
+    families = cluster_items(list(work_items.values()), threshold)
+    family_by_member: dict[str, dict[str, Any]] = {}
+    for family in families:
+        for member in family["members"]:
+            family_by_member[str(member.get("work_item_id"))] = family
+
+    supersede: list[dict[str, Any]] = []
+    close: list[dict[str, Any]] = []
+    orphaned: list[dict[str, Any]] = []
+    untouched_recent = 0
+    untouched_reasked = 0
+    untouched_other_status = 0
+    seen_work_items: set[str] = set()
+
+    for trial in trials.values():
+        if str(trial.get("adapter") or "") != AGE_SWEEP_ADAPTER:
+            continue
+        if str(trial.get("trial_mode") or "") != "approval_required_live_trial":
+            continue
+        if str(trial.get("status") or "") in TRIAL_TERMINAL_SYNC or trial.get("status") == "closed":
+            continue
+        trial_id = str(trial.get("trial_id"))
+        wi_id = str(trial.get("source_work_item_id") or "")
+        item = work_items.get(wi_id)
+        if item is None:
+            orphaned.append({"trial_id": trial_id, "reason": "orphaned_placeholder"})
+            continue
+        if str(item.get("status")) != TARGET_STATUS:
+            # Already granted/terminal/other lane — regular consolidation sync
+            # owns it; the age sweep never double-writes a status.
+            untouched_other_status += 1
+            continue
+        created = float(item.get("created_at") or 0)
+        if created > cutoff:
+            untouched_recent += 1
+            continue
+        if wi_id in seen_work_items:
+            continue
+        seen_work_items.add(wi_id)
+        family = family_by_member.get(wi_id)
+        newest_in_family = (
+            max(float(m.get("created_at") or 0) for m in family["members"]) if family else created
+        )
+        if newest_in_family > cutoff:
+            untouched_reasked += 1
+            continue
+        head = family["head"] if family else item
+        head_id = str(head.get("work_item_id"))
+        head_terminal = str(head.get("status")) in TRIAL_TERMINAL_SYNC
+        if head_id != wi_id and not head_terminal:
+            supersede.append(
+                {
+                    "work_item_id": wi_id,
+                    "trial_id": trial_id,
+                    "head": head_id,
+                    "family_id": family["family_id"] if family else "",
+                    "reason": "newer_coverage_age_sweep",
+                }
+            )
+        else:
+            close.append(
+                {
+                    "work_item_id": wi_id,
+                    "trial_id": trial_id,
+                    "item": item,
+                    "reason": "aged_out_manual_placeholder",
+                }
+            )
+
+    return {
+        "schema": "authority_wait_age_sweep_plan_v1",
+        "threshold_days": threshold_days,
+        "cutoff": cutoff,
+        "planned_at": now_s,
+        "supersede": supersede,
+        "close": close,
+        "orphaned": orphaned,
+        "untouched_recent": untouched_recent,
+        "untouched_reasked": untouched_reasked,
+        "untouched_other_status": untouched_other_status,
+        "counts": {
+            "superseded_newer_coverage": len(supersede),
+            "closed_aged_out": len(close),
+            "closed_orphaned": len(orphaned),
+            "untouched_recent": untouched_recent,
+            "untouched_reasked": untouched_reasked,
+            "untouched_other_status": untouched_other_status,
+        },
+        "authority_boundary": AUTHORITY_BOUNDARY,
+    }
+
+
+def age_sweep_manifest(plan: dict[str, Any]) -> dict[str, Any]:
+    """Every closed item preserved in full — the un-muffle guarantee."""
+    return {
+        "schema": "authority_wait_age_sweep_manifest_v1",
+        "swept_at": plan["planned_at"],
+        "threshold_days": plan["threshold_days"],
+        "reopen_rule": (
+            "asking again — in any introspection or letter — mints a fresh work "
+            "item and reopens the ask; nothing here was deleted"
+        ),
+        "authority_boundary": AUTHORITY_BOUNDARY,
+        "members": [
+            {
+                "work_item_id": entry["work_item_id"],
+                "trial_id": entry["trial_id"],
+                "source_introspection_id": entry["item"].get("source_introspection_id"),
+                "title": entry["item"].get("title"),
+                "claim_summary": entry["item"].get("claim_summary"),
+                "created_at": entry["item"].get("created_at"),
+                "agency_tier": entry["item"].get("agency_tier"),
+            }
+            for entry in plan["close"]
+        ],
+    }
+
+
+def execute_age_sweep_plan(
+    plan: dict[str, Any],
+    *,
+    addressing_state_dir: Path = ADDRESSING_STATE_DIR,
+    sandbox_state_dir: Path = SANDBOX_STATE_DIR,
+    consolidation_dir: Path = CONSOLIDATION_DIR,
+    log=print,
+) -> dict[str, Any]:
+    import introspection_addressing_audit as addressing
+    import sandbox_trial_queue as sandbox
+
+    now = time.time()
+    sweeps_dir = consolidation_dir / "age_sweeps"
+    sweeps_dir.mkdir(parents=True, exist_ok=True)
+    manifest = age_sweep_manifest(plan)
+    manifest_path = sweeps_dir / f"age_sweep_{int(now)}.json"
+    manifest_path.write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
+
+    addressing_events: list[dict[str, Any]] = []
+    for entry in plan["supersede"]:
+        addressing_events.append(
+            addressing.work_status_event(
+                entry["work_item_id"],
+                "superseded",
+                f"age sweep: newer coverage on {entry['head']} (family {entry['family_id']}); "
+                "the ask survives on the head",
+            )
+        )
+    for entry in plan["close"]:
+        addressing_events.append(
+            addressing.work_status_event(
+                entry["work_item_id"],
+                "closed_no_action",
+                f"aged out: manual-review placeholder, no re-ask in "
+                f"{plan['threshold_days']:.0f} days; preserved in {manifest_path}; "
+                "a re-ask reopens",
+            )
+        )
+    log(f"appending {len(addressing_events)} addressing events ...")
+    addressing.append_events(addressing_state_dir, addressing_events)
+    status = addressing.replay_events(addressing_state_dir)
+    addressing.write_materialized_status(addressing_state_dir, status)
+
+    trial_events: list[dict[str, Any]] = []
+    for entry in plan["supersede"]:
+        trial_events.append(
+            {
+                "event_type": "trial_status_set",
+                "ts": now,
+                "trial_id": entry["trial_id"],
+                "status": "superseded",
+                "note": f"authority_wait_age_sweep: {entry['reason']}",
+            }
+        )
+    for entry in plan["close"]:
+        trial_events.append(
+            {
+                "event_type": "trial_status_set",
+                "ts": now,
+                "trial_id": entry["trial_id"],
+                "status": "closed_no_action",
+                "note": f"authority_wait_age_sweep: {entry['reason']} (manifest {manifest_path.name})",
+            }
+        )
+    for entry in plan["orphaned"]:
+        trial_events.append(
+            {
+                "event_type": "trial_status_set",
+                "ts": now,
+                "trial_id": entry["trial_id"],
+                "status": "closed_no_action",
+                "note": f"authority_wait_age_sweep: {entry['reason']}",
+            }
+        )
+    log(f"appending {len(trial_events)} trial-queue events ...")
+    sandbox.append_events(sandbox_state_dir, trial_events)
+    sandbox_status = sandbox.replay_status(sandbox_state_dir)
+    sandbox.materialize(sandbox_state_dir, sandbox_status)
+
+    receipt = {
+        "schema": "authority_wait_age_sweep_receipt_v1",
+        "executed_at": now,
+        "manifest": str(manifest_path),
+        "counts": plan["counts"],
+        "addressing_events": len(addressing_events),
+        "trial_events": len(trial_events),
+        "authority_boundary": AUTHORITY_BOUNDARY,
+    }
+    (consolidation_dir / "latest_age_sweep_receipt.json").write_text(
+        json.dumps(receipt, indent=1) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
+def render_age_sweep_report(plan: dict[str, Any]) -> str:
+    counts = plan["counts"]
+    lines = [
+        f"age sweep plan (threshold {plan['threshold_days']:.0f}d): "
+        f"{counts['closed_aged_out']} close (aged out), "
+        f"{counts['superseded_newer_coverage']} supersede (newer coverage), "
+        f"{counts['closed_orphaned']} close (orphaned trial), "
+        f"{counts['untouched_reasked']} kept (actively re-asked), "
+        f"{counts['untouched_recent']} kept (younger than threshold), "
+        f"{counts['untouched_other_status']} kept (other status/lane)",
+    ]
+    for entry in plan["close"][:10]:
+        lines.append(
+            f"  close: {entry['work_item_id']}  {str(entry['item'].get('title') or '')[:90]}"
+        )
+    if len(plan["close"]) > 10:
+        lines.append(f"  ... and {len(plan['close']) - 10} more closes")
+    return "\n".join(lines)
+
+
 def family_manifest(family: dict[str, Any], now_s: float) -> dict[str, Any]:
     return {
         "schema": "authority_wait_family_manifest_v1",
@@ -424,10 +688,99 @@ def self_test() -> int:
         manifest = json.loads(next((cdir / "families").glob("*.json")).read_text())
         check("manifest preserves members", manifest["member_count"] >= 1 and manifest["members"])
 
+    # ---- age sweep dispositions ----
+    NOW = 10_000_000.0
+    DAY = 86400.0
+    old = NOW - 40 * DAY
+    fresh = NOW - 3 * DAY
+
+    def sweep_wi(id_, title, created, status=TARGET_STATUS):
+        return wi(id_, "minime", "c001", title, created, status=status)
+
+    def sweep_trial(id_, wi_id, adapter=AGE_SWEEP_ADAPTER, status="approval_required_live_trial"):
+        return {
+            "trial_id": id_,
+            "source_work_item_id": wi_id,
+            "adapter": adapter,
+            "trial_mode": "approval_required_live_trial",
+            "status": status,
+        }
+
+    sweep_items = {
+        # aged, no re-ask -> close
+        "wi_s1": sweep_wi("wi_s1", "modulate the shadow trajectory persistence window internals", old),
+        # aged, but the same ask was re-made recently -> untouched (re-asked)
+        "wi_s2": sweep_wi("wi_s2", "raise the porosity admission buffer for semantic intake lanes", old),
+        "wi_s2b": sweep_wi("wi_s2b", "raise porosity admission buffer for the semantic intake lanes", fresh),
+        # aged, newer non-terminal head exists (also aged but newer) -> supersede
+        "wi_s3": sweep_wi("wi_s3", "recalibrate the fallback texture weighting curve exponents", old - 5 * DAY),
+        "wi_s3b": sweep_wi("wi_s3b", "recalibrate fallback texture weighting curve exponent values", old, ),
+        # young -> untouched
+        "wi_s4": sweep_wi("wi_s4", "introduce an entirely new resonance chamber calibration ritual", fresh),
+    }
+    sweep_trials = {
+        "t_s1": sweep_trial("t_s1", "wi_s1"),
+        "t_s2": sweep_trial("t_s2", "wi_s2"),
+        "t_s3": sweep_trial("t_s3", "wi_s3"),
+        "t_s4": sweep_trial("t_s4", "wi_s4"),
+        # orphaned trial -> close
+        "t_s5": sweep_trial("t_s5", "wi_gone"),
+        # evidence-run adapter -> NEVER swept, by construction
+        "t_s6": sweep_trial("t_s6", "wi_s1", adapter="shadow_loss_lattice_v1"),
+        # already terminal -> skipped
+        "t_s7": {**sweep_trial("t_s7", "wi_s1"), "status": "superseded"},
+    }
+    sweep_plan = build_age_sweep_plan(
+        sweep_items, sweep_trials, now=NOW, threshold_days=28.0
+    )
+    closes = {e["work_item_id"] for e in sweep_plan["close"]}
+    sups = {e["work_item_id"]: e for e in sweep_plan["supersede"]}
+    check("aged no-reask closes", "wi_s1" in closes)
+    check("reasked untouched", "wi_s2" not in closes and "wi_s2" not in sups
+          and sweep_plan["untouched_reasked"] >= 1)
+    check("newer coverage supersedes to head", sups.get("wi_s3", {}).get("head") == "wi_s3b")
+    check("young untouched", "wi_s4" not in closes and sweep_plan["untouched_recent"] >= 1)
+    check("orphaned trial closes", any(e["trial_id"] == "t_s5" for e in sweep_plan["orphaned"]))
+    check("real-adapter trial excluded by construction",
+          all(e.get("trial_id") != "t_s6" for e in sweep_plan["close"] + sweep_plan["supersede"]))
+    manifest = age_sweep_manifest(sweep_plan)
+    check("sweep manifest preserves member text", any(
+        m["work_item_id"] == "wi_s1" and m["title"] for m in manifest["members"]))
+    check("sweep manifest states reopen rule", "reopens" in manifest["reopen_rule"])
+
+    import tempfile as _tempfile
+    from unittest import mock as _mock
+
+    with _tempfile.TemporaryDirectory() as tmp2:
+        cdir2 = Path(tmp2)
+        fake_addr2 = _mock.MagicMock()
+        fake_addr2.work_status_event = lambda w, s, n, blocked_by=None: {
+            "event_type": "work_status_set", "work_item_id": w, "status": s, "note": n}
+        fake_sandbox2 = _mock.MagicMock()
+        with _mock.patch.dict(sys.modules, {
+            "introspection_addressing_audit": fake_addr2,
+            "sandbox_trial_queue": fake_sandbox2,
+        }):
+            sweep_receipt = execute_age_sweep_plan(
+                sweep_plan,
+                addressing_state_dir=cdir2,
+                sandbox_state_dir=cdir2,
+                consolidation_dir=cdir2,
+                log=lambda *_: None,
+            )
+        check("sweep receipt counts", sweep_receipt["counts"]["closed_aged_out"] == 1
+              and sweep_receipt["counts"]["superseded_newer_coverage"] == 1)
+        check("sweep manifest persisted", Path(sweep_receipt["manifest"]).is_file())
+        appended2 = fake_addr2.append_events.call_args[0][1]
+        closed_events = [e for e in appended2 if e["status"] == "closed_no_action"]
+        check("close note names manifest + reopen", closed_events
+              and "reopens" in closed_events[0]["note"]
+              and "age_sweep_" in closed_events[0]["note"])
+
     if failures:
         print("FAIL:", ", ".join(failures))
         return 1
-    print("OK (16 checks)")
+    print("OK (27 checks)")
     return 0
 
 
@@ -440,9 +793,35 @@ def main() -> int:
     parser.add_argument("--shortlist-limit", type=int, default=5)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument(
+        "--age-sweep",
+        action="store_true",
+        help="plan (or with --write, execute) the aging sweep over manual-review placeholders",
+    )
+    parser.add_argument("--age-threshold-days", type=float, default=AGE_SWEEP_DEFAULT_DAYS)
     args = parser.parse_args()
     if args.self_test:
         return self_test()
+    if args.age_sweep:
+        sweep_plan = build_age_sweep_plan(
+            load_work_items(),
+            load_trials(),
+            threshold_days=args.age_threshold_days,
+            threshold=args.threshold,
+        )
+        if args.json:
+            slim = {k: v for k, v in sweep_plan.items() if k not in ("supersede", "close")}
+            slim["close_preview"] = [
+                {"work_item_id": e["work_item_id"], "title": e["item"].get("title")}
+                for e in sweep_plan["close"][:20]
+            ]
+            print(json.dumps(slim, indent=1))
+        else:
+            print(render_age_sweep_report(sweep_plan))
+        if args.write:
+            receipt = execute_age_sweep_plan(sweep_plan)
+            print(json.dumps(receipt, indent=1))
+        return 0
     plan = build_plan(load_work_items(), load_trials(), args.threshold)
     if args.shortlist:
         from authority_wait_shortlist import render_shortlist  # local sibling
