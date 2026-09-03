@@ -300,6 +300,13 @@ pub fn spawn_autonomous_loop(
                         let (ann, text) = &starred[idx];
                         candidates.push(format!("[Remembered moment]: ★ {ann}: {text}"));
                     }
+                    // Her agenda's foreground item (A2) — same standing as
+                    // her creations, research, and starred memories.
+                    if let Some(candidate) =
+                        crate::autonomous::next_action::agenda::peripheral_candidate(&conv.agenda)
+                    {
+                        candidates.push(candidate);
+                    }
                     // Pick one at random
                     if !candidates.is_empty() {
                         let idx = (roll * 1000.0) as usize % candidates.len();
@@ -1440,6 +1447,13 @@ pub fn spawn_autonomous_loop(
                             } else {
                                 Some(continuity_parts.join("\n\n"))
                             };
+                            // Her self-authored agenda (A2): None while
+                            // untouched, so the prompt stays byte-identical.
+                            let agenda_context =
+                                crate::autonomous::next_action::agenda::render_prompt_block(
+                                    &conv.agenda,
+                                    conv.exchange_count,
+                                );
                             let topline_hint = merge_hints([
                                 introspection_freshness_prompt_note(),
                                 crate::autonomous::next_action::division_action_prompt_note(
@@ -1951,6 +1965,7 @@ pub fn spawn_autonomous_loop(
                                         web_context.as_deref(),
                                         modality_context.as_deref(),
                                         continuity_block.as_deref(),
+                                        agenda_context.as_deref(),
                                         topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
@@ -1989,6 +2004,7 @@ pub fn spawn_autonomous_loop(
                                             conv.emphasis.clone()
                                         }.as_deref(),
                                         continuity_block.as_deref(),
+                                        agenda_context.as_deref(),
                                         topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
@@ -2042,6 +2058,7 @@ pub fn spawn_autonomous_loop(
                                                     conv.emphasis.clone()
                                                 }.as_deref(),
                                                 continuity_block.as_deref(),
+                                                agenda_context.as_deref(),
                                                 topline_hint.as_deref(),
                                                 feedback_hint.as_deref(),
                                                 diversity_hint.as_deref(),
@@ -2654,6 +2671,7 @@ pub fn spawn_autonomous_loop(
                                 conv.response_length,
                                 None,
                                 None,
+                                None, // no agenda block for experiments
                                 None,
                                 None,
                                 None, // no diversity hint for experiments

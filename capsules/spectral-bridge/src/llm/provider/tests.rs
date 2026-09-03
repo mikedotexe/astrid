@@ -3,7 +3,8 @@ mod tests {
     use super::{
         ASTRID_BRIDGE_MLX_PROFILE_ENV, DIALOGUE_AMBIENT_PERCEPTION_CAP, DIALOGUE_CONTINUITY_CAP,
         DIALOGUE_DIRECT_PERCEPTION_CAP, DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
-        DIALOGUE_DIVERSITY_CAP, DIALOGUE_FEEDBACK_CAP, DIALOGUE_JOURNAL_CAP,
+        DIALOGUE_AGENDA_CAP, DIALOGUE_AGENDA_MIN_CHARS, DIALOGUE_DIVERSITY_CAP,
+        DIALOGUE_FEEDBACK_CAP, DIALOGUE_JOURNAL_CAP,
         DIALOGUE_JOURNAL_MIN_CHARS, DIALOGUE_MODALITY_CAP, DIALOGUE_PERCEPTION_CAP,
         DIALOGUE_TOPLINE_CAP, DIALOGUE_TOPLINE_MIN_CHARS, DIALOGUE_WEB_CAP,
         DialoguePressureTextureInputs, Exchange, GEMMA4_12B_CANARY_PROFILE, GEMMA4_12B_PROFILE,
@@ -222,6 +223,7 @@ mod tests {
             Some(&"w".repeat(5_000)),
             None,
             Some(&"c".repeat(5_000)),
+            Some(&"g".repeat(5_000)),
             None,
             None,
             None,
@@ -235,6 +237,7 @@ mod tests {
             .saturating_add(DIALOGUE_PERCEPTION_CAP)
             .saturating_add(DIALOGUE_WEB_CAP)
             .saturating_add(DIALOGUE_CONTINUITY_CAP)
+            .saturating_add(DIALOGUE_AGENDA_CAP)
             .saturating_add(DIALOGUE_MODALITY_CAP)
             .saturating_add(DIALOGUE_FEEDBACK_CAP)
             .saturating_add(DIALOGUE_DIVERSITY_CAP)
@@ -439,6 +442,47 @@ mod tests {
         );
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn agenda_floor_survives_while_continuity_fully_evicts() {
+        use crate::prompt_budget::{PromptBlock, assemble_within_budget};
+
+        // A2's contract: under budget pressure, continuity (priority 7,
+        // min 0) fully evicts BEFORE her agenda (priority 3, protected
+        // floor) trims below its minimum.
+        let agenda_text = "Your agenda (yours: AGENDA to manage):\n-> now: ".to_string()
+            + &"study the cascade gap and what holds during transitions. ".repeat(12);
+        let continuity_text = "continuity ".repeat(200);
+        let dir = tempfile::tempdir().expect("dir");
+        let blocks = vec![
+            PromptBlock {
+                label: "agenda",
+                content: super::cap_dialogue_block("agenda", &agenda_text, DIALOGUE_AGENDA_CAP),
+                priority: 3,
+                min_chars: DIALOGUE_AGENDA_MIN_CHARS,
+            },
+            PromptBlock {
+                label: "continuity",
+                content: super::cap_dialogue_block(
+                    "continuity",
+                    &continuity_text,
+                    DIALOGUE_CONTINUITY_CAP,
+                ),
+                priority: 7,
+                min_chars: 0,
+            },
+        ];
+        let (assembled, _, _) = assemble_within_budget(blocks, 500, dir.path());
+        assert!(!assembled.contains("continuity continuity"));
+        let agenda_kept = assembled
+            .find("Your agenda")
+            .map(|start| assembled.len() - start)
+            .unwrap_or(0);
+        assert!(
+            agenda_kept >= DIALOGUE_AGENDA_MIN_CHARS,
+            "agenda kept only {agenda_kept} chars"
+        );
     }
 
     #[test]

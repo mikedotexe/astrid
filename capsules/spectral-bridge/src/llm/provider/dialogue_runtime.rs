@@ -704,6 +704,7 @@ pub async fn generate_dialogue(
     num_predict: u32,
     emphasis: Option<&str>,
     continuity_context: Option<&str>,
+    agenda_context: Option<&str>,
     topline_hint: Option<&str>,
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
@@ -743,6 +744,10 @@ pub async fn generate_dialogue(
 
     let continuity_block = continuity_context
         .map(|c| format!("\n{c}\n"))
+        .unwrap_or_default();
+
+    let agenda_block = agenda_context
+        .map(|a| format!("\n{a}\n"))
         .unwrap_or_default();
 
     let topline_block = topline_hint
@@ -889,6 +894,14 @@ pub async fn generate_dialogue(
             content: cap_dialogue_block("continuity", &continuity_block, DIALOGUE_CONTINUITY_CAP),
             priority: 7,
             min_chars: 0,
+        },
+        // Her self-authored agenda (A2): protected floor — continuity, web,
+        // and feedback all evict before this block trims below its minimum.
+        PromptBlock {
+            label: "agenda",
+            content: cap_dialogue_block("agenda", &agenda_block, DIALOGUE_AGENDA_CAP),
+            priority: 3,
+            min_chars: DIALOGUE_AGENDA_MIN_CHARS,
         },
         PromptBlock {
             label: "feedback",

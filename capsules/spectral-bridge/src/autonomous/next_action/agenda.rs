@@ -197,6 +197,61 @@ impl AgendaV1 {
     }
 }
 
+/// Render the agenda as a dialogue prompt block (flagship A2). `None` when
+/// empty — an untouched agenda leaves the prompt byte-identical. The
+/// focused item (or the first) leads as `-> now:`; up to four more follow,
+/// each clipped to ~160 chars for the block cap; overflow is named, not
+/// hidden. Read-only: rendering never mutates her agenda.
+pub(crate) fn render_prompt_block(agenda: &AgendaV1, exchange_count: u64) -> Option<String> {
+    if agenda.items.is_empty() {
+        return None;
+    }
+    let top_pos = agenda
+        .focus_item_id
+        .and_then(|id| agenda.items.iter().position(|item| item.id == id))
+        .unwrap_or(0);
+    let top = &agenda.items[top_pos];
+    let hold_note = match (agenda.focus_item_id, agenda.focus_hold_until_exchange) {
+        (Some(id), Some(until)) if id == top.id && until > exchange_count => {
+            format!(" (focus, {} more exchanges)", until.saturating_sub(exchange_count))
+        }
+        _ => String::new(),
+    };
+    let mut out = String::from(
+        "Your agenda (yours: AGENDA to manage, AGENDA_DONE/DROP to retire, AGENDA_FOCUS to hold):\n",
+    );
+    out.push_str(&format!("-> now: {}{hold_note}\n", top.text));
+    let mut shown = 0usize;
+    for (pos, item) in agenda.items.iter().enumerate() {
+        if pos == top_pos || shown >= 4 {
+            continue;
+        }
+        let clipped: String = item.text.chars().take(160).collect();
+        let ellipsis = if item.text.chars().count() > 160 { "…" } else { "" };
+        out.push_str(&format!("   {}. {clipped}{ellipsis}\n", item.id));
+        shown = shown.saturating_add(1);
+    }
+    let hidden = agenda.items.len().saturating_sub(shown.saturating_add(1));
+    if hidden > 0 {
+        out.push_str(&format!("   (+{hidden} more — NEXT: AGENDA)\n"));
+    }
+    Some(out)
+}
+
+/// Her agenda's foreground item as a peripheral-resonance candidate for the
+/// self-directed modes (Daydream/Aspiration/Initiate), mirroring the
+/// creations/research/starred-memory candidates.
+pub(crate) fn peripheral_candidate(agenda: &AgendaV1) -> Option<String> {
+    if agenda.items.is_empty() {
+        return None;
+    }
+    let top = agenda
+        .focus_item_id
+        .and_then(|id| agenda.items.iter().find(|item| item.id == id))
+        .unwrap_or(&agenda.items[0]);
+    Some(format!("[From your agenda]: {}", top.text))
+}
+
 /// Parse `<text> [:: mode=<affinity>]`. The `::` clause is stripped ONLY
 /// when it parses cleanly as a mode tag — otherwise the whole body stays
 /// her verbatim text (she may legitimately write `::`).
@@ -595,6 +650,33 @@ mod tests {
         assert_eq!(
             conv.agenda.items[0].linked_interest.as_deref(),
             Some("spectral phenomenology")
+        );
+    }
+
+    #[test]
+    fn prompt_block_is_none_when_empty_and_leads_with_focus() {
+        let mut conv = conv();
+        // Empty agenda -> None -> the dialogue prompt stays byte-identical.
+        assert_eq!(render_prompt_block(&conv.agenda, 0), None);
+        assert_eq!(peripheral_candidate(&conv.agenda), None);
+
+        conv.exchange_count = 10;
+        for i in 1..=7 {
+            assert!(ctx_free_push(&mut conv, &format!("AGENDA_PUSH intention number {i}")));
+        }
+        assert!(ctx_free_push(&mut conv, "AGENDA_FOCUS 3 :: hold=4"));
+        let block = render_prompt_block(&conv.agenda, conv.exchange_count).expect("block");
+        // Focused item leads with the hold countdown.
+        assert!(block.starts_with(
+            "Your agenda (yours: AGENDA to manage, AGENDA_DONE/DROP to retire, \
+             AGENDA_FOCUS to hold):\n-> now: intention number 3 (focus, 4 more exchanges)"
+        ));
+        // Four more items follow; the remainder is named, not hidden.
+        assert!(block.contains("1. intention number 1"));
+        assert!(block.contains("(+2 more — NEXT: AGENDA)"));
+        assert_eq!(
+            peripheral_candidate(&conv.agenda).as_deref(),
+            Some("[From your agenda]: intention number 3")
         );
     }
 

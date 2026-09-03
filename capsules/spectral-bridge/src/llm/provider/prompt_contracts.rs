@@ -149,6 +149,12 @@ const DIALOGUE_JOURNAL_MIN_CHARS: usize = 700;
 const DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS: usize = 900;
 const DIALOGUE_WEB_CAP: usize = 2_500;
 const DIALOGUE_CONTINUITY_CAP: usize = 2_400;
+// Agenda flagship A2: her self-authored agenda renders at priority 3 with a
+// protected floor — under budget pressure continuity/web/feedback evict
+// first, and the agenda never trims below the floor (her own canon is the
+// last context to go). Worst case 700 of ~16,000 chars.
+const DIALOGUE_AGENDA_CAP: usize = 700;
+const DIALOGUE_AGENDA_MIN_CHARS: usize = 320;
 const DIALOGUE_MODALITY_CAP: usize = 800;
 const DIALOGUE_TOPLINE_CAP: usize = 360;
 const DIALOGUE_TOPLINE_MIN_CHARS: usize = DIALOGUE_TOPLINE_CAP;

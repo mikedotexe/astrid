@@ -132,6 +132,7 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
     web_context: Option<&str>,
     modality_context: Option<&str>,
     continuity_context: Option<&str>,
+    agenda_context: Option<&str>,
     topline_hint: Option<&str>,
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
@@ -183,6 +184,12 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
                 .unwrap_or_default()
                 .len()
                 .min(DIALOGUE_CONTINUITY_CAP),
+        )
+        .saturating_add(
+            agenda_context
+                .unwrap_or_default()
+                .len()
+                .min(DIALOGUE_AGENDA_CAP),
         )
         .saturating_add(
             topline_hint
