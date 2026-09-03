@@ -284,7 +284,11 @@ and git operation at a time. These rules also live in `AGENTS.md`:
    not reliable attribution.
 4. **Keep durable context.** Require an `[Unreleased]` changelog entry and feedback-ledger trail
    where being-driven. Source, tests, evidence, authority boundaries, and restart alignment should
-   remain understandable together.
+   remain understandable together. Run `python3 scripts/domain_boundary_audit.py verify` before
+   staging Rust changes, and re-capture a reviewed boundary in the SAME change that grows it
+   (baseline integers in `domain_boundaries_legacy_large_files_v1.json`, exception ceilings in
+   `domain_boundaries_v1.toml` — the manifest shadows the baseline; justification in the commit
+   message). Deliberate re-capture, never a blanket exemption.
 5. **Deploy only via `scripts/build_bridge.sh`.** `scripts/deploy_preflight.py` still aborts if
    the other agent is editing and requires `--ack "reason"` to build dirty bridge source. Never
    hand-run `cargo build --release` plus kickstart. Commit authority does not imply live-control

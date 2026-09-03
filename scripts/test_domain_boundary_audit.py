@@ -91,6 +91,33 @@ class DomainBoundaryAuditTests(unittest.TestCase):
             {"unique_fn_signatures": 2, "maximum_unique_fn_signatures": 1},
         )
 
+    def test_structural_metrics_report_smuggled_logic_without_gating(self) -> None:
+        # One fn holding all the logic: the signature count stays at 1 (well
+        # inside its ceiling) while the structural measures show the bulk.
+        # This is the orchestration.rs shape Astrid named, in miniature.
+        body = "".join(
+            f"    if x {{ while y {{ match z {{ _ => {i} }} }} }}\n" for i in range(6)
+        )
+        (self.bridge / "src/legacy.rs").write_text(
+            f"fn only_one() {{\n{body}}}\n", encoding="utf-8"
+        )
+        status, _, violations = audit(self.root, self.manifest)
+        metrics = status["exception_structural_metrics"]["src/legacy.rs"]
+        self.assertEqual(metrics["max_fn_lines"], 8)
+        self.assertEqual(metrics["decision_points"], 18)
+        self.assertEqual(metrics["max_nesting_depth"], 4)
+        self.assertEqual(
+            status["exception_signature_counts"]["src/legacy.rs"][
+                "unique_fn_signatures"
+            ],
+            1,
+        )
+        # Report-only: the metrics never add a violation kind and never flip
+        # `valid` — the ceiling question stays open for review.
+        self.assertNotIn(
+            "exception_signature_growth", {row["kind"] for row in violations}
+        )
+
     def test_forbidden_edge_and_new_large_file_fail(self) -> None:
         (self.bridge / "src/dispatch/path.rs").write_text(
             "use crate::AstridInterpretationV1;\n", encoding="utf-8"

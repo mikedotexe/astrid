@@ -41,7 +41,7 @@ maximum_lines = 10750
 [[cohesion_exceptions]]
 path = "src/autonomous/runtime/orchestration.rs"
 maximum_unique_fn_signatures = 7
-maximum_lines = 5000
+maximum_lines = 5023
 
 [[cohesion_exceptions]]
 path = "src/ws/bridge_state.rs"

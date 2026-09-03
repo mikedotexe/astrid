@@ -76,8 +76,10 @@ The round:
   for real evidence/authority boundaries, not time pressure.
 - Run the handoff's integrity suites: addressing self-test, evidence store,
   controller, projection, Division, Chronicle, cursor, cadence, anti-drop
-  verify, and the final epistemic verify after all durable writes; then
-  audit-counters (must be consistent) and evidence_event_store verify.
+  verify, domain-boundary verify (report a red ratchet in the round summary —
+  stage 10 records violations that no summary surfaced for two days), and the
+  final epistemic verify after all durable writes; then audit-counters (must
+  be consistent) and evidence_event_store verify.
 - Record the productive Division round: division_ceremony_followup.py
   record-round with the current steward run id (read it from
   capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/lease.json)

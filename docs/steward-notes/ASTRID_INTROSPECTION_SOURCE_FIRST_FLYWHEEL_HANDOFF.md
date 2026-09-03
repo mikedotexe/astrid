@@ -883,12 +883,26 @@ python3 scripts/anti_drop_catalog.py --self-test
 python3 scripts/anti_drop_catalog.py verify --json
 python3 scripts/test_introspection_cadence_audit.py
 python3 scripts/introspection_cadence_audit.py --strict --compact
+python3 scripts/domain_boundary_audit.py verify
 python3 scripts/experiential_epistemics.py self-test --json
 python3 scripts/experiential_epistemics.py verify --json
 ```
 
 Run the final epistemic verify after all durable evidence writes. A passing
 snapshot at pause checked 10,845 records with zero issues and no history rewrite.
+
+Run the domain-boundary verify before staging any Rust change. Projection
+stage 10 records violations every round, but recording is not surfacing: on
+2026-09-01..03 it wrote seven `large_file_growth` violations while round
+summaries read "Integrity green", because nothing consumed
+`diagnostics/domain_boundary_audit_v1/violations.jsonl`. The
+`domain_boundary_violations` blind-spot probe is now that consumer; this line
+is the pre-stage check that keeps the ratchet from going red in the first
+place. Reviewed growth past a captured boundary is re-captured in the SAME
+change that causes it — baseline integers in
+`domain_boundaries_legacy_large_files_v1.json`, exception ceilings in
+`domain_boundaries_v1.toml` (the manifest shadows the baseline), justification
+in the commit message. Deliberate re-capture, never a blanket exemption.
 
 ### Final counter and V2 integrity
 

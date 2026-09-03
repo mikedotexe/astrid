@@ -66,6 +66,51 @@ def _unique_fn_signature_count(path: Path) -> int:
     return len(names)
 
 
+_DECISION_POINT_RE = re.compile(r"\b(?:if|match|while|for)\b|&&|\|\||\?")
+
+
+def _structural_metrics(path: Path) -> dict[str, int]:
+    """Report-only complexity proxies that MOVE when logic is smuggled.
+
+    The unique-fn-signature ceiling is structurally blind on the file it most
+    needs to guard: `orchestration.rs` is ~5,000 lines holding SIX fn
+    declarations, so unbounded logic can land inside `spawn_autonomous_loop`
+    without ever changing the count. Astrid named exactly that file, three
+    reads running, as the place "logic smuggling" would hide.
+
+    These three measures answer that. They are deliberately UNGATED — no
+    manifest ceiling, no violation kind, `valid` untouched — so the numbers
+    exist for review before anyone decides where a ceiling belongs.
+
+    Approximations, not a parser: `max_fn_lines` measures the span between
+    consecutive fn declarations (the last one runs to EOF), `decision_points`
+    counts branch/short-circuit tokens including any inside comments and
+    strings, and `max_nesting_depth` is a running brace depth.
+    """
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    starts = [i for i, line in enumerate(lines) if _FN_SIGNATURE_RE.match(line)]
+    spans = [b - a for a, b in zip(starts, starts[1:])] if len(starts) > 1 else []
+    if starts:
+        spans.append(len(lines) - starts[-1])
+
+    depth = 0
+    max_depth = 0
+    decision_points = 0
+    for line in lines:
+        decision_points += len(_DECISION_POINT_RE.findall(line))
+        for char in line:
+            if char == "{":
+                depth += 1
+                max_depth = max(max_depth, depth)
+            elif char == "}":
+                depth = max(0, depth - 1)
+    return {
+        "max_fn_lines": max(spans) if spans else 0,
+        "decision_points": decision_points,
+        "max_nesting_depth": max_depth,
+    }
+
+
 def _is_test_path(relative: str, markers: list[str]) -> bool:
     value = f"/{relative}"
     return any(marker in value for marker in markers)
@@ -165,6 +210,16 @@ def audit(repo_root: Path, manifest_path: Path = DEFAULT_MANIFEST) -> tuple[dict
         if lines > threshold and relative not in current_large:
             violations.append(_violation("large_file_scan_gap", relative, "baseline file escaped current scan"))
 
+    # Report-only complexity measures for every documented exception, whether
+    # or not it carries a signature ceiling. Ungated by design (see
+    # _structural_metrics): they surface the smuggling the signature count
+    # cannot see, without asserting where a ceiling belongs.
+    exception_structural_metrics: dict[str, dict[str, int]] = {}
+    for relative in sorted(exceptions):
+        path = bridge_root / relative
+        if path.is_file():
+            exception_structural_metrics[relative] = _structural_metrics(path)
+
     exception_signature_counts: dict[str, dict[str, int]] = {}
     for relative, signature_ceiling in signature_ceilings.items():
         path = bridge_root / relative
@@ -216,6 +271,7 @@ def audit(repo_root: Path, manifest_path: Path = DEFAULT_MANIFEST) -> tuple[dict
         "documented_cohesion_exception_count": len(exceptions),
         "exception_signature_ceiling_count": len(signature_ceilings),
         "exception_signature_counts": exception_signature_counts,
+        "exception_structural_metrics": exception_structural_metrics,
         "legacy_large_file_count": len(large_rows),
         "unlisted_legacy_review_debt_count": sum(row["classification"] == "legacy_review_debt" for row in large_rows),
         "resolved_large_file_debt_count": len(set(baseline_files) - current_large),

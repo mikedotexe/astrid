@@ -94,7 +94,12 @@ own a stabilization pass and commit; one agent still owns the index and git oper
    feedback-to-change ledger when being feedback drove the work. Keep source, tests, evidence,
    restart alignment, and authority boundaries reviewable together.
 4. **Leave bridge source compiling and coherent.** Never stop mid-edit on bridge `.rs`; run focused
-   tests and the relevant full suite before handing off or committing.
+   tests and the relevant full suite before handing off or committing. Run
+   `python3 scripts/domain_boundary_audit.py verify` before staging Rust changes, and re-capture a
+   reviewed boundary in the SAME change that grows it (baseline integers in
+   `domain_boundaries_legacy_large_files_v1.json`, exception ceilings in `domain_boundaries_v1.toml`,
+   justification in the commit message). Third occurrence of this lesson: recording is not
+   surfacing — stage 10 logged seven violations for two days while summaries read green.
 5. **Deploy the bridge only via `scripts/build_bridge.sh`.** Never hand-run `cargo build --release`
    plus `launchctl kickstart` on the live bridge. `scripts/deploy_preflight.py` still aborts on
    concurrent foreign activity and requires an explicit `--ack "reason"` before building dirty

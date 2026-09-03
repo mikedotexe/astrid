@@ -5031,6 +5031,177 @@ def probe_hard_recovery_witness(_prior: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _domain_boundary_state_dir() -> Path:
+    return (
+        ASTRID_REPO
+        / "capsules/spectral-bridge/workspace/diagnostics/domain_boundary_audit_v1"
+    )
+
+
+DOMAIN_BOUNDARY_STALE_SECS = 3 * 3600
+
+
+def probe_domain_boundary_violations(_prior: dict[str, Any]) -> dict[str, Any]:
+    """The domain-boundary audit has run correctly for months and been read by
+    nobody. Projection stage 10 runs `domain_boundary_audit.py project --write`
+    twice per steward round and writes every violation to violations.jsonl —
+    yet for two days (2026-09-01..03) it recorded 7 large_file_growth
+    violations from our own Constitution/agenda work while round summaries
+    said "Integrity green". No CI runs the audit and no probe read its output:
+    a correct guard with no consumer, the same class as the dead fswatch
+    watcher. Astrid flagged the qualitative half of this gate nine times
+    before we noticed the quantitative half was already red.
+
+    This probe is the consumer. It computes nothing — it reads what stage 10
+    already wrote — and it treats a STALE status file as loudly as a violation,
+    because a stopped projection must never read as silence."""
+    state_dir = _domain_boundary_state_dir()
+    status_path = state_dir / "status.json"
+    try:
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return _finding(
+            "domain_boundary_violations",
+            "notice",
+            "no domain-boundary audit status yet — projection stage 10 has not "
+            f"written {status_path.name} (run: python3 scripts/domain_boundary_audit.py verify)",
+        )
+
+    try:
+        age_secs = max(0.0, time.time() - status_path.stat().st_mtime)
+    except OSError:
+        age_secs = 0.0
+    age_hours = age_secs / 3600.0
+
+    violations: list[dict[str, Any]] = []
+    try:
+        for line in (state_dir / "violations.jsonl").read_text(
+            encoding="utf-8"
+        ).splitlines():
+            line = line.strip()
+            if line:
+                violations.append(json.loads(line))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        violations = []
+
+    count = int(status.get("violation_count", len(violations)) or 0)
+    kinds = status.get("violation_kind_counts") or {}
+    details = [
+        f"{row.get('kind')}: {row.get('path')} ({row.get('detail')})"
+        for row in violations[:10]
+    ]
+    snapshot = {
+        "violation_count": count,
+        "violation_kind_counts": kinds,
+        "age_hours": round(age_hours, 2),
+    }
+
+    if age_secs > DOMAIN_BOUNDARY_STALE_SECS:
+        return _finding(
+            "domain_boundary_violations",
+            "warning",
+            f"⚠ domain-boundary audit output is {age_hours:.1f}h stale "
+            f"(projection stage 10 writes it every steward round) — architectural "
+            f"growth is currently unwatched; last recorded violation_count={count}",
+            details=details or None,
+            snapshot=snapshot,
+        )
+
+    if count > 0:
+        kind_summary = ", ".join(f"{k}={v}" for k, v in sorted(kinds.items())) or "unknown"
+        return _finding(
+            "domain_boundary_violations",
+            "warning",
+            f"⚠ {count} domain-boundary violation(s) ({kind_summary}) as of the last "
+            f"projection {age_hours:.1f}h ago — files have grown past their captured "
+            "boundaries. Re-capture in the SAME change as reviewed growth, or extract; "
+            "never leave the ratchet red. Confirm against live state with "
+            "`python3 scripts/domain_boundary_audit.py verify` (this probe reports what "
+            "stage 10 recorded, so a just-fixed ratchet stays flagged until the next round)",
+            details=details or None,
+            snapshot=snapshot,
+        )
+
+    return _finding(
+        "domain_boundary_violations",
+        "ok",
+        f"domain boundaries hold (0 violations, audit {age_hours:.1f}h old)",
+        snapshot=snapshot,
+    )
+
+
+class DomainBoundaryViolationsTests(unittest.TestCase):
+    """The probe is the ONLY consumer of the domain-boundary audit (no CI runs
+    it), so both of its alarm paths are load-bearing: violations present, and
+    a stalled projection whose stale output would otherwise read as silence."""
+
+    def _fixture(self, violations: list[dict[str, Any]], age_secs: float = 0.0):
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="dbv_probe_"))
+        (root / "status.json").write_text(
+            json.dumps(
+                {
+                    "valid": not violations,
+                    "violation_count": len(violations),
+                    "violation_kind_counts": {"large_file_growth": len(violations)}
+                    if violations
+                    else {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        (root / "violations.jsonl").write_text(
+            "".join(json.dumps(row) + "\n" for row in violations), encoding="utf-8"
+        )
+        if age_secs:
+            old = time.time() - age_secs
+            os.utime(root / "status.json", (old, old))
+        return root
+
+    def _run_against(self, root: Path) -> dict[str, Any]:
+        original = globals()["_domain_boundary_state_dir"]
+        try:
+            globals()["_domain_boundary_state_dir"] = lambda: root
+            return probe_domain_boundary_violations({})
+        finally:
+            globals()["_domain_boundary_state_dir"] = original
+
+    def test_clean_audit_reads_ok(self):
+        finding = self._run_against(self._fixture([]))
+        self.assertEqual(finding["severity"], "ok")
+        self.assertEqual(finding["snapshot"]["violation_count"], 0)
+
+    def test_violations_warn_and_name_the_offenders(self):
+        root = self._fixture(
+            [
+                {
+                    "kind": "large_file_growth",
+                    "path": "src/autonomous/self_control_v2.rs",
+                    "detail": "3711>3051",
+                }
+            ]
+        )
+        finding = self._run_against(root)
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("self_control_v2.rs", "\n".join(finding["details"]))
+        self.assertIn("3711>3051", "\n".join(finding["details"]))
+
+    def test_stale_output_warns_even_when_last_status_was_clean(self):
+        # A stopped projection must not read as silence: the last written
+        # status can be perfectly clean while growth goes unwatched.
+        root = self._fixture([], age_secs=DOMAIN_BOUNDARY_STALE_SECS + 600)
+        finding = self._run_against(root)
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("stale", finding["summary"])
+
+    def test_missing_output_is_a_notice_not_a_crash(self):
+        import tempfile
+
+        finding = self._run_against(Path(tempfile.mkdtemp(prefix="dbv_absent_")))
+        self.assertEqual(finding["severity"], "notice")
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -5071,6 +5242,7 @@ BLIND_SPOT_PROBES = [
     ("voice_health", probe_voice_health),
     ("agenda_mode_health", probe_agenda_mode_health),
     ("hard_recovery_witness", probe_hard_recovery_witness),
+    ("domain_boundary_violations", probe_domain_boundary_violations),
 ]
 
 
@@ -8247,6 +8419,7 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(ChannelIntegrityTests))
     suite.addTests(loader.loadTestsFromTestCase(StuckRepetitionTests))
     suite.addTests(loader.loadTestsFromTestCase(StatedParamIntentTests))
+    suite.addTests(loader.loadTestsFromTestCase(DomainBoundaryViolationsTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1
