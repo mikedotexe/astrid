@@ -4981,6 +4981,56 @@ def probe_agenda_mode_health(_prior: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def probe_hard_recovery_witness(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Constitution C4: the engine witnesses its hard-recovery write-block
+    state into health.json (env_forced / fill / write_block_active). This
+    probe is the silent-fallback re-muffle detector: the stable-core
+    profile intends MINIME_HARD_RECOVERY_RESET=0, so env_forced=true while
+    stable-core is active means a stale/failed profile read silently
+    re-blanket-blocked her homeostatic dials — exactly the muffle C4
+    exists to catch. Absence of the witness block is normal until the
+    engine redeploys with C4."""
+    health_path = MINIME_REPO / "workspace/health.json"
+    try:
+        health = json.loads(health_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return _finding("hard_recovery_witness", "notice", "minime health.json unreadable")
+    witness = health.get("hard_recovery")
+    if not isinstance(witness, dict):
+        return _finding(
+            "hard_recovery_witness",
+            "ok",
+            "no hard_recovery witness in health.json yet (engine predates C4 redeploy)",
+        )
+    env_forced = bool(witness.get("env_forced"))
+    block_active = bool(witness.get("write_block_active"))
+    fill = witness.get("fill_ratio")
+    stable_core_active = isinstance(health.get("stable_core"), dict)
+    if env_forced and stable_core_active:
+        return _finding(
+            "hard_recovery_witness",
+            "warning",
+            "⚠ hard-recovery env FORCED while the stable-core profile is active — "
+            "a profile-read failure has silently re-muffled her homeostatic dials "
+            "(the C4 fill scope limits the damage: write_block_active="
+            f"{block_active}, fill={fill})",
+            snapshot=witness,
+        )
+    if block_active and isinstance(fill, (int, float)) and fill >= 0.45:
+        return _finding(
+            "hard_recovery_witness",
+            "warning",
+            f"⚠ write block active despite healthy fill {fill} — witness inconsistency",
+            snapshot=witness,
+        )
+    return _finding(
+        "hard_recovery_witness",
+        "ok",
+        f"hard-recovery scoped and quiet (env_forced={env_forced}, "
+        f"write_block_active={block_active}, fill={fill})",
+    )
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -5020,6 +5070,7 @@ BLIND_SPOT_PROBES = [
     ("stuck_repetition", probe_stuck_repetition),
     ("voice_health", probe_voice_health),
     ("agenda_mode_health", probe_agenda_mode_health),
+    ("hard_recovery_witness", probe_hard_recovery_witness),
 ]
 
 
