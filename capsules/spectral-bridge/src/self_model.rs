@@ -92,7 +92,7 @@ pub struct ReflectionState {
 /// How heavily each context source is weighted in prompt assembly.
 /// These are derived from the current mode selection probabilities
 /// and explicit toggles (echo_muted, senses_snoozed, etc.).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AttentionProfile {
     pub minime_live: f32,
     pub self_history: f32,

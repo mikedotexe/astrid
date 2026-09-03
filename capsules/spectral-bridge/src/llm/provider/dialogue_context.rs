@@ -136,17 +136,23 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
 ) -> usize {
+    // The estimate must model what the assembly actually builds. It was
+    // 4-ways stale (fixed 2026-09-03, Constitution A0): it took 8 history
+    // entries with the legacy gradient while the canary assembly builds 6
+    // with a tighter one; it measured the legacy SYSTEM_PROMPT under the
+    // canary profile; and it used the unsplit perception cap. The stale
+    // over-estimate tripped the 512-token high-pressure cap early.
+    let profile = configured_mlx_profile();
     let history_chars: usize = recent_history
         .iter()
         .rev()
-        .take(8)
+        .take(dialogue_history_limit(profile))
         .collect::<Vec<_>>()
         .into_iter()
         .rev()
         .enumerate()
         .map(|(idx, exchange)| {
-            // Match the gradient in generate_dialogue: oldest=150, newest=1200
-            let trim_len = 150usize.saturating_add(idx.saturating_mul(150).min(1050));
+            let trim_len = dialogue_history_trim_len(profile, idx);
             exchange
                 .minime_said
                 .len()
@@ -155,7 +161,7 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
         })
         .sum();
 
-    SYSTEM_PROMPT
+    dialogue_system_prompt_for_profile(profile)
         .len()
         .saturating_add(history_chars)
         .saturating_add(journal_text.len().min(DIALOGUE_JOURNAL_CAP))
@@ -163,7 +169,7 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
             perception_context
                 .unwrap_or_default()
                 .len()
-                .min(DIALOGUE_PERCEPTION_CAP),
+                .min(DIALOGUE_DIRECT_PERCEPTION_CAP + DIALOGUE_AMBIENT_PERCEPTION_CAP),
         )
         .saturating_add(web_context.unwrap_or_default().len().min(DIALOGUE_WEB_CAP))
         .saturating_add(

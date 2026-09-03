@@ -84,6 +84,8 @@ struct SavedState {
     #[serde(default)]
     wants_introspect: bool,
     #[serde(default)]
+    wants_deep_think: bool,
+    #[serde(default)]
     introspect_target: Option<state::IntrospectTargetV2>,
     #[serde(default)]
     introspection_cadence: next_action::introspection_cadence::IntrospectionCadenceV1,
@@ -260,6 +262,7 @@ fn save_state(conv: &mut ConversationState) {
         last_research_anchor: conv.last_research_anchor.clone(),
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
         wants_introspect: conv.wants_introspect,
+        wants_deep_think: conv.wants_deep_think,
         introspect_target: conv.introspect_target.clone(),
         introspection_cadence: conv.introspection_cadence.clone(),
         condition_receipts: conv.condition_receipts.clone(),
@@ -352,6 +355,7 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_research_anchor = state.last_research_anchor;
     conv.last_read_meaning_summary = state.last_read_meaning_summary;
     conv.wants_introspect = state.wants_introspect;
+    conv.wants_deep_think = state.wants_deep_think;
     conv.introspect_target = state.introspect_target;
     conv.introspection_cadence = state.introspection_cadence;
     conv.introspection_cadence.repair_after_restore(

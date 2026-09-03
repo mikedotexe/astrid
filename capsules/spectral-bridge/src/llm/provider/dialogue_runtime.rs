@@ -768,7 +768,7 @@ pub async fn generate_dialogue(
     //   Middle 3:  250 chars — substantial excerpt
     //   Newest 2:  400 chars — near-full detail
     // Total budget: ~3400 chars (was ~2240). Well within gemma-3-4b-it 8k ctx.
-    let history_limit = if mlx_profile.is_gemma4_canary() { 6 } else { 8 };
+    let history_limit = dialogue_history_limit(mlx_profile);
     for (idx, exchange) in recent_history
         .iter()
         .rev()
@@ -783,11 +783,7 @@ pub async fn generate_dialogue(
         // longest message, perhaps prioritize retaining the most relevant
         // information from earlier exchanges — a decaying attention mechanism."
         // 8 exchanges: idx 0=oldest→150, idx 7=newest→1200.
-        let trim_len = if mlx_profile.is_gemma4_canary() {
-            100usize.saturating_add(idx.saturating_mul(80).min(400))
-        } else {
-            150usize.saturating_add(idx.saturating_mul(150).min(1050))
-        };
+        let trim_len = dialogue_history_trim_len(mlx_profile, idx);
         let minime_history = sanitize_minime_context_for_dialogue(&exchange.minime_said);
         let minime_excerpt: String = minime_history.chars().take(trim_len).collect();
         let minime_excerpt = if mlx_profile.is_gemma4_canary() {

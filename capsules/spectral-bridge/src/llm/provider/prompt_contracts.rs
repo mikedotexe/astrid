@@ -79,6 +79,24 @@ const DIALOGUE_PROMPT_BUDGET_SHORT: usize = 32_000;
 const DIALOGUE_PROMPT_BUDGET_MEDIUM: usize = 24_000;
 const DIALOGUE_PROMPT_BUDGET_DEEP: usize = 16_000;
 const GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET: usize = 16_000;
+
+/// History depth for dialogue prompts, per model profile. SINGLE SOURCE —
+/// the prompt assembly (dialogue_runtime) and the pressure estimator
+/// (dialogue_context) both read this so they can never disagree again
+/// (the estimator modelled 8 entries while the canary assembly built 6).
+fn dialogue_history_limit(profile: MlxProfile) -> usize {
+    if profile.is_gemma4_canary() { 6 } else { 8 }
+}
+
+/// Per-entry history trim gradient (idx 0 = oldest), per profile. Same
+/// single-source rule as `dialogue_history_limit`.
+fn dialogue_history_trim_len(profile: MlxProfile, idx: usize) -> usize {
+    if profile.is_gemma4_canary() {
+        100usize.saturating_add(idx.saturating_mul(80).min(400))
+    } else {
+        150usize.saturating_add(idx.saturating_mul(150).min(1050))
+    }
+}
 const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS: usize = 14_000;
 const GEMMA4_CANARY_DIALOGUE_TOKEN_CAP: u32 = 768;
 const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_TOKEN_CAP: u32 = 512;

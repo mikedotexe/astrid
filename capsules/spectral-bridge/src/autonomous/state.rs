@@ -2469,7 +2469,66 @@ impl ConversationState {
 mod tests {
     use crate::journal::{RemoteJournalKind, scan_remote_journal_dir};
 
-    use super::{ConversationState, NextChoiceFeedback};
+    use super::{AgendaPullV1, ConversationState, Mode, NextChoiceFeedback, spontaneous_mode_from_roll};
+
+    /// Transcription of the pre-extraction spontaneity cascade, kept verbatim
+    /// so the extracted ladder is provably byte-identical at `bias: None`.
+    fn legacy_cascade(roll: f32, fill_pct: f32, fill_delta: f32, has_entries: bool) -> Mode {
+        if fill_pct < 25.0 && fill_delta < 1.0 {
+            if roll < 0.20 {
+                return Mode::Aspiration;
+            } else if roll < 0.50 {
+                return Mode::Daydream;
+            }
+        }
+        if fill_delta > 3.0 {
+            return Mode::Dialogue;
+        }
+        if roll > 0.92 {
+            Mode::Witness
+        } else if has_entries && roll < 0.12 {
+            Mode::Mirror
+        } else if roll < 0.22 {
+            Mode::Daydream
+        } else if roll < 0.29 {
+            Mode::Aspiration
+        } else {
+            Mode::Dialogue
+        }
+    }
+
+    #[test]
+    fn spontaneity_ladder_is_byte_identical_to_legacy_cascade() {
+        let regimes = [(10.0_f32, 0.5_f32), (10.0, 2.0), (50.0, 0.5), (50.0, 4.0), (72.0, 6.0)];
+        for i in 0..=1000_u32 {
+            let roll = i as f32 / 1000.0;
+            for &(fill, delta) in &regimes {
+                for &entries in &[true, false] {
+                    assert_eq!(
+                        spontaneous_mode_from_roll(roll, fill, delta, entries, None),
+                        legacy_cascade(roll, fill, delta, entries),
+                        "diverged at roll={roll} fill={fill} delta={delta} entries={entries}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn agenda_pull_is_bounded_and_never_certainty() {
+        // A pull only fires when its independent roll2 lands under p; above p
+        // the ladder is untouched — enumerate both sides of the boundary.
+        let pull = AgendaPullV1 { mode: Mode::Introspect, p: 0.35, roll2: 0.34 };
+        assert_eq!(
+            spontaneous_mode_from_roll(0.5, 50.0, 0.5, true, Some(&pull)),
+            Mode::Introspect
+        );
+        let no_pull = AgendaPullV1 { mode: Mode::Introspect, p: 0.35, roll2: 0.36 };
+        assert_eq!(
+            spontaneous_mode_from_roll(0.5, 50.0, 0.5, true, Some(&no_pull)),
+            legacy_cascade(0.5, 50.0, 0.5, true)
+        );
+    }
 
     fn is_breaker(feedback: &NextChoiceFeedback) -> bool {
         matches!(
@@ -3462,6 +3521,41 @@ pub(super) fn choose_mode(
     let roll = ((seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1)) >> 33) as f32
         / u32::MAX as f32;
 
+    spontaneous_mode_from_roll(
+        roll,
+        fill_pct,
+        fill_delta,
+        !conv.remote_journal_entries.is_empty(),
+        None,
+    )
+}
+
+/// A bounded agenda pull toward one mode: probability `p` (hard-capped by the
+/// caller's construction, never certainty) decided by an independent `roll2`.
+/// `None` bias reproduces today's spontaneity ladder byte-for-byte.
+pub(super) struct AgendaPullV1 {
+    pub mode: Mode,
+    pub p: f32,
+    pub roll2: f32,
+}
+
+/// The spontaneity ladder, extracted pure so the agenda flagship can bias it
+/// (and tests can enumerate it). With `bias: None` this is EXACTLY the
+/// pre-extraction cascade: the low-fill branch, the fill-delta dialogue gate,
+/// and the terminal roll ladder, verbatim.
+pub(super) fn spontaneous_mode_from_roll(
+    roll: f32,
+    fill_pct: f32,
+    fill_delta: f32,
+    has_remote_entries: bool,
+    bias: Option<&AgendaPullV1>,
+) -> Mode {
+    if let Some(pull) = bias {
+        if pull.roll2 < pull.p {
+            return pull.mode;
+        }
+    }
+
     if fill_pct < 25.0 && fill_delta < 1.0 {
         if roll < 0.20 {
             return Mode::Aspiration;
@@ -3476,7 +3570,7 @@ pub(super) fn choose_mode(
 
     if roll > 0.92 {
         Mode::Witness
-    } else if !conv.remote_journal_entries.is_empty() && roll < 0.12 {
+    } else if has_remote_entries && roll < 0.12 {
         Mode::Mirror
     } else if roll < 0.22 {
         Mode::Daydream
