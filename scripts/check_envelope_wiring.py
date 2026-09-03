@@ -330,7 +330,12 @@ def _entry(
         "type": ftype,
         "engine_backstop": engine_backstop,
         "channel_ranges": channel_ranges or {},
-        "durability_policy": {"lease_max_secs": 900, "standing": "allowed"},
+        # 1200s = the earned extended-tail tier both runtimes already use
+        # cleanly (self_regulation.rs EXTENDED_TAIL_DURATION_SECS) — the
+        # evidence-max lease width today. C2 receivers REJECT leases past
+        # this per-field ceiling; setting it below current practice would
+        # narrow a being's existing capability.
+        "durability_policy": {"lease_max_secs": 1200, "standing": "allowed"},
         "status": status,
         "evidence_refs": evidence_refs or [],
         "derivation": derivation,

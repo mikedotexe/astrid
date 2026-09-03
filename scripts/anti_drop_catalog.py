@@ -286,6 +286,17 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "python3 scripts/check_envelope_wiring.py --self-test"},
     },
     {
+        "id": "lease_law_reverts_without_a_turn",
+        "shipped": "2026-09-02",
+        "surface": "Constitution C2 lease law: the 24h wire-shape cap (both wire twins), the per-field durability_policy.lease_max_secs REJECT at both receivers (reason lease_exceeds_envelope_duration), and astrid's turn-independent lease sweep",
+        "failure_mode": "astrid's V1 self-regulation lease sweep ran only inside next_action dispatch, so a lease expiring mid-rest hung past expiry until she next acted (minutes late); and lease durations had NO ceiling anywhere on the wire — guard = orchestration calls next_action::reconcile_lease_law at loop-top AND each 5s rest pulse (folding the V2 reconcile in), while both receivers REJECT (never clamp) leases exceeding the registry's per-field policy, keeping durations policy rather than values so no receipt-equality clause is disturbed; a refactor deleting the pulse-loop call or the REJECT silently reverts leases to turn-driven-only expiry",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs", "symbol": "reconcile_lease_law"},
+        "test": {"repo": "astrid", "kind": "rust",
+                 "file": "capsules/spectral-bridge/src/autonomous/self_control_v2.rs",
+                 "name": "lease_envelope_duration_policy_rejects_only_with_a_policy_present",
+                 "run": "cd capsules/spectral-bridge && cargo test --lib self_control_v2::tests::lease"},
+    },
+    {
         "id": "approval_receipt_expiry_honored",
         "shipped": "2026-09-03",
         "surface": "sandbox trial queue operator-approval receipts (approve-live-trial, TTL 60-900s)",

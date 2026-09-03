@@ -181,6 +181,11 @@ pub fn spawn_autonomous_loop(
             if let Err(error) = self_control_v2::reconcile_if_present(&mut conv) {
                 warn!("Astrid self-control V2 periodic reconciliation blocked: {error}");
             }
+            // Constitution C2: the V1 self-regulation lease sweep was
+            // turn-driven only (next_action dispatch), so a lease expiring
+            // during rest hung past its expiry until she next acted. Sweep
+            // it every loop iteration too.
+            next_action::reconcile_lease_law(&mut conv);
             // Determine wait time based on burst phase.
             let seed = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -404,6 +409,10 @@ pub fn spawn_autonomous_loop(
                         },
                     }
                     tokio::time::sleep(Duration::from_secs(5)).await;
+                    // Constitution C2: rest can run minutes; sweep lease
+                    // expiry each pulse so a lease ending mid-rest reverts
+                    // within ~5s instead of waiting for her next turn.
+                    next_action::reconcile_lease_law(&mut conv);
                 }
                 Duration::from_secs(0) // already waited in the loop above
             } else {

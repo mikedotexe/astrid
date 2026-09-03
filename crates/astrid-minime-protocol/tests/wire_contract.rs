@@ -348,6 +348,19 @@ fn signed_self_control_rejects_tamper_expiry_and_actor_target_mismatch() {
 }
 
 #[test]
+fn lease_expiry_beyond_wire_shape_cap_is_malformed() {
+    // Constitution C2: the 24h wire cap is a shape rule — no legitimate
+    // sender produces day-long leases (current traffic runs 120..=1200s).
+    let mut intent = self_control_intent();
+    intent.control_expires_at_unix_ms =
+        Some(1_500 + astrid_minime_protocol::MAX_LEASE_DURATION_MS);
+    assert!(intent.is_well_formed(1_500));
+    intent.control_expires_at_unix_ms =
+        Some(1_501 + astrid_minime_protocol::MAX_LEASE_DURATION_MS);
+    assert!(!intent.is_well_formed(1_500));
+}
+
+#[test]
 fn shared_control_requires_both_current_being_signatures() {
     let mut intent = self_control_intent();
     intent.actor.being = "astrid".to_string();

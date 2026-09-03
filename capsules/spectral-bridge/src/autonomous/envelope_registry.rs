@@ -43,6 +43,14 @@ pub(crate) struct EnvelopeField {
     #[allow(dead_code)]
     #[serde(default)]
     status: Option<String>,
+    #[serde(default)]
+    durability_policy: Option<DurabilityPolicy>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct DurabilityPolicy {
+    #[serde(default)]
+    lease_max_secs: Option<u64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -89,9 +97,30 @@ impl EnvelopeRegistry {
         }
         Some((floor, ceiling))
     }
+
+    /// The registry's lease-duration ceiling for a field, in seconds, or
+    /// `None` when the field carries no durability policy (Constitution C2:
+    /// no policy recorded means only the wire-shape cap applies).
+    pub(crate) fn lease_max_secs(&self, field: &str) -> Option<u64> {
+        let policy = self.fields.get(field)?.durability_policy.as_ref()?;
+        policy.lease_max_secs.filter(|max| *max > 0)
+    }
+
+    /// The strictest lease ceiling across the named fields — a lease Set
+    /// touching several fields must satisfy every field's policy.
+    pub(crate) fn strictest_lease_max_secs<I, S>(&self, fields: I) -> Option<u64>
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        fields
+            .into_iter()
+            .filter_map(|field| self.lease_max_secs(field.as_ref()))
+            .min()
+    }
 }
 
-fn parse_registry(text: &str) -> Option<EnvelopeRegistry> {
+pub(crate) fn parse_registry(text: &str) -> Option<EnvelopeRegistry> {
     let registry: EnvelopeRegistry = serde_json::from_str(text).ok()?;
     if registry.schema != REGISTRY_SCHEMA || registry.being != TARGET_BEING {
         return None;
@@ -197,6 +226,29 @@ mod tests {
         ))
         .expect("parses");
         assert_eq!(inverted.envelope_for("aperture"), None);
+    }
+
+    #[test]
+    fn lease_max_reads_policy_and_takes_the_strictest_across_fields() {
+        let registry = parse_registry(&fixture(
+            "\"aperture\":{\"floor\":0.0,\"ceiling\":1.0,\
+             \"durability_policy\":{\"lease_max_secs\":1200,\"standing\":\"allowed\"}},\
+             \"conversation_temperature\":{\"floor\":0.1,\"ceiling\":1.5,\
+             \"durability_policy\":{\"lease_max_secs\":600}},\
+             \"no_policy_field\":{\"floor\":0.0,\"ceiling\":1.0}",
+        ))
+        .expect("parses");
+        assert_eq!(registry.lease_max_secs("aperture"), Some(1200));
+        assert_eq!(registry.lease_max_secs("no_policy_field"), None);
+        assert_eq!(registry.lease_max_secs("uncovered"), None);
+        assert_eq!(
+            registry.strictest_lease_max_secs(["aperture", "conversation_temperature"]),
+            Some(600)
+        );
+        assert_eq!(
+            registry.strictest_lease_max_secs(Vec::<String>::new()),
+            None
+        );
     }
 
     #[test]

@@ -117,6 +117,14 @@ pub(super) struct NextActionContext<'a> {
 }
 
 /// Parse NEXT: action from Astrid's response.
+/// Constitution C2: lease law must not depend on the being taking a turn.
+/// The orchestration loop calls this at loop-top and during rest pulses so
+/// an expired lease (V1 self-regulation — which folds the V2 self-control
+/// reconcile inside it) reverts on time even while she rests.
+pub(super) fn reconcile_lease_law(conv: &mut super::state::ConversationState) {
+    self_regulation::reconcile_active_lease(conv);
+}
+
 pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
     let mut in_fence = false;
     for line in text.lines().rev() {

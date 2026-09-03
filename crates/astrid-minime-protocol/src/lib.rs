@@ -23,7 +23,7 @@ pub use division::{
     DivisionReceiptStatusV1, DivisionReceiptV1, DivisionSourceIdentityV1, DivisionStatusV1,
 };
 pub use self_control::{
-    SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1, SELF_CONTROL_COMMAND_SCHEMA_V2,
+    MAX_LEASE_DURATION_MS, SELF_CONTROL_AUTHORITY_PROOF_SCHEMA_V1, SELF_CONTROL_COMMAND_SCHEMA_V2,
     SELF_CONTROL_INTENT_SCHEMA_V2, SELF_CONTROL_RECEIPT_SCHEMA_V2, SelfControlActionV2,
     SelfControlAuthorityClassV2, SelfControlAuthorityProofV1, SelfControlCommandV2,
     SelfControlDurabilityV2, SelfControlFamilyV2, SelfControlIntentV2, SelfControlReceiptStatusV2,

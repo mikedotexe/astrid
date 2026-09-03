@@ -921,6 +921,23 @@ fn apply_command(
         return Ok(receipt);
     }
 
+    let registry = crate::autonomous::runtime::envelope_registry::current_registry();
+    if lease_exceeds_envelope_duration(registry.as_ref(), &command.intent) {
+        let mut receipt = make_receipt(
+            state,
+            &command,
+            SelfControlReceiptStatusV2::Rejected,
+            current_revision,
+            SelfControlValuesV2::default(),
+            SelfControlValuesV2::default(),
+            Some("lease_exceeds_envelope_duration".to_string()),
+            now,
+        );
+        receipt.control_expires_at_unix_ms = None;
+        record_replay_state(state, &command, command_sha256, &receipt);
+        return Ok(receipt);
+    }
+
     let requested = command.intent.values.clone();
     let clamped = clamp_values(command.intent.family, &requested);
     let receipt_previous = snapshot_values(conv, &requested);
@@ -1350,6 +1367,25 @@ fn unsupported_fields(family: SelfControlFamilyV2, values: &SelfControlValuesV2)
             (!allowed).then_some(field)
         })
         .collect()
+}
+
+/// Constitution C2: a lease may not outlast the strictest
+/// `durability_policy.lease_max_secs` across its fields in the envelope
+/// registry. Durations are policy, not values — exceeding is REJECTED
+/// (never clamped), so no receipt-equality clause is disturbed. With no
+/// registry or no policy, only the wire-shape cap applies.
+fn lease_exceeds_envelope_duration(
+    registry: Option<&crate::autonomous::runtime::envelope_registry::EnvelopeRegistry>,
+    intent: &SelfControlIntentV2,
+) -> bool {
+    match (intent.durability, intent.control_expires_at_unix_ms) {
+        (SelfControlDurabilityV2::Lease, Some(expiry)) => registry
+            .and_then(|registry| registry.strictest_lease_max_secs(intent.values.field_names()))
+            .is_some_and(|max_secs| {
+                expiry.saturating_sub(intent.issued_at_unix_ms) > max_secs.saturating_mul(1_000)
+            }),
+        _ => false,
+    }
 }
 
 fn clamp_values(family: SelfControlFamilyV2, values: &SelfControlValuesV2) -> SelfControlValuesV2 {
@@ -2108,6 +2144,59 @@ mod tests {
 
     fn conv() -> ConversationState {
         ConversationState::new(Vec::new(), None)
+    }
+
+    #[test]
+    fn lease_envelope_duration_policy_rejects_only_with_a_policy_present() {
+        let registry = crate::autonomous::runtime::envelope_registry::parse_registry(
+            "{\"schema\":\"being_envelope_registry_v1\",\"being\":\"astrid\",\"revision\":1,\
+             \"fields\":{\"conversation_temperature\":{\"floor\":0.1,\"ceiling\":1.5,\
+             \"durability_policy\":{\"lease_max_secs\":600}}}}",
+        )
+        .expect("fixture parses");
+        let mut intent = SelfControlIntentV2 {
+            schema: SELF_CONTROL_INTENT_SCHEMA_V2.to_string(),
+            intent_id: "intent-lease-envelope".to_string(),
+            actor: SelfControlSourceIdentityV1 {
+                being: TARGET_BEING.to_string(),
+                process_identity: "astrid-test".to_string(),
+                deployment_identity: "astrid-deployment-test".to_string(),
+            },
+            target_being: TARGET_BEING.to_string(),
+            target_deployment_identity: "astrid-deployment-test".to_string(),
+            family: SelfControlFamilyV2::Conversation,
+            action: SelfControlActionV2::Set,
+            durability: SelfControlDurabilityV2::Lease,
+            authority_class: SelfControlAuthorityClassV2::SelfOwned,
+            authority_scope: "self_control.astrid.conversation".to_string(),
+            revision: 1,
+            expected_revision: 0,
+            issued_at_unix_ms: 1_000_000,
+            command_expires_at_unix_ms: 1_060_000,
+            control_expires_at_unix_ms: Some(1_000_000 + 601_000),
+            idempotency_key: "lease-envelope-idem".to_string(),
+            values: SelfControlValuesV2 {
+                conversation_temperature: Some(1.1),
+                ..SelfControlValuesV2::default()
+            },
+            related_intent_id: None,
+            related_receipt_id: None,
+            evidence_refs: Vec::new(),
+            success_conditions: Vec::new(),
+            stop_conditions: Vec::new(),
+        };
+        // 601s lease against a 600s policy: rejected.
+        assert!(lease_exceeds_envelope_duration(Some(&registry), &intent));
+        // Exactly at the policy ceiling: allowed.
+        intent.control_expires_at_unix_ms = Some(1_000_000 + 600_000);
+        assert!(!lease_exceeds_envelope_duration(Some(&registry), &intent));
+        // No registry (fail-open to the wire cap only, C2 default-safe).
+        intent.control_expires_at_unix_ms = Some(1_000_000 + 601_000);
+        assert!(!lease_exceeds_envelope_duration(None, &intent));
+        // Standing durability is not a lease.
+        intent.durability = SelfControlDurabilityV2::Standing;
+        intent.control_expires_at_unix_ms = None;
+        assert!(!lease_exceeds_envelope_duration(Some(&registry), &intent));
     }
 
     #[test]
