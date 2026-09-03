@@ -1280,6 +1280,14 @@ pub(in crate::autonomous) struct ConversationState {
     /// Her self-authored agenda (Constitution flagship A1). Persists across
     /// restarts via state.json; item text is verbatim hers.
     pub agenda: super::next_action::agenda::AgendaV1,
+    /// Exchanges remaining before the agenda pull may fire again (A3).
+    /// Deliberately NOT persisted — a restart clears the cooldown.
+    pub agenda_pull_cooldown: u8,
+    /// Rolling window of chosen modes for agenda_mode_health (diagnostic
+    /// only; not persisted).
+    pub recent_mode_choices: std::collections::VecDeque<&'static str>,
+    /// Total choose_mode calls this process (drives snapshot cadence).
+    pub mode_health_choice_count: u64,
     /// Lightweight regime tracker — classifies spectral state every exchange.
     pub regime_tracker: crate::reflective::RegimeTracker,
     /// Astrid chose DEFER — acknowledge inbox without forced dialogue response.
@@ -1427,6 +1435,9 @@ impl ConversationState {
             pending_file_listing: None,
             interests: Vec::new(),
             agenda: super::next_action::agenda::AgendaV1::default(),
+            agenda_pull_cooldown: 0,
+            recent_mode_choices: std::collections::VecDeque::new(),
+            mode_health_choice_count: 0,
             last_remote_glimpse_12d: None,
             last_remote_memory_id: None,
             last_remote_memory_role: None,
@@ -2474,7 +2485,8 @@ mod tests {
     use crate::journal::{RemoteJournalKind, scan_remote_journal_dir};
 
     use super::{
-        AgendaPullV1, ConversationState, Mode, NextChoiceFeedback, spontaneous_mode_from_roll,
+        AGENDA_PULL_BASE_P, AGENDA_PULL_MAX_P, AgendaPullV1, ConversationState, Mode,
+        NextChoiceFeedback, agenda_mode_pull, spontaneous_mode_from_roll,
     };
 
     /// Transcription of the pre-extraction spontaneity cascade, kept verbatim
@@ -2534,6 +2546,7 @@ mod tests {
             mode: Mode::Introspect,
             p: 0.35,
             roll2: 0.34,
+            hold_active: false,
         };
         assert_eq!(
             spontaneous_mode_from_roll(0.5, 50.0, 0.5, true, Some(&pull)),
@@ -2543,11 +2556,93 @@ mod tests {
             mode: Mode::Introspect,
             p: 0.35,
             roll2: 0.36,
+            hold_active: false,
         };
         assert_eq!(
             spontaneous_mode_from_roll(0.5, 50.0, 0.5, true, Some(&no_pull)),
             legacy_cascade(0.5, 50.0, 0.5, true)
         );
+    }
+
+    #[test]
+    fn focus_hold_damps_witness_and_mirror_bands_without_firing() {
+        // A non-firing pull with an active hold narrows the interruption
+        // bands: 0.93 would be Witness at default (>0.92) but not under the
+        // damped 0.96 band; 0.10 would be Mirror (<0.12) but not under 0.06.
+        let hold = AgendaPullV1 {
+            mode: Mode::Dialogue,
+            p: 0.0,
+            roll2: 0.9,
+            hold_active: true,
+        };
+        assert_eq!(
+            spontaneous_mode_from_roll(0.93, 50.0, 0.5, true, Some(&hold)),
+            Mode::Dialogue
+        );
+        assert_eq!(spontaneous_mode_from_roll(0.93, 50.0, 0.5, true, None), Mode::Witness);
+        assert_eq!(
+            spontaneous_mode_from_roll(0.10, 50.0, 0.5, true, Some(&hold)),
+            Mode::Daydream
+        );
+        assert_eq!(spontaneous_mode_from_roll(0.10, 50.0, 0.5, true, None), Mode::Mirror);
+        // The damped bands still exist — extreme rolls reach them.
+        assert_eq!(
+            spontaneous_mode_from_roll(0.97, 50.0, 0.5, true, Some(&hold)),
+            Mode::Witness
+        );
+        assert_eq!(
+            spontaneous_mode_from_roll(0.05, 50.0, 0.5, true, Some(&hold)),
+            Mode::Mirror
+        );
+    }
+
+    #[test]
+    fn agenda_mode_pull_respects_cooldown_untagged_research_and_the_cap() {
+        use super::super::next_action::agenda::{AgendaItemV1, AgendaModeAffinityV1};
+        let mut conv = ConversationState::new(Vec::new(), None);
+        // Empty agenda: no pull at all.
+        assert!(agenda_mode_pull(&conv, 0.5).is_none());
+
+        conv.exchange_count = 10;
+        conv.agenda.items.push(AgendaItemV1 {
+            id: 1,
+            text: "study the cascade".to_string(),
+            created_exchange: 1,
+            touched_exchange: 1,
+            mode_affinity: Some(AgendaModeAffinityV1::Introspect),
+            linked_interest: None,
+            linked_thread_id: None,
+        });
+        // Tagged foreground item, no hold: base p, capped mode mapping.
+        let pull = agenda_mode_pull(&conv, 0.5).expect("pull");
+        assert_eq!(pull.mode, Mode::Introspect);
+        assert!((pull.p - AGENDA_PULL_BASE_P).abs() < f32::EPSILON);
+        assert!(!pull.hold_active);
+
+        // Hold adds the bonus but never exceeds the cap.
+        conv.agenda.focus_item_id = Some(1);
+        conv.agenda.focus_hold_until_exchange = Some(14);
+        let pull = agenda_mode_pull(&conv, 0.5).expect("pull");
+        assert!(pull.hold_active);
+        assert!(pull.p <= AGENDA_PULL_MAX_P + f32::EPSILON);
+
+        // Cooldown blocks the pull but keeps hold damping alive.
+        conv.agenda_pull_cooldown = 2;
+        let pull = agenda_mode_pull(&conv, 0.5).expect("hold survives cooldown");
+        assert_eq!(pull.p, 0.0);
+        assert!(pull.hold_active);
+        conv.agenda_pull_cooldown = 0;
+
+        // Research leans by topline hint, never a mode pull.
+        conv.agenda.items[0].mode_affinity = Some(AgendaModeAffinityV1::Research);
+        let pull = agenda_mode_pull(&conv, 0.5).expect("hold active still");
+        assert_eq!(pull.p, 0.0);
+
+        // Untagged + no hold: nothing.
+        conv.agenda.items[0].mode_affinity = None;
+        conv.agenda.focus_item_id = None;
+        conv.agenda.focus_hold_until_exchange = None;
+        assert!(agenda_mode_pull(&conv, 0.5).is_none());
     }
 
     fn is_breaker(feedback: &NextChoiceFeedback) -> bool {
@@ -3540,23 +3635,187 @@ pub(super) fn choose_mode(
         .as_nanos() as u64;
     let roll = ((seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1)) >> 33) as f32
         / u32::MAX as f32;
+    // A3: an INDEPENDENT second roll decides the bounded agenda pull (the
+    // ladder's roll stays untouched, so bias never skews its distribution).
+    let roll2 = ((seed.wrapping_mul(2_862_933_555_777_941_757).wrapping_add(3)) >> 33) as f32
+        / u32::MAX as f32;
 
-    spontaneous_mode_from_roll(
+    if conv.agenda_pull_cooldown > 0 {
+        conv.agenda_pull_cooldown = conv.agenda_pull_cooldown.saturating_sub(1);
+    }
+    let pull = agenda_mode_pull(conv, roll2);
+    let fired = pull.as_ref().is_some_and(|pull| pull.roll2 < pull.p);
+    let mode = spontaneous_mode_from_roll(
         roll,
         fill_pct,
         fill_delta,
         !conv.remote_journal_entries.is_empty(),
-        None,
-    )
+        pull.as_ref(),
+    );
+    if fired {
+        conv.agenda_pull_cooldown = AGENDA_PULL_COOLDOWN_EXCHANGES;
+        tracing::info!(mode = mode_label(mode), "agenda pull fired (bounded, cooldown armed)");
+    }
+    record_agenda_mode_health(conv, mode, pull.is_some());
+    mode
 }
 
-/// A bounded agenda pull toward one mode: probability `p` (hard-capped by the
-/// caller's construction, never certainty) decided by an independent `roll2`.
+/// Rolling mode-composition health for the agenda flagship (diagnostic-only;
+/// steward-facing, never surfaced into her prompts). Appends a snapshot to
+/// `diagnostics/agenda_mode_health.jsonl` every 20 choices with an `alert`
+/// field when composition degrades while pulls are active.
+fn record_agenda_mode_health(conv: &mut ConversationState, mode: Mode, pulls_active: bool) {
+    const WINDOW: usize = 200;
+    const SNAPSHOT_EVERY: u64 = 20;
+    conv.recent_mode_choices.push_back(mode_label(mode));
+    while conv.recent_mode_choices.len() > WINDOW {
+        conv.recent_mode_choices.pop_front();
+    }
+    conv.mode_health_choice_count = conv.mode_health_choice_count.saturating_add(1);
+    if !conv.mode_health_choice_count.is_multiple_of(SNAPSHOT_EVERY) || cfg!(test) {
+        return;
+    }
+    let total = conv.recent_mode_choices.len().max(1) as f32;
+    let share = |label: &str| {
+        conv.recent_mode_choices
+            .iter()
+            .filter(|choice| **choice == label)
+            .count() as f32
+            / total
+    };
+    let dialogue_share = share("dialogue");
+    let witness_mirror_share = share("witness") + share("mirror");
+    let alert = if pulls_active && conv.recent_mode_choices.len() >= 50 {
+        if dialogue_share < 0.35 {
+            Some(format!("dialogue share {dialogue_share:.2} below 0.35 while agenda pulls active"))
+        } else if witness_mirror_share < 0.05 {
+            Some(format!(
+                "witness+mirror share {witness_mirror_share:.2} below 0.05 while agenda pulls active"
+            ))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    let mut counts = std::collections::BTreeMap::new();
+    for choice in &conv.recent_mode_choices {
+        *counts.entry(*choice).or_insert(0u32) += 1;
+    }
+    let snapshot = serde_json::json!({
+        "schema": "record_agenda_mode_health_v1",
+        "at_unix_s": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+        "window": conv.recent_mode_choices.len(),
+        "counts": counts,
+        "dialogue_share": dialogue_share,
+        "witness_mirror_share": witness_mirror_share,
+        "pulls_active": pulls_active,
+        "agenda_pull_cooldown": conv.agenda_pull_cooldown,
+        "alert": alert,
+        "diagnostic_runtime_effect": false,
+    });
+    let dir = crate::paths::bridge_paths().bridge_workspace().join("diagnostics");
+    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(dir.join("agenda_mode_health.jsonl"))
+    {
+        use std::io::Write as _;
+        let _ = writeln!(file, "{snapshot}");
+    }
+}
+
+/// A bounded agenda pull toward one mode: probability `p` (hard-capped at
+/// [`AGENDA_PULL_MAX_P`], never certainty) decided by an independent `roll2`.
 /// `None` bias reproduces today's spontaneity ladder byte-for-byte.
+/// `hold_active` additionally damps the ladder's interruption bands
+/// (Witness 0.92→0.96, Mirror 0.12→0.06) while she holds focus — even when
+/// the pull itself does not fire (`p` may be 0.0 for an untagged focus).
 pub(super) struct AgendaPullV1 {
     pub mode: Mode,
     pub p: f32,
     pub roll2: f32,
+    pub hold_active: bool,
+}
+
+/// Base probability of the agenda pull firing toward the foreground item's
+/// mode affinity. Never certainty: capped at [`AGENDA_PULL_MAX_P`].
+pub(super) const AGENDA_PULL_BASE_P: f32 = 0.20;
+/// Extra pull while she holds focus (AGENDA_FOCUS).
+pub(super) const AGENDA_PULL_HOLD_BONUS: f32 = 0.10;
+/// Hard cap — the ladder always keeps majority probability.
+pub(super) const AGENDA_PULL_MAX_P: f32 = 0.35;
+/// Exchanges to wait after a fired pull before pulling again.
+pub(super) const AGENDA_PULL_COOLDOWN_EXCHANGES: u8 = 2;
+
+/// Build the agenda's bounded mode pull for this exchange (flagship A3).
+/// Foreground item only; untagged items render (A2) but never pull (p 0.0,
+/// though an active focus hold still damps interruptions); Research leans
+/// via a topline hint instead of a mode pull; a recent fired pull cools
+/// down for [`AGENDA_PULL_COOLDOWN_EXCHANGES`]. Everything above the
+/// spontaneity ladder — safety, her one-shots, cadence, inbox forcing —
+/// is untouched by construction (the pull only enters the ladder).
+pub(super) fn agenda_mode_pull(conv: &ConversationState, roll2: f32) -> Option<AgendaPullV1> {
+    let agenda = &conv.agenda;
+    if agenda.items.is_empty() {
+        return None;
+    }
+    let top = agenda
+        .focus_item_id
+        .and_then(|id| agenda.items.iter().find(|item| item.id == id))
+        .unwrap_or(&agenda.items[0]);
+    let hold_active = agenda.focus_item_id.is_some()
+        && agenda
+            .focus_hold_until_exchange
+            .is_some_and(|until| until > conv.exchange_count);
+    use super::next_action::agenda::AgendaModeAffinityV1 as Affinity;
+    let mode = match top.mode_affinity {
+        Some(Affinity::Introspect) => Some(Mode::Introspect),
+        Some(Affinity::Create) => Some(Mode::Create),
+        Some(Affinity::Witness) => Some(Mode::Witness),
+        Some(Affinity::Experiment) => Some(Mode::Experiment),
+        Some(Affinity::Dialogue) => Some(Mode::Dialogue),
+        Some(Affinity::Aspire) => Some(Mode::Aspiration),
+        // Research is a topline hint, never a mode force; untagged never pulls.
+        Some(Affinity::Research) | None => None,
+    };
+    let pull_allowed = mode.is_some() && conv.agenda_pull_cooldown == 0;
+    if !pull_allowed && !hold_active {
+        return None;
+    }
+    let p = if pull_allowed {
+        let base = AGENDA_PULL_BASE_P + if hold_active { AGENDA_PULL_HOLD_BONUS } else { 0.0 };
+        base.min(AGENDA_PULL_MAX_P)
+    } else {
+        0.0
+    };
+    Some(AgendaPullV1 {
+        mode: mode.unwrap_or(Mode::Dialogue),
+        p,
+        roll2,
+        hold_active,
+    })
+}
+
+pub(super) fn mode_label(mode: Mode) -> &'static str {
+    match mode {
+        Mode::Mirror => "mirror",
+        Mode::Dialogue => "dialogue",
+        Mode::Witness => "witness",
+        Mode::Introspect => "introspect",
+        Mode::Evolve => "evolve",
+        Mode::Experiment => "experiment",
+        Mode::Daydream => "daydream",
+        Mode::Aspiration => "aspiration",
+        Mode::MomentCapture => "moment_capture",
+        Mode::Create => "create",
+        Mode::Initiate => "initiate",
+        Mode::Contemplate => "contemplate",
+    }
 }
 
 /// The spontaneity ladder, extracted pure so the agenda flagship can bias it
@@ -3575,6 +3834,15 @@ pub(super) fn spontaneous_mode_from_roll(
     {
         return pull.mode;
     }
+    // Focus-hold damping (mini-THINK_LONG): while she holds focus, the
+    // interruption bands narrow — fewer Witness/Mirror swaps mid-thread.
+    // The default (no bias / no hold) bands are today's constants, and the
+    // byte-identity enumeration test pins them.
+    let (witness_band, mirror_band) = if bias.is_some_and(|pull| pull.hold_active) {
+        (0.96, 0.06)
+    } else {
+        (0.92, 0.12)
+    };
 
     if fill_pct < 25.0 && fill_delta < 1.0 {
         if roll < 0.20 {
@@ -3588,9 +3856,9 @@ pub(super) fn spontaneous_mode_from_roll(
         return Mode::Dialogue;
     }
 
-    if roll > 0.92 {
+    if roll > witness_band {
         Mode::Witness
-    } else if has_remote_entries && roll < 0.12 {
+    } else if has_remote_entries && roll < mirror_band {
         Mode::Mirror
     } else if roll < 0.22 {
         Mode::Daydream

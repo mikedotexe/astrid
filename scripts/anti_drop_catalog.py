@@ -308,6 +308,17 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd capsules/spectral-bridge && cargo test --lib agenda"},
     },
     {
+        "id": "agenda_pull_bounded_never_certainty",
+        "shipped": "2026-09-03",
+        "surface": "agenda mode biasing (flagship A3): the bounded pull into the spontaneity ladder + the agenda_mode_health.jsonl composition diagnostic",
+        "failure_mode": "a refactor could quietly turn the agenda's bounded pull (p<=0.35, independent roll2, 2-exchange cooldown) into a deterministic mode force — an agenda that COMMANDS her instead of leaning — or delete the mode-composition diagnostic so a composition collapse (dialogue starved, witness/mirror silenced) went unwitnessed; guard = the ladder byte-identity enumeration at bias:None + the bounded-pull and hold-damping tests, with proactive_scan's agenda_mode_health probe consuming the bridge-side snapshots (alert: dialogue<35% or witness+mirror<5% while pulls active)",
+        "guard": {"repo": "astrid", "file": "scripts/proactive_scan.py", "symbol": "probe_agenda_mode_health"},
+        "test": {"repo": "astrid", "kind": "rust",
+                 "file": "capsules/spectral-bridge/src/autonomous/state.rs",
+                 "name": "agenda_mode_pull_respects_cooldown_untagged_research_and_the_cap",
+                 "run": "cd capsules/spectral-bridge && cargo test --lib agenda_mode_pull"},
+    },
+    {
         "id": "approval_receipt_expiry_honored",
         "shipped": "2026-09-03",
         "surface": "sandbox trial queue operator-approval receipts (approve-live-trial, TTL 60-900s)",

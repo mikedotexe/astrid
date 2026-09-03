@@ -238,6 +238,28 @@ pub(crate) fn render_prompt_block(agenda: &AgendaV1, exchange_count: u64) -> Opt
     Some(out)
 }
 
+/// A gentle topline hint when her foreground item leans research (A3):
+/// Research affinity never forces a mode or a SEARCH — it only names the
+/// route, in the same optional/read-only idiom as the freshness note.
+pub(crate) fn research_topline_note(agenda: &AgendaV1) -> Option<String> {
+    if agenda.items.is_empty() {
+        return None;
+    }
+    let top = agenda
+        .focus_item_id
+        .and_then(|id| agenda.items.iter().find(|item| item.id == id))
+        .unwrap_or(&agenda.items[0]);
+    if top.mode_affinity != Some(AgendaModeAffinityV1::Research) {
+        return None;
+    }
+    Some(format!(
+        "agenda_research_v1 (optional/read-only): your agenda's foreground item leans \
+         research: \"{}\". Routes include SEARCH <topic> or BROWSE <url>. Not a task; \
+         you may ignore it, defer it, or retire it with AGENDA_DONE.",
+        top.text
+    ))
+}
+
 /// Her agenda's foreground item as a peripheral-resonance candidate for the
 /// self-directed modes (Daydream/Aspiration/Initiate), mirroring the
 /// creations/research/starred-memory candidates.

@@ -4931,6 +4931,56 @@ def probe_voice_health(_prior: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def probe_agenda_mode_health(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Mode-composition watch for the agenda flagship (A3). The bridge
+    appends record_agenda_mode_health_v1 snapshots to
+    diagnostics/agenda_mode_health.jsonl every ~20 exchanges; absence is
+    normal until the flagship deploys or her agenda is in use. The alert
+    thresholds (dialogue < 35%, witness+mirror < 5% while pulls are active)
+    are computed bridge-side; this probe just surfaces them. Diagnostic
+    only — nothing here changes live behavior."""
+    path = ASTRID_DIAGNOSTICS_DIR / "agenda_mode_health.jsonl"
+    if not path.exists():
+        return _finding(
+            "agenda_mode_health",
+            "ok",
+            "no agenda mode-health snapshots yet (flagship not deployed or agenda unused)",
+        )
+    try:
+        lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        snap = json.loads(lines[-1]) if lines else {}
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        return _finding(
+            "agenda_mode_health",
+            "warning",
+            f"agenda_mode_health.jsonl unreadable: {error}",
+        )
+    if not snap:
+        return _finding("agenda_mode_health", "ok", "agenda_mode_health.jsonl empty")
+    alert = snap.get("alert")
+    try:
+        age_h = (time.time() - float(snap.get("at_unix_s") or 0)) / 3600.0
+    except (TypeError, ValueError):
+        age_h = -1.0
+    if alert:
+        return _finding(
+            "agenda_mode_health",
+            "warning",
+            f"mode composition alert while agenda pulls active: {alert}",
+            [f"window={snap.get('window')}", f"snapshot age {age_h:.1f}h"],
+            snapshot=snap,
+        )
+    return _finding(
+        "agenda_mode_health",
+        "ok",
+        (
+            f"mode composition healthy (dialogue {snap.get('dialogue_share')}, "
+            f"witness+mirror {snap.get('witness_mirror_share')}, window {snap.get('window')})"
+        ),
+        snapshot={"age_h": round(age_h, 1)},
+    )
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -4969,6 +5019,7 @@ BLIND_SPOT_PROBES = [
     ("channel_integrity", probe_channel_integrity),
     ("stuck_repetition", probe_stuck_repetition),
     ("voice_health", probe_voice_health),
+    ("agenda_mode_health", probe_agenda_mode_health),
 ]
 
 

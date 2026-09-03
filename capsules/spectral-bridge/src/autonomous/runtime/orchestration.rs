@@ -1459,6 +1459,11 @@ pub fn spawn_autonomous_loop(
                                 crate::autonomous::next_action::division_action_prompt_note(
                                     conv.remote_workspace.as_deref(),
                                 ),
+                                // A3: Research-leaning agenda items hint the
+                                // route; they never force a mode or a SEARCH.
+                                crate::autonomous::next_action::agenda::research_topline_note(
+                                    &conv.agenda,
+                                ),
                             ]);
                             feedback_hint = merge_hints([
                                 feedback_hint,
