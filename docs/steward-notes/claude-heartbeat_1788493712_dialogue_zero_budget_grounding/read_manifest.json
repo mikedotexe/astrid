@@ -1,0 +1,24 @@
+{
+  "round": "claude-heartbeat_1788493712_dialogue_zero_budget_grounding",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788483436.txt",
+      "sha256": "58e78a4a9c8a29ec44b718535b65bfa1dce33a9e7168b1ff01d5e78d76f3d62f",
+      "bytes": 3702,
+      "lines": 45,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_84582cdf2342870e1931eb699c6be0b16c4989665ae4a7eaf7bee9c97ac8989b",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_84582cdf2342870e1931eb699c6be0b16c4989665ae4a7eaf7bee9c97ac8989b.json",
+      "sha256": "f4d1c5b89f84fc7413326032336bd5fe8fc9033f7b14f1be5e3f2463942d2a8e",
+      "bytes": 23931,
+      "lines": 533,
+      "read": "complete"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788483436",
+  "report_sha256": "58e78a4a9c8a29ec44b718535b65bfa1dce33a9e7168b1ff01d5e78d76f3d62f",
+  "witness_id": "lsw_84582cdf2342870e1931eb699c6be0b16c4989665ae4a7eaf7bee9c97ac8989b",
+  "report_bound_source": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+  "report_bound_source_sha256": "d9070beb523bdb2795ef714723c9142d276b858ae19cf2bc54dc904bae5a985d",
+  "source_hash_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "generate_dialogue (L763) assembles a multi-tiered prompt with a gradual-fade history compression (L836-853): older exchanges progressively truncated to fit context.",
+      "disposition": "Verified at the report-bound SHA. L763 is the async generate_dialogue signature; L836-891 build alternating user/assistant history via attended_history_limit/attended_history_trim_len, oldest short to newest full. The L844 comment names gemma-3-4b-it 8k; the live profile per witness is gemma4_12b (16k canary) so that comment is historical, not a runtime claim.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "user_content_budget (L893-900) subtracts committed overhead (system prompt + history) from assembly_prompt_budget_chars.",
+      "disposition": "Verified exactly. L896 overhead = sum of messages[*].content.len(); L898-900 user_content_budget = assembly_prompt_budget_chars.saturating_sub(overhead).saturating_sub(100).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Content is organized into PromptBlock structures (L914-970) with priorities and char caps (journal_cap, direct_cap, ambient_cap) modulated by the attention variable.",
+      "disposition": "Verified. L914-995 build 11 PromptBlocks; caps come from attended_journal_caps/attended_perception_caps/attended_web_cap/etc (prompt_contracts.rs L147-202), which return compiled constants when attention is None and scale by the ATTEND ratios otherwise.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "user_content_budget can reach 0: if overhead + 100 exceeds assembly_prompt_budget_chars the double saturating_sub floors at 0.",
+      "disposition": "Verified. The chained saturating_sub (L898-900) does floor at 0 under enough overhead. This is the intended saturating floor, not UB; her observation that the value CAN be 0 is exactly correct and is the antecedent her Test 1 / Suggested Next asks to pin.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "If assemble_within_budget (L904) does not handle a zero budget by prioritizing critical blocks (topline/spectral), the model could get an empty or severely truncated prompt and produce incoherent output.",
+      "disposition": "Graceful handling verified: at budget 0 the min_chars floors keep prefixes of journal(700)/direct_perception(900)/topline(360)/agenda(320), and the caller always appends 'Fill X%.' + turn_instruction + the system prompt, so the prompt is never empty. Contradiction preserved: she named spectral as protected, but spectral has min_chars 0 and is fully evicted at budget 0 despite sharing priority 3 with topline. Protection is keyed on min_chars, not priority.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Budget Exhaustion Test: verify user_content_budget hits 0 and assemble_within_budget still includes a priority-3 block (topline/spectral) over lower-priority blocks.",
+      "disposition": "Implemented her test at the exact target layer. New prompt_budget.rs regression zero_budget_keeps_protected_floors_and_is_never_empty exercises assemble_within_budget with budget 0 and the real dialogue block shape: journal/topline/agenda retain their floors, output is non-empty, and topline(pri 3, min 360) survives while spectral(pri 3, min 0) is evicted. Passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "History Truncation Verification: minime_said exceeding trim_len should slice minime_excerpt (L862) correctly and NEXT: line stripping (L872-880) should work.",
+      "disposition": "Behavior verified in source: L862 minime_excerpt = chars().take(trim_len).collect(); L875-880 strips lines whose trimmed start is 'NEXT:' before the char take. A dedicated unit test needs a testable seam extracted from the inline async generate_dialogue (being-facing dialogue-assembly code); I deliberately do not refactor that in this non-live headless run. Test-add deferred; behavior is correct as written.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: verify the priority-based selection inside assemble_within_budget handles user_content_budget == 0 gracefully.",
+      "disposition": "Answered. Source analysis shows the zero-budget path retains the min_chars floors and never empties the prompt, and the new regression pins it. The one honest correction: 'gracefully' does not mean every named-critical block survives — spectral (min_chars 0) does not. Whether spectral should get a floor is a being-facing prompt-assembly design change (Tier 5); not made here.",
+      "classification": "implemented_now"
+    }
+  ]
+}

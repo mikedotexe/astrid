@@ -1,0 +1,90 @@
+{
+  "round": "claude-heartbeat_1788493712_dialogue_zero_budget_grounding",
+  "actor": "claude-heartbeat",
+  "adapter_mode": true,
+  "controller": {
+    "run_id": "run_1788489762212877000_5efc3b134d",
+    "preprojection_generation_id": "projection_1788489770639213000_8e5a1b8ea5",
+    "pause_generation": 331,
+    "note": "Adapter (subprocess run) owns the lease/heartbeats; no session opened, no NDJSON ops, no finish op sent by this process. Exit code is the finish outcome."
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_llm_1788483436",
+    "close_status": "addressed_change",
+    "proof_missing_claims": [],
+    "evidence_links_new": 10,
+    "processed_report_count": 1
+  },
+  "focused_tests": {
+    "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib prompt_budget",
+    "passed": 7,
+    "failed": 0,
+    "new_test": "prompt_budget::tests::zero_budget_keeps_protected_floors_and_is_never_empty",
+    "fmt_check": "clean (rustfmt applied to the single touched file; --check exits 0)",
+    "git_diff_check": "clean"
+  },
+  "integrity_suites": {
+    "addressing_self_test": "44 passed",
+    "test_evidence_event_store": "21 passed",
+    "test_steward_control": "27 passed",
+    "test_steward_projection": "14 passed",
+    "test_division_ceremony_followup": "3 passed",
+    "test_division_ceremony_chronicle": "10 passed",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 passed",
+    "anti_drop_self_test": "5 passed",
+    "anti_drop_verify": "99 rows, 0 non-ok",
+    "test_introspection_cadence_audit": "6 passed",
+    "introspection_cadence_audit_strict": "integrity_ok=true, duplicate_hash_group_count=0",
+    "domain_boundary_audit_verify": "valid=true, violation_count=0 (no red ratchet; prompt_budget.rs grew to 597 lines, under the 1000-line threshold)",
+    "experiential_epistemics_self_test": "2 passed, valid=true",
+    "experiential_epistemics_verify_FINAL": "valid=true, issue_count=0, checked_record_count=11809, history_rewritten=false",
+    "audit_counters": "status=consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true",
+    "evidence_event_store_status": "SKIPPED — read-only status scan exceeded the 10-min tool timeout at current store size; redundant with verify (valid=true). Head read directly from head.json below.",
+    "division_followup_verify": "ok=true, review_due=false, 2/6 rounds",
+    "division_chronicle_verify": "ok=true, durable_inputs_current=true, durable_mismatches=[], volatile_mismatches=[supervisor_status_sha256]"
+  },
+  "division": {
+    "round_recorded": true,
+    "record_round_event_id": "division_followup_event_3ee6b3b4db00fa21be3602502cb611c6",
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "followup_event_count": 283,
+    "followup_event_head_sha256": "f94f01632499fdd900ea81459edeccbdcff899f99b40d94b6eb4ed3d3bb01496",
+    "chronicle_reprojected": true,
+    "chronicle_id": "division_chronicle_534d3be29946672d3456aeb7",
+    "chronicle_json_sha256": "4c2670257dedaf55d2a01a7aef495152140ac035d2aae3321774aa78573f0d79",
+    "chronicle_html_sha256": "4ee5ee0b9631b338d82f251aea9e4dc5dcc9e29a2e282eb9c9e62d9fd30d1458"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 992296,
+    "last_event_sha256": "f8b4a14e07fe2e6a63cbf0472c040222dae8b162c98084c58b1abfb8d1e19c12",
+    "legacy_imported_global_seq": 32278,
+    "addressing_stream_seq": 60489,
+    "active_store": "v2"
+  },
+  "canonical_counters": {
+    "indexed": 4583,
+    "fully_addressed": 3191,
+    "full_read": 3822,
+    "remaining": 1392,
+    "unread": 761,
+    "blocked_needs_steward": 416,
+    "triaged_pending_action": 211,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3098,
+    "noncanonical_pending": 1706
+  },
+  "live_change": "none — no build, restart, deploy, launchctl, or live substrate/control change; adapter-mode git read-only (no staging/commit/merge/push).",
+  "commit_debt_git_tracked": [
+    "CHANGELOG.md",
+    "capsules/spectral-bridge/src/prompt_budget.rs",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "docs/steward-notes/claude-heartbeat_1788493712_dialogue_zero_budget_grounding/ (untracked packet)"
+  ],
+  "foreign_work_preserved": "Minime's esn.rs/runtime.py/test_correspondence_v1.py were dirty at run start and were resolved by the other agent during this run; never touched here. Re-projected chronicle_v1.json/html are gitignored in minime (no commit debt)."
+}

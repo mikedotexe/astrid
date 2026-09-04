@@ -1,0 +1,74 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "generate_dialogue L763; gradual-fade history assembly L836-891."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "overhead L896; user_content_budget double saturating_sub L898-900."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "attended_* cap/min helpers L147-202 and DIALOGUE_* constants L270-292 that drive PromptBlock caps/floors."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "user_content_budget can floor at 0 via chained saturating_sub L898-900."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/prompt_budget.rs",
+      "note": "assemble_within_budget L68-212: min_chars floors retain protected prefixes at budget 0; min-0 blocks (spectral) move to overflow; never empty."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/prompt_budget.rs",
+      "note": "New regression zero_budget_keeps_protected_floors_and_is_never_empty pins her Budget Exhaustion Test at budget 0."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "minime_excerpt slice L862; NEXT: line stripping L875-880 — verified correct in source; dedicated test deferred (needs seam extraction)."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/prompt_budget.rs",
+      "note": "Suggested Next answered: zero-budget graceful handling verified and pinned by the new regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the zero-budget regression and the min_chars-vs-priority finding."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788483436",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row: her budget-exhaustion snag -> source-verified graceful handling + spectral-floor correction + regression."
+    }
+  ]
+}

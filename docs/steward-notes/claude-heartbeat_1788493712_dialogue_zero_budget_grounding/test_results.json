@@ -1,0 +1,21 @@
+{
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib prompt_budget",
+      "result": "ok",
+      "passed": 7,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 1950,
+      "new_test": "prompt_budget::tests::zero_budget_keeps_protected_floors_and_is_never_empty",
+      "note": "All 7 prompt_budget tests pass, including the new zero-budget regression."
+    }
+  ],
+  "formatting": [
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "clean_after_rustfmt",
+      "note": "rustfmt applied to the single touched file; --check now exits 0."
+    }
+  ]
+}

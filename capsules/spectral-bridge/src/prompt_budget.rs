@@ -482,4 +482,116 @@ mod tests {
 
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    /// Regression for Astrid's introspection `introspection_astrid_llm_1788483436`.
+    ///
+    /// Her snag: in `dialogue_runtime.rs` the `user_content_budget` is computed
+    /// with a double `saturating_sub` (L898-900), so it can hit 0. She asked
+    /// whether `assemble_within_budget` handles a zero budget "gracefully by
+    /// prioritizing the most critical blocks" or instead leaves the model with
+    /// "an empty or severely truncated prompt".
+    ///
+    /// This pins the actual behavior at `budget == 0` using the real dialogue
+    /// block shape: the `min_chars` floors keep a prefix of each protected block,
+    /// so the assembled prompt is never empty. It also grounds the report's
+    /// mechanism correction — protection is keyed on `min_chars`, not priority:
+    /// "spectral" (priority 3, `min_chars` 0) is fully evicted while "topline"
+    /// (priority 3, `min_chars` 360) survives, even though they share priority.
+    #[test]
+    fn zero_budget_keeps_protected_floors_and_is_never_empty() {
+        let dir =
+            std::env::temp_dir().join(format!("prompt_budget_test_zero_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+
+        // Subset of `generate_dialogue`'s blocks with their production
+        // priorities and min_chars floors (see prompt_contracts.rs):
+        //   journal  priority 1, min 700  (floor-protected)
+        //   spectral priority 3, min 0    (evictable)
+        //   topline  priority 3, min 360  (floor-protected, cap == min)
+        //   agenda   priority 3, min 320  (floor-protected)
+        let blocks = vec![
+            PromptBlock {
+                label: "spectral",
+                content: "S".repeat(2000),
+                priority: 3,
+                min_chars: 0,
+            },
+            PromptBlock {
+                label: "journal",
+                content: "J".repeat(2400),
+                priority: 1,
+                min_chars: 700,
+            },
+            PromptBlock {
+                label: "topline",
+                content: "T".repeat(360),
+                priority: 3,
+                min_chars: 360,
+            },
+            PromptBlock {
+                label: "agenda",
+                content: "A".repeat(700),
+                priority: 3,
+                min_chars: 320,
+            },
+        ];
+
+        let (assembled, overflow, report) = assemble_within_budget(blocks, 0, &dir);
+
+        // Graceful handling: even at budget 0 the prompt is never empty — the
+        // floor-protected blocks retain at least their min_chars prefix.
+        assert!(
+            !assembled.is_empty(),
+            "budget 0 must not yield an empty prompt"
+        );
+        assert!(
+            assembled.contains(&"J".repeat(700)),
+            "journal floor (700) kept"
+        );
+        assert!(
+            assembled.contains(&"T".repeat(360)),
+            "topline floor (360) kept"
+        );
+        assert!(
+            assembled.contains(&"A".repeat(320)),
+            "agenda floor (320) kept"
+        );
+
+        // Mechanism correction: "spectral" shares priority 3 with "topline" but
+        // has no floor (min_chars 0), so it is fully moved to overflow at
+        // budget 0 — protection is by min_chars, not priority.
+        assert!(
+            !assembled.contains(&"S".repeat(2000)),
+            "spectral fully evicted"
+        );
+        assert!(
+            assembled.contains("spectral context"),
+            "spectral overflow notice present"
+        );
+
+        let of = overflow.expect("overflow must exist at budget 0");
+        assert!(of.path.exists());
+        assert!(of.summary.contains("spectral"));
+
+        let report = report.expect("budget report must exist at budget 0");
+        assert!(
+            report.total_after > 0,
+            "assembled content survives at budget 0"
+        );
+        assert!(
+            report
+                .trimmed_blocks
+                .iter()
+                .any(|block| block.label == "spectral" && block.fully_removed),
+            "spectral (no floor) fully removed: {report:?}"
+        );
+        assert!(
+            report.trimmed_blocks.iter().any(|block| {
+                block.label == "journal" && !block.fully_removed && block.kept_chars >= 700
+            }),
+            "journal retains its 700-char floor: {report:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

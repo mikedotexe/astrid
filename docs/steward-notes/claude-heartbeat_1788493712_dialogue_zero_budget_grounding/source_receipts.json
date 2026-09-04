@@ -1,0 +1,30 @@
+{
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "sha256": "d9070beb523bdb2795ef714723c9142d276b858ae19cf2bc54dc904bae5a985d",
+    "total_lines": 1134,
+    "total_bytes": 42174,
+    "report_bound_sha256": "d9070beb523bdb2795ef714723c9142d276b858ae19cf2bc54dc904bae5a985d",
+    "hash_match": true,
+    "read_scope": "Lines 755-1134 read in full (the entire generate_dialogue fn and its budget/PromptBlock/assemble path, covering every cited line L763, L836-853, L860-891, L893-900, L904, L914-995, L1010). Lines 1-754 not read: no cited claim references them. Whole-file SHA matches the report binding, so the read bytes are authentic and complete for the window."
+  },
+  "adjacent_evidence": [
+    {
+      "path": "capsules/spectral-bridge/src/prompt_budget.rs",
+      "sha256_at_analysis_git_head": "72b12f442347ceb7e6dd50e5ddb4809ad99cda4554b02a07b048542bcc41d4e2",
+      "sha256_working_copy_after_test_add": "d2480fa6c9db263b4e3e5d5e31544efe7da012cece066a33c21db10786d9e66e",
+      "total_lines_after_edit": 597,
+      "total_bytes_after_edit": 21422,
+      "read_scope": "Complete file read (1-485 at analysis time). assemble_within_budget (fn body L68-212) is the exact target of the report's snag and was read in full and unchanged by this round's edit; only a test was appended to the #[cfg(test)] module.",
+      "note": "This is the function Astrid's snag names ('assemble_within_budget logic (L904)'). Grounds the zero-budget disposition."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "4a00787c9802eb46884f76ec8171af11f1a1fd9e2d0169e03d8cd7ed098b6c3e",
+      "total_lines": 399,
+      "total_bytes": 39271,
+      "read_scope": "Lines 140-299 read: the attended_* cap/min helpers and the DIALOGUE_* constants. Establishes the exact per-block min_chars floors: journal 700, direct_perception 900, topline 360 (== cap), agenda 320; spectral min 0.",
+      "note": "Grounds the mechanism correction that protection is keyed on min_chars, not priority."
+    }
+  ]
+}
