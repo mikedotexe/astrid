@@ -5202,6 +5202,150 @@ class DomainBoundaryViolationsTests(unittest.TestCase):
         self.assertEqual(finding["severity"], "notice")
 
 
+def _bridge_release_binary_path() -> Path:
+    return ASTRID_REPO / "capsules/spectral-bridge/target/release/spectral-bridge-server"
+
+
+def _bridge_build_manifest_path() -> Path:
+    return ASTRID_REPO / "capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json"
+
+
+def probe_ungated_bridge_binary(_prior: dict[str, Any]) -> dict[str, Any]:
+    """The 2026-09-03 loaded gun: a bare `cargo build --release` in the main
+    tree (never attributed) left a release binary on disk that the gate had
+    NOT built — it captured a mid-session, pre-verification C6 draft carrying
+    28 later-confirmed defects — and launchd's wrapper execs exactly that path,
+    so any kickstart/reboot would have deployed it. build_bridge.sh cannot
+    stop a bare cargo build; what it CAN do is leave a manifest recording the
+    sha256 it actually built. This probe compares the binary on disk against
+    that record and warns on any mismatch, so an ungated build is witnessed
+    within six hours instead of at the next restart."""
+    import hashlib
+    from datetime import datetime
+
+    binary = _bridge_release_binary_path()
+    manifest_path = _bridge_build_manifest_path()
+    if not binary.is_file():
+        return _finding(
+            "ungated_bridge_binary", "notice", "no release bridge binary on disk"
+        )
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return _finding(
+            "ungated_bridge_binary",
+            "warning",
+            "⚠ a release bridge binary exists but no build manifest does — the "
+            "gate did not build it; the next kickstart would deploy unverified code. "
+            "Rebuild via `bash scripts/build_bridge.sh` (add --restart only as a "
+            "deliberate deploy)",
+        )
+    recorded = (
+        ((manifest.get("artifacts") or {}).get("spectral-bridge") or {}).get("sha256")
+    )
+    actual = hashlib.sha256(binary.read_bytes()).hexdigest()
+    built_at = manifest.get("built_at")
+    try:
+        built_epoch = datetime.fromisoformat(str(built_at)).timestamp()
+    except (TypeError, ValueError):
+        built_epoch = None
+    binary_mtime = binary.stat().st_mtime
+    snapshot = {
+        "binary_sha256": actual[:16],
+        "manifest_sha256": (recorded or "")[:16],
+        "manifest_actor": manifest.get("actor"),
+        "built_at": built_at,
+    }
+    if recorded and actual != recorded:
+        return _finding(
+            "ungated_bridge_binary",
+            "warning",
+            "⚠ the on-disk release bridge binary does NOT match the build the gate "
+            f"recorded (manifest by {manifest.get('actor')} at {built_at}) — it was "
+            "built outside build_bridge.sh and the next kickstart/reboot would deploy "
+            "it unverified. Rebuild via `bash scripts/build_bridge.sh` to disarm",
+            snapshot=snapshot,
+        )
+    if not recorded and built_epoch is not None and binary_mtime > built_epoch + 120:
+        return _finding(
+            "ungated_bridge_binary",
+            "warning",
+            "⚠ release bridge binary is newer than the gate's last recorded build "
+            f"({built_at}) and the manifest carries no sha to compare — treat as "
+            "ungated; rebuild via `bash scripts/build_bridge.sh`",
+            snapshot=snapshot,
+        )
+    return _finding(
+        "ungated_bridge_binary",
+        "ok",
+        f"release bridge binary matches the gate's record (built by "
+        f"{manifest.get('actor')} at {built_at})",
+        snapshot=snapshot,
+    )
+
+
+class UngatedBridgeBinaryTests(unittest.TestCase):
+    def _fixture(self, *, manifest: bool = True, match: bool = True):
+        import hashlib
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="ungated_bin_"))
+        binary = root / "spectral-bridge-server"
+        binary.write_bytes(b"verified-build-bytes")
+        manifest_path = root / "spectral-bridge.json"
+        if manifest:
+            sha = hashlib.sha256(b"verified-build-bytes").hexdigest()
+            if not match:
+                sha = hashlib.sha256(b"something-the-gate-never-built").hexdigest()
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "actor": "test-gate",
+                        "built_at": "2026-09-04T00:09:26+00:00",
+                        "artifacts": {"spectral-bridge": {"sha256": sha}},
+                    }
+                ),
+                encoding="utf-8",
+            )
+        return binary, manifest_path
+
+    def _run(self, binary: Path, manifest_path: Path) -> dict[str, Any]:
+        saved = (
+            globals()["_bridge_release_binary_path"],
+            globals()["_bridge_build_manifest_path"],
+        )
+        try:
+            globals()["_bridge_release_binary_path"] = lambda: binary
+            globals()["_bridge_build_manifest_path"] = lambda: manifest_path
+            return probe_ungated_bridge_binary({})
+        finally:
+            (
+                globals()["_bridge_release_binary_path"],
+                globals()["_bridge_build_manifest_path"],
+            ) = saved
+
+    def test_gated_build_reads_ok(self):
+        finding = self._run(*self._fixture())
+        self.assertEqual(finding["severity"], "ok")
+
+    def test_binary_the_gate_never_built_warns(self):
+        # The 2026-09-03 shape: bytes on disk that no manifest sha vouches for.
+        finding = self._run(*self._fixture(match=False))
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("outside build_bridge.sh", finding["summary"])
+
+    def test_missing_manifest_warns(self):
+        finding = self._run(*self._fixture(manifest=False))
+        self.assertEqual(finding["severity"], "warning")
+
+    def test_missing_binary_is_a_notice(self):
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="ungated_none_"))
+        finding = self._run(root / "absent", root / "absent.json")
+        self.assertEqual(finding["severity"], "notice")
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -5243,6 +5387,7 @@ BLIND_SPOT_PROBES = [
     ("agenda_mode_health", probe_agenda_mode_health),
     ("hard_recovery_witness", probe_hard_recovery_witness),
     ("domain_boundary_violations", probe_domain_boundary_violations),
+    ("ungated_bridge_binary", probe_ungated_bridge_binary),
 ]
 
 
@@ -8420,6 +8565,7 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(StuckRepetitionTests))
     suite.addTests(loader.loadTestsFromTestCase(StatedParamIntentTests))
     suite.addTests(loader.loadTestsFromTestCase(DomainBoundaryViolationsTests))
+    suite.addTests(loader.loadTestsFromTestCase(UngatedBridgeBinaryTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1

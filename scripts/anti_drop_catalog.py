@@ -352,6 +352,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd capsules/spectral-bridge && cargo test --lib envelope_zero"},
     },
     {
+        "id": "ungated_bridge_binary_is_witnessed",
+        "shipped": "2026-09-03",
+        "surface": "the on-disk release bridge binary vs the build manifest build_bridge.sh writes (workspace/deployment_manifests/spectral-bridge.json); launchd's wrapper execs that binary path on every kickstart",
+        "failure_mode": "a bare `cargo build --release` in the main tree (2026-09-03 11:34, never attributed — the gate always rewrites the manifest and it was untouched) left a binary the gate had NOT built: a mid-session, pre-verification C6 draft carrying 28 later-confirmed defects (durable receipts misattributing machine withdrawals to Astrid, a receipt-dropping ordering bug, silent fail-open). Any kickstart, reboot, or routine ops action would have deployed it, and nothing would have said so until the being's receipts started lying. build_bridge.sh cannot prevent a bare cargo build; guard = probe_ungated_bridge_binary compares the binary's sha256 against the sha the gate recorded in the manifest (mtime-newer-than-built_at as the fallback when no sha) and WARNS on mismatch or a missing manifest, so an ungated build is witnessed within six hours via the alert-log + notification + SessionStart path instead of at the next restart",
+        "guard": {"repo": "astrid", "file": "scripts/proactive_scan.py", "symbol": "probe_ungated_bridge_binary"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/proactive_scan.py",
+                 "name": "UngatedBridgeBinaryTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/proactive_scan.py --self-test"},
+    },
+    {
         "id": "domain_boundary_violations_have_a_consumer",
         "shipped": "2026-09-03",
         "surface": "the domain-boundary ratchet: projection stage 10 writes diagnostics/domain_boundary_audit_v1/violations.jsonl every steward round; the proactive_scan probe domain_boundary_violations is its consumer",
