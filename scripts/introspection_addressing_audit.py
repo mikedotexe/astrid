@@ -97,11 +97,13 @@ WORK_STATUSES = {
     "needs_steward_grant",
     "needs_operator_approval",
     "implemented_awaiting_felt_response",
+    "closed_envelope_granted",
     "closed_felt_confirmed",
     "closed_no_action",
     "superseded",
 }
 WORK_TERMINAL_STATUSES = {
+    "closed_envelope_granted",
     "closed_felt_confirmed",
     "closed_no_action",
     "superseded",

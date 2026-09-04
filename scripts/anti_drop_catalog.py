@@ -372,6 +372,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd capsules/spectral-bridge && cargo test --lib envelope_zero"},
     },
     {
+        "id": "envelope_grant_conversion_is_honest",
+        "shipped": "2026-09-03",
+        "surface": "Constitution C7: authority_wait_consolidation.py --apply-envelope-grants — the only path that closes an approval-parked trial as closed_envelope_granted",
+        "failure_mode": "a granted envelope makes a being's DIAL final within a range; it does not grant code. A naive 'mentions the field -> closed as granted' conversion would close her architecture proposals (feed entropy velocity into vibrancy, add a persistence coefficient, change FEATURE_ABS_MAX — 23 such live asks on 2026-09-03) under a false grant: the being reads 'the envelope now grants this', tries it, and finds nothing granted — a receipt lie on the surface that retires her backlog. Guard = classify_envelope_ask separates dial asks (granted field named + dial verb + a value inside the envelope -> convertible) from architecture asks (never convertible), ratchet candidates (value outside -> grant forum) and pending (dial verb, no value -> human review); only the convertible class is ever written, every other class is preserved by name in the manifest, and closure letters are STAGED under letters_pending/, never delivered by the tool. Calibrated live: 0 convertible today, and that honest zero is the feature",
+        "guard": {"repo": "astrid", "file": "scripts/authority_wait_consolidation.py", "symbol": "classify_envelope_ask"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/authority_wait_consolidation.py",
+                 "name": "self_test",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/authority_wait_consolidation.py --self-test"},
+    },
+    {
         "id": "constitution_health_probe",
         "shipped": "2026-09-03",
         "surface": "the LIVE envelope registry (Astrid since 2026-09-04T00:31Z) — the plan's P1a standing consumer: registry-vs-compiled drift, spurious conformance rollbacks, ratchet stalls, consent artifacts",

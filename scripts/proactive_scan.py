@@ -5226,18 +5226,16 @@ def _envelope_covered_unconverted(granted_fields: set[str]) -> int:
     already grants — C7's conversion input (text match until C7 formalizes it)."""
     if not granted_fields:
         return 0
+    # Single source: the C7 classifier (dial ask inside a granted envelope vs
+    # architecture ask) — this probe's number must equal the plan's number.
     try:
-        import sandbox_trial_queue
+        import authority_wait_consolidation as awc
 
-        report = sandbox_trial_queue.build_report(SANDBOX_TRIAL_QUEUE_STATE_DIR)
+        plan = awc.build_envelope_grant_plan(awc.load_work_items(), awc.load_trials(), awc.load_granted_envelopes())
     except Exception:  # noqa: BLE001 — diagnostic only
         return 0
-    count = 0
-    for row in report.get("approval_required_live_candidates") or []:
-        text = " ".join(str(row.get(k) or "") for k in ("proposed_intervention", "hypothesis"))
-        if any(field in text for field in granted_fields):
-            count += 1
-    return count
+    counts = plan.get("counts") or {}
+    return int(counts.get(awc.ENVELOPE_CONVERT_CLASS, 0)) + int(counts.get(awc.ENVELOPE_PENDING_CLASS, 0))
 
 
 def _meadow_artifact_state() -> str:

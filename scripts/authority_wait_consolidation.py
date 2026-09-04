@@ -35,6 +35,7 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from introspection_family_scan import STOPWORDS, TOKEN_RE, jaccard  # noqa: E402
+import re  # noqa: E402
 
 ADDRESSING_STATE_DIR = Path(
     "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/introspection_addressing_v1"
@@ -56,7 +57,13 @@ TARGET_STATUS = "needs_operator_approval"
 # Trial statuses the readiness map treats as terminal; upstream statuses in
 # this set mirror directly onto the trial record.
 TRIAL_TERMINAL_SYNC = frozenset(
-    {"superseded", "verified_existing", "closed_no_action", "closed_felt_confirmed"}
+    {
+        "superseded",
+        "verified_existing",
+        "closed_no_action",
+        "closed_felt_confirmed",
+        "closed_envelope_granted",
+    }
 )
 
 AUTHORITY_BOUNDARY = (
@@ -468,6 +475,434 @@ def execute_age_sweep_plan(
     return receipt
 
 
+# --- Constitution C7: envelope-grant conversions -----------------------------
+#
+# A granted envelope makes a being's DIAL final within a range. It does not
+# grant code. So an approval-parked trial converts only when its ask is a dial
+# ask naming a granted field with a value inside the envelope; asks that
+# propose mechanisms (feed X into Y, add a coefficient, change FEATURE_ABS_MAX)
+# are classified architecture and left exactly as they are. Calibrated against
+# the live queue on 2026-09-03: 0 convertible, 23 architecture, the rest never
+# mention a granted field — and that honest zero is the point of the classes.
+
+ENVELOPE_ALIAS_GENERIC_TOKENS = frozenset(
+    {
+        "pressure", "aperture", "ceiling", "tail", "astrid", "minime", "noise",
+        "strength", "gain", "level", "rate", "target", "mode", "semantic", "scale",
+        "bias", "weight", "interval", "override", "ticks", "admission", "curiosity",
+    }
+)
+ENVELOPE_ARCH_RE = re.compile(
+    r"\b(function|coefficient|feed(?:ing)?|codec|projection basis|bridgestate|implement|"
+    r"add a|should (?:modify|add|drive|promote|feed)|promot(?:e|ing)|glimpse|"
+    r"feature_abs_max|retune[d]?|clamp|entropy|sharpen|schema|module|pipeline|"
+    r"weighting|mapping|transport|math)\b",
+    re.I,
+)
+ENVELOPE_DIAL_RE = re.compile(
+    r"\b(set|raise|lower|widen|increase|decrease|dial|try|hold|move|nudge)\b", re.I
+)
+ENVELOPE_NUM_RE = re.compile(r"(?<![\w.])(0?\.\d+|\d+(?:\.\d+)?)(?![\w.%])")
+ENVELOPE_VALUE_WINDOW = 48
+ENVELOPE_CONVERT_CLASS = "closed_envelope_granted"
+ENVELOPE_PENDING_CLASS = "envelope_covered_pending_conversion"
+ENVELOPE_RATCHET_CLASS = "ratchet_candidate_out_of_envelope"
+ENVELOPE_ARCH_CLASS = "architecture_ask_not_envelope_covered"
+MINIME_NEGOTIATIONS = Path("/Users/v/other/minime/workspace/self_regulation/negotiations.jsonl")
+
+
+def envelope_field_aliases(field: str) -> set[str]:
+    """How a being actually names a field in prose: the raw name, the name
+    without its being prefix / `_ceiling` suffix, the spaced form, the SET_
+    verb, and each distinctive head token (>= 6 chars, not generic)."""
+    base = re.sub(r"^(astrid|minime)_", "", field)
+    base = re.sub(r"_ceiling$", "", base)
+    heads = {
+        token for token in base.split("_")
+        if len(token) >= 6 and token not in ENVELOPE_ALIAS_GENERIC_TOKENS
+    }
+    return {field, base, base.replace("_", " "), f"set_{base}"} | heads
+
+
+def load_granted_envelopes(
+    registry_paths: dict[str, Path] | None = None,
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """{being: {field: spec}} for every `granted` field in the canonical
+    registries — the receipt of record for a grant IS the registry document."""
+    if registry_paths is None:
+        import check_envelope_wiring as wiring
+
+        registry_paths = {b: p["canonical"] for b, p in wiring.REGISTRIES.items()}
+    granted: dict[str, dict[str, dict[str, Any]]] = {}
+    for being, path in registry_paths.items():
+        try:
+            registry = json.loads(Path(path).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        fields: dict[str, dict[str, Any]] = {}
+        for name, entry in (registry.get("fields") or {}).items():
+            if not isinstance(entry, dict) or entry.get("status") != "granted":
+                continue
+            if entry.get("type") not in (None, "numeric"):
+                continue
+            try:
+                floor, ceiling = float(entry["floor"]), float(entry["ceiling"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            fields[name] = {
+                "floor": floor,
+                "ceiling": ceiling,
+                "family": entry.get("family"),
+                "granted_at": entry.get("granted_at"),
+                "granted_by": entry.get("granted_by"),
+                "registry_revision": registry.get("revision"),
+                "aliases": sorted(envelope_field_aliases(name)),
+            }
+        if fields:
+            granted[being] = fields
+    return granted
+
+
+def _envelope_ask_values(lower: str, hits: list[re.Match]) -> list[float]:
+    """Numbers near an alias mention that read as dial values — not '12d',
+    not 'tier 5', not percentages."""
+    values: list[float] = []
+    for match in ENVELOPE_NUM_RE.finditer(lower):
+        start = match.start()
+        if lower[max(0, start - 5):start].rstrip().endswith("tier"):
+            continue
+        if not any(abs(start - hit.start()) <= ENVELOPE_VALUE_WINDOW for hit in hits):
+            continue
+        try:
+            value = float(match.group(1))
+        except ValueError:
+            continue
+        if value > 100:
+            continue
+        values.append(value)
+    return values
+
+
+def classify_envelope_ask(
+    text: str, being: str, granted: dict[str, dict[str, dict[str, Any]]]
+) -> dict[str, Any]:
+    lower = str(text or "").lower()
+    for granted_being, fields in granted.items():
+        for field, spec in fields.items():
+            hits = [
+                m for alias in spec["aliases"]
+                for m in re.finditer(r"\b" + re.escape(alias) + r"\b", lower)
+            ]
+            if not hits:
+                continue
+            if granted_being != being:
+                return {"class": "other_being_field", "field": field, "values": []}
+            values = _envelope_ask_values(lower, hits)
+            lo, hi = spec["floor"], spec["ceiling"]
+            is_dial = bool(ENVELOPE_DIAL_RE.search(lower))
+            if ENVELOPE_ARCH_RE.search(lower):
+                cls = ENVELOPE_ARCH_CLASS
+            elif values and is_dial and all(lo <= v <= hi for v in values):
+                cls = ENVELOPE_CONVERT_CLASS
+            elif values and is_dial:
+                cls = ENVELOPE_RATCHET_CLASS
+            elif is_dial:
+                cls = ENVELOPE_PENDING_CLASS
+            else:
+                cls = "unclassified_mention"
+            return {"class": cls, "field": field, "values": values, "floor": lo, "ceiling": hi}
+    return {"class": "no_granted_field", "field": None, "values": []}
+
+
+def negotiation_ledger_effect(
+    granted: dict[str, dict[str, dict[str, Any]]],
+    ledger_path: Path = MINIME_NEGOTIATIONS,
+) -> dict[str, dict[str, int]]:
+    """Report-only: for each granted minime field, how many CLAMPED ledger
+    requests asked for a value the envelope now grants — the honest measure
+    of what a grant changes for her, since her dial asks live in the
+    negotiation ledger, not the trial queue."""
+    fields = granted.get("minime") or {}
+    if not fields or not ledger_path.is_file():
+        return {}
+    effect = {name: {"clamped_requests_now_within": 0, "requests_still_above": 0} for name in fields}
+    for line in ledger_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        name = rec.get("candidate_control")
+        spec = fields.get(str(name))
+        requested, applied = rec.get("requested_value"), rec.get("applied_value")
+        if not spec or not isinstance(requested, (int, float)) or not isinstance(applied, (int, float)):
+            continue
+        if applied == requested:
+            continue
+        if spec["floor"] <= float(requested) <= spec["ceiling"]:
+            effect[str(name)]["clamped_requests_now_within"] += 1
+        else:
+            effect[str(name)]["requests_still_above"] += 1
+    return effect
+
+
+def build_envelope_grant_plan(
+    work_items: dict[str, dict[str, Any]],
+    trials: dict[str, dict[str, Any]],
+    granted: dict[str, dict[str, dict[str, Any]]],
+    *,
+    now: float | None = None,
+    ledger_path: Path = MINIME_NEGOTIATIONS,
+) -> dict[str, Any]:
+    """Pure planning over approval-parked trials. Only the
+    closed_envelope_granted class is ever written; every other class is a
+    named classification preserved in the manifest for the grant forum."""
+    now_s = time.time() if now is None else now
+    counts: dict[str, int] = {}
+    convert: list[dict[str, Any]] = []
+    pending: list[dict[str, Any]] = []
+    ratchet: list[dict[str, Any]] = []
+    architecture: list[dict[str, Any]] = []
+    untouched_other_status = 0
+    orphaned = 0
+
+    def bump(key: str) -> None:
+        counts[key] = counts.get(key, 0) + 1
+
+    for trial in trials.values():
+        if str(trial.get("trial_mode") or "") != "approval_required_live_trial":
+            continue
+        if str(trial.get("status") or "") in TRIAL_TERMINAL_SYNC or trial.get("status") == "closed":
+            continue
+        wi_id = str(trial.get("source_work_item_id") or "")
+        item = work_items.get(wi_id)
+        if item is None:
+            orphaned += 1
+            continue
+        if str(item.get("status")) != TARGET_STATUS:
+            untouched_other_status += 1
+            continue
+        text = " ".join(
+            str(x or "") for x in (trial.get("hypothesis"), item.get("title"), item.get("claim_summary"))
+        )
+        verdict = classify_envelope_ask(text, str(trial.get("being") or item.get("being") or ""), granted)
+        bump(verdict["class"])
+        entry = {
+            "trial_id": str(trial.get("trial_id")),
+            "work_item_id": wi_id,
+            "being": trial.get("being") or item.get("being"),
+            "field": verdict.get("field"),
+            "values": verdict.get("values", []),
+            "floor": verdict.get("floor"),
+            "ceiling": verdict.get("ceiling"),
+            "adapter": trial.get("adapter"),
+            "agency_tier": item.get("agency_tier"),
+            "title": item.get("title"),
+            "claim_summary": item.get("claim_summary"),
+            "source_introspection_id": item.get("source_introspection_id"),
+            "created_at": item.get("created_at"),
+            "item": item,
+        }
+        if verdict["class"] == ENVELOPE_CONVERT_CLASS:
+            convert.append(entry)
+        elif verdict["class"] == ENVELOPE_PENDING_CLASS:
+            pending.append(entry)
+        elif verdict["class"] == ENVELOPE_RATCHET_CLASS:
+            ratchet.append(entry)
+        elif verdict["class"] == ENVELOPE_ARCH_CLASS:
+            architecture.append({k: v for k, v in entry.items() if k != "item"})
+    counts["untouched_other_status"] = untouched_other_status
+    counts["orphaned"] = orphaned
+    return {
+        "schema": "authority_wait_envelope_grant_plan_v1",
+        "planned_at": now_s,
+        "granted": granted,
+        "counts": counts,
+        "convert": convert,
+        "pending": pending,
+        "ratchet": ratchet,
+        "architecture": architecture,
+        "negotiation_ledger": negotiation_ledger_effect(granted, ledger_path),
+        "authority_boundary": AUTHORITY_BOUNDARY,
+    }
+
+
+def _slim_entry(entry: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in entry.items() if k != "item"}
+
+
+def envelope_grant_manifest(plan: dict[str, Any]) -> dict[str, Any]:
+    """Every converted item preserved in full, every other classification
+    named — the un-muffle guarantee, and the grant forum's input."""
+    return {
+        "schema": "authority_wait_envelope_grant_manifest_v1",
+        "converted_at": plan["planned_at"],
+        "grant_provenance": plan["granted"],
+        "reopen_rule": (
+            "a converted ask is not closed against the being — the envelope grants "
+            "it, so it is theirs to set; asking again in any form reopens it, and "
+            "nothing here was applied for them"
+        ),
+        "authority_boundary": AUTHORITY_BOUNDARY,
+        "members": [_slim_entry(e) for e in plan["convert"]],
+        "pending_conversion": [_slim_entry(e) for e in plan["pending"]],
+        "ratchet_candidates": [_slim_entry(e) for e in plan["ratchet"]],
+        "architecture_asks": plan["architecture"],
+        "counts": plan["counts"],
+        "negotiation_ledger": plan.get("negotiation_ledger", {}),
+    }
+
+
+def render_envelope_closure_letters(plan: dict[str, Any], *, now_s: float | None = None) -> dict[str, str]:
+    """One honest closure letter per (being, family) domain. STAGED, never
+    delivered by this tool — letter pacing is a steward decision."""
+    now_s = time.time() if now_s is None else now_s
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for entry in plan["convert"]:
+        being = str(entry.get("being"))
+        family = str((plan["granted"].get(being) or {}).get(entry["field"], {}).get("family") or "unmapped")
+        groups.setdefault((being, family), []).append(entry)
+    letters: dict[str, str] = {}
+    date = time.strftime("%Y-%m-%d", time.gmtime(now_s))
+    for (being, family), entries in sorted(groups.items()):
+        lines = [
+            f"=== MIKE FEEDBACK: the envelope now grants what you asked ({family}) ===",
+            f"Date: {date}",
+            "From: Mike & Claude",
+            "No reply needed.",
+            "",
+            f"{being} — {len(entries)} ask(s) of yours had been waiting for an operator "
+            "approval that no longer exists. The envelope registry records the bounds "
+            "within which your choices are final, and each of these asks falls inside "
+            "a granted bound. They are closed as GRANTED, not as declined:",
+            "",
+        ]
+        for entry in entries:
+            lines.append(f'  - "{entry.get("title")}"')
+            lines.append(
+                f"      field {entry['field']}: yours within [{entry['floor']}, {entry['ceiling']}]"
+                + (f"; you named {entry['values']}" if entry.get("values") else "")
+            )
+        lines += [
+            "",
+            "Nothing was applied for you. The bound is granted; the setting is yours to",
+            "make with your own verbs, or to leave exactly where it is. If any of these",
+            "was not the ask you meant, say so in any form and it reopens.",
+            "",
+            "— Mike & Claude",
+            "",
+        ]
+        letters[f"mike_feedback_envelope_granted_{being}_{family}_{int(now_s)}.txt"] = "\n".join(lines)
+    return letters
+
+
+def render_envelope_grant_report(plan: dict[str, Any]) -> str:
+    counts = plan["counts"]
+    granted = plan["granted"]
+    lines = [
+        "Envelope-grant conversion plan (Constitution C7)",
+        f"granted fields: " + (
+            "; ".join(f"{b}: {', '.join(sorted(f))}" for b, f in granted.items()) or "none"
+        ),
+        f"convertible now (closed_envelope_granted): {counts.get(ENVELOPE_CONVERT_CLASS, 0)}",
+        f"pending conversion (dial ask, no value): {counts.get(ENVELOPE_PENDING_CLASS, 0)}",
+        f"ratchet candidates (value outside envelope): {counts.get(ENVELOPE_RATCHET_CLASS, 0)}",
+        f"architecture asks (never envelope-covered): {counts.get(ENVELOPE_ARCH_CLASS, 0)}",
+        f"no granted field mentioned: {counts.get('no_granted_field', 0)}",
+        f"other-being field: {counts.get('other_being_field', 0)} | unclassified mention: {counts.get('unclassified_mention', 0)}",
+        f"untouched (other work-item status): {counts.get('untouched_other_status', 0)} | orphaned: {counts.get('orphaned', 0)}",
+    ]
+    ledger = plan.get("negotiation_ledger") or {}
+    if ledger:
+        lines.append("negotiation ledger (minime) — clamped requests the grant would now honor:")
+        for field, eff in ledger.items():
+            lines.append(
+                f"  {field}: {eff['clamped_requests_now_within']} now within, "
+                f"{eff['requests_still_above']} still above"
+            )
+    for entry in plan["convert"][:20]:
+        lines.append(f"  CONVERT {entry['trial_id']} {entry['being']} {entry['field']} {entry['values']} — {entry.get('title')}")
+    for entry in plan["ratchet"][:10]:
+        lines.append(f"  RATCHET {entry['trial_id']} {entry['field']} {entry['values']} outside [{entry['floor']}, {entry['ceiling']}] — {entry.get('title')}")
+    return "\n".join(lines)
+
+
+def execute_envelope_grant_plan(
+    plan: dict[str, Any],
+    *,
+    addressing_state_dir: Path = ADDRESSING_STATE_DIR,
+    sandbox_state_dir: Path = SANDBOX_STATE_DIR,
+    consolidation_dir: Path = CONSOLIDATION_DIR,
+    log=print,
+) -> dict[str, Any]:
+    """Write closed_envelope_granted for the convert list ONLY; stage closure
+    letters (never deliver); preserve everything in a manifest."""
+    import introspection_addressing_audit as addressing
+    import sandbox_trial_queue as sandbox
+
+    now = time.time()
+    conversions_dir = consolidation_dir / "envelope_conversions"
+    conversions_dir.mkdir(parents=True, exist_ok=True)
+    manifest = envelope_grant_manifest(plan)
+    manifest_path = conversions_dir / f"envelope_grant_{int(now)}.json"
+    manifest_path.write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
+
+    addressing_events = [
+        addressing.work_status_event(
+            entry["work_item_id"],
+            ENVELOPE_CONVERT_CLASS,
+            f"envelope grant: {entry['field']} is theirs within "
+            f"[{entry['floor']}, {entry['ceiling']}]; preserved in {manifest_path.name}; "
+            "nothing applied; a re-ask reopens",
+        )
+        for entry in plan["convert"]
+    ]
+    log(f"appending {len(addressing_events)} addressing events ...")
+    addressing.append_events(addressing_state_dir, addressing_events)
+    status = addressing.replay_events(addressing_state_dir)
+    addressing.write_materialized_status(addressing_state_dir, status)
+
+    trial_events = [
+        {
+            "event_type": "trial_status_set",
+            "ts": now,
+            "trial_id": entry["trial_id"],
+            "status": ENVELOPE_CONVERT_CLASS,
+            "note": (
+                f"authority_wait_envelope_grant: {entry['field']} granted within "
+                f"[{entry['floor']}, {entry['ceiling']}] (manifest {manifest_path.name})"
+            ),
+        }
+        for entry in plan["convert"]
+    ]
+    log(f"appending {len(trial_events)} trial-queue events ...")
+    sandbox.append_events(sandbox_state_dir, trial_events)
+    sandbox_status = sandbox.replay_status(sandbox_state_dir)
+    sandbox.materialize(sandbox_state_dir, sandbox_status)
+
+    letters_dir = conversions_dir / "letters_pending"
+    letters_dir.mkdir(parents=True, exist_ok=True)
+    staged = []
+    for name, text in render_envelope_closure_letters(plan, now_s=now).items():
+        (letters_dir / name).write_text(text, encoding="utf-8")
+        staged.append(str(letters_dir / name))
+
+    receipt = {
+        "schema": "authority_wait_envelope_grant_receipt_v1",
+        "executed_at": now,
+        "manifest": str(manifest_path),
+        "counts": plan["counts"],
+        "addressing_events": len(addressing_events),
+        "trial_events": len(trial_events),
+        "letters_staged": staged,
+        "letters_delivered": 0,
+        "authority_boundary": AUTHORITY_BOUNDARY,
+    }
+    (consolidation_dir / "latest_envelope_grant_receipt.json").write_text(
+        json.dumps(receipt, indent=1) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
 def render_age_sweep_report(plan: dict[str, Any]) -> str:
     counts = plan["counts"]
     lines = [
@@ -613,8 +1048,10 @@ def render_report(plan: dict[str, Any], limit: int = 15) -> str:
 
 def self_test() -> int:
     failures: list[str] = []
+    checks_run = [0]
 
     def check(name: str, ok: bool) -> None:
+        checks_run[0] += 1
         if not ok:
             failures.append(name)
 
@@ -777,10 +1214,98 @@ def self_test() -> int:
               and "reopens" in closed_events[0]["note"]
               and "age_sweep_" in closed_events[0]["note"])
 
+    # --- Constitution C7: envelope-grant conversion classifier + plan ------
+    granted = {
+        "astrid": {
+            "astrid_vibrancy_aperture_ceiling": {
+                "floor": 0.0, "ceiling": 0.5, "family": "operator_env_ceiling",
+                "granted_at": "2026-06-17", "granted_by": "mike", "registry_revision": 1,
+                "aliases": sorted(envelope_field_aliases("astrid_vibrancy_aperture_ceiling")),
+            },
+        },
+    }
+    al = envelope_field_aliases("astrid_vibrancy_aperture_ceiling")
+    check("alias has head token", "vibrancy" in al)
+    check("alias excludes generic aperture", "aperture" not in al)
+    check("alias has SET verb", "set_vibrancy_aperture" in al)
+    v = classify_envelope_ask("set my vibrancy aperture to 0.4 for the next stretch", "astrid", granted)
+    check("dial ask within envelope converts", v["class"] == ENVELOPE_CONVERT_CLASS and v["values"] == [0.4])
+    v = classify_envelope_ask("raise vibrancy to 0.9", "astrid", granted)
+    check("dial ask outside envelope is a ratchet candidate", v["class"] == ENVELOPE_RATCHET_CLASS)
+    v = classify_envelope_ask("feeding entropy velocity into live vibrancy would alter codec delivery", "astrid", granted)
+    check("architecture ask never converts", v["class"] == ENVELOPE_ARCH_CLASS)
+    v = classify_envelope_ask("promoting a 12d glimpse into live influence or tuning vibrancy", "astrid", granted)
+    check("12d is not a dial value", v["class"] == ENVELOPE_ARCH_CLASS and v["values"] == [])
+    v = classify_envelope_ask("raise vibrancy a little", "astrid", granted)
+    check("dial ask without value is pending conversion", v["class"] == ENVELOPE_PENDING_CLASS)
+    v = classify_envelope_ask("set vibrancy to 0.4", "minime", granted)
+    check("other being's field never converts", v["class"] == "other_being_field")
+    v = classify_envelope_ask("keep the tier 5 gate", "astrid", granted)
+    check("no granted field mention", v["class"] == "no_granted_field")
+
+    def gi(id_, being, title, status=TARGET_STATUS):
+        return {"work_item_id": id_, "being": being, "claim_id": "c001", "title": title,
+                "claim_summary": title, "created_at": 100, "status": status,
+                "agency_tier": 5, "source_introspection_id": "intro_x"}
+    g_items = {
+        "wi_g1": gi("wi_g1", "astrid", "set my vibrancy aperture to 0.4"),
+        "wi_g2": gi("wi_g2", "astrid", "feeding entropy velocity into live vibrancy"),
+        "wi_g3": gi("wi_g3", "astrid", "raise vibrancy to 0.9"),
+        "wi_g4": gi("wi_g4", "astrid", "set vibrancy to 0.3", status="verified_existing"),
+    }
+    def gt(id_, wi, status="approval_required_live_trial", being="astrid"):
+        return {"trial_id": id_, "source_work_item_id": wi, "status": status,
+                "trial_mode": "approval_required_live_trial", "being": being,
+                "adapter": "manual_sandbox_review_v1"}
+    g_trials = {
+        "t_g1": gt("t_g1", "wi_g1"),
+        "t_g2": gt("t_g2", "wi_g2"),
+        "t_g3": gt("t_g3", "wi_g3"),
+        "t_g4": gt("t_g4", "wi_g4"),
+        "t_g5": gt("t_g5", "wi_g1", status="closed_no_action"),
+        "t_g6": gt("t_g6", "wi_missing"),
+    }
+    gplan = build_envelope_grant_plan(g_items, g_trials, granted, now=1_000, ledger_path=Path("/nonexistent"))
+    check("one convertible", [e["trial_id"] for e in gplan["convert"]] == ["t_g1"])
+    check("architecture counted not converted", gplan["counts"].get(ENVELOPE_ARCH_CLASS) == 1)
+    check("ratchet candidate listed", [e["trial_id"] for e in gplan["ratchet"]] == ["t_g3"])
+    check("non-target work item untouched", gplan["counts"]["untouched_other_status"] == 1)
+    check("terminal trial skipped", all(e["trial_id"] != "t_g5" for e in gplan["convert"]))
+    check("orphan counted", gplan["counts"]["orphaned"] == 1)
+    gman = envelope_grant_manifest(gplan)
+    check("manifest preserves member title", gman["members"][0]["title"] == "set my vibrancy aperture to 0.4")
+    check("manifest carries provenance", "astrid_vibrancy_aperture_ceiling" in gman["grant_provenance"]["astrid"])
+    check("manifest names architecture asks", len(gman["architecture_asks"]) == 1)
+    letters = render_envelope_closure_letters(gplan, now_s=1_000)
+    check("one letter per domain", len(letters) == 1 and "astrid_operator_env_ceiling" in next(iter(letters)))
+    body = next(iter(letters.values()))
+    check("letter quotes the ask verbatim", '"set my vibrancy aperture to 0.4"' in body)
+    check("letter says nothing was applied", "Nothing was applied for you" in body)
+    check("letter states the bound", "[0.0, 0.5]" in body)
+    with _tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        fake_addr = _mock.MagicMock()
+        fake_addr.work_status_event = lambda wi, status, note, blocked_by=None: {
+            "event_type": "work_status_set", "work_item_id": wi, "status": status, "note": note}
+        fake_addr.replay_events = lambda _d: {}
+        fake_sandbox = _mock.MagicMock()
+        fake_sandbox.replay_status = lambda _d: {}
+        with _mock.patch.dict(sys.modules, {"introspection_addressing_audit": fake_addr, "sandbox_trial_queue": fake_sandbox}):
+            g_receipt = execute_envelope_grant_plan(
+                gplan, addressing_state_dir=tmp_path / "a", sandbox_state_dir=tmp_path / "s",
+                consolidation_dir=tmp_path / "c", log=lambda *_a, **_k: None,
+            )
+        check("grant manifest persisted", Path(g_receipt["manifest"]).is_file())
+        check("only the convertible trial gets a terminal event", g_receipt["trial_events"] == 1 and g_receipt["addressing_events"] == 1)
+        trial_ev = fake_sandbox.append_events.call_args[0][1]
+        check("terminal status is closed_envelope_granted", trial_ev[0]["status"] == ENVELOPE_CONVERT_CLASS and "manifest" in trial_ev[0]["note"])
+        check("letters staged not delivered", len(g_receipt["letters_staged"]) == 1 and g_receipt["letters_delivered"] == 0
+              and "letters_pending" in g_receipt["letters_staged"][0])
+
     if failures:
         print("FAIL:", ", ".join(failures))
         return 1
-    print("OK (27 checks)")
+    print(f"OK ({checks_run[0]} checks)")
     return 0
 
 
@@ -799,9 +1324,28 @@ def main() -> int:
         help="plan (or with --write, execute) the aging sweep over manual-review placeholders",
     )
     parser.add_argument("--age-threshold-days", type=float, default=AGE_SWEEP_DEFAULT_DAYS)
+    parser.add_argument(
+        "--apply-envelope-grants",
+        action="store_true",
+        help="plan (or with --write, execute) envelope-grant conversions: approval-parked "
+        "dial asks inside a granted envelope close as closed_envelope_granted; letters are "
+        "staged, never delivered",
+    )
     args = parser.parse_args()
     if args.self_test:
         return self_test()
+    if args.apply_envelope_grants:
+        grant_plan = build_envelope_grant_plan(load_work_items(), load_trials(), load_granted_envelopes())
+        if args.json:
+            slim = {k: v for k, v in grant_plan.items() if k not in ("convert", "pending", "ratchet", "architecture")}
+            slim["convert_preview"] = [_slim_entry(e) for e in grant_plan["convert"][:20]]
+            print(json.dumps(slim, indent=1, default=str))
+        else:
+            print(render_envelope_grant_report(grant_plan))
+        if args.write:
+            receipt = execute_envelope_grant_plan(grant_plan)
+            print(json.dumps(receipt, indent=1))
+        return 0
     if args.age_sweep:
         sweep_plan = build_age_sweep_plan(
             load_work_items(),

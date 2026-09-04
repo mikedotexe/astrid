@@ -99,6 +99,7 @@ RUNNABLE_ADAPTERS = {
 }
 TRIAL_TERMINAL_STATUSES = {
     "closed",
+    "closed_envelope_granted",
     "closed_felt_confirmed",
     "closed_no_action",
     "superseded",
@@ -2900,6 +2901,7 @@ class SandboxTrialQueueTests(unittest.TestCase):
     def test_terminal_addressing_work_items_do_not_create_trials(self) -> None:
         for terminal_status in (
             "closed",
+            "closed_envelope_granted",
             "closed_felt_confirmed",
             "closed_no_action",
             "superseded",
