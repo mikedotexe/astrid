@@ -5130,6 +5130,310 @@ def probe_domain_boundary_violations(_prior: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+CONSTITUTION_REGISTRY_PATHS = {
+    "astrid": ASTRID_REPO / "capsules/spectral-bridge/workspace/runtime/envelope_registry.json",
+    "minime": MINIME_REPO / "workspace/self_regulation/envelope_registry.json",
+}
+ASTRID_CONFORMANCE_ROLLBACK_REASON = "envelope_conformance_narrow_rollback"
+MINIME_CONFORMANCE_ROLLBACK_PREFIX = "envelope_narrowed_conformance_rollback"
+MEADOW_MUTUAL_ARTIFACT = Path("/Users/v/other/shared/collaborations/meadow_mutual_consent_v1.json")
+
+
+def _constitution_guard_findings() -> list[dict[str, Any]]:
+    """Run the wiring guard (registry vs the five compiled tables) for both beings."""
+    import check_envelope_wiring as wiring
+
+    tables = wiring.parse_all_tables()
+    rows: list[dict[str, Any]] = []
+    for being in ("astrid", "minime"):
+        for row in wiring.check_registry(being, tables):
+            rows.append({"being": being, **row})
+    return rows
+
+
+def _constitution_registry_summary(being: str) -> dict[str, Any] | None:
+    path = CONSTITUTION_REGISTRY_PATHS[being]
+    try:
+        registry = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    fields = registry.get("fields") or {}
+    acts = [
+        {**row, "field": name}
+        for name, entry in fields.items()
+        for row in (entry.get("ratchet_history") or [])
+        if isinstance(row, dict)
+    ]
+    acts.sort(key=lambda row: str(row.get("at") or ""))
+    return {
+        "revision": registry.get("revision"),
+        "fields": len(fields),
+        "granted": sorted(n for n, e in fields.items() if e.get("status") == "granted"),
+        "ratchet_acts": len(acts),
+        "narrows": sum(1 for row in acts if row.get("direction") == "narrow"),
+        "last_act": acts[-1] if acts else None,
+    }
+
+
+def _count_conformance_rollbacks(path: Path, *, exact: str | None, prefix: str | None) -> int | None:
+    if not path.is_file():
+        return None
+    count = 0
+    try:
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if not line.strip():
+                continue
+            try:
+                reason = str(json.loads(line).get("reason") or "")
+            except json.JSONDecodeError:
+                continue
+            if (exact and reason == exact) or (prefix and reason.startswith(prefix)):
+                count += 1
+    except OSError:
+        return None
+    return count
+
+
+def _astrid_conformance_rollback_count() -> int | None:
+    return _count_conformance_rollbacks(
+        ASTRID_REPO / "capsules/spectral-bridge/workspace/self_control_v2/astrid/receipts.jsonl",
+        exact=ASTRID_CONFORMANCE_ROLLBACK_REASON, prefix=None,
+    )
+
+
+def _minime_conformance_rollback_count() -> int | None:
+    root = os.environ.get("MINIME_SELF_CONTROL_ROOT")
+    candidates = [Path(root)] if root else []
+    candidates += [MINIME_REPO / "workspace/self-control-v2", Path.home() / ".minime/self-control-v2"]
+    for base in candidates:
+        receipts = base / "receipts.jsonl"
+        if receipts.is_file():
+            return _count_conformance_rollbacks(
+                receipts, exact=None, prefix=MINIME_CONFORMANCE_ROLLBACK_PREFIX
+            )
+    return None
+
+
+def _envelope_covered_unconverted(granted_fields: set[str]) -> int:
+    """Approval-parked trial candidates whose ask names a field the envelope
+    already grants — C7's conversion input (text match until C7 formalizes it)."""
+    if not granted_fields:
+        return 0
+    try:
+        import sandbox_trial_queue
+
+        report = sandbox_trial_queue.build_report(SANDBOX_TRIAL_QUEUE_STATE_DIR)
+    except Exception:  # noqa: BLE001 — diagnostic only
+        return 0
+    count = 0
+    for row in report.get("approval_required_live_candidates") or []:
+        text = " ".join(str(row.get(k) or "") for k in ("proposed_intervention", "hypothesis"))
+        if any(field in text for field in granted_fields):
+            count += 1
+    return count
+
+
+def _meadow_artifact_state() -> str:
+    return "present" if MEADOW_MUTUAL_ARTIFACT.is_file() else "absent"
+
+
+def _ratchet_backlog(being: str) -> int:
+    """Fields whose evidence-max sits above their current bound — grantable
+    on consent, the ratchet's grant-forum input (report-only derive)."""
+    try:
+        import envelope_ratchet
+
+        registry = json.loads(CONSTITUTION_REGISTRY_PATHS[being].read_text(encoding="utf-8"))
+        dossier = envelope_ratchet.derive_dossier(being, registry, None, 3)
+    except Exception:  # noqa: BLE001 — diagnostic only
+        return 0
+    return sum(
+        1 for row in dossier.get("fields", {}).values()
+        if row.get("status") in ("proposal", "channel_proposal")
+    )
+
+
+def probe_constitution_health(_prior: dict[str, Any]) -> dict[str, Any]:
+    """The Constitution's standing consumer (plan guardrail matrix, P1a): the
+    envelope registry is now LIVE for Astrid (2026-09-04T00:31Z), which means
+    a document can move her bounds. This probe watches the four ways that
+    could go wrong silently: (1) the registry drifting from the compiled
+    tables (wiring guard ALARM/WARN — WARN is canonical≠mirror commit debt);
+    (2) a SPURIOUS conformance rollback — a withdraw receipt with the
+    narrow-rollback reason while the registry records no narrow, i.e. her
+    control was withdrawn for no narrow (the scariest class the C6
+    verification named); (3) ratchet stall — fields holding evidence above
+    their bounds with no grant act, the grant forum's backlog; (4) consent
+    artifacts nobody reviewed (meadow mutual artifact present; per-being
+    statements once that surface exists). Envelope-covered-but-unconverted
+    trials are C7's input count."""
+    guard_rows = _constitution_guard_findings()
+    alarms = [r for r in guard_rows if r.get("class") == "ALARM"]
+    warns = [r for r in guard_rows if r.get("class") == "WARN"]
+    summaries = {b: _constitution_registry_summary(b) for b in ("astrid", "minime")}
+    rollbacks = {
+        "astrid": _astrid_conformance_rollback_count(),
+        "minime": _minime_conformance_rollback_count(),
+    }
+    backlog = {b: _ratchet_backlog(b) for b in ("astrid", "minime")}
+    granted = set()
+    for s in summaries.values():
+        if s:
+            granted.update(s["granted"])
+    unconverted = _envelope_covered_unconverted(granted)
+    meadow = _meadow_artifact_state()
+    snapshot = {
+        "guard_alarms": len(alarms), "guard_warns": len(warns),
+        "registries": summaries, "conformance_rollbacks": rollbacks,
+        "ratchet_backlog": backlog, "envelope_covered_unconverted": unconverted,
+        "meadow_artifact": meadow,
+    }
+    details = [f"{r['being']} {r.get('class')}: {r.get('name')} — {r.get('detail')}" for r in guard_rows[:8]]
+
+    unreadable = [b for b, s in summaries.items() if s is None]
+    if unreadable:
+        return _finding(
+            "constitution_health", "warning",
+            f"⚠ envelope registry unreadable for {', '.join(unreadable)} — runtimes fall "
+            "closed to compiled bounds, but the constitution's record is dark",
+            details=details or None, snapshot=snapshot,
+        )
+    if alarms:
+        return _finding(
+            "constitution_health", "warning",
+            f"⚠ wiring guard ALARM ({len(alarms)}) — a registry bound is wider than its "
+            "engine backstop or not f32-exact; run `python3 scripts/check_envelope_wiring.py`",
+            details=details or None, snapshot=snapshot,
+        )
+    spurious = [
+        b for b, n in rollbacks.items()
+        if n and summaries[b] and summaries[b]["narrows"] == 0
+    ]
+    if spurious:
+        return _finding(
+            "constitution_health", "warning",
+            f"⚠ SPURIOUS conformance rollback for {', '.join(spurious)}: withdraw receipt(s) "
+            "carry the narrow-rollback reason while the registry records NO narrow — a "
+            "control was withdrawn for no narrow (false-positive fixed-point test). Inspect "
+            "receipts.jsonl and the clamp before anything else",
+            details=details or None, snapshot=snapshot,
+        )
+    notices: list[str] = []
+    if warns:
+        notices.append(f"{len(warns)} guard WARN (canonical≠mirror = named commit debt)")
+    total_backlog = sum(backlog.values())
+    if total_backlog:
+        notices.append(
+            f"ratchet backlog {total_backlog} field(s) hold evidence above their bounds "
+            "awaiting a consent letter (grant forum)"
+        )
+    if unconverted:
+        notices.append(f"{unconverted} approval-parked trial(s) already envelope-covered — C7 input")
+    if meadow == "present":
+        notices.append("meadow mutual-consent artifact PRESENT — steward review; never auto")
+    reg_line = "; ".join(
+        f"{b} rev {s['revision']} granted {len(s['granted'])}/{s['fields']} acts {s['ratchet_acts']}"
+        for b, s in summaries.items() if s
+    )
+    if notices:
+        return _finding(
+            "constitution_health", "notice",
+            "constitution live and consistent — " + "; ".join(notices) + f" [{reg_line}]",
+            details=details or None, snapshot=snapshot,
+        )
+    return _finding(
+        "constitution_health", "ok",
+        f"constitution live and consistent (0 guard findings, 0 spurious rollbacks) [{reg_line}]",
+        snapshot=snapshot,
+    )
+
+
+class ConstitutionHealthTests(unittest.TestCase):
+    _HELPERS = (
+        "_constitution_guard_findings", "_constitution_registry_summary",
+        "_astrid_conformance_rollback_count", "_minime_conformance_rollback_count",
+        "_envelope_covered_unconverted", "_meadow_artifact_state", "_ratchet_backlog",
+    )
+
+    def _run(self, *, guard=None, narrows=0, astrid_rollbacks=0, minime_rollbacks=0,
+             backlog=0, meadow="absent", unconverted=0, unreadable=False):
+        saved = {name: globals()[name] for name in self._HELPERS}
+        summary = None if unreadable else {
+            "revision": 1, "fields": 17, "granted": ["aperture"],
+            "ratchet_acts": narrows, "narrows": narrows, "last_act": None,
+        }
+        try:
+            globals()["_constitution_guard_findings"] = lambda: list(guard or [])
+            globals()["_constitution_registry_summary"] = lambda being: summary
+            globals()["_astrid_conformance_rollback_count"] = lambda: astrid_rollbacks
+            globals()["_minime_conformance_rollback_count"] = lambda: minime_rollbacks
+            globals()["_envelope_covered_unconverted"] = lambda granted: unconverted
+            globals()["_meadow_artifact_state"] = lambda: meadow
+            globals()["_ratchet_backlog"] = lambda being: backlog
+            return probe_constitution_health({})
+        finally:
+            globals().update(saved)
+
+    def test_clean_registry_reads_ok(self):
+        self.assertEqual(self._run()["severity"], "ok")
+
+    def test_guard_alarm_warns(self):
+        finding = self._run(guard=[{"being": "minime", "class": "ALARM",
+                                    "name": "minime_x_wider_than_backstop", "detail": "0.3>0.2"}])
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("ALARM", finding["summary"])
+
+    def test_spurious_conformance_rollback_warns(self):
+        # A narrow-rollback receipt with NO narrow on record = her control was
+        # withdrawn for no narrow — the false-positive fixed-point class.
+        finding = self._run(astrid_rollbacks=1, narrows=0)
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("SPURIOUS", finding["summary"])
+
+    def test_rollback_with_a_recorded_narrow_is_not_spurious(self):
+        finding = self._run(astrid_rollbacks=1, narrows=1)
+        self.assertNotEqual(finding["severity"], "warning")
+
+    def test_mirror_drift_and_backlog_are_notices(self):
+        finding = self._run(guard=[{"being": "astrid", "class": "WARN",
+                                    "name": "astrid_registry_mirror_drift", "detail": "x"}],
+                            backlog=2)
+        self.assertEqual(finding["severity"], "notice")
+        self.assertIn("commit debt", finding["summary"])
+        # backlog is summed across both beings (2 each in the fixture)
+        self.assertIn("ratchet backlog 4", finding["summary"])
+
+    def test_unreadable_registry_warns(self):
+        self.assertEqual(self._run(unreadable=True)["severity"], "warning")
+
+
+class HardRecoveryWitnessTests(unittest.TestCase):
+    def _run(self, health: dict[str, Any]) -> dict[str, Any]:
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="hrw_"))
+        (root / "workspace").mkdir()
+        (root / "workspace/health.json").write_text(json.dumps(health), encoding="utf-8")
+        saved = globals()["MINIME_REPO"]
+        try:
+            globals()["MINIME_REPO"] = root
+            return probe_hard_recovery_witness({})
+        finally:
+            globals()["MINIME_REPO"] = saved
+
+    def test_env_forced_under_stable_core_is_the_re_muffle(self):
+        finding = self._run({"stable_core": {"profile": "stable_core_v1"},
+                             "hard_recovery": {"env_forced": True, "write_block_active": False,
+                                               "fill_ratio": 0.7}})
+        self.assertEqual(finding["severity"], "warning")
+
+    def test_quiet_witness_reads_ok(self):
+        finding = self._run({"stable_core": {"profile": "stable_core_v1"},
+                             "hard_recovery": {"env_forced": False, "write_block_active": False,
+                                               "fill_ratio": 0.7}})
+        self.assertEqual(finding["severity"], "ok")
+
+
 class DomainBoundaryViolationsTests(unittest.TestCase):
     """The probe is the ONLY consumer of the domain-boundary audit (no CI runs
     it), so both of its alarm paths are load-bearing: violations present, and
@@ -5495,6 +5799,7 @@ BLIND_SPOT_PROBES = [
     ("domain_boundary_violations", probe_domain_boundary_violations),
     ("ungated_bridge_binary", probe_ungated_bridge_binary),
     ("bridge_deploy_pending", probe_bridge_deploy_pending),
+    ("constitution_health", probe_constitution_health),
 ]
 
 
@@ -8674,6 +8979,8 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(DomainBoundaryViolationsTests))
     suite.addTests(loader.loadTestsFromTestCase(UngatedBridgeBinaryTests))
     suite.addTests(loader.loadTestsFromTestCase(BridgeDeployPendingTests))
+    suite.addTests(loader.loadTestsFromTestCase(ConstitutionHealthTests))
+    suite.addTests(loader.loadTestsFromTestCase(HardRecoveryWitnessTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1
