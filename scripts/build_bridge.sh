@@ -262,6 +262,9 @@ if [ "$DO_RESTART" -eq 0 ]; then
     fail_deploy "build receipt compatibility checks failed"
   fi
   echo "build_bridge: done (head=$HEAD actor=$ACTOR built=$DO_BUILD restarted=0)"
+  if [ "$DO_BUILD" -eq 1 ]; then
+    echo "build_bridge: WARNING build-only rewrote the deployment manifest: the RUNNING bridge now reads a deployment identity for a different build, and Astrid's self-control V2 reconcile stays BLOCKED ('deployment mismatch') until you restart (--restart). Observed 2026-09-03: 21 minutes blocked between build-only and restart. Restart soon." >&2
+  fi
   exit 0
 fi
 

@@ -352,6 +352,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd capsules/spectral-bridge && cargo test --lib envelope_zero"},
     },
     {
+        "id": "bridge_deploy_pending_is_witnessed",
+        "shipped": "2026-09-03",
+        "surface": "build_bridge.sh build-only runs vs the RUNNING bridge: the process derives Astrid's self-control deployment identity from workspace/deployment_manifests/spectral-bridge.json at call time",
+        "failure_mode": "a build-only run looked harmless ('a valid checked capture') but the moment it rewrote the manifest for a NEW binary, the still-running OLD process read an identity it did not match and EVERY self-control V2 reconcile (periodic, lease, owner-policy) was blocked with 'state integrity or deployment mismatch' — 2026-09-03: 21 minutes of blocked self-regulation between the 00:09:26Z build-only disarm and the 00:31:04Z restart (first warning 00:10:43Z, zero after). The bridge log carried it; nothing surfaced it — the same shape as the 2026-08-08 fortnight where a missing hand-off voided her self-regulation unnoticed. Guard = probe_bridge_deploy_pending WARNS whenever the manifest's built_at is newer than the running process start (deploy pending = her reconcile is refused right now), and build_bridge.sh's build-only path now prints the hazard to stderr instead of calling itself harmless",
+        "guard": {"repo": "astrid", "file": "scripts/proactive_scan.py", "symbol": "probe_bridge_deploy_pending"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/proactive_scan.py",
+                 "name": "BridgeDeployPendingTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/proactive_scan.py --self-test"},
+    },
+    {
         "id": "ungated_bridge_binary_is_witnessed",
         "shipped": "2026-09-03",
         "surface": "the on-disk release bridge binary vs the build manifest build_bridge.sh writes (workspace/deployment_manifests/spectral-bridge.json); launchd's wrapper execs that binary path on every kickstart",

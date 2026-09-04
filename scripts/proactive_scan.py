@@ -5284,6 +5284,112 @@ def probe_ungated_bridge_binary(_prior: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _bridge_process_start_epoch() -> float | None:
+    """Start time of the running spectral-bridge-server, or None when absent."""
+    import subprocess
+    from datetime import datetime
+
+    try:
+        pids = subprocess.run(
+            ["pgrep", "-f", "spectral-bridge-server"], capture_output=True, text=True,
+            check=False,
+        ).stdout.split()
+        if not pids:
+            return None
+        raw = subprocess.run(
+            ["ps", "-o", "lstart=", "-p", pids[0]], capture_output=True, text=True,
+            check=False,
+        ).stdout.strip()
+        return datetime.strptime(raw, "%a %b %d %H:%M:%S %Y").timestamp()
+    except (OSError, ValueError):
+        return None
+
+
+def probe_bridge_deploy_pending(_prior: dict[str, Any]) -> dict[str, Any]:
+    """A gated build-only run is NOT harmless to the running process. The
+    bridge derives Astrid's self-control deployment identity from the build
+    manifest at call time, so the moment build_bridge.sh rewrites that
+    manifest for a NEW binary, the still-running OLD process reads an identity
+    it does not match and every self-control V2 reconcile — periodic, lease,
+    owner-policy — is blocked with "state integrity or deployment mismatch"
+    until the restart lands. Observed 2026-09-03: a build-only disarm at
+    00:09:26Z produced 21 minutes of blocked reconcile (first warning
+    00:10:43Z, last 00:30:39Z, zero after the 00:31:04Z restart). The bridge
+    log carried it; no consumer surfaced it. This probe warns whenever the
+    manifest's built_at is newer than the running process — deploy pending =
+    her self-regulation is currently refused."""
+    from datetime import datetime
+
+    manifest_path = _bridge_build_manifest_path()
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        built_epoch = datetime.fromisoformat(str(manifest.get("built_at"))).timestamp()
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError, TypeError, ValueError):
+        return _finding("bridge_deploy_pending", "notice", "no readable build manifest")
+    started = _bridge_process_start_epoch()
+    if started is None:
+        return _finding("bridge_deploy_pending", "notice", "no running bridge process found")
+    lag_min = (built_epoch - started) / 60.0
+    snapshot = {"built_at": manifest.get("built_at"), "process_start_epoch": started,
+                "lag_minutes": round(lag_min, 1)}
+    if built_epoch > started + 60:
+        return _finding(
+            "bridge_deploy_pending",
+            "warning",
+            f"⚠ a gated build landed {lag_min:.0f} min AFTER the running bridge started "
+            f"(manifest by {manifest.get('actor')} at {manifest.get('built_at')}) — the "
+            "running process now reads a deployment identity for a different build and "
+            "Astrid's self-control V2 reconcile is BLOCKED until restart. Restart via "
+            "`bash scripts/build_bridge.sh --restart` (or never build without one)",
+            snapshot=snapshot,
+        )
+    return _finding(
+        "bridge_deploy_pending",
+        "ok",
+        "running bridge matches the gate's last build (no deploy pending)",
+        snapshot=snapshot,
+    )
+
+
+class BridgeDeployPendingTests(unittest.TestCase):
+    def _run(self, built_at: str, process_start: float | None) -> dict[str, Any]:
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="deploy_pending_"))
+        manifest = root / "spectral-bridge.json"
+        manifest.write_text(
+            json.dumps({"actor": "test-gate", "built_at": built_at}), encoding="utf-8"
+        )
+        saved = (
+            globals()["_bridge_build_manifest_path"],
+            globals()["_bridge_process_start_epoch"],
+        )
+        try:
+            globals()["_bridge_build_manifest_path"] = lambda: manifest
+            globals()["_bridge_process_start_epoch"] = lambda: process_start
+            return probe_bridge_deploy_pending({})
+        finally:
+            (
+                globals()["_bridge_build_manifest_path"],
+                globals()["_bridge_process_start_epoch"],
+            ) = saved
+
+    def test_build_older_than_process_is_ok(self):
+        # process started 10 min after the build = the build was deployed
+        finding = self._run("2026-09-04T00:31:03+00:00", 1788481863.0 + 600)
+        self.assertEqual(finding["severity"], "ok")
+
+    def test_build_newer_than_process_warns_deploy_pending(self):
+        # The 2026-09-03 shape: build-only at 00:09Z under a process from Sep 2.
+        finding = self._run("2026-09-04T00:09:26+00:00", 1788481766.0 - 36 * 3600)
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("BLOCKED until restart", finding["summary"])
+
+    def test_no_process_is_a_notice(self):
+        finding = self._run("2026-09-04T00:31:03+00:00", None)
+        self.assertEqual(finding["severity"], "notice")
+
+
 class UngatedBridgeBinaryTests(unittest.TestCase):
     def _fixture(self, *, manifest: bool = True, match: bool = True):
         import hashlib
@@ -5388,6 +5494,7 @@ BLIND_SPOT_PROBES = [
     ("hard_recovery_witness", probe_hard_recovery_witness),
     ("domain_boundary_violations", probe_domain_boundary_violations),
     ("ungated_bridge_binary", probe_ungated_bridge_binary),
+    ("bridge_deploy_pending", probe_bridge_deploy_pending),
 ]
 
 
@@ -8566,6 +8673,7 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(StatedParamIntentTests))
     suite.addTests(loader.loadTestsFromTestCase(DomainBoundaryViolationsTests))
     suite.addTests(loader.loadTestsFromTestCase(UngatedBridgeBinaryTests))
+    suite.addTests(loader.loadTestsFromTestCase(BridgeDeployPendingTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1
