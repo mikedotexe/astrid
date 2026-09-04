@@ -1922,6 +1922,60 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     }
 
     #[test]
+    fn outbox_scan_tolerates_operator_pin_prefix_on_reply_names() {
+        // Regression (un-muffle, 2026-09-03): `!reply_2026-06-26T07-28-41.txt`
+        // — a reply Mike hand-pinned with a leading "!" 46s after minime wrote
+        // it — fell out of the starts_with("reply_") match and sat undelivered
+        // for 69 days while ~21,600 siblings flowed. A pinned reply is still a
+        // reply: it must stay deliverable.
+        assert_eq!(
+            deliverable_reply_name("reply_2026-06-26T07-28-41.txt"),
+            Some("reply_2026-06-26T07-28-41.txt")
+        );
+        assert_eq!(
+            deliverable_reply_name("!reply_2026-06-26T07-28-41.txt"),
+            Some("reply_2026-06-26T07-28-41.txt")
+        );
+        assert_eq!(deliverable_reply_name("pong_x.txt"), Some("pong_x.txt"));
+        assert_eq!(deliverable_reply_name("!pong_x.txt"), Some("pong_x.txt"));
+        // Steward outreach shares the outbox root but is the steward loop's
+        // to pick up, pinned or not — never this scanner's.
+        assert_eq!(deliverable_reply_name("steward_query_x.txt"), None);
+        assert_eq!(deliverable_reply_name("!steward_report_x.txt"), None);
+        // Non-.txt and degenerate pin-only names stay out.
+        assert_eq!(deliverable_reply_name("reply_x.md"), None);
+        assert_eq!(deliverable_reply_name("!.txt"), None);
+    }
+
+    #[test]
+    fn delivered_reply_target_normalizes_pin_without_overwriting_history() {
+        let dir = std::env::temp_dir().join("bridge_test_delivered_reply_target");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+
+        // Plain names pass through untouched.
+        assert_eq!(
+            delivered_reply_target(&dir, "reply_a.txt"),
+            dir.join("reply_a.txt")
+        );
+        // Pinned names normalize to canonical so history globs
+        // (scan_reply_dir, the legacy correspondence bridge) still see them.
+        assert_eq!(
+            delivered_reply_target(&dir, "!reply_a.txt"),
+            dir.join("reply_a.txt")
+        );
+        // ...unless the canonical name already exists in delivered/ — then
+        // keep the pinned name rather than overwrite the earlier delivery.
+        std::fs::write(dir.join("reply_a.txt"), "already delivered").unwrap();
+        assert_eq!(
+            delivered_reply_target(&dir, "!reply_a.txt"),
+            dir.join("!reply_a.txt")
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn check_inbox_cutoff_defers_late_arrivals_to_the_next_exchange() {
         let dir = std::env::temp_dir().join("bridge_test_astrid_inbox_cutoff_read");
         let _ = std::fs::remove_dir_all(&dir);
