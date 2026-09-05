@@ -1,0 +1,347 @@
+{
+  "schema": "predeployment_stack_check_extract_v1",
+  "source_receipt_id": "env_receipt_1788563175289_828000",
+  "source_receipt_sha256": "3ac714e5ded28fa07a54f390b73d6b68b98f8bad11d107db75347ef3400adb05",
+  "iso_time": "2026-09-04T23:06:15.289000+00:00",
+  "scope": "read-only stack inventory; no restart attempted",
+  "deployment": {
+    "acknowledgement": "Pre-deployment inventory only, no restart: preserve Minime manifest and source-lineage discrepancies for reconciliation",
+    "actor": "codex-astra-interactive",
+    "requested_status": "failed",
+    "status": "failed"
+  },
+  "compatibility_status": {
+    "checks": [
+      {
+        "name": "protocol_major_and_revision",
+        "passed": true
+      },
+      {
+        "name": "manifest:spectral-bridge.json",
+        "passed": true,
+        "protocol_participant": true
+      },
+      {
+        "name": "manifest:minime-engine.json",
+        "passed": false,
+        "protocol_participant": true
+      },
+      {
+        "name": "manifest:coupled-model.json",
+        "passed": true,
+        "protocol_participant": false
+      },
+      {
+        "name": "stack_process:bridge",
+        "passed": true
+      },
+      {
+        "name": "stack_process:minime",
+        "passed": true
+      },
+      {
+        "name": "stack_process:model",
+        "passed": true
+      },
+      {
+        "name": "probe:bridge_process",
+        "passed": true
+      },
+      {
+        "name": "probe:minime_process",
+        "passed": true
+      },
+      {
+        "name": "probe:model_process",
+        "passed": true
+      },
+      {
+        "name": "probe:port_7878",
+        "passed": false
+      },
+      {
+        "name": "probe:port_7879",
+        "passed": false
+      },
+      {
+        "name": "probe:livez",
+        "passed": true
+      },
+      {
+        "name": "probe:readyz",
+        "passed": true
+      },
+      {
+        "name": "probe:bridge_manifest",
+        "passed": true
+      },
+      {
+        "name": "probe:minime_manifest",
+        "passed": true
+      },
+      {
+        "name": "probe:model_manifest",
+        "passed": true
+      },
+      {
+        "name": "probe:telemetry",
+        "passed": true
+      },
+      {
+        "name": "telemetry:/Users/v/other/astrid/capsules/spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+        "passed": true
+      },
+      {
+        "name": "telemetry:/Users/v/other/minime/workspace/health.json",
+        "passed": true
+      }
+    ],
+    "compatible": false,
+    "failure_reasons": [
+      "binary/script manifest mismatch for launch-wrapper: /Users/v/other/minime/scripts/launchd_minime_engine.sh",
+      "binary/script manifest mismatch for minime-engine: /Users/v/other/minime/minime/target/release/minime",
+      "health/readiness probe failed: port_7878",
+      "health/readiness probe failed: port_7879",
+      "deployment wrapper reported failed"
+    ]
+  },
+  "protocol": {
+    "compatible": true,
+    "major": 1,
+    "name": "astrid-minime",
+    "revision": "9a324d16294b2318da6f476ff7f295c423a9b4b1",
+    "revision_present_in_astrid": true,
+    "version": "1.1"
+  },
+  "manifests": {
+    "coupled-model.json": {
+      "available": true,
+      "manifest": {
+        "actor": "codex-stabilization",
+        "artifact_authority_state_v1": {
+          "schema": "artifact_authority_state_v1",
+          "schema_version": 1,
+          "state": "evidence_only",
+          "witness_only": true
+        },
+        "artifacts": {
+          "gateway": {
+            "exists": true,
+            "path": "/Users/v/other/neural-triple-reservoir/coupled_http_gateway.py",
+            "sha256": "564959c16ccef2b42c43031c93677abc6b47718932b65d2ca314cce61d1e658b"
+          },
+          "launchd-plist": {
+            "exists": true,
+            "path": "/Users/v/other/neural-triple-reservoir/launchd/com.reservoir.coupled-astrid.plist",
+            "sha256": "4d4bb17099f48b85e2cdcee7d343b4238253edb982fde67d3d9b1e5cad0152ec"
+          },
+          "python": {
+            "exists": true,
+            "path": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+            "sha256": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+          },
+          "server": {
+            "exists": true,
+            "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+            "sha256": "58c7174b081a45ceebfb2420165a7f636f0c216547d3aa70cb1d8b729b50ce09"
+          }
+        },
+        "authority": "build_manifest_witness_not_deploy_authority",
+        "authority_projection_v2": {
+          "auto_approved": false,
+          "edits_source_now": false,
+          "grants_approval": false,
+          "live_eligible_now": false,
+          "schema": "artifact_authority_projection_v2",
+          "schema_version": 2,
+          "source_state": "evidence_only"
+        },
+        "auto_approved": false,
+        "built_at": "2026-07-22T20:57:21.055206+00:00",
+        "command": "launchd bootstrap com.reservoir.coupled-astrid",
+        "component": "coupled-model",
+        "edits_source_now": false,
+        "grants_approval": false,
+        "live_eligible_now": false,
+        "protocol": {
+          "revision": "9a324d16294b2318da6f476ff7f295c423a9b4b1",
+          "version": "1.1"
+        },
+        "repository": {
+          "available": true,
+          "branch": "feat/service-stack-and-multi-headed",
+          "dirty": false,
+          "dirty_paths": [],
+          "head": "afc2931a657d1bd79a7076ece6310ee3d8f6ceba",
+          "path": "/Users/v/other/neural-triple-reservoir",
+          "source_identity_sha256": "c6843e967b57d9140e2b3d04c82e26c9571efc37b1eed57c8c64a3f883506ccc"
+        },
+        "schema": "stack_build_manifest_v1",
+        "schema_version": 1,
+        "witness_only": true
+      },
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/coupled-model.json",
+      "protocol_participant": false
+    },
+    "minime-engine.json": {
+      "available": true,
+      "manifest": {
+        "actor": "codex-interactive",
+        "artifact_authority_state_v1": {
+          "schema": "artifact_authority_state_v1",
+          "schema_version": 1,
+          "state": "evidence_only",
+          "witness_only": true
+        },
+        "artifacts": {
+          "launch-wrapper": {
+            "exists": true,
+            "path": "/Users/v/other/minime/scripts/launchd_minime_engine.sh",
+            "sha256": "cfb90595bee27cbdc9af4eed396aee6586fea2ce90f94a9c6c14ec829f6d1edd"
+          },
+          "minime-engine": {
+            "exists": true,
+            "path": "/Users/v/other/minime/minime/target/release/minime",
+            "sha256": "1440d8c330d6d43690de9b06b803fdf70bff6c28532e10415b956428df11c9da"
+          }
+        },
+        "authority": "build_manifest_witness_not_deploy_authority",
+        "authority_projection_v2": {
+          "auto_approved": false,
+          "edits_source_now": false,
+          "grants_approval": false,
+          "live_eligible_now": false,
+          "schema": "artifact_authority_projection_v2",
+          "schema_version": 2,
+          "source_state": "evidence_only"
+        },
+        "auto_approved": false,
+        "built_at": "2026-07-27T02:42:53.228053+00:00",
+        "command": "cargo build --release --manifest-path /Users/v/other/minime/minime/Cargo.toml",
+        "component": "minime-engine",
+        "edits_source_now": false,
+        "grants_approval": false,
+        "live_eligible_now": false,
+        "protocol": {
+          "revision": "9a324d16294b2318da6f476ff7f295c423a9b4b1",
+          "version": "1.1"
+        },
+        "repository": {
+          "available": true,
+          "branch": "main",
+          "dirty": true,
+          "dirty_paths": [
+            "CHANGELOG.md",
+            "minime_autonomy/division_ceremony.py",
+            "minime_autonomy/phase_passage_context.py",
+            "minime_autonomy/phase_passage_context_types.py",
+            "tests/test_division_ceremony.py",
+            "tests/test_phase_transition_agency.py"
+          ],
+          "head": "33d8a842bbc7709f75b389c48a4a1bdc30f337ea",
+          "path": "/Users/v/other/minime",
+          "source_identity_sha256": "d86456d1341fd716744fb1efa4bce82347a72967e7d84e53f97b44c02911ae48"
+        },
+        "schema": "stack_build_manifest_v1",
+        "schema_version": 1,
+        "witness_only": true
+      },
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/minime-engine.json",
+      "protocol_participant": true
+    },
+    "spectral-bridge.json": {
+      "available": true,
+      "manifest": {
+        "actor": "claude-interactive",
+        "artifact_authority_state_v1": {
+          "schema": "artifact_authority_state_v1",
+          "schema_version": 1,
+          "state": "evidence_only",
+          "witness_only": true
+        },
+        "artifacts": {
+          "launch-wrapper": {
+            "exists": true,
+            "path": "/Users/v/other/astrid/scripts/launchd_spectral_bridge.sh",
+            "sha256": "9acc7a731edb19ef63f5284f8e6764bb8165879228c3264bc06d03c7fe3ab74c"
+          },
+          "spectral-bridge": {
+            "exists": true,
+            "path": "/Users/v/other/astrid/capsules/spectral-bridge/target/release/spectral-bridge-server",
+            "sha256": "b74ecee28acaf5e2ec3cdec9142d0f2e7c552d7c6864f115e361492090c3b725"
+          }
+        },
+        "authority": "build_manifest_witness_not_deploy_authority",
+        "authority_projection_v2": {
+          "auto_approved": false,
+          "edits_source_now": false,
+          "grants_approval": false,
+          "live_eligible_now": false,
+          "schema": "artifact_authority_projection_v2",
+          "schema_version": 2,
+          "source_state": "evidence_only"
+        },
+        "auto_approved": false,
+        "built_at": "2026-09-04T00:31:03.789335+00:00",
+        "command": "cargo build --release --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml",
+        "component": "spectral-bridge",
+        "edits_source_now": false,
+        "grants_approval": false,
+        "live_eligible_now": false,
+        "protocol": {
+          "revision": "9a324d16294b2318da6f476ff7f295c423a9b4b1",
+          "version": "1.1"
+        },
+        "repository": {
+          "available": true,
+          "branch": "codex/sovereign-daughter-runtime",
+          "dirty": false,
+          "dirty_paths": [],
+          "head": "d6ff371cd25e6a4616431d8f07f09a3e7eb3fcdf",
+          "path": "/Users/v/other/astrid",
+          "source_identity_sha256": "4e1e1d0c39fff5b5949120d60b65eb9bef5eb76b8aa8b22b1e8aa2c27293f39a"
+        },
+        "schema": "stack_build_manifest_v1",
+        "schema_version": 1,
+        "witness_only": true
+      },
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json",
+      "protocol_participant": true
+    }
+  },
+  "processes": {
+    "bridge": {
+      "pid": 36597,
+      "started_at": "Thu Sep 3 17:31:04 2026",
+      "running": true
+    },
+    "minime": {
+      "pid": 63445,
+      "started_at": "Mon Aug 31 12:51:36 2026",
+      "running": true
+    },
+    "model": {
+      "pid": 98236,
+      "started_at": "Tue Sep 1 11:52:25 2026",
+      "running": true
+    }
+  },
+  "telemetry_freshness": [
+    {
+      "age_s": 1.221,
+      "available": true,
+      "fresh": true,
+      "fresh_within_s": 180.0,
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+      "sha256": "9ec338891111fcbf9b0dffd63bccc1341f8b4fcac0eac189cad8af7bf0541104"
+    },
+    {
+      "age_s": 1.227,
+      "available": true,
+      "fresh": true,
+      "fresh_within_s": 180.0,
+      "path": "/Users/v/other/minime/workspace/health.json",
+      "sha256": "d60ce36a9535c774881a4dfbbfab6d60c900f140a66c0b597a2afa632333c5c5"
+    }
+  ]
+}

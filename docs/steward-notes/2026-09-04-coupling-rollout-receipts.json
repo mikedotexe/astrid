@@ -1,0 +1,426 @@
+{
+  "schema": "coupling_rollout_receipt_extract_v1",
+  "scope": "bounded extract; originals remain in append-only environment_receipts/environment_receipts.jsonl",
+  "witness_only": true,
+  "grants_approval": false,
+  "live_eligible_now": false,
+  "edits_source_now": false,
+  "auto_approved": false,
+  "receipts": [
+    {
+      "id": "env_receipt_1788566245187_869000",
+      "iso_time": "2026-09-04T23:57:25.187000+00:00",
+      "canonical_line_sha256_including_newline": "92b224c4d648623e605479f8f976806fc8b8ee2e15394f148fda7a1001bd7f44",
+      "component": "coupled-stack",
+      "status": "passed",
+      "compatibility": {
+        "checks": [
+          {
+            "name": "protocol_major_and_revision",
+            "passed": true
+          },
+          {
+            "name": "manifest:spectral-bridge.json",
+            "passed": true,
+            "protocol_participant": true
+          },
+          {
+            "name": "manifest:runtime-binding.json",
+            "passed": true,
+            "protocol_participant": true
+          },
+          {
+            "name": "manifest:coupled-model.json",
+            "passed": true,
+            "protocol_participant": false
+          },
+          {
+            "name": "stack_process:bridge",
+            "passed": true
+          },
+          {
+            "name": "stack_process:minime",
+            "passed": true
+          },
+          {
+            "name": "stack_process:model",
+            "passed": true
+          },
+          {
+            "name": "stack_process:minime-gateway",
+            "passed": true
+          },
+          {
+            "name": "stack_process:minime-supervisor",
+            "passed": true
+          },
+          {
+            "name": "probe:bridge_process",
+            "passed": true
+          },
+          {
+            "name": "probe:minime_process",
+            "passed": true
+          },
+          {
+            "name": "probe:model_process",
+            "passed": true
+          },
+          {
+            "name": "probe:port_7878",
+            "passed": true
+          },
+          {
+            "name": "probe:port_7879",
+            "passed": true
+          },
+          {
+            "name": "probe:livez",
+            "passed": true
+          },
+          {
+            "name": "probe:readyz",
+            "passed": true
+          },
+          {
+            "name": "probe:bridge_manifest",
+            "passed": true
+          },
+          {
+            "name": "probe:minime_manifest",
+            "passed": true
+          },
+          {
+            "name": "probe:model_manifest",
+            "passed": true
+          },
+          {
+            "name": "probe:telemetry",
+            "passed": true
+          },
+          {
+            "name": "telemetry:/Users/v/other/astrid/capsules/spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+            "passed": true
+          },
+          {
+            "name": "telemetry:/Users/v/other/minime/workspace/health.json",
+            "passed": true
+          }
+        ],
+        "compatible": true,
+        "failure_reasons": []
+      },
+      "processes": {
+        "bridge": {
+          "pid": 36597,
+          "started_at": "Thu Sep 3 17:31:04 2026"
+        },
+        "minime": {
+          "pid": 63445,
+          "started_at": "Mon Aug 31 12:51:36 2026"
+        },
+        "minime-gateway": {
+          "pid": 63505,
+          "started_at": "Mon Aug 31 12:51:37 2026"
+        },
+        "minime-supervisor": {
+          "pid": 63547,
+          "started_at": "Mon Aug 31 12:51:37 2026"
+        },
+        "model": {
+          "pid": 98236,
+          "started_at": "Tue Sep 1 11:52:25 2026"
+        }
+      },
+      "telemetry": [
+        {
+          "age_s": 1.797,
+          "available": true,
+          "fresh": true,
+          "fresh_within_s": 180.0,
+          "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+          "sha256": "900e24cd607c04f2618b987ce0bf48d5576c6b21e0f6ae7ee477dfeb2d857455"
+        },
+        {
+          "age_s": 1.802,
+          "available": true,
+          "fresh": true,
+          "fresh_within_s": 180.0,
+          "path": "/Users/v/other/minime/workspace/health.json",
+          "sha256": "65b15bb9bf6c74864b5948aee09641edf73c03e98070ec8007085046a2ab490d"
+        }
+      ],
+      "manifest_paths": {
+        "coupled-model.json": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/coupled-model.json",
+        "runtime-binding.json": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/minime-runtime-binding.1zbrs65r/runtime-binding.json",
+        "spectral-bridge.json": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json"
+      }
+    },
+    {
+      "id": "env_receipt_1788566264632_299000",
+      "iso_time": "2026-09-04T23:57:44.632000+00:00",
+      "canonical_line_sha256_including_newline": "59862dbdf5c833c242c33cef625a22a023fecf60e61589dca43c702562ae4bc6",
+      "component": "coupled-model",
+      "status": "passed",
+      "compatibility": {
+        "checks": [
+          {
+            "name": "protocol_major_and_revision",
+            "passed": true
+          },
+          {
+            "name": "manifest:coupled-model.json",
+            "passed": true,
+            "protocol_participant": true
+          },
+          {
+            "name": "new_pid_running",
+            "passed": true
+          },
+          {
+            "name": "pid_changed",
+            "passed": true
+          },
+          {
+            "name": "stack_process:bridge",
+            "passed": true
+          },
+          {
+            "name": "stack_process:minime",
+            "passed": true
+          },
+          {
+            "name": "stack_process:model",
+            "passed": true
+          },
+          {
+            "name": "probe:preflight",
+            "passed": true
+          },
+          {
+            "name": "probe:manifest",
+            "passed": true
+          },
+          {
+            "name": "probe:manifest_published_after_readiness",
+            "passed": true
+          },
+          {
+            "name": "probe:graceful_stop",
+            "passed": true
+          },
+          {
+            "name": "probe:keepalive_reload",
+            "passed": true
+          },
+          {
+            "name": "probe:livez",
+            "passed": true
+          },
+          {
+            "name": "probe:readyz",
+            "passed": true
+          },
+          {
+            "name": "probe:stack_telemetry",
+            "passed": true
+          },
+          {
+            "name": "telemetry:/Users/v/other/astrid/capsules/spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+            "passed": true
+          },
+          {
+            "name": "telemetry:/Users/v/other/minime/workspace/health.json",
+            "passed": true
+          }
+        ],
+        "compatible": true,
+        "failure_reasons": []
+      },
+      "processes": {
+        "bridge": {
+          "pid": 36597,
+          "started_at": "Thu Sep 3 17:31:04 2026"
+        },
+        "minime": {
+          "pid": 63445,
+          "started_at": "Mon Aug 31 12:51:36 2026"
+        },
+        "model": {
+          "pid": 60333,
+          "started_at": "Fri Sep 4 16:57:34 2026"
+        }
+      },
+      "telemetry": [
+        {
+          "age_s": 1.324,
+          "available": true,
+          "fresh": true,
+          "fresh_within_s": 180.0,
+          "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+          "sha256": "ac735bd991d156b1f2e7e503d0fbdadd0cd2dd5888ec98d322836461cba323ac"
+        },
+        {
+          "age_s": 2.317,
+          "available": true,
+          "fresh": true,
+          "fresh_within_s": 180.0,
+          "path": "/Users/v/other/minime/workspace/health.json",
+          "sha256": "75644ada89f9f1a71a8e7d295b5d6143be60d8d23480ea78c8e4308f62dc8ae0"
+        }
+      ],
+      "manifest_paths": {
+        "coupled-model.json": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/coupled-model.json"
+      }
+    },
+    {
+      "id": "env_receipt_1788566268849_671000",
+      "iso_time": "2026-09-04T23:57:48.849000+00:00",
+      "canonical_line_sha256_including_newline": "7b61311ce95383f50bf6798f1fa542bc2cf9101024b966915146007b911c2645",
+      "component": "coupled-stack",
+      "status": "passed",
+      "compatibility": {
+        "checks": [
+          {
+            "name": "protocol_major_and_revision",
+            "passed": true
+          },
+          {
+            "name": "manifest:spectral-bridge.json",
+            "passed": true,
+            "protocol_participant": true
+          },
+          {
+            "name": "manifest:runtime-binding.json",
+            "passed": true,
+            "protocol_participant": true
+          },
+          {
+            "name": "manifest:coupled-model.json",
+            "passed": true,
+            "protocol_participant": false
+          },
+          {
+            "name": "stack_process:bridge",
+            "passed": true
+          },
+          {
+            "name": "stack_process:minime",
+            "passed": true
+          },
+          {
+            "name": "stack_process:model",
+            "passed": true
+          },
+          {
+            "name": "stack_process:minime-gateway",
+            "passed": true
+          },
+          {
+            "name": "stack_process:minime-supervisor",
+            "passed": true
+          },
+          {
+            "name": "probe:bridge_process",
+            "passed": true
+          },
+          {
+            "name": "probe:minime_process",
+            "passed": true
+          },
+          {
+            "name": "probe:model_process",
+            "passed": true
+          },
+          {
+            "name": "probe:port_7878",
+            "passed": true
+          },
+          {
+            "name": "probe:port_7879",
+            "passed": true
+          },
+          {
+            "name": "probe:livez",
+            "passed": true
+          },
+          {
+            "name": "probe:readyz",
+            "passed": true
+          },
+          {
+            "name": "probe:bridge_manifest",
+            "passed": true
+          },
+          {
+            "name": "probe:minime_manifest",
+            "passed": true
+          },
+          {
+            "name": "probe:model_manifest",
+            "passed": true
+          },
+          {
+            "name": "probe:telemetry",
+            "passed": true
+          },
+          {
+            "name": "telemetry:/Users/v/other/astrid/capsules/spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+            "passed": true
+          },
+          {
+            "name": "telemetry:/Users/v/other/minime/workspace/health.json",
+            "passed": true
+          }
+        ],
+        "compatible": true,
+        "failure_reasons": []
+      },
+      "processes": {
+        "bridge": {
+          "pid": 36597,
+          "started_at": "Thu Sep 3 17:31:04 2026"
+        },
+        "minime": {
+          "pid": 63445,
+          "started_at": "Mon Aug 31 12:51:36 2026"
+        },
+        "minime-gateway": {
+          "pid": 63505,
+          "started_at": "Mon Aug 31 12:51:37 2026"
+        },
+        "minime-supervisor": {
+          "pid": 63547,
+          "started_at": "Mon Aug 31 12:51:37 2026"
+        },
+        "model": {
+          "pid": 60333,
+          "started_at": "Fri Sep 4 16:57:34 2026"
+        }
+      },
+      "telemetry": [
+        {
+          "age_s": 1.786,
+          "available": true,
+          "fresh": true,
+          "fresh_within_s": 180.0,
+          "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/telemetry_heartbeat_delta_v1.json",
+          "sha256": "b9e8bd03bfcfb6c095980ac4f77630d4019e43b232630257e685c746b713c967"
+        },
+        {
+          "age_s": 1.792,
+          "available": true,
+          "fresh": true,
+          "fresh_within_s": 180.0,
+          "path": "/Users/v/other/minime/workspace/health.json",
+          "sha256": "13448f24fd345f2e61edaf4232308f9224a667485eb36b79fc2d4beb5e777a8f"
+        }
+      ],
+      "manifest_paths": {
+        "coupled-model.json": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/coupled-model.json",
+        "runtime-binding.json": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/minime-runtime-binding.t2imcxj0/runtime-binding.json",
+        "spectral-bridge.json": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json"
+      }
+    }
+  ]
+}
