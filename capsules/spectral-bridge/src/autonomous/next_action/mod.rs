@@ -2170,21 +2170,9 @@ pub(super) fn handle_next_action(
         ctx.telemetry,
         ctx.fill_pct,
     ) {
-        match result {
-            Ok(message) => {
-                conv.emphasis = Some(message.clone());
-                return NextActionOutcome::handled("action_continuity", message)
-                    .with_stage_visibility("read_only", visibility);
-            },
-            Err(err) => {
-                conv.emphasis = Some(format!("Action continuity command failed: {err:#}"));
-                return NextActionOutcome::blocked(
-                    "action_continuity",
-                    format!("Action continuity command `{original}` failed: {err:#}"),
-                )
-                .with_stage_visibility("blocked", visibility);
-            },
-        }
+        let outcome = NextActionOutcome::continuity_result(result, visibility);
+        conv.emphasis = Some(outcome.outcome_summary.clone());
+        return outcome;
     }
 
     if lived_term::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
@@ -3220,6 +3208,9 @@ mod tests {
         super::attractor::set_test_suggestion_store_path(
             suggestion_dir.join("attractor_suggestions.json"),
         );
+        let _continuity_root = crate::action_continuity::scoped_test_action_continuity_root(
+            suggestion_dir.join("action_threads"),
+        );
         let mut conv = ConversationState::new(Vec::new(), None);
         let db = BridgeDb::open(":memory:").expect("open in-memory db");
         let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
@@ -3255,6 +3246,9 @@ mod tests {
         let _ = std::fs::remove_dir_all(&suggestion_dir);
         super::attractor::set_test_suggestion_store_path(
             suggestion_dir.join("attractor_suggestions.json"),
+        );
+        let _continuity_root = crate::action_continuity::scoped_test_action_continuity_root(
+            suggestion_dir.join("action_threads"),
         );
         let mut conv = ConversationState::new(Vec::new(), None);
         let db = BridgeDb::open(":memory:").expect("open in-memory db");

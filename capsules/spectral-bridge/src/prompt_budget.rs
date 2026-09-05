@@ -5,6 +5,7 @@
 //! that the existing READ_MORE infrastructure can serve back on demand.
 
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
@@ -70,6 +71,26 @@ pub fn assemble_within_budget(
     budget: usize,
     overflow_dir: &Path,
 ) -> (String, Option<PromptOverflow>, Option<PromptBudgetReport>) {
+    assemble_within_budget_with_sources(blocks, budget, overflow_dir, Vec::new())
+}
+
+/// Preserve source text removed by an earlier per-block cap as well as budget
+/// overflow. Source labels and bytes remain intact; visible caps/floors do not change.
+pub fn assemble_within_budget_with_sources(
+    blocks: Vec<PromptBlock>,
+    budget: usize,
+    overflow_dir: &Path,
+    sources: Vec<(&'static str, String)>,
+) -> (String, Option<PromptOverflow>, Option<PromptBudgetReport>) {
+    let mut overflow_sections: Vec<(String, String)> = sources
+        .into_iter()
+        .filter(|(label, source)| {
+            blocks
+                .iter()
+                .any(|block| block.label == *label && block.content != *source)
+        })
+        .map(|(label, source)| (label.to_string(), source))
+        .collect();
     // Filter out empty blocks and compute total.
     let blocks: Vec<PromptBlock> = blocks
         .into_iter()
@@ -80,12 +101,13 @@ pub fn assemble_within_budget(
 
     if total <= budget {
         // Everything fits — concatenate in order and return.
-        let assembled = blocks
+        let mut assembled = blocks
             .into_iter()
             .map(|b| b.content)
             .collect::<Vec<_>>()
             .join("\n");
-        return (assembled, None, None);
+        let overflow = write_context_overflow(&overflow_sections, overflow_dir, &mut assembled);
+        return (assembled, overflow, None);
     }
 
     // Need to trim. Build a priority-sorted index (highest priority number = trimmed first).
@@ -94,7 +116,6 @@ pub fn assemble_within_budget(
 
     // Mutable copies of content for trimming.
     let mut contents: Vec<String> = blocks.iter().map(|b| b.content.clone()).collect();
-    let mut overflow_sections: Vec<(String, String)> = Vec::new(); // (label, spilled_text)
     let mut remaining_excess = total.saturating_sub(budget);
     let mut trimmed_blocks: Vec<PromptTrimmedBlock> = Vec::new();
 
@@ -118,7 +139,9 @@ pub fn assemble_within_budget(
 
         if block_len <= remaining_excess && min_chars == 0 {
             // Remove this block entirely.
-            overflow_sections.push((label.to_string(), contents[idx].clone()));
+            if !overflow_sections.iter().any(|(saved, _)| saved == label) {
+                overflow_sections.push((label.to_string(), contents[idx].clone()));
+            }
             remaining_excess = remaining_excess.saturating_sub(block_len);
             contents[idx] = format!(
                 "[{label} context ({block_len} chars) moved to overflow. NEXT: READ_MORE to see it.]"
@@ -144,7 +167,9 @@ pub fn assemble_within_budget(
             }
             let trimmed_portion = contents[idx][keep_at..].to_string();
             let trimmed_len = trimmed_portion.len();
-            overflow_sections.push((label.to_string(), trimmed_portion));
+            if !overflow_sections.iter().any(|(saved, _)| saved == label) {
+                overflow_sections.push((label.to_string(), trimmed_portion));
+            }
 
             let mut kept: String = contents[idx][..keep_at].to_string();
             kept.push_str(&format!(
@@ -163,43 +188,13 @@ pub fn assemble_within_budget(
     }
 
     // Assemble in original block order.
-    let assembled = contents
+    let mut assembled = contents
         .into_iter()
         .filter(|c| !c.trim().is_empty())
         .collect::<Vec<_>>()
         .join("\n");
 
-    // Write overflow to disk if anything was spilled.
-    let overflow = if overflow_sections.is_empty() {
-        None
-    } else {
-        let summary_parts: Vec<String> = overflow_sections
-            .iter()
-            .map(|(label, text)| format!("{label} ({} chars)", text.len()))
-            .collect();
-        let summary = summary_parts.join(", ");
-
-        let ts = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        let path = overflow_dir.join(format!("context_overflow_{ts}.txt"));
-        let _ = fs::create_dir_all(overflow_dir);
-
-        let mut file_content = String::new();
-        for (label, text) in &overflow_sections {
-            file_content.push_str(&format!("=== [{label}] ===\n\n"));
-            file_content.push_str(text);
-            file_content.push_str("\n\n");
-        }
-        let _ = fs::write(&path, &file_content);
-
-        Some(PromptOverflow {
-            path,
-            offset: 0,
-            summary,
-        })
-    };
+    let overflow = write_context_overflow(&overflow_sections, overflow_dir, &mut assembled);
 
     let report = Some(PromptBudgetReport {
         budget,
@@ -209,6 +204,53 @@ pub fn assemble_within_budget(
     });
 
     (assembled, overflow, report)
+}
+
+fn write_context_overflow(
+    sections: &[(String, String)],
+    dir: &Path,
+    assembled: &mut String,
+) -> Option<PromptOverflow> {
+    if sections.is_empty() {
+        return None;
+    }
+    let save = || -> std::io::Result<PromptOverflow> {
+        fs::create_dir_all(dir)?;
+        let ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let path = dir.join(format!("context_overflow_{}_{ts}.txt", std::process::id()));
+        let mut options = fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
+        let mut file = options.open(&path)?;
+        for (label, content) in sections {
+            writeln!(file, "=== [{label}] ===\n\n{content}\n")?;
+        }
+        file.sync_all()?;
+        Ok(PromptOverflow {
+            path,
+            offset: 0,
+            summary: sections
+                .iter()
+                .map(|(label, content)| format!("{label} ({} chars)", content.len()))
+                .collect::<Vec<_>>()
+                .join(", "),
+        })
+    };
+    match save() {
+        Ok(overflow) => Some(overflow),
+        Err(error) => {
+            tracing::warn!(%error, "prompt overflow was not saved");
+            assembled.push_str("\n[Overflow storage failed; the trimmed context is not available through READ_MORE for this turn.]");
+            None
+        },
+    }
 }
 
 /// Cap a string with overflow to disk. Returns (capped_content, optional overflow).

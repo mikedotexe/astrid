@@ -369,7 +369,9 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
     );
     let denominator_clause = telemetry.denominator_metrics().map_or_else(String::new, |metrics| {
         format!(
-            " Denominator Sequence: effective dimensionality {:.2}/{}; distinguishability loss {:.0}%{}.",
+            " Denominator Sequence: effective dimensionality {:.2}/{}; relative spectral dimensionality deficit {:.0}%{} \
+             (telemetry field distinguishability_loss: 1 - effective_dimensionality / active_mode_capacity; \
+             a spectral dimensionality ratio, not a measurement of authorship or self/other boundaries).",
             metrics.effective_dimensionality,
             metrics.active_mode_capacity,
             metrics.distinguishability_loss * 100.0,

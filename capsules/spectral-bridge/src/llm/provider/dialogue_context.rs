@@ -18,6 +18,16 @@ fn cap_dialogue_block(label: &str, content: &str, max_chars: usize) -> String {
     }
 }
 
+#[derive(Default)]
+struct DialogueBlockSources(Vec<(&'static str, String)>);
+
+impl DialogueBlockSources {
+    fn cap(&mut self, label: &'static str, content: &str, max_chars: usize) -> String {
+        self.0.push((label, content.to_string()));
+        cap_dialogue_block(label, content, max_chars)
+    }
+}
+
 fn dialogue_direct_perception_marker_index(context: &str) -> Option<usize> {
     const DIRECT_PERCEPTION_MARKERS: &[&str] = &[
         "[A note was left for you:]",

@@ -769,18 +769,19 @@ pub async fn generate_dialogue(
 
     let diversity_block = diversity_hint.map(|d| format!("[{d}]")).unwrap_or_default();
 
-    use crate::prompt_budget::{PromptBlock, assemble_within_budget};
+    use crate::prompt_budget::{PromptBlock, assemble_within_budget_with_sources};
     let journal_text_for_dialogue = sanitize_minime_context_for_dialogue(journal_text);
+    let mut sources = DialogueBlockSources::default();
     let blocks = vec![
         PromptBlock {
             label: "spectral",
-            content: cap_dialogue_block("spectral", spectral_summary, DIALOGUE_SPECTRAL_CAP),
+            content: sources.cap("spectral", spectral_summary, DIALOGUE_SPECTRAL_CAP),
             priority: 3,
             min_chars: 0,
         },
         PromptBlock {
             label: "journal",
-            content: cap_dialogue_block(
+            content: sources.cap(
                 "journal",
                 &format!("Minime wrote: {journal_text_for_dialogue}"),
                 DIALOGUE_JOURNAL_CAP,
@@ -790,7 +791,7 @@ pub async fn generate_dialogue(
         },
         PromptBlock {
             label: "direct_perception",
-            content: cap_dialogue_block(
+            content: sources.cap(
                 "direct_perception",
                 &direct_perception_block,
                 DIALOGUE_DIRECT_PERCEPTION_CAP,
@@ -800,13 +801,13 @@ pub async fn generate_dialogue(
         },
         PromptBlock {
             label: "topline",
-            content: cap_dialogue_block("topline", &topline_block, DIALOGUE_TOPLINE_CAP),
+            content: sources.cap("topline", &topline_block, DIALOGUE_TOPLINE_CAP),
             priority: 3,
             min_chars: DIALOGUE_TOPLINE_MIN_CHARS,
         },
         PromptBlock {
             label: "ambient_perception",
-            content: cap_dialogue_block(
+            content: sources.cap(
                 "ambient_perception",
                 &ambient_perception_block,
                 DIALOGUE_AMBIENT_PERCEPTION_CAP,
@@ -816,31 +817,31 @@ pub async fn generate_dialogue(
         },
         PromptBlock {
             label: "modality",
-            content: cap_dialogue_block("modality", &modality_block, DIALOGUE_MODALITY_CAP),
+            content: sources.cap("modality", &modality_block, DIALOGUE_MODALITY_CAP),
             priority: 8,
             min_chars: 0,
         },
         PromptBlock {
             label: "web",
-            content: cap_dialogue_block("web", &web_block, DIALOGUE_WEB_CAP),
+            content: sources.cap("web", &web_block, DIALOGUE_WEB_CAP),
             priority: 6,
             min_chars: 0,
         },
         PromptBlock {
             label: "continuity",
-            content: cap_dialogue_block("continuity", &continuity_block, DIALOGUE_CONTINUITY_CAP),
+            content: sources.cap("continuity", &continuity_block, DIALOGUE_CONTINUITY_CAP),
             priority: 7,
             min_chars: 0,
         },
         PromptBlock {
             label: "feedback",
-            content: cap_dialogue_block("feedback", &feedback_block, DIALOGUE_FEEDBACK_CAP),
+            content: sources.cap("feedback", &feedback_block, DIALOGUE_FEEDBACK_CAP),
             priority: 4,
             min_chars: 0,
         },
         PromptBlock {
             label: "diversity",
-            content: cap_dialogue_block("diversity", &diversity_block, DIALOGUE_DIVERSITY_CAP),
+            content: sources.cap("diversity", &diversity_block, DIALOGUE_DIVERSITY_CAP),
             priority: 9,
             min_chars: 0,
         },
@@ -848,7 +849,7 @@ pub async fn generate_dialogue(
 
     let context_packing_originals = context_packing_original_blocks(&blocks);
     let (assembled, overflow, budget_report) =
-        assemble_within_budget(blocks, user_content_budget, overflow_dir);
+        assemble_within_budget_with_sources(blocks, user_content_budget, overflow_dir, sources.0);
     let context_packing_pressure = context_packing_pressure_diagnostic(
         unix_timestamp_string(),
         user_content_budget,

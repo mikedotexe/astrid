@@ -38,6 +38,7 @@ mod persistence;
 pub use guards::{CharterReason, CharterRequiredGuardAssessment, ResearchBudgetGuardAssessment};
 
 include!("runtime/core.rs");
+include!("runtime/session_contract.rs");
 include!("runtime/prompt_projection.rs");
 include!("runtime/command_dispatch.rs");
 include!("runtime/experiment_projection.rs");
@@ -55,3 +56,7 @@ include!("runtime/spectral_projection.rs");
 #[cfg(test)]
 #[path = "tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "session_contract_tests.rs"]
+mod session_contract_tests;

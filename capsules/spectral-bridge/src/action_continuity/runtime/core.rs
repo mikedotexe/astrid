@@ -5717,25 +5717,21 @@ impl ActionContinuityStore {
         let mut thread = self.ensure_active_thread(None)?;
         let (selector, payload) = parse_session_selector_payload(raw);
         let Some(session) = self.resolve_continuity_session(&thread, selector.as_deref())? else {
-            return Ok("CONTINUITY_SESSION_CAPTURE needs an existing session. Start one with CONTINUITY_SESSION_START current :: title: ...; focus: ...; next: ...".to_string());
+            return Err(ContinuityInputError("CONTINUITY_SESSION_CAPTURE needs an existing session. Start one with CONTINUITY_SESSION_START current :: title: ...; focus: ...; next: ...").into());
         };
-        let summary = dossier_field(&payload, &["summary", "note", "memory"])
-            .unwrap_or_else(|| payload.trim().to_string());
-        if summary.trim().is_empty() {
-            return Ok("CONTINUITY_SESSION_CAPTURE needs a summary.".to_string());
+        if session_is_quiet(&session) {
+            return Err(ContinuityInputError("Explicitly CONTINUITY_SESSION_RESUME this session before capturing another note. The bookmark is unchanged.").into());
         }
+        let summary = session_authored_summary(&payload)?;
         let experiment = self.session_experiment(&thread, &session)?;
         let session_id = session
             .get("session_id")
             .and_then(Value::as_str)
             .unwrap_or("latest")
             .to_string();
-        let source_refs = dossier_list_field(&payload, &["source_refs", "source", "sources"]);
-        let artifact_refs = dossier_list_field(
-            &payload,
-            &["artifact_refs", "artifact", "artifact_grounding"],
-        );
-        let next_command = dossier_field(&payload, &["next", "next_safe_command"]);
+        let source_refs = session_preserved_list(&payload, &["source_refs", "source", "sources"], &session, "source_refs");
+        let artifact_refs = session_preserved_list(&payload, &["artifact_refs", "artifact", "artifact_grounding"], &session, "artifact_refs");
+        let next_command = session_preserved_next(&payload, &session);
         let record = self.continuity_session_record(
             "session_capture",
             &session_id,
@@ -5752,10 +5748,7 @@ impl ActionContinuityStore {
                     .and_then(Value::as_str)
                     .map(str::to_string),
                 summary: Some(summary.clone()),
-                open_questions: dossier_list_field(
-                    &payload,
-                    &["open_questions", "questions", "question"],
-                ),
+                open_questions: session_preserved_list(&payload, &["open_questions", "questions", "question"], &session, "open_questions"),
                 source_refs: source_refs.clone(),
                 artifact_refs: artifact_refs.clone(),
                 suggested_next: next_command.clone(),
@@ -5790,7 +5783,7 @@ impl ActionContinuityStore {
             json!({"continuity_session_id": session_id}),
         )?;
         Ok(format!(
-            "Continuity session `{}` captured as `{}`.\nMemory card: {}\nSuggested NEXT: CONTINUITY_SESSION_SUMMARIZE {} :: summary: ...; open_questions: ...; next: ...",
+            "Continuity session `{}` captured as `{}`.\nMemory card: {}\nSaved in: {}\nRecorded next step (not dispatched): {}",
             session_id,
             record
                 .get("record_id")
@@ -5800,7 +5793,8 @@ impl ActionContinuityStore {
                 .get("memory_id")
                 .and_then(Value::as_str)
                 .unwrap_or("memory"),
-            session_id
+            self.continuity_sessions_path(&thread.thread_id).display(),
+            next_command.as_deref().unwrap_or("(none)")
         ))
     }
 
@@ -5813,10 +5807,9 @@ impl ActionContinuityStore {
             selector
         };
         let Some(draft) = self.resolve_continuity_session_draft(&thread, Some(selector))? else {
-            return Ok(
+            return Err(ContinuityInputError(
                 "No continuity-session draft is available to accept. Wait for guarded pressure or start one with CONTINUITY_SESSION_START current :: title: ...; focus: ...; next: ..."
-                    .to_string(),
-            );
+            ).into());
         };
         let experiment = self.session_experiment(&thread, &draft)?;
         let experiment_id = experiment
@@ -5932,13 +5925,12 @@ impl ActionContinuityStore {
         let mut thread = self.ensure_active_thread(None)?;
         let (selector, payload) = parse_session_selector_payload(raw);
         let Some(session) = self.resolve_continuity_session(&thread, selector.as_deref())? else {
-            return Ok("CONTINUITY_SESSION_SUMMARIZE needs an existing session.".to_string());
+            return Err(ContinuityInputError("CONTINUITY_SESSION_SUMMARIZE needs an existing session.").into());
         };
-        let summary = dossier_field(&payload, &["summary", "note"])
-            .unwrap_or_else(|| payload.trim().to_string());
-        if summary.trim().is_empty() {
-            return Ok("CONTINUITY_SESSION_SUMMARIZE needs a summary.".to_string());
+        if session_is_quiet(&session) {
+            return Err(ContinuityInputError("Explicitly CONTINUITY_SESSION_RESUME this session before summarizing it.").into());
         }
+        let summary = session_authored_summary(&payload)?;
         let experiment = self.session_experiment(&thread, &session)?;
         let session_id = session
             .get("session_id")
@@ -5955,17 +5947,17 @@ impl ActionContinuityStore {
                 title: session.get("title").and_then(Value::as_str).map(str::to_string),
                 focus: session.get("focus").and_then(Value::as_str).map(str::to_string),
                 summary: Some(summary),
-                open_questions: dossier_list_field(&payload, &["open_questions", "questions", "question"]),
-                source_refs: dossier_list_field(&payload, &["source_refs", "source", "sources"]),
-                artifact_refs: dossier_list_field(&payload, &["artifact_refs", "artifact", "artifact_grounding"]),
-                suggested_next: dossier_field(&payload, &["next", "next_safe_command"])
-                    .or_else(|| Some(format!("CONTINUITY_SESSION_FINALIZE {session_id} :: outcome: park; summary: ...; next: ..."))),
+                open_questions: session_preserved_list(&payload, &["open_questions", "questions", "question"], &session, "open_questions"),
+                source_refs: session_preserved_list(&payload, &["source_refs", "source", "sources"], &session, "source_refs"),
+                artifact_refs: session_preserved_list(&payload, &["artifact_refs", "artifact", "artifact_grounding"], &session, "artifact_refs"),
+                suggested_next: session_preserved_next(&payload, &session),
                 extra: json!({}),
             },
         );
+        let next_command = record.get("suggested_next").and_then(Value::as_str).unwrap_or("(none)").to_string();
         self.append_continuity_session_record(&mut thread, record)?;
         Ok(format!(
-            "Continuity session `{session_id}` summarized. Suggested NEXT: CONTINUITY_SESSION_FINALIZE {session_id} :: outcome: complete|park|hold; summary: ...; next: ..."
+            "Continuity session `{session_id}` summarized. Recorded next step (not dispatched): {next_command}"
         ))
     }
 
@@ -5973,7 +5965,7 @@ impl ActionContinuityStore {
         let mut thread = self.ensure_active_thread(None)?;
         let (selector, payload) = parse_session_selector_payload(raw);
         let Some(session) = self.resolve_continuity_session(&thread, selector.as_deref())? else {
-            return Ok("CONTINUITY_SESSION_FINALIZE needs an existing session.".to_string());
+            return Err(ContinuityInputError("CONTINUITY_SESSION_FINALIZE needs an existing session.").into());
         };
         let outcome = dossier_field(&payload, &["outcome", "status"])
             .unwrap_or_else(|| "park".to_string())
@@ -5981,7 +5973,8 @@ impl ActionContinuityStore {
         let status = match outcome.as_str() {
             "complete" => "complete",
             "hold" => "held",
-            _ => "parked",
+            "park" => "parked",
+            _ => return Err(ContinuityInputError("Choose outcome: complete, park, or hold. No session state changed.").into()),
         };
         let experiment = self.session_experiment(&thread, &session)?;
         let session_id = session
@@ -6011,18 +6004,11 @@ impl ActionContinuityStore {
                     .and_then(Value::as_str)
                     .map(str::to_string),
                 summary,
-                open_questions: dossier_list_field(
-                    &payload,
-                    &["open_questions", "questions", "question"],
-                ),
-                source_refs: dossier_list_field(&payload, &["source_refs", "source", "sources"]),
-                artifact_refs: dossier_list_field(
-                    &payload,
-                    &["artifact_refs", "artifact", "artifact_grounding"],
-                ),
-                suggested_next: dossier_field(&payload, &["next", "next_safe_command"])
-                    .or_else(|| Some(format!("CONTINUITY_SESSION_RESUME {session_id}"))),
-                extra: json!({"outcome": outcome}),
+                open_questions: session_preserved_list(&payload, &["open_questions", "questions", "question"], &session, "open_questions"),
+                source_refs: session_preserved_list(&payload, &["source_refs", "source", "sources"], &session, "source_refs"),
+                artifact_refs: session_preserved_list(&payload, &["artifact_refs", "artifact", "artifact_grounding"], &session, "artifact_refs"),
+                suggested_next: session_preserved_next(&payload, &session),
+                extra: json!({"outcome": outcome, "return_cue": dossier_field(&payload, &["return_cue"]).unwrap_or_else(|| "explicit request".to_string()), "automatic_return": false}),
             },
         );
         self.append_continuity_session_record(&mut thread, record)?;
@@ -6030,7 +6016,7 @@ impl ActionContinuityStore {
             .as_ref()
             .map_or("latest", |experiment| experiment.experiment_id.as_str());
         Ok(format!(
-            "Continuity session `{session_id}` finalized as {status}.\nResume NEXT: CONTINUITY_SESSION_RESUME {session_id}\nPromotion options: MEMORY_PROMOTE {target} :: dossier|evidence|authority_request"
+            "Continuity session `{session_id}` finalized as {status}.\nAvailable on request: CONTINUITY_SESSION_RESUME {session_id}\nReturn cue is recorded only, not scheduled.\nPromotion options: MEMORY_PROMOTE {target} :: dossier|evidence|authority_request"
         ))
     }
 
@@ -6038,7 +6024,7 @@ impl ActionContinuityStore {
         let mut thread = self.ensure_active_thread(None)?;
         let (selector, _) = parse_session_selector_payload(raw);
         let Some(session) = self.resolve_continuity_session(&thread, selector.as_deref())? else {
-            return Ok("CONTINUITY_SESSION_RESUME could not find a session.".to_string());
+            return Err(ContinuityInputError("CONTINUITY_SESSION_RESUME could not find a session.").into());
         };
         let experiment = self.session_experiment(&thread, &session)?;
         let session_id = session
@@ -6057,16 +6043,7 @@ impl ActionContinuityStore {
                 focus: session.get("focus").and_then(Value::as_str).map(str::to_string),
                 summary: session.get("summary").and_then(Value::as_str).map(str::to_string),
                 open_questions: value_string_list(session.get("open_questions")),
-                source_refs: vec![
-                    self.continuity_sessions_path(&thread.thread_id)
-                        .display()
-                        .to_string(),
-                    session
-                        .get("record_id")
-                        .and_then(Value::as_str)
-                        .unwrap_or(&session_id)
-                        .to_string(),
-                ],
+                source_refs: value_string_list(session.get("source_refs")),
                 artifact_refs: value_string_list(session.get("artifact_refs")),
                 suggested_next: session
                     .get("suggested_next")
@@ -6078,7 +6055,8 @@ impl ActionContinuityStore {
         );
         self.append_continuity_session_record(&mut thread, record.clone())?;
         Ok(format!(
-            "Continuity session `{session_id}` reopened.\nSummary: {}\nSuggested NEXT: {}",
+            "Continuity session `{session_id}` reopened.\nFocus: {}\nSummary: {}\nOpen questions: {}\nSources: {}\nSuggested NEXT (not dispatched): {}",
+            session.get("focus").and_then(Value::as_str).unwrap_or("(none)"),
             truncate_chars(
                 session
                     .get("summary")
@@ -6086,6 +6064,8 @@ impl ActionContinuityStore {
                     .unwrap_or("(no summary yet)"),
                 400
             ),
+            serde_json::to_string(&value_string_list(session.get("open_questions")))?,
+            serde_json::to_string(&value_string_list(session.get("source_refs")))?,
             record
                 .get("suggested_next")
                 .and_then(Value::as_str)
@@ -6240,7 +6220,13 @@ impl ActionContinuityStore {
     ) -> Result<Option<Value>> {
         let target = selector.unwrap_or("latest").trim();
         let target_lower = target.to_ascii_lowercase();
-        let rows = self.continuity_session_rows(&thread.thread_id, None, 256)?;
+        // Explicit bookmarks remain addressable beyond the prompt's recent window.
+        let limit = if matches!(target_lower.as_str(), "" | "latest" | "current") {
+            256
+        } else {
+            usize::MAX
+        };
+        let rows = self.continuity_session_rows(&thread.thread_id, None, limit)?;
         if rows.is_empty() {
             return Ok(None);
         }
@@ -6271,14 +6257,7 @@ impl ActionContinuityStore {
                 .find(|row| row.get("experiment_id").and_then(Value::as_str) == Some(target))
                 .cloned());
         }
-        Ok(rows
-            .iter()
-            .rev()
-            .find(|row| {
-                row.get("session_id").and_then(Value::as_str) == Some(target)
-                    || row.get("record_id").and_then(Value::as_str) == Some(target)
-            })
-            .cloned())
+        Ok(resolve_session_reference(&rows, target).cloned())
     }
 
     fn resolve_continuity_session_draft(
@@ -6587,16 +6566,7 @@ impl ActionContinuityStore {
             .last()
             .cloned()
             .or_else(|| rows.last().cloned());
-        let active = rows
-            .iter()
-            .rev()
-            .find(|row| {
-                matches!(
-                    row.get("status").and_then(Value::as_str),
-                    Some("active" | "summarized")
-                )
-            })
-            .cloned();
+        let active = latest_active_session(&rows).cloned();
         let session_count = rows
             .iter()
             .filter_map(|row| row.get("session_id").and_then(Value::as_str))
@@ -6662,7 +6632,9 @@ impl ActionContinuityStore {
                 "Continuity session NEXT: CONTINUITY_SESSION_START {selector} :: title: ...; focus: ...; next: ...\n"
             );
         }
-        let latest = rows.last().expect("checked not empty");
+        let Some(latest) = latest_active_session(&rows) else {
+            return String::new();
+        };
         let session_id = latest
             .get("session_id")
             .and_then(Value::as_str)

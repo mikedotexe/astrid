@@ -37,3 +37,4 @@ include!("provider/fallback_contract_tests.rs");
 include!("provider/witness_tests.rs");
 include!("provider/generative_actions.rs");
 include!("provider/tests.rs");
+include!("provider/context_retrieval_tests.rs");

@@ -233,7 +233,20 @@ pub fn build_control_plane_v1(input: &Value) -> Value {
 
     if let Some(session) = input
         .get("continuity_session_v1")
+        .and_then(|session| {
+            if session.get("active_session").is_some() {
+                session.get("active_session")
+            } else {
+                Some(session)
+            }
+        })
         .filter(|value| value.is_object())
+        .filter(|value| {
+            !matches!(
+                value.get("status").and_then(Value::as_str),
+                Some("parked" | "held" | "complete")
+            )
+        })
     {
         let command = text(session.get("suggested_next"));
         routes.push(route(

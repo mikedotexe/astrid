@@ -1089,6 +1089,9 @@ mod tests {
         assert!(desc.contains("density gradient"));
         assert!(desc.contains("Denominator Sequence"));
         assert!(desc.contains("effective dimensionality"));
+        assert!(desc.contains("relative spectral dimensionality deficit"));
+        assert!(desc.contains("telemetry field distinguishability_loss"));
+        assert!(desc.contains("not a measurement of authorship or self/other boundaries"));
         assert!(desc.contains("Resonance density"));
         assert!(desc.contains("forming_containment"));
         assert!(desc.contains("Pressure source"));
