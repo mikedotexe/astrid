@@ -12,7 +12,8 @@ import unittest
 
 from evidence_store import EvidenceEventStore
 from evidence_store.model import ProvenanceSourceV1
-from lived_state_witness.model import authority_state
+from lived_state_witness.model import authority_state, witness_pointer
+from lived_state_witness.validation import validate_witness
 from lived_state_witness.concordance import (
     build_concordance_events,
     validate_concordance_preflight,
@@ -88,6 +89,51 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+
+    def test_extended_header_preserves_witness_binding(self) -> None:
+        witness_id, filename = self._write_exact_fixture()
+        path = self.introspections / filename
+        report = path.read_bytes().replace(
+            b"Lived-state witness:",
+            b"Source coverage: complete\n" * 45 + b"Lived-state witness:",
+        )
+        path.write_bytes(report)
+        sidecar_path = self.introspections / "lived_state_witnesses/witnesses" / f"{witness_id}.json"
+        sidecar = json.loads(sidecar_path.read_text())
+        sidecar["artifact_sha256"] = sha256(report)
+        sidecar_path.write_text(json.dumps(sidecar))
+        self.assertEqual(witness_pointer(path), witness_id)
+        status = project(self.workspace, write=True)
+        self.assertTrue(status["valid"])
+        self.assertEqual(status["migration_counters"]["exact"], 1)
+
+    def test_body_cannot_supply_witness_header(self) -> None:
+        witness_id, filename = self._write_exact_fixture()
+        path = self.introspections / filename
+        path.write_text(f"Source: fixture\n\nLived-state witness: {witness_id}\n")
+        self.assertIsNone(witness_pointer(path))
+        path.write_text("Source: fixture\n" * 256 + f"Lived-state witness: {witness_id}\n")
+        self.assertIsNone(witness_pointer(path))
+
+    def test_producer_pressure_relations_preserve_no_causation_boundary(self) -> None:
+        witness_id, _ = self._write_exact_fixture()
+        path = self.introspections / "lived_state_witnesses/witnesses" / f"{witness_id}.json"
+        witness = json.loads(path.read_text())
+        observation = witness["parameter_observations_v1"][0]
+        for relation in (
+            "prompt_rendered_pressure_composite_via_interpret_spectral_distinct_from_resonance_pressure_risk_no_mechanism_claim",
+            "prompt_rendered_porosity_scalar_via_interpret_spectral_no_mechanism_claim",
+            "pressure_source_component_distinct_from_resonance_density_mode_packing_no_mechanism_claim",
+        ):
+            with self.subTest(relation=relation):
+                observation["value_relation"] = relation
+                observation["direct_causation_claimed"] = False
+                self.assertEqual(validate_witness(witness), [])
+                observation["direct_causation_claimed"] = True
+                self.assertTrue(validate_witness(witness))
+        observation["direct_causation_claimed"] = False
+        observation["value_relation"] = "unreviewed_relation"
+        self.assertTrue(validate_witness(witness))
 
     def _write_exact_fixture(self) -> tuple[str, str]:
         witness_id = "lsw_" + "a" * 64

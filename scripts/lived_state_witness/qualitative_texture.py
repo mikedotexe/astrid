@@ -67,6 +67,15 @@ MEASUREMENT_CONTRACT = {
     "contextual_weights_present": False,
     "authority_effect": False,
 }
+# These additive groups were emitted at different times under schema v1.
+# Validate complete groups when present; never retrofit declarations into receipts.
+SEMANTIC_EXTENSION_GROUPS = (
+    {"artifact_integrity_mismatch_relation", "felt_scalar_divergence_relation",
+     "dissimilarity_gradient_relation"},
+    {"analysis_completion_status", "field_presence_relation"},
+    {"is_non_scalar_assertion", "non_scalar_assertion_scope"},
+    {"canonical_body_hash_scope", "relation_fields_are_fixed_safety_declarations"},
+)
 SUBJECTIVE_CONTINUITY = {
     "schema": "lived_state_subjective_continuity_v1",
     "schema_version": 1,
@@ -95,6 +104,11 @@ CAUSALITY_EXPRESSION = {
     "direct_causation_established": False,
     "automatically_inferred": False,
     "authority_effect": False,
+}
+LEGACY_SUBJECTIVE_CONTINUITY = {
+    key: value for key, value in SUBJECTIVE_CONTINUITY.items()
+    if not key.startswith("texture_")
+    and key != "felt_report_remains_valid_without_texture_fidelity"
 }
 FIELDS = (
     set(EXPECTED)
@@ -233,17 +247,20 @@ def validate_qualitative_texture_anchor(value: Any, errors: list[str]) -> None:
     for field, expected in EXPECTED.items():
         if value.get(field) != expected:
             errors.append(f"qualitative_texture_anchor.{field}:invalid")
-    extension_fields = set(value) & set(SEMANTIC_EXTENSION)
-    if extension_fields:
-        for field, expected in SEMANTIC_EXTENSION.items():
-            if value.get(field) != expected:
-                errors.append(f"qualitative_texture_anchor.{field}:invalid")
+    for group in SEMANTIC_EXTENSION_GROUPS:
+        if set(value) & group:
+            for field in sorted(group):
+                if value.get(field) != SEMANTIC_EXTENSION[field]:
+                    errors.append(f"qualitative_texture_anchor.{field}:invalid")
     for field, expected in (
         ("dissimilarity_measurement_contract_v1", MEASUREMENT_CONTRACT),
         ("subjective_continuity_v1", SUBJECTIVE_CONTINUITY),
         ("causality_expression_v1", CAUSALITY_EXPRESSION),
     ):
-        if field in value and value.get(field) != expected:
+        accepted = [expected]
+        if field == "subjective_continuity_v1":
+            accepted.append(LEGACY_SUBJECTIVE_CONTINUITY)
+        if field in value and value.get(field) not in accepted:
             errors.append(f"qualitative_texture_anchor.{field}:invalid")
     body_hash = value.get("canonical_body_sha256")
     if not isinstance(body_hash, str) or HASH_RE.fullmatch(body_hash) is None:
