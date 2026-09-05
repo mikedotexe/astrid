@@ -29,17 +29,28 @@ label_pid() {
 BRIDGE_PID="$(label_pid com.astrid.spectral-bridge || true)"
 MINIME_PID="$(label_pid com.minime.engine || true)"
 MODEL_PID="$(label_pid com.reservoir.coupled-astrid || true)"
+GATEWAY_PID=""
+SUPERVISOR_PID=""
+PORT_OWNER_PID="$MINIME_PID"
+MINIME_MANIFEST="$WORKSPACE/deployment_manifests/minime-engine.json"
+DIVISION_ENABLED="$(python3 -c 'import plistlib,sys; print(plistlib.load(open(sys.argv[1], "rb")).get("EnvironmentVariables", {}).get("MINIME_DIVISION_GATEWAY_ENABLED", "false"))' "$HOME/Library/LaunchAgents/com.minime.engine.plist")"
+if [ "$DIVISION_ENABLED" = true ]; then
+  # This creates a new runtime binding; historical build manifests stay intact.
+  MINIME_MANIFEST="$(python3 "$ASTRID/scripts/minime_runtime_binding.py")"
+  GATEWAY_PID="$(label_pid com.minime.division-gateway)"
+  SUPERVISOR_PID="$(label_pid com.minime.division-supervisor)"
+  PORT_OWNER_PID="$GATEWAY_PID"
+fi
 
 BRIDGE_PROCESS_OK=false; [ -n "$BRIDGE_PID" ] && kill -0 "$BRIDGE_PID" 2>/dev/null && BRIDGE_PROCESS_OK=true
 MINIME_PROCESS_OK=false; [ -n "$MINIME_PID" ] && kill -0 "$MINIME_PID" 2>/dev/null && MINIME_PROCESS_OK=true
 MODEL_PROCESS_OK=false; [ -n "$MODEL_PID" ] && kill -0 "$MODEL_PID" 2>/dev/null && MODEL_PROCESS_OK=true
-PORT_7878_OK=false; [ -n "$MINIME_PID" ] && lsof -t -nP -iTCP:7878 -sTCP:LISTEN 2>/dev/null | grep -qx "$MINIME_PID" && PORT_7878_OK=true
-PORT_7879_OK=false; [ -n "$MINIME_PID" ] && lsof -t -nP -iTCP:7879 -sTCP:LISTEN 2>/dev/null | grep -qx "$MINIME_PID" && PORT_7879_OK=true
+PORT_7878_OK=false; [ -n "$PORT_OWNER_PID" ] && lsof -t -nP -iTCP:7878 -sTCP:LISTEN 2>/dev/null | grep -qx "$PORT_OWNER_PID" && PORT_7878_OK=true
+PORT_7879_OK=false; [ -n "$PORT_OWNER_PID" ] && lsof -t -nP -iTCP:7879 -sTCP:LISTEN 2>/dev/null | grep -qx "$PORT_OWNER_PID" && PORT_7879_OK=true
 LIVEZ_OK=false; [ "$(curl --silent --max-time 2 --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8090/livez 2>/dev/null || true)" = "200" ] && LIVEZ_OK=true
 READYZ_OK=false; [ "$(curl --silent --max-time 2 --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8090/readyz 2>/dev/null || true)" = "200" ] && READYZ_OK=true
 
 BRIDGE_MANIFEST="$WORKSPACE/deployment_manifests/spectral-bridge.json"
-MINIME_MANIFEST="$WORKSPACE/deployment_manifests/minime-engine.json"
 MODEL_MANIFEST="$WORKSPACE/deployment_manifests/coupled-model.json"
 BRIDGE_MANIFEST_OK=false; [ -f "$BRIDGE_MANIFEST" ] && BRIDGE_MANIFEST_OK=true
 MINIME_MANIFEST_OK=false; [ -f "$MINIME_MANIFEST" ] && MINIME_MANIFEST_OK=true
@@ -79,7 +90,7 @@ args=(
   --probe "model_manifest=$MODEL_MANIFEST_OK"
   --probe "telemetry=$TELEMETRY_OK"
   --binary "spectral-bridge=$ASTRID/capsules/spectral-bridge/target/release/spectral-bridge-server"
-  --binary "minime-engine=$MINIME/minime/target/release/minime"
+  --binary "minime-current-disk-executable=$MINIME/minime/target/release/minime"
   --binary "model-python=$MODEL_REPO/.venv/bin/python"
   --script "bridge-wrapper=$ASTRID/scripts/build_bridge.sh"
   --script "minime-wrapper=$ASTRID/scripts/deploy_minime.sh"
@@ -93,5 +104,7 @@ args=(
 [ -n "$BRIDGE_PID" ] && args+=(--process "bridge=$BRIDGE_PID")
 [ -n "$MINIME_PID" ] && args+=(--process "minime=$MINIME_PID")
 [ -n "$MODEL_PID" ] && args+=(--process "model=$MODEL_PID")
+[ -n "$GATEWAY_PID" ] && args+=(--process "minime-gateway=$GATEWAY_PID" --launchd-label com.minime.division-gateway)
+[ -n "$SUPERVISOR_PID" ] && args+=(--process "minime-supervisor=$SUPERVISOR_PID" --launchd-label com.minime.division-supervisor)
 
 python3 "$ASTRID/scripts/environment_receipts.py" "${args[@]}"

@@ -83,7 +83,18 @@ COMPONENTS = {
         "build_paths": (
             "coupled_astrid_server.py",
             "coupled_http_gateway.py",
+            "mlx_reservoir.py",
             "launchd/com.reservoir.coupled-astrid.plist",
+        ),
+        "external_roots": (),
+    },
+    "minime-agent": {
+        "repo": Path("/Users/v/other/minime"),
+        "build_paths": (
+            ":(top,glob)*.py", "minime_autonomy", "mikemind",
+            "scripts/launchd_autonomous_agent.sh",
+            "scripts/minime_rescue_investigation.py",
+            "launchd/com.minime.autonomous-agent.plist",
         ),
         "external_roots": (),
     },
@@ -381,6 +392,26 @@ class DeployPreflightTests(unittest.TestCase):
             )
 
             self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (True, 0, "dirty_acked"))
+
+    def test_model_preflight_includes_imported_logit_processor(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._repo(tmp)
+            (repo / "mlx_reservoir.py").write_text("# changed processor\n")
+            files = dirty_build_files(repo, COMPONENTS["model"]["build_paths"], ())
+            self.assertEqual(files, ["mlx_reservoir.py"])
+
+    def test_agent_preflight_includes_python_imports_not_engine_or_tests(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._repo(tmp)
+            (repo / "minime_autonomy").mkdir()
+            (repo / "tests").mkdir()
+            (repo / "autonomous_agent.py").write_text("# facade\n")
+            (repo / "minime_autonomy/journal_context.py").write_text("# helper\n")
+            (repo / "tests/test_example.py").write_text("# fixture\n")
+            files = dirty_build_files(repo, COMPONENTS["minime-agent"]["build_paths"], ())
+            self.assertEqual(files, ["autonomous_agent.py", "minime_autonomy/journal_context.py"])
 
     def test_component_build_paths_are_scoped_independently(self):
         import os

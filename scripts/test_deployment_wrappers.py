@@ -40,6 +40,27 @@ class DeploymentWrapperTests(unittest.TestCase):
         self.assertIn("http://127.0.0.1:8090/readyz", text)
         self.assertNotIn('wait_port 8090 "coupled Astrid server"', text)
 
+    def test_model_reload_drains_without_forced_bootout(self) -> None:
+        text = (ROOT / "scripts/restart_coupled_model.sh").read_text()
+        self.assertIn("graceful_model_reload.py", text)
+        self.assertNotIn("launchctl bootout", text)
+        self.assertNotIn("launchctl kickstart", text)
+        self.assertIn('cmp -s "$PLIST" "$INSTALLED_PLIST"', text)
+        self.assertIn("-iTCP:8090", text)
+        self.assertIn('logit-processor=$PROCESSOR', text)
+        self.assertLess(text.index('bash "$ASTRID/scripts/capture_stack_receipt.sh"'), text.index('if ! python3 "$ASTRID/scripts/graceful_model_reload.py"'))
+        self.assertEqual(text.count('bash "$ASTRID/scripts/capture_stack_receipt.sh"'), 2)
+        self.assertIn('--output "$CANDIDATE_MANIFEST"', text)
+        self.assertLess(text.index('[ "$READYZ_OK" = true ]'), text.index('mv "$RELOAD_DIR/publish-manifest.json" "$MANIFEST"'))
+        self.assertIn('--old-started-at "$OLD_STARTED_AT"', text)
+
+    def test_stack_capture_checks_division_runtime_binding(self) -> None:
+        text = (ROOT / "scripts/capture_stack_receipt.sh").read_text()
+        self.assertIn("minime_runtime_binding.py", text)
+        self.assertIn('PORT_OWNER_PID="$GATEWAY_PID"', text)
+        self.assertIn('--process "minime-gateway=$GATEWAY_PID"', text)
+        self.assertIn('--process "minime-supervisor=$SUPERVISOR_PID"', text)
+
     def test_wrappers_emit_checked_receipts_and_manifests(self) -> None:
         for path in SCRIPTS[:3]:
             text = path.read_text()

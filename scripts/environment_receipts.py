@@ -479,6 +479,13 @@ def manifest_compatibility(
     manifest = manifest_entry.get("manifest")
     if not isinstance(manifest, dict):
         return False, [f"build manifest missing: {path}"]
+    if manifest.get("schema") == "stack_runtime_binding_v1":
+        try:
+            from minime_runtime_binding import validate as validate_runtime_binding
+        except ImportError:
+            from scripts.minime_runtime_binding import validate as validate_runtime_binding
+
+        reasons.extend(validate_runtime_binding(manifest))
     if require_protocol:
         protocol = (
             manifest.get("protocol")
