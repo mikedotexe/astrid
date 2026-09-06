@@ -9,7 +9,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
-- **[codex] Isolates Avado/ICP release preparation.** Adds a sanitized device-readiness checkpoint and a portable, offline source-candidate freezer with exact-ref, clean-tree, and non-overwrite tests. Private device evidence stays outside tracked files. This is preparation only: no Linux release qualification, deployment, state migration, or bridge change.
+- **[codex] Isolates Avado/ICP release preparation.** Adds a sanitized device-readiness checkpoint and a portable, offline source-candidate freezer with exact-ref, clean-tree, and non-overwrite tests, also run in Python 3.11 CI. Private device evidence stays outside tracked files. This is preparation only: no Linux release qualification, deployment, state migration, or bridge change.
 
 - **[codex-astra] Drafts and refines a selectively shareable reservoir-introspection discussion paper.** Separates first-person reports, verified mechanisms, the bounded real-model replay, deployed repairs, and unresolved hypotheses; includes a concrete research agenda and explicit prompt, privacy, and publication limits. Revision v0.2 clarifies post-forward logit coupling versus transformer-internal access, adds related work and discriminating controls, and provides an excerpt-free reviewer brief plus a sourced internal outreach shortlist with unsent messages. The share-facing draft is `docs/research/2026-09-05-reservoir-introspection-discussion-draft.md`; its local evidence map and outreach plan are separate. Documentation only, with no new experiment, live change, outreach submission, or automation resumption.
 
