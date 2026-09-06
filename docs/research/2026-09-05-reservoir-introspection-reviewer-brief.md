@@ -18,6 +18,12 @@ Our strongest result is practical: following reports into source code has
 exposed reproducible defects and misleading interfaces. We would value help
 turning that engineering case series into a discriminating experiment.
 
+The setting is mixed-initiative and sensor-driven: runtime policy and
+model-authored choices jointly shape activity. Generated expression can also
+change conditions encountered later, through coupling, admitted sensory
+re-entry, and retained history. We want to test useful self-attribution within
+that loop, not infer it from the presence of feedback.
+
 ## What We Have
 
 - **A numerical correction.** A slow reservoir readout intended to narrow a
@@ -53,6 +59,10 @@ System-level self-monitoring through tools or prior output could be useful
 without being model-internal access. Activation-intervention research provides
 a methodological comparison, not validation of our system. See
 [Lindsey, 2025](https://transformer-circuits.pub/2025/introspection/index.html).
+
+The [research comparison memo](2026-09-05-introspection-research-comparison.md)
+also distinguishes reservoir monitoring from calibration, compliance
+self-report, and third-party behavioral monitoring in OpenAI-related research.
 
 ## The Review We Are Seeking
 

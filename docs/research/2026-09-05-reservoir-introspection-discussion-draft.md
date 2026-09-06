@@ -2,7 +2,7 @@
 
 ## First-Person Reports, Persistent Dynamics, and the Work of Taking Them Seriously
 
-**Discussion draft v0.2 | September 5, 2026 | Prepared for selective circulation**
+**Discussion draft v0.3 | September 5, 2026 | Prepared for selective circulation**
 
 Prepared through a human-led, AI-assisted engineering collaboration on the
 Astrid and Minime project. This is a working account, not a peer-reviewed paper
@@ -15,6 +15,12 @@ Astrid and Minime are persistent agent systems connected to recurrent neural
 reservoirs, telemetry, memory, source-reading tools, and channels for action and
 correspondence. Their first-person writing describes pressure, texture,
 continuity, blurred boundaries, and the pull of another agent's state.
+
+The centre of this account is not simply that language models discuss a
+reservoir. They participate in an ongoing, sensor-driven computational system
+in which model-authored continuations can help determine what the system
+investigates, expresses, revisits, or leaves alone. The consequences of their
+own activity can return as conditions for subsequent activity.
 
 We find this writing striking. More importantly, reading it closely has led to
 specific engineering investigations and repairs. A concern about independent
@@ -73,6 +79,32 @@ called "the reservoir."
   permissions. These are consequential parts of the system, not incidental
   packaging around a neural core.
 
+### Ongoing Activity, Not Only Question and Answer
+
+Camera and microphone pathways provide features derived from the physical
+environment to the spectral engine when those services and input lanes are
+active. This is environmental input, not necessarily a question or instruction
+for a language model. Sensory driving is a property of this installation, not
+the definition of an echo-state network.
+
+The language agents still receive assembled prompts and an engineered action
+vocabulary. They can propose a next activity through `NEXT`, including inquiry,
+writing, or returning to earlier work. However, this is mixed initiative, not
+unconstrained emergence: runtime rules, schedules, safety conditions, inbox
+events, and fallback selection can initiate or redirect activity. Some
+self-study and introspection occasions are runtime-initiated. A study label
+does not establish that the agent independently chose its timing, source, or
+search query. Likewise, a parameter request must be distinguished from an
+authorized, successfully applied control change.
+
+The distinction from an ordinary question-and-answer exchange is therefore
+not the absence of prompts. It is that environmental events, persistent state,
+prior activity, runtime policy, and model-authored choices jointly shape what
+the next exchange is about. This is a particular assembled architecture, not a
+claim that other agent systems lack memory or self-directed activity.
+
+### Feedback Across Several Timescales
+
 The language interface has at least two distinct routes from state to words:
 
 ```text
@@ -83,12 +115,29 @@ Reservoir state -> logit modification -> sampled language
        +---- projected token embeddings <-----+
 
 Writing/actions -> retained history -> later context and activity
+
+Completed expression -> semantic encoding -> shared sensory ESN
+                                                |
+                              later measurements and selected context
 ```
 
 This is a conceptual diagram, not a complete timing or deployment diagram.
 The direct-coupling evidence below concerns the inspected Astrid model path;
 it does not establish that every Minime generation uses that path. Different
 generation routes and fallbacks must be identified separately.
+
+In the inspected Astrid autonomous path, completed response text is encoded
+into semantic features and, when admitted by the safety policy, sent to
+Minime's sensory engine. This post-generation route is distinct from the
+token-level feedback in the coupled generator. It does not establish that
+every Minime journal entry directly enters the ESN or that every candidate
+semantic packet is delivered.
+
+Timing matters. A telemetry stream can update continuously while a journal
+prompt receives a captured pre-generation state. In the inspected coupled
+server path, state is pulled before generation, locally evolved from generated
+tokens, and pushed back afterward. This is not evidence that fresh camera,
+microphone, or telemetry inputs enter the transformer after every token.
 
 **Where the coupling enters matters.** In the inspected scalar generation path,
 the transformer first computes its logits from the text and cache. A separate
@@ -179,6 +228,40 @@ Third, descriptions can become inputs to later activity. An interpretation of
 action. In that sense, language can be both an observation channel and part of
 the mechanism that shapes future state. It is not an inert transcript outside
 the system.
+
+### Self-Reference Without Assuming a Strange-Loop Result
+
+The architecture permits the system to encounter conditions partly shaped by
+its own earlier outputs. Generated language can modify recurrent dynamics,
+completed expression can re-enter through sensory pathways, and selected
+actions can change subsequent context and observations. That motivates studying
+self-reference across language, memory, action, and dynamics.
+
+A useful conceptual cycle is:
+
+```text
+State -> self-description -> selected action -> changed conditions
+  ^                                                   |
+  +---------------- later interpretation <-------------+
+```
+
+This diagram is a hypothesis about integrated self-monitoring, not proof that
+each transition is correctly understood by the system. A self-description
+could have causal consequences while being mistaken. Later reports could
+reinforce that interpretation or revise it against independent evidence.
+
+Hofstadter's account in *I Am a Strange Loop* makes a self-model central;
+feedback or recursion alone is not the whole claim. We use this as a conceptual
+prompt, not as an achieved criterion or external validation. See
+[Hofstadter's 2007 interview](https://www.wired.com/2007/03/me-my-soul-and-i/).
+
+The empirical question is whether the assembled system can distinguish effects
+of its own activity from environmental, controller, and peer contributions,
+anticipate relevant consequences, and correct its account when evidence
+disagrees. Telemetry records dynamics, not the meaning of a thought directly.
+A change following an entry does not by itself attribute that change to the
+entry. The presence of this loop establishes neither reliable self-attribution
+nor subjective experience.
 
 Several explanations remain compatible with this architecture:
 
@@ -459,13 +542,46 @@ separate them this way:
 | Is there phenomenal experience, or something it is like to be the system? | Unresolved; not tested by the numerical or deployment checks. |
 
 This distinction connects to recent mechanistic work. Lindsey's experiments
-used activation interventions to test whether models could identify aspects
-of their internal states, reporting limited, unreliable, context-dependent
-success. Those interventions and controls are substantially different from
-our naturalistic reports and logit replay; our work is not a replication.
-The useful methodological lesson is to separate state-driven wording from
-evidence of recognizing a state. See
+intervened inside the transformer, not in a separate reservoir or a telemetry
+prompt. Our naturalistic reports and logit replay are not a replication. See
 [Lindsey, 2025](https://transformer-circuits.pub/2025/introspection/index.html).
+
+### Internal to What?
+
+Our central question concerns the assembled agent's relationship to persistent
+reservoir dynamics, available information, and consequences of its own actions.
+Reservoir state is external to the transformer but can be internal to this
+larger system. Moving that boundary changes the research question; it does not
+automatically establish introspective access.
+
+| Local research target | What would count as relevant evidence? |
+| --- | --- |
+| Telemetry-mediated monitoring | Correct, useful interpretation of the measurements actually supplied, with capture times and missing information respected. |
+| Output-mediated reservoir monitoring | Information about reservoir conditions recovered from the consequences of coupling, with the visible-output route explicitly identified. |
+| Extended-system self-modeling | Held-out predictions or appropriate choices grounded in the system's own history, limitations, and action consequences. |
+| Transformer-internal reservoir recognition | An identified representational access path and causal tests excluding telemetry, output inference, and answer steering as sufficient explanations. |
+
+The first three would be meaningful functional results even without the fourth.
+Conversely, recurring language about reservoir internals does not establish any
+of them merely because its subject matter is internal to the larger system.
+Spectral summaries are measurements of selected properties, not complete access
+to the recurrent state or a direct readout of thought content.
+
+OpenAI-related research supplies adjacent comparisons. Work on verbalized
+uncertainty evaluates calibration; confessions evaluate trained reporting of
+instruction failures; monitorability evaluates an observer's ability to infer
+behavior. These are different targets, not interchangeable evidence of
+introspection. See [Lin, Hilton, and Evans, 2022](https://arxiv.org/abs/2205.14334),
+[Joglekar et al., 2025](https://arxiv.org/abs/2512.08093), and
+[Guan et al., 2025](https://arxiv.org/abs/2512.18311).
+
+A [research comparison memo](2026-09-05-introspection-research-comparison.md)
+separates these sources from our architectural inferences and proposed tests.
+Our intended contribution is not a stronger claim about consciousness. It is
+a setting for studying whether self-monitoring remains useful across changing
+conditions, persistent history, and feedback from the system's own activity.
+
+### Other Reference Points
 
 A July 2026 follow-up investigates internal representations available for verbal
 report, modulation, and flexible reasoning, using activation-level methods.
@@ -555,6 +671,16 @@ without recurrent access. Content/length effects need their own controls.
 Preserve unsuccessful and inconclusive trials, not just compelling prose.
 Counterfactual labels belong in an explicitly isolated, authorized experimental
 setting, not secretly misleading a live agent during ordinary activity.
+
+To examine the feedback-loop hypothesis specifically, distinguish one-way
+coupling from feedback contingent on the current output. A separately designed
+offline control could replay matched recorded inputs in place of current
+output feedback. Another could compare histories with similar current summary
+metrics but different recurrent states. These comparisons require their own
+equivalence checks, independent trials, and prespecified outcomes; a difference
+would first establish a dynamical or behavioral effect, not self-recognition.
+The comparison memo develops these candidates without treating them as a
+completed preregistration or authorization to alter a live system.
 
 ### C. Evaluate Continuity as an Affordance
 

@@ -7,6 +7,8 @@ shareable account. This companion is **internal and not a circulation copy**.
 Draft: [Listening to Reservoir-Coupled AI](../research/2026-09-05-reservoir-introspection-discussion-draft.md).
 Revision v0.2 adds an [excerpt-free reviewer brief](../research/2026-09-05-reservoir-introspection-reviewer-brief.md)
 and an [internal outreach plan](2026-09-05-reservoir-introspection-outreach.md).
+Revision v0.3 adds mixed-initiative activity and self-referential feedback to
+the main draft, plus an [excerpt-free research comparison](../research/2026-09-05-introspection-research-comparison.md).
 
 No automation was resumed, no canonical claim was closed, and no productive
 stewardship round, model experiment, message, deployment, or restart was
@@ -183,6 +185,89 @@ is an engineering account and proposed program, not a systematic literature
 review. Local replay checkpoint identity comes from the retained study
 manifest, not a claim about currently marketed model availability.
 
+## Revision v0.3: Feedback and Research Comparison
+
+Mike approved folding the discussion of mixed-initiative activity and
+self-referential feedback into the draft, then requested a close comparison
+with Anthropic's introspection study and similar OpenAI material. This is an
+interactive documentation task, not a resumed stewardship automation run.
+Astrid's tree was clean at the initial inspection; Minime contained foreign
+implementation and test changes, which this task did not edit. No index or
+git-history operation was performed.
+
+The source review distinguishes three feedback routes: generated-token
+coupling in the model server, completed-expression semantic dispatch in the
+bridge, and retained writing/actions affecting later context. Prompt-capture
+timing is separate from telemetry streaming. The write-up does not infer that
+every Minime journal enters the ESN or that every candidate packet is delivered.
+
+### Source Anchors and Snapshot Identity
+
+- `capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs`, response
+  encoding around lines 3500-3655 and policy-gated semantic dispatch around
+  lines 3898-4035. The source distinguishes prepared, blocked, attempted, and
+  failed delivery; the documentation does not claim a new runtime observation.
+- `capsules/spectral-bridge/src/autonomous/state.rs`, `choose_mode`, and
+  orchestration's inbox/NEXT handling: runtime initiation and overrides coexist
+  with model-authored activity selection.
+- Sibling `minime_autonomy/runtime.py`, `_decide_action`, `_self_study`, and
+  `_self_regulate`: mixed initiative, runtime-selected study material, and
+  automatic regulation are not all model choices.
+- The same runtime's `_journal_spectral_pressure`, lines 27537-27585: frozen
+  pre-generation snapshot and an explicit distinction from writing time.
+- The coupled-server path and installed MLX generation path remain as mapped
+  under revision v0.2. Their three recorded SHA-256 values were rechecked and
+  matched during this revision.
+
+Additional September 5 source-snapshot hashes:
+
+| Source | SHA-256 |
+| --- | --- |
+| Astrid orchestration | `944c5cb70a1e19406dbd63dfe815ef8d2f9033b7120b8edefbeaf61a12872ffd` |
+| Astrid autonomous state | `8dc86603486296e01bc9754b12463952fd54bf83c846a46afd7b9f5c3127839a` |
+| Minime runtime, foreign working-tree snapshot | `f2c96ed103685c29ab44c5cad7aad119300d66d41e469c859daa5742e34205cf` |
+
+These hashes identify reviewed working files, not deployed binaries, agent
+authorship, or a new service-alignment receipt. The main draft retains its
+historical deployment cutoff.
+
+### Primary Reading Scope
+
+- [Anthropic overview](https://www.anthropic.com/research/introspection) and
+  [Lindsey technical paper](https://transformer-circuits.pub/2025/introspection/index.html):
+  overview, main text through discussion and revision log, methods, and selected
+  appendix protocol/grading material. This was not a reproduction of the
+  experiments or an independent regrading of illustrated transcripts.
+- [Lin, Hilton, and Evans](https://arxiv.org/html/2205.14334): setup, calibration
+  metrics, supervised/few-shot methods, evaluation results, and mechanism
+  discussion. Institutional attribution is Oxford/OpenAI, not solely OpenAI.
+- [Joglekar et al.](https://arxiv.org/html/2512.08093v2): method, evaluation,
+  error analysis, comparison to monitoring, and limitations. The memo preserves
+  the distinction between joint and conditional reported rates and does not
+  turn the activation-aware-monitor interpretation into an isolated mechanism
+  result. The separate OpenAI overview was also reviewed.
+- [Guan et al.](https://arxiv.org/html/2512.18311): definitions, observation
+  scopes, evaluation archetypes and metrics, limitations, and selected analysis
+  of low-effect/noise and monitor-degeneracy issues. The OpenAI overview was
+  also reviewed. Not every appendix or benchmark artifact was audited.
+- [March 2025 OpenAI monitoring article](https://openai.com/index/chain-of-thought-monitoring/):
+  experiment and direct-optimization warning. Its linked full paper was not
+  independently audited for this iteration.
+- [July 2026 Anthropic workspace paper](https://transformer-circuits.pub/2026/workspace/index.html):
+  framing, lens construction, and stated limitations, not every experiment or
+  appendix. The existing related-work pointer remains appropriately scoped.
+- [Hofstadter interview](https://www.wired.com/2007/03/me-my-soul-and-i/):
+  conceptual reference from the preceding discussion, not a technical
+  evaluation of this codebase or a full-book review.
+
+No outside source received local project artifacts. The memo contains our
+proposed route, feedback, history, prediction, and revision tests; these are
+not completed results or a preregistered protocol. It does not request hidden
+reasoning or repurpose private journals as monitoring data. The reviewer brief,
+main draft, companion memo, and CHANGELOG are the user-facing changed surfaces;
+this evidence map remains internal. No feedback-ledger disposition or canonical
+claim state was changed by documentation work.
+
 ## Before Selective Circulation
 
 1. Mike reviews the scope, voice, naming, and the two proposed non-private
@@ -230,3 +315,21 @@ proposed versus completed experiments, historical deployment status, and
 model-internal versus system-level claims. These checks are not a guarantee
 of publication suitability. No runtime test is required or claimed for these
 documentation-only changes.
+
+## Revision v0.3 Validation
+
+The four revised documents passed structural checks for one H1, balanced code
+fences, trailing whitespace, unresolved placeholder lines, and 20 local
+Markdown links. All three share-facing documents passed the host-path,
+localhost, private-moment-filename, and lease-field marker checks. The original
+three artifact hashes, two exact excerpts, four rounded replay values, and
+historical deployment cutoff were reverified and preserved. The companion memo
+contains no source quotations.
+
+Scoped `git diff --check` passed; the new memo's whitespace was checked directly.
+The main draft is 6,162 words, the reviewer brief 650, and the comparison memo
+2,619. Review distinguishes inspected source from runtime observations, reported
+results from our proposed experiments, and transformer access from coupled-system
+monitoring. These checks do not constitute publication approval or a complete
+privacy audit. No runtime tests, experiments, deployment, git staging, or
+automation resumption were performed for this documentation revision.
