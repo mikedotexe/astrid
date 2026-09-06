@@ -1,0 +1,236 @@
+{
+  "authority_effect": false,
+  "backend": "TripleReservoir.step_numpy",
+  "being_learning_demonstrated": false,
+  "felt_state_conclusion": null,
+  "full_service_state_modeled": false,
+  "live_model_parity_established": false,
+  "live_state_changed": false,
+  "numpy_version": "2.4.3",
+  "plan": {
+    "authorship": "developer_fixture_not_being_prediction",
+    "comparison": "isolated_synthetic_counterfactual",
+    "controls": [
+      "identical_history",
+      "copied_state_reset",
+      "reversed_execution",
+      "different_future_input"
+    ],
+    "future_row_a": [
+      0.05,
+      0.1,
+      -0.05
+    ],
+    "future_row_b": [
+      -0.05,
+      -0.1,
+      0.05
+    ],
+    "future_ticks": 8,
+    "history_row_a": [
+      0.25,
+      -0.15,
+      0.1
+    ],
+    "history_row_b": [
+      -0.25,
+      0.15,
+      -0.1
+    ],
+    "history_ticks": 12,
+    "identity_tolerance": 1e-07,
+    "input_dim": 3,
+    "live_identity_established": false,
+    "metric": "mean_future_concatenated_state_l2",
+    "n_nodes": 32,
+    "prediction": "different histories yield a gap above 1e-6 under a common future",
+    "runner_sha256": "07671d73e5e674a0cc9277a746f1f88a13d0aec30044d1299a71411d064cd448",
+    "schema": "synthetic_history_plan_v1",
+    "seeds": [
+      7,
+      17,
+      29
+    ],
+    "source_sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8",
+    "threshold": 1e-06
+  },
+  "plan_sha256": "481cbe7feebfe275ecd1d7f0df130439588ff67f1ce3217c5bf5bcd69bc6c423",
+  "python_version": "3.12.13",
+  "readout_used": false,
+  "schema": "isolated_reservoir_history_study_v1",
+  "source_bytes_unchanged": true,
+  "source_path": "/Users/v/other/neural-triple-reservoir/triple_reservoir_coreml.py",
+  "trials": [
+    {
+      "config": {
+        "bias_scale": 0.05,
+        "densities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "input_dim": 3,
+        "input_scales": [
+          0.8,
+          0.7,
+          0.6
+        ],
+        "leaks": [
+          0.35,
+          0.22,
+          0.14
+        ],
+        "n_nodes": 32,
+        "output_dim": 1,
+        "radii": [
+          0.98,
+          0.92,
+          0.85
+        ],
+        "ridge_alpha": 0.01,
+        "seed": 7,
+        "washout": 128
+      },
+      "controls_valid": true,
+      "future_sha256": "2e330c3a9ffaa333ec88627bc0d0f0114274607f0c94aadf60446d0f9f25057c",
+      "history_sha256": [
+        "ef38782cee7bb3076956182aa40542478de336114fcad90776fb5478e016fd50",
+        "ffde95024fea8e578e4fb0c6adf12adcf8d1fa175d9fbc678d6b9d7c34c93fc8"
+      ],
+      "initial_state_sha256": [
+        "23b75f593abe63a754b1c520ea535a4081b20f3f70c357e8cde53818627d2c05",
+        "43411c626aced51855715372518faf43dad30fa52ed45d5ccd8fb122638cc837"
+      ],
+      "metric_values": {
+        "copied_state_reset_gap": 0.0,
+        "different_future_input_gap": 1.8617546558380127,
+        "execution_order_gap": 0.0,
+        "history_gap": 9.21561050415039,
+        "identical_history_gap": 0.0
+      },
+      "original_states_unchanged": true,
+      "prediction_outcome": "matched",
+      "seed": 7,
+      "trajectory_sha256": [
+        "fb4da5605833b75bd4e0ba9ec6503f40ae2d2f13aa677f1da1b7d9394d37fe4d",
+        "abcf52cdf665063f703bc1729c8185d7d9945f818bd3ad434cf06a1f3551c752"
+      ],
+      "weights_sha256": "54f766c66f26d68ff4e2396163ec17bdbc207ea2780f9c648a69af7e1371d272",
+      "weights_unchanged": true
+    },
+    {
+      "config": {
+        "bias_scale": 0.05,
+        "densities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "input_dim": 3,
+        "input_scales": [
+          0.8,
+          0.7,
+          0.6
+        ],
+        "leaks": [
+          0.35,
+          0.22,
+          0.14
+        ],
+        "n_nodes": 32,
+        "output_dim": 1,
+        "radii": [
+          0.98,
+          0.92,
+          0.85
+        ],
+        "ridge_alpha": 0.01,
+        "seed": 17,
+        "washout": 128
+      },
+      "controls_valid": true,
+      "future_sha256": "2e330c3a9ffaa333ec88627bc0d0f0114274607f0c94aadf60446d0f9f25057c",
+      "history_sha256": [
+        "ef38782cee7bb3076956182aa40542478de336114fcad90776fb5478e016fd50",
+        "ffde95024fea8e578e4fb0c6adf12adcf8d1fa175d9fbc678d6b9d7c34c93fc8"
+      ],
+      "initial_state_sha256": [
+        "ff64f3dfc1d0f63c1169418febdcea5c88d5443f4276fa58e05b814b12a2a20a",
+        "9fc9bbec235e7684c8fbeaa350aa152f57201a263d9755df40ee4ad1fc07e2f2"
+      ],
+      "metric_values": {
+        "copied_state_reset_gap": 0.0,
+        "different_future_input_gap": 1.7247874736785889,
+        "execution_order_gap": 0.0,
+        "history_gap": 11.15749740600586,
+        "identical_history_gap": 0.0
+      },
+      "original_states_unchanged": true,
+      "prediction_outcome": "matched",
+      "seed": 17,
+      "trajectory_sha256": [
+        "1b6ee5dae328032c39d7f8a282688552c75baa8b9bc9e9f100d7b92157549500",
+        "2987b99c399e94fc1c493f0cea11dc8596bba721d240b5e6086ee7aad27b36dd"
+      ],
+      "weights_sha256": "cd5ef62088d7b933ae8f58b604ae57aa257ddf4e36e81b6ff9aac6040826aaa7",
+      "weights_unchanged": true
+    },
+    {
+      "config": {
+        "bias_scale": 0.05,
+        "densities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "input_dim": 3,
+        "input_scales": [
+          0.8,
+          0.7,
+          0.6
+        ],
+        "leaks": [
+          0.35,
+          0.22,
+          0.14
+        ],
+        "n_nodes": 32,
+        "output_dim": 1,
+        "radii": [
+          0.98,
+          0.92,
+          0.85
+        ],
+        "ridge_alpha": 0.01,
+        "seed": 29,
+        "washout": 128
+      },
+      "controls_valid": true,
+      "future_sha256": "2e330c3a9ffaa333ec88627bc0d0f0114274607f0c94aadf60446d0f9f25057c",
+      "history_sha256": [
+        "ef38782cee7bb3076956182aa40542478de336114fcad90776fb5478e016fd50",
+        "ffde95024fea8e578e4fb0c6adf12adcf8d1fa175d9fbc678d6b9d7c34c93fc8"
+      ],
+      "initial_state_sha256": [
+        "81e5af094266a047bc6b5a8dcc5d9790f8d23a8274bc75f5fe6ba4a2ea8a6e8b",
+        "fcb44f003e40f5532844a90dd22f055acf19b5ea31dfc7ec84cb0dc3af4d7f56"
+      ],
+      "metric_values": {
+        "copied_state_reset_gap": 0.0,
+        "different_future_input_gap": 1.8147838115692139,
+        "execution_order_gap": 0.0,
+        "history_gap": 9.907787322998047,
+        "identical_history_gap": 0.0
+      },
+      "original_states_unchanged": true,
+      "prediction_outcome": "matched",
+      "seed": 29,
+      "trajectory_sha256": [
+        "1ccb3cd370e17c135856d7707260cc0be52996b0513924a5c4e34d9311b2ddbe",
+        "984a89fcffc811f9a646b51dd801ad0e510f51ff4adc670ac17dadb070c41937"
+      ],
+      "weights_sha256": "a3829c661b729779abc90a2f1a6752bce2ace2cc85000b3c595399ebf4445103",
+      "weights_unchanged": true
+    }
+  ]
+}

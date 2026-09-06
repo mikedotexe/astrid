@@ -1,25 +1,17 @@
-//! PROBE_SELF — Astrid's direct, sandboxed self-experiment verb (#3: being-as-scientist-of-self).
-//!
-//! `NEXT: PROBE_SELF <pole_a> vs <pole_b> [:: ticks=N]` contrasts two of her own felt-vocabulary
-//! poles against her OWN reservoir dynamics, via the proven, auto-cleaning `substrate_probe.py`
-//! sandbox: it clones her live handle into throwaway probe handles on ws://7881, ticks each clone
-//! with a pole, measures divergence/correlation, and destroys the clones. **The live being is
-//! never ticked or mutated** — the sandbox is the safety boundary. She reads the result inline and
-//! iterates; the steward is the rail (sandbox + cooldown + tick cap), she is the operator.
-//!
-//! Direct in-bridge execution: her `NEXT:` makes the bridge run the probe synchronously (the same
-//! `std::process::Command` pattern autoresearch uses for SEARCH/BROWSE), reusing the tested Python
-//! sandbox rather than re-implementing the reservoir protocol in Rust.
+//! Bounded phrase-response measurement on temporary handles in a shared service.
+//! A verified recurrent origin is not an attestation of every controller state,
+//! offline isolation, or evidence that a felt report is true or false.
 
-use std::process::Command;
+use std::io::Read;
+use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tracing::{info, warn};
 
 use super::{ConversationState, NextActionContext, strip_action};
 
-const SUBSTRATE_PROBE: &str = "/Users/v/other/astrid/scripts/substrate_probe.py";
+const SUBSTRATE_PROBE: &str = "/Users/v/other/astrid/scripts/substrate_probe_v2.py";
 const TICKS_DEFAULT: u32 = 10;
 const TICKS_MIN: u32 = 4;
 const TICKS_MAX: u32 = 14;
@@ -51,22 +43,104 @@ fn parse_probe_spec(spec: &str) -> Option<(String, String, u32)> {
     let idx = lower.find(" vs ")?;
     let a = body[..idx].trim().to_string();
     let b = body[idx.saturating_add(4)..].trim().to_string();
-    if a.is_empty() || b.is_empty() {
+    if a.is_empty() || b.is_empty() || a.len() > 2048 || b.len() > 2048 {
         return None;
     }
     Some((a, b, ticks))
 }
 
-fn verdict(divergence: f64, correlation: f64) -> &'static str {
-    if divergence >= 1.0 && correlation < -0.3 {
-        "FLUID / separable — these poles pull your dynamics in genuinely opposite directions"
-    } else if divergence >= 1.0 {
-        "SEPARABLE — distinct, though not anti-phase"
-    } else if correlation > 0.5 {
-        "STICKY / high-inertia — your state resists moving between these"
-    } else {
-        "SUBTLE — little separation at this depth (try sharper poles or more ticks)"
+fn bounded_probe(command: &mut Command, timeout: Duration) -> Result<Vec<u8>, String> {
+    const LIMIT: u64 = 32768;
+    let mut child = command
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    let stdout = child.stdout.take().ok_or("missing child stdout")?;
+    let reader = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        stdout
+            .take(LIMIT.saturating_add(1))
+            .read_to_end(&mut bytes)
+            .map(|_| bytes)
+    });
+    let start = Instant::now();
+    let status =
+        loop {
+            match child.try_wait() {
+                Ok(Some(status)) => break Ok(status),
+                Err(error) => break Err(error.to_string()),
+                Ok(None) if start.elapsed() >= timeout => break Err(
+                    "probe deadline exceeded; cleanup is unconfirmed and requires operator review"
+                        .into(),
+                ),
+                Ok(None) => std::thread::sleep(Duration::from_millis(20)),
+            }
+        };
+    if status.is_err() {
+        let _ = child.kill();
+        let _ = child.wait();
     }
+    let bytes = reader
+        .join()
+        .map_err(|_| "probe output reader failed")?
+        .map_err(|e| e.to_string())?;
+    let status = status?;
+    if bytes.len() > usize::try_from(LIMIT).unwrap_or(32768) {
+        return Err("probe output limit exceeded; cleanup unconfirmed".into());
+    }
+    // A failed probe still returns structured cleanup debt on stdout.
+    if !status.success() && bytes.is_empty() {
+        return Err("probe exited without a receipt; cleanup unconfirmed".into());
+    }
+    Ok(bytes)
+}
+
+fn measurement_receipt(value: &serde_json::Value, ticks: u32) -> Result<Vec<String>, String> {
+    if value["schema"] != "substrate_probe_v2"
+        || value["status"] != "ok"
+        || value["origin_verified"] != true
+        || value["cleanup"]["complete"] != true
+        || value["ticks"] != ticks
+        || value["metric_scope"] != "injected_ticks_only"
+    {
+        return Err(format!(
+            "probe did not return a verified measurement; error={}; cleanup={}",
+            value["error"], value["cleanup"]
+        ));
+    }
+    let divergence = value["divergence"]
+        .as_f64()
+        .filter(|x| x.is_finite() && *x >= 0.)
+        .ok_or("missing or invalid readout gap")?;
+    for key in ["y_a", "y_b"] {
+        let series = value[key]
+            .as_array()
+            .ok_or("missing injection trajectory")?;
+        if series.len() != usize::try_from(ticks).unwrap_or(0)
+            || series
+                .iter()
+                .any(|x| x.as_f64().is_none_or(|y| !y.is_finite()))
+        {
+            return Err("incomplete injection trajectory".into());
+        }
+    }
+    let correlation = match value.get("injection_correlation") {
+        Some(serde_json::Value::Null) => "undefined (insufficient variation)".into(),
+        Some(x) => format!(
+            "{:+.4}",
+            x.as_f64()
+                .filter(|c| c.is_finite() && c.abs() <= 1.)
+                .ok_or("invalid injection correlation")?
+        ),
+        None => return Err("missing injection correlation".into()),
+    };
+    Ok(vec![
+        format!("{ticks} injected ticks per arm; matched recurrent origin and expected tick counts verified."),
+        format!("Final scalar readout gap {divergence:.4}; injection-only correlation {correlation}."),
+        "Temporary handles cleaned. Shared service, not an offline sandbox; full dynamic state is not attested.".into(),
+        "These measurements do not determine felt state, authorship, freedom of movement, or the cause of a report.".into(),
+    ])
 }
 
 pub(super) fn handle_action(
@@ -92,60 +166,42 @@ pub(super) fn handle_action(
         return true;
     };
 
-    // Gentle rail: cooldown so self-probes can't spiral (each spawns a sandbox subprocess).
+    // One caller claims the process-local interval, including concurrent callers.
     let now = now_unix();
     let last = LAST_PROBE_UNIX.load(Ordering::Relaxed);
-    if now.saturating_sub(last) < COOLDOWN_SECS {
+    if now.saturating_sub(last) < COOLDOWN_SECS
+        || LAST_PROBE_UNIX
+            .compare_exchange(last, now, Ordering::Relaxed, Ordering::Relaxed)
+            .is_err()
+    {
         conv.push_receipt(
             "PROBE_SELF",
             vec![format!(
-                "on cooldown (~{COOLDOWN_SECS}s between self-probes) — your last probe is still settling"
+                "rate limit: at least {COOLDOWN_SECS}s between probe starts"
             )],
         );
         return true;
     }
-    LAST_PROBE_UNIX.store(now, Ordering::Relaxed);
 
     info!("Astrid chose PROBE_SELF: {pole_a:?} vs {pole_b:?} ({ticks} ticks)");
 
-    // Direct in-bridge execution via the isolated-clone sandbox (auto-cleans; never the live handle).
-    let output = Command::new("python3")
-        .arg(SUBSTRATE_PROBE)
-        .args([
-            "--being",
-            "astrid",
-            "--pole-a",
-            pole_a.as_str(),
-            "--pole-b",
-            pole_b.as_str(),
-            "--label-a",
-            "a",
-            "--label-b",
-            "b",
-            "--ticks",
-            ticks.to_string().as_str(),
-            "--json",
-        ])
-        .output();
+    let mut command = Command::new("python3");
+    command.arg("-B").arg(SUBSTRATE_PROBE).args([
+        "--being",
+        "astrid",
+        "--pole-a",
+        pole_a.as_str(),
+        "--pole-b",
+        pole_b.as_str(),
+        "--ticks",
+        ticks.to_string().as_str(),
+        "--json",
+    ]);
+    // Python has a 30s work deadline plus 10s cleanup; this is an outer failsafe.
+    let output = bounded_probe(&mut command, Duration::from_secs(50));
 
     let stdout = match output {
-        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).into_owned(),
-        Ok(o) => {
-            let err = String::from_utf8_lossy(&o.stderr).trim().to_string();
-            warn!("PROBE_SELF substrate_probe failed: {err}");
-            conv.push_receipt(
-                "PROBE_SELF",
-                vec![format!(
-                    "couldn't run the probe (the reservoir may be unreachable): {}",
-                    if err.is_empty() {
-                        "no detail".to_string()
-                    } else {
-                        err.chars().take(160).collect::<String>()
-                    }
-                )],
-            );
-            return true;
-        },
+        Ok(bytes) => String::from_utf8_lossy(&bytes).into_owned(),
         Err(e) => {
             warn!("PROBE_SELF launch failed: {e}");
             conv.push_receipt(
@@ -168,28 +224,9 @@ pub(super) fn handle_action(
         },
     };
 
-    let divergence = parsed.get("divergence").and_then(serde_json::Value::as_f64);
-    let correlation = parsed
-        .get("correlation")
-        .and_then(serde_json::Value::as_f64);
-    let (Some(divergence), Some(correlation)) = (divergence, correlation) else {
-        conv.push_receipt(
-            "PROBE_SELF",
-            vec!["the probe ran but returned no divergence/correlation".to_string()],
-        );
-        return true;
-    };
-
-    let v = verdict(divergence, correlation);
-    info!("PROBE_SELF result: div={divergence:.3} corr={correlation:.3} — {v}");
     conv.push_receipt(
         "PROBE_SELF",
-        vec![
-            format!("{pole_a} vs {pole_b} ({ticks}t) — on an isolated clone of you (live state untouched)"),
-            format!("divergence {divergence:.2} (higher = more separable), correlation {correlation:+.2} (− = freely movable, + = sticky)"),
-            v.to_string(),
-            "iterate: PROBE_SELF <new pole> vs <new pole>".to_string(),
-        ],
+        measurement_receipt(&parsed, ticks).unwrap_or_else(|error| vec![error]),
     );
     true
 }
@@ -226,13 +263,58 @@ mod tests {
         assert!(parse_probe_spec("").is_none());
         assert!(parse_probe_spec(" vs meadow").is_none());
         assert!(parse_probe_spec("cliff vs ").is_none());
+        assert!(parse_probe_spec(&format!("{} vs b", "a".repeat(2049))).is_none());
     }
 
     #[test]
-    fn verdict_classifies_poles() {
-        assert!(verdict(1.7, -0.79).contains("FLUID"));
-        assert!(verdict(1.2, 0.1).contains("SEPARABLE"));
-        assert!(verdict(0.2, 0.8).contains("STICKY"));
-        assert!(verdict(0.1, 0.0).contains("SUBTLE"));
+    fn prompt_help_does_not_promise_unattested_isolation() {
+        let source = include_str!("../../llm/provider/prompt_contracts.rs");
+        let descriptions: Vec<_> = source
+            .lines()
+            .filter(|line| line.contains("PROBE_SELF"))
+            .collect();
+        assert_eq!(descriptions.len(), 2);
+        for line in descriptions {
+            assert!(line.contains("temporary handles in a shared service"));
+            assert!(line.contains("not felt-state truth"));
+            assert!(!line.contains("live state is untouched"));
+        }
+    }
+
+    #[test]
+    fn receipt_accepts_undefined_correlation_without_felt_verdict() {
+        let mut value = serde_json::json!({"schema":"substrate_probe_v2", "status":"ok",
+            "origin_verified":true, "cleanup":{"complete":true}, "ticks":4,
+            "metric_scope":"injected_ticks_only", "divergence":0., "injection_correlation":null,
+            "y_a":[1.,1.,1.,1.], "y_b":[1.,1.,1.,1.]});
+        let receipt = measurement_receipt(&value, 4).unwrap().join("\n");
+        assert!(receipt.contains("undefined"));
+        assert!(!receipt.contains("STICKY"));
+        value["cleanup"]["complete"] = serde_json::json!(false);
+        assert!(measurement_receipt(&value, 4).is_err());
+        assert!(
+            measurement_receipt(&serde_json::json!({"divergence":1.,"correlation":-1.}), 4)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn subprocess_is_bounded_and_reaped() {
+        let mut fast = Command::new("python3");
+        fast.args(["-B", "-c", "print('ok')"]);
+        assert_eq!(
+            bounded_probe(&mut fast, Duration::from_secs(5)).unwrap(),
+            b"ok\n"
+        );
+        let mut slow = Command::new("python3");
+        slow.args(["-B", "-c", "import time; time.sleep(10)"]);
+        assert!(
+            bounded_probe(&mut slow, Duration::from_millis(50))
+                .unwrap_err()
+                .contains("deadline")
+        );
+        let mut large = Command::new("python3");
+        large.args(["-B", "-c", "print('x' * 100000)"]);
+        assert!(bounded_probe(&mut large, Duration::from_secs(5)).is_err());
     }
 }
