@@ -84,3 +84,6 @@ capsules/perception/workspace/visual/
 **/__pycache__/
 *.pyc
 launchd/com.astrid.action-canonicalization-scorecard-once.plist
+
+# Private CPU-edge observations, backup inventories, and local candidate archives
+/.device-local/
