@@ -4252,7 +4252,7 @@ fn build_prompt(
     let validation_continuation = compact_action_validation_continuation(receipt_value.as_ref());
     let authored_continuity = last_authored_response_excerpt(config, state)
         .unwrap_or_else(|| "No prior genuinely authored edge response is available.".to_string());
-    let recent_artifacts = recent_owned_artifacts(config);
+    let recent_artifacts = recent_owned_artifacts(config, usize::MAX);
     let chain_context = state.active_chain_id.as_ref().map_or_else(
         || "No action chain is active.".to_string(),
         |chain_id| {
@@ -4374,7 +4374,6 @@ fn build_compact_prompt(
     let active_study = inquiry::active_summary(config);
     let continuity =
         format!("thread={thread_continuity}\nstudy={active_study}\nauthored={continuity}");
-    let artifacts = recent_owned_artifacts(config);
     let chain = bounded_chars(
         &state.active_chain_id.as_ref().map_or_else(
             || "none".to_string(),
@@ -4420,6 +4419,7 @@ fn build_compact_prompt(
     let remaining_budget = variable_budget.saturating_sub(continuation_budget);
     let continuity_budget = remaining_budget.saturating_mul(4) / 5;
     let artifact_budget = remaining_budget.saturating_sub(continuity_budget);
+    let artifacts = recent_owned_artifacts(config, artifact_budget);
     let prompt = format!(
         "{fixed_prefix}Evidence: {}\nVerified continuity: {}\nArtifacts: {}\n{fixed_suffix}",
         bounded_chars(&continuation, continuation_budget),
@@ -4427,7 +4427,7 @@ fn build_compact_prompt(
             &continuity,
             continuity_budget.min(MAX_COMPACT_CONTINUITY_CHARS)
         ),
-        bounded_chars(&artifacts, artifact_budget),
+        artifacts,
     );
     debug_assert!(prompt.chars().count() <= prompt_limit);
     prompt
@@ -4503,6 +4503,16 @@ fn compact_action_validation_continuation(value: Option<&serde_json::Value>) -> 
         .get("validation_reason")
         .and_then(serde_json::Value::as_str)
     else {
+        if value.get("status").and_then(serde_json::Value::as_str) == Some("failed")
+            && value
+                .get("execution_error")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|error| error.starts_with("owned artifact not found:"))
+        {
+            return "Executor: owned_artifact_not_found. Use exact names with all suffixes; \
+                    inspect the owned directory if needed. Choose freely; no substitute was created.\n"
+                .to_string();
+        }
         return String::new();
     };
     let intention = value
@@ -5738,7 +5748,7 @@ fn write_private_new_durable(path: &Path, content: &[u8]) -> anyhow::Result<()> 
     Ok(())
 }
 
-fn recent_owned_artifacts(config: &Config) -> String {
+fn recent_owned_artifacts(config: &Config, maximum_chars: usize) -> String {
     let mut artifacts = Vec::<(SystemTime, String)>::new();
     for directory in [
         "journal",
@@ -5783,13 +5793,31 @@ fn recent_owned_artifacts(config: &Config) -> String {
         }
     }
     artifacts.sort_by(|left, right| right.0.cmp(&left.0));
-    let names = artifacts
-        .into_iter()
-        .take(8)
-        .map(|(_, name)| name)
-        .collect::<Vec<_>>();
+    let no_artifacts = artifacts.is_empty();
+    let mut names = Vec::new();
+    let mut used_chars = 0_usize;
+    // An artifact identifier is an executable reference, never an excerpt.
+    for (_, name) in artifacts.into_iter().take(8) {
+        let separator_chars = if names.is_empty() { 0 } else { 2 };
+        let next_chars = used_chars
+            .saturating_add(separator_chars)
+            .saturating_add(name.chars().count());
+        if next_chars <= maximum_chars {
+            used_chars = next_chars;
+            names.push(name);
+        }
+    }
     if names.is_empty() {
-        "(none yet)".to_string()
+        let placeholder = if no_artifacts {
+            "(none yet)"
+        } else {
+            "(omitted)"
+        };
+        if placeholder.len() <= maximum_chars {
+            placeholder.to_string()
+        } else {
+            String::new()
+        }
     } else {
         names.join(", ")
     }
@@ -7810,6 +7838,125 @@ mod tests {
         assert!(prompt.ends_with("one standalone NEXT action."));
         assert!(prompt.contains("source_real.md"));
         assert!(!prompt.contains("signal_123.md"));
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn compact_prompt_never_advertises_partial_artifact_names() {
+        let mut config = config();
+        config.autonomy_prompt_profile = AutonomyPromptProfile::Compact;
+        config.workspace =
+            std::env::temp_dir().join(format!("astrid-edge-artifact-token-{}", Uuid::new_v4()));
+        config.prepare_workspace().unwrap();
+        let name = "check_1700000000000_research_1699999999999.md.json";
+        fs::write(config.workspace.join("workshop/checks").join(name), "{}").unwrap();
+        for limit in 700..=1_400 {
+            config.autonomy_prompt_max_chars = limit;
+            let prompt = build_prompt(
+                &config,
+                &ReservoirSnapshot::default(),
+                "scheduled_self_directed_turn",
+                &AutonomyState::default(),
+            );
+            assert!(prompt.chars().count() <= limit);
+            let artifacts = prompt
+                .split_once("\nArtifacts: ")
+                .unwrap()
+                .1
+                .split('\n')
+                .next()
+                .unwrap();
+            assert!(
+                !artifacts.contains("check_") || artifacts.contains(name),
+                "partial artifact at {limit} characters: {artifacts:?}"
+            );
+        }
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn owned_artifact_listing_skips_oversized_names_without_losing_short_names() {
+        let mut config = config();
+        config.workspace =
+            std::env::temp_dir().join(format!("astrid-edge-artifact-listing-{}", Uuid::new_v4()));
+        config.prepare_workspace().unwrap();
+        let long_name = format!("check_{}.md.json", "x".repeat(90));
+        let short_name = "note_\u{00e9}.md";
+        fs::write(
+            config.workspace.join("workshop/checks").join(&long_name),
+            "{}",
+        )
+        .unwrap();
+        fs::write(
+            config.workspace.join("research").join(short_name),
+            "fixture",
+        )
+        .unwrap();
+        for maximum in 0..=220 {
+            let listing = super::recent_owned_artifacts(&config, maximum);
+            assert!(listing.chars().count() <= maximum);
+            assert!(!listing.contains("check_") || listing.contains(&long_name));
+            assert!(!listing.contains("note_") || listing.contains(short_name));
+        }
+        let listing = super::recent_owned_artifacts(&config, 25);
+        assert!(listing.contains(short_name));
+        assert!(!listing.contains("check_"));
+        fs::remove_dir_all(config.workspace).unwrap();
+    }
+
+    #[test]
+    fn missing_artifact_feedback_requires_the_failed_receipt_class() {
+        for receipt in [
+            serde_json::json!({
+                "status": "executed",
+                "execution_error": "owned artifact not found: stale field",
+            }),
+            serde_json::json!({
+                "status": "failed",
+                "execution_error": "private unrelated error must not be echoed",
+            }),
+        ] {
+            assert!(super::compact_action_validation_continuation(Some(&receipt)).is_empty());
+        }
+    }
+
+    #[test]
+    fn compact_prompt_reports_missing_artifact_without_substitution() {
+        let mut config = config();
+        config.autonomy_prompt_profile = AutonomyPromptProfile::Compact;
+        config.autonomy_prompt_max_chars = 900;
+        config.workspace = std::env::temp_dir().join(format!(
+            "astrid-edge-missing-artifact-feedback-{}",
+            Uuid::new_v4()
+        ));
+        config.prepare_workspace().unwrap();
+        let receipt = serde_json::json!({
+            "decision_source": "astrid_declared",
+            "status": "failed",
+            "declared_next": "CHECK missing.md",
+            "execution_error": "owned artifact not found: missing.md",
+            "outcome": "action_execution_failed_after_durable_intent",
+            "artifact_path": null,
+        });
+        fs::write(
+            config.workspace.join("actions/receipts.jsonl"),
+            format!("{receipt}\n"),
+        )
+        .unwrap();
+        let prompt = build_prompt(
+            &config,
+            &ReservoirSnapshot::default(),
+            "scheduled_self_directed_turn",
+            &AutonomyState::default(),
+        );
+        assert!(prompt.chars().count() <= 900);
+        assert!(prompt.contains("owned_artifact_not_found"));
+        assert!(prompt.contains("suffix"));
+        assert!(!config.workspace.join("workshop/checks/missing.md").exists());
+        assert_eq!(
+            fs::read_to_string(config.workspace.join("actions/receipts.jsonl")).unwrap(),
+            format!("{receipt}\n")
+        );
         fs::remove_dir_all(config.workspace).unwrap();
     }
 
