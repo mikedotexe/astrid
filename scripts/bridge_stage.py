@@ -84,6 +84,10 @@ def host_target(source: Path) -> str:
 
 def input_snapshot(source: Path, packages: list[Path]) -> dict:
     files = {source / name for name in TOOLS}
+    # Retained releases predating this operator helper have no such input.
+    stopped_recovery = source / "scripts/bridge_stopped_recovery.py"
+    if stopped_recovery.exists():
+        files.add(stopped_recovery)
     for package in packages:
         for root, directories, names in os.walk(package):
             directories[:] = sorted(name for name in directories if name not in EXCLUDED)

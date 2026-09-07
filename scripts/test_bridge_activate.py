@@ -220,6 +220,35 @@ class TransactionFilesTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "reused"):
                 self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"})
 
+    def test_exit_between_identity_observations_is_confirmed_by_kernel(self):
+        with patch.object(activation.os, "kill", side_effect=[None, ProcessLookupError]), \
+             patch.object(activation.drain, "process_identity", return_value=("old", "(exited)")):
+            self.assertFalse(self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"}))
+
+    def test_same_start_zombie_is_waited_for_not_treated_as_exit(self):
+        with patch.object(activation.os, "kill"), \
+             patch.object(activation.drain, "process_identity", return_value=("old", "(zombie)")), \
+             patch.object(activation.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "old Z+\n")):
+            self.assertTrue(self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"}))
+
+    def test_same_start_live_changed_executable_is_rejected(self):
+        with patch.object(activation.os, "kill"), \
+             patch.object(activation.drain, "process_identity", return_value=("old", "/changed")), \
+             patch.object(activation.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "old S\n")):
+            with self.assertRaisesRegex(RuntimeError, "reused"):
+                self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"})
+
+    def test_permission_failure_never_establishes_exit(self):
+        with patch.object(activation.os, "kill", side_effect=PermissionError):
+            with self.assertRaises(PermissionError):
+                self.backend.old_exists(12345, {})
+
+    def test_exit_during_zombie_probe_is_confirmed_by_kernel(self):
+        with patch.object(activation.os, "kill", side_effect=[None, None, ProcessLookupError]), \
+             patch.object(activation.drain, "process_identity", return_value=("old", "(exited)")), \
+             patch.object(activation.subprocess, "run", return_value=subprocess.CompletedProcess([], 1, "")):
+            self.assertFalse(self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"}))
+
     def test_canonical_publication_refuses_concurrent_change(self):
         self.backend.canonical_manifest.parent.mkdir(parents=True)
         self.backend.canonical_manifest.write_text("foreign")

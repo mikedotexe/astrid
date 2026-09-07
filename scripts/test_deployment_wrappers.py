@@ -62,7 +62,8 @@ class DeploymentWrapperTests(unittest.TestCase):
             return result, calls, str(source)
 
     def test_system_bash_dispatches_activation_with_and_without_recovery(self) -> None:
-        for recovery in ([], ["--resume-verification", "/fixture/transaction with spaces"]):
+        for recovery in ([], ["--resume-verification", "/fixture/transaction with spaces"],
+                         ["--resume-stopped-transition", "/fixture/transaction with spaces"]):
             with self.subTest(recovery=recovery):
                 result, calls, source = self.activation_run([
                     "--activate-stage", "/fixture/stage with spaces", "--expected-pid", "12345",
@@ -89,6 +90,11 @@ class DeploymentWrapperTests(unittest.TestCase):
             [*base, "--resume-verification", "--timeout-secs", "10"],
             ["--resume-verification", "/fixture/transaction"],
             [*base, "--resume-verification", "/fixture/transaction", "--legacy-stop-ack", "legacy"],
+            [*base, "--resume-stopped-transition"],
+            [*base, "--resume-stopped-transition", "--actor", "fixture"],
+            [*base, "--resume-stopped-transition", "/fixture/transaction", "--legacy-stop-ack", "legacy"],
+            [*base, "--resume-stopped-transition", "/fixture/transaction", "--resume-verification", "/fixture/transaction"],
+            ["--resume-stopped-transition", "/fixture/transaction"],
         ):
             with self.subTest(arguments=arguments):
                 result, calls, _ = self.activation_run(arguments)

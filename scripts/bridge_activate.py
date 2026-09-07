@@ -24,6 +24,7 @@ import uuid
 import bridge_drain as drain
 import bridge_stage as stage_tools
 from bridge_release_launch import digest, runtime_arguments
+from bridge_stopped_recovery import StoppedTransitionMixin, resume_stopped_transition
 
 ROOT = Path("/Users/v/other/astrid")
 LABEL = "com.astrid.spectral-bridge"
@@ -155,7 +156,7 @@ def resume_verification(backend, *, transaction: Path, expected_pid: int, actor:
         raise
 
 
-class LaunchdBridge:
+class LaunchdBridge(StoppedTransitionMixin):
     def __init__(self, stage: Path, root: Path = ROOT):
         self.stage = stage.resolve(strict=True)
         self.root = root.resolve(strict=True)
@@ -227,7 +228,7 @@ class LaunchdBridge:
             self.old["selection_sha256"] = digest(self.control / "active.json")
         return self.old
 
-    def verify_launch_configuration(self, expected_pid: int) -> None:
+    def verify_launch_configuration(self, expected_pid: int | None) -> None:
         installed = plistlib.loads((Path.home() / "Library/LaunchAgents" / f"{LABEL}.plist").read_bytes())
         source = plistlib.loads((self.root / "launchd" / f"{LABEL}.plist").read_bytes())
         if installed != source or installed.get("KeepAlive") is not True or installed.get("ProgramArguments") != ["/bin/bash", str(self.launcher)]:
@@ -326,6 +327,22 @@ class LaunchdBridge:
                 return False
             raise
         if identity != (initial["started_at"], initial["binary"]):
+            # The process can exit between kill(0), lstart and comm observations.
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return False
+            if identity[0] == initial["started_at"]:
+                status = subprocess.run(["ps", "-p", str(pid), "-o", "lstart=", "-o", "stat="],
+                    capture_output=True, text=True, check=False, timeout=5)
+                fields = status.stdout.strip().rsplit(None, 1)
+                if (status.returncode == 0 and len(fields) == 2
+                        and fields[0] == initial["started_at"] and fields[1].startswith("Z")):
+                    return True  # Wait for confirmed kernel absence; never signal again.
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return False
             raise RuntimeError("old PID was reused during transition")
         return True
 
@@ -441,10 +458,12 @@ class LaunchdBridge:
         failed_path = transaction / "receipt.json"
         failed = stage_tools.json_file(failed_path)
         failure_sha = digest(failed_path)
+        stopped_evidence = self.stopped_release_intent(transaction, failure_sha, failed)
         if (failed.get("schema") != "bridge_activation_v1"
                 or failed.get("status") != "failed_requires_review"
-                or failed.get("activation_performed") is not True
-                or failed.get("old_process_exited") is not True
+                or not ((failed.get("activation_performed") is True
+                         and failed.get("old_process_exited") is True)
+                        or stopped_evidence)
                 or failed.get("force_used") is not False
                 or failed.get("automatic_rollback") is not False
                 or failed.get("legacy_transition") is not False
@@ -471,10 +490,13 @@ class LaunchdBridge:
         if hold_present:
             guard = stage_tools.json_file(hold_path)
         else:
-            guard = self.completed_recovery_guard(failure_sha, expected_pid, process)
+            guard = (stopped_evidence["owned_hold"] if stopped_evidence else
+                     self.completed_recovery_guard(failure_sha, expected_pid, process))
         if guard.get("schema") != "bridge_launch_hold_v1" or guard.get("transaction") != str(transaction):
             raise RuntimeError("verification recovery does not own the current launch hold")
         self.guard = guard
+        if stopped_evidence and guard != stopped_evidence["owned_hold"]:
+            raise RuntimeError("stopped recovery launch hold changed")
         before = stage_tools.json_file(transaction / "inputs.before.json")
         checkpoint_sha = before["checkpoint"]["sha256"]
         if (digest(transaction / "conversation.before.json") != checkpoint_sha
@@ -489,7 +511,7 @@ class LaunchdBridge:
             raise RuntimeError("current signed state does not target the selected release")
         initial = {"original_failure_sha256":failure_sha, "old_pid":failed["old_pid"],
                    "old_identity":self.old, "process":list(process), "owned_hold":guard,
-                   "hold_present":hold_present}
+                   "hold_present":hold_present, "stopped_recovery_evidence":stopped_evidence}
         self.assert_resume_ownership(initial, expected_pid)
         return initial
 
@@ -524,6 +546,9 @@ class LaunchdBridge:
         self.verify_bundle()
         if digest(self.transaction / "receipt.json") != initial["original_failure_sha256"]:
             raise RuntimeError("original failure receipt changed during verification recovery")
+        stopped = initial.get("stopped_recovery_evidence")
+        if stopped and digest(Path(stopped["path"])) != stopped["sha256"]:
+            raise RuntimeError("stopped recovery release intent changed during verification")
         if self.pid() != expected_pid or drain.process_identity(expected_pid) != tuple(initial["process"]):
             raise RuntimeError("recovery process identity changed")
         self.verify_launch_configuration(expected_pid)
@@ -543,11 +568,13 @@ class LaunchdBridge:
         if digest(self.canonical_manifest) not in {self.old["manifest_sha256"], self.ready["manifest_sha256"]}:
             raise RuntimeError("canonical manifest changed concurrently; not overwritten")
 
-    def begin_recovery(self, witness: dict) -> None:
-        directory = self.transaction / "verification-recoveries"
+    def begin_recovery(self, witness: dict, *, history: str = "verification-recoveries") -> None:
+        if history not in {"verification-recoveries", "stopped-transition-recoveries"}:
+            raise ValueError("unknown recovery history")
+        directory = self.transaction / history
         if directory.exists() and (directory.is_symlink() or not directory.is_dir()):
             raise RuntimeError("invalid verification recovery history directory")
-        directory.mkdir(mode=0o700, exist_ok=True)
+        directory.mkdir(mode=0o700, exist_ok=history != "stopped-transition-recoveries")
         sync_directory(self.transaction)
         self.recovery_transaction = directory / uuid.uuid4().hex
         self.recovery_transaction.mkdir(mode=0o700)
@@ -571,6 +598,7 @@ def main() -> int:
     parser.add_argument("--stage-dir", type=Path, required=True)
     parser.add_argument("--expected-pid", type=int, required=True)
     parser.add_argument("--resume-verification", type=Path)
+    parser.add_argument("--resume-stopped-transition", type=Path)
     parser.add_argument("--actor", required=True)
     parser.add_argument("--ack", required=True)
     parser.add_argument("--legacy-stop-ack", default="")
@@ -579,7 +607,12 @@ def main() -> int:
     try:
         if os.environ.get("ASTRID_SANCTIONED_BRIDGE_ACTIVATION") != "1":
             raise ValueError("activate only through scripts/build_bridge.sh --activate-stage")
-        if args.resume_verification is not None:
+        if args.resume_stopped_transition is not None:
+            if args.legacy_stop_ack or args.resume_verification is not None:
+                raise ValueError("stopped recovery cannot accompany legacy or verification recovery")
+            result = resume_stopped_transition(LaunchdBridge(args.stage_dir), transaction=args.resume_stopped_transition,
+                expected_pid=args.expected_pid, actor=args.actor, ack=args.ack, timeout=args.timeout_secs)
+        elif args.resume_verification is not None:
             if args.legacy_stop_ack:
                 raise ValueError("verification-only recovery cannot acknowledge a legacy stop")
             result = resume_verification(LaunchdBridge(args.stage_dir), transaction=args.resume_verification,
