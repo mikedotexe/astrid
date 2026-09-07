@@ -12,7 +12,7 @@ impl std::error::Error for ContinuityInputError {}
 fn session_is_quiet(session: &Value) -> bool {
     matches!(
         session.get("status").and_then(Value::as_str),
-        Some("parked" | "held" | "complete")
+        Some("parked" | "held" | "complete" | "abandoned")
     )
 }
 

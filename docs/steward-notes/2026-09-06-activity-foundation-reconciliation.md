@@ -125,6 +125,17 @@ changes. Neither sibling's dirty work was merged, restarted or represented as
 loaded code by this pass. Minime adapter work requires its own reviewed source
 checkpoint; the Astrid-first contract can proceed on this reconciled baseline.
 
+## Canonical checkpoint
+
+Canonical `main` now contains this reconciliation at `7b9f4d544d9661491eb9a57286daeca929e7d760`.
+Its tracked tree matches foundation checkpoint `5bcb457fe6` except for preserving
+the existing executable bit on `scripts/bridge_release_launch.py`; launcher bytes
+are unchanged. The source import receipt describes that foundation, not later
+feature edits. The three original discussion documents were preserved in an
+explicit path-scoped stash before their reconciled versions were imported.
+Remote main was independently rechecked at `888c1708dcb3d4669e9219c2d0b9be1185984f4d`.
+No push occurred.
+
 ## Next feature step
 
 The [activity plan](../architecture/activity-continuity-and-inbox.md) remains the

@@ -3,11 +3,11 @@
 September 6, 2026. Implementation preparation following Mike's
 [spectral-bridge discussion](../research/2026-09-05-spectral-bridge-feature-map.md).
 
-**Status:** the episode, boundaries, and acceptance cases below are design work.
-They have not been implemented or executed by this pass. Mike has asked us to
-round out the plan while two other project tasks finish, then move toward
-implementation. Source edits must begin from a fresh shared-tree reconciliation
-after that work; deployment is a separate operation.
+**Status:** the full reading-and-mailbox episode remains the implementation target.
+The [first bookmark tranche](../steward-notes/2026-09-06-recoverable-reader-bookmarks.md)
+adds the typed durable store and isolated return tests. Provider delivery,
+foreground runtime wiring and durable inbox admission still require integration.
+Deployment remains a separate operation.
 
 The accompanying [preimplementation findings](../steward-notes/2026-09-06-activity-continuity-preflight-findings.md)
 record concrete source paths, failure conditions, and proposed characterization

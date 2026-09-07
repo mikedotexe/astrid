@@ -34,6 +34,12 @@ The already-recorded global, unpersisted, early-advancing reading cursor and
 bulk inbox retirement remain central repairs. This note records additional
 findings rather than duplicating their full account.
 
+**Implementation follow-up:** [recoverable reader bookmarks](2026-09-06-recoverable-reader-bookmarks.md)
+now provide the mechanical source/cursor/offer contract and repair historical
+session STATUS selection and its implicit thread/projection writes. The existing
+MIKE_READ/READ_MORE runtime paths, provider adaptation, bulk inbox retirement and
+pause ownership findings remain open; adding the store alone does not repair them.
+
 ## Findings affecting the first slice
 
 ### Requested reading loses its status during provider fallback

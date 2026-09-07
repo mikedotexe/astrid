@@ -2354,10 +2354,12 @@ mod tests {
         // Lane layout arithmetic: 32-39 embedding | 40-43 narrative | 44-47
         // reserved all fit inside the 48-dim vector; 40-43 are NOT reserved.
         assert_eq!(RESERVED_CODEC_DIM_START, 44);
-        assert!(
-            EMBEDDING_PROJECT_DIM + NARRATIVE_ARC_DIM + (SEMANTIC_DIM - RESERVED_CODEC_DIM_START)
-                <= SEMANTIC_DIM
-        );
+        const {
+            assert!(
+                EMBEDDING_PROJECT_DIM + NARRATIVE_ARC_DIM + (SEMANTIC_DIM - RESERVED_CODEC_DIM_START)
+                    <= SEMANTIC_DIM
+            );
+        }
         assert!(is_reserved_codec_dim(44) && is_reserved_codec_dim(47));
         assert!(!is_reserved_codec_dim(43)); // narrative arc dim, not reserved
         assert!(!is_reserved_codec_dim(48)); // out of range
