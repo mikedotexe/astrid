@@ -44,6 +44,17 @@ from .verification import StoreVerification, verify_canonical_events
 
 DEFAULT_ACTOR = "interactive-agent"
 VERIFIED_SESSION_ENV = "ASTRID_EVIDENCE_PROJECTION_SESSION"
+# Durable verified-checkpoint (2026-08-15): the session-anchor mechanism above
+# had a reader but no writer, so every fresh process paid a full O(N) chain
+# verify (62s at 810k events / 5.2GB, minutes under load). The store now
+# persists its own checkpoint at this filename under the store root after any
+# successful full verify or append, and falls back to it when the env is
+# unset. Integrity: owner-only perms, exact schema, store-root binding,
+# expiry, a content self-hash, AND the anchor must exist in the validated
+# read index — any failure falls back to the full chain verify (fail closed).
+DURABLE_CHECKPOINT_FILENAME = "verified_checkpoint.json"
+DURABLE_CHECKPOINT_TTL_SECS = 24 * 3600.0
+FORCE_FULL_VERIFY_ENV = "ASTRID_EVIDENCE_FORCE_FULL_VERIFY"
 HEAD_SCHEMA = "evidence_event_store_head_v1"
 ACTIVATION_SCHEMA = "evidence_event_store_activation_v1"
 CHECKPOINT_SCHEMA = "evidence_event_projection_checkpoint_v1"
@@ -215,6 +226,10 @@ class EvidenceEventStore:
             if verification.valid
             else None
         )
+        if verification.valid:
+            self._write_durable_checkpoint(
+                verification.last_global_seq, verification.last_event_sha256
+            )
         self._last_verification_mode = "full_chain"
         return verification
 
@@ -223,7 +238,7 @@ class EvidenceEventStore:
 
         had_anchor = self._verified_anchor is not None
         if not had_anchor:
-            session_anchor = self._session_anchor()
+            session_anchor = self._any_verified_anchor()
             had_anchor = (
                 session_anchor is not None
                 and self.read_index.has_anchor(*session_anchor)
@@ -259,10 +274,76 @@ class EvidenceEventStore:
             if verification.valid
             else None
         )
+        if verification.valid:
+            self._write_durable_checkpoint(
+                verification.last_global_seq, verification.last_event_sha256
+            )
         self._last_verification_mode = (
             "indexed_tail" if had_anchor else "full_chain"
         )
         return verification
+
+    @property
+    def durable_checkpoint_path(self) -> Path:
+        return self.root / DURABLE_CHECKPOINT_FILENAME
+
+    def _write_durable_checkpoint(self, global_seq: int, event_sha256: str) -> None:
+        """Persist the verified anchor so future processes can ride the
+        indexed-tail path. Best-effort: a write failure only costs speed."""
+        body = {
+            "schema": "evidence_projection_session_v1",
+            "store_root": str(self.root.resolve()),
+            "verified_global_seq": int(global_seq),
+            "verified_event_sha256": str(event_sha256),
+            "expires_at_unix": time.time() + DURABLE_CHECKPOINT_TTL_SECS,
+        }
+        body["content_sha256"] = hashlib.sha256(
+            canonical_json(body).encode()
+        ).hexdigest()
+        try:
+            tmp = self.durable_checkpoint_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(body, indent=1) + "\n", encoding="utf-8")
+            os.chmod(tmp, 0o600)
+            os.replace(tmp, self.durable_checkpoint_path)
+        except OSError:
+            pass
+
+    def _durable_checkpoint_anchor(self) -> tuple[int, str] | None:
+        """Read the durable checkpoint. Any corruption, staleness, permission
+        laxity, schema drift, root mismatch, or self-hash mismatch returns
+        None — the caller then performs the full chain verify."""
+        if os.environ.get(FORCE_FULL_VERIFY_ENV) == "1":
+            return None
+        path = self.durable_checkpoint_path
+        try:
+            if stat.S_IMODE(path.stat().st_mode) & 0o077:
+                return None
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if not isinstance(value, dict):
+            return None
+        recorded_hash = value.pop("content_sha256", None)
+        if recorded_hash != hashlib.sha256(
+            canonical_json(value).encode()
+        ).hexdigest():
+            return None
+        if (
+            value.get("schema") != "evidence_projection_session_v1"
+            or Path(str(value.get("store_root") or "")).resolve()
+            != self.root.resolve()
+            or float(value.get("expires_at_unix") or 0) <= time.time()
+        ):
+            return None
+        return (
+            int(value.get("verified_global_seq") or 0),
+            str(value.get("verified_event_sha256") or GENESIS_HASH),
+        )
+
+    def _any_verified_anchor(self) -> tuple[int, str] | None:
+        if os.environ.get(FORCE_FULL_VERIFY_ENV) == "1":
+            return None
+        return self._session_anchor() or self._durable_checkpoint_anchor()
 
     def _session_anchor(self) -> tuple[int, str] | None:
         raw_path = os.environ.get(VERIFIED_SESSION_ENV)
@@ -301,7 +382,7 @@ class EvidenceEventStore:
                 int(head.get("last_global_seq") or 0),
                 str(head.get("last_event_sha256") or GENESIS_HASH),
             )
-            session_anchor = self._session_anchor()
+            session_anchor = self._any_verified_anchor()
             can_validate_tail = self._verified_anchor is not None or (
                 session_anchor is not None
                 and self.read_index.has_anchor(*session_anchor)
@@ -433,6 +514,7 @@ class EvidenceEventStore:
             head["stream_sequences"] = dict(sorted(stream_sequences.items()))
             self._write_head(head)
             self._verified_anchor = (global_seq, previous_hash)
+            self._write_durable_checkpoint(global_seq, previous_hash)
             try:
                 self.read_index.reconcile()
             except EvidenceReadIndexError:

@@ -499,8 +499,12 @@ def build_report(
         "hard_violation_count": len(hard_violations),
         "unclassified_live_wait_count": len(unclassified),
         "domain_candidate_counts": domain_counts,
-        "proposal_card_count": sum(int(domain.get("proposal_card_count") or 0) for domain in domains),
-        "replay_evidence_count": sum(int(domain.get("replay_evidence_count") or 0) for domain in domains),
+        # Distinct-trial counts (2026-08-16): domains overlap ~45% by keyword
+        # multi-membership, so summing per-domain counts double-counted (the
+        # dossier reported 144 proposal cards where 102 distinct trials had
+        # one). Count each trial once across the whole candidate set.
+        "proposal_card_count": proposal_card_count(trials),
+        "replay_evidence_count": replay_evidence_count(trials),
         "next_suggestions": [
             "repair hard live/approval/source-edit violations before any automation" if hard_violations else "keep all Tier 4/5 waits non-live until explicit scoped approval",
             "use this readiness map to pick the next replay, artifact comparison, or proposal-card hardening pass",

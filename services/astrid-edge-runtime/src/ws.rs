@@ -223,7 +223,9 @@ pub async fn serve_sensory(address: SocketAddr, ingress_tx: mpsc::Sender<Sensory
 
 fn cpu_edge_hello(mut hello: SensoryServerHelloV1) -> SensoryServerHelloV1 {
     hello.capabilities.retain(|capability| {
-        !capability.starts_with("division_") && !capability.starts_with("self_control_")
+        !capability.starts_with("division_")
+            && !capability.starts_with("self_control_")
+            && capability != "semantic_body_v2"
     });
     hello
         .capabilities
@@ -330,5 +332,28 @@ mod tests {
                 .iter()
                 .any(|value| value == "reservoir_tuning_private_action_executor_only")
         );
+    }
+
+    #[test]
+    fn hello_withholds_unsupported_semantic_body_and_preserves_legacy_delivery() {
+        let hello = cpu_edge_hello(SensoryServerHelloV1::new(
+            "process".to_string(),
+            "deployment".to_string(),
+        ));
+        assert!(!hello.supports_semantic_body_v2());
+        assert!(hello.supports_receipts());
+        assert!(
+            hello
+                .capabilities
+                .iter()
+                .any(|value| value == "mutual_address_v1")
+        );
+        assert!(matches!(
+            message_to_ingress(SensoryMsg::Semantic {
+                features: vec![0.0; 48],
+                ts_ms: None,
+            }),
+            Some(crate::reservoir::SensoryIngress::Semantic(_))
+        ));
     }
 }

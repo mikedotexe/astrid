@@ -62,6 +62,18 @@ class EvidenceReadIndex:
         connection.execute("PRAGMA synchronous = FULL")
         return connection
 
+    def _connect_readonly(self) -> sqlite3.Connection:
+        """Reader connection that never takes a write lock. The rw `_connect`
+        issues `PRAGMA journal_mode = DELETE`, which itself requires an
+        exclusive lock — so every pure READER used to contend with the live
+        writer (the 1-in-5 "database is locked" under concurrent scans,
+        2026-08-19). mode=ro skips journal/synchronous concerns entirely;
+        the durability posture of the write path is unchanged."""
+        connection = sqlite3.connect(f"file:{self.path}?mode=ro", uri=True, timeout=30)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA query_only = ON")
+        return connection
+
     @staticmethod
     def _create_schema(connection: sqlite3.Connection) -> None:
         connection.executescript(
@@ -367,6 +379,36 @@ class EvidenceReadIndex:
         if not self.path.is_file():
             return self.rebuild()
         os.chmod(self.path, 0o600)
+        # Fast path: when the index already matches the canonical head there
+        # is nothing to consume, so validate over a read-only connection and
+        # never take a write lock. Steady-state readers (probes, corridor
+        # reads) no longer contend with the live writer; the rw path below —
+        # with its full journal DELETE + synchronous FULL posture — runs only
+        # when a real tail needs consuming.
+        try:
+            with closing(self._connect_readonly()) as connection:
+                metadata = self._metadata(connection)
+                if (
+                    metadata.get("schema") == INDEX_SCHEMA
+                    and int(metadata.get("schema_version") or 0) == INDEX_SCHEMA_VERSION
+                ):
+                    indexed_bytes = int(metadata.get("indexed_bytes") or 0)
+                    canonical_size = (
+                        self.events_path.stat().st_size if self.events_path.exists() else 0
+                    )
+                    head = self._read_head()
+                    if (
+                        indexed_bytes == canonical_size
+                        and int(metadata.get("last_global_seq") or 0)
+                        == int(head.get("last_global_seq") or 0)
+                        and metadata.get("last_event_sha256")
+                        == str(head.get("last_event_sha256") or GENESIS_HASH)
+                    ):
+                        self._assert_anchor(connection, metadata)
+                        self._assert_streams_match_head(connection, head)
+                        return self.status(include_details=False)
+        except sqlite3.OperationalError:
+            pass  # fall through to the rw path, which owns lock semantics
         with closing(self._connect()) as connection:
             metadata = self._metadata(connection)
             if (
@@ -425,7 +467,7 @@ class EvidenceReadIndex:
         if not self.path.is_file():
             return result
         try:
-            with closing(self._connect()) as connection:
+            with closing(self._connect_readonly()) as connection:
                 metadata = self._metadata(connection)
             head = self._read_head()
             file_size = self.events_path.stat().st_size if self.events_path.exists() else 0
@@ -448,7 +490,7 @@ class EvidenceReadIndex:
                 }
             )
             if include_details:
-                with closing(self._connect()) as connection:
+                with closing(self._connect_readonly()) as connection:
                     result["stream_counts"] = {
                         str(row["stream"]): int(row["count"])
                         for row in connection.execute(
@@ -495,7 +537,7 @@ class EvidenceReadIndex:
         if errors:
             return {**status, "valid": False, "errors": errors}
         try:
-            with closing(self._connect()) as connection, self.events_path.open("rb") as handle:
+            with closing(self._connect_readonly()) as connection, self.events_path.open("rb") as handle:
                 expected_previous = GENESIS_HASH
                 expected_global_seq = 1
                 for row in connection.execute(
@@ -539,7 +581,7 @@ class EvidenceReadIndex:
         stream: str,
         idempotency_key: str,
     ) -> EvidenceEventV2 | None:
-        with closing(self._connect()) as connection:
+        with closing(self._connect_readonly()) as connection:
             row = connection.execute(
                 """
                 SELECT * FROM events
@@ -550,7 +592,7 @@ class EvidenceReadIndex:
             return None if row is None else self._event_for_row(row)
 
     def idempotency_keys(self, stream: str) -> set[str]:
-        with closing(self._connect()) as connection:
+        with closing(self._connect_readonly()) as connection:
             return {
                 str(row["idempotency_key"])
                 for row in connection.execute(
@@ -568,7 +610,7 @@ class EvidenceReadIndex:
         if not self.path.is_file():
             return False
         try:
-            with closing(self._connect()) as connection:
+            with closing(self._connect_readonly()) as connection:
                 row = connection.execute(
                     "SELECT event_sha256 FROM events WHERE global_seq = ?",
                     (global_seq,),
@@ -584,7 +626,7 @@ class EvidenceReadIndex:
         after_stream_seq: int = 0,
     ) -> Iterator[EvidenceEventV2]:
         with (
-            closing(self._connect()) as connection,
+            closing(self._connect_readonly()) as connection,
             self.events_path.open("rb") as handle,
         ):
             rows = connection.execute(
@@ -619,7 +661,7 @@ class EvidenceReadIndex:
         if not streams:
             return watermarks
         placeholders = ",".join("?" for _ in streams)
-        with closing(self._connect()) as connection:
+        with closing(self._connect_readonly()) as connection:
             rows = connection.execute(
                 f"""
                 SELECT event_id, event_sha256, global_seq, stream, stream_seq

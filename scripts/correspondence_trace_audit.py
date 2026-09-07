@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Read-only direct-address marker survival audit for correspondence V1.
+"""Read-only-by-default direct-address marker survival audit for correspondence V1.
 
 The audit scans public correspondence and reviewable public lanes for a shared
 lexicon anchor. It never reads Minime private qualia bodies: every Minime text
-file is checked with scripts/being_privacy.py before content is loaded.
+file is checked with scripts/being_privacy.py before content is loaded. Durable
+observation writes require the explicit ``--write-observation`` option.
 """
 
 from __future__ import annotations
@@ -28,6 +29,17 @@ DEFAULT_MINIME_WORKSPACE = Path("/Users/v/other/minime/workspace")
 DEFAULT_SHARED_DIR = Path("/Users/v/other/shared/collaborations")
 POLICY = "correspondence_direct_address_trace_v1"
 STATUSES = {"unknown", "pending", "observed", "not_observed"}
+EFFECT_CONTRACT = {
+    "measurement_scope": "public_lexical_marker_survival",
+    "language_only_trace_contract": True,
+    "shadow_magnetization_effect_established": False,
+    "pressure_effect_established": False,
+    "mode_packing_effect_established": False,
+    "felt_holding_effect_established": False,
+    "cross_lane_correlation_measured": False,
+    "live_substrate_change_authorized": False,
+    "separate_live_authority_required": True,
+}
 
 
 def now_ms() -> int:
@@ -200,7 +212,7 @@ def audit(
     shared_dir: Path,
     astrid_workspace: Path,
     minime_workspace: Path,
-    append_observation: bool = True,
+    append_observation: bool = False,
 ) -> dict[str, Any]:
     generated = now_ms()
     cutoff_s = time.time() - since_hours * 3600.0
@@ -258,6 +270,7 @@ def audit(
                         "evidence_count": report["evidence_count"],
                         "evidence": report["evidence"][:5],
                         "authority": "read_only_observation_not_control",
+                        "effect_contract": EFFECT_CONTRACT,
                         "privacy": {
                             "minime_private_files_skipped": skipped_private,
                             "minime_private_bodies_read": False,
@@ -275,6 +288,7 @@ def audit(
             "minime_private_files_skipped": skipped_private,
             "minime_private_bodies_read": False,
         },
+        "effect_contract": EFFECT_CONTRACT,
         "observation_appended": {
             "path": str(observation_path) if observation_path else None,
             "count": appended,
@@ -347,6 +361,7 @@ class CorrespondenceTraceAuditTests(unittest.TestCase):
                 shared_dir=shared,
                 astrid_workspace=astrid_ws,
                 minime_workspace=minime_ws,
+                append_observation=True,
             )
 
             self.assertEqual(payload["markers"][0]["status"], "observed")
@@ -355,6 +370,33 @@ class CorrespondenceTraceAuditTests(unittest.TestCase):
             observation_text = (coll_dir / "correspondence_trace_observations.jsonl").read_text()
             self.assertIn('"status": "observed"', observation_text)
             self.assertNotIn("should not be surfaced", json.dumps(payload))
+            self.assertFalse(payload["effect_contract"]["shadow_magnetization_effect_established"])
+
+    def test_default_audit_is_read_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shared = root / "shared"
+            coll_dir = shared / "coll_1"
+            coll_dir.mkdir(parents=True)
+            (coll_dir / "meta.json").write_text(
+                json.dumps({"id": "coll_1", "status": "joined", "updated_t_ms": 1}),
+                encoding="utf-8",
+            )
+
+            payload = audit(
+                since_hours=24,
+                marker=None,
+                shared_dir=shared,
+                astrid_workspace=root / "astrid_ws",
+                minime_workspace=root / "minime_ws",
+            )
+
+            self.assertFalse((coll_dir / "correspondence_trace_observations.jsonl").exists())
+            self.assertEqual(payload["observation_appended"], {"path": None, "count": 0})
+            self.assertEqual(
+                payload["effect_contract"]["measurement_scope"],
+                "public_lexical_marker_survival",
+            )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -363,6 +405,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--marker", help="Specific shared lexicon anchor to audit.")
     parser.add_argument("--json", action="store_true", help="Emit JSON to stdout.")
     parser.add_argument("--output-root", type=Path)
+    parser.add_argument(
+        "--write-observation",
+        action="store_true",
+        help="Explicitly append durable observation rows to the latest joined collaboration.",
+    )
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
 
@@ -377,6 +424,7 @@ def main(argv: list[str] | None = None) -> int:
         shared_dir=DEFAULT_SHARED_DIR,
         astrid_workspace=DEFAULT_ASTRID_WORKSPACE,
         minime_workspace=DEFAULT_MINIME_WORKSPACE,
+        append_observation=args.write_observation,
     )
     write_outputs(payload, args.output_root)
     if args.json:

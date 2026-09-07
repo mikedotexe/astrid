@@ -1,7 +1,19 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::autonomous::state::IntrospectOffsetV2;
 use crate::paths::{BridgePaths, bridge_paths};
+
+#[path = "introspect/continuity_v1.rs"]
+mod continuity_v1;
+#[path = "introspect/source_first_v2.rs"]
+mod source_first_v2;
+#[path = "introspect/source_first_v3/mod.rs"]
+mod source_first_v3;
+
+pub(super) use continuity_v1::{
+    PriorEvidenceContextV1, load_prior_evidence_v1, record_prior_evidence_responses_v1,
+};
 
 const INTROSPECT_WINDOW_LINES: usize = 400;
 const INTROSPECT_MAX_FILE_BYTES: u64 = 2_000_000;
@@ -44,9 +56,11 @@ pub(super) struct ResolvedIntrospectTarget {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct IntrospectWindow {
     pub text: String,
+    pub line_offset: usize,
     pub next_offset: Option<usize>,
     pub source_snapshot_v1: crate::lived_state_witness::LivedStateSourceSnapshotV1,
     source_scope_v1: IntrospectSourceScopeV1,
+    source_coverage_manifest_v2: source_first_v2::SourceCoverageManifestV2,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -97,12 +111,20 @@ impl IntrospectSourceScopeV1 {
 pub(super) fn source_scope_artifact_header_v1(window: Option<&IntrospectWindow>) -> String {
     window.map_or_else(
         || {
-            "Source window: unavailable\n\
+            format!(
+                "Source window: unavailable\n\
              Source evidence scope: source_unavailable_not_assessed\n\
-             Source activation boundary: source_unread_not_runtime_activation_proof"
-                .to_string()
+             Source activation boundary: source_unread_not_runtime_activation_proof\n{}",
+                source_first_v2::unavailable_header_v2()
+            )
         },
-        |window| window.source_scope_v1.artifact_header_v1(),
+        |window| {
+            format!(
+                "{}\n{}",
+                window.source_scope_v1.artifact_header_v1(),
+                window.source_coverage_manifest_v2.artifact_header_v2()
+            )
+        },
     )
 }
 
@@ -454,6 +476,7 @@ fn should_skip_introspect_dir(name: &str) -> bool {
 fn source_roots(paths: &BridgePaths) -> Vec<PathBuf> {
     vec![
         paths.bridge_root().join("src"),
+        paths.bridge_root().join("DOMAIN_BOUNDARIES.md"),
         paths.astrid_root().join("docs/steward-notes"),
         paths.minime_root().join("minime/src"),
         paths.minime_root().join("minime_autonomy"),
@@ -1148,10 +1171,23 @@ fn cross_file_xrefs(
 /// `line_offset`: start reading from this line (0 = beginning).
 /// Shows up to 400 lines from the offset. Includes a pagination hint
 /// so Astrid can request the next page: `INTROSPECT label next_offset`.
+#[cfg(test)]
 pub(super) fn read_introspect_window(
     label: &str,
     path: &Path,
     line_offset: usize,
+) -> Result<IntrospectWindow, String> {
+    read_introspect_window_for_offset(label, path, IntrospectOffsetV2::Exact(line_offset))
+}
+
+pub(super) fn source_sha256_v2(window: &IntrospectWindow) -> &str {
+    window.source_coverage_manifest_v2.source_sha256()
+}
+
+pub(super) fn read_introspect_window_for_offset(
+    label: &str,
+    path: &Path,
+    requested_offset: IntrospectOffsetV2,
 ) -> Result<IntrospectWindow, String> {
     let canonical = validate_introspect_source_path(label, path)?;
     let content =
@@ -1163,6 +1199,12 @@ pub(super) fn read_introspect_window(
 
     let all_lines: Vec<&str> = content.lines().collect();
     let total = all_lines.len();
+    let line_offset = match requested_offset {
+        IntrospectOffsetV2::Auto => {
+            source_first_v3::next_uncovered_offset_v3(&canonical, &content, total)?
+        },
+        IntrospectOffsetV2::Exact(offset) => offset,
+    };
     let start = validated_introspect_window_start(line_offset, total)?;
     let end = start.saturating_add(INTROSPECT_WINDOW_LINES).min(total);
     let page: String = all_lines[start..end]
@@ -1201,8 +1243,12 @@ pub(super) fn read_introspect_window(
     // requested), live, never cached.
     let xref = within_file_xrefs(&all_lines, start, end);
     let cross = cross_file_xrefs(&canonical, &all_lines, start, end);
+    let source_coverage_manifest_v2 = source_first_v2::build_source_coverage_manifest_v2(
+        &canonical, &content, start, end, total,
+    )?;
+    let coverage = source_coverage_manifest_v2.prompt_context_v2();
 
-    let text = format!("{header}{page}{xref}{cross}{footer}");
+    let text = format!("{header}{coverage}\n{page}{xref}{cross}{footer}");
     let source_snapshot_v1 = crate::lived_state_witness::source_snapshot_v1(
         &canonical,
         &content,
@@ -1215,9 +1261,11 @@ pub(super) fn read_introspect_window(
     let source_scope_v1 = IntrospectSourceScopeV1::new(start, end, total);
     Ok(IntrospectWindow {
         text,
+        line_offset,
         next_offset,
         source_snapshot_v1,
         source_scope_v1,
+        source_coverage_manifest_v2,
     })
 }
 
@@ -1256,6 +1304,26 @@ pub(super) fn introspection_has_required_sections_for_target(
     };
     let body = introspection_body_without_next(response);
     introspection_mentions_target(&body, label, source_path)
+}
+
+#[must_use]
+pub(super) fn introspection_has_supported_claims_for_window_v2(
+    response: Option<&str>,
+    label: &str,
+    path: &Path,
+    window: Option<&IntrospectWindow>,
+) -> bool {
+    if !introspection_has_required_sections_for_target(response, label, path) {
+        return false;
+    }
+    let (Some(response), Some(window)) = (response, window) else {
+        return false;
+    };
+    source_first_v2::response_claims_supported_v2(
+        response,
+        path,
+        &window.source_coverage_manifest_v2,
+    )
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -1951,6 +2019,23 @@ mod tests {
     }
 
     #[test]
+    fn source_first_v2_header_discloses_session_map_and_uncovered_intervals() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let path = dir.join("src/autonomous/introspect.rs");
+        let window = read_introspect_window("introspect.rs", &path, 0).expect("source window");
+        let header = source_scope_artifact_header_v1(Some(&window));
+        assert!(header.contains("Source coverage schema: source_coverage_manifest_v2"));
+        assert!(header.contains("Source read session:"));
+        assert!(header.contains("Source structural map SHA-256:"));
+        assert!(header.contains("Source uncovered intervals:"));
+        assert!(header.contains("Source map schema: source_map_v3"));
+        assert!(header.contains("Source V3 persistence: owner_only_source_hash_bound"));
+        assert!(window.text.contains("Whole-file structural outline:"));
+        assert!(window.text.contains("Persistent Source Map V3"));
+        assert!(window.text.contains("Binding claim rule:"));
+    }
+
+    #[test]
     fn safe_label_replaces_path_punctuation() {
         assert_eq!(
             safe_artifact_label("astrid:autonomous/mod.rs"),
@@ -2017,6 +2102,24 @@ mod tests {
         assert!(err.contains("syntax placeholder"));
         assert!(err.contains("astrid:llm"));
         assert!(err.contains("minime:regulator"));
+    }
+
+    #[test]
+    fn domain_boundaries_path_accepts_exact_and_legacy_lowercase_spelling() {
+        let sources = introspect_sources();
+
+        for requested in [
+            "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md",
+            "capsules/spectral-bridge/domain_boundaries.md",
+        ] {
+            let resolved = resolve_introspect_target_result(requested, &sources)
+                .expect("resolve bridge domain-boundary source");
+
+            assert_eq!(
+                resolved.path,
+                bridge_paths().bridge_root().join("DOMAIN_BOUNDARIES.md")
+            );
+        }
     }
 
     #[test]

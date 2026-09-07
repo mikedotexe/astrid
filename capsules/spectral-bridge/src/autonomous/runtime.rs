@@ -21,16 +21,33 @@
 
 #[path = "btsp/mod.rs"]
 pub(crate) mod btsp;
+#[path = "concern_queue.rs"]
+mod concern_queue;
+#[path = "runtime/contact_capacity.rs"]
+mod contact_capacity;
 #[path = "correspondence_v1.rs"]
 mod correspondence_v1;
+#[path = "delegated_capability.rs"]
+mod delegated_capability;
+#[path = "runtime/deployment_startup.rs"]
+mod deployment_startup;
+pub use deployment_startup::{apply_deployment_startup, inspect_deployment_inputs};
 #[path = "division_ceremony.rs"]
 mod division_ceremony;
+#[path = "envelope_registry.rs"]
+pub(crate) mod envelope_registry;
 #[path = "hebbian.rs"]
 mod hebbian;
+#[path = "inquiry.rs"]
+mod inquiry;
 #[path = "introspect.rs"]
 mod introspect;
+#[path = "learning_outcomes.rs"]
+mod learning_outcomes;
 #[path = "next_action/mod.rs"]
 pub(crate) mod next_action;
+#[path = "owner_policy.rs"]
+mod owner_policy;
 #[path = "phase_passage_context.rs"]
 mod phase_passage_context;
 #[path = "phase_passages.rs"]
@@ -41,8 +58,12 @@ mod phase_transitions;
 mod readiness;
 #[path = "reservoir.rs"]
 pub(crate) mod reservoir;
+#[path = "self_control_v2.rs"]
+pub(crate) mod self_control_v2;
 #[path = "state.rs"]
 pub(crate) mod state;
+#[path = "volition.rs"]
+mod volition;
 
 #[cfg(test)]
 static TEST_SUPPRESS_ASTRID_JOURNAL_SAVES: std::sync::atomic::AtomicBool =
@@ -68,6 +89,14 @@ pub(crate) fn suppress_astrid_journal_saves_for_test() -> TestAstridJournalSaveG
     TestAstridJournalSaveGuard { previous }
 }
 
+/// Prepare a one-shot, signed state-lineage receipt for the currently built bridge.
+pub fn prepare_self_control_deployment_handoff(
+    operator_actor: &str,
+    operator_ack: &str,
+) -> Result<serde_json::Value, String> {
+    self_control_v2::prepare_deployment_handoff(operator_actor, operator_ack)
+}
+
 include!("runtime/text.rs");
 include!("runtime/continuity.rs");
 include!("runtime/introspection_freshness.rs");
@@ -82,6 +111,7 @@ include!("runtime/spectral_state.rs");
 include!("runtime/interpretation.rs");
 include!("runtime/inbox.rs");
 include!("runtime/state_persistence.rs");
+include!("runtime/learning_feedback.rs");
 include!("runtime/journal.rs");
 include!("runtime/feedback_persistence.rs");
 include!("runtime/peripheral_resonance.rs");

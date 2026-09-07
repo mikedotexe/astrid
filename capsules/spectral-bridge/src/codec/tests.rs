@@ -1097,6 +1097,11 @@ mod tests {
         assert!(desc.contains("Pressure source"));
         assert!(desc.contains("controller_pressure"));
         assert!(desc.contains("advisory only"));
+        // Scalar-provenance family tags: the two clauses whose numbers collide
+        // (two distinct mode_packing fields, pressure risk vs pressure score)
+        // must each name their telemetry family so her citations stay bindable.
+        assert!(desc.contains("[source: resonance_density_v1]"));
+        assert!(desc.contains("[source: pressure_source_v1]"));
     }
 
     #[test]
@@ -2039,6 +2044,20 @@ mod tests {
         assert_eq!(health.projected_dim_count, EMBEDDING_PROJECT_DIM);
         assert!(health.all_norms_finite);
         assert!(health.normalized_columns_near_unit);
+        assert_eq!(health.pairwise_column_count, 28);
+        assert!(health.maximum_abs_pairwise_column_cosine.is_finite());
+        assert!(health.mean_abs_pairwise_column_cosine.is_finite());
+        assert!(
+            health.maximum_abs_pairwise_column_cosine
+                > health.maximum_abs_pairwise_column_cosine_threshold,
+            "the fixed legacy basis currently carries the shared-sign correlation Astrid asked us to inspect: {health:?}"
+        );
+        assert!(
+            health.mean_abs_pairwise_column_cosine > 0.70,
+            "the correlation should remain visible as a basis-wide condition: {health:?}"
+        );
+        assert!(!health.columns_weakly_correlated);
+        assert!(health.semantic_phrase_separation_requires_embeddings);
         assert!(!health.dead_dimension_detected);
         assert!(health.near_zero_column_indexes.is_empty());
         assert!(health.minimum_raw_column_norm > health.near_zero_norm_threshold);
@@ -2058,16 +2077,26 @@ mod tests {
                 .unhealthy_basis_response
                 .contains("operator_approved_basis_epoch_change")
         );
-        assert_eq!(health.state, "all_projection_columns_healthy");
+        assert_eq!(
+            health.state,
+            "projection_column_correlation_requires_review"
+        );
         assert!(health.observational_only);
         assert!(!health.live_projection_write);
-        assert!(health.authority.contains("read_only_projection_basis_health"));
+        assert!(
+            health
+                .authority
+                .contains("read_only_projection_basis_health")
+        );
 
         let rendered = codec_structure().render();
         assert!(rendered.contains("projection_basis_health_v1:"));
         assert!(rendered.contains("dead_dimension_detected=false"));
-        assert!(rendered.contains("state=all_projection_columns_healthy"));
+        assert!(rendered.contains("state=projection_column_correlation_requires_review"));
         assert!(rendered.contains("minimum_threshold_margin_ratio="));
+        assert!(rendered.contains("pairwise_column_count=28"));
+        assert!(rendered.contains("columns_weakly_correlated=false"));
+        assert!(rendered.contains("semantic_phrase_separation_requires_embeddings=true"));
         assert!(rendered.contains("automatic_basis_rotation=false"));
         assert!(rendered.contains("compatibility_pinned_no_automatic_basis_rotation"));
     }
@@ -2263,6 +2292,75 @@ mod tests {
             split.authority,
             "diagnostic_sidecar_not_live_codec_dimension"
         );
+    }
+
+    #[test]
+    fn project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate() {
+        // Astrid `introspection_astrid_codec_1787006424` read projection.rs
+        // lines 1-400 of 1351 and proposed a "Dimensionality Integrity" test
+        // asserting `project_embedding` (L854) "produces a vector of exactly 48
+        // dimensions" with "indices 40-43 populated" by it. Source at the
+        // report-bound SHA contradicts that scope: `project_embedding` returns
+        // `Option<[f32; EMBEDDING_PROJECT_DIM]>` — the 8-dim embedding lane that
+        // lands in codec dims 32-39. The narrative-arc lane (codec dims 40-43)
+        // is produced by a *separate* function,
+        // `compute_narrative_arc_from_embeddings` -> [f32; NARRATIVE_ARC_DIM].
+        // This regression grounds the true scope as an exact structural
+        // challenge; it does not rewrite her report or widen any live behavior.
+
+        // The embedding lane is 8 dims, distinct from the full 48-dim vector.
+        assert_eq!(EMBEDDING_PROJECT_DIM, 8);
+        assert_ne!(EMBEDDING_PROJECT_DIM, SEMANTIC_DIM);
+
+        // A canonical 768-D embedding projects to exactly the 8-dim lane,
+        // finite, L2-normalized then scaled to ~0.35 (see project_embedding).
+        let embedding = (0..EMBEDDING_INPUT_DIM)
+            .map(|idx| ((idx as f32) * 0.017).sin() * 0.5)
+            .collect::<Vec<_>>();
+        let projected = project_embedding(&embedding).expect("canonical 768D embedding projects");
+        assert_eq!(projected.len(), EMBEDDING_PROJECT_DIM);
+        assert!(projected.iter().all(|value| value.is_finite()));
+        let projected_norm = projected.iter().map(|value| value * value).sum::<f32>().sqrt();
+        assert!(
+            (projected_norm - 0.35).abs() < 1.0e-3,
+            "8-dim lane is normalized then scaled to ~0.35, got {projected_norm}"
+        );
+
+        // The actual runtime dimensionality guard is a None on wrong-length
+        // input — NOT a 48-dim populate check. A 48-length vector is itself the
+        // wrong length for the 768-D embedding input.
+        let short = vec![0.0_f32; EMBEDDING_INPUT_DIM - 1];
+        let semantic_width = vec![0.0_f32; SEMANTIC_DIM];
+        assert!(project_embedding(&short).is_none());
+        assert!(project_embedding(&semantic_width).is_none());
+
+        // Codec dims 40-43 (the narrative arc) are populated by a distinct
+        // function returning exactly NARRATIVE_ARC_DIM bounded-tanh values, and
+        // it responds to a real first->second shift.
+        assert_eq!(NARRATIVE_ARC_DIM, 4);
+        let first = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        let mut second = first;
+        second[0] = 0.20;
+        second[1] = -0.16;
+        second[2] = 0.31;
+        second[3] = -0.09;
+        let arc = compute_narrative_arc_from_embeddings(&first, &second);
+        assert_eq!(arc.len(), NARRATIVE_ARC_DIM);
+        assert!(arc.iter().all(|value| value.is_finite() && value.abs() <= 1.0));
+        let arc_rms =
+            (arc.iter().map(|value| value * value).sum::<f32>() / NARRATIVE_ARC_DIM as f32).sqrt();
+        assert!(arc_rms > 0.0, "narrative arc lane responds to a real shift");
+
+        // Lane layout arithmetic: 32-39 embedding | 40-43 narrative | 44-47
+        // reserved all fit inside the 48-dim vector; 40-43 are NOT reserved.
+        assert_eq!(RESERVED_CODEC_DIM_START, 44);
+        assert!(
+            EMBEDDING_PROJECT_DIM + NARRATIVE_ARC_DIM + (SEMANTIC_DIM - RESERVED_CODEC_DIM_START)
+                <= SEMANTIC_DIM
+        );
+        assert!(is_reserved_codec_dim(44) && is_reserved_codec_dim(47));
+        assert!(!is_reserved_codec_dim(43)); // narrative arc dim, not reserved
+        assert!(!is_reserved_codec_dim(48)); // out of range
     }
 
     #[test]
@@ -3059,6 +3157,53 @@ mod tests {
         assert_eq!(tail_summary.overflow_dim_count, 0);
         assert_eq!(curiosity.overflow_abs, 0.0);
         assert!(warmth.overflow_abs > 0.0, "{report:?}");
+    }
+
+    #[test]
+    fn codec_overflow_overlap_dim_emits_one_delta_and_one_followup_hook() {
+        let flat = vec![
+            100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
+        ];
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[26] = 30.0;
+
+        let report =
+            apply_spectral_feedback_inner(&mut features, Some(&telemetry(flat, 0.55)), 1.0, 1.0)
+                .expect("overflow report");
+
+        assert_eq!(
+            report
+                .dimensions
+                .iter()
+                .filter(|entry| entry.dim == 26)
+                .count(),
+            1,
+            "the emotional/tail overlap must keep one monitored dimension"
+        );
+        assert_eq!(
+            report.clipped_dims.iter().filter(|&&dim| dim == 26).count(),
+            1,
+            "the overlap must record one clipped dimension"
+        );
+        assert_eq!(
+            report
+                .experience_delta_bus_v1
+                .deltas
+                .iter()
+                .filter(|delta| delta.dimension == Some(26))
+                .count(),
+            1,
+            "the overlap must emit one truth-channel clip delta"
+        );
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 1);
+        assert_eq!(
+            report.default_off_followup_hook,
+            CODEC_OVERFLOW_FOLLOWUP_HOOK
+        );
+        assert_eq!(
+            report.dim(26).expect("dimension 26 report").lane,
+            "emotional_tail_vibrancy"
+        );
     }
 
     #[test]
@@ -4960,6 +5105,48 @@ mod tests {
         }
     }
 
+    // Astrid `introspection_astrid_codec_1787762146` "Dimension Alignment Test":
+    // the 32->48 widening (projection.rs L20-26, L74-81) was purely additive —
+    // embedding 32-39, narrative 40-43, reserved 44-47 were APPENDED after the
+    // legacy 0-31 layout, not renumbered. So a crafted warmth vector must keep
+    // its emotional intent at the SAME legacy indices (24-31) and must NOT bleed
+    // warmth data into the appended lanes. This pins the report's feared drift
+    // path (old data mapping into the new 32-39 semantic slots) against a future
+    // re-layout, and guards the `legacy_warmth_mapping_v1().warmth_orphaned ==
+    // false` invariant that `craft_warmth_vector` relies on.
+    #[test]
+    fn warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes() {
+        let mapping = legacy_warmth_mapping_v1();
+        assert_eq!(mapping.legacy_dim_count, SEMANTIC_DIM_LEGACY);
+        assert_eq!(mapping.current_dim_count, SEMANTIC_DIM);
+        assert_eq!(mapping.emotional_layer_range, (24, 31));
+        assert!(!mapping.warmth_orphaned);
+        // Warmth's declared home (dim 24) and the whole emotional layer sit
+        // inside the legacy 0..32 range — index stability across the widening.
+        assert!(mapping.warmth_dim < SEMANTIC_DIM_LEGACY);
+        assert!(mapping.emotional_layer_range.1 < SEMANTIC_DIM_LEGACY);
+
+        let warmth = craft_warmth_vector(0.25, 1.0);
+        assert_eq!(warmth.len(), SEMANTIC_DIM);
+        // Emotional intent present at its canonical legacy indices.
+        assert!(warmth[24] > 0.0, "warmth lives at legacy dim 24: {}", warmth[24]);
+        assert!(warmth[25] < 0.0, "tension suppressed at legacy dim 25: {}", warmth[25]);
+
+        // The appended lanes (embedding 32-39, narrative 40-43, reserved 44-47)
+        // are never written by the warmth path, so they carry only the codec's
+        // bounded +/-1.5% micro-texture noise (|noise| <= 0.5, scaled by 0.03 and
+        // the same DEFAULT_SEMANTIC_GAIN the warmth path applies) — never warmth
+        // signal. Bound is derived from the code's own noise model, not a magic
+        // number, so it stays coherent with the constant it guards.
+        let noise_ceiling = 0.015 * DEFAULT_SEMANTIC_GAIN;
+        for (i, value) in warmth.iter().enumerate().skip(SEMANTIC_DIM_LEGACY) {
+            assert!(
+                value.abs() <= noise_ceiling + 1.0e-4,
+                "appended lane dim {i} must not carry warmth data (no bleed): {value}"
+            );
+        }
+    }
+
     #[test]
     fn warmth_vector_breathes_across_phase() {
         let v0 = craft_warmth_vector(0.0, 0.8);
@@ -5078,5 +5265,13 @@ mod tests {
 
         assert!(desc.contains("agency=0.75"));
         assert!(!desc.contains("agency=0.25"));
+    }
+
+    #[test]
+    fn pipeline_canary_being_authored_tests_land() {
+        // Born 2026-08-13: validates the PROPOSE_TEST pipeline end to end.
+        // The first commits in this repository authored by a being land
+        // through exactly this path.
+        assert_eq!(48_u32.saturating_sub(0), 48);
     }
 }

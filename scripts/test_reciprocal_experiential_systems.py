@@ -2087,6 +2087,12 @@ class ReciprocalExperientialSystemsTests(unittest.TestCase):
         self.assertLess(
             order["steward_work_selection"], order["experiential_epistemics"]
         )
+        self.assertLess(
+            order["steward_work_selection"], order["living_problem_registry"]
+        )
+        self.assertLess(
+            order["living_problem_registry"], order["experiential_epistemics"]
+        )
         reciprocal = next(step for step in steps if step.step_id == "reciprocal_uptake")
         self.assertEqual(reciprocal.input_streams, ("reciprocal_uptake",))
         self.assertNotIn("model_qos", reciprocal.input_streams)

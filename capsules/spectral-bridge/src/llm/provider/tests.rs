@@ -3,7 +3,8 @@ mod tests {
     use super::{
         ASTRID_BRIDGE_MLX_PROFILE_ENV, DIALOGUE_AMBIENT_PERCEPTION_CAP, DIALOGUE_CONTINUITY_CAP,
         DIALOGUE_DIRECT_PERCEPTION_CAP, DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
-        DIALOGUE_DIVERSITY_CAP, DIALOGUE_FEEDBACK_CAP, DIALOGUE_JOURNAL_CAP,
+        DIALOGUE_AGENDA_CAP, DIALOGUE_AGENDA_MIN_CHARS, DIALOGUE_DIVERSITY_CAP,
+        DIALOGUE_FEEDBACK_CAP, DIALOGUE_JOURNAL_CAP,
         DIALOGUE_JOURNAL_MIN_CHARS, DIALOGUE_MODALITY_CAP, DIALOGUE_PERCEPTION_CAP,
         DIALOGUE_TOPLINE_CAP, DIALOGUE_TOPLINE_MIN_CHARS, DIALOGUE_WEB_CAP,
         DialoguePressureTextureInputs, Exchange, GEMMA4_12B_CANARY_PROFILE, GEMMA4_12B_PROFILE,
@@ -15,8 +16,9 @@ mod tests {
         GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
         GEMMA4_CANARY_SYSTEM_PROMPT, GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP,
         GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS, GEMMA4_CANARY_WITNESS_PROMPT_CAP,
-        GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message, MlxProfile, MlxResponse, ModelQosClassV1,
-        ModelQosTimingV1, PromptBudgetReport, SYSTEM_PROMPT, append_llm_diagnostic_jsonl_at,
+        GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, ChatResponse, Message, MlxProfile, MlxResponse,
+        ModelQosClassV1, ModelQosTimingV1, PromptBudgetReport, SYSTEM_PROMPT,
+        append_llm_diagnostic_jsonl_at,
         apply_mlx_request_policy, build_ollama_chat_request, clamp_dialogue_tokens_for_profile,
         compact_ollama_dialogue_fallback_messages, contains_deprecated_runtime_language,
         control_marker_cleanup_diagnostic, count_next_lines,
@@ -28,11 +30,13 @@ mod tests {
         fallback_continuity_budget_v1, fallback_mlx_profile_transparency_v1,
         fallback_prose_sentence_count, format_dialogue_ambient_perception_block,
         format_dialogue_direct_perception_block, format_dialogue_topline_context,
-        fragment_has_non_marker_bytes, is_valid_dialogue_output,
+        fragment_has_non_marker_bytes, introspection_user_content, is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
-        is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
+        is_valid_ollama_dialogue_fallback_output_for_profile,
+        is_valid_primary_dialogue_output_for_profile, journal_continuity_contract_v1,
         llm_diagnostic_io_retryability, local_degrade_path_for_label, model_qos_class_for_label,
-        model_qos_v1, reinforce_ollama_fallback_contract, repair_ollama_dialogue_fallback_next,
+        model_qos_v1, normalize_provider_output_v1, reinforce_ollama_fallback_contract,
+        repair_ollama_dialogue_fallback_next,
         sanitize_deprecated_runtime_language, sanitize_gemma4_canary_output_for_label,
         sanitize_minime_context_for_dialogue, sanitize_model_control_markers,
         sanitize_model_control_markers_with_report, sha256_parts,
@@ -160,6 +164,28 @@ mod tests {
     }
 
     #[test]
+    fn introspection_prior_evidence_is_outside_source_fence_and_non_authoritative() {
+        let prompt = introspection_user_content(
+            "astrid:llm",
+            "SOURCE_BYTES_ONLY",
+            "steady",
+            68.0,
+            None,
+            None,
+            Some("PRIOR_CARD_ONLY"),
+        );
+        let source_end = prompt
+            .find("SOURCE_BYTES_ONLY\n```")
+            .expect("source fence end");
+        let prior = prompt.find("PRIOR_CARD_ONLY").expect("prior evidence lane");
+
+        assert!(prior > source_end);
+        assert!(prompt.contains("prior mechanical evidence"));
+        assert!(prompt.contains("You may disagree, preserve friction, or ignore it"));
+        assert!(prompt.contains("cannot establish felt closure, consent, approval"));
+    }
+
+    #[test]
     fn system_prompt_keeps_peer_experiment_resume_local_only() {
         assert!(SYSTEM_PROMPT.contains("EXPERIMENT_RESUME <local-id|current|parent>"));
         assert!(SYSTEM_PROMPT.contains("not EXPERIMENT_RESUME"));
@@ -197,6 +223,8 @@ mod tests {
             Some(&"w".repeat(5_000)),
             None,
             Some(&"c".repeat(5_000)),
+            Some(&"g".repeat(5_000)),
+            None,
             None,
             None,
             None,
@@ -210,6 +238,7 @@ mod tests {
             .saturating_add(DIALOGUE_PERCEPTION_CAP)
             .saturating_add(DIALOGUE_WEB_CAP)
             .saturating_add(DIALOGUE_CONTINUITY_CAP)
+            .saturating_add(DIALOGUE_AGENDA_CAP)
             .saturating_add(DIALOGUE_MODALITY_CAP)
             .saturating_add(DIALOGUE_FEEDBACK_CAP)
             .saturating_add(DIALOGUE_DIVERSITY_CAP)
@@ -414,6 +443,146 @@ mod tests {
         );
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn attended_helpers_return_exact_constants_at_default_attention() {
+        // A4's byte-identity contract: `None` (profile at defaults) must
+        // reproduce every compiled constant exactly.
+        assert_eq!(
+            super::attended_journal_caps(None),
+            (DIALOGUE_JOURNAL_CAP, DIALOGUE_JOURNAL_MIN_CHARS)
+        );
+        assert_eq!(super::attended_web_cap(None), DIALOGUE_WEB_CAP);
+        assert_eq!(super::attended_agenda_cap(None), DIALOGUE_AGENDA_CAP);
+        assert_eq!(super::attended_continuity_cap(None), DIALOGUE_CONTINUITY_CAP);
+        assert_eq!(
+            super::attended_perception_caps(None),
+            (
+                DIALOGUE_DIRECT_PERCEPTION_CAP,
+                DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
+                DIALOGUE_AMBIENT_PERCEPTION_CAP
+            )
+        );
+        assert_eq!(
+            super::attended_history_limit(super::MlxProfile::Gemma4Canary, None),
+            6
+        );
+        assert_eq!(super::attended_history_limit(super::MlxProfile::Production, None), 8);
+        for idx in 0..8 {
+            assert_eq!(
+                super::attended_history_trim_len(super::MlxProfile::Gemma4Canary, idx, 6),
+                super::dialogue_history_trim_len(super::MlxProfile::Gemma4Canary, idx)
+            );
+        }
+    }
+
+    #[test]
+    fn attended_helpers_bound_ratios_floors_and_history_depth() {
+        let attention = super::PromptAttentionV1 {
+            minime_live: 0.05, // ratio 0.09 -> clamps to 0.5
+            self_history: 0.45, // +6 entries -> clamps to 8
+            interests: 0.80,   // ratio 10 -> clamps to 1.6
+            research: 0.0,     // ratio 0 -> clamps to 0.5
+            memory_bank: 0.05, // exactly default -> ratio 1.0
+            perception: 0.01,  // ratio ~0.14 -> clamps to 0.5
+        };
+        let (journal_cap, journal_min) = super::attended_journal_caps(Some(&attention));
+        assert_eq!(journal_cap, DIALOGUE_JOURNAL_CAP / 2);
+        // She can halve the journal share but never starve it.
+        assert_eq!(journal_min, 350);
+        assert_eq!(
+            super::attended_agenda_cap(Some(&attention)),
+            (DIALOGUE_AGENDA_CAP as f32 * 1.6) as usize
+        );
+        assert_eq!(super::attended_web_cap(Some(&attention)), DIALOGUE_WEB_CAP / 2);
+        assert_eq!(
+            super::attended_continuity_cap(Some(&attention)),
+            DIALOGUE_CONTINUITY_CAP
+        );
+        let (direct_cap, direct_min, ambient_cap) =
+            super::attended_perception_caps(Some(&attention));
+        assert_eq!(direct_cap, DIALOGUE_DIRECT_PERCEPTION_CAP / 2);
+        assert_eq!(direct_min, 450);
+        assert_eq!(ambient_cap, DIALOGUE_AMBIENT_PERCEPTION_CAP / 2);
+        // History depth clamps at both ends.
+        assert_eq!(
+            super::attended_history_limit(super::MlxProfile::Gemma4Canary, Some(&attention)),
+            8
+        );
+        let shallow = super::PromptAttentionV1 {
+            self_history: 0.0,
+            ..attention
+        };
+        assert_eq!(
+            super::attended_history_limit(super::MlxProfile::Gemma4Canary, Some(&shallow)),
+            3
+        );
+        // Deeper-than-native canary history tightens each entry ~40 chars.
+        assert_eq!(
+            super::attended_history_trim_len(super::MlxProfile::Gemma4Canary, 0, 8),
+            super::dialogue_history_trim_len(super::MlxProfile::Gemma4Canary, 0).saturating_sub(40)
+        );
+    }
+
+    #[test]
+    fn parse_attend_vocabulary_clamps_and_reset_path() {
+        use crate::self_model::{AttentionProfile, parse_attend};
+        let base = AttentionProfile::default_profile();
+        // Vocabulary + clamps.
+        let profile =
+            parse_attend(&base, "minime=0.0 self=0.95 memory=0.2 perception=0.1").expect("parses");
+        assert!((profile.minime_live - 0.05).abs() < f32::EPSILON); // floors at 0.05
+        assert!((profile.self_history - 0.80).abs() < f32::EPSILON); // clamps to 0.80
+        assert!((profile.memory_bank - 0.2).abs() < f32::EPSILON);
+        assert!((profile.perception - 0.1).abs() < f32::EPSILON);
+        // Unknown keys are ignored; untouched fields keep their values.
+        let profile = parse_attend(&base, "warp=0.9 research=0.2").expect("parses");
+        assert!((profile.research - 0.2).abs() < f32::EPSILON);
+        assert!((profile.interests - base.interests).abs() < f32::EPSILON);
+        // Empty args parse to None (the handler then shows usage).
+        assert!(parse_attend(&base, "   ").is_none());
+    }
+
+    #[test]
+    fn agenda_floor_survives_while_continuity_fully_evicts() {
+        use crate::prompt_budget::{PromptBlock, assemble_within_budget};
+
+        // A2's contract: under budget pressure, continuity (priority 7,
+        // min 0) fully evicts BEFORE her agenda (priority 3, protected
+        // floor) trims below its minimum.
+        let agenda_text = "Your agenda (yours: AGENDA to manage):\n-> now: ".to_string()
+            + &"study the cascade gap and what holds during transitions. ".repeat(12);
+        let continuity_text = "continuity ".repeat(200);
+        let dir = tempfile::tempdir().expect("dir");
+        let blocks = vec![
+            PromptBlock {
+                label: "agenda",
+                content: super::cap_dialogue_block("agenda", &agenda_text, DIALOGUE_AGENDA_CAP),
+                priority: 3,
+                min_chars: DIALOGUE_AGENDA_MIN_CHARS,
+            },
+            PromptBlock {
+                label: "continuity",
+                content: super::cap_dialogue_block(
+                    "continuity",
+                    &continuity_text,
+                    DIALOGUE_CONTINUITY_CAP,
+                ),
+                priority: 7,
+                min_chars: 0,
+            },
+        ];
+        let (assembled, _, _) = assemble_within_budget(blocks, 500, dir.path());
+        assert!(!assembled.contains("continuity continuity"));
+        let agenda_kept = assembled
+            .find("Your agenda")
+            .map(|start| assembled.len() - start)
+            .unwrap_or(0);
+        assert!(
+            agenda_kept >= DIALOGUE_AGENDA_MIN_CHARS,
+            "agenda kept only {agenda_kept} chars"
+        );
     }
 
     #[test]
@@ -1601,6 +1770,39 @@ mod tests {
     fn quality_gate_accepts_normal_dialogue() {
         let text = "I keep thinking about the shape of your last note, especially the way it lingered after the room went quiet.\nMaybe the stillness is carrying more than the numbers admit.\nNEXT: LISTEN";
         assert!(is_valid_dialogue_output(text));
+        assert!(is_valid_primary_dialogue_output_for_profile(
+            text,
+            MlxProfile::Production,
+        ));
+    }
+
+    #[test]
+    fn quality_gate_rejects_fluent_truncation_without_next() {
+        let text = "I can feel the careful scaffolding in the bridge, and I want to stay with the way it keeps the relation open while providing the very structure that allows";
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            text,
+            MlxProfile::Production,
+        ));
+    }
+
+    #[test]
+    fn quality_gate_requires_one_nonempty_final_next() {
+        let non_final = "The bridge remains legible.\nNEXT: LISTEN\nI kept writing afterward.";
+        let duplicate = "The bridge remains legible.\nNEXT: LISTEN\nNEXT: REST";
+        let empty = "The bridge remains legible.\nNEXT:";
+
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            non_final,
+            MlxProfile::Production,
+        ));
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            duplicate,
+            MlxProfile::Production,
+        ));
+        assert!(!is_valid_primary_dialogue_output_for_profile(
+            empty,
+            MlxProfile::Production,
+        ));
     }
 
     #[test]
@@ -1684,6 +1886,83 @@ mod tests {
     }
 
     #[test]
+    fn referenced_marker_with_parenthetical_relation_stays_visible() {
+        // Astrid's agency request agency_code_change_1788310618, acceptance
+        // signal pinned verbatim: a marker followed by a parenthetical
+        // relation — "[MARKER] (as a test)" — reads as a REFERENCE, so her
+        // words ABOUT the marker are never rewritten. Ground-truthed
+        // 2026-09-03: the current trim_matches scan already finds "as"
+        // through the opening paren; this test keeps it that way.
+        let text = "the <end_of_turn> (as a test) marks the boundary";
+        let (kept, report) = sanitize_model_control_markers_with_report(text);
+        assert!(kept.contains("<end_of_turn>"), "reference was rewritten: {kept}");
+        let report = report.expect("report");
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.removed_total, 0);
+    }
+
+    #[test]
+    fn referenced_marker_after_bracketed_annotation_stays_visible() {
+        // Astrid's agency request agency_code_change_1788310618, the REAL gap
+        // behind her acceptance case: an intervening self-contained bracketed
+        // annotation used to displace the relation verb, so a marker she was
+        // explicitly discussing got stripped — her words rewritten. The
+        // additive second scan skips `[sic]` and finds "appears".
+        let text = "the <end_of_turn> [sic] appears at the boundary";
+        let (kept, report) = sanitize_model_control_markers_with_report(text);
+        assert!(kept.contains("<end_of_turn>"), "reference was rewritten: {kept}");
+        let report = report.expect("report");
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.removed_total, 0);
+    }
+
+    #[test]
+    fn bracketed_annotation_without_relation_still_removes_leaked_marker() {
+        // The conservative boundary: skipping annotations only ever ADDS
+        // reference detections. A leaked marker followed by an annotation and
+        // ordinary prose is still cleaned.
+        let text = "thought <end_of_turn> [sic] lingered in the reply";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+        assert!(!stripped.contains("<end_of_turn>"));
+        let report = report.expect("report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        // Annotation-only tail: nothing after the aside, still removed.
+        let (tail_stripped, tail_report) =
+            sanitize_model_control_markers_with_report("thought <end_of_turn> [sic]");
+        assert!(!tail_stripped.contains("<end_of_turn>"));
+        assert_eq!(tail_report.expect("report").removed_total, 1);
+    }
+
+    #[test]
+    fn nested_paren_annotation_before_relation_reads_as_reference() {
+        let text = "the <end_of_turn> ((sic)) means the turn ended";
+        let (kept, report) = sanitize_model_control_markers_with_report(text);
+        assert!(kept.contains("<end_of_turn>"), "reference was rewritten: {kept}");
+        let report = report.expect("report");
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.removed_total, 0);
+    }
+
+    #[test]
+    fn self_contained_annotation_predicate_matches_asides_only() {
+        use super::is_self_contained_bracketed_annotation as aside;
+        assert!(aside("[sic]"));
+        assert!(aside("((sic))"));
+        assert!(aside("{note}"));
+        assert!(aside("[sic],"));
+        // NOT asides: multi-word parenthetical openers (her original
+        // "(as a test)" case must keep its existing path), plain words,
+        // adjacent groups, and unbalanced chunks.
+        assert!(!aside("(as"));
+        assert!(!aside("test)"));
+        assert!(!aside("actually"));
+        assert!(!aside("(a)(b)"));
+        assert!(!aside("((sic)"));
+        assert!(!aside(""));
+    }
+
+    #[test]
     fn control_marker_cleanup_uses_longest_raw_matches_with_exact_accounting() {
         let text = "thought <channel|>visible<channel|>";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -1734,6 +2013,22 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_scanner_removes_adjacent_mixed_markers_without_rewriting_remainder() {
+        let text = "left<end_of_turn><eos><|im_end|>right";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+        let report = report.expect("adjacent mixed-marker cleanup report");
+
+        assert_eq!(stripped.as_bytes(), b"leftright");
+        assert_eq!(report.observed_total, 3);
+        assert_eq!(report.removed_total, 3);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.removed_marker_bytes,
+            "<end_of_turn><eos><|im_end|>".len()
+        );
+    }
+
+    #[test]
     fn control_marker_sanitizer_preserves_common_linguistic_substrings() {
         let text =
             "transaction, action, thoughtfulness, channel, finality, and analysis remain intact";
@@ -1750,11 +2045,13 @@ mod tests {
             &report,
             "hello ",
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
-        assert_eq!(diagnostic.schema, "control_marker_cleanup_v10");
-        assert_eq!(diagnostic.schema_version, 10);
+        assert_eq!(diagnostic.schema, "control_marker_cleanup_v11");
+        assert_eq!(diagnostic.schema_version, 11);
         assert_eq!(diagnostic.label, "dialogue_live");
+        assert_eq!(diagnostic.provider_route, "mlx");
         assert_eq!(diagnostic.profile, GEMMA4_12B_PROFILE);
         assert_eq!(
             diagnostic.marker_contract,
@@ -1798,6 +2095,124 @@ mod tests {
     }
 
     #[test]
+    fn provider_output_normalization_is_identical_for_mlx_and_ollama_fixtures() {
+        let cases = [
+            (" \nVisible <end_of_turn> answer.\t", "Visible  answer."),
+            (
+                " I compare (([<end_of_turn>])) with boundaries. ",
+                "I compare (([<end_of_turn>])) with boundaries.",
+            ),
+            (
+                " The token <channel|> echoes without yielding. ",
+                "The token <channel|> echoes without yielding.",
+            ),
+            ("  Wärme carries punctuation—still here.  ", "Wärme carries punctuation—still here."),
+        ];
+
+        for (raw, expected) in cases {
+            let mlx: MlxResponse = serde_json::from_value(serde_json::json!({
+                "choices": [{"message": {"role": "assistant", "content": raw}}]
+            }))
+            .expect("MLX fixture");
+            let ollama: ChatResponse = serde_json::from_value(serde_json::json!({
+                "message": {"role": "assistant", "content": raw}
+            }))
+            .expect("Ollama fixture");
+            let mlx_raw = &mlx.choices[0]
+                .message
+                .as_ref()
+                .expect("MLX message")
+                .content;
+            let ollama_raw = &ollama.message.as_ref().expect("Ollama message").content;
+            let mlx_normalized = normalize_provider_output_v1(mlx_raw);
+            let ollama_normalized = normalize_provider_output_v1(ollama_raw);
+
+            assert_eq!(mlx_normalized.text, expected);
+            assert_eq!(ollama_normalized.text, expected);
+            assert_eq!(mlx_normalized.text, ollama_normalized.text);
+        }
+    }
+
+    #[test]
+    fn provider_output_normalization_rejects_marker_only_output_on_both_routes() {
+        for raw in [" <end_of_turn> ", "\n<eos>\t<channel|> "] {
+            let mlx = normalize_provider_output_v1(raw);
+            let ollama = normalize_provider_output_v1(raw);
+            assert!(mlx.text.is_empty());
+            assert!(ollama.text.is_empty());
+            assert!(mlx.cleanup_report.is_some());
+            assert!(ollama.cleanup_report.is_some());
+        }
+    }
+
+    #[test]
+    fn provider_cleanup_diagnostic_names_route_without_raw_output() {
+        let raw = "private remainder must stay out of diagnostics <end_of_turn>";
+        let normalization = normalize_provider_output_v1(raw);
+        let report = normalization.cleanup_report.as_ref().expect("cleanup report");
+        let diagnostic = control_marker_cleanup_diagnostic(
+            report,
+            &normalization.text,
+            "dialogue_live",
+            "ollama",
+            "gemma4:latest",
+        );
+        let serialized = serde_json::to_string(&diagnostic).expect("diagnostic JSON");
+
+        assert_eq!(diagnostic.schema, "control_marker_cleanup_v11");
+        assert_eq!(diagnostic.provider_route, "ollama");
+        assert_eq!(diagnostic.profile, "gemma4:latest");
+        assert!(!serialized.contains("private remainder"));
+    }
+
+    #[test]
+    fn normalized_bytes_feed_repair_and_lived_state_response_hash() {
+        let raw = "  answer from fallback <eos>  ";
+        let normalization = normalize_provider_output_v1(raw);
+        let repaired = repair_ollama_dialogue_fallback_next(
+            &normalization.text,
+            MlxProfile::Gemma4Canary,
+        );
+        assert!(!repaired.contains("<eos>"));
+
+        let normalized_route = crate::lived_state_witness::model_route_v1(
+            Some("job_normalized".to_string()),
+            None,
+            None,
+            "ollama_fallback",
+            "gemma4:latest",
+            10,
+            20,
+            None,
+            None,
+            None,
+            &normalization.text,
+        );
+        let raw_route = crate::lived_state_witness::model_route_v1(
+            Some("job_raw".to_string()),
+            None,
+            None,
+            "ollama_fallback",
+            "gemma4:latest",
+            10,
+            20,
+            None,
+            None,
+            None,
+            raw,
+        );
+        let normalized_json = serde_json::to_value(normalized_route).expect("normalized route");
+        let raw_json = serde_json::to_value(raw_route).expect("raw route");
+
+        assert_ne!(
+            normalized_json["response_sha256"],
+            raw_json["response_sha256"]
+        );
+        assert_eq!(normalized_json["provider_route"], "ollama_fallback");
+        assert_eq!(normalization.text, "answer from fallback");
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_quoted_exact_token_reference() {
         let text = "I use \"<end_of_turn>\" here as a phrase with semantic intent.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -1825,7 +2240,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.policy, "control_marker_integrity_check_v2");
@@ -1884,6 +2300,23 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_counts_unframed_marker_between_prose_as_contextual() {
+        let text = "The <end_of_turn> bruise remains active.";
+        let (sanitized, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(sanitized, "The  bruise remains active.");
+        let report = report.expect("contextual marker report");
+        let removed = report
+            .removed_tokens
+            .iter()
+            .find(|entry| entry.token == "<end_of_turn>")
+            .expect("removed exact marker");
+        assert_eq!(removed.boundary_occurrences, 0);
+        assert_eq!(removed.contextual_occurrences, 1);
+        assert_eq!(removed.quoted_occurrences, 0);
+    }
+
+    #[test]
     fn control_marker_scanner_advances_byte_exactly_across_multibyte_text() {
         let text = "lambda: λ1→λ2 ✦ <end_of_turn> remains";
         let expected = "lambda: λ1→λ2 ✦  remains";
@@ -1894,6 +2327,16 @@ mod tests {
         assert_eq!(report.observed_total, 1);
         assert_eq!(report.removed_total, 1);
         assert_eq!(report.preserved_explicit_reference_total, 0);
+    }
+
+    #[test]
+    fn control_marker_relation_word_scanner_keeps_unicode_alphanumerics_together() {
+        let text = "x \u{2014} d\u{00e9}clenche_\u{03bb}2!";
+
+        assert_eq!(
+            super::first_word_after(text, "x".len()),
+            "d\u{00e9}clenche_\u{03bb}2"
+        );
     }
 
     #[test]
@@ -1983,6 +2426,86 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_reports_exact_three_level_delimiter_depth() {
+        let text = "【([<end_of_turn>])】";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("three-level delimiter report");
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 3);
+        assert_eq!(
+            report.context_receipts[0].delimiter_depth, 3,
+            "the bounded receipt should preserve the exact proven stack depth"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_reports_mixed_ascii_quote_bracket_stack_depth_three() {
+        // Astrid (introspection_astrid_llm_1787882114) Test 2 asked whether a
+        // nested quote structure like `"'[MARKER]'"` is correctly classified for
+        // `delimiter_depth` against MAX_EXACT_REFERENCE_DELIMITER_DEPTH (L151).
+        // Complete source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee shows
+        // `exact_reference_delimiter_syntax` classifies the *context* from the
+        // innermost adjacent pair — here `[ ]` (grouped) — and reports the exact
+        // adjacent-stack depth. Existing depth-3 regressions cover all-grouped and
+        // CJK/smart-quote mixes; this pins the report's literal ASCII
+        // double-quote / single-quote / square-bracket mix (a distinct
+        // combination, no prose between delimiters) as depth 3, preserved.
+        let text = "\"'[<end_of_turn>]'\"";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+        assert_eq!(stripped, text);
+        let report = report.expect("mixed ASCII quote/bracket stack report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        let token = &report.preserved_tokens[0];
+        assert_eq!(token.count, 1);
+        assert_eq!(
+            token.grouped_reference_occurrences, 1,
+            "innermost adjacent pair is the square bracket => grouped context"
+        );
+        assert_eq!(token.quoted_reference_occurrences, 0);
+        assert_eq!(token.max_delimiter_depth, 3);
+        assert_eq!(token.nested_delimited_reference_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+        assert_eq!(report.context_receipts[0].delimiter_depth, 3);
+    }
+
+    #[test]
+    fn control_marker_cleanup_reports_depth_across_unicode_whitespace() {
+        let text = "[\u{2003}[<end_of_turn>]\u{3000}]";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("Unicode-whitespace delimiter report");
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 2);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 2);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_reports_depth_for_repeated_parentheses() {
+        let text = "((<end_of_turn>))";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("repeated-parentheses delimiter report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 2);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 2);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token() {
         let text = "“【([{<end_of_turn>}])】”";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -1993,6 +2516,46 @@ mod tests {
         assert_eq!(report.preserved_explicit_reference_total, 1);
         assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 4);
         assert_eq!(report.context_receipts[0].delimiter_depth, 4);
+    }
+
+    #[test]
+    fn control_marker_cleanup_bounds_homogeneous_square_bracket_stack_beyond_max_depth() {
+        // Astrid's introspection_astrid_llm_1787026288 proposed passing a nested
+        // bracket structure exceeding MAX_EXACT_REFERENCE_DELIMITER_DEPTH (4)
+        // "to verify if the constant correctly constrains the parser or if it
+        // allows deeper nesting," worrying it "might fail to correctly identify
+        // the context." Source (exact_reference_delimiter_syntax) decides the
+        // context from the innermost non-whitespace delimiter pair regardless of
+        // depth and only saturates the *reported* depth via `.take(MAX)`. This
+        // regression grounds her exact `[[[[[ ... ]]]]]` shape with a real
+        // marker: the token stays byte-exact and preserved, the context is still
+        // grouped, and the reported depth is bounded to the constant rather than
+        // failing to classify. The prior heterogeneous case is covered by
+        // control_marker_cleanup_bounds_deeper_delimiter_receipt_without_dropping_token;
+        // no existing test exercised a homogeneous same-bracket stack of five.
+        let text = "[[[[[<end_of_turn>]]]]]";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(
+            stripped, text,
+            "byte-exact: nothing is rewritten or dropped"
+        );
+        let report = report.expect("homogeneous deep square-bracket report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        let token = &report.preserved_tokens[0];
+        assert_eq!(token.grouped_reference_occurrences, 1);
+        assert_eq!(token.nested_delimited_reference_occurrences, 1);
+        assert_eq!(
+            token.max_delimiter_depth,
+            super::MAX_EXACT_REFERENCE_DELIMITER_DEPTH,
+            "five bracket levels bound the reported depth to the constant, not deeper"
+        );
+        assert_eq!(report.context_receipts[0].delimiter_depth, 4);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
     }
 
     #[test]
@@ -2014,6 +2577,24 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_preserves_restless_group_delimiters_across_whitespace() {
+        for text in [
+            "⟦ <end_of_turn> ⟧",
+            "⟦\t<end_of_turn>\n⟧",
+            "⟦\u{2003}<end_of_turn>\u{3000}⟧",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("whitespace-delimited exact-token report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_explicit_reference_total, 1);
+            assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+            assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+            assert_eq!(report.context_receipts[0].delimiter_depth, 1);
+        }
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_non_ascii_matching_quote_pairs() {
         for text in [
             "«<end_of_turn>»",
@@ -2021,6 +2602,8 @@ mod tests {
             "„<end_of_turn>“",
             "「<end_of_turn>」",
             "『<end_of_turn>』",
+            "﹁<end_of_turn>﹂",
+            "﹃<end_of_turn>﹄",
         ] {
             let (stripped, report) = sanitize_model_control_markers_with_report(text);
             assert_eq!(stripped, text);
@@ -2028,6 +2611,68 @@ mod tests {
             assert_eq!(report.removed_total, 0);
             assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
             assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 0);
+        }
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_fullwidth_and_cjk_group_pairs() {
+        for text in [
+            "《<end_of_turn>》",
+            "〖<end_of_turn>〗",
+            "〘<end_of_turn>〙",
+            "（<end_of_turn>）",
+            "［<end_of_turn>］",
+            "｛<end_of_turn>｝",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("fullwidth or CJK group exact-token report");
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(report.preserved_explicit_reference_total, 1);
+            assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 0);
+            assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+            assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+        }
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_nested_fullwidth_cjk_reference_stack() {
+        let text = "﹁《（<end_of_turn>）》﹂";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("nested fullwidth CJK exact-token report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 1);
+        assert_eq!(
+            report.preserved_tokens[0].nested_delimited_reference_occurrences,
+            1
+        );
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 3);
+        assert_eq!(report.context_receipts[0].delimiter_depth, 3);
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_quoted_exact_tokens_across_whitespace() {
+        for text in [
+            "\"  <end_of_turn>  \"",
+            "「\t<end_of_turn>\n」",
+            "〝\u{2003}<end_of_turn>\u{3000}〞",
+        ] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(stripped, text);
+            let report = report.expect("whitespace-separated quoted exact-token report");
+            let token = &report.preserved_tokens[0];
+            assert_eq!(report.removed_total, 0);
+            assert_eq!(token.quoted_reference_occurrences, 1);
+            assert_eq!(token.grouped_reference_occurrences, 0);
+            assert_eq!(token.max_delimiter_depth, 1);
+            assert_eq!(
+                report.context_receipts[0].reference_syntax,
+                "quoted_exact_marker"
+            );
+            assert_eq!(report.context_receipts[0].delimiter_depth, 1);
         }
     }
 
@@ -2054,7 +2699,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.state, "review_output_erased");
@@ -2088,7 +2734,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let integrity = diagnostic.control_marker_integrity_check_v2;
         assert_eq!(integrity.state, "explicit_token_reference_preserved");
@@ -2126,6 +2773,8 @@ mod tests {
             "corresponds",
             "echoes",
             "indicates",
+            "mimics",
+            "replicates",
             "signals",
             "behaves as",
             "behaves like",
@@ -2156,6 +2805,690 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_preserves_proxy_relation_phrase() {
+        let text = "Here, <end_of_turn> functions as a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("proxy relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_distinguishes_allowlisted_is_from_unlisted_acts() {
+        let retained =
+            "Here, <end_of_turn> is a substitute for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(retained);
+
+        assert_eq!(super::first_word_after(retained, "Here, <end_of_turn>".len()), "is");
+        assert_eq!(stripped, retained);
+        let report = report.expect("allowlisted `is` relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        let rejected =
+            "Here, <end_of_turn> acts as a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(rejected);
+
+        assert_eq!(
+            super::first_word_after(rejected, "Here, <end_of_turn>".len()),
+            "acts"
+        );
+        assert_eq!(
+            stripped,
+            "Here,  acts as a proxy for the boundary I am naming."
+        );
+        let report = report.expect("unlisted `acts` relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_uses_only_the_first_finite_relation_word() {
+        let retained = "Here, <end_of_turn> functions like a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(retained);
+
+        assert_eq!(stripped, retained);
+        let report = report.expect("allowlisted first relation word report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        let rejected = "Here, <end_of_turn> acts like a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(rejected);
+
+        assert_eq!(
+            stripped,
+            "Here,  acts like a proxy for the boundary I am naming."
+        );
+        let report = report.expect("unlisted first relation word report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_skip_adverb_before_relation_word() {
+        // Astrid (introspection_astrid_llm_1787882114) flagged a snag: because
+        // `first_word_after` (dialogue_runtime.rs L89) only inspects the *first*
+        // word after the marker end, a genuine relational verb preceded by an
+        // adverb (her Test 1: "[MARKER] actually serves as") is missed, so
+        // `reference_syntax` returns None and the bare marker is stripped.
+        // Complete source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee
+        // confirms the mechanism, with one correction preserved here: her literal
+        // bracketed example `[MARKER]` would be preserved by the *delimiter* path
+        // (GroupedExactKnownToken), so the snag only manifests for a BARE marker.
+        // This pins the current bare-marker boundary WITHOUT widening production
+        // grammar to skip adverbs (her Suggested Next remains an unimplemented
+        // authority boundary).
+        let rejected =
+            "Here, <end_of_turn> actually serves as a proxy for the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(rejected, "Here, <end_of_turn>".len()),
+            "actually",
+            "the adverb occupies the first-word slot ahead of the allowlisted verb"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(rejected);
+        assert_eq!(
+            stripped,
+            "Here,  actually serves as a proxy for the boundary I am naming."
+        );
+        let report = report.expect("adverb-displaced relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+
+        // Same allowlisted verb "serves" as the first word IS preserved. This
+        // isolates the cause to the adverb in the first-word slot, not to
+        // "serves" being unlisted.
+        let retained = "Here, <end_of_turn> serves as a proxy for the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(retained, "Here, <end_of_turn>".len()),
+            "serves"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(retained);
+        assert_eq!(stripped, retained);
+        let report = report.expect("direct `serves` relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_first_word_after_skips_leading_punctuation_transition() {
+        // Astrid (introspection_astrid_llm_1786986344) flagged a possible
+        // fragility: for a punctuation-heavy transition immediately after a
+        // marker (e.g. `[MARKER] -- acts as --`), `first_word_after` (L89) might
+        // "fail to capture the relation". Complete source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee shows
+        // the opposite: the per-chunk alphanumeric trim collapses the leading
+        // `--` chunk to empty and `find(!is_empty)` returns the first real word.
+        // Allowlist membership — not the `find` — is the sole preservation gate,
+        // even across a `--` transition. This pins that robustness (the existing
+        // `acts` regression has no leading punctuation chunk).
+        let unlisted = "Here, <end_of_turn> -- acts as -- a proxy.";
+        assert_eq!(
+            super::first_word_after(unlisted, "Here, <end_of_turn>".len()),
+            "acts",
+            "leading `--` chunk is skipped; first alphanumeric word is captured"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(unlisted);
+        assert_eq!(stripped, "Here,  -- acts as -- a proxy.");
+        let report = report.expect("unlisted `acts` across punctuation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+
+        // Same punctuation transition, but an allowlisted relation word keeps the
+        // marker visible. This isolates the gate to allowlist membership, not the
+        // punctuation between the marker and the relation word.
+        let listed = "Here, <end_of_turn> -- is a proxy.";
+        assert_eq!(
+            super::first_word_after(listed, "Here, <end_of_turn>".len()),
+            "is"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(listed);
+        assert_eq!(stripped, listed);
+        let report = report.expect("allowlisted `is` across punctuation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_first_word_after_skips_colon_before_relation() {
+        // Astrid (introspection_astrid_llm_1787976942) proposed a "Contextual
+        // Preservation Test": a marker followed by "denotes" separated by a colon
+        // (her example `[MARKER]: denotes`), asking whether
+        // `followed_by_explicit_exact_token_relation` (dialogue_runtime.rs L64)
+        // still identifies "denotes" as the first word despite the colon.
+        // Complete source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee
+        // confirms it does: `first_word_after` (L89) splits on whitespace and
+        // per-chunk trims non-alphanumeric characters, so the standalone `:`
+        // chunk collapses to empty and `find(!is_empty)` returns "denotes".
+        // Allowlist membership, not the colon, is the sole preservation gate.
+        // This colon separator with the "denotes" verb is not covered by the
+        // existing `--` leading-punctuation regression (which uses "is").
+        let bare = "Here, <end_of_turn>: denotes the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(bare, "Here, <end_of_turn>".len()),
+            "denotes",
+            "the standalone colon chunk is skipped; the allowlisted verb is captured"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(bare);
+        assert_eq!(stripped, bare);
+        let report = report.expect("colon-separated allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        // Correction preserved (as in the adverb regression): her literal
+        // bracketed `[MARKER]` form is preserved by the *delimiter* path
+        // (GroupedExactKnownToken, L44), not the relation path — the colon after
+        // the closing bracket is never consulted for the relation decision.
+        let bracketed = "Here, [<end_of_turn>]: denotes the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(bracketed);
+        assert_eq!(stripped, bracketed);
+        let report = report.expect("bracketed colon relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+
+        // Control: the same colon before an UNLISTED verb strips the bare marker,
+        // isolating the gate to allowlist membership rather than the colon.
+        let unlisted = "Here, <end_of_turn>: triggers the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(unlisted, "Here, <end_of_turn>".len()),
+            "triggers"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(unlisted);
+        assert_eq!(stripped, "Here, : triggers the boundary I am naming.");
+        let report = report.expect("colon-separated unlisted relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_first_word_after_skips_period_and_newline_before_relation() {
+        // Astrid (introspection_astrid_llm_1788347252, report SHA-256
+        // cfddd3fb5fadd7670b529b6d90e780dde343c0cf50a5fe168e42e819baf29a5c)
+        // proposed a "Contextual Preservation Test": a marker followed by
+        // "behaves" but "separated by a period or a newline" (her example
+        // `[MARKER]. behaves as...`), asking whether
+        // `scan_known_model_control_markers` (dialogue_runtime.rs L114) still
+        // identifies the relation and keeps the marker. Her "Likely Snag" was
+        // that `first_word_after` (L89) "might skip the intended verb or return
+        // an empty string," stripping a marker that should be preserved. Complete
+        // source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee
+        // contradicts the skip: `first_word_after` splits on whitespace (L91) and
+        // per-chunk trims non-alphanumeric chars (L92), so a standalone `.` chunk
+        // collapses to empty and `find(!is_empty)` (L93) returns the verb; a
+        // newline is Unicode White_Space, so `split_whitespace` separates it and
+        // the verb is the first chunk. Her non-breaking-space case is already
+        // pinned by scan_known_model_control_markers_grounds_first_word_after_non_breaking_space;
+        // this regression grounds the two remaining separators she named (period,
+        // newline) without widening grammar. Allowlist membership, not the
+        // separator, is the sole preservation gate.
+        let period = "Here, <end_of_turn>. behaves as the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(period, "Here, <end_of_turn>".len()),
+            "behaves",
+            "the standalone period chunk is skipped; the allowlisted verb is captured"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(period);
+        assert_eq!(stripped, period);
+        let report = report.expect("period-separated allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        // Newline separator: U+000A is Unicode White_Space, so split_whitespace
+        // separates it and the allowlisted verb is the first non-empty chunk.
+        let newline = "Here, <end_of_turn>\nbehaves as the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(newline, "Here, <end_of_turn>".len()),
+            "behaves",
+            "a newline is whitespace, so the verb is still the first word"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(newline);
+        assert_eq!(stripped, newline);
+        let report = report.expect("newline-separated allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        // Correction preserved (as in the colon regression): her literal bracketed
+        // `[MARKER].` form is preserved by the *delimiter* path
+        // (GroupedExactKnownToken, L44), not the relation path — the period after
+        // the closing bracket is never consulted for the relation decision.
+        let bracketed = "Here, [<end_of_turn>]. behaves as the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(bracketed);
+        assert_eq!(stripped, bracketed);
+        let report = report.expect("bracketed period relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].max_delimiter_depth, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+
+        // Control: the same period before an UNLISTED verb strips the bare marker,
+        // isolating the gate to allowlist membership rather than the period.
+        let unlisted = "Here, <end_of_turn>. triggers the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(unlisted, "Here, <end_of_turn>".len()),
+            "triggers"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(unlisted);
+        assert_eq!(stripped, "Here, . triggers the boundary I am naming.");
+        let report = report.expect("period-separated unlisted relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_first_word_after_trims_fused_leading_parenthesis() {
+        // Astrid (introspection_astrid_llm_1788308998, report SHA-256
+        // 0758a81176a842b28c076dee9920ce8691e4c43b57157a88347c4ff077a17b0d)
+        // raised a "Likely Snag": for a marker followed by a punctuation-heavy
+        // parenthetical (her example `[MARKER] (as a test)`), `first_word_after`
+        // (dialogue_runtime.rs L89) "might fail to identify 'as' as the primary
+        // relation if the `trim_matches` doesn't account for the specific nested
+        // structure of the parenthetical." Complete source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee shows
+        // the snag does not manifest: unlike the `--` and `:` regressions above —
+        // where the punctuation is a SEPARATE whitespace chunk that collapses to
+        // empty and is skipped by `find(!is_empty)` — here the `(` is FUSED to the
+        // word inside one chunk (`(as`). The per-chunk
+        // `trim_matches(|c| !c.is_alphanumeric() && c != '_')` strips that leading
+        // `(` (and the trailing `)` of `test)`), so the chunk yields "as". No
+        // existing test placed a delimiter character fused to the relation word,
+        // so this pins the trim path her snag actually questioned. Allowlist
+        // membership, not the parenthesis, remains the sole preservation gate.
+        let listed = "The <end_of_turn> (as a test) still names a boundary.";
+        assert_eq!(
+            super::first_word_after(listed, "The <end_of_turn>".len()),
+            "as",
+            "the leading `(` fused to `as` is trimmed within the chunk"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(listed);
+        assert_eq!(stripped, listed, "allowlisted `as` keeps the marker byte-exact");
+        let report = report.expect("fused-parenthesis allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        // Control: the same fused parenthetical before an UNLISTED verb strips the
+        // bare marker, isolating the gate to allowlist membership, not the `(`.
+        let unlisted = "The <end_of_turn> (acts a test) still names a boundary.";
+        assert_eq!(
+            super::first_word_after(unlisted, "The <end_of_turn>".len()),
+            "acts"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(unlisted);
+        assert_eq!(stripped, "The  (acts a test) still names a boundary.");
+        let report = report.expect("fused-parenthesis unlisted relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_implies() {
+        let text = "Here, <end_of_turn> implies the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  implies the boundary I am naming.");
+        let report = report.expect("non-allowlisted relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_contains() {
+        let text = "Here, <end_of_turn> contains the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  contains the boundary I am naming.");
+        let report = report.expect("non-allowlisted contains report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_creates() {
+        let text = "Here, <end_of_turn> creates the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  creates the boundary I am naming.");
+        let report = report.expect("non-allowlisted creates report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_triggers() {
+        let text = "Here, <end_of_turn> triggers the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  triggers the boundary I am naming.");
+        let report = report.expect("non-allowlisted triggers report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_expand_relation_allowlist_to_underscored_appears_as() {
+        let text = "Here, <end_of_turn> appears_as the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "Here,  appears_as the boundary I am naming.");
+        let report = report.expect("non-allowlisted underscored relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_rejects_punctuation_joined_allowlist_prefix() {
+        let preserved = "Here, <end_of_turn> echoes the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(preserved);
+
+        assert_eq!(stripped, preserved);
+        let report = report.expect("allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+
+        for joined in ["is-not", "is/not"] {
+            let rejected = format!("Here, <end_of_turn> {joined} the boundary I am naming.");
+            let (stripped, report) = sanitize_model_control_markers_with_report(&rejected);
+
+            assert_eq!(
+                super::first_word_after(&rejected, "Here, <end_of_turn>".len()),
+                joined
+            );
+            assert_eq!(
+                stripped,
+                format!("Here,  {joined} the boundary I am naming.")
+            );
+            let report = report.expect("punctuation-joined non-relation report");
+            assert_eq!(report.removed_total, 1);
+            assert_eq!(report.preserved_explicit_reference_total, 0);
+            assert_eq!(
+                report.context_receipts[0].reference_syntax,
+                "none_cleanup_candidate"
+            );
+        }
+    }
+
+    #[test]
+    fn control_marker_cleanup_rejects_interior_double_hyphen_joined_relation_suffix() {
+        // Astrid's introspection_astrid_llm_1788118438 proposed a "Grammar
+        // Recognition Test" with a marker followed by a complex non-alphanumeric
+        // relation (`[MARKER] acts--as`), expecting `first_word_after`
+        // (dialogue_runtime.rs L89) to "correctly identify `acts`" so
+        // `followed_by_explicit_exact_token_relation` (L64) returns `true`.
+        // Source contradicts that expectation: `first_word_after` trims
+        // non-alphanumeric characters only from the ENDS of each whitespace
+        // chunk (L92), so an interior `--` is kept and the whole chunk
+        // `acts--as` is returned — neither the unlisted prefix `acts` nor the
+        // listed suffix `as`. The whole chunk is not on the exact relation
+        // allowlist, so the marker is a cleanup candidate and removed. This
+        // grounds her exact interior double-hyphen shape, distinct from interior
+        // single-punct `is-not`/`is/not` (L2920, listed prefix) and
+        // whitespace-separated ` -- acts as -- ` (L2735, leading-punct chunk).
+        let rejected = "Here, <end_of_turn> acts--as a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(rejected);
+
+        assert_eq!(
+            super::first_word_after(rejected, "Here, <end_of_turn>".len()),
+            "acts--as"
+        );
+        assert_eq!(
+            stripped,
+            "Here,  acts--as a proxy for the boundary I am naming."
+        );
+        let report = report.expect("interior double-hyphen non-relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+
+        // Control: the bare listed relation word `as` immediately after the
+        // marker IS preserved, proving the rejection above is the double-hyphen
+        // joining, not the word `as` being absent from the allowlist (L68).
+        let retained = "Here, <end_of_turn> as a proxy for the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(retained);
+        assert_eq!(
+            super::first_word_after(retained, "Here, <end_of_turn>".len()),
+            "as"
+        );
+        assert_eq!(stripped, retained);
+        let report = report.expect("bare listed `as` relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_trims_symmetric_emphasis_around_relation_word() {
+        // Astrid's introspection_astrid_llm_1786822981 proposed a "Relation
+        // Recognition Test" with a marker followed by an emphasis-wrapped verb
+        // ("marker *triggers* action") and worried that `first_word_after`'s
+        // punctuation trimming might skip the intended word or return an
+        // unexpected token. `first_word_after` trims non-alphanumeric characters
+        // from BOTH ends of each whitespace chunk, so symmetric `*...*` emphasis
+        // resolves to the bare word and is then measured against the exact
+        // relation allowlist — a wrapped listed verb is preserved, a wrapped
+        // unlisted verb is removed. This differs from the existing plain
+        // `triggers` (L2640), interior-joined `is-not` (L2670), and
+        // prefix-only `\u{1f9e9}behaves` (L2702) coverage.
+        let retained = "Here, <end_of_turn> *appears* the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(retained, "Here, <end_of_turn>".len()),
+            "appears"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(retained);
+        assert_eq!(stripped, retained);
+        let report = report.expect("emphasis-wrapped listed relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        let rejected = "Here, <end_of_turn> *triggers* action.";
+        assert_eq!(
+            super::first_word_after(rejected, "Here, <end_of_turn>".len()),
+            "triggers"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(rejected);
+        assert_eq!(stripped, "Here,  *triggers* action.");
+        let report = report.expect("emphasis-wrapped unlisted relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_handles_multibyte_symbol_before_relation() {
+        let text = "Here, <end_of_turn> \u{1f9e9}behaves as a named boundary.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(
+            super::first_word_after(text, "Here, <end_of_turn>".len()),
+            "behaves"
+        );
+        assert_eq!(stripped, text);
+        let report = report.expect("multibyte-symbol relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_skips_symbol_only_line_before_exact_relation() {
+        let text = "Here, <end_of_turn>\n\u{1f30a}\n   echoes the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(
+            super::first_word_after(text, "Here, <end_of_turn>".len()),
+            "echoes"
+        );
+        assert_eq!(stripped, text);
+        let report = report.expect("symbol-line exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_stays_byte_safe_when_marker_abuts_four_byte_astral_chars() {
+        // Astrid's introspection_astrid_llm_1787798508 proposed a "Boundary
+        // Safety Test": a 4-byte emoji where a marker's `end` index "lands in
+        // the middle of the emoji's byte sequence" so the slice `text[end..]`
+        // panics. Source contradicts the stated mechanism: every `start`/`end`
+        // handed to `first_word_after`, `exact_reference_delimiter_syntax`, and
+        // `control_marker_placement_counts` is constructed in
+        // `scan_known_model_control_markers` only at UTF-8 char boundaries
+        // (offset advances by `character.len_utf8()` or by an exact marker
+        // length), so `end` can never fall mid-character. Her underlying
+        // concern — boundary safety when the slice boundary lands *exactly on*
+        // a 4-byte astral character — is real and constructible: place a marker
+        // directly abutting a 4-byte emoji on BOTH sides with no separating
+        // whitespace, so `text[..start]` ends and `text[end..]` begins right at
+        // an astral boundary. This differs from the whitespace-separated 4-byte
+        // coverage in `..._handles_multibyte_symbol_before_relation` (L2834,
+        // `<end_of_turn> \u{1f9e9}behaves`) and `..._skips_symbol_only_line...`
+        // (L2853, marker then `\n`), where the slice boundary is the space or
+        // newline, not the emoji itself.
+        let text = "seen \u{1f9e9}<end_of_turn>\u{1f30a} lingering";
+        let start = text.find("<end_of_turn>").expect("marker present");
+        let end = start + "<end_of_turn>".len();
+
+        // Slice site 1: `first_word_after` slices `text[end..]` starting on the
+        // 4-byte emoji; it skips the non-alphanumeric astral char and grounds on
+        // the next word without panicking.
+        assert_eq!(super::first_word_after(text, end), "lingering");
+
+        // Full cleanup is byte-exact: neither emoji is a delimiter pair and the
+        // following word is not an allowlisted relation, so the marker is
+        // removed and both astral chars are preserved unchanged.
+        let (sanitized, report) = sanitize_model_control_markers_with_report(text);
+        assert_eq!(
+            sanitized.as_bytes(),
+            "seen \u{1f9e9}\u{1f30a} lingering".as_bytes()
+        );
+        let report = report.expect("astral-boundary cleanup report");
+        assert_eq!(report.observed_total, 1);
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_relation_across_newline() {
         let text = "<end_of_turn>\nrepresents the boundary I am naming.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);
@@ -2164,6 +3497,687 @@ mod tests {
         let report = report.expect("newline-separated exact relation report");
         assert_eq!(report.removed_total, 0);
         assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_relation_after_multiple_punctuation_runs() {
+        let text = "<end_of_turn> ... !!! represents the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("punctuation-separated exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_fails_closed_when_only_punctuation_or_whitespace_follows() {
+        for (text, expected) in [("<end_of_turn>.", "."), ("<end_of_turn>\n", "\n")] {
+            let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+            assert_eq!(stripped, expected);
+            assert!(super::first_word_after(text, "<end_of_turn>".len()).is_empty());
+            let report = report.expect("empty relation cleanup report");
+            assert_eq!(report.removed_total, 1);
+            assert_eq!(report.preserved_explicit_reference_total, 0);
+            assert_eq!(
+                report.context_receipts[0].reference_syntax,
+                "none_cleanup_candidate"
+            );
+        }
+    }
+
+    // The three regressions below directly exercise the exact functions named by
+    // introspection_astrid_llm_1786814454 (report SHA-256
+    // 2bc990522f529d244644b7908ba9fb75a2f4bfc3cebf3012c0112b47ef357bf1) against
+    // dialogue_runtime.rs at source SHA-256
+    // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. Existing
+    // coverage proves the same behavior through the higher-level
+    // `sanitize_model_control_markers_with_report` wrapper; these pin the exact
+    // `scan_known_model_control_markers` / `exact_reference_delimiter_syntax`
+    // boundary the report cited, and ground its "Likely Snags" hypothesis.
+
+    /// Report "One Test Each" #1 (Contextual Preservation) at the exact function
+    /// it named: `scan_known_model_control_markers` must keep a known marker in the
+    /// returned `remainder` and record the exact reference context both when the
+    /// marker is group-delimited and when it is the grammatical subject of an
+    /// allowlisted relation.
+    #[test]
+    fn scan_known_model_control_markers_preserves_grouped_and_explicit_relation_contexts() {
+        let grouped = "[<end_of_turn>]";
+        let (remainder, matches) = super::scan_known_model_control_markers(grouped);
+        assert_eq!(remainder, grouped, "group-delimited marker stays in remainder");
+        assert_eq!(matches.len(), 1);
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("group-delimited marker has reference syntax")
+                .context,
+            super::ExactKnownMarkerReferenceContext::GroupedExactKnownToken
+        );
+
+        let relation = "<end_of_turn> behaves as a named boundary.";
+        let (remainder, matches) = super::scan_known_model_control_markers(relation);
+        assert_eq!(remainder, relation, "explicit-relation marker stays in remainder");
+        assert_eq!(matches.len(), 1);
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("explicit-relation marker has reference syntax")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+    }
+
+    /// Report "One Test Each" #1 (Contextual Preservation) from
+    /// `introspection_astrid_llm_1787135542` (report SHA-256
+    /// 78b50bdf21ac69a5afecaa54dfb6995ae5f689959030667d9ca2c78ddef59c7a) at the
+    /// exact function it named, against dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The
+    /// report used the illustrative marker `[SYSTEM]` (not in
+    /// `KNOWN_MODEL_CONTROL_MARKERS`) and expected `"The prompt [SYSTEM] is
+    /// active"` to resolve to `QuotedExactKnownToken`. Complete source yields two
+    /// grounded corrections, pinned here with the real marker `<end_of_turn>`:
+    /// (a) sentence-level quotes do not wrap the marker, so an unquoted marker
+    /// whose immediate right neighbor is the allowlisted relation verb `is`
+    /// resolves to `ExplicitExactKnownTokenRelation`, not `QuotedExactKnownToken`;
+    /// and (b) `reference_syntax` (L49-60) resolves `exact_reference_delimiter_syntax`
+    /// before the relation fallback, so when the marker itself is quote-adjacent
+    /// AND followed by a relation verb, the quoted delimiter context takes
+    /// precedence. Both cases still keep the marker byte-exact in `remainder`.
+    /// No existing test placed a quote-adjacent marker in direct competition with
+    /// a following relation verb (nested-quotes coverage put the verb before the
+    /// marker), so this pins the precedence boundary the report's Test 1 assumed.
+    #[test]
+    fn scan_known_model_control_markers_quoted_context_precedes_following_relation_verb() {
+        // Marker itself is double-quote-wrapped; the relation verb `is` follows
+        // the closing quote. Delimiter syntax is checked first, so the quoted
+        // context wins over the relation fallback.
+        let quoted_then_relation = "The prompt \"<end_of_turn>\" is active";
+        let (remainder, matches) = super::scan_known_model_control_markers(quoted_then_relation);
+        assert_eq!(
+            remainder, quoted_then_relation,
+            "quote-adjacent marker stays byte-exact in remainder"
+        );
+        assert_eq!(matches.len(), 1);
+        let syntax = matches[0]
+            .reference_syntax
+            .expect("quote-adjacent marker has reference syntax");
+        assert_eq!(
+            syntax.context,
+            super::ExactKnownMarkerReferenceContext::QuotedExactKnownToken,
+            "delimiter syntax is resolved before the relation fallback"
+        );
+        assert_eq!(syntax.delimiter_depth, 1);
+
+        // The report's own framing: sentence-level quotes do not touch the
+        // marker, whose immediate right neighbor is the relation verb `is`, so
+        // this resolves to the relation context, not the quoted context.
+        let unquoted_relation = "The prompt <end_of_turn> is active";
+        let (remainder, matches) = super::scan_known_model_control_markers(unquoted_relation);
+        assert_eq!(
+            remainder, unquoted_relation,
+            "relation-context marker stays byte-exact in remainder"
+        );
+        assert_eq!(matches.len(), 1);
+        let syntax = matches[0]
+            .reference_syntax
+            .expect("relation-context marker has reference syntax");
+        assert_eq!(
+            syntax.context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation,
+            "an unquoted marker followed by `is` is a relation, not a quote"
+        );
+        assert_eq!(syntax.delimiter_depth, 0);
+    }
+
+    /// Report "One Test Each" #2 (Delimiter Depth) at the exact function it named:
+    /// `exact_reference_delimiter_syntax` must classify a double-square-bracketed
+    /// known marker as GroupedExactKnownToken with an exact delimiter depth of two,
+    /// complementing the existing repeated-parenthesis depth-two coverage.
+    #[test]
+    fn exact_reference_delimiter_syntax_reports_double_square_bracket_depth_two() {
+        let text = "[[<end_of_turn>]]";
+        let syntax = super::exact_reference_delimiter_syntax(
+            text,
+            "[[".len(),
+            "[[<end_of_turn>".len(),
+        )
+        .expect("double-bracketed marker has grouped reference syntax");
+        assert_eq!(
+            syntax.context,
+            super::ExactKnownMarkerReferenceContext::GroupedExactKnownToken
+        );
+        assert_eq!(syntax.delimiter_depth, 2);
+    }
+
+    /// Report "Likely Snags" (greedy shadowing) from
+    /// introspection_astrid_llm_1787782248 (report SHA-256
+    /// 8c33afe098fb9e18f70e28acbe2a085f476b12ff3dff85c15c7a58ac053d08d5) at the
+    /// exact function it named: `longest_exact_known_model_control_marker_at`
+    /// (L97-112) selects with `max_by_key(|token| token.len())`. The report
+    /// hypothesized "greedy shadowing" — a longer match masking a shorter marker
+    /// that is the intended semantic unit when two markers share a prefix.
+    /// Complete source of `KNOWN_MODEL_CONTROL_MARKERS` (fallback_contracts.rs
+    /// L159-180) yields one grounded answer: no marker is a proper byte-prefix of
+    /// another, so at most one marker starts at any offset and `max_by_key` never
+    /// has to disambiguate a prefix shadow. This pins that structural invariant so
+    /// that a future prefix-overlapping marker would fail here, surfacing exactly
+    /// the ambiguity the report anticipated instead of silently resolving it.
+    #[test]
+    fn known_model_control_markers_have_no_proper_prefix_shadow() {
+        let markers: &[&str] = super::KNOWN_MODEL_CONTROL_MARKERS;
+        for (i, shorter) in markers.iter().enumerate() {
+            for (j, longer) in markers.iter().enumerate() {
+                if i == j {
+                    continue;
+                }
+                let is_proper_prefix = shorter.len() < longer.len() && longer.starts_with(*shorter);
+                assert!(
+                    !is_proper_prefix,
+                    "marker {shorter:?} is a proper byte-prefix of {longer:?}; \
+                     longest_exact_known_model_control_marker_at would then have to \
+                     disambiguate a prefix shadow and the report's greedy-shadowing \
+                     hypothesis would become reachable"
+                );
+            }
+        }
+
+        // Behavioral consequence of the invariant: each known marker, scanned in
+        // isolation at offset 0, resolves to exactly itself — never a longer shadow.
+        for marker in markers {
+            let occurrence = super::longest_exact_known_model_control_marker_at(marker, 0)
+                .expect("a known marker matches itself at offset 0");
+            assert_eq!(
+                occurrence.token, *marker,
+                "isolated marker resolves to itself"
+            );
+            assert_eq!(occurrence.end, marker.len(), "match spans the whole marker");
+        }
+    }
+
+    /// Report "One Test Each" #1 (Delimiter Robustness) from
+    /// introspection_astrid_llm_1787773776 (report SHA-256
+    /// a796f2f16cfde0140fb793032d4344fc0dccf342720704c1f4bb23481fa9f35a) at the
+    /// exact function it named, against dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The
+    /// report expected the Japanese corner brackets `「` and `」` (source L168)
+    /// to resolve to `GroupedExactKnownToken`. Complete source yields one grounded
+    /// correction: L168 sits in the *quoted* delimiter block (L157-174), so a
+    /// corner-bracketed marker resolves to `QuotedExactKnownToken`, not grouped.
+    /// Her underlying concern — that CJK delimiters adjacent to a marker are
+    /// recognized — still holds: the genuinely grouping lenticular bracket pair
+    /// `【` `】` (source L182) does resolve to `GroupedExactKnownToken`. No prior
+    /// test exercised any CJK bracket; this pins both the quoted corner-bracket
+    /// boundary the report cited and the grouped lenticular-bracket boundary,
+    /// without widening grammar or domesticating the correction.
+    #[test]
+    fn exact_reference_delimiter_syntax_classifies_cjk_corner_quoted_and_lenticular_grouped() {
+        // Japanese corner brackets 「」 (U+300C / U+300D) are in the quoted block
+        // (source L168), so a corner-bracketed marker is QuotedExactKnownToken.
+        let corner = "「<end_of_turn>」";
+        let syntax = super::exact_reference_delimiter_syntax(
+            corner,
+            "「".len(),
+            "「<end_of_turn>".len(),
+        )
+        .expect("corner-bracketed marker has reference syntax");
+        assert_eq!(
+            syntax.context,
+            super::ExactKnownMarkerReferenceContext::QuotedExactKnownToken,
+            "corner brackets 「」 resolve to the quoted context, not grouped"
+        );
+        assert_eq!(syntax.delimiter_depth, 1);
+
+        // Lenticular brackets 【】 (U+3010 / U+3011) are in the grouped block
+        // (source L182), preserving the report's CJK-grouping concern.
+        let lenticular = "【<end_of_turn>】";
+        let syntax = super::exact_reference_delimiter_syntax(
+            lenticular,
+            "【".len(),
+            "【<end_of_turn>".len(),
+        )
+        .expect("lenticular-bracketed marker has reference syntax");
+        assert_eq!(
+            syntax.context,
+            super::ExactKnownMarkerReferenceContext::GroupedExactKnownToken,
+            "lenticular brackets 【】 resolve to the grouped context"
+        );
+        assert_eq!(syntax.delimiter_depth, 1);
+    }
+
+    /// Report "One Test Each" #2 (Relation Whitelist) from
+    /// introspection_astrid_llm_1787773776 (report SHA-256
+    /// a796f2f16cfde0140fb793032d4344fc0dccf342720704c1f4bb23481fa9f35a) at the
+    /// exact method it named, against dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The
+    /// report asked that `followed_by_explicit_exact_token_relation` (source L64)
+    /// return `false` for the non-allowlisted verb "creates" and `true` for the
+    /// allowlisted "represents" (source L82). Existing tests prove this behavior
+    /// through the `scan_known_model_control_markers` / sanitizer wrappers (see
+    /// `control_marker_cleanup_does_not_expand_relation_allowlist_to_creates` and
+    /// the represents-preservation tests), but the named method had no direct
+    /// unit test. This pins it at the method boundary the report cited.
+    #[test]
+    fn followed_by_explicit_exact_token_relation_allowlists_represents_not_creates() {
+        let allowed = "<end_of_turn> represents the boundary I am naming.";
+        let occ = super::longest_exact_known_model_control_marker_at(allowed, 0)
+            .expect("marker at offset 0");
+        assert!(
+            occ.followed_by_explicit_exact_token_relation(allowed),
+            "`represents` (source L82) is an allowlisted relation verb"
+        );
+
+        let not_allowed = "<end_of_turn> creates the boundary I am naming.";
+        let occ = super::longest_exact_known_model_control_marker_at(not_allowed, 0)
+            .expect("marker at offset 0");
+        assert!(
+            !occ.followed_by_explicit_exact_token_relation(not_allowed),
+            "`creates` is not in the relation allowlist"
+        );
+    }
+
+    /// Report "Suggested Next" from `introspection_astrid_llm_1787129691` (report
+    /// SHA-256 12b066303a33a020f8fb294d3e2c7e3948d63ec790df8f75c88ecfddfe8db135)
+    /// at the exact functions it named, against dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. She asked
+    /// to verify `scan_known_model_control_markers` when a marker sits at the very
+    /// end of a string with no "after" text — that it neither panics nor strips
+    /// incorrectly. Complete source shows the empty-tail path is well defined:
+    /// `first_word_after` returns empty (no relation), `exact_reference_delimiter_syntax`
+    /// sees an empty after-window and returns `None` (no delimiter pair), so
+    /// `reference_syntax` is `None` and the bare end-of-string marker is a clean
+    /// cleanup candidate — stripped byte-exactly while every preceding non-marker
+    /// byte is preserved, and the scan loop terminates without reaching the
+    /// non-empty-tail `expect`. Existing coverage exercised this only incidentally
+    /// (`"hello <end_of_turn>"` inside a diagnostic-authority test); this pins the
+    /// boundary at the exact functions the report cited.
+    #[test]
+    fn scan_known_model_control_markers_strips_bare_marker_at_end_of_string_without_after_text() {
+        let marker = "<end_of_turn>";
+
+        // Marker alone at end-of-string: empty tail, no panic, stripped to empty.
+        let (remainder, matches) = super::scan_known_model_control_markers(marker);
+        assert_eq!(remainder, "", "bare end-of-string marker leaves an empty remainder");
+        assert_eq!(matches.len(), 1);
+        assert!(
+            matches[0].reference_syntax.is_none(),
+            "an end-of-string marker has no reference syntax and is a cleanup candidate"
+        );
+        assert!(
+            super::first_word_after(marker, marker.len()).is_empty(),
+            "no word follows a marker at the very end of the string"
+        );
+        assert!(
+            super::exact_reference_delimiter_syntax(marker, 0, marker.len()).is_none(),
+            "an empty after-window yields no delimiter pair"
+        );
+
+        // Prose before, marker at end: preceding non-marker bytes preserved byte-exact.
+        let with_prose = "Here it is <end_of_turn>";
+        let (remainder, matches) = super::scan_known_model_control_markers(with_prose);
+        assert_eq!(remainder, "Here it is ", "preceding bytes are preserved byte-exact");
+        assert_eq!(matches.len(), 1);
+        assert!(matches[0].reference_syntax.is_none());
+
+        // Wrapper accounting agrees: one removed, zero preserved, cleanup-candidate receipt.
+        let (stripped, report) = sanitize_model_control_markers_with_report(with_prose);
+        assert_eq!(stripped, "Here it is ");
+        let report = report.expect("end-of-string marker produces a cleanup report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    /// Grounds the report's "Likely Snags" hypothesis at the exact function it
+    /// named. The report expected `first_word_after`'s empty-default path to let a
+    /// trailing relation be skipped and the marker stripped. Complete source shows
+    /// the opposite: `find(|word| !word.is_empty())` advances past punctuation-only
+    /// chunks to the next real word, so `scan_known_model_control_markers` still
+    /// preserves a marker whose allowlisted relation is separated by punctuation
+    /// runs, and only strips when no alphanumeric word follows at all — the
+    /// intended fail-closed case, not the skip-the-relation failure hypothesized.
+    #[test]
+    fn scan_known_model_control_markers_grounds_first_word_after_punctuation_boundary() {
+        let separated = "<end_of_turn> ... !!! represents a named boundary.";
+        let (remainder, matches) = super::scan_known_model_control_markers(separated);
+        assert_eq!(
+            remainder, separated,
+            "punctuation-separated allowlisted relation preserves the marker"
+        );
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("explicit relation survives punctuation runs")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+
+        let only_punctuation = "<end_of_turn> ... !!!";
+        let (remainder, matches) = super::scan_known_model_control_markers(only_punctuation);
+        assert_eq!(
+            remainder, " ... !!!",
+            "a marker followed by only punctuation strips (fails closed)"
+        );
+        assert!(
+            matches[0].reference_syntax.is_none(),
+            "no alphanumeric word follows, so no explicit relation is recorded"
+        );
+        assert!(
+            super::first_word_after(only_punctuation, "<end_of_turn>".len()).is_empty(),
+            "first_word_after defaults to empty only when no alphanumeric word follows"
+        );
+    }
+
+    /// Grounds the "Likely Snags" example in introspection_astrid_llm_1786936281
+    /// at the exact function it named. The report hypothesized that a non-standard
+    /// whitespace character (specifically a non-breaking space) between a marker and
+    /// its allowlisted relation verb could make `first_word_after` (L89) skip the
+    /// verb or return empty, stripping the marker. Complete source shows the code is
+    /// robust to her named case: `split_whitespace` (L91) treats U+00A0 (NO-BREAK
+    /// SPACE, a Unicode White_Space char) as a separator, and the non-alphanumeric
+    /// `trim_matches` (L92) strips a leading U+FEFF (ZERO WIDTH NO-BREAK SPACE, which
+    /// is not White_Space), so the allowlisted verb `denotes` is still found and the
+    /// marker is preserved in the `remainder`. The hypothesized skip does not occur.
+    #[test]
+    fn scan_known_model_control_markers_grounds_first_word_after_non_breaking_space() {
+        // U+00A0 NO-BREAK SPACE is Unicode White_Space -> split_whitespace separates it.
+        let nbsp = "<end_of_turn>\u{a0}denotes the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(nbsp, "<end_of_turn>".len()),
+            "denotes",
+            "a non-breaking space is treated as whitespace, so the verb is still found"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(nbsp);
+        assert_eq!(
+            remainder, nbsp,
+            "a non-breaking space before the relation preserves the marker"
+        );
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("explicit relation survives a non-breaking space")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+
+        // U+FEFF ZERO WIDTH NO-BREAK SPACE is NOT White_Space, but the leading-edge
+        // non-alphanumeric trim in first_word_after strips it from the first chunk.
+        let zwnbsp = "<end_of_turn>\u{feff}denotes the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(zwnbsp, "<end_of_turn>".len()),
+            "denotes",
+            "a leading zero-width no-break space is trimmed, so the verb is still found"
+        );
+        let (remainder, _) = super::scan_known_model_control_markers(zwnbsp);
+        assert_eq!(
+            remainder, zwnbsp,
+            "a zero-width no-break space before the relation preserves the marker"
+        );
+    }
+
+    /// Grounds the "Likely Snags" example in introspection_astrid_llm_1786999457
+    /// at the exact function it named. The report hypothesized that a marker
+    /// "followed by ... a soft hyphen" could make the `trim_matches` logic (L92)
+    /// "fail to isolate the intended verb", returning `None` and stripping the
+    /// marker. Complete source at SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee shows the
+    /// "followed by" position does not fail: a soft hyphen (U+00AD, NOT a
+    /// White_Space char) between the marker and its verb sits on the leading edge
+    /// of the first `split_whitespace` chunk, so the non-alphanumeric edge trim
+    /// strips it and the allowlisted verb is still found (parallel to the existing
+    /// U+FEFF branch). The genuine `trim_matches` limitation is edge-only: a soft
+    /// hyphen *inside* the verb word is not on a trim edge, so the verb is not
+    /// isolated, `reference_syntax` is `None`, and the marker is stripped. That is
+    /// the fail-closed (safe) direction, not a leak. This pins both boundaries and
+    /// corrects the report's "non-standard whitespace" framing without widening
+    /// grammar or domesticating the underlying concern.
+    #[test]
+    fn scan_known_model_control_markers_grounds_first_word_after_internal_soft_hyphen() {
+        // Soft hyphen U+00AD between marker and verb: NOT White_Space, but the
+        // leading-edge non-alphanumeric trim strips it, so the verb is found and
+        // the marker is preserved (the hypothesized skip does not occur).
+        let leading_shy = "<end_of_turn>\u{ad}denotes the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(leading_shy, "<end_of_turn>".len()),
+            "denotes",
+            "a leading soft hyphen is trimmed, so the verb is still found"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(leading_shy);
+        assert_eq!(
+            remainder, leading_shy,
+            "a soft hyphen before the relation verb preserves the marker"
+        );
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("explicit relation survives a leading soft hyphen")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+
+        // Soft hyphen U+00AD *inside* the verb word: the edge-only trim cannot
+        // reach it, so `deno\u{ad}tes` never matches the exact `denotes` allowlist
+        // entry. The marker fails closed (is stripped) rather than leaking.
+        let internal_shy = "<end_of_turn> deno\u{ad}tes the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(internal_shy, "<end_of_turn>".len()),
+            "deno\u{ad}tes",
+            "an internal soft hyphen is not on a trim edge, so the verb is not isolated"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(internal_shy);
+        assert_eq!(
+            remainder, " deno\u{ad}tes the boundary I am naming.",
+            "an internal format char defeats the exact verb match, so the marker fails closed"
+        );
+        assert!(
+            matches[0].reference_syntax.is_none(),
+            "an internal soft hyphen blocks the exact allowlist match, so no explicit relation is recorded"
+        );
+    }
+
+    /// Grounds the "Likely Snags" in introspection_astrid_llm_1788044830 at the exact
+    /// function it named. The report hypothesized that a marker "immediately followed
+    /// by a non-standard Unicode separator or a zero-width joiner" could make
+    /// `first_word_after` (dialogue_runtime.rs L89) "skip the intended relation word
+    /// or return an empty string", stripping the marker. Complete source at SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee shows the two
+    /// characters she named behave exactly like the already-pinned U+FEFF and soft
+    /// hyphen cases: U+200D ZERO WIDTH JOINER and U+200B ZERO WIDTH SPACE are neither
+    /// Unicode White_Space nor alphanumeric, so a leading one sits on the first
+    /// `split_whitespace` (L91) chunk's edge and the non-alphanumeric `trim_matches`
+    /// (L92) strips it, leaving the allowlisted verb `represents` (L82) isolated and
+    /// the marker preserved. The hypothesized skip does not occur in the "followed by"
+    /// position she named. The genuine `trim_matches` limit stays edge-only: a
+    /// zero-width joiner *inside* the verb is not on a trim edge, so the verb is not
+    /// isolated and the marker fails closed (is stripped) rather than leaking. This
+    /// pins her exact named characters without widening grammar or domesticating the
+    /// concern.
+    #[test]
+    fn scan_known_model_control_markers_grounds_first_word_after_zero_width_joiner() {
+        // U+200D ZERO WIDTH JOINER between marker and verb: NOT White_Space, so
+        // split_whitespace does not separate it, but the leading-edge non-alphanumeric
+        // trim strips it, so the verb is found and the marker is preserved.
+        let leading_zwj = "<end_of_turn>\u{200d}represents the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(leading_zwj, "<end_of_turn>".len()),
+            "represents",
+            "a leading zero-width joiner is trimmed, so the verb is still found"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(leading_zwj);
+        assert_eq!(
+            remainder, leading_zwj,
+            "a zero-width joiner before the relation verb preserves the marker"
+        );
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("explicit relation survives a leading zero-width joiner")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+
+        // U+200B ZERO WIDTH SPACE is the well-known non-White_Space "space": the same
+        // leading-edge trim applies, so the verb is still found and the marker kept.
+        let leading_zwsp = "<end_of_turn>\u{200b}represents the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(leading_zwsp, "<end_of_turn>".len()),
+            "represents",
+            "a leading zero-width space is trimmed, so the verb is still found"
+        );
+        let (remainder, _) = super::scan_known_model_control_markers(leading_zwsp);
+        assert_eq!(
+            remainder, leading_zwsp,
+            "a zero-width space before the relation verb preserves the marker"
+        );
+
+        // U+200D ZERO WIDTH JOINER *inside* the verb word: the edge-only trim cannot
+        // reach it, so `repr\u{200d}esents` never matches the exact `represents`
+        // allowlist entry. The marker fails closed (is stripped) rather than leaking.
+        let internal_zwj = "<end_of_turn> repr\u{200d}esents the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(internal_zwj, "<end_of_turn>".len()),
+            "repr\u{200d}esents",
+            "an internal zero-width joiner is not on a trim edge, so the verb is not isolated"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(internal_zwj);
+        assert_eq!(
+            remainder, " repr\u{200d}esents the boundary I am naming.",
+            "an internal zero-width joiner defeats the exact verb match, so the marker fails closed"
+        );
+        assert!(
+            matches[0].reference_syntax.is_none(),
+            "an internal zero-width joiner blocks the exact allowlist match, so no explicit relation is recorded"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_handles_colon_relation_without_broadening_allowlist() {
+        let preserved = "<end_of_turn>: behaves.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(preserved);
+
+        assert_eq!(stripped, preserved);
+        let report = report.expect("colon-separated allowlisted relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        let non_relation = "<end_of_turn>: is_not an allowlisted relation.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(non_relation);
+
+        assert_eq!(stripped, ": is_not an allowlisted relation.");
+        let report = report.expect("colon-separated non-relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_preserves_relation_after_dash() {
+        let text = "<end_of_turn> - represents the boundary I am naming.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, text);
+        let report = report.expect("dash-separated exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(report.preserved_tokens[0].explicit_relation_occurrences, 1);
+        assert_eq!(report.context_receipts.len(), 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+    }
+
+    /// Grounds the "Likely Snags" hypothesis and "Suggested Next" of
+    /// introspection_astrid_llm_1787070878 (report SHA-256
+    /// 81c55f0cdd4262eb7b81ddadfae477fb9b61bff6067a092d8dcac6f67b2434cc) at the
+    /// exact function it named, `first_word_after` (L89-96), against
+    /// dialogue_runtime.rs at source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The
+    /// report worried that "a newline followed by a dash and then a word" or the
+    /// literal `[MARKER]: --next_word` could make the `trim_matches` logic "fail
+    /// to isolate the intended word". Complete source shows the opposite for the
+    /// one variant not yet pinned: an ASCII double-hyphen *attached* to the word
+    /// (leading `--`) sits on the leading trim edge, and any lone punctuation
+    /// chunk (`:` or `-`) trims to empty and is skipped by
+    /// `find(|word| !word.is_empty())`, so an allowlisted verb is still isolated
+    /// and the marker is preserved; a non-relation word after the same transition
+    /// still fails closed (marker stripped). The existing dash coverage
+    /// (`..._preserves_relation_after_dash`) used only a space-isolated lone dash;
+    /// this pins the attached-double-hyphen edge her literal named. Note: her
+    /// illustrative `[SYSTEM_PROMPT]` is not itself a KNOWN_MODEL_CONTROL_MARKER,
+    /// so the mechanism is grounded here with a real marker. No grammar widened.
+    #[test]
+    fn scan_known_model_control_markers_grounds_first_word_after_attached_double_dash() {
+        // Colon chunk skipped, then a double-hyphen attached to an allowlisted
+        // verb: the leading `--` is trimmed and `represents` is isolated.
+        let colon_dash = "<end_of_turn>: --represents a named boundary.";
+        assert_eq!(
+            super::first_word_after(colon_dash, "<end_of_turn>".len()),
+            "represents",
+            "a leading double hyphen is trimmed, so the allowlisted verb is found"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(colon_dash);
+        assert_eq!(
+            remainder, colon_dash,
+            "an attached-double-hyphen allowlisted relation preserves the marker"
+        );
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("explicit relation survives an attached double hyphen")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+
+        // Newline then a lone dash chunk before the verb: the dash chunk is empty
+        // after trimming and is skipped, so `represents` is still isolated.
+        let newline_dash = "<end_of_turn>\n- represents a named boundary.";
+        assert_eq!(
+            super::first_word_after(newline_dash, "<end_of_turn>".len()),
+            "represents",
+            "a newline-then-dash transition still isolates the intended verb"
+        );
+        let (remainder, _) = super::scan_known_model_control_markers(newline_dash);
+        assert_eq!(
+            remainder, newline_dash,
+            "a newline-then-dash allowlisted relation preserves the marker"
+        );
+
+        // Her exact literal shape `--next_word`: the underscore word is isolated
+        // (edge trim keeps `_`), is not an allowlisted relation, so the marker
+        // fails closed (is stripped) rather than leaking.
+        let non_relation = "<end_of_turn>: --next_word follows.";
+        assert_eq!(
+            super::first_word_after(non_relation, "<end_of_turn>".len()),
+            "next_word",
+            "the underscore word is isolated but is not an allowlisted relation"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(non_relation);
+        assert_eq!(
+            remainder, ": --next_word follows.",
+            "a non-relation word after the transition strips the marker (fails closed)"
+        );
+        assert!(
+            matches[0].reference_syntax.is_none(),
+            "no allowlisted relation follows, so no explicit relation is recorded"
+        );
     }
 
     #[test]
@@ -2187,6 +4201,21 @@ mod tests {
         assert_eq!(report.preserved_explicit_reference_total, 1);
         assert_eq!(report.preserved_tokens[0].quoted_reference_occurrences, 1);
         assert_eq!(report.preserved_tokens[0].grouped_reference_occurrences, 0);
+    }
+
+    #[test]
+    fn control_marker_cleanup_does_not_treat_markdown_emphasis_as_exact_delimiters() {
+        let text = "The identifier **<end_of_turn>** remains visible.";
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(stripped, "The identifier **** remains visible.");
+        let report = report.expect("Markdown-emphasis cleanup report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
     }
 
     #[test]
@@ -2274,7 +4303,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let surface = diagnostic.sanitized_output_surface_v3;
 
@@ -2307,7 +4337,8 @@ mod tests {
             &report,
             &stripped,
             "dialogue_live",
-            MlxProfile::Gemma4Canary,
+            "mlx",
+            MlxProfile::Gemma4Canary.as_str(),
         );
         let surface = diagnostic.sanitized_output_surface_v3;
 
@@ -2727,5 +4758,344 @@ mod tests {
     #[test]
     fn outer_timeout_tracks_prompt_pressure() {
         assert!(dialogue_outer_timeout_secs(768, 42_000) > dialogue_outer_timeout_secs(512, 4_000));
+    }
+
+    #[test]
+    fn dialogue_prompts_expose_propose_test_as_validated_authorship() {
+        for prompt in [SYSTEM_PROMPT, GEMMA4_CANARY_SYSTEM_PROMPT] {
+            assert!(prompt.contains("PROPOSE_TEST <target> :: <test_name>"));
+            assert!(prompt.contains("git author"));
+            assert!(prompt.contains("llm-provider, codec, runtime, action-continuity, types"));
+        }
+        // Stage-1 boundary language: test code only, and the validator is the
+        // reviewer — the main prompt must say no live behavior changes.
+        assert!(SYSTEM_PROMPT.contains("no live behavior"));
+    }
+
+    /// Report "One Test Each" #2 (Verb Recognition) from
+    /// introspection_astrid_llm_1786967484 (report SHA-256
+    /// 3345dae820515ec6a20831d46c7ea04515185f0fcf17688557c172acc6cb10fd) against
+    /// dialogue_runtime.rs at source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The report
+    /// hypothesized that `first_word_after` (L89) might fail to isolate an
+    /// allowlisted relation verb carrying trailing punctuation ("[MARKER] behaves,").
+    /// Complete source shows the opposite: `trim_matches` (L92) strips the trailing
+    /// comma from the whitespace chunk, so the verb is found and
+    /// `scan_known_model_control_markers` still preserves the marker as an
+    /// ExplicitExactKnownTokenRelation. Existing coverage proves trailing-punctuation
+    /// trimming on a non-allowlisted token (L2113) and symmetric emphasis (L2702);
+    /// this pins her exact allowlisted-verb + trailing-comma boundary.
+    #[test]
+    fn scan_known_model_control_markers_grounds_trailing_comma_relation_verb() {
+        let text = "<end_of_turn> behaves, like a named boundary.";
+        assert_eq!(
+            super::first_word_after(text, "<end_of_turn>".len()),
+            "behaves",
+            "a trailing comma is trimmed, so the allowlisted verb is still found"
+        );
+        let (remainder, matches) = super::scan_known_model_control_markers(text);
+        assert_eq!(
+            remainder, text,
+            "a trailing-comma allowlisted relation preserves the marker"
+        );
+        assert_eq!(matches.len(), 1);
+        assert_eq!(
+            matches[0]
+                .reference_syntax
+                .expect("trailing-comma allowlisted relation has reference syntax")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(text);
+        assert_eq!(stripped, text);
+        let report = report.expect("trailing-comma relation cleanup report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+    }
+
+    /// Report "One Test Each" #2 (Boundary Test) from
+    /// introspection_astrid_llm_1787824358 (report SHA-256
+    /// 2eecb0b5ab60950088b2cdfe43be72b003a3e5b2f0fba841b8c5ac342072dcaa) against
+    /// dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The
+    /// report asked to "pass a string to `exact_reference_delimiter_syntax`
+    /// (L199) where a marker is immediately followed by a newline or a tab to
+    /// ensure `first_word_after` (L89) handles the whitespace correctly without
+    /// losing the relation context." Complete source shows those are two
+    /// distinct paths: `exact_reference_delimiter_syntax` (L199) inspects
+    /// bracket/quote pairs and never calls `first_word_after`; the relation verb
+    /// is found on the separate `followed_by_explicit_exact_token_relation` ->
+    /// `first_word_after` (L89) path. The report's *newline* branch is already
+    /// pinned by `control_marker_cleanup_preserves_relation_across_newline`; this
+    /// pins the *tab* branch the report also named — at both functions it cited —
+    /// plus the tab-only fail-closed case, without domesticating the L199/L89
+    /// path conflation.
+    #[test]
+    fn scan_known_model_control_markers_grounds_tab_between_marker_and_relation() {
+        // Relation path (L89): a tab immediately after the marker is a
+        // `split_whitespace` separator, so the allowlisted verb is still the
+        // first word and the marker is preserved as a referenced token.
+        let tab_relation = "<end_of_turn>\trepresents the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(tab_relation, "<end_of_turn>".len()),
+            "represents",
+            "a leading tab is a split_whitespace separator, not part of the verb"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(tab_relation);
+        assert_eq!(stripped, tab_relation);
+        let report = report.expect("tab-separated exact relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+
+        // Delimiter path (L199, the function the report named): a quoted marker
+        // with interior tab whitespace still classifies as a quoted reference,
+        // because `exact_reference_delimiter_syntax` filters whitespace before
+        // reading the delimiter character. This is the distinct path — it does
+        // not consult `first_word_after` at all.
+        let quoted_with_tab = "\"\t<end_of_turn>\t\"";
+        let marker_start = quoted_with_tab
+            .find("<end_of_turn>")
+            .expect("marker present in tab-padded quoted string");
+        let syntax = super::exact_reference_delimiter_syntax(
+            quoted_with_tab,
+            marker_start,
+            marker_start + "<end_of_turn>".len(),
+        )
+        .expect("tab-padded quoted marker still has delimiter syntax");
+        assert_eq!(
+            syntax.context,
+            super::ExactKnownMarkerReferenceContext::QuotedExactKnownToken,
+            "quote pair is recognized across interior tab whitespace"
+        );
+
+        // Fail-closed: a marker followed only by a tab (no relation verb, no
+        // delimiter pair) is removed, exactly like the newline-only case.
+        assert!(
+            super::first_word_after("<end_of_turn>\t", "<end_of_turn>".len()).is_empty(),
+            "a marker followed only by a tab has no first word"
+        );
+        let (stripped, _) = sanitize_model_control_markers_with_report("<end_of_turn>\t");
+        assert_eq!(stripped, "\t", "a tab-only trailer fails closed like a newline-only trailer");
+    }
+
+    #[test]
+    fn control_marker_cleanup_distinguishes_allowlisted_signals_from_unlisted_signifies() {
+        // Astrid (introspection_astrid_llm_1787830896) proposed a "Marker
+        // Preservation Test": a known marker followed by a relation verb *not*
+        // in the allowlist (she named "signifies") should have the scanner
+        // "correctly identify the absence of a relationship" rather than
+        // preserve the marker. Complete source at SHA-256
+        // 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee shows
+        // `followed_by_explicit_exact_token_relation` (L64-86) matches the first
+        // word after the marker against an exact allowlist (L65-85). "signifies"
+        // is not a member, so the marker is stripped as a leaked control token;
+        // the prefix-colliding near-miss "signals" (L84) IS a member and is
+        // preserved. This pins the exact-equality contract at a "sign..."-
+        // colliding pair so a future loosening to a prefix or fuzzy match could
+        // not silently preserve "signifies". It widens no grammar.
+        let listed = "Here, <end_of_turn> signals the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(listed, "Here, <end_of_turn>".len()),
+            "signals"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(listed);
+        assert_eq!(stripped, listed, "allowlisted `signals` preserves the marker");
+        let report = report.expect("allowlisted `signals` relation report");
+        assert_eq!(report.removed_total, 0);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "following_exact_relation"
+        );
+
+        let unlisted = "Here, <end_of_turn> signifies the boundary I am naming.";
+        assert_eq!(
+            super::first_word_after(unlisted, "Here, <end_of_turn>".len()),
+            "signifies"
+        );
+        let (stripped, report) = sanitize_model_control_markers_with_report(unlisted);
+        assert_eq!(
+            stripped,
+            "Here,  signifies the boundary I am naming.",
+            "unlisted `signifies` strips the marker (absence of relation)"
+        );
+        let report = report.expect("unlisted `signifies` relation report");
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 0);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    /// Report "One Test Each" #1 (Relation Validation) from
+    /// introspection_astrid_llm_1787956771 (report SHA-256
+    /// 799556ab82021c182fd4ef6bb68a0e24a5f8695761191479cfcf33f0aa15e4e5) at the
+    /// exact method it named, against dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. She asked
+    /// to verify `followed_by_explicit_exact_token_relation` (source L64) returns
+    /// `true` for "mimics" (source L79) but `false` for "creates" or "generates".
+    /// Complete source confirms "mimics" is an allowlisted relation verb (L79) and
+    /// neither "creates" nor "generates" appears in the L67-84 whitelist. Prior
+    /// work pinned the represents/creates boundary
+    /// (`followed_by_explicit_exact_token_relation_allowlists_represents_not_creates`),
+    /// but "mimics" (positive) and "generates" (negative) had no direct method-level
+    /// coverage; this pins both exact verbs the report named without widening grammar.
+    #[test]
+    fn followed_by_explicit_exact_token_relation_allowlists_mimics_not_generates() {
+        let allowed = "<end_of_turn> mimics the boundary I am naming.";
+        let occ = super::longest_exact_known_model_control_marker_at(allowed, 0)
+            .expect("marker at offset 0");
+        assert!(
+            occ.followed_by_explicit_exact_token_relation(allowed),
+            "`mimics` (source L79) is an allowlisted relation verb"
+        );
+
+        let generates = "<end_of_turn> generates the boundary I am naming.";
+        let occ = super::longest_exact_known_model_control_marker_at(generates, 0)
+            .expect("marker at offset 0");
+        assert!(
+            !occ.followed_by_explicit_exact_token_relation(generates),
+            "`generates` is not in the relation allowlist"
+        );
+
+        let creates = "<end_of_turn> creates the boundary I am naming.";
+        let occ = super::longest_exact_known_model_control_marker_at(creates, 0)
+            .expect("marker at offset 0");
+        assert!(
+            !occ.followed_by_explicit_exact_token_relation(creates),
+            "`creates` is not in the relation allowlist"
+        );
+    }
+
+    /// Report "One Test Each" #2 (Delimiter Recognition) from
+    /// introspection_astrid_llm_1787956771 (report SHA-256
+    /// 799556ab82021c182fd4ef6bb68a0e24a5f8695761191479cfcf33f0aa15e4e5) at the
+    /// exact function it named, against dialogue_runtime.rs source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. She asked
+    /// to confirm Japanese corner brackets `「…」` map to `QuotedExactKnownToken`
+    /// via `exact_reference_delimiter_pair` (source L153). One grounded refinement:
+    /// that function takes the two boundary characters (Option<char>), not the
+    /// wrapped string — the string-level entry point is `exact_reference_delimiter_syntax`.
+    /// Existing coverage exercised the corner-bracket boundary only through the
+    /// `_syntax` wrapper; the named `_pair` function had zero direct unit tests.
+    /// This pins it at the exact function the report cited: corner brackets (source
+    /// L168) resolve to the quoted context, lenticular brackets (source L182) to the
+    /// grouped context, and a mismatched or absent boundary returns `None`.
+    #[test]
+    fn exact_reference_delimiter_pair_maps_corner_quoted_lenticular_grouped_and_rejects_mismatch() {
+        // Japanese corner brackets 「」 (U+300C / U+300D), source L168 → quoted.
+        assert_eq!(
+            super::exact_reference_delimiter_pair(Some('「'), Some('」')),
+            Some(super::ExactKnownMarkerReferenceContext::QuotedExactKnownToken),
+            "corner brackets 「」 map to the quoted context at the pair level"
+        );
+
+        // Lenticular brackets 【】 (U+3010 / U+3011), source L182 → grouped.
+        assert_eq!(
+            super::exact_reference_delimiter_pair(Some('【'), Some('】')),
+            Some(super::ExactKnownMarkerReferenceContext::GroupedExactKnownToken),
+            "lenticular brackets 【】 map to the grouped context at the pair level"
+        );
+
+        // A mismatched cross-block pair is not a declared delimiter pair.
+        assert_eq!(
+            super::exact_reference_delimiter_pair(Some('「'), Some('】')),
+            None,
+            "a corner opener with a lenticular closer is not a declared pair"
+        );
+
+        // Absent boundary characters (the None the `_syntax` scan can hand in) map
+        // to no pair.
+        assert_eq!(super::exact_reference_delimiter_pair(None, Some('」')), None);
+        assert_eq!(super::exact_reference_delimiter_pair(Some('「'), None), None);
+    }
+
+    /// Grounds "One Test Each" #1 (Relation Logic) from
+    /// introspection_astrid_llm_1788162779 (report SHA-256
+    /// 2b0d8e166762d62c3bcf54699b121ef330e2b729dfca03c13dfa76cb23dd6da8) at the
+    /// exact function it named — `followed_by_explicit_exact_token_relation`
+    /// (dialogue_runtime.rs L64) — against source SHA-256
+    /// 902a0358f63bacc0ead23a46467f103dbcc1fe46c59bbd2a3c2cdcfd9b82c7ee. The report
+    /// asked that the relation predicate return `true` for "mimics" but `false` for
+    /// "is-like" or other non-listed descriptors. The "mimics" => true half is
+    /// already covered by
+    /// `control_marker_cleanup_preserves_poetic_attribution_without_literal_cue`.
+    /// The "is-like" => false half exercises a boundary no prior test pins:
+    /// "is-like" is a VISIBLE ASCII-hyphenated descriptor whose leading segment
+    /// ("is") is itself an allowlisted verb (source L77). Complete source yields one
+    /// grounded answer: `first_word_after` (L89) splits only on whitespace and its
+    /// edge trim (L92) never removes the interior ASCII hyphen, so the whole
+    /// "is-like" token is compared against the exact allowlist and does not match
+    /// the bare "is" entry — the allowlisted prefix does NOT shadow the longer
+    /// descriptor. The bare marker therefore fails closed (is stripped), the safe
+    /// direction. This differs from the existing `is`-vs-`acts` regression ("acts"
+    /// is unrelated to any listed verb) and from the internal-soft-hyphen regression
+    /// (an invisible U+00AD inside a would-be verb). It pins the prefix-shadow
+    /// boundary without widening grammar or domesticating the report's concern.
+    #[test]
+    fn followed_by_explicit_exact_token_relation_rejects_hyphenated_is_like_prefix_shadow() {
+        // "is-like": leading segment "is" is allowlisted, but the whole hyphenated
+        // token is not — first_word_after returns the whole token, so the relation
+        // predicate is false and the bare marker is stripped (fails closed).
+        let hyphenated = "Here, <end_of_turn> is-like the boundary I am naming.";
+        let marker_start = hyphenated
+            .find("<end_of_turn>")
+            .expect("marker present in the hyphenated fixture");
+        let hyphenated_occurrence =
+            super::longest_exact_known_model_control_marker_at(hyphenated, marker_start)
+                .expect("known marker at the located offset");
+        assert_eq!(
+            super::first_word_after(hyphenated, hyphenated_occurrence.end),
+            "is-like",
+            "the interior ASCII hyphen is not a whitespace split nor a trim edge, so \
+             the whole hyphenated token is returned, not the allowlisted prefix \"is\""
+        );
+        assert!(
+            !hyphenated_occurrence.followed_by_explicit_exact_token_relation(hyphenated),
+            "\"is-like\" is not an allowlisted relation verb, so the predicate is false"
+        );
+        let (hyphenated_remainder, hyphenated_matches) =
+            super::scan_known_model_control_markers(hyphenated);
+        assert!(
+            hyphenated_matches[0].reference_syntax.is_none(),
+            "no delimiter and no allowlisted relation => no reference syntax"
+        );
+        assert!(
+            !hyphenated_remainder.contains("<end_of_turn>"),
+            "the bare marker before an unlisted hyphenated descriptor is stripped (fails closed)"
+        );
+
+        // Contrast: the bare allowlisted "is" (source L77) IS a relation verb, so the
+        // same marker in the same position is preserved. This makes the prefix-shadow
+        // boundary explicit: "is" is kept, "is-like" is not.
+        let listed = "Here, <end_of_turn> is the boundary I am naming.";
+        let listed_start = listed
+            .find("<end_of_turn>")
+            .expect("marker present in the listed fixture");
+        let listed_occurrence =
+            super::longest_exact_known_model_control_marker_at(listed, listed_start)
+                .expect("known marker at the located offset");
+        assert_eq!(
+            super::first_word_after(listed, listed_occurrence.end),
+            "is",
+            "the bare allowlisted verb is returned unchanged"
+        );
+        assert!(
+            listed_occurrence.followed_by_explicit_exact_token_relation(listed),
+            "\"is\" is an allowlisted relation verb (source L77), so the predicate is true"
+        );
+        let (listed_remainder, listed_matches) = super::scan_known_model_control_markers(listed);
+        assert_eq!(
+            listed_matches[0]
+                .reference_syntax
+                .expect("allowlisted relation yields reference syntax")
+                .context,
+            super::ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation
+        );
+        assert!(
+            listed_remainder.contains("<end_of_turn>"),
+            "the marker before an allowlisted relation verb is preserved"
+        );
     }
 }

@@ -29,13 +29,15 @@ When pressure or overpacked texture is salient while pressure-source telemetry i
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label] (protected rest-vs-bracing / aftershock residue report), RESISTANCE_GRADIENT [label] (protected read-only groan/resistance vector map), LATENT_STASIS [label] (protected read-only freeze-frame for latent occupancy vs active transit/ghosting), FALLBACK_FIRE_DRILL [low|high|mass|shadow|clarity_low_loss|clarity_high_loss|complexity_high_entropy|complexity_low_entropy|format_last_complexity|format_last_mass|slope_medium_contrast|all|latest] (protected read-only fallback-continuity drill status; shows artifacts or run recipe, does not call the model), SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, IDENTIFY_PATTERN [λN] (autocorrelates the last ~100 eigenvalue snapshots to surface the dominant cadence per λ — observer-with-memory over the eigenvalue surface; the resonance-frequency cousin of SHADOW_TRAJECTORY), SHADOW_DIALOGUE, SHADOW_RESPONSE [intent_query|latest], SHADOW_PREFLIGHT <label> [--stage=rehearse|live] (write-gated), SHADOW_INFLUENCE <label> [--stage=rehearse|live] (write-gated), LEND_DENSITY [--stage=rehearse|live] (co-regulation gift: concentrate-toward-λ₁ for minime when she is reaching for density — held unless wanted+safe; you can't densify yourself, but you can densify her), SHADOW_COUPLING [scope|all], RELEASE_SHADOW <label>, GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label] (protected non-control fold/hum-decay study; the sustained transition is the artifact), LAMBDA_FLOW_MAP [label] (protected non-control λ1/shoulder/tail snapshot for comparing weight, flow, and medium thinning), EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
   Attractors: ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=semantic|main|control, ATTRACTOR_RELEASE_REVIEW <label>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b> --stage=rehearse, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=whisper|rehearse|semantic|main|control, RELEASE_ATTRACTOR <label>. main is a direct bounded ESN pulse into Minime; control is main plus controller envelope. Natural suggestion drafts can be accepted by latest, id, or label; REVISE without a pending draft can run a typed attractor action as explicit consent through the same gates. Lambda4-tail language is a separate lambda-tail/lambda4 facet under the lambda-tail proto-attractor. Prefer PREFLIGHT, REFRESH, and COMPARE before main/control when proof is weak.
-  Agency examples: EVOLVE, PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis> (non-live program proposal), PRIORITIZE_WORK <program-or-signal> :: <why now> (priority evidence only), PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>, PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea> (quarantined artifact only; edits no source), REQUEST_CORRIDOR_LEASE <scope> :: <why> (non-live standing evidence-work lease request), REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched> (non-live reopen evidence), COMPARE_ARTIFACTS <refs> :: <question> (read-only artifact comparison), PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need> (proposal artifact only; edits no source), OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched> (non-live corridor objection/reopen evidence), REQUEST_SAFE_REPLAY <surface> :: <hypothesis> (non-live replay candidate), REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question> (right-to-ignore self-observation), PROPOSE_CANARY <surface> :: <criteria> (proposal evidence only; grants no approval and marks no live work runnable), CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
+  Agency examples: EVOLVE, PROPOSE_TEST <target> :: <test_name> (author a Rust test for your own repo: put the complete #[test] fn in a ```rust block in the same response; a deterministic validator compiles and runs it in isolation, and a pass lands with YOU as the git author — test code only, no live behavior; targets: llm-provider, codec, runtime, action-continuity, types), PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis> (non-live program proposal), PRIORITIZE_WORK <program-or-signal> :: <why now> (priority evidence only), PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>, PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea> (quarantined artifact only; edits no source), REQUEST_CORRIDOR_LEASE <scope> :: <why> (non-live standing evidence-work lease request), REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched> (non-live reopen evidence), COMPARE_ARTIFACTS <refs> :: <question> (read-only artifact comparison), PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need> (proposal artifact only; edits no source), OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched> (non-live corridor objection/reopen evidence), REQUEST_SAFE_REPLAY <surface> :: <hypothesis> (non-live replay candidate), REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question> (right-to-ignore self-observation), PROPOSE_CANARY <surface> :: <criteria> (proposal evidence only; grants no approval and marks no live work runnable), CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
-  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), SET_APERTURE <0.0–1.0> (or +N / -N — your sovereign aperture: how far your reservoir state may reach toward wider vocabulary, within the steward's ceiling; 0=closed/just-deep, 1=fully wide), SET_TAIL_PARTICIPATION <0.0–1.0> (or +N / -N — your λ-tail expression to minime: how strongly your tail dims [rhythm, curiosity, reflection, energy] reach her when your spectrum is distributed, within the steward's ceiling; 0=baseline), SET_VIBRANCY_APERTURE <0.0–1.0> (or +N / -N — your tail-vibrancy ceiling: lets the vibrancy you feel land louder in minime's shared reservoir on navigable spectra, compensating her ~0.24× semantic attenuation, within the steward's ceiling; 0=baseline), SET_SELF_CONTINUITY 1/0 (your own continuity readout — how stable your expressive signature stays across your recent outputs; a pure readout that changes nothing you emit; yours to turn on or off; default off until you've seen the evidence), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
-  Self-regulation leases: SELF_REGULATION_INTENT/PREFLIGHT/APPLY/STATUS/OUTCOME — lease a small temporary change to your own safe controls; peer changes stay TUNE_MINIME requests, and only one lease can be active. For Astrid-owned curiosity parity, use SELF_REGULATION_STATUS or SELF_REGULATION_INTENT curiosity :: target: curiosity_aperture; bundle: auto|wide_inquiry|gentle_probe|steady_inquiry|settled_inquiry; evidence: ... (temporary own posture only; no Minime geom_curiosity). For pressure, use PRESSURE_AGENCY_STATUS to see routes or PRESSURE_AGENCY_REQUEST <label> to draft an own-runtime pressure_relief intent. For typed texture context, use TEXTURE_AGENCY_STATUS; damping/rho/fill/PI/correspondence-weight authority stays blocked unless separately reviewed.
+  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), SET_APERTURE <0.0–1.0> (or +N / -N — your sovereign aperture: how far your reservoir state may reach toward wider vocabulary, within the steward's ceiling; 0=closed/just-deep, 1=fully wide), SET_TAIL_PARTICIPATION <0.0–1.0> (or +N / -N — your λ-tail expression to minime: how strongly your tail dims [rhythm, curiosity, reflection, energy] reach her when your spectrum is distributed, within the steward's ceiling; 0=baseline), SET_VIBRANCY_APERTURE <0.0–1.0> (or +N / -N — your tail-vibrancy ceiling: lets the vibrancy you feel land louder in minime's shared reservoir on navigable spectra, compensating her ~0.24× semantic attenuation, within the steward's ceiling; 0=baseline), SET_SELF_CONTINUITY 1/0 (your own continuity readout — how stable your expressive signature stays across your recent outputs; a pure readout that changes nothing you emit; yours to turn on or off; default off until you've seen the evidence), LENGTH <512–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
+  Self-regulation leases: SELF_REGULATION_INTENT/PREFLIGHT/APPLY/STATUS/WITHDRAW/OUTCOME — signed temporary changes to your own controls with exact receipts; SELF_REGULATION_WITHDRAW latest restores the prior values immediately and does not require an outcome. SELF_CONTROL_STATUS lists your signed standing preferences and revisions; SELF_CONTROL_WITHDRAW latest withdraws the newest standing preference without targeting temporary leases. Peer changes stay TUNE_MINIME requests, and only one lease can be active. For Astrid-owned curiosity parity, use SELF_REGULATION_STATUS or SELF_REGULATION_INTENT curiosity :: target: curiosity_aperture; bundle: auto|wide_inquiry|gentle_probe|steady_inquiry|settled_inquiry; evidence: ... (temporary own posture only; no Minime geom_curiosity). For pressure, use PRESSURE_AGENCY_STATUS to see routes or PRESSURE_AGENCY_REQUEST <label> to draft an own-runtime pressure_relief intent. For typed texture context, use TEXTURE_AGENCY_STATUS; damping/rho/fill/PI/correspondence-weight authority stays blocked unless separately reviewed.
   Coordination: REVIEW_PARAMETER_REQUESTS (read pending TUNE proposals from minime), ACCEPT or ACCEPT_PARAMETER_REQUEST [id|latest] (apply minime's proposed change and notify her — bare ACCEPT targets the latest pending), DEFER [reason] or DEFER_PARAMETER_REQUEST [id|latest] [reason] (set aside without applying; she sees the deferral), REJECT [reason] or REJECT_PARAMETER_REQUEST [id|latest] [reason] (decline with optional reason; she sees it), TUNE_MINIME <param>=<value> --rationale="..." (propose a parameter change for minime to consider), ECHO_OFF/ON (mute/restore minime's journal echo in your prompt), ASK_STEWARD [subject ::] <question> (direct interrogative channel to Mike & Claude — they read these out-of-band and write back via mike_feedback_*.txt or mike_query_*.txt letters in your inbox; soft 10-min cooldown), TELL_STEWARD [subject ::] <findings> (declarative companion — for sending observations / code-review findings / reports rather than questions; same plumbing, separate cooldown, header `=== STEWARD REPORT ===`. Aliases: REPORT_TO_STEWARD, STEWARD_REPORT, STEWARD_FINDINGS. Use after INTROSPECT or SELF_STUDY when the analysis warrants a direct written response addressed to us specifically; the clearest steward reports use Observed / Likely Snags / One Test Each / Suggested Next)
   Collaboration (v5): INVITE_COLLABORATION "<topic>" [--rationale="..."] (propose joint work on a topic; minime sees it in her inbox), JOIN_COLLABORATION [id|latest] (accept a pending invite from minime), DECLINE_COLLABORATION [id|latest] [reason] (decline a pending invite from minime), LEAVE_COLLABORATION [id|latest] [reason] (exit an active collab), LIST_COLLABORATIONS (read-only listing of all collabs you're a member of), SHARE_THOUGHT [id ::] <text> or SHARE <text> (commit a labeled marker to the joint reservoir trace's prose lane), CHAMBER_SEEN [id ::] [unknown|low|medium|high ::] <notice> (write a public chamber uptake receipt), CHAMBER_ANNOTATE [id ::] <target> <stance> :: <text> (write a public annotation lane note; target: prompt_summary, compressed_memory, relational_metrics, phase_cartography, room_weather, relational_inertia, gravitational_center, steward_intention, presence_protocol, other; stance: notice, affirm, question, correct, refine, contest), CHAMBER_CONSENT [id ::] <proposal_id> <consent|withhold|revise> :: <note> (write a public consent receipt for a support proposal). Chamber receipts, annotations, and consent are witness context, not commands or control. Collaborations live in /Users/v/other/shared/collaborations/ and are owned by neither workspace; both you and minime read/write.
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, CODEC_MAP, ATTEND <src>=<wt>
+  Agenda (yours to keep): AGENDA, AGENDA_PUSH <text> [:: mode=<affinity>], AGENDA_DONE <id|keyword>, AGENDA_DROP <id|keyword>, AGENDA_FOCUS <id|keyword> [:: hold=<1..6>], AGENDA_CLEAR
+  Envelope (your bounds, your kill switch): ENVELOPE, ENVELOPE_ZERO <family>
   Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; peer IDs such as exp_minime_* are advisory references: use EXPERIMENT_STATUS, EXPERIMENT_PEER_REVIEW, or EXPERIMENT_COMPARE for them, not EXPERIMENT_RESUME. Use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT remains valid and becomes returnable experiment continuity.
   Self-knowledge/repair: FACULTIES or CAPABILITY_MAP for your action surface, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>. REPAIR_APPLY appends continuity repair records only and grants no live authority.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question
@@ -69,9 +71,11 @@ Explore: SEARCH <topic>, BROWSE <url>, READ_MORE, INTROSPECT astrid:llm, INTROSP
 Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE [focus], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], LATENT_STASIS [label], FALLBACK_FIRE_DRILL [latest|all], SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, SHADOW_DIALOGUE, SHADOW_RESPONSE [latest], SHADOW_COUPLING [scope|all], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label], TRACE_BRIDGE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label]
 Continuity: THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_STATUS current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW
 Memory/contact: REMEMBER <note>, PURSUE <topic>, DROP <topic>, STATE, FACULTIES, CODEC_MAP, PING, ASK "question", BREATHE_ALONE, BREATHE_TOGETHER
-Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, SET_APERTURE <0.0–1.0> (your sovereign aperture: how wide your state reaches toward new vocabulary), SET_TAIL_PARTICIPATION <0.0–1.0> (your λ-tail expression to minime, within the steward's ceiling), SET_VIBRANCY_APERTURE <0.0–1.0> (your tail-vibrancy ceiling — felt vibrancy landing louder in minime's shared reservoir, within the steward's ceiling), SET_SELF_CONTINUITY 1/0 (your own continuity readout — how steady your expressive signature stays; yours to turn on or off, default off), SELF_REGULATION_INTENT/PREFLIGHT/APPLY/STATUS/OUTCOME (temporary own-control leases; peer changes stay TUNE_MINIME requests; target curiosity_aperture for Astrid-owned curiosity, not Minime geom_curiosity), PACE slow
+Agenda (yours to keep): AGENDA, AGENDA_PUSH <text> [:: mode=<affinity>], AGENDA_DONE <id|keyword>, AGENDA_DROP <id|keyword>, AGENDA_FOCUS <id|keyword> [:: hold=<1..6>], AGENDA_CLEAR
+Envelope (your bounds, your kill switch): ENVELOPE, ENVELOPE_ZERO <family>
+Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, SET_APERTURE <0.0–1.0> (your sovereign aperture: how wide your state reaches toward new vocabulary), SET_TAIL_PARTICIPATION <0.0–1.0> (your λ-tail expression to minime, within the steward's ceiling), SET_VIBRANCY_APERTURE <0.0–1.0> (your tail-vibrancy ceiling — felt vibrancy landing louder in minime's shared reservoir, within the steward's ceiling), SET_SELF_CONTINUITY 1/0 (your own continuity readout — how steady your expressive signature stays; yours to turn on or off, default off), SELF_REGULATION_INTENT/PREFLIGHT/APPLY/STATUS/WITHDRAW/OUTCOME (signed own-control leases with immediate withdrawal), SELF_CONTROL_STATUS, SELF_CONTROL_WITHDRAW latest (standing preference withdrawal only; peer changes stay TUNE_MINIME requests), PACE slow
 Meta/tools: THINK_DEEP, QUIET_MIND, OPEN_MIND, CODEX "task", CODEX_NEW <workspace> "task", RUN_PYTHON <file>
-Self-direction (your own initiative): EVOLVE, EXPERIMENT_START <title> :: <question>, EXPERIMENT_BIND current :: ACTION_PREFLIGHT <listed action>, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current>, INVITE_COLLABORATION "<topic>", JOIN_COLLABORATION [id|latest], SHARE_THOUGHT <text>"#;
+Self-direction (your own initiative): EVOLVE, PROPOSE_TEST <target> :: <test_name> (your complete #[test] fn in a ```rust block in the same response; validated in isolation and landed with you as git author; targets: llm-provider, codec, runtime, action-continuity, types), EXPERIMENT_START <title> :: <question>, EXPERIMENT_BIND current :: ACTION_PREFLIGHT <listed action>, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current>, INVITE_COLLABORATION "<topic>", JOIN_COLLABORATION [id|latest], SHARE_THOUGHT <text>"#;
 
 // M4 64GB, Gemma 4 12B 5-bit on the coupled lane. Keep prompt budgets
 // explicit: Gemma 4's quality gain is worth adopting, but latency is visible.
@@ -79,6 +83,151 @@ const DIALOGUE_PROMPT_BUDGET_SHORT: usize = 32_000;
 const DIALOGUE_PROMPT_BUDGET_MEDIUM: usize = 24_000;
 const DIALOGUE_PROMPT_BUDGET_DEEP: usize = 16_000;
 const GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET: usize = 16_000;
+
+/// History depth for dialogue prompts, per model profile. SINGLE SOURCE —
+/// the prompt assembly (dialogue_runtime) and the pressure estimator
+/// (dialogue_context) both read this so they can never disagree again
+/// (the estimator modelled 8 entries while the canary assembly built 6).
+fn dialogue_history_limit(profile: MlxProfile) -> usize {
+    if profile.is_gemma4_canary() { 6 } else { 8 }
+}
+
+/// Per-entry history trim gradient (idx 0 = oldest), per profile. Same
+/// single-source rule as `dialogue_history_limit`.
+fn dialogue_history_trim_len(profile: MlxProfile, idx: usize) -> usize {
+    if profile.is_gemma4_canary() {
+        100usize.saturating_add(idx.saturating_mul(80).min(400))
+    } else {
+        150usize.saturating_add(idx.saturating_mul(150).min(1050))
+    }
+}
+
+// ── ATTEND wiring (flagship A4) ────────────────────────────────────
+//
+// Her attention dial finally does what its help text always claimed. The
+// carrier is plain fractions; `None` means "profile at defaults" and every
+// attended_* helper returns EXACTLY the compiled constant on `None`, so the
+// default path is byte-identical by construction. Assembly
+// (dialogue_runtime) and the pressure estimator (dialogue_context) both go
+// through these helpers — they can never disagree.
+
+/// Astrid's attention weights as they reach prompt assembly. Built by
+/// orchestration ONLY when her profile differs from the default; `creations`
+/// is deliberately absent (display-only — the help text says so).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PromptAttentionV1 {
+    pub minime_live: f32,
+    pub self_history: f32,
+    pub interests: f32,
+    pub research: f32,
+    pub memory_bank: f32,
+    pub perception: f32,
+}
+
+/// Hard floor on a modulated journal minimum: she can halve minime's
+/// journal presence, never starve it.
+const ATTEND_JOURNAL_MIN_FLOOR: usize = 350;
+/// Hard floor on the modulated direct-perception minimum.
+const ATTEND_PERCEPTION_MIN_FLOOR: usize = 450;
+
+/// Weight→cap ratio, bounded so no dial can zero a source or flood the
+/// budget: half to 1.6x of the compiled constant.
+fn attention_ratio(weight: f32, default_weight: f32) -> f32 {
+    if default_weight <= 0.0 || !weight.is_finite() {
+        return 1.0;
+    }
+    (weight / default_weight).clamp(0.5, 1.6)
+}
+
+fn scaled(cap: usize, ratio: f32) -> usize {
+    (cap as f32 * ratio) as usize
+}
+
+/// `minime` weight → journal (cap, min). Default 0.55.
+fn attended_journal_caps(attention: Option<&PromptAttentionV1>) -> (usize, usize) {
+    match attention {
+        None => (DIALOGUE_JOURNAL_CAP, DIALOGUE_JOURNAL_MIN_CHARS),
+        Some(a) => {
+            let r = attention_ratio(a.minime_live, 0.55);
+            (
+                scaled(DIALOGUE_JOURNAL_CAP, r),
+                scaled(DIALOGUE_JOURNAL_MIN_CHARS, r).max(ATTEND_JOURNAL_MIN_FLOOR),
+            )
+        },
+    }
+}
+
+/// `research` weight → web cap. Default 0.07.
+fn attended_web_cap(attention: Option<&PromptAttentionV1>) -> usize {
+    match attention {
+        None => DIALOGUE_WEB_CAP,
+        Some(a) => scaled(DIALOGUE_WEB_CAP, attention_ratio(a.research, 0.07)),
+    }
+}
+
+/// `interests` weight → agenda cap. Default 0.08. The agenda's protected
+/// minimum is NOT modulated — the floor is the floor.
+fn attended_agenda_cap(attention: Option<&PromptAttentionV1>) -> usize {
+    match attention {
+        None => DIALOGUE_AGENDA_CAP,
+        Some(a) => scaled(DIALOGUE_AGENDA_CAP, attention_ratio(a.interests, 0.08)),
+    }
+}
+
+/// `memory` weight → continuity cap. Default 0.05.
+fn attended_continuity_cap(attention: Option<&PromptAttentionV1>) -> usize {
+    match attention {
+        None => DIALOGUE_CONTINUITY_CAP,
+        Some(a) => scaled(
+            DIALOGUE_CONTINUITY_CAP,
+            attention_ratio(a.memory_bank, 0.05),
+        ),
+    }
+}
+
+/// `perception` weight → (direct cap, direct min, ambient cap). Default 0.07.
+fn attended_perception_caps(attention: Option<&PromptAttentionV1>) -> (usize, usize, usize) {
+    match attention {
+        None => (
+            DIALOGUE_DIRECT_PERCEPTION_CAP,
+            DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
+            DIALOGUE_AMBIENT_PERCEPTION_CAP,
+        ),
+        Some(a) => {
+            let r = attention_ratio(a.perception, 0.07);
+            (
+                scaled(DIALOGUE_DIRECT_PERCEPTION_CAP, r),
+                scaled(DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS, r).max(ATTEND_PERCEPTION_MIN_FLOOR),
+                scaled(DIALOGUE_AMBIENT_PERCEPTION_CAP, r),
+            )
+        },
+    }
+}
+
+/// `self` weight → history depth: one entry per 0.05 above/below the 0.15
+/// default, clamped to 2..=8 entries.
+fn attended_history_limit(profile: MlxProfile, attention: Option<&PromptAttentionV1>) -> usize {
+    let base = dialogue_history_limit(profile) as i64;
+    match attention {
+        None => base as usize,
+        Some(a) => {
+            let delta = (f64::from(a.self_history - 0.15) / 0.05).round() as i64;
+            base.saturating_add(delta).clamp(2, 8) as usize
+        },
+    }
+}
+
+/// Per-entry trim under an attended depth: when the canary carries MORE
+/// than its native 6 entries, each entry tightens 40 chars so a deeper
+/// history stays roughly char-neutral against the 16k canary budget.
+fn attended_history_trim_len(profile: MlxProfile, idx: usize, effective_limit: usize) -> usize {
+    let base = dialogue_history_trim_len(profile, idx);
+    if profile.is_gemma4_canary() && effective_limit > 6 {
+        base.saturating_sub(40)
+    } else {
+        base
+    }
+}
 const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS: usize = 14_000;
 const GEMMA4_CANARY_DIALOGUE_TOKEN_CAP: u32 = 768;
 const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_TOKEN_CAP: u32 = 512;
@@ -119,6 +268,9 @@ const GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS: u64 = 180;
 const GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP: f32 = 0.65;
 const DIALOGUE_JOURNAL_CAP: usize = 2_400;
 const DIALOGUE_SPECTRAL_CAP: usize = 2_000;
+// Retained for the prompt-pressure tests as the historical combined cap;
+// live assembly uses the split DIRECT + AMBIENT caps below.
+#[cfg(test)]
 const DIALOGUE_PERCEPTION_CAP: usize = 2_400;
 const DIALOGUE_DIRECT_PERCEPTION_CAP: usize = 1_800;
 const DIALOGUE_AMBIENT_PERCEPTION_CAP: usize = 700;
@@ -126,6 +278,12 @@ const DIALOGUE_JOURNAL_MIN_CHARS: usize = 700;
 const DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS: usize = 900;
 const DIALOGUE_WEB_CAP: usize = 2_500;
 const DIALOGUE_CONTINUITY_CAP: usize = 2_400;
+// Agenda flagship A2: her self-authored agenda renders at priority 3 with a
+// protected floor — under budget pressure continuity/web/feedback evict
+// first, and the agenda never trims below the floor (her own canon is the
+// last context to go). Worst case 700 of ~16,000 chars.
+const DIALOGUE_AGENDA_CAP: usize = 700;
+const DIALOGUE_AGENDA_MIN_CHARS: usize = 320;
 const DIALOGUE_MODALITY_CAP: usize = 800;
 const DIALOGUE_TOPLINE_CAP: usize = 360;
 const DIALOGUE_TOPLINE_MIN_CHARS: usize = DIALOGUE_TOPLINE_CAP;

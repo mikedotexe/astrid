@@ -78,6 +78,19 @@ fn score_read_more_candidate(hint: &str, candidate: &str, rank: usize) -> f32 {
     score + (overlap as f32 * 18.0)
 }
 
+fn previous_recorded_choice_was_read_more(conv: &ConversationState) -> bool {
+    conv.recent_next_choices
+        .iter()
+        .rev()
+        .nth(1)
+        .is_some_and(|choice| {
+            choice
+                .split_whitespace()
+                .next()
+                .is_some_and(|action| action.eq_ignore_ascii_case("READ_MORE"))
+        })
+}
+
 fn extract_url_arg(original: &str, action: &str, fallback: &str) -> Option<String> {
     let raw_s = strip_action(original, action);
     let raw_owned = if raw_s.is_empty() {
@@ -367,6 +380,14 @@ pub(super) fn handle_action(
         "READ_MORE" => {
             let hint = strip_action(original, "READ_MORE");
             if conv.last_read_path.is_none() {
+                if previous_recorded_choice_was_read_more(conv) {
+                    conv.pending_file_listing = Some(
+                        "[The previous continuation reached the end of its source. Open something new with BROWSE, MIKE_READ, AR_READ, LIST_FILES, or CODEX.]"
+                            .to_string(),
+                    );
+                    info!("READ_MORE: previous continuation completed; recovery fallback skipped");
+                    return true;
+                }
                 match recover_read_more_target(conv, &hint) {
                     Some((path, offset, label)) if offset != usize::MAX => {
                         conv.last_read_path = Some(path);
@@ -536,7 +557,10 @@ pub(super) fn handle_action(
             true
         },
         "PURSUE" => {
-            let interest = strip_action(original, "PURSUE");
+            // Leaked transport markers (<end_of_turn> etc.) must not persist
+            // into her interests — they re-enter every prompt render.
+            let interest =
+                crate::autonomous::state::sanitize_interest_text(&strip_action(original, "PURSUE"));
             if !interest.is_empty() {
                 let prefix_len = interest.len().min(30);
                 let interest_prefix = interest.to_lowercase();
@@ -646,8 +670,8 @@ pub(super) fn handle_action(
 mod tests {
     use super::{
         ConversationState, advance_by_chars, clamp_to_char_boundary, extract_url_arg,
-        looks_like_raw_pdf_dump, parse_saved_page_header, queue_browse_url,
-        recover_read_more_target,
+        looks_like_raw_pdf_dump, parse_saved_page_header, previous_recorded_choice_was_read_more,
+        queue_browse_url, recover_read_more_target,
     };
     use crate::paths::bridge_paths;
     use std::fs;
@@ -697,6 +721,24 @@ mod tests {
     }
 
     #[test]
+    fn completed_read_more_does_not_recover_a_new_overflow_source() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.recent_next_choices.push_back("STILL".to_string());
+        conv.recent_next_choices.push_back("READ_MORE".to_string());
+        assert!(!previous_recorded_choice_was_read_more(&conv));
+
+        conv.recent_next_choices
+            .push_back("read_more context-overflow".to_string());
+        assert!(previous_recorded_choice_was_read_more(&conv));
+
+        conv.recent_next_choices.push_back("SPEAK".to_string());
+        assert!(previous_recorded_choice_was_read_more(&conv));
+
+        conv.recent_next_choices.push_back("READ_MORE".to_string());
+        assert!(!previous_recorded_choice_was_read_more(&conv));
+    }
+
+    #[test]
     fn recover_read_more_target_skips_raw_pdf_dump_candidates() {
         let unique = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -704,6 +746,7 @@ mod tests {
             .as_nanos();
         let hint = format!("raw skip token {unique}");
         let research_dir = bridge_paths().research_dir();
+        fs::create_dir_all(&research_dir).expect("create research fixture directory");
         let raw_path = research_dir.join(format!("page_{unique}_raw.txt"));
         let text_path = research_dir.join(format!("page_{unique}_text.txt"));
 

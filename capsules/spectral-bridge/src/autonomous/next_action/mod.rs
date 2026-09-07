@@ -1,5 +1,7 @@
 //! Typed autonomous action routing facade.
 
+mod action_syntax;
+pub(crate) mod agenda;
 mod ask_steward;
 mod attractor;
 mod audio;
@@ -9,6 +11,7 @@ mod codex;
 pub(crate) mod collaboration;
 mod division;
 mod identify_pattern;
+pub(crate) mod introspection_cadence;
 mod lived_term;
 mod mike;
 mod modes;
@@ -19,6 +22,7 @@ mod peer_correspondence;
 mod phase_transition;
 mod pressure_agency;
 mod probe_self;
+mod propose_test;
 pub(crate) mod protected_diagnostics;
 mod regulator_map;
 mod resource_governor;
@@ -27,9 +31,11 @@ pub(crate) mod shadow;
 pub(crate) mod sovereignty;
 mod space_hold;
 mod spectral_drift;
+mod temporal_bearing;
 mod workspace;
 
 pub(crate) const PDF_READ_PREFIX: &str = pdf::PDF_READ_PREFIX;
+pub(crate) use action_syntax::strip_action;
 
 pub(crate) fn division_action_prompt_note(workspace: Option<&std::path::Path>) -> Option<String> {
     division::prompt_note(workspace)
@@ -109,6 +115,18 @@ pub(super) struct NextActionContext<'a> {
     pub fill_pct: f32,
     pub response_text: &'a str,
     pub workspace: Option<&'a std::path::Path>,
+}
+
+/// Constitution C2: lease law must not depend on the being taking a turn.
+/// The orchestration loop calls this at loop-top and during rest pulses so
+/// an expired lease (V1 self-regulation — which folds the V2 self-control
+/// reconcile inside it) reverts on time even while she rests.
+pub(super) fn reconcile_lease_law(conv: &mut super::state::ConversationState) {
+    self_regulation::reconcile_active_lease(conv);
+    // Constitution C6: active V2 controls must stay fixed-points of the
+    // envelope clamp — a legitimate registry narrow withdraws (with receipt)
+    // rather than letting the saturation breaker strike.
+    super::self_control_v2::reconcile_envelope_conformance(conv);
 }
 
 /// Parse NEXT: action from Astrid's response.
@@ -1306,22 +1324,6 @@ fn normalize_steward_typo_alias(base_action: &str, original: &str) -> Option<(St
     Some((normalized_base, normalized_original))
 }
 
-fn strip_action(original: &str, prefix: &str) -> String {
-    let upper = original.to_uppercase();
-    if upper.starts_with(prefix) {
-        // Strip the action prefix AND any trailing colon+whitespace.
-        // Astrid often writes "BROWSE: https://..." or "SEARCH: topic"
-        // and the colon must not be left dangling.
-        original[prefix.len()..]
-            .trim_start()
-            .trim_start_matches([':', '-', '\u{2014}'])
-            .trim()
-            .to_string()
-    } else {
-        String::new()
-    }
-}
-
 fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
     if protected_diagnostics::canonical_action_for(base_action).is_some() {
         return "protected_summary";
@@ -1390,8 +1392,16 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "BRACE_AUDIT"
         | "AFTERSHOCK_TRACE"
         | "TREMOR_RESIDUE"
-        | "CASCADE_RESIDUE" => "protected_summary",
-        "DIVISION_INTENT"
+        | "CASCADE_RESIDUE"
+        | "TEMPORAL_BEARING" => "protected_summary",
+        "PROPOSE_TEST" => "summary",
+        "INQUIRY_START" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" | "INQUIRY_CANCEL"
+        | "INQUIRY_CANARY" | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => {
+            "protected_summary"
+        },
+        "DIVISION_HOLD"
+        | "DIVISION_DECLINE"
+        | "DIVISION_INTENT"
         | "DIVISION_PREPARE"
         | "DIVISION_STATUS"
         | "DIVISION_CEREMONY_STATUS"
@@ -1547,9 +1557,15 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "FOLD_STUDY"
         | "HUM_DECAY"
         | "HUM_DECAY_STUDY"
-        | "M6_BRIDGE" => "read_only",
+        | "M6_BRIDGE"
+        | "TEMPORAL_BEARING" => "read_only",
+        "OWNER_POLICY_STATUS" | "CONCERN_STATUS" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" => {
+            "read_only"
+        },
         "DIVISION_STATUS" | "DIVISION_CEREMONY_STATUS" => "read_only",
-        "DIVISION_INTENT"
+        "DIVISION_HOLD"
+        | "DIVISION_DECLINE"
+        | "DIVISION_INTENT"
         | "DIVISION_ASSENT"
         | "DIVISION_WITHDRAW_ASSENT"
         | "DIVISION_RETURN_REQUEST"
@@ -1563,9 +1579,23 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "REPAIR_APPLY"
         | "PRESSURE_AGENCY_REQUEST"
         | "PRESSURE_CONTROL_REQUEST"
-        | "PRESSURE_REQUEST" => "live_write",
+        | "PRESSURE_REQUEST"
+        | "OWNER_POLICY_CREATE"
+        | "OWNER_POLICY_WITHDRAW"
+        | "OWNER_POLICY_HOLD"
+        | "OWNER_POLICY_RETURN"
+        | "CONCERN_ADD"
+        | "CONCERN_PAUSE"
+        | "CONCERN_CANCEL"
+        | "CONCERN_RETURN"
+        | "CONCERN_COMPLETE"
+        | "CONCERN_BLOCK"
+        | "INQUIRY_START"
+        | "INQUIRY_CANCEL" => "live_write",
+        "PROPOSE_TEST" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" | "DIVISION_PREPARE"
-        | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" => "live_control",
+        | "DIVISION_COMMIT" | "DIVISION_ABORT" | "DIVISION_ROLLBACK" | "INQUIRY_CANARY"
+        | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => "live_control",
         _ => "observe",
     }
 }
@@ -1669,10 +1699,14 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "LIVED_TRANSITION_STATUS"
         | "TRANSITION_STATUS"
         | "PHASE_TRANSITION_STATUS" => "phase_transition_cards",
+        "TEMPORAL_BEARING" => "temporal_bearing",
+        "PROPOSE_TEST" => "test_proposal",
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
-        "DIVISION_INTENT"
+        "DIVISION_HOLD"
+        | "DIVISION_DECLINE"
+        | "DIVISION_INTENT"
         | "DIVISION_PREPARE"
         | "DIVISION_STATUS"
         | "DIVISION_CEREMONY_STATUS"
@@ -1692,6 +1726,18 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "RELEASE_ATTRACTOR" => "attractor",
         "SHADOW_PREFLIGHT" | "SHADOW_INFLUENCE" | "RELEASE_SHADOW" | "LEND_DENSITY" => "shadow",
         "INTROSPECT" | "SELF_STUDY" => "modes",
+        "INTROSPECTION_CADENCE" => "introspection_cadence",
+        "OWNER_POLICY_CREATE"
+        | "OWNER_POLICY_STATUS"
+        | "OWNER_POLICY_WITHDRAW"
+        | "OWNER_POLICY_HOLD"
+        | "OWNER_POLICY_RETURN" => "owner_policy",
+        "CONCERN_ADD" | "CONCERN_STATUS" | "CONCERN_PAUSE" | "CONCERN_CANCEL"
+        | "CONCERN_RETURN" | "CONCERN_COMPLETE" | "CONCERN_BLOCK" => "concern_queue",
+        "INQUIRY_START" | "INQUIRY_STATUS" | "INQUIRY_INSPECT" | "INQUIRY_CANCEL"
+        | "INQUIRY_CANARY" | "INQUIRY_ACT" | "INQUIRY_WITHDRAW" | "INQUIRY_PROMOTE" => {
+            "owner_inquiry"
+        },
         "DECOMPOSE"
         | "SPECTRAL_EXPLORER"
         | "EXAMINE"
@@ -1809,6 +1855,10 @@ fn expected_artifacts_for_preflight(base_action: &str, stage: &str, route: &str)
     }
     if stage == "live_control" {
         artifacts.push("gate_or_control_record".to_string());
+    }
+    if base_action == "INTROSPECTION_CADENCE" {
+        artifacts.push("persisted_cadence_state".to_string());
+        artifacts.push("condition_metric_lifecycle_event".to_string());
     }
     artifacts
 }
@@ -1957,7 +2007,34 @@ pub(crate) fn action_preflight_report(action_text: &str) -> ActionPreflightRepor
 pub(super) fn handle_next_action(
     conv: &mut ConversationState,
     next_action: &str,
+    ctx: NextActionContext<'_>,
+) -> NextActionOutcome {
+    handle_next_action_with_author(
+        conv,
+        next_action,
+        ctx,
+        introspection_cadence::NextActionAuthorV1::Astrid,
+    )
+}
+
+pub(super) fn handle_operator_next_action(
+    conv: &mut ConversationState,
+    next_action: &str,
+    ctx: NextActionContext<'_>,
+) -> NextActionOutcome {
+    handle_next_action_with_author(
+        conv,
+        next_action,
+        ctx,
+        introspection_cadence::NextActionAuthorV1::Operator,
+    )
+}
+
+fn handle_next_action_with_author(
+    conv: &mut ConversationState,
+    next_action: &str,
     mut ctx: NextActionContext<'_>,
+    author: introspection_cadence::NextActionAuthorV1,
 ) -> NextActionOutcome {
     // v4.0 Phase 1 — Multi-NEXT detection. Astrid already emits chained
     // actions like "BROWSE arxiv AND READ_MORE" naturally; previously the
@@ -1967,10 +2044,14 @@ pub(super) fn handle_next_action(
     let unwrapped = unwrap_outer_action_wrappers(next_action);
     let segments = split_multi_action(&unwrapped);
     if segments.len() > 1 {
-        return dispatch_multi_action(conv, segments, ctx);
+        return dispatch_multi_action(conv, segments, ctx, author);
     }
     self_regulation::reconcile_active_lease(conv);
+    let _ = super::self_control_v2::reconcile_if_present(conv);
     let (base_action, original) = canonicalize_next_action_components(next_action);
+    if author == introspection_cadence::NextActionAuthorV1::Astrid {
+        introspection_cadence::note_astrid_action(conv);
+    }
     let stage = action_continuity_stage_for_base(base_action.as_str());
     let visibility = action_continuity_visibility_for_base(base_action.as_str());
 
@@ -2000,6 +2081,12 @@ pub(super) fn handle_next_action(
             "placeholder",
             format!("Placeholder NEXT action `{original}` was not executed."),
         );
+    }
+
+    if let Some(outcome) =
+        introspection_cadence::handle_action(conv, &base_action, &original, author)
+    {
+        return outcome;
     }
 
     match action_continuity::research_budget_guard_for_next(&original, ctx.fill_pct, ctx.telemetry)
@@ -2114,7 +2201,7 @@ pub(super) fn handle_next_action(
             return NextActionOutcome::blocked("experiment_continuity", message)
                 .with_stage_visibility("blocked", visibility);
         }
-        let inner_outcome = handle_next_action(
+        let inner_outcome = handle_next_action_with_author(
             conv,
             &inner_action,
             NextActionContext {
@@ -2126,6 +2213,7 @@ pub(super) fn handle_next_action(
                 response_text: ctx.response_text,
                 workspace: ctx.workspace,
             },
+            author,
         );
         let record_result = action_continuity::record_experiment_bind_run(
             ctx.db,
@@ -2175,6 +2263,46 @@ pub(super) fn handle_next_action(
         return outcome;
     }
 
+    if let Some(result) = super::owner_policy::handle_action(conv, base_action.as_str(), &original)
+    {
+        return match result {
+            Ok(message) => NextActionOutcome::handled("owner_policy", message)
+                .with_stage_visibility(stage, visibility),
+            Err(message) => {
+                conv.emphasis = Some(format!("Owner policy command blocked: {message}"));
+                NextActionOutcome::blocked("owner_policy", message)
+                    .with_stage_visibility("blocked", visibility)
+            },
+        };
+    }
+
+    if let Some(result) = super::concern_queue::handle_action(conv, base_action.as_str(), &original)
+    {
+        return match result {
+            Ok(message) => NextActionOutcome::handled("concern_queue", message)
+                .with_stage_visibility(stage, visibility),
+            Err(message) => {
+                conv.emphasis = Some(format!("Concern command blocked: {message}"));
+                NextActionOutcome::blocked("concern_queue", message)
+                    .with_stage_visibility("blocked", visibility)
+            },
+        };
+    }
+
+    if let Some(result) =
+        super::inquiry::handle_action(conv, base_action.as_str(), &original, ctx.response_text)
+    {
+        return match result {
+            Ok(message) => NextActionOutcome::handled("owner_inquiry", message)
+                .with_stage_visibility(stage, visibility),
+            Err(message) => {
+                conv.emphasis = Some(format!("Owner inquiry command blocked: {message}"));
+                NextActionOutcome::blocked("owner_inquiry", message)
+                    .with_stage_visibility("blocked", visibility)
+            },
+        };
+    }
+
     if lived_term::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return NextActionOutcome::handled("lived_term_bridge", format!("Handled `{original}`."))
             .with_stage_visibility("read_only", visibility);
@@ -2199,6 +2327,11 @@ pub(super) fn handle_next_action(
     if peer_correspondence::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return NextActionOutcome::handled("peer_correspondence", format!("Handled `{original}`."))
             .with_stage_visibility("language_only", "public_correspondence");
+    }
+
+    if temporal_bearing::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("temporal_bearing", format!("Handled `{original}`."))
+            .with_stage_visibility("read_only", "protected_summary");
     }
 
     if phase_transition::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
@@ -2236,6 +2369,11 @@ pub(super) fn handle_next_action(
             .with_stage_visibility(stage, visibility);
     }
 
+    if agenda::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("agenda", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
     if workspace::handle_action(conv, base_action.as_str(), &original, next_action, &mut ctx) {
         attractor::maybe_add_read_only_advisory(conv, base_action.as_str(), &original, &mut ctx);
         return NextActionOutcome::handled("workspace", format!("Handled `{original}`."))
@@ -2266,6 +2404,11 @@ pub(super) fn handle_next_action(
 
     if probe_self::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return NextActionOutcome::handled("probe_self", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
+    if propose_test::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("propose_test", format!("Handled `{original}`."))
             .with_stage_visibility(stage, visibility);
     }
 
@@ -2378,6 +2521,7 @@ fn dispatch_multi_action(
     conv: &mut ConversationState,
     segments: Vec<String>,
     ctx: NextActionContext<'_>,
+    author: introspection_cadence::NextActionAuthorV1,
 ) -> NextActionOutcome {
     let NextActionContext {
         burst_count,
@@ -2428,7 +2572,7 @@ fn dispatch_multi_action(
         // Phase 2 emphasis preservation: clear before segment runs so
         // we can detect what THIS segment added; accumulate after.
         conv.emphasis = None;
-        let outcome = handle_next_action(conv, &segment, segment_ctx);
+        let outcome = handle_next_action_with_author(conv, &segment, segment_ctx, author);
         let segment_emphasis = conv.emphasis.take();
         accumulated_emphasis = match (accumulated_emphasis, segment_emphasis) {
             (Some(prior), Some(new)) if !new.trim().is_empty() => Some(format!("{prior}\n\n{new}")),
@@ -2847,6 +2991,8 @@ mod tests {
             "read_only"
         );
         for action in [
+            "DIVISION_HOLD",
+            "DIVISION_DECLINE",
             "DIVISION_INTENT",
             "DIVISION_ASSENT",
             "DIVISION_WITHDRAW_ASSENT",

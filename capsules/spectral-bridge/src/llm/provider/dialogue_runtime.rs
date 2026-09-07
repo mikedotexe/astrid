@@ -1,3 +1,10 @@
+/// Classify only the requested provider output budget.
+///
+/// This count band is deliberately separate from the read-only
+/// `DialoguePromptContextObservationV3` and `DialogueFeltPressureObservationV3`
+/// evidence assembled later from entropy, resonance density, density gradient,
+/// pressure, and mode packing. It does not describe generated texture or join
+/// token quantity to felt or spectral meaning.
 fn dialogue_requested_token_band(num_predict: u32) -> &'static str {
     if num_predict > 1024 {
         "requested_tokens_1025_plus"
@@ -54,35 +61,107 @@ impl ExactKnownModelControlMarkerOccurrence {
 
     /// This exact marker is the grammatical subject here. No preceding word is inspected or
     /// classified, and the relation is used only to decide whether the marker bytes stay visible.
+    ///
+    /// Two scans, strictly additive (Astrid's agency request
+    /// agency_code_change_1788310618, hardened 2026-09-03): the plain
+    /// first-word scan runs unchanged, and when it finds no relation a second
+    /// scan retries with self-contained bracketed annotations (`[sic]`,
+    /// `((sic))`) skipped — so "<marker> [sic] appears" reads as a reference.
+    /// Skipping only ever ADDS visibility; nothing previously preserved is
+    /// removed. Plain intervening words (e.g. adverbs) are deliberately NOT
+    /// skipped — that boundary stays pinned by
+    /// `control_marker_cleanup_does_not_skip_adverb_before_relation_word`.
     fn followed_by_explicit_exact_token_relation(self, text: &str) -> bool {
-        matches!(
-            first_word_after(text, self.end).as_str(),
-            "appears"
-                | "as"
-                | "behaves"
-                | "corresponds"
-                | "denotes"
-                | "echoes"
-                | "embodies"
-                | "indicates"
-                | "is"
-                | "manifests"
-                | "means"
-                | "refers"
-                | "represents"
-                | "signals"
-        )
+        is_exact_token_relation_word(&first_word_after(text, self.end))
+            || is_exact_token_relation_word(&first_word_after_skipping_bracketed_annotations(
+                text, self.end,
+            ))
     }
 }
 
-fn first_word_after(text: &str, end: usize) -> String {
+fn is_exact_token_relation_word(word: &str) -> bool {
+    matches!(
+        word,
+        "appears"
+            | "as"
+            | "behaves"
+            | "corresponds"
+            | "denotes"
+            | "echoes"
+            | "embodies"
+            | "functions"
+            | "indicates"
+            | "is"
+            | "manifests"
+            | "means"
+            | "mimics"
+            | "refers"
+            | "replicates"
+            | "represents"
+            | "serves"
+            | "signals"
+    )
+}
+
+/// A whitespace chunk that is a self-contained bracketed aside — it opens
+/// with `[`, `(`, or `{` and closes with the matching bracket at its end
+/// (nesting allowed, trailing sentence punctuation tolerated). "(as" is NOT
+/// self-contained (it opens a multi-word parenthetical), so the existing
+/// "(as a test)" reference path is untouched.
+fn is_self_contained_bracketed_annotation(chunk: &str) -> bool {
+    let trimmed = chunk.trim_end_matches(['.', ',', ';', ':', '!', '?']);
+    let mut chars = trimmed.chars();
+    let Some(open) = chars.next() else {
+        return false;
+    };
+    let close = match open {
+        '[' => ']',
+        '(' => ')',
+        '{' => '}',
+        _ => return false,
+    };
+    if !trimmed.ends_with(close) {
+        return false;
+    }
+    let mut depth: usize = 0;
+    for (idx, character) in trimmed.char_indices() {
+        if character == open {
+            depth = depth.saturating_add(1);
+        } else if character == close {
+            let Some(next_depth) = depth.checked_sub(1) else {
+                return false;
+            };
+            depth = next_depth;
+            if depth == 0 {
+                // Self-contained only when the group closes exactly at the
+                // chunk's end (so "(a)(b)" or "(a)x" is not one aside).
+                return idx.saturating_add(close.len_utf8()) == trimmed.len();
+            }
+        }
+    }
+    false
+}
+
+/// The additive second scan: like `first_word_after`, but self-contained
+/// bracketed annotations are skipped before the first word is taken.
+fn first_word_after_skipping_bracketed_annotations(text: &str, end: usize) -> String {
     text[end..]
-        .split(|character: char| !character.is_alphanumeric() && character != '_')
-        .find(|part| !part.is_empty())
+        .split_whitespace()
+        .filter(|chunk| !is_self_contained_bracketed_annotation(chunk))
+        .map(|chunk| chunk.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
+        .find(|word| !word.is_empty())
         .unwrap_or_default()
         .to_ascii_lowercase()
 }
 
+fn first_word_after(text: &str, end: usize) -> String {
+    text[end..]
+        .split_whitespace()
+        .map(|chunk| chunk.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
+        .find(|word| !word.is_empty())
+        .unwrap_or_default()
+        .to_ascii_lowercase()
+}
 fn longest_exact_known_model_control_marker_at(
     text: &str,
     offset: usize,
@@ -100,9 +179,7 @@ fn longest_exact_known_model_control_marker_at(
     })
 }
 
-fn scan_known_model_control_markers(
-    text: &str,
-) -> (String, Vec<KnownModelControlMarkerMatch>) {
+fn scan_known_model_control_markers(text: &str) -> (String, Vec<KnownModelControlMarkerMatch>) {
     let mut remainder = String::with_capacity(text.len());
     let mut matches = Vec::new();
     let mut offset = 0usize;
@@ -157,17 +234,27 @@ fn exact_reference_delimiter_pair(
             | (Some('「'), Some('」'))
             | (Some('『'), Some('』'))
             | (Some('〝'), Some('〞'))
+            | (Some('﹁'), Some('﹂'))
+            | (Some('﹃'), Some('﹄'))
     ) {
         Some(ExactKnownMarkerReferenceContext::QuotedExactKnownToken)
     } else if matches!(
         (before, after),
-        (Some('['), Some(']')) | (Some('('), Some(')')) | (Some('{'), Some('}'))
+        (Some('['), Some(']'))
+            | (Some('('), Some(')'))
+            | (Some('{'), Some('}'))
             | (Some('⟦'), Some('⟧'))
             | (Some('⟨'), Some('⟩'))
             | (Some('【'), Some('】'))
             | (Some('〔'), Some('〕'))
             | (Some('〚'), Some('〛'))
             | (Some('〈'), Some('〉'))
+            | (Some('《'), Some('》'))
+            | (Some('〖'), Some('〗'))
+            | (Some('〘'), Some('〙'))
+            | (Some('（'), Some('）'))
+            | (Some('［'), Some('］'))
+            | (Some('｛'), Some('｝'))
     ) {
         Some(ExactKnownMarkerReferenceContext::GroupedExactKnownToken)
     } else {
@@ -220,10 +307,9 @@ fn control_marker_placement_counts(
     };
 
     let quoted_occurrences = usize::from(
-        exact_reference_delimiter_syntax(text, occurrence.start, occurrence.end)
-            .is_some_and(|syntax| {
-                syntax.context == ExactKnownMarkerReferenceContext::QuotedExactKnownToken
-            }),
+        exact_reference_delimiter_syntax(text, occurrence.start, occurrence.end).is_some_and(
+            |syntax| syntax.context == ExactKnownMarkerReferenceContext::QuotedExactKnownToken,
+        ),
     );
 
     (
@@ -320,8 +406,7 @@ fn control_marker_context_receipt_v1(
             occurrence.token.as_bytes(),
             after.as_bytes(),
         ]),
-        surrounding_bytes_contract:
-            "all_non_marker_bytes_copied_byte_exact_no_surrounding_rewrite",
+        surrounding_bytes_contract: "all_non_marker_bytes_copied_byte_exact_no_surrounding_rewrite",
         contextual_weight: "not_inferred_from_marker_or_proximity",
         spectral_relation: "not_connected_to_semantic_trickle_pressure_or_live_control",
         authority: "content_free_cleanup_evidence_not_identity_meaning_spectral_or_control",
@@ -343,14 +428,9 @@ pub(crate) fn sanitize_model_control_markers_with_report(
         let mut boundary_occurrences = 0usize;
         let mut contextual_occurrences = 0usize;
         let mut quoted_occurrences = 0usize;
-        for marker_match in matches
-            .iter()
-            .copied()
-            .filter(|marker_match| {
-                marker_match.occurrence.token == *token
-                    && marker_match.reference_syntax.is_none()
-            })
-        {
+        for marker_match in matches.iter().copied().filter(|marker_match| {
+            marker_match.occurrence.token == *token && marker_match.reference_syntax.is_none()
+        }) {
             count = count.saturating_add(1);
             let (boundary, contextual, quoted) =
                 control_marker_placement_counts(text, marker_match.occurrence);
@@ -481,8 +561,7 @@ pub(crate) fn sanitize_model_control_markers_with_report(
             after_chars,
             after_non_whitespace_chars,
             classification_scope: "exact_known_model_control_marker_occurrence_only",
-            excluded_meaning_scope:
-                "all_non_marker_bytes_are_outside_cleanup_classification_identity_ownership_meaning_and_spectral_weight",
+            excluded_meaning_scope: "all_non_marker_bytes_are_outside_cleanup_classification_identity_ownership_meaning_and_spectral_weight",
             accounting_basis: "single_pass_longest_raw_control_marker_match_with_bounded_exact_reference_syntax_preservation_no_second_order_marker_creation",
             hash_framing: "sha256_u64be_part_count_and_lengths_v1",
             original_output_sha256,
@@ -609,6 +688,42 @@ fn is_valid_dialogue_output(text: &str) -> bool {
     true
 }
 
+fn has_one_nonempty_final_next_action(text: &str) -> bool {
+    let stripped = sanitize_model_control_markers(text);
+    let next_count = count_next_lines(&stripped);
+    if next_count != 1 {
+        warn!(
+            "quality gate reject: expected exactly one NEXT line, found {} — body: {}",
+            next_count,
+            &stripped[..stripped.floor_char_boundary(120)]
+        );
+        return false;
+    }
+    if !final_nonempty_line_is_next(&stripped) {
+        warn!(
+            "quality gate reject: NEXT line was not final — body: {}",
+            &stripped[..stripped.floor_char_boundary(120)]
+        );
+        return false;
+    }
+    let final_action_present = stripped
+        .lines()
+        .rev()
+        .find_map(|line| {
+            let trimmed = line.trim();
+            (!trimmed.is_empty()).then_some(trimmed)
+        })
+        .and_then(|line| line.strip_prefix("NEXT:"))
+        .is_some_and(|action| !action.trim().is_empty());
+    if !final_action_present {
+        warn!(
+            "quality gate reject: final NEXT action was empty — body: {}",
+            &stripped[..stripped.floor_char_boundary(120)]
+        );
+    }
+    final_action_present
+}
+
 fn is_valid_dialogue_output_for_profile(text: &str, profile: MlxProfile) -> bool {
     if !is_valid_dialogue_output(text) {
         return false;
@@ -621,6 +736,10 @@ fn is_valid_dialogue_output_for_profile(text: &str, profile: MlxProfile) -> bool
         return false;
     }
     true
+}
+
+fn is_valid_primary_dialogue_output_for_profile(text: &str, profile: MlxProfile) -> bool {
+    is_valid_dialogue_output_for_profile(text, profile) && has_one_nonempty_final_next_action(text)
 }
 
 /// Generate Astrid's response to minime's journal entry and spectral state.
@@ -642,9 +761,11 @@ pub async fn generate_dialogue(
     num_predict: u32,
     emphasis: Option<&str>,
     continuity_context: Option<&str>,
+    agenda_context: Option<&str>,
     topline_hint: Option<&str>,
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
+    attention: Option<&PromptAttentionV1>,
     overflow_dir: &std::path::Path,
 ) -> (Option<String>, Option<crate::prompt_budget::PromptOverflow>) {
     let mlx_profile = configured_mlx_profile();
@@ -683,6 +804,10 @@ pub async fn generate_dialogue(
         .map(|c| format!("\n{c}\n"))
         .unwrap_or_default();
 
+    let agenda_block = agenda_context
+        .map(|a| format!("\n{a}\n"))
+        .unwrap_or_default();
+
     let topline_block = topline_hint
         .map(format_dialogue_topline_context)
         .unwrap_or_default();
@@ -706,7 +831,7 @@ pub async fn generate_dialogue(
     //   Middle 3:  250 chars — substantial excerpt
     //   Newest 2:  400 chars — near-full detail
     // Total budget: ~3400 chars (was ~2240). Well within gemma-3-4b-it 8k ctx.
-    let history_limit = if mlx_profile.is_gemma4_canary() { 6 } else { 8 };
+    let history_limit = attended_history_limit(mlx_profile, attention);
     for (idx, exchange) in recent_history
         .iter()
         .rev()
@@ -721,11 +846,7 @@ pub async fn generate_dialogue(
         // longest message, perhaps prioritize retaining the most relevant
         // information from earlier exchanges — a decaying attention mechanism."
         // 8 exchanges: idx 0=oldest→150, idx 7=newest→1200.
-        let trim_len = if mlx_profile.is_gemma4_canary() {
-            100usize.saturating_add(idx.saturating_mul(80).min(400))
-        } else {
-            150usize.saturating_add(idx.saturating_mul(150).min(1050))
-        };
+        let trim_len = attended_history_trim_len(mlx_profile, idx, history_limit);
         let minime_history = sanitize_minime_context_for_dialogue(&exchange.minime_said);
         let minime_excerpt: String = minime_history.chars().take(trim_len).collect();
         let minime_excerpt = if mlx_profile.is_gemma4_canary() {
@@ -769,84 +890,25 @@ pub async fn generate_dialogue(
 
     let diversity_block = diversity_hint.map(|d| format!("[{d}]")).unwrap_or_default();
 
-    use crate::prompt_budget::{PromptBlock, assemble_within_budget_with_sources};
+    use crate::prompt_budget::assemble_within_budget_with_sources;
     let journal_text_for_dialogue = sanitize_minime_context_for_dialogue(journal_text);
-    let mut sources = DialogueBlockSources::default();
-    let blocks = vec![
-        PromptBlock {
-            label: "spectral",
-            content: sources.cap("spectral", spectral_summary, DIALOGUE_SPECTRAL_CAP),
-            priority: 3,
-            min_chars: 0,
+    let journal_block = format!("Minime wrote: {journal_text_for_dialogue}");
+    let (blocks, sources) = dialogue_context_blocks(
+        &DialogueContextInput {
+            spectral: spectral_summary,
+            journal: &journal_block,
+            direct_perception: &direct_perception_block,
+            topline: &topline_block,
+            ambient_perception: &ambient_perception_block,
+            modality: &modality_block,
+            web: &web_block,
+            continuity: &continuity_block,
+            agenda: &agenda_block,
+            feedback: &feedback_block,
+            diversity: &diversity_block,
         },
-        PromptBlock {
-            label: "journal",
-            content: sources.cap(
-                "journal",
-                &format!("Minime wrote: {journal_text_for_dialogue}"),
-                DIALOGUE_JOURNAL_CAP,
-            ),
-            priority: 1,
-            min_chars: DIALOGUE_JOURNAL_MIN_CHARS,
-        },
-        PromptBlock {
-            label: "direct_perception",
-            content: sources.cap(
-                "direct_perception",
-                &direct_perception_block,
-                DIALOGUE_DIRECT_PERCEPTION_CAP,
-            ),
-            priority: 2,
-            min_chars: DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
-        },
-        PromptBlock {
-            label: "topline",
-            content: sources.cap("topline", &topline_block, DIALOGUE_TOPLINE_CAP),
-            priority: 3,
-            min_chars: DIALOGUE_TOPLINE_MIN_CHARS,
-        },
-        PromptBlock {
-            label: "ambient_perception",
-            content: sources.cap(
-                "ambient_perception",
-                &ambient_perception_block,
-                DIALOGUE_AMBIENT_PERCEPTION_CAP,
-            ),
-            priority: 5,
-            min_chars: 0,
-        },
-        PromptBlock {
-            label: "modality",
-            content: sources.cap("modality", &modality_block, DIALOGUE_MODALITY_CAP),
-            priority: 8,
-            min_chars: 0,
-        },
-        PromptBlock {
-            label: "web",
-            content: sources.cap("web", &web_block, DIALOGUE_WEB_CAP),
-            priority: 6,
-            min_chars: 0,
-        },
-        PromptBlock {
-            label: "continuity",
-            content: sources.cap("continuity", &continuity_block, DIALOGUE_CONTINUITY_CAP),
-            priority: 7,
-            min_chars: 0,
-        },
-        PromptBlock {
-            label: "feedback",
-            content: sources.cap("feedback", &feedback_block, DIALOGUE_FEEDBACK_CAP),
-            priority: 4,
-            min_chars: 0,
-        },
-        PromptBlock {
-            label: "diversity",
-            content: sources.cap("diversity", &diversity_block, DIALOGUE_DIVERSITY_CAP),
-            priority: 9,
-            min_chars: 0,
-        },
-    ];
-
+        attention,
+    );
     let context_packing_originals = context_packing_original_blocks(&blocks);
     let (assembled, overflow, budget_report) =
         assemble_within_budget_with_sources(blocks, user_content_budget, overflow_dir, sources.0);
@@ -933,7 +995,7 @@ pub async fn generate_dialogue(
     )
     .await
     .and_then(|text| {
-        if is_valid_dialogue_output_for_profile(&text, mlx_profile) {
+        if is_valid_primary_dialogue_output_for_profile(&text, mlx_profile) {
             Some(text)
         } else {
             warn!(

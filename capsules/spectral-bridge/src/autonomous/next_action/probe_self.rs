@@ -185,8 +185,18 @@ pub(super) fn handle_action(
 
     info!("Astrid chose PROBE_SELF: {pole_a:?} vs {pole_b:?} ({ticks} ticks)");
 
+    let script = match crate::deployment::runtime_artifact(
+        "substrate-probe-v2",
+        std::path::Path::new(SUBSTRATE_PROBE),
+    ) {
+        Ok(path) => path,
+        Err(error) => {
+            conv.push_receipt("PROBE_SELF", vec![error]);
+            return true;
+        },
+    };
     let mut command = Command::new("python3");
-    command.arg("-B").arg(SUBSTRATE_PROBE).args([
+    command.arg("-B").arg(script).args([
         "--being",
         "astrid",
         "--pole-a",

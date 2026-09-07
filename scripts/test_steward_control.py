@@ -463,6 +463,43 @@ class StewardControlTests(unittest.TestCase):
         )
         self.assertIsNone(self.controller.leases.lease())
 
+    def test_session_cli_accepts_ndjson_from_regular_file(self) -> None:
+        self.resume()
+        request_path = self.root / "session-request.ndjson"
+        request_path.write_text(
+            json.dumps(
+                {
+                    "op": "finish",
+                    "request_id": "regular-file-finish",
+                    "outcome": "success",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        with request_path.open(encoding="utf-8") as request_stream:
+            result = subprocess.run(
+                self.session_cli_command(),
+                stdin=request_stream,
+                text=True,
+                capture_output=True,
+                timeout=10,
+                check=False,
+            )
+
+        responses = [json.loads(line) for line in result.stdout.splitlines()]
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([item["type"] for item in responses], ["ready", "response"])
+        self.assertEqual(
+            responses[-1]["result"]["receipt"]["outcome"],
+            "success",
+        )
+        self.assertFalse(
+            any("\"lease_token\":" in line for line in result.stdout.splitlines())
+        )
+        self.assertIsNone(self.controller.leases.lease())
+
     def test_session_cli_renews_while_request_line_is_partial(self) -> None:
         self.resume()
         process = self.start_session_cli(max_run_secs=8)

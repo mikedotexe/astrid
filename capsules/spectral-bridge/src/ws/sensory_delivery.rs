@@ -6,7 +6,8 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use astrid_minime_protocol::{
-    DeliveryEnvelopeV1, MutualAddressEnvelopeV1, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1,
+    DeliveryEnvelopeV1, MutualAddressEnvelopeV1, SelfControlReceiptStatusV2, SelfControlReceiptV2,
+    SelfControlValuesV2, SensoryDeliveryReceiptV1, SensoryDeliveryStatusV1,
     SensoryMsg as WireSensoryMsg, SensoryPacketV1, SensoryServerHelloV1,
     canonical_sensory_payload_sha256,
 };
@@ -46,6 +47,7 @@ pub type AddressedSensorySender = mpsc::Sender<AddressedSensoryMessage>;
 pub(super) struct EncodedSensoryPacketV1 {
     pub(super) json: String,
     pub(super) pending: Option<PendingSensoryDeliveryV1>,
+    pub(super) pending_self_control: Option<PendingSelfControlReceiptV2>,
 }
 
 #[derive(Debug)]
@@ -57,6 +59,18 @@ pub struct PendingSensoryDeliveryV1 {
     delivery_id_basis: &'static str,
     pending_resolution: &'static str,
     felt_effect_boundary_v1: AstridFeltDeliveryEffectBoundaryV1,
+    sent_at_unix_ms: u64,
+}
+
+#[derive(Debug)]
+pub(super) struct PendingSelfControlReceiptV2 {
+    command_id: String,
+    pub(super) intent_id: String,
+    idempotency_key: String,
+    requested_revision: u64,
+    target_being: String,
+    target_deployment_identity: String,
+    requested_values: SelfControlValuesV2,
     sent_at_unix_ms: u64,
 }
 
@@ -128,6 +142,35 @@ impl PendingSensoryDeliveryV1 {
     }
 }
 
+impl PendingSelfControlReceiptV2 {
+    fn event(&self, outcome: &str, reason: Option<&str>) -> Value {
+        json!({
+            "schema": "astrid_self_control_receipt_observation_v2",
+            "schema_version": 2,
+            "event": outcome,
+            "command_id": self.command_id,
+            "intent_id": self.intent_id,
+            "idempotency_key": self.idempotency_key,
+            "requested_revision": self.requested_revision,
+            "target_being": self.target_being,
+            "target_deployment_identity": self.target_deployment_identity,
+            "sent_at_unix_ms": self.sent_at_unix_ms,
+            "recorded_at_unix_ms": unix_now_ms(),
+            "reason": reason,
+            "felt_effect_established": false,
+            "authority": {
+                "schema": "artifact_authority_state_v1",
+                "schema_version": 1,
+                "state": "evidence_only",
+                "live_eligible_now": false,
+                "auto_approved": false,
+                "grants_approval": false,
+                "edits_source_now": false
+            }
+        })
+    }
+}
+
 fn delivery_address_classification(mutual_address_id: Option<&str>) -> &'static str {
     if mutual_address_id.is_some() {
         "exact_mutual_address_lineage"
@@ -148,9 +191,23 @@ pub(super) fn encode_sensory_packet_v1(
         return Ok(EncodedSensoryPacketV1 {
             json: serde_json::to_string(&SensoryPacketV1::versioned_1_0(wire_message))?,
             pending: None,
+            pending_self_control: None,
         });
     }
 
+    let pending_self_control = match &wire_message {
+        WireSensoryMsg::SelfControl { command } => Some(PendingSelfControlReceiptV2 {
+            command_id: command.command_id.clone(),
+            intent_id: command.intent.intent_id.clone(),
+            idempotency_key: command.intent.idempotency_key.clone(),
+            requested_revision: command.intent.revision,
+            target_being: command.intent.target_being.clone(),
+            target_deployment_identity: command.intent.target_deployment_identity.clone(),
+            requested_values: command.intent.values.clone(),
+            sent_at_unix_ms: unix_now_ms(),
+        }),
+        _ => None,
+    };
     let mutual_address_v1 =
         mutual_address_v1.or_else(|| authority_mutual_address_v1(&wire_message));
     let payload_sha256 = canonical_sensory_payload_sha256(&wire_message);
@@ -188,20 +245,62 @@ pub(super) fn encode_sensory_packet_v1(
             felt_effect_boundary_v1: AstridFeltDeliveryEffectBoundaryV1::unmeasured(),
             sent_at_unix_ms,
         }),
+        pending_self_control,
     })
 }
 
+pub(super) fn validate_negotiated_extension_v2(
+    message: &SensoryMsg,
+    status: &SensoryDeliveryProtocolStatusV1,
+    now_unix_ms: u64,
+) -> Result<(), &'static str> {
+    match message {
+        SensoryMsg::SemanticBody { body } => {
+            if !status.semantic_body_v2_negotiated {
+                return Err("semantic_body_v2_not_negotiated");
+            }
+            if !body.is_well_formed() {
+                return Err("semantic_body_v2_malformed");
+            }
+        },
+        SensoryMsg::SelfControl { command } => {
+            if !status.self_control_v2_negotiated {
+                return Err("self_control_v2_not_negotiated");
+            }
+            if status.server_deployment_identity.as_deref()
+                != Some(command.intent.target_deployment_identity.as_str())
+            {
+                return Err("self_control_stale_target_deployment");
+            }
+            if !command.is_well_formed(now_unix_ms) {
+                return Err("self_control_command_malformed");
+            }
+        },
+        _ => {},
+    }
+    Ok(())
+}
+
 fn authority_mutual_address_v1(message: &WireSensoryMsg) -> Option<MutualAddressEnvelopeV1> {
-    let lineage = match message {
+    let (lineage, from_being, to_being) = match message {
         WireSensoryMsg::AttractorPulse { intent_id, .. }
-        | WireSensoryMsg::ShadowInfluence { intent_id, .. } => Some(intent_id.as_str()),
+        | WireSensoryMsg::ShadowInfluence { intent_id, .. } => {
+            Some((intent_id.as_str(), "astrid", "minime"))
+        },
         WireSensoryMsg::Control {
             esn_leak_authority_request_id,
             ..
-        } => esn_leak_authority_request_id.as_deref(),
+        } => esn_leak_authority_request_id
+            .as_deref()
+            .map(|lineage| (lineage, "astrid", "minime")),
+        WireSensoryMsg::SelfControl { command } => Some((
+            command.intent.intent_id.as_str(),
+            command.intent.actor.being.as_str(),
+            command.intent.target_being.as_str(),
+        )),
         _ => None,
-    }?
-    .trim();
+    }?;
+    let lineage = lineage.trim();
     if lineage.is_empty() {
         return None;
     }
@@ -213,8 +312,8 @@ fn authority_mutual_address_v1(message: &WireSensoryMsg) -> Option<MutualAddress
     Some(MutualAddressEnvelopeV1 {
         schema_version: 1,
         address_id,
-        from_being: "astrid".to_string(),
-        to_being: "minime".to_string(),
+        from_being: from_being.to_string(),
+        to_being: to_being.to_string(),
         correspondence_id: None,
         thread_id: None,
         reply_to: None,
@@ -247,7 +346,7 @@ fn short_sha256(value: &str) -> String {
         .collect()
 }
 
-fn unix_now_ms() -> u64 {
+pub(super) fn unix_now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
@@ -260,6 +359,12 @@ fn delivery_events_path() -> PathBuf {
     bridge_paths()
         .bridge_workspace()
         .join("diagnostics/sensory_delivery_v1/events.jsonl")
+}
+
+fn self_control_receipt_events_path() -> PathBuf {
+    bridge_paths()
+        .bridge_workspace()
+        .join("diagnostics/self_control_receipts_v2/events.jsonl")
 }
 
 fn append_delivery_event(value: &Value) -> std::io::Result<()> {
@@ -301,6 +406,23 @@ pub(super) fn record_unknown_deliveries(
     status.pending_delivery_count = 0;
 }
 
+pub(super) fn record_unknown_self_control_receipts(
+    pending: &mut BTreeMap<String, PendingSelfControlReceiptV2>,
+    reason: &str,
+    status: &mut SensoryDeliveryProtocolStatusV1,
+) {
+    for (_, item) in std::mem::take(pending) {
+        let _ = append_delivery_event_at(
+            &self_control_receipt_events_path(),
+            &item.event("unknown_self_control_receipt", Some(reason)),
+        );
+        status.self_control_unknown_receipt_count =
+            status.self_control_unknown_receipt_count.saturating_add(1);
+        status.last_self_control_receipt_state = Some("unknown_self_control_receipt".to_string());
+    }
+    status.self_control_pending_receipt_count = 0;
+}
+
 pub(super) fn apply_server_hello(
     hello: SensoryServerHelloV1,
     status: &mut SensoryDeliveryProtocolStatusV1,
@@ -313,6 +435,9 @@ pub(super) fn apply_server_hello(
     status.negotiated = true;
     status.protocol_major = Some(hello.protocol.major);
     status.protocol_minor = Some(hello.protocol.minor);
+    status.semantic_body_v2_negotiated = hello.supports_semantic_body_v2();
+    status.self_control_v2_negotiated = hello.supports_self_control_v2();
+    status.server_capabilities.clone_from(&hello.capabilities);
     status.server_process_identity = Some(hello.server_process_identity);
     status.server_deployment_identity = Some(hello.server_deployment_identity);
     status.last_hello_unix_ms = Some(unix_now_ms());
@@ -326,6 +451,103 @@ pub(super) fn apply_delivery_receipt(
     status: &mut SensoryDeliveryProtocolStatusV1,
 ) -> bool {
     apply_delivery_receipt_with_path(receipt, pending, status, None)
+}
+
+pub(super) fn apply_self_control_receipt(
+    receipt: SelfControlReceiptV2,
+    pending: &mut BTreeMap<String, PendingSelfControlReceiptV2>,
+    status: &mut SensoryDeliveryProtocolStatusV1,
+) -> bool {
+    apply_self_control_receipt_with_path(receipt, pending, status, None)
+}
+
+fn apply_self_control_receipt_with_path(
+    receipt: SelfControlReceiptV2,
+    pending: &mut BTreeMap<String, PendingSelfControlReceiptV2>,
+    status: &mut SensoryDeliveryProtocolStatusV1,
+    event_path: Option<&std::path::Path>,
+) -> bool {
+    let Some(expected) = pending.get(&receipt.intent_id) else {
+        status.self_control_receipt_mismatch_count =
+            status.self_control_receipt_mismatch_count.saturating_add(1);
+        status.last_self_control_receipt_state =
+            Some("unexpected_self_control_receipt".to_string());
+        return false;
+    };
+    let identities_match = status
+        .server_process_identity
+        .as_deref()
+        .is_some_and(|identity| identity == receipt.server_process_identity)
+        && status
+            .server_deployment_identity
+            .as_deref()
+            .is_some_and(|identity| identity == receipt.server_deployment_identity);
+    if !receipt.is_well_formed()
+        || !identities_match
+        || receipt.command_id != expected.command_id
+        || receipt.idempotency_key != expected.idempotency_key
+        || receipt.requested_revision != expected.requested_revision
+        || receipt.target_being != expected.target_being
+        || receipt.target_deployment_identity != expected.target_deployment_identity
+        || receipt.server_deployment_identity != expected.target_deployment_identity
+        || receipt.requested_values != expected.requested_values
+        || receipt.felt_effect_established
+    {
+        status.self_control_receipt_mismatch_count =
+            status.self_control_receipt_mismatch_count.saturating_add(1);
+        status.last_self_control_receipt_state = Some("self_control_receipt_mismatch".to_string());
+        return false;
+    }
+
+    let expected = pending
+        .remove(&receipt.intent_id)
+        .expect("pending self-control receipt exists after validation");
+    let receipt_state = match receipt.status {
+        SelfControlReceiptStatusV2::Applied => "applied",
+        SelfControlReceiptStatusV2::Duplicate => "duplicate",
+        SelfControlReceiptStatusV2::Rejected => "rejected",
+        SelfControlReceiptStatusV2::RevisionConflict => "revision_conflict",
+        SelfControlReceiptStatusV2::Expired => "expired",
+        SelfControlReceiptStatusV2::Withdrawn => "withdrawn",
+        SelfControlReceiptStatusV2::SafetyHeld => "safety_held",
+        SelfControlReceiptStatusV2::RolledBack => "rolled_back",
+    };
+    let event = json!({
+        "schema": "astrid_self_control_receipt_observation_v2",
+        "schema_version": 2,
+        "event": "self_control_receipt_verified",
+        "command_id": expected.command_id,
+        "intent_id": expected.intent_id,
+        "idempotency_key": expected.idempotency_key,
+        "requested_revision": expected.requested_revision,
+        "target_being": expected.target_being,
+        "target_deployment_identity": expected.target_deployment_identity,
+        "sent_at_unix_ms": expected.sent_at_unix_ms,
+        "recorded_at_unix_ms": unix_now_ms(),
+        "receipt": receipt,
+        "receipt_state": receipt_state,
+        "felt_effect_established": false,
+        "authority": {
+            "schema": "artifact_authority_state_v1",
+            "schema_version": 1,
+            "state": "evidence_only",
+            "live_eligible_now": false,
+            "auto_approved": false,
+            "grants_approval": false,
+            "edits_source_now": false
+        }
+    });
+    let _ = if let Some(path) = event_path {
+        append_delivery_event_at(path, &event)
+    } else {
+        append_delivery_event_at(&self_control_receipt_events_path(), &event)
+    };
+    status.self_control_receipt_count = status.self_control_receipt_count.saturating_add(1);
+    status.self_control_pending_receipt_count = pending.len().try_into().unwrap_or(u64::MAX);
+    status.last_self_control_receipt_unix_ms = Some(unix_now_ms());
+    status.last_self_control_receipt_state = Some(receipt_state.to_string());
+    status.last_self_control_receipt = Some(receipt);
+    true
 }
 
 fn apply_delivery_receipt_with_path(
@@ -464,6 +686,239 @@ mod tests {
         assert!(!delivery.sender_deployment_identity.is_empty());
         assert!(packet.mutual_address_v1.is_none());
         assert!(encoded.pending.is_some());
+    }
+
+    fn malformed_self_control(target_deployment_identity: &str) -> SensoryMsg {
+        SensoryMsg::SelfControl {
+            command: Box::new(
+                serde_json::from_value(json!({
+                    "schema": "self_control.command.v2",
+                    "command_id": "command-test",
+                    "intent": {
+                        "schema": "self_control.intent.v2",
+                        "intent_id": "intent-test",
+                        "actor": {
+                            "being": "minime",
+                            "process_identity": "minime:test",
+                            "deployment_identity": target_deployment_identity
+                        },
+                        "target_being": "minime",
+                        "target_deployment_identity": target_deployment_identity,
+                        "family": "reservoir_regulation",
+                        "action": "set",
+                        "durability": "lease",
+                        "authority_class": "self_owned",
+                        "authority_scope": "self_control.minime.reservoir_regulation",
+                        "revision": 2,
+                        "expected_revision": 1,
+                        "issued_at_unix_ms": 100,
+                        "command_expires_at_unix_ms": 200,
+                        "control_expires_at_unix_ms": 300,
+                        "idempotency_key": "command-test-2",
+                        "values": {"fill_target": 0.68},
+                        "evidence_refs": [],
+                        "success_conditions": [],
+                        "stop_conditions": []
+                    },
+                    "authority_proofs": []
+                }))
+                .expect("self-control test shape"),
+            ),
+        }
+    }
+
+    fn pending_self_control() -> PendingSelfControlReceiptV2 {
+        PendingSelfControlReceiptV2 {
+            command_id: "command-test".to_string(),
+            intent_id: "intent-test".to_string(),
+            idempotency_key: "idempotency-test".to_string(),
+            requested_revision: 2,
+            target_being: "minime".to_string(),
+            target_deployment_identity: "minime-deployment-b".to_string(),
+            requested_values: astrid_minime_protocol::SelfControlValuesV2 {
+                regulation_strength: Some(0.63),
+                ..astrid_minime_protocol::SelfControlValuesV2::default()
+            },
+            sent_at_unix_ms: 100,
+        }
+    }
+
+    fn self_control_receipt() -> SelfControlReceiptV2 {
+        SelfControlReceiptV2 {
+            schema: astrid_minime_protocol::SELF_CONTROL_RECEIPT_SCHEMA_V2.to_string(),
+            receipt_id: "receipt-test".to_string(),
+            command_id: "command-test".to_string(),
+            intent_id: "intent-test".to_string(),
+            idempotency_key: "idempotency-test".to_string(),
+            status: SelfControlReceiptStatusV2::Applied,
+            requested_revision: 2,
+            resulting_revision: 2,
+            target_being: "minime".to_string(),
+            target_deployment_identity: "minime-deployment-b".to_string(),
+            requested_values: astrid_minime_protocol::SelfControlValuesV2 {
+                regulation_strength: Some(0.63),
+                ..astrid_minime_protocol::SelfControlValuesV2::default()
+            },
+            clamped_values: astrid_minime_protocol::SelfControlValuesV2 {
+                regulation_strength: Some(0.63),
+                ..astrid_minime_protocol::SelfControlValuesV2::default()
+            },
+            applied_values: astrid_minime_protocol::SelfControlValuesV2 {
+                regulation_strength: Some(0.63),
+                ..astrid_minime_protocol::SelfControlValuesV2::default()
+            },
+            previous_values: astrid_minime_protocol::SelfControlValuesV2 {
+                regulation_strength: Some(0.8),
+                ..astrid_minime_protocol::SelfControlValuesV2::default()
+            },
+            previous_automatic_fields: Vec::new(),
+            received_at_unix_ms: 110,
+            completed_at_unix_ms: 111,
+            control_expires_at_unix_ms: Some(1_000),
+            rollback_receipt_id: None,
+            reason: None,
+            server_process_identity: "minime-process-b".to_string(),
+            server_deployment_identity: "minime-deployment-b".to_string(),
+            felt_effect_established: false,
+        }
+    }
+
+    #[test]
+    fn extension_negotiation_rejects_legacy_and_stale_deployments() {
+        let mut status = SensoryDeliveryProtocolStatusV1::default();
+        let message = malformed_self_control("minime-deployment-a");
+        assert_eq!(
+            validate_negotiated_extension_v2(&message, &status, 150),
+            Err("self_control_v2_not_negotiated")
+        );
+
+        assert!(apply_server_hello(
+            SensoryServerHelloV1::new("minime-pid".to_string(), "minime-deployment-b".to_string()),
+            &mut status,
+        ));
+        assert!(status.self_control_v2_negotiated);
+        assert!(status.semantic_body_v2_negotiated);
+        assert_eq!(
+            validate_negotiated_extension_v2(&message, &status, 150),
+            Err("self_control_stale_target_deployment")
+        );
+
+        let malformed_current = malformed_self_control("minime-deployment-b");
+        assert_eq!(
+            validate_negotiated_extension_v2(&malformed_current, &status, 150),
+            Err("self_control_command_malformed")
+        );
+    }
+
+    #[test]
+    fn typed_self_control_receipt_is_correlated_and_replay_is_rejected() {
+        let path = temp_events_path("self_control_receipt_v2");
+        let mut status = SensoryDeliveryProtocolStatusV1 {
+            server_process_identity: Some("minime-process-b".to_string()),
+            server_deployment_identity: Some("minime-deployment-b".to_string()),
+            self_control_pending_receipt_count: 1,
+            ..SensoryDeliveryProtocolStatusV1::default()
+        };
+        let mut pending = BTreeMap::from([("intent-test".to_string(), pending_self_control())]);
+        let receipt = self_control_receipt();
+
+        assert!(apply_self_control_receipt_with_path(
+            receipt.clone(),
+            &mut pending,
+            &mut status,
+            Some(&path),
+        ));
+        assert!(pending.is_empty());
+        assert_eq!(status.self_control_pending_receipt_count, 0);
+        assert_eq!(status.self_control_receipt_count, 1);
+        assert_eq!(
+            status.last_self_control_receipt_state.as_deref(),
+            Some("applied")
+        );
+        assert_eq!(
+            status
+                .last_self_control_receipt
+                .as_ref()
+                .map(|observed| observed.receipt_id.as_str()),
+            Some("receipt-test")
+        );
+        assert!(
+            !status
+                .last_self_control_receipt
+                .as_ref()
+                .expect("typed receipt")
+                .felt_effect_established
+        );
+        assert!(delivery_path_is_owner_only(&path));
+        let event: Value = serde_json::from_str(fs::read_to_string(&path).unwrap().trim()).unwrap();
+        assert_eq!(event["event"], "self_control_receipt_verified");
+        assert_eq!(event["receipt"]["intent_id"], "intent-test");
+        assert_eq!(event["felt_effect_established"], false);
+
+        assert!(!apply_self_control_receipt_with_path(
+            receipt,
+            &mut pending,
+            &mut status,
+            Some(&path),
+        ));
+        assert_eq!(status.self_control_receipt_count, 1);
+        assert_eq!(status.self_control_receipt_mismatch_count, 1);
+        assert_eq!(
+            status.last_self_control_receipt_state.as_deref(),
+            Some("unexpected_self_control_receipt")
+        );
+    }
+
+    #[test]
+    fn typed_self_control_receipt_rejects_stale_server_identity() {
+        let path = temp_events_path("self_control_receipt_v2_stale");
+        let mut status = SensoryDeliveryProtocolStatusV1 {
+            server_process_identity: Some("minime-process-c".to_string()),
+            server_deployment_identity: Some("minime-deployment-c".to_string()),
+            self_control_pending_receipt_count: 1,
+            ..SensoryDeliveryProtocolStatusV1::default()
+        };
+        let mut pending = BTreeMap::from([("intent-test".to_string(), pending_self_control())]);
+
+        assert!(!apply_self_control_receipt_with_path(
+            self_control_receipt(),
+            &mut pending,
+            &mut status,
+            Some(&path),
+        ));
+        assert_eq!(pending.len(), 1);
+        assert_eq!(status.self_control_receipt_count, 0);
+        assert_eq!(status.self_control_receipt_mismatch_count, 1);
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn typed_self_control_receipt_rejects_substituted_requested_values() {
+        let path = temp_events_path("self_control_receipt_v2_substituted_values");
+        let mut status = SensoryDeliveryProtocolStatusV1 {
+            server_process_identity: Some("minime-process-b".to_string()),
+            server_deployment_identity: Some("minime-deployment-b".to_string()),
+            self_control_pending_receipt_count: 1,
+            ..SensoryDeliveryProtocolStatusV1::default()
+        };
+        let mut pending = BTreeMap::from([("intent-test".to_string(), pending_self_control())]);
+        let mut receipt = self_control_receipt();
+        receipt.requested_values.regulation_strength = Some(0.61);
+
+        assert!(!apply_self_control_receipt_with_path(
+            receipt,
+            &mut pending,
+            &mut status,
+            Some(&path),
+        ));
+        assert_eq!(pending.len(), 1);
+        assert_eq!(status.self_control_receipt_count, 0);
+        assert_eq!(status.self_control_receipt_mismatch_count, 1);
+        assert_eq!(
+            status.last_self_control_receipt_state.as_deref(),
+            Some("self_control_receipt_mismatch")
+        );
+        assert!(!path.exists());
     }
 
     #[test]

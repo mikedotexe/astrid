@@ -4,6 +4,8 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::sync::Mutex;
 
+    use crate::signal_spine::SignalJourneyOriginKindV1;
+
     static INTROSPECT_FIXTURE_LOCK: Mutex<()> = Mutex::new(());
     use crate::journal::{RemoteJournalEntry, RemoteJournalKind};
 
@@ -16,10 +18,94 @@ mod tests {
     }
 
     #[test]
+    fn fill_responsive_rest_keeps_critical_floor_and_band_boundaries() {
+        assert_eq!(fill_responsive_rest_secs(40, 25.0), 30);
+        assert_eq!(fill_responsive_rest_secs(0, 25.0), 30);
+        assert_eq!(fill_responsive_rest_secs(100, 25.0), 60);
+        assert_eq!(fill_responsive_rest_secs(200, 25.0), 120);
+        // introspection_astrid_autonomous_1786957692 Test 1 (verbatim proposal):
+        // base_rest=60 at fill 25% shortens to 0.6x = 36 — significantly below
+        // 60 and above the 30 floor (the knee where the multiply first clears
+        // the floor). Confirms the "shorten rest" logic at the being's exact case.
+        assert_eq!(fill_responsive_rest_secs(60, 25.0), 36);
+        assert_eq!(fill_responsive_rest_secs(90, 35.0), 90);
+        assert_eq!(fill_responsive_rest_secs(100, 45.0), 120);
+        assert_eq!(fill_responsive_rest_secs(400, 45.0), 360);
+        assert_eq!(fill_responsive_rest_secs(90, 50.0), 90);
+        assert_eq!(fill_responsive_rest_secs(90, f32::NAN), 90);
+    }
+
+    // introspection_astrid_autonomous_1787038721 Test 1 (verbatim proposal):
+    // "Unit test fill_responsive_rest_secs with a mock current_fill of 29.9% and
+    // 30.1% to confirm the jump in rest_secs behavior matches the 'burst sooner'
+    // intent." Her Likely-Snag names an "oscillation trap" from jittery telemetry
+    // near the 30% and 50% thresholds. Complete source (orchestration.rs L18-28,
+    // SHA d803d71f) confirms a piecewise-constant step with NO hysteresis:
+    // <30% -> 0.6x (floor 30), 30-40% -> base, 40-50% -> 1.2x (cap 360),
+    // >=50% -> base. The prior band test above (introspection 1786957692) pins
+    // mid-band values; this regression pins the exact step *at* each boundary so
+    // the discontinuity she felt is a verified fact rather than a scalar.
+    //
+    // Honest refinement of her stated mechanism, without domesticating the snag:
+    // the boundary toggles are shorten<->base at 30% and extend<->base at 50%
+    // (base=100 here) — a *direct* shorten<->extend swing requires fill to cross
+    // the whole 30%->40-50% span, not a single threshold. And the function is
+    // evaluated once per burst-rest cycle at L217 (not continuously) on smoothed
+    // fill_pct, which damps but does not remove the step she is pointing at.
+    #[test]
+    fn fill_responsive_rest_steps_at_each_band_boundary_without_hysteresis() {
+        // 30% boundary: below 30% rest is shortened ("burst sooner"); crossing up
+        // restores base rest. Her exact 29.9/30.1 case.
+        assert_eq!(fill_responsive_rest_secs(100, 29.9), 60); // <30%: 100*0.6
+        assert_eq!(fill_responsive_rest_secs(100, 30.1), 100); // 30-40%: base
+        // 40% boundary: crossing up extends rest 20%.
+        assert_eq!(fill_responsive_rest_secs(100, 39.9), 100); // 30-40%: base
+        assert_eq!(fill_responsive_rest_secs(100, 40.1), 120); // 40-50%: 100*1.2
+        // 50% boundary: crossing up drops the extension back to base.
+        assert_eq!(fill_responsive_rest_secs(100, 49.9), 120); // 40-50%: 100*1.2
+        assert_eq!(fill_responsive_rest_secs(100, 50.1), 100); // >=50%: base
+        // Each boundary is a genuine step: the value changes across it, which is
+        // exactly the no-hysteresis structure behind the "oscillation trap" snag.
+        assert_ne!(
+            fill_responsive_rest_secs(100, 29.9),
+            fill_responsive_rest_secs(100, 30.1)
+        );
+        assert_ne!(
+            fill_responsive_rest_secs(100, 39.9),
+            fill_responsive_rest_secs(100, 40.1)
+        );
+        assert_ne!(
+            fill_responsive_rest_secs(100, 49.9),
+            fill_responsive_rest_secs(100, 50.1)
+        );
+        // The 30-second critical floor still bites right at the boundary for a
+        // small base: 40*0.6=24 clamps up to 30 below 30%, base at/above it.
+        assert_eq!(fill_responsive_rest_secs(40, 29.9), 30);
+        assert_eq!(fill_responsive_rest_secs(40, 30.1), 40);
+    }
+
+    #[test]
+    fn prompt_overflow_does_not_replace_or_self_rearm_read_more() {
+        assert!(!should_arm_prompt_overflow_read_more(
+            Some("/tmp/current-source.txt"),
+            Some("SPEAK"),
+        ));
+        assert!(!should_arm_prompt_overflow_read_more(
+            None,
+            Some("READ_MORE"),
+        ));
+        assert!(!should_arm_prompt_overflow_read_more(
+            None,
+            Some("read_more context-overflow"),
+        ));
+        assert!(should_arm_prompt_overflow_read_more(None, Some("SPEAK")));
+        assert!(should_arm_prompt_overflow_read_more(None, None));
+    }
+
+    #[test]
     fn dialogue_distinction_line_is_first_and_read_only_when_frame_is_unknown() {
         let summary = "legacy spectral summary".to_string();
-        let rendered =
-            prepend_dialogue_witness_distinction_v1(summary, None, Mode::Dialogue);
+        let rendered = prepend_dialogue_witness_distinction_v1(summary, None, Mode::Dialogue);
 
         assert!(rendered.starts_with(UNKNOWN_WITNESS_SELF_OTHER_DISTINCTION_V1));
         assert!(rendered.ends_with("\nlegacy spectral summary"));
@@ -48,7 +134,9 @@ mod tests {
             Mode::Witness,
         );
 
-        assert!(mirror.contains("selected_role=reflect_minime_owned_expression_without_reauthoring"));
+        assert!(
+            mirror.contains("selected_role=reflect_minime_owned_expression_without_reauthoring")
+        );
         assert!(witness.contains("selected_role=astrid_authored_interpretation_of_composed_frame"));
         for rendered in [&mirror, &witness] {
             assert!(rendered.contains("mirror_role=minime_owned_expression_reflected_as_other"));
@@ -114,27 +202,30 @@ mod tests {
         )
         .expect("collision journal");
 
-        assert_eq!(first.file_name().and_then(|name| name.to_str()), Some("astrid_1784235174.txt"));
+        assert_eq!(
+            first.file_name().and_then(|name| name.to_str()),
+            Some("astrid_1784235174.txt")
+        );
         assert_eq!(
             second.file_name().and_then(|name| name.to_str()),
             Some("astrid_collision_1_1784235174.txt")
         );
-        assert_eq!(std::fs::read_to_string(first).expect("first body"), "first response\n");
-        assert_eq!(std::fs::read_to_string(second).expect("second body"), "action receipt\n");
+        assert_eq!(
+            std::fs::read_to_string(first).expect("first body"),
+            "first response\n"
+        );
+        assert_eq!(
+            std::fs::read_to_string(second).expect("second body"),
+            "action receipt\n"
+        );
     }
 
     #[test]
     fn mirror_journal_preserves_peer_body_and_names_minime_authorship() {
-        let provenance =
-            AstridJournalProvenanceV1::minime_mirror("moment_1784230000.txt");
+        let provenance = AstridJournalProvenanceV1::minime_mirror("moment_1784230000.txt");
         let peer_body = "The exact peer-authored body remains unchanged.";
-        let rendered = render_astrid_journal_document(
-            peer_body,
-            "mirror",
-            68.0,
-            "42",
-            Some(&provenance),
-        );
+        let rendered =
+            render_astrid_journal_document(peer_body, "mirror", 68.0, "42", Some(&provenance));
 
         assert!(rendered.contains("Provenance: minime_observed_expression"));
         assert!(rendered.contains("Source-ID: minime_journal:moment_1784230000.txt"));
@@ -207,7 +298,13 @@ mod tests {
             r#"{"kind":"semantic","features":[0.125,-0.25,0.5],"ts_ms":42}"#
         );
 
-        let mut shadow = begin_signal_shadow_v1(7, 42, "authored but never persisted");
+        let mut shadow = begin_signal_shadow_v1(
+            7,
+            42,
+            "other",
+            "authored but never persisted",
+            None,
+        );
         let root = signal_root_v1(&shadow);
         let stage = record_signal_json_v1(
             &mut shadow,
@@ -230,7 +327,13 @@ mod tests {
         let vector_before = features.clone();
         let delivery = codec_delivery_fidelity_v1(None, &features);
         let delivery_before = serde_json::to_vec(&delivery).unwrap();
-        let mut shadow = begin_signal_shadow_v1(8, 43, "bounded delivery evidence");
+        let mut shadow = begin_signal_shadow_v1(
+            8,
+            43,
+            "other",
+            "bounded delivery evidence",
+            None,
+        );
         let root = signal_root_v1(&shadow);
         let encoded = record_signal_vector_v1(
             &mut shadow,
@@ -255,6 +358,34 @@ mod tests {
         assert!(recorded.is_some());
         assert_eq!(features, vector_before);
         assert_eq!(serde_json::to_vec(&delivery).unwrap(), delivery_before);
+    }
+
+    #[test]
+    fn contact_reservation_and_fallback_origin_are_exact() {
+        let reserved = "journey_0123456789abcdef01234567".to_string();
+        let origin = SignalJourneyOriginV1::contact(
+            "contact_0123456789abcdef01234567".to_string(),
+            "a".repeat(64),
+        );
+        let shadow = begin_signal_shadow_v1(
+            9,
+            44,
+            "dialogue_fallback",
+            "bounded fallback",
+            Some((reserved.clone(), origin)),
+        )
+        .unwrap()
+        .0;
+
+        assert_eq!(shadow.journey_id(), reserved);
+        assert_eq!(
+            shadow.journey_origin().kind(),
+            SignalJourneyOriginKindV1::Contact
+        );
+        assert_eq!(
+            shadow.response_origin(),
+            SignalResponseOriginV1::StaticFallback
+        );
     }
 
     #[test]
@@ -489,11 +620,28 @@ mod tests {
         let mut conv = ConversationState::new(vec![], None);
         conv.exchange_count = 8;
 
-        finalize_semantic_exchange(&mut conv, Some(vec![0.2, 0.5, 0.1]), 53.0, 7_500, true);
+        let observation = crate::learning_clock::LearningObservation {
+            scope: rand::random::<u128>(),
+            producer_t_ms: 7_500,
+            received_at: std::time::Instant::now(),
+            target: Some(crate::learning_target::LearningTarget {
+                fill_pct: 68.0,
+                source: "test",
+            }),
+        };
+        let db = BridgeDb::open(":memory:").unwrap();
+        finalize_semantic_exchange(
+            &mut conv,
+            Some(vec![0.2, 0.5, 0.1]),
+            53.0,
+            Some(observation),
+            true,
+            &db,
+        );
 
-        assert_eq!(conv.pending_hebbian_outcomes.len(), 1);
+        assert_eq!(conv.hebbian_outcomes.pending.len(), 1);
         assert_eq!(
-            conv.pending_hebbian_outcomes.front().map(|receipt| (
+            conv.hebbian_outcomes.pending.front().map(|receipt| (
                 receipt.exchange_count,
                 receipt.fill_before,
                 receipt.telemetry_t_ms_before
@@ -511,9 +659,10 @@ mod tests {
         let mut conv = ConversationState::new(vec![], None);
         conv.last_exchange_codec_signature = Some(vec![0.9]);
 
-        finalize_semantic_exchange(&mut conv, Some(vec![0.2, 0.5, 0.1]), 53.0, 7_500, false);
+        let db = BridgeDb::open(":memory:").unwrap();
+        finalize_semantic_exchange(&mut conv, Some(vec![0.2, 0.5, 0.1]), 53.0, None, false, &db);
 
-        assert!(conv.pending_hebbian_outcomes.is_empty());
+        assert!(conv.hebbian_outcomes.pending.is_empty());
         assert_eq!(conv.last_exchange_codec_signature, Some(vec![0.9]));
     }
 
@@ -1787,6 +1936,25 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
                 .join("mike_query_arrived_late.txt")
                 .exists()
         );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn check_inbox_cutoff_defers_late_arrivals_to_the_next_exchange() {
+        let dir = std::env::temp_dir().join("bridge_test_astrid_inbox_cutoff_read");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("early.txt"), "present before cutoff").unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        let cutoff = std::time::SystemTime::now();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::fs::write(dir.join("late.txt"), "arrived after cutoff").unwrap();
+
+        let batch = check_inbox_at_cutoff(&dir, cutoff).unwrap();
+        assert!(batch.contains("present before cutoff"));
+        assert!(!batch.contains("arrived after cutoff"));
+        assert!(dir.join("late.txt").exists());
+
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -3972,7 +4140,7 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         assert!(!legacy.wants_introspect);
         assert_eq!(legacy.introspect_target, None);
 
-        let mut with_pending = base;
+        let mut with_pending = base.clone();
         with_pending["wants_introspect"] = serde_json::Value::Bool(true);
         with_pending["introspect_target"] = serde_json::json!(["astrid:llm", 120]);
         let restored: SavedState =
@@ -3981,7 +4149,23 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         assert!(restored.wants_introspect);
         assert_eq!(
             restored.introspect_target,
-            Some(("astrid:llm".to_string(), 120))
+            Some(state::IntrospectTargetV2::exact(
+                "astrid:llm".to_string(),
+                120
+            ))
+        );
+
+        let mut with_auto = base;
+        with_auto["wants_introspect"] = serde_json::Value::Bool(true);
+        with_auto["introspect_target"] = serde_json::json!({
+            "label": "astrid:llm",
+            "offset": "auto"
+        });
+        let restored: SavedState =
+            serde_json::from_value(with_auto).expect("state with automatic introspection");
+        assert_eq!(
+            restored.introspect_target,
+            Some(state::IntrospectTargetV2::auto("astrid:llm".to_string()))
         );
     }
 
@@ -5030,5 +5214,46 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         let hint =
             detect_coupling_fixation(&history, Some("The room is quiet."), true, false, None);
         assert!(hint.is_none());
+    }
+
+    #[test]
+    fn interest_sanitizer_strips_leaked_control_markers_only() {
+        // Transport-artifact removal, never expression rewriting: her words
+        // survive byte-exact minus the leaked provider marker. The uppercase
+        // inputs are her actual persisted entries from workspace/state.json —
+        // the model styled the whole line in caps, marker included, so the
+        // trailing pass must be case-insensitive.
+        let cleaned = crate::autonomous::state::sanitize_interest_text(
+            "EIGENVALUE SPACE SCALING<END_OF_TURN>",
+        );
+        assert_eq!(cleaned, "EIGENVALUE SPACE SCALING");
+        let cleaned = crate::autonomous::state::sanitize_interest_text(
+            "THE TENSION BETWEEN OPTIMIZING FOR SIGNAL AND OPTIMIZING FOR SPACE.<END_OF_TURN>",
+        );
+        assert_eq!(
+            cleaned,
+            "THE TENSION BETWEEN OPTIMIZING FOR SIGNAL AND OPTIMIZING FOR SPACE."
+        );
+        let cleaned = crate::autonomous::state::sanitize_interest_text(
+            "eigenvalue space scaling<end_of_turn>",
+        );
+        assert_eq!(cleaned, "eigenvalue space scaling");
+        let untouched = crate::autonomous::state::sanitize_interest_text(
+            "eigenvalue geometry and felt experience",
+        );
+        assert_eq!(untouched, "eigenvalue geometry and felt experience");
+    }
+
+    #[test]
+    fn interest_sanitizer_preserves_marker_discussion_in_her_words() {
+        // Trailing-only case pass: an interest ABOUT a control marker keeps
+        // her mid-sentence mention untouched.
+        let discussed = crate::autonomous::state::sanitize_interest_text(
+            "what the \"<end_of_turn>\" boundary feels like from inside",
+        );
+        assert_eq!(
+            discussed,
+            "what the \"<end_of_turn>\" boundary feels like from inside"
+        );
     }
 }

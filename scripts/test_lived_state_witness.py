@@ -135,13 +135,18 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
         observation["value_relation"] = "unreviewed_relation"
         self.assertTrue(validate_witness(witness))
 
-    def _write_exact_fixture(self) -> tuple[str, str]:
+    def _write_exact_fixture(self, *, source_header_lines: int = 0) -> tuple[str, str]:
         witness_id = "lsw_" + "a" * 64
         timestamp = 1_700_000_100
         filename = f"introspection_fixture_{timestamp}.txt"
+        source_metadata = "".join(
+            f"Source detail {index}: fixture\n"
+            for index in range(source_header_lines)
+        )
         report = (
             "=== ASTRID INTROSPECTION ===\n"
             "Source: fixture\n"
+            f"{source_metadata}"
             f"Timestamp: {timestamp}\n"
             f"Lived-state witness: {witness_id}\n"
             "Fill: 68.0%\n\n"
@@ -377,6 +382,18 @@ class LivedStateWitnessProjectionTests(unittest.TestCase):
                 "lived_state_witness_v1", PROJECTOR_VERSION
             )
         )
+
+    def test_exact_projection_accepts_extended_source_first_header(self) -> None:
+        witness_id, _ = self._write_exact_fixture(source_header_lines=24)
+
+        status = project(self.workspace, write=True)
+
+        self.assertEqual(status["migration_counters"]["exact"], 1)
+        self.assertEqual(status["migration_counters"]["orphan"], 0)
+        self.assertEqual(
+            status["migration_counters"]["artifact_integrity_issue"], 0
+        )
+        self.assertIn(witness_id, status["witnesses"])
 
     def test_qualitative_texture_anchor_matches_exact_canonical_body(self) -> None:
         artifact = b"=== ASTRID INTROSPECTION ===\nHeader: value\n\nviscous texture\n"

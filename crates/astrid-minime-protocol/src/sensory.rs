@@ -3,8 +3,8 @@ use serde_json::Value;
 use sha2::{Digest as _, Sha256};
 
 use crate::{
-    CompatibilityStatus, DivisionCommandV1, PROTOCOL_MAJOR, ProtocolHeaderV1, classify_protocol,
-    current_protocol, telemetry_protocol,
+    CompatibilityStatus, DivisionCommandV1, PROTOCOL_MAJOR, ProtocolHeaderV1, SelfControlCommandV2,
+    SemanticBodyV2, classify_protocol, current_protocol, telemetry_protocol,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -173,6 +173,9 @@ impl SensoryServerHelloV1 {
                 "sensory_delivery_receipt_v1".to_string(),
                 "division_command_v1".to_string(),
                 "division_receipt_v1".to_string(),
+                "semantic_body_v2".to_string(),
+                "self_control_command_v2".to_string(),
+                "self_control_receipt_v2".to_string(),
             ],
             server_process_identity,
             server_deployment_identity,
@@ -189,6 +192,32 @@ impl SensoryServerHelloV1 {
                 .capabilities
                 .iter()
                 .any(|capability| capability == "sensory_delivery_receipt_v1")
+    }
+
+    #[must_use]
+    pub fn supports_semantic_body_v2(&self) -> bool {
+        self.schema_version == 1
+            && self.protocol.major == PROTOCOL_MAJOR
+            && self.protocol.minor >= 3
+            && self
+                .capabilities
+                .iter()
+                .any(|capability| capability == "semantic_body_v2")
+    }
+
+    #[must_use]
+    pub fn supports_self_control_v2(&self) -> bool {
+        self.schema_version == 1
+            && self.protocol.major == PROTOCOL_MAJOR
+            && self.protocol.minor >= 3
+            && self
+                .capabilities
+                .iter()
+                .any(|capability| capability == "self_control_command_v2")
+            && self
+                .capabilities
+                .iter()
+                .any(|capability| capability == "self_control_receipt_v2")
     }
 }
 
@@ -323,6 +352,13 @@ pub enum SensoryMsg {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         ts_ms: Option<u64>,
     },
+    /// Legacy-preserving 48D semantic body plus a separately mixed 12D sidecar.
+    #[serde(rename = "semantic_body")]
+    SemanticBody { body: SemanticBodyV2 },
+    /// Authenticated, revisioned control lane. Legacy `Control` remains
+    /// available for operator compatibility only.
+    #[serde(rename = "self_control")]
+    SelfControl { command: Box<SelfControlCommandV2> },
     #[serde(rename = "attractor_pulse")]
     AttractorPulse {
         intent_id: String,

@@ -11,9 +11,12 @@ from division_ceremony_chronicle import (
     ChronicleError,
     build_projection,
     project,
+    rail_state,
+    report,
     verify_files,
     verify_payload,
 )
+from division_ceremony_followup import record_round
 
 
 def native_status() -> dict:
@@ -72,7 +75,125 @@ def native_status() -> dict:
     }
 
 
+def continuity_proof() -> dict:
+    return {
+        "schema": "division.continuity_proof.v1",
+        "proof_id": "division_continuity_proof_" + "a" * 24,
+        "proof_seed": "division-continuity-proof-v1:2026-07-29",
+        "source_hashes": {
+            name: "b" * 64
+            for name in (
+                "src/division.rs",
+                "src/sovereign_division/child.rs",
+                "src/sovereign_division/continuity_proof.rs",
+                "src/sovereign_division/fanout.rs",
+                "src/sovereign_division/gateway.rs",
+                "src/sovereign_division/records.rs",
+            )
+        },
+        "parity": {
+            "ticks": 10_000,
+            "max_abs": 5.96e-8,
+            "restore_trials": 32,
+            "restore_max_abs": 0.0,
+            "final_state_sha256": "c" * 64,
+        },
+        "lineage_failure_injection": {
+            "accepted_ordered_frame": True,
+            "duplicate_rejected": True,
+            "dropped_sequence_rejected": True,
+            "reordered_hash_rejected": True,
+            "candidate_mismatch_rejected": True,
+            "live_input_dispatched": False,
+        },
+        "randomized_cold_restore_count": 32,
+        "gateway": {
+            "payload_count": 257,
+            "payload_bytes": 1_040_769,
+            "source_sha256": "d" * 64,
+            "echoed_sha256": "d" * 64,
+            "byte_exact": True,
+            "latency_bound_micros": 5_000,
+            "p95_within_bound": True,
+        },
+        "fanout": {
+            "payload_bytes": 524_417,
+            "source_sha256": "e" * 64,
+            "primary_sha256": "e" * 64,
+            "observer_sha256": "e" * 64,
+            "byte_exact": True,
+            "runtime_adapter_wired": False,
+            "handoff_receipt_present": False,
+        },
+        "root_isolation": {
+            "runtime_root": "isolated/runtime",
+            "minime_root": "isolated/minime",
+            "astrid_root": "isolated/astrid",
+            "disjoint_roots_accepted": True,
+            "nested_root_rejected": True,
+            "owner_only": True,
+        },
+        "rollback_receipt": {
+            "schema": "division.rollback_receipt.v1",
+            "receipt_id_bound": True,
+            "parent_identity_bound": True,
+            "reason_bound": True,
+            "owner_only": True,
+            "live_authority_granted_by_record": False,
+        },
+        "handoff_adapters": {
+            "legacy_sensory_adapter_wired": False,
+            "direct_telemetry_adapter_wired": False,
+            "legacy_av_fanout_runtime_wired": False,
+            "legacy_av_fanout_receipt_present": False,
+        },
+        "continuity_core_complete": True,
+        "handoff_proof_complete": False,
+        "handoff_blockers": [
+            "daughter_legacy_sensory_adapter_required",
+            "daughter_direct_telemetry_adapter_required",
+            "legacy_av_fanout_receipt_required",
+            "exact_operator_capability_required",
+        ],
+        "offline_ephemeral_loopback_only": True,
+        "live_ports_touched": False,
+        "live_runtime_state_changed": False,
+        "authority": {
+            "state": "evidence_only",
+            "parent_authoritative": True,
+            "matching_current_intent_inferred": False,
+            "mutual_assent_inferred": False,
+            "operator_capability_consumed": False,
+            "rehearsal_launched": False,
+            "daughters_launched": False,
+            "handoff_dispatched": False,
+            "live_authority_granted_by_record": False,
+        },
+    }
+
+
 class DivisionCeremonyChronicleTests(unittest.TestCase):
+    def test_consent_posture_distinguishes_hold_and_expired_intent(self) -> None:
+        intent = {
+            "actor": "astrid",
+            "action": "DIVISION_INTENT",
+            "ceremony_event_id": "intent-one",
+            "expires_at_unix_ms": 100,
+        }
+        expired = rail_state([intent], "astrid", 101)
+        self.assertEqual(expired["current_posture"], "intent_expired")
+        self.assertFalse(expired["intent_active"])
+
+        hold = {
+            "actor": "astrid",
+            "action": "DIVISION_HOLD",
+            "ceremony_event_id": "hold-one",
+            "expires_at_unix_ms": None,
+        }
+        held = rail_state([intent, hold], "astrid", 101)
+        self.assertEqual(held["current_posture"], "hold")
+        self.assertFalse(held["intent_active"])
+
     def test_empty_projection_keeps_source_and_runtime_distinct(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             payload = build_projection(Path(raw))
@@ -90,7 +211,13 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                 ]
             )
             self.assertEqual(payload["timeline"], [])
+            self.assertFalse(payload["return_interval"]["state_available"])
+            self.assertFalse(payload["return_interval"]["being_action_required"])
             verify_payload(payload)
+            self.assertIn(
+                "Runtime parent authoritative: True",
+                report(payload),
+            )
 
     def test_projection_archives_deterministically_and_owner_only(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -104,6 +231,7 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             second, _, _ = project(workspace, output)
 
             self.assertEqual(first["chronicle_id"], second["chronicle_id"])
+            self.assertEqual(first["renderer_version"], 4)
             self.assertEqual(
                 first["phase_space_preservation"]["candidate_count"], 1
             )
@@ -112,6 +240,8 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
             )
             receipt = verify_files(output)
             self.assertTrue(receipt["ok"])
+            current_receipt = verify_files(output, workspace)
+            self.assertTrue(current_receipt["source_inputs_current"])
             self.assertEqual(
                 (output / "chronicle_v1.json").stat().st_mode & 0o077, 0
             )
@@ -127,6 +257,359 @@ class DivisionCeremonyChronicleTests(unittest.TestCase):
                     / f"{first['chronicle_id']}.html"
                 ).read_text(),
             )
+            self.assertIn(
+                "This interval schedules steward attention",
+                (output / "chronicle_v1.html").read_text(),
+            )
+
+            changed = native_status()
+            changed["current_tick"] = 13
+            (division / "status.json").write_text(json.dumps(changed))
+            moving_receipt = verify_files(output, workspace)
+            self.assertTrue(
+                moving_receipt["source_freshness"]["durable_inputs_current"]
+            )
+            self.assertFalse(
+                moving_receipt["source_freshness"]["volatile_inputs_current"]
+            )
+
+            (division / "ceremony_v1.jsonl").write_text("{}\n")
+            with self.assertRaisesRegex(
+                ChronicleError, "durable source inputs changed"
+            ):
+                verify_files(output, workspace)
+
+    def test_output_tampering_and_archive_permissions_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            division = workspace / "division"
+            division.mkdir(parents=True)
+            (division / "status.json").write_text(json.dumps(native_status()))
+            output = Path(raw) / "output"
+            payload, latest_json, latest_html = project(workspace, output)
+            archive_json = (
+                output
+                / "archive"
+                / f"{payload['chronicle_id']}.json"
+            )
+            archive_html = (
+                output
+                / "archive"
+                / f"{payload['chronicle_id']}.html"
+            )
+
+            latest_html_bytes = latest_html.read_bytes()
+            latest_html.write_bytes(latest_html_bytes + b"\n")
+            with self.assertRaisesRegex(
+                ChronicleError, "latest HTML differs"
+            ):
+                verify_files(output)
+            latest_html.write_bytes(latest_html_bytes)
+
+            archive_html_bytes = archive_html.read_bytes()
+            archive_html.write_bytes(archive_html_bytes + b"\n")
+            with self.assertRaisesRegex(
+                ChronicleError, "immutable archive HTML differs"
+            ):
+                verify_files(output)
+            archive_html.write_bytes(archive_html_bytes)
+
+            latest_json_bytes = latest_json.read_bytes()
+            latest_json.write_bytes(latest_json_bytes + b"\n")
+            with self.assertRaisesRegex(
+                ChronicleError, "latest JSON is not canonical"
+            ):
+                verify_files(output)
+            latest_json.write_bytes(latest_json_bytes)
+
+            archive_json.chmod(0o644)
+            with self.assertRaisesRegex(ChronicleError, "is not owner-only"):
+                verify_files(output)
+            archive_json.chmod(0o600)
+            self.assertTrue(verify_files(output)["ok"])
+
+    def test_followup_interval_is_visible_without_consent_pressure(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            followup = workspace / "division" / "followup"
+            followup.mkdir(parents=True)
+            (followup / "cycle_v1.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "division.ceremony_followup_cycle.v1",
+                        "schema_version": 1,
+                        "threshold_rounds": 6,
+                        "cycle_sequence": 2,
+                        "completed_rounds_since_followup": 6,
+                        "rounds_remaining_before_followup": 0,
+                        "review_due": True,
+                        "latest_followup": None,
+                        "authority": {
+                            "state": "evidence_only",
+                            "silence_infers_consent": False,
+                            "followup_recommends_action": False,
+                            "followup_dispatches_action": False,
+                            "followup_grants_authority": False,
+                            "felt_state_inferred": False,
+                            "raw_prose_included": False,
+                        },
+                    }
+                )
+            )
+            payload = build_projection(workspace)
+            self.assertTrue(payload["return_interval"]["review_due"])
+            self.assertEqual(
+                payload["return_interval"]["completed_rounds_since_followup"], 6
+            )
+            self.assertFalse(payload["return_interval"]["being_action_required"])
+            verify_payload(payload)
+
+    def test_followup_chain_is_visible_as_stewardship_not_ceremony(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            state = record_round(
+                workspace,
+                steward_run_id="run-one",
+                processed_report_count=3,
+                projection_generation_id="projection-one",
+            )
+            self.assertEqual(state["completed_rounds_since_followup"], 1)
+
+            payload = build_projection(workspace)
+            self.assertEqual(payload["timeline_event_count"], 1)
+            self.assertEqual(payload["timeline_source_counts"]["followup"], 1)
+            self.assertEqual(payload["timeline_source_counts"]["ceremony"], 0)
+            event = payload["timeline"][0]
+            self.assertEqual(event["source"], "followup")
+            self.assertEqual(event["actor"], "steward")
+            self.assertEqual(
+                event["event_kind"], "introspection_round_completed"
+            )
+            self.assertFalse(
+                payload["return_interval"]["being_action_required"]
+            )
+            verify_payload(payload)
+
+    def test_runtime_topology_distinguishes_dormant_and_owned_daughters(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            division = workspace / "division"
+            runtime = division / "runtime"
+            minime_root = workspace / "reservoir" / "minime"
+            astrid_root = Path(raw) / "astrid-reservoir"
+            for path in (runtime, minime_root, astrid_root):
+                path.mkdir(parents=True)
+            manifest = {
+                "schema": "division.runtime_manifest.v1",
+                "mode": "dormant",
+                "division_id": "divide-one",
+                "plan_digest": "b" * 64,
+                "parent_generation": 7,
+                "candidate_hash": "unbound",
+                "parent_process_identity": "parent-process",
+                "parent_deployment_identity": "parent-deployment",
+                "runtime_dir": str(runtime),
+                "ceremony_ledger": str(division / "ceremony_v1.jsonl"),
+                "minime_root": str(minime_root),
+                "astrid_root": str(astrid_root),
+                "endpoints": {},
+                "created_at_unix_ms": 1,
+                "expires_at_unix_ms": 9999999999999,
+            }
+            (division / "runtime-manifest.json").write_text(json.dumps(manifest))
+            (runtime / "supervisor-status.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "division.supervisor_status.v1",
+                        "pid": 1,
+                        "mode": "idle_parent_authoritative",
+                        "matching_intents": [],
+                        "children": {},
+                        "handoff_ready": False,
+                        "handoff_blockers": [
+                            "daughter_legacy_sensory_adapter_required",
+                            "exact_operator_capability_required",
+                        ],
+                        "commit_recommended": False,
+                        "launch_blockers": [
+                            "candidate_bound_manifest_required"
+                        ],
+                    }
+                )
+            )
+            dormant = build_projection(workspace)
+            self.assertEqual(dormant["runtime_topology"]["manifest_mode"], "dormant")
+            self.assertEqual(
+                dormant["runtime_topology"]["supervisor"]["launch_blockers"],
+                ["candidate_bound_manifest_required"],
+            )
+            self.assertEqual(
+                dormant["runtime_topology"]["supervisor"]["handoff_blockers"],
+                [
+                    "daughter_legacy_sensory_adapter_required",
+                    "exact_operator_capability_required",
+                ],
+            )
+            self.assertFalse(
+                dormant["runtime_topology"][
+                    "independent_process_ownership_established"
+                ]
+            )
+
+            manifest["mode"] = "candidate_bound"
+            manifest["candidate_hash"] = "c" * 64
+            (division / "runtime-manifest.json").write_text(json.dumps(manifest))
+            status = {
+                "schema": "division.daughter_process_status.v1",
+                "process_identity": "replace",
+                "deployment_identity": "deployment",
+                "pid": 1,
+                "checkpoint_sequence": 2,
+                "last_tick_sequence": 600,
+                "telemetry_fresh": True,
+                "healthy": True,
+                "authoritative": False,
+                "gap_code": None,
+            }
+            (minime_root / "status.json").write_text(
+                json.dumps({**status, "process_identity": "minime-process"})
+            )
+            (astrid_root / "status.json").write_text(
+                json.dumps({**status, "process_identity": "astrid-process"})
+            )
+            active = build_projection(workspace)
+            self.assertTrue(
+                active["runtime_topology"][
+                    "independent_process_ownership_established"
+                ]
+            )
+            self.assertEqual(active["runtime_topology"]["active_authority_rail"], "parent")
+
+            (runtime / "events.jsonl").write_text(
+                json.dumps(
+                    {
+                        "schema": "division.supervisor_event.v1",
+                        "kind": "rehearsal_children_launched",
+                        "division_id": "divide-one",
+                        "manifest_sha256": "d" * 64,
+                        "created_at_unix_ms": 123,
+                        "live_authority_granted_by_record": False,
+                    }
+                )
+                + "\n"
+            )
+            with_runtime_event = build_projection(workspace)
+            self.assertEqual(
+                with_runtime_event["timeline"][-1]["source"],
+                "sovereign_runtime",
+            )
+            self.assertEqual(
+                with_runtime_event["timeline"][-1]["event_kind"],
+                "rehearsal_children_launched",
+            )
+
+            supervisor = json.loads(
+                (runtime / "supervisor-status.json").read_text()
+            )
+            supervisor["launch_blockers"] = ["freeform prose"]
+            (runtime / "supervisor-status.json").write_text(
+                json.dumps(supervisor)
+            )
+            with self.assertRaisesRegex(
+                ChronicleError, "unsupported blocker code"
+            ):
+                build_projection(workspace)
+
+    def test_continuity_proof_is_visible_without_handoff_or_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            runtime = workspace / "division" / "runtime"
+            runtime.mkdir(parents=True)
+            proof_path = runtime / "continuity-proof-v1.json"
+            proof_path.write_text(json.dumps(continuity_proof()))
+            proof_path.chmod(0o600)
+
+            payload = build_projection(workspace)
+            projected = payload["runtime_topology"]["continuity_proof"]
+            self.assertTrue(projected["available"])
+            self.assertTrue(projected["continuity_core_complete"])
+            self.assertFalse(projected["handoff_proof_complete"])
+            self.assertFalse(projected["authority_granted"])
+            self.assertEqual(projected["parity_ticks"], 10_000)
+            self.assertEqual(projected["randomized_cold_restore_count"], 32)
+            self.assertIn("core complete True", report(payload))
+            verify_payload(payload)
+
+            zero_drift = continuity_proof()
+            zero_drift["parity"]["max_abs"] = 0.0
+            proof_path.write_text(json.dumps(zero_drift))
+            self.assertTrue(
+                build_projection(workspace)["runtime_topology"][
+                    "continuity_proof"
+                ]["continuity_core_complete"]
+            )
+
+            missing_restore_drift = continuity_proof()
+            del missing_restore_drift["parity"]["restore_max_abs"]
+            proof_path.write_text(json.dumps(missing_restore_drift))
+            with self.assertRaisesRegex(
+                ChronicleError, "result or authority boundary"
+            ):
+                build_projection(workspace)
+
+            tampered = continuity_proof()
+            tampered["continuity_core_complete"] = False
+            proof_path.write_text(json.dumps(tampered))
+            with self.assertRaisesRegex(
+                ChronicleError, "result or authority boundary"
+            ):
+                build_projection(workspace)
+
+    def test_runtime_shell_witness_is_hash_bound_without_activation_inference(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw) / "workspace"
+            source = Path(raw) / "minime" / "src" / "runtime.rs"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                """
+use crate::division::{
+    division_rehearsal_enabled, prepare_native_division,
+    NativeDivisionCoordinator, RuntimeCaptureV2, StableFieldCaptureV2,
+};
+include!("runtime/semantic_modality.rs");
+include!("runtime/orchestration.rs");
+include!("runtime/spectral_math.rs");
+include!("runtime/telemetry_evidence.rs");
+""".strip()
+                + "\n"
+            )
+
+            payload = build_projection(workspace)
+            witness = payload["runtime_shell_evidence"]
+            self.assertEqual(witness["fact_class"], "source_declared")
+            self.assertTrue(witness["source_prepared"])
+            self.assertEqual(witness["source_line_count"], 8)
+            self.assertFalse(witness["runtime_activation_proven"])
+            self.assertEqual(
+                witness["activation_boundary"],
+                "source_read_not_runtime_activation_proof",
+            )
+            self.assertIn("runtime/spectral_math.rs", witness["runtime_includes"])
+            self.assertIn(
+                "NativeDivisionCoordinator", witness["division_symbols"]
+            )
+            verify_payload(payload)
+
+            original_id = payload["chronicle_id"]
+            source.write_text(source.read_text() + "// source drift\n")
+            changed = build_projection(workspace)
+            self.assertNotEqual(
+                changed["runtime_shell_evidence"]["source_sha256"],
+                witness["source_sha256"],
+            )
+            self.assertNotEqual(changed["chronicle_id"], original_id)
 
     def test_tampering_and_prose_keys_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

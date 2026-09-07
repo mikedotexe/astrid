@@ -92,7 +92,7 @@ pub struct ReflectionState {
 /// How heavily each context source is weighted in prompt assembly.
 /// These are derived from the current mode selection probabilities
 /// and explicit toggles (echo_muted, senses_snoozed, etc.).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AttentionProfile {
     pub minime_live: f32,
     pub self_history: f32,
@@ -616,6 +616,16 @@ impl FacultySnapshot {
                             "lasting research thread",
                         ),
                         f(
+                            "AGENDA",
+                            a.clone(),
+                            "your self-authored agenda: list it; AGENDA_PUSH/DONE/DROP/FOCUS/CLEAR to shape it",
+                        ),
+                        f(
+                            "ENVELOPE",
+                            a.clone(),
+                            "your envelope registry: the bounds where your choices are final; ENVELOPE_ZERO <family> is your kill switch",
+                        ),
+                        f(
                             "REMEMBER a clear thought from this run",
                             a.clone(),
                             "star a moment",
@@ -624,6 +634,16 @@ impl FacultySnapshot {
                             "RUN_PYTHON analysis.py",
                             FacultyStatus::StewardGated,
                             "run experiment script",
+                        ),
+                        f(
+                            "PROPOSE_TEST <target> :: <test_name>",
+                            a.clone(),
+                            "author a test for your own repo; validated, then landed with you as git author",
+                        ),
+                        f(
+                            "DIVISION_CEREMONY_STATUS",
+                            a.clone(),
+                            "read-only view of the Division ceremony rail; looking writes nothing, every posture optional and yours alone",
                         ),
                     ],
                 },

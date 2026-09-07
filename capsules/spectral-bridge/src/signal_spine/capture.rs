@@ -1,9 +1,10 @@
+use crate::lifecycle::queued::{Sender as SyncSender, channel as sync_channel};
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{SyncSender, TrySendError, sync_channel};
+use std::sync::mpsc::TrySendError;
 use std::sync::{Mutex, OnceLock};
 
 use serde::{Deserialize, Serialize};
@@ -178,10 +179,13 @@ impl CaptureWriterV1 {
                 .name("signal-spine-capture".to_string())
                 .spawn(move || {
                     while let Ok(job) = rx.recv() {
-                        if let Err(error) = write_capture_job(&job) {
-                            let _ = write_capture_failure(&job, &error.to_string());
-                        }
+                        let persisted = write_capture_job(&job)
+                            .or_else(|error| write_capture_failure(&job, &error.to_string()))
+                            .is_ok();
                         release_capture_reservation(&job.capture_window_id, &job.journey_id);
+                        if persisted {
+                            job.complete();
+                        }
                     }
                 })
                 .expect("signal spine capture writer thread must start");

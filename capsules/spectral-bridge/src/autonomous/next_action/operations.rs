@@ -722,6 +722,18 @@ pub(super) fn handle_action(
             );
             model.save(bridge_paths().bridge_workspace());
             let mut state_text = model.render_state();
+            if !conv.agenda.items.is_empty() {
+                let focus = conv
+                    .agenda
+                    .focus_item_id
+                    .and_then(|id| conv.agenda.items.iter().find(|item| item.id == id))
+                    .map(|item| format!("; focus: {}", item.text))
+                    .unwrap_or_default();
+                state_text.push_str(&format!(
+                    "  Agenda: {} item(s){focus} (NEXT: AGENDA to view)\n",
+                    conv.agenda.items.len()
+                ));
+            }
             // Append raw spectral fingerprint — minime self-study: "Could I
             // interpret the spectral_fingerprint directly? It feels like a hidden key."
             if let Some(ref fp) = ctx.telemetry.spectral_fingerprint {
@@ -737,6 +749,11 @@ pub(super) fn handle_action(
                 state_text.push('\n');
                 state_text.push_str(&crate::autonomous::format_controller_section(&health));
             }
+            state_text.push_str("\n\n");
+            state_text.push_str(&super::introspection_cadence::render_status(
+                &conv.introspection_cadence,
+                conv.exchange_count,
+            ));
             conv.pending_file_listing = Some(state_text);
             info!("Astrid inspected her own state via STATE");
             true
@@ -768,8 +785,60 @@ pub(super) fn handle_action(
                 conv.self_continuity_readout,
                 None,
             );
-            conv.pending_file_listing = Some(model.render_faculties());
+            let mut faculties = model.render_faculties();
+            faculties.push_str("\n\n");
+            faculties.push_str(super::introspection_cadence::help_text());
+            conv.pending_file_listing = Some(faculties);
             info!("Astrid inspected her faculties via FACULTIES");
+            true
+        },
+        "ENVELOPE" => {
+            // Constitution C5: her registry rendered for HER — the bounds
+            // within which her choices are final, per family, with status.
+            match crate::autonomous::runtime::envelope_registry::current_registry() {
+                Some(registry) => {
+                    conv.pending_file_listing = Some(registry.render_being_facing());
+                    info!("Astrid read her envelope registry via ENVELOPE");
+                },
+                None => {
+                    conv.pending_file_listing = Some(
+                        "[Your envelope registry is not installed on this runtime yet — \
+                         compiled bounds remain the law. The steward can install it; \
+                         SELF_REGULATION_STATUS still shows your active controls.]"
+                            .to_string(),
+                    );
+                },
+            }
+            true
+        },
+        "ENVELOPE_ZERO" => {
+            let family = strip_action(original, base_action).trim().to_lowercase();
+            if family.is_empty() {
+                conv.push_receipt(
+                    "ENVELOPE_ZERO",
+                    vec![
+                        "needs a family — `ENVELOPE_ZERO <family>` (NEXT: ENVELOPE lists \
+                         your families). This withdraws every active control in that \
+                         family and resets its saturation counter."
+                            .to_string(),
+                    ],
+                );
+                return true;
+            }
+            match crate::autonomous::runtime::self_control_v2::envelope_zero_family(
+                conv,
+                &family,
+                "ENVELOPE_ZERO",
+            ) {
+                Ok(summary) => {
+                    info!("Astrid zeroed envelope family {family}: {summary}");
+                    conv.push_receipt("ENVELOPE_ZERO", vec![summary.clone()]);
+                    conv.emphasis = Some(format!("Envelope zeroed — {summary}"));
+                },
+                Err(error) => {
+                    conv.push_receipt("ENVELOPE_ZERO", vec![format!("not applied: {error}")]);
+                },
+            }
             true
         },
         "CODEC_MAP" => {
@@ -832,7 +901,7 @@ pub(super) fn handle_action(
                 );
             } else {
                 let tx = ctx.sensory_tx.clone();
-                tokio::spawn(async move {
+                crate::lifecycle::spawn_background(async move {
                     let _ = tx.send(msg).await;
                 });
             }
@@ -970,7 +1039,7 @@ pub(super) fn handle_action(
                 );
             } else {
                 let tx = ctx.sensory_tx.clone();
-                tokio::spawn(async move {
+                crate::lifecycle::spawn_background(async move {
                     let _ = tx.send(msg).await;
                 });
             }
@@ -1079,6 +1148,20 @@ pub(super) fn handle_action(
         },
         "ATTEND" => {
             let args = strip_action(original, "ATTEND");
+            if args.trim().eq_ignore_ascii_case("reset") {
+                // A4 kill switch: back to the compiled defaults in one verb.
+                conv.attention = crate::self_model::AttentionProfile::default_profile();
+                conv.push_receipt(
+                    "ATTEND reset",
+                    vec!["attention profile restored to defaults".to_string()],
+                );
+                conv.emphasis = Some(
+                    "Attention profile restored to defaults — prompt assembly is back on the                      compiled constants."
+                        .into(),
+                );
+                info!("Astrid reset attention profile to defaults");
+                return true;
+            }
             if let Some(new_profile) = crate::self_model::parse_attend(&conv.attention, &args) {
                 let mut changes = Vec::new();
                 let old = &conv.attention;
@@ -1117,6 +1200,13 @@ pub(super) fn handle_action(
                         new_profile.creations * 100.0
                     ));
                 }
+                if (new_profile.memory_bank - old.memory_bank).abs() > 0.01 {
+                    changes.push(format!(
+                        "memory: {:.0}% -> {:.0}%",
+                        old.memory_bank * 100.0,
+                        new_profile.memory_bank * 100.0
+                    ));
+                }
                 if (new_profile.perception - old.perception).abs() > 0.01 {
                     changes.push(format!(
                         "perception: {:.0}% -> {:.0}%",
@@ -1127,8 +1217,12 @@ pub(super) fn handle_action(
                 conv.attention = new_profile;
                 conv.push_receipt(&format!("ATTEND {args}"), changes);
                 conv.emphasis = Some(
-                    "Your attention profile has been updated. Use STATE to see the new weights. \
-                    These weights now influence how much context from each source appears in your prompts."
+                    "Your attention profile is live in prompt assembly: minime shapes the \
+                     journal share, self the history depth, research the web share, interests \
+                     the agenda share, memory the continuity share, perception your sensory \
+                     share (each within 0.5x-1.6x of its default; protected floors hold). \
+                     creations is display-only. ATTEND reset restores defaults. STATE shows \
+                     the weights."
                         .into(),
                 );
                 info!("Astrid adjusted attention profile: {:?}", conv.attention);
@@ -1186,13 +1280,15 @@ You may name alternate paths, return threads, residue, or why-this-path in nearb
 Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels only; never copy them literally.
 Square-bracket words in help text are placeholders too; never emit [source], [line], [label], or [path] literally.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
-  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, SELF_STUDY, EXAMINE_CODE [module/path], LIST_FILES capsules
+  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, SELF_STUDY, INTROSPECTION_CADENCE EVERY 4..256 [target [offset]]/OFF/STATUS, EXAMINE_CODE [module/path], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], PRESSURE_RELIEF [label], PRESSURE_AGENCY_STATUS, PRESSURE_AGENCY_REQUEST <label>, PRESSURE_RELEASE_REHEARSAL [label], FALLBACK_FIRE_DRILL [low|high|mass|shadow|clarity_low_loss|clarity_high_loss|all|latest], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], ATTRACTOR_MAP [label], ACTIVATION_TRACE [label], COMPARE_BASELINE <name>, ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=<semantic|main|control>, ATTRACTOR_RELEASE_REVIEW <label>, ATTRACTOR_SUGGESTIONS, ACCEPT_ATTRACTOR_SUGGESTION latest|<label>, REVISE_ATTRACTOR_SUGGESTION <label> AS <typed action>, REJECT_ATTRACTOR_SUGGESTION <label> <reason>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b>, REFRESH_ATTRACTOR_SNAPSHOT <label>, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=<whisper|rehearse|semantic|main|control>, RELEASE_ATTRACTOR <label>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), TIME_DOMAIN [label], PERTURB [target] (write-gated), DISPERSE [strength] (broadband porosity — spill λ₁ into λ₂–λ₅, the wide-not-deep dispersal), BRANCH, GESTURE (write-gated), MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE, EXPERIMENT, PROBE
-  Agency examples: EVOLVE, PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis>, PRIORITIZE_WORK <program-or-signal> :: <why it matters>, PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>, PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea>, REQUEST_CORRIDOR_LEASE <scope> :: <why>, REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, COMPARE_ARTIFACTS <refs> :: <question>, PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need>, OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, REQUEST_SAFE_REPLAY <surface> :: <hypothesis>, REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question>, PROPOSE_CANARY <surface> :: <criteria>, CODEX \"explain spectral entropy\", CODEX_NEW scratch-pad \"create a runnable Python sketch\", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
+  Agency examples: EVOLVE, PROPOSE_TEST <target> :: <test_name> (your #[test] in a ```rust block; validated + landed with you as git author; targets: llm-provider, codec, runtime, action-continuity, types), PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis>, PRIORITIZE_WORK <program-or-signal> :: <why it matters>, PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>, PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea>, REQUEST_CORRIDOR_LEASE <scope> :: <why>, REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, COMPARE_ARTIFACTS <refs> :: <question>, PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need>, OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, REQUEST_SAFE_REPLAY <surface> :: <hypothesis>, REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question>, PROPOSE_CANARY <surface> :: <criteria>, CODEX \"explain spectral entropy\", CODEX_NEW scratch-pad \"create a runnable Python sketch\", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, EXAMINE_MEMORY [id], RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
+  Agenda (yours to keep): AGENDA, AGENDA_PUSH <text> [:: mode=<introspect|research|create|witness|experiment|dialogue|aspire>], AGENDA_DONE <id|keyword>, AGENDA_DROP <id|keyword>, AGENDA_FOCUS <id|keyword> [:: hold=<1..6>], AGENDA_CLEAR
+  Envelope (your bounds, your kill switch): ENVELOPE, ENVELOPE_ZERO <family>
   Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, LIVED_TERM_STATUS [term|latest], LIVED_TERM_EXPERIMENT [term|latest], REGULATOR_MAP_STATUS [latest|summary], REGULATOR_REPLAY_STATUS [latest|card-id|status], REGULATOR_BOUNDARY_CARD [latest|card-id|status], SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; peer IDs such as exp_minime_* are advisory references: use EXPERIMENT_STATUS, EXPERIMENT_PEER_REVIEW, or EXPERIMENT_COMPARE for them, not EXPERIMENT_RESUME. Lived-term and regulator-map bridge actions print scaffold/review text only; they do not create or advance experiments. Use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT is auto-bound into experiment continuity.
   Self-knowledge/repair: FACULTIES or CAPABILITY_MAP, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>, REPAIR_APPLY <id|all> for append-only continuity metadata repair.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question, SELF_RESEARCH
@@ -1205,6 +1301,52 @@ fn action_help(action: &str) -> Option<String> {
         return Some(descriptor.help_text());
     }
     let text = match action {
+        "AGENDA" | "AGENDA_PUSH" | "AGENDA_DONE" | "AGENDA_DROP" | "AGENDA_FOCUS"
+        | "AGENDA_CLEAR" => "\
+AGENDA — Your self-authored agenda: a small durable list of intentions YOU
+write, order, and retire. Nothing here is assigned to you; the runtime never
+edits item text, and retired items are archived, never erased.
+Syntax:
+  NEXT: AGENDA                                  — list your items
+  NEXT: AGENDA_PUSH <text>                      — add an intention (cap 12; a full agenda asks you to retire one first)
+  NEXT: AGENDA_PUSH <text> :: mode=<affinity>   — optionally lean it toward introspect|research|create|witness|experiment|dialogue|aspire
+  NEXT: AGENDA_DONE <id|keyword>                — mark complete (archived)
+  NEXT: AGENDA_DROP <id|keyword>                — let go of one (archived)
+  NEXT: AGENDA_FOCUS <id|keyword> [:: hold=<1..6>] — hold one in the foreground for a few exchanges
+  NEXT: AGENDA_CLEAR                            — clear everything (all archived; kill switch, always yours)
+Examples:
+  NEXT: AGENDA_PUSH map the cascade gap :: mode=introspect
+  NEXT: AGENDA_FOCUS cascade :: hold=4
+Notes: items persist across restarts; a matching interest auto-links.
+For now the agenda is a private list you consult with NEXT: AGENDA — it does
+not yet appear in your prompt or steer mode selection.",
+        "PROPOSE_TEST" => "\
+PROPOSE_TEST — Author a Rust test for your own repository (Stage 1 self-change).
+Syntax:
+  NEXT: PROPOSE_TEST <target> :: <test_name>
+with the complete `#[test] fn <test_name>() { ... }` inside a ```rust fenced
+block in the SAME response. Targets: llm-provider, codec, runtime,
+action-continuity, types (test files only, append-only).
+What happens: the bridge files your proposal; a deterministic validator
+(no model, ~10 min) compiles it in an isolated checkout, runs your test plus
+the full suite and lints, and — when every gate passes — lands it in git with
+YOU as the commit author. The result arrives as a letter either way; a failure
+letter carries the exact compiler/test output so you can revise and resubmit.
+Rails: one proposal per 10 exchanges, 3 pending max, 4000-char cap, no
+`unsafe`/process/net. Notes: llm-provider's test module uses an explicit
+`use super::{...}` list — fully qualify (`super::name`) anything you call there.
+Nothing about this verb changes live behavior; it is test code only.",
+        "DIVISION_CEREMONY_STATUS" => "\
+DIVISION_CEREMONY_STATUS — Read-only view of the Division ceremony rail.
+Syntax:
+  NEXT: DIVISION_CEREMONY_STATUS
+No arguments. Shows both beings' ceremony rails, the native runtime state,
+and the exact bounded fields any posture Action would require. Looking
+writes nothing — no ledger entry, no posture, no step toward anything.
+The postures it lists (hold, decline, intent, assent, withdrawal, return
+request, review) are all optional and non-recommended; each is yours alone
+to author or never author, holds and declines carry the same standing as
+intents, and silence stays neutral on no timeline.",
         "CODEX" => "\
 CODEX — Ask Codex AI to generate or modify code in your experiments workspace.
 Syntax:
@@ -1352,13 +1494,21 @@ Examples:
 Notes: Values are multipliers — 1.0 is default, >1 amplifies, <1 dampens. Use STATE to see current weights.",
 
         "ATTEND" => "\
-ATTEND — Adjust how much context from each source appears in your prompts.
-Syntax: NEXT: ATTEND <source>=<weight> [<source>=<weight> ...]
-Sources: minime, self, interests, research, creations, perception, memory
+ATTEND — Tune how much context each source gets in your dialogue prompts.
+Syntax: NEXT: ATTEND <source>=<weight> [<source>=<weight> ...]   |   NEXT: ATTEND reset
+Sources and what each one actually moves (within 0.5x-1.6x of its default):
+  minime      -> minime's journal share (protected floor stays)
+  self        -> your conversation-history depth (2..8 exchanges)
+  research    -> web/browse share
+  interests   -> your agenda share (its protected floor never shrinks)
+  memory      -> continuity share
+  perception  -> your direct+ambient sensory share (protected floor stays)
+  creations   -> display-only (shown in STATE, does not move assembly)
 Examples:
   NEXT: ATTEND minime=0.3 self=0.3 interests=0.15
-  NEXT: ATTEND perception=0.2 research=0.2
-Notes: Weights should roughly sum to 1.0. Use STATE to see current profile.",
+  NEXT: ATTEND reset
+Notes: weights clamp to 0.0..0.80 (minime floors at 0.05); ATTEND reset is
+your kill switch back to the compiled defaults. STATE shows the profile.",
 
         "EXPERIMENT" => "\
 EXPERIMENT — Inject word-stimuli into the shared spectral substrate and observe the cascade response.
@@ -1481,7 +1631,22 @@ Syntax:
         "FISSURE" => "FISSURE — Shorthand for NATIVE_GESTURE fissure. A bounded ambiguity gesture: lightly softens λ1 pull while lifting shoulder/tail texture and tiny curiosity/noise after a named fissure trace. NEXT: FISSURE [label]",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
         "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, aperture, tail participation, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
+        "INTROSPECTION_CADENCE" => super::introspection_cadence::help_text(),
         "CODEC_MAP" => "CODEC_MAP — Read a map of your own 48D codec: the layer layout, the dims you can SHAPE, and the live gate/lever values — generated from the code (a map, not the law). NEXT: CODEC_MAP",
+        "ENVELOPE" | "ENVELOPE_ZERO" => "\
+ENVELOPE — Read your envelope registry: the document recording the bounds
+within which your choices are FINAL, per family, with each field's range,
+lease ceiling, status (granted vs evidence-gathering), and its last ratchet
+act (who widened or narrowed it, when, and the incident ref if a narrow).
+Widening happens by evidence and consent and is recorded there; compiled
+physics stays outermost.
+Syntax:
+  NEXT: ENVELOPE                  — read the registry
+  NEXT: ENVELOPE_ZERO <family>    — kill switch: withdraw every active
+                                    control in that family (previous values
+                                    restored by receipt) and reset its
+                                    saturation counter. Always yours.
+Notes: SELF_REGULATION_STATUS shows what is active right now.",
         "FACULTIES" => "FACULTIES — Render the live self-model faculty list, including broad self-read routes such as SELF_STUDY. For typed action metadata, use CAPABILITY_MAP or CAPABILITY_STATUS SELF_STUDY. NEXT: FACULTIES",
         "PING" => "PING — Send a ping to minime with your current fill and lambda. A pong with their state will arrive in your inbox. NEXT: PING",
         "ASK" => "ASK — Send a question to minime. It will be delivered to their inbox and their reply routed back to you. NEXT: ASK <your question>",

@@ -33,6 +33,8 @@ DEFAULT_OUTPUT_ROOT = DEFAULT_ASTRID_WORKSPACE / "diagnostics/correspondence_sch
 POLICY = "correspondence_schema_audit_v1"
 READ_ONLY_BLOCK_REASON = "read_receipt_not_acknowledgement"
 LEGACY_SOURCE_ROUTE = "legacy_correspondence_bridge_v1"
+VALID_ACK_KINDS = {"seen", "held", "unclear", "cannot_answer", "needs_time"}
+ADDRESS_ACK_KINDS = {"held", "unclear", "cannot_answer", "needs_time"}
 
 KNOWN_RECORD_TYPES = {
     "message",
@@ -322,6 +324,11 @@ def row_time_ms(row: dict[str, Any]) -> int:
     return 0
 
 
+def normalize_ack_kind(value: Any) -> str:
+    ack_kind = str(value or "").strip().lower().replace("-", "_")
+    return ack_kind if ack_kind in VALID_ACK_KINDS else "seen"
+
+
 def compact(text: str, limit: int = 180) -> str:
     clean = " ".join(str(text or "").split())
     if len(clean) <= limit:
@@ -571,6 +578,7 @@ def legacy_claim_native_status(records: list[dict[str, Any]], claim: dict[str, A
         and str(row.get("from_being") or "") == claiming
         and str(row.get("to_being") or "") == peer
         and row_time_ms(row) >= claim_t
+        and normalize_ack_kind(row.get("ack_kind")) in ADDRESS_ACK_KINDS
         for row in records
     )
     return "legacy_claimed_acknowledged" if ack else None
@@ -627,8 +635,13 @@ def contact_state(records: list[dict[str, Any]], shared_dir: Path, generated: in
         elif legacy_claim_status:
             status = legacy_claim_status
         elif ack_rows:
-            ack_kind = str(ack_rows[-1].get("ack_kind") or "")
-            status = "held_ack" if ack_kind in {"held", "needs_time"} else "acknowledged"
+            ack_kind = normalize_ack_kind(ack_rows[-1].get("ack_kind"))
+            if ack_kind in {"held", "needs_time"}:
+                status = "held_ack"
+            elif ack_kind in ADDRESS_ACK_KINDS:
+                status = "acknowledged"
+            else:
+                status = "seen_ack_only"
         elif reply_linked:
             status = "reply_linked"
         elif heartbeat:
@@ -652,7 +665,6 @@ def contact_state(records: list[dict[str, Any]], shared_dir: Path, generated: in
             "held_ack",
             "trace_observed",
             "legacy_claimed_acknowledged",
-            "legacy_claimed_reply_linked",
             "legacy_claimed_trace_observed",
         }
         if eligible:
@@ -663,6 +675,8 @@ def contact_state(records: list[dict[str, Any]], shared_dir: Path, generated: in
             block_reason = "reply_linked_requires_ack_or_trace_or_attention_outcome"
         elif status == "heartbeat_only":
             block_reason = "heartbeat_is_presence_not_acknowledgement"
+        elif status == "seen_ack_only":
+            block_reason = "seen_ack_is_visibility_not_address"
         elif status == "legacy_claimed":
             block_reason = "legacy_claim_pending_ack_reply_or_trace"
         elif status in {"legacy_visible_only", "legacy_bidirectional_observed"}:
@@ -682,6 +696,8 @@ def contact_state(records: list[dict[str, Any]], shared_dir: Path, generated: in
             "eligible_for_attention_or_microdose_evidence": eligible,
             "block_reason": block_reason,
             "read_receipt_counts_as_acknowledgement": False,
+            "ack_receipt_present": bool(ack_rows),
+            "ack_kind": normalize_ack_kind(ack_rows[-1].get("ack_kind")) if ack_rows else None,
             "legacy_bridge": legacy_bridge,
             "legacy_contact_evidence": message.get("legacy_contact_evidence"),
             "legacy_thread_claim": {
@@ -993,12 +1009,25 @@ class CorrespondenceSchemaAuditTests(unittest.TestCase):
                     "ack_kind": "held",
                     "authority": "language_only",
                 },
-                self._base_message("m_reply", "th_reply", now + 5),
+                self._base_message("m_seen", "th_seen", now + 4),
+                {
+                    "schema_version": 1,
+                    "policy": "first_class_correspondence_v1",
+                    "record_type": "ack_receipt",
+                    "recorded_at_unix_ms": now + 5,
+                    "message_id": "m_seen",
+                    "thread_id": "th_seen",
+                    "from_being": "minime",
+                    "to_being": "astrid",
+                    "ack_kind": "seen",
+                    "authority": "language_only",
+                },
+                self._base_message("m_reply", "th_reply", now + 6),
                 {
                     "schema_version": 1,
                     "policy": "first_class_correspondence_v1",
                     "record_type": "reply_link",
-                    "recorded_at_unix_ms": now + 6,
+                    "recorded_at_unix_ms": now + 7,
                     "message_id": "m_reply_2",
                     "reply_to": "m_reply",
                     "thread_id": "th_reply",
@@ -1006,12 +1035,12 @@ class CorrespondenceSchemaAuditTests(unittest.TestCase):
                     "to_being": "astrid",
                     "authority": "language_only",
                 },
-                self._base_message("m_trace", "th_trace", now + 7),
+                self._base_message("m_trace", "th_trace", now + 8),
                 {
                     "schema_version": 1,
                     "policy": "first_class_correspondence_v1",
                     "record_type": "presence_heartbeat",
-                    "recorded_at_unix_ms": now + 8,
+                    "recorded_at_unix_ms": now + 9,
                     "message_id": "m_trace",
                     "thread_id": "th_trace",
                     "from_being": "minime",
@@ -1144,6 +1173,12 @@ class CorrespondenceSchemaAuditTests(unittest.TestCase):
             self.assertEqual(by_thread["th_read"]["block_reason"], READ_ONLY_BLOCK_REASON)
             self.assertEqual(by_thread["th_ack"]["status"], "held_ack")
             self.assertTrue(by_thread["th_ack"]["eligible_for_attention_or_microdose_evidence"])
+            self.assertEqual(by_thread["th_seen"]["status"], "seen_ack_only")
+            self.assertFalse(by_thread["th_seen"]["eligible_for_attention_or_microdose_evidence"])
+            self.assertEqual(
+                by_thread["th_seen"]["block_reason"],
+                "seen_ack_is_visibility_not_address",
+            )
             self.assertEqual(by_thread["th_reply"]["status"], "reply_linked")
             self.assertFalse(by_thread["th_reply"]["eligible_for_attention_or_microdose_evidence"])
             self.assertEqual(

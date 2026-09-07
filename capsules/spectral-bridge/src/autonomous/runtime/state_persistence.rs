@@ -29,6 +29,8 @@ struct SavedState {
     vibrancy_aperture: f32,
     #[serde(default)]
     self_continuity_readout: bool,
+    #[serde(default)]
+    semantic_strand_retention_turns: u32,
     response_length: u32,
     self_reflect_paused: bool,
     ears_closed: bool,
@@ -82,7 +84,13 @@ struct SavedState {
     #[serde(default)]
     wants_introspect: bool,
     #[serde(default)]
-    introspect_target: Option<(String, usize)>,
+    wants_deep_think: bool,
+    #[serde(default)]
+    introspect_target: Option<state::IntrospectTargetV2>,
+    #[serde(default)]
+    agenda: next_action::agenda::AgendaV1,
+    #[serde(default)]
+    introspection_cadence: next_action::introspection_cadence::IntrospectionCadenceV1,
     /// Condition change receipts — persist across restarts so Astrid sees
     /// recent changes even after bridge restart.
     #[serde(default)]
@@ -95,7 +103,7 @@ struct SavedState {
     #[serde(default)]
     glimpse_12d: Option<Vec<f32>>,
     #[serde(default)]
-    pending_hebbian_outcomes: std::collections::VecDeque<state::PendingHebbianOutcome>,
+    pending_hebbian_outcomes: std::collections::VecDeque<learning_outcomes::PendingHebbianOutcome>,
     #[serde(default)]
     last_hebbian_consumed_telemetry_t_ms: Option<u64>,
     #[serde(default)]
@@ -116,6 +124,9 @@ struct SavedState {
     // v3.6.4 Review→Decide cadence (serde(default) keeps backward compat).
     #[serde(default)]
     last_review_parameter_requests_exchange: Option<u64>,
+    // Stage-1 being self-change: PROPOSE_TEST spacing rail.
+    #[serde(default)]
+    last_test_proposal_exchange: Option<u64>,
 }
 
 fn default_noise() -> f32 {
@@ -131,24 +142,6 @@ fn default_rest_range() -> (u64, u64) {
     (45, 90)
 }
 
-fn finalize_semantic_exchange(
-    conv: &mut ConversationState,
-    exchange_codec_signature: Option<Vec<f32>>,
-    fill_before: f32,
-    telemetry_t_ms: u64,
-    sent_semantic_chunk: bool,
-) {
-    if !sent_semantic_chunk {
-        return;
-    }
-    if let Some(signature) = exchange_codec_signature {
-        conv.arm_pending_hebbian_outcome(signature.clone(), fill_before, Some(telemetry_t_ms));
-        conv.glimpse_12d =
-            crate::codec::GlimpseCodec::derive_12d(&signature).map(|glimpse| glimpse.to_vec());
-        conv.last_exchange_codec_signature = Some(signature);
-    }
-}
-
 #[derive(Serialize, Deserialize)]
 struct SavedExchange {
     minime_said: String,
@@ -156,6 +149,26 @@ struct SavedExchange {
 }
 
 fn save_state(conv: &mut ConversationState) {
+    if let Err(error) = save_state_checked(conv) {
+        warn!(%error, "conversation checkpoint failed");
+    }
+}
+
+async fn finish_autonomous_drain(
+    conv: &mut ConversationState,
+    heartbeat: tokio::task::JoinHandle<()>,
+    job_status: tokio::task::JoinHandle<()>,
+) -> anyhow::Result<()> {
+    // Reached only after the admitted exchange finishes. Auxiliary producers
+    // must finish too, before the final durable conversation checkpoint.
+    heartbeat.await?;
+    job_status.await?;
+    save_state_checked(conv)?;
+    info!("autonomous work drained and conversation checkpoint persisted");
+    Ok(())
+}
+
+fn save_state_checked(conv: &mut ConversationState) -> anyhow::Result<()> {
     // v3.6.6: safety net — auto-defer ("expire") any pending parameter
     // request that has outlived AUTO_DEFER_AFTER_EXCHANGES since Astrid's
     // most recent REVIEW. Runs BEFORE the pending count + snapshot below
@@ -219,6 +232,7 @@ fn save_state(conv: &mut ConversationState) {
         tail_aperture: conv.tail_aperture,
         vibrancy_aperture: conv.vibrancy_aperture,
         self_continuity_readout: conv.self_continuity_readout,
+        semantic_strand_retention_turns: conv.semantic_strand_retention_turns,
         response_length: conv.response_length,
         self_reflect_paused: conv.self_reflect_paused,
         ears_closed: conv.ears_closed,
@@ -243,6 +257,7 @@ fn save_state(conv: &mut ConversationState) {
         burst_target: conv.burst_target,
         rest_range: conv.rest_range,
         interests: conv.interests.clone(),
+        agenda: conv.agenda.clone(),
         last_remote_glimpse_12d: conv.last_remote_glimpse_12d.clone(),
         last_remote_memory_id: conv.last_remote_memory_id.clone(),
         last_remote_memory_role: conv.last_remote_memory_role.clone(),
@@ -252,13 +267,15 @@ fn save_state(conv: &mut ConversationState) {
         last_research_anchor: conv.last_research_anchor.clone(),
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
         wants_introspect: conv.wants_introspect,
+        wants_deep_think: conv.wants_deep_think,
         introspect_target: conv.introspect_target.clone(),
+        introspection_cadence: conv.introspection_cadence.clone(),
         condition_receipts: conv.condition_receipts.clone(),
         attention: conv.attention.clone(),
         last_exchange_codec_signature: conv.last_exchange_codec_signature.clone(),
         glimpse_12d: conv.glimpse_12d.clone(),
-        pending_hebbian_outcomes: conv.pending_hebbian_outcomes.clone(),
-        last_hebbian_consumed_telemetry_t_ms: conv.last_hebbian_consumed_telemetry_t_ms,
+        pending_hebbian_outcomes: conv.hebbian_outcomes.pending.clone(),
+        last_hebbian_consumed_telemetry_t_ms: conv.hebbian_outcomes.last_consumed_t_ms,
         text_type_history: (!conv.text_type_history.is_empty())
             .then(|| conv.text_type_history.snapshot()),
         char_freq_window: (!conv.char_freq_window.is_empty())
@@ -269,10 +286,11 @@ fn save_state(conv: &mut ConversationState) {
         last_coupling_artifact_exchange: conv.last_coupling_artifact_exchange,
         last_sovereignty_nomination_exchange: conv.last_sovereignty_nomination_exchange,
         last_review_parameter_requests_exchange: conv.last_review_parameter_requests_exchange,
+        last_test_proposal_exchange: conv.last_test_proposal_exchange,
     };
-    if let Ok(json) = serde_json::to_string_pretty(&state) {
-        let _ = std::fs::write(&state_path, json);
-    }
+    let json = serde_json::to_vec_pretty(&state)?;
+    crate::lifecycle::atomic_private_write(&state_path, &json)?;
+    Ok(())
 }
 
 fn restore_state(conv: &mut ConversationState) {
@@ -298,6 +316,7 @@ fn restore_state(conv: &mut ConversationState) {
     conv.vibrancy_aperture = state.vibrancy_aperture;
     crate::llm::set_astrid_vibrancy_aperture(conv.vibrancy_aperture);
     conv.self_continuity_readout = state.self_continuity_readout;
+    conv.semantic_strand_retention_turns = state.semantic_strand_retention_turns.min(32);
     // Take the max of persisted and current default — never downgrade token limits.
     // Coupled model proven stable over 7200+ exchanges at 10-72 tok/s.
     // At 10 tok/s worst case, 1536 tokens = 154s gen, within 210s timeout.
@@ -324,7 +343,17 @@ fn restore_state(conv: &mut ConversationState) {
     conv.warmth_intensity_override = state.warmth_intensity_override;
     conv.burst_target = state.burst_target;
     conv.rest_range = state.rest_range;
-    conv.interests = state.interests;
+    // Heal pre-fix persisted interests that carry leaked control markers.
+    conv.interests = state
+        .interests
+        .into_iter()
+        .map(|interest| crate::autonomous::state::sanitize_interest_text(&interest))
+        .filter(|interest| !interest.is_empty())
+        .collect();
+    // Her agenda heals like her interests: transport markers stripped,
+    // empties dropped, focus cleared if its item vanished.
+    conv.agenda = state.agenda;
+    conv.agenda.resanitize();
     conv.last_remote_glimpse_12d = state.last_remote_glimpse_12d;
     conv.last_remote_memory_id = state.last_remote_memory_id;
     conv.last_remote_memory_role = state.last_remote_memory_role;
@@ -335,14 +364,22 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_research_anchor = state.last_research_anchor;
     conv.last_read_meaning_summary = state.last_read_meaning_summary;
     conv.wants_introspect = state.wants_introspect;
+    conv.wants_deep_think = state.wants_deep_think;
     conv.introspect_target = state.introspect_target;
+    conv.introspection_cadence = state.introspection_cadence;
+    conv.introspection_cadence.repair_after_restore(
+        conv.exchange_count,
+        next_action::introspection_cadence::unix_now_ms_for_restore(),
+    );
+    conv.introspection_cadence_attempt = None;
     conv.condition_receipts = state.condition_receipts;
     conv.attention = state.attention;
     conv.last_exchange_codec_signature = state.last_exchange_codec_signature;
     conv.glimpse_12d = state.glimpse_12d;
-    conv.pending_hebbian_outcomes = state.pending_hebbian_outcomes;
-    conv.repair_pending_hebbian_outcomes();
-    conv.last_hebbian_consumed_telemetry_t_ms = state.last_hebbian_consumed_telemetry_t_ms;
+    conv.hebbian_outcomes = learning_outcomes::HebbianOutcomeQueue::from_checkpoint(
+        state.pending_hebbian_outcomes,
+        state.last_hebbian_consumed_telemetry_t_ms,
+    );
     if let Some(snapshot) = state.text_type_history.as_ref() {
         conv.text_type_history = crate::codec::TextTypeHistory::warm_start_from_snapshot(snapshot);
     }
@@ -355,6 +392,7 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_coupling_artifact_exchange = state.last_coupling_artifact_exchange;
     conv.last_sovereignty_nomination_exchange = state.last_sovereignty_nomination_exchange;
     conv.last_review_parameter_requests_exchange = state.last_review_parameter_requests_exchange;
+    conv.last_test_proposal_exchange = state.last_test_proposal_exchange;
     info!(
         exchanges = conv.exchange_count,
         history_len = conv.history.len(),
@@ -368,4 +406,68 @@ fn restore_state(conv: &mut ConversationState) {
         witness_depth = conv.witness_depth.as_str(),
         "restored conversation state from previous session"
     );
+}
+
+#[cfg(test)]
+mod cadence_saved_state_tests {
+    use super::*;
+
+    fn minimal_saved_state() -> serde_json::Value {
+        serde_json::json!({
+            "exchange_count": 42,
+            "creative_temperature": 0.8,
+            "response_length": 512,
+            "self_reflect_paused": true,
+            "ears_closed": false,
+            "senses_snoozed": false,
+            "recent_next_choices": [],
+            "history": []
+        })
+    }
+
+    #[test]
+    fn saved_state_legacy_default_keeps_introspection_cadence_off() {
+        let restored: SavedState =
+            serde_json::from_value(minimal_saved_state()).expect("legacy saved state");
+        assert!(!restored.introspection_cadence.enabled);
+        assert_eq!(restored.introspection_cadence.every_exchanges, 0);
+        assert_eq!(restored.introspection_cadence.pending_since_exchange, None);
+    }
+
+    #[test]
+    fn saved_state_restores_pending_introspection_cadence_fields() {
+        let mut value = minimal_saved_state();
+        value["introspection_cadence"] = serde_json::json!({
+            "schema_version": 1,
+            "enabled": true,
+            "every_exchanges": 12,
+            "target": {"label": "astrid:llm", "offset": 400},
+            "anchor_completed_exchange": 30,
+            "pending_since_exchange": 42,
+            "last_attempt_exchange": 41,
+            "last_admitted_exchange": 18,
+            "last_outcome": {
+                "event": "failed",
+                "exchange": 41,
+                "reason": "provider_timeout",
+                "attempt_id": "attempt-1",
+                "artifact_path": null
+            }
+        });
+        let restored: SavedState = serde_json::from_value(value).expect("cadence saved state");
+        assert!(restored.introspection_cadence.enabled);
+        assert_eq!(restored.introspection_cadence.every_exchanges, 12);
+        assert_eq!(
+            restored
+                .introspection_cadence
+                .target
+                .as_ref()
+                .map(|target| (target.label.as_str(), target.offset)),
+            Some(("astrid:llm", Some(400)))
+        );
+        assert_eq!(
+            restored.introspection_cadence.pending_since_exchange,
+            Some(42)
+        );
+    }
 }

@@ -104,6 +104,24 @@ pub struct TelemetryHeartbeatDeltaV1 {
     pub field_vs_hearing: String,
 }
 
+/// Independent read-only evidence about whether modal distinction is mechanically observable.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SpectralModalDistinctionEvidenceV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_dimensionality: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distinguishability_loss: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_entropy: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_pairwise_overlap: Option<f32>,
+    pub availability_state: String,
+    pub basis: String,
+    pub authority: String,
+}
+
 /// Read-only schema truth around the typed spectral fingerprint.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpectralFingerprintIntegrityV1 {
@@ -122,12 +140,16 @@ pub struct SpectralFingerprintIntegrityV1 {
     pub hybrid_coherence_state: String,
     #[serde(default)]
     pub hybrid_coherence_basis: String,
+    #[serde(default)]
+    pub hybrid_coherence_scope: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_pairwise_overlap: Option<f32>,
     #[serde(default)]
     pub mode_collision_review_threshold: f32,
     #[serde(default)]
     pub mode_collision_state: String,
+    #[serde(default)]
+    pub modal_distinction_evidence_v1: SpectralModalDistinctionEvidenceV1,
     #[serde(default)]
     pub issues: Vec<String>,
     pub summary: String,
@@ -336,6 +358,8 @@ impl SpectralTelemetry {
         const HYBRID_COHERENCE_NEAR_AT: f32 = 0.90;
         const HYBRID_COHERENCE_MIXED_AT: f32 = 0.50;
         const MODE_COLLISION_REVIEW_OVERLAP: f32 = 0.90;
+        const HYBRID_COHERENCE_SCOPE: &str =
+            "typed_legacy_representation_agreement_not_modal_integration_or_felt_distinction";
 
         let typed_present = self.spectral_fingerprint_v1.is_some();
         let legacy_vector_len = self.spectral_fingerprint.as_ref().map(Vec::len);
@@ -384,6 +408,41 @@ impl SpectralTelemetry {
             .and_then(serde_json::Value::as_f64)
             .filter(|overlap| overlap.is_finite())
             .map(|overlap| overlap as f32);
+        let effective_dimensionality = self
+            .effective_dimensionality
+            .filter(|value| value.is_finite());
+        let distinguishability_loss = self
+            .distinguishability_loss
+            .filter(|value| value.is_finite());
+        let spectral_entropy = self
+            .typed_fingerprint()
+            .map(|fingerprint| fingerprint.spectral_entropy)
+            .filter(|value| value.is_finite());
+        let modal_evidence_count = [
+            effective_dimensionality.is_some(),
+            distinguishability_loss.is_some(),
+            spectral_entropy.is_some(),
+            max_pairwise_overlap.is_some(),
+        ]
+        .into_iter()
+        .filter(|present| *present)
+        .count();
+        let modal_distinction_evidence_v1 = SpectralModalDistinctionEvidenceV1 {
+            policy: "spectral_modal_distinction_evidence_v1".to_string(),
+            schema_version: 1,
+            effective_dimensionality,
+            distinguishability_loss,
+            spectral_entropy,
+            max_pairwise_overlap,
+            availability_state: match modal_evidence_count {
+                0 => "unavailable".to_string(),
+                4 => "complete_independent_sources".to_string(),
+                available => format!("partial_{available}_of_4_sources"),
+            },
+            basis: "independent_current_telemetry_values_not_derived_from_hybrid_coherence_or_felt_report"
+                .to_string(),
+            authority: "diagnostic_context_not_felt_state_or_control".to_string(),
+        };
         let mut issues = Vec::new();
         if let Some(len) = legacy_vector_len
             && len != 32
@@ -445,12 +504,14 @@ impl SpectralTelemetry {
                 hybrid_coherence_state,
                 hybrid_coherence_basis:
                     "normalized_rms_agreement_across_canonical_32_slots".to_string(),
+                hybrid_coherence_scope: HYBRID_COHERENCE_SCOPE.to_string(),
                 max_pairwise_overlap,
                 mode_collision_review_threshold: MODE_COLLISION_REVIEW_OVERLAP,
                 mode_collision_state,
+                modal_distinction_evidence_v1,
                 issues,
                 summary: format!(
-                    "legacy spectral_fingerprint has {len} values; expected 32, so typed reconstruction is blocked"
+                    "legacy spectral_fingerprint has {len} values; expected 32, so typed reconstruction is blocked; hybrid coherence is representation agreement, not modal integration or felt distinction"
                 ),
                 authority: "diagnostic_context_not_control".to_string(),
             };
@@ -463,6 +524,10 @@ impl SpectralTelemetry {
                 "{summary}; typed/legacy hybrid coherence={coherence:.3} state={hybrid_coherence_state}"
             )
         });
+        let summary = format!(
+            "{summary}; hybrid coherence is typed/legacy representation agreement, not modal integration or felt distinction; modal distinction evidence={}",
+            modal_distinction_evidence_v1.availability_state
+        );
 
         SpectralFingerprintIntegrityV1 {
             policy: "spectral_fingerprint_integrity_v1".to_string(),
@@ -476,9 +541,11 @@ impl SpectralTelemetry {
             hybrid_coherence_state,
             hybrid_coherence_basis:
                 "normalized_rms_agreement_across_canonical_32_slots".to_string(),
+            hybrid_coherence_scope: HYBRID_COHERENCE_SCOPE.to_string(),
             max_pairwise_overlap,
             mode_collision_review_threshold: MODE_COLLISION_REVIEW_OVERLAP,
             mode_collision_state,
+            modal_distinction_evidence_v1,
             issues,
             summary,
             authority: "diagnostic_context_not_control".to_string(),
@@ -527,5 +594,259 @@ impl SpectralTelemetry {
         self.eigenvector_field
             .as_ref()
             .and_then(EigenvectorFieldV1::from_value)
+    }
+}
+
+#[cfg(test)]
+mod telemetry_distinction_tests {
+    use super::*;
+
+    #[test]
+    fn hybrid_coherence_discloses_representation_scope_and_independent_modal_evidence() {
+        let telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "effective_dimensionality": 3.2,
+            "distinguishability_loss": 0.32,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.90,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            },
+            "eigenvector_field": {
+                "summary": {
+                    "max_pairwise_overlap": 0.93
+                }
+            }
+        }))
+        .unwrap();
+
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+
+        assert_eq!(
+            integrity.hybrid_coherence_scope,
+            "typed_legacy_representation_agreement_not_modal_integration_or_felt_distinction"
+        );
+        assert_eq!(
+            integrity
+                .modal_distinction_evidence_v1
+                .availability_state,
+            "complete_independent_sources"
+        );
+        assert_eq!(
+            integrity
+                .modal_distinction_evidence_v1
+                .distinguishability_loss,
+            Some(0.32)
+        );
+        assert_eq!(
+            integrity.modal_distinction_evidence_v1.spectral_entropy,
+            Some(0.90)
+        );
+        assert_eq!(
+            integrity.modal_distinction_evidence_v1.authority,
+            "diagnostic_context_not_felt_state_or_control"
+        );
+        assert!(integrity.summary.contains("not modal integration"));
+    }
+
+    #[test]
+    fn modal_distinction_evidence_does_not_invent_missing_values() {
+        let telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0],
+            "fill_ratio": 0.5
+        }))
+        .unwrap();
+
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+
+        assert_eq!(
+            integrity
+                .modal_distinction_evidence_v1
+                .availability_state,
+            "unavailable"
+        );
+        assert_eq!(
+            integrity.modal_distinction_evidence_v1.authority,
+            "diagnostic_context_not_felt_state_or_control"
+        );
+    }
+
+    #[test]
+    fn hybrid_coherence_returns_none_for_non_finite_legacy() {
+        // Astrid's Integrity Check ask (introspection_astrid_types_1786721214):
+        // the L163 finite guard must refuse NaN/Infinity legacy slots rather
+        // than produce a "coherent" number from poisoned input.
+        let mut telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.90,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            }
+        }))
+        .unwrap();
+        let mut poisoned = vec![0.0_f32; 32];
+        poisoned[7] = f32::NAN;
+        telemetry.spectral_fingerprint = Some(poisoned);
+
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert!(integrity.hybrid_coherence_index.is_none());
+        assert_eq!(integrity.hybrid_coherence_state, "unavailable_non_finite");
+
+        telemetry.spectral_fingerprint = Some(
+            std::iter::once(f32::INFINITY)
+                .chain(std::iter::repeat_n(0.0, 31))
+                .collect(),
+        );
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert!(integrity.hybrid_coherence_index.is_none());
+        assert_eq!(integrity.hybrid_coherence_state, "unavailable_non_finite");
+    }
+
+    #[test]
+    fn hybrid_coherence_index_populates_when_typed_takes_precedence() {
+        // Astrid's Schema Alignment ask (introspection_astrid_types_1786721214):
+        // with both payloads present, typed_precedence_over_legacy is true and
+        // the coherence index is populated from the typed source of truth.
+        let mut telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.90,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            }
+        }))
+        .unwrap();
+        telemetry.spectral_fingerprint = Some(vec![0.0_f32; 32]);
+
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert!(integrity.typed_precedence_over_legacy);
+        assert!(integrity.hybrid_coherence_index.is_some());
+        assert!(integrity.hybrid_max_abs_delta.is_some());
+    }
+
+    #[test]
+    fn hybrid_coherence_length_mismatch_is_disclosed_not_silent() {
+        // introspection_astrid_types_1788153857: Astrid's snag + proposed test #2.
+        // She worried the L163 guard returns a bare `None` for a legacy slice
+        // whose length != 32, surfacing as silent "missing" data in
+        // hybrid_coherence_index. Ground truth: the private fn does return a bare
+        // None at length 31 (her concern holds at that level), but the public
+        // integrity report is NOT silent — it names the reason via
+        // hybrid_coherence_state and pushes a specific issue string. The existing
+        // non-finite regression covers the length-32-but-non-finite path only;
+        // this covers the length-mismatch (unavailable_malformed_legacy) path.
+        let telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.90,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            }
+        }))
+        .unwrap();
+
+        // 1. Private fn, exactly as Astrid proposed: a length-31 legacy slice
+        //    hits the L163 length guard and returns None. (The public caller
+        //    pre-filters legacy.len() == 32, so this guard is defensive
+        //    redundancy for that path — still worth a direct regression.)
+        let typed = telemetry
+            .typed_fingerprint()
+            .expect("typed fingerprint present");
+        assert!(spectral_fingerprint_hybrid_coherence_v1(&typed, &[0.0_f32; 31]).is_none());
+
+        // 2. Public path: the length mismatch is disclosed, not silent.
+        let mut telemetry = telemetry;
+        telemetry.spectral_fingerprint = Some(vec![0.0_f32; 31]);
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert!(integrity.hybrid_coherence_index.is_none());
+        assert_eq!(integrity.hybrid_coherence_state, "unavailable_malformed_legacy");
+        assert!(
+            integrity
+                .issues
+                .iter()
+                .any(|issue| issue == "legacy_vector_len_31_expected_32")
+        );
+    }
+
+    #[test]
+    fn integrity_report_serde_defaults_are_independent_for_mode_collision_fields() {
+        // introspection_astrid_types_1788153857 (proposed test #1): confirm the
+        // #[serde(default)] contract on SpectralFingerprintIntegrityV1. Astrid
+        // framed mode_collision_state as defaulting "when
+        // mode_collision_review_threshold is set", but the two fields carry
+        // INDEPENDENT #[serde(default)] attributes with no conditional linkage:
+        // omitting mode_collision_state yields String::default() ("") whether or
+        // not the threshold is present.
+        let integrity: SpectralFingerprintIntegrityV1 =
+            serde_json::from_value(serde_json::json!({
+                "policy": "spectral_fingerprint_integrity_v1",
+                "schema_version": 1,
+                "status": "absent",
+                "typed_present": false,
+                "typed_precedence_over_legacy": false,
+                "summary": "no spectral fingerprint payload present",
+                "authority": "diagnostic_context_not_control"
+            }))
+            .unwrap();
+        assert_eq!(integrity.mode_collision_state, "");
+        assert_eq!(integrity.mode_collision_review_threshold, 0.0_f32);
+
+        // Independence: supplying the threshold does not populate the state.
+        let with_threshold: SpectralFingerprintIntegrityV1 =
+            serde_json::from_value(serde_json::json!({
+                "policy": "spectral_fingerprint_integrity_v1",
+                "schema_version": 1,
+                "status": "absent",
+                "typed_present": false,
+                "typed_precedence_over_legacy": false,
+                "mode_collision_review_threshold": 0.90,
+                "summary": "no spectral fingerprint payload present",
+                "authority": "diagnostic_context_not_control"
+            }))
+            .unwrap();
+        assert_eq!(with_threshold.mode_collision_state, "");
+        assert_eq!(with_threshold.mode_collision_review_threshold, 0.90_f32);
     }
 }

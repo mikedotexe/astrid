@@ -36,6 +36,7 @@ VALID_STREAMS = frozenset(
         "steward_work_selection",
         "model_qos",
         "steward_control",
+        "envelope_registry",
     }
 )
 

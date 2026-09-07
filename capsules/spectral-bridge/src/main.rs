@@ -19,7 +19,7 @@ use clap::Parser;
 use spectral_bridge_server::{
     attractor_atlas, authority_gate, autonomous, condition_metrics,
     db::BridgeDb,
-    lived_state_witness, mcp,
+    deployment, lifecycle, lived_state_witness, mcp,
     message_archive::{self, BridgeMessageMaintenanceConfig},
     paths::{BridgePathOverrides, configure_bridge_paths},
     rescue_policy,
@@ -35,6 +35,22 @@ use ws::BridgeState;
 #[derive(Parser)]
 #[command(name = "spectral-bridge-server", version)]
 struct Cli {
+    /// Bind this process to an explicit staged build manifest before admission.
+    #[arg(long)]
+    deployment_manifest: Option<PathBuf>,
+
+    /// Verify the staged executable/manifest binding and exit without runtime work.
+    #[arg(
+        long,
+        requires = "deployment_manifest",
+        conflicts_with = "prepare_self_control_deployment_handoff"
+    )]
+    verify_deployment_manifest: bool,
+
+    /// Decode the existing checkpoint and inspect state lineage without mutation.
+    #[arg(long, requires = "deployment_manifest", conflicts_with_all = ["verify_deployment_manifest", "prepare_self_control_deployment_handoff"])]
+    verify_deployment_inputs: bool,
+
     /// Minime telemetry `WebSocket` address (outbound eigenvalue stream).
     #[arg(long, default_value = "ws://127.0.0.1:7878")]
     minime_telemetry: String,
@@ -157,6 +173,21 @@ struct Cli {
     /// Optional max_actions cap for `--approve-research-budget` (hard-capped by policy).
     #[arg(long)]
     max_actions: Option<u64>,
+
+    /// Prepare a signed one-shot handoff of valid Astrid self-control state to this build.
+    #[arg(
+        long,
+        requires_all = ["operator_actor", "operator_ack"]
+    )]
+    prepare_self_control_deployment_handoff: bool,
+
+    /// Operator identity recorded on a deployment-lineage handoff.
+    #[arg(long, requires = "prepare_self_control_deployment_handoff")]
+    operator_actor: Option<String>,
+
+    /// Explicit operator acknowledgement for a deployment-lineage handoff.
+    #[arg(long, requires = "prepare_self_control_deployment_handoff")]
+    operator_ack: Option<String>,
 }
 
 #[tokio::main]
@@ -182,6 +213,36 @@ async fn main() -> Result<()> {
         introspector_script: cli.introspector_script.clone(),
         reflective_sidecar_script: cli.reflective_sidecar_script.clone(),
     });
+    deployment::configure(cli.deployment_manifest.as_deref()).map_err(anyhow::Error::msg)?;
+    if cli.verify_deployment_manifest {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&deployment::verification_receipt())?
+        );
+        return Ok(());
+    }
+    if cli.verify_deployment_inputs {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(
+                &autonomous::inspect_deployment_inputs().map_err(anyhow::Error::msg)?
+            )?
+        );
+        return Ok(());
+    }
+    if cli.autonomous
+        && cli.deployment_manifest.is_some()
+        && !cli.prepare_self_control_deployment_handoff
+    {
+        let startup = autonomous::apply_deployment_startup().map_err(anyhow::Error::msg)?;
+        lifecycle::atomic_private_write(
+            &resolved_paths.astrid_root().join(format!(
+                ".runtime/bridge-lifecycle/{}.startup.json",
+                std::process::id()
+            )),
+            &serde_json::to_vec_pretty(&startup)?,
+        )?;
+    }
     lived_state_witness::initialize_runtime_identity_v1();
     let archive_dir = cli.message_archive_dir.clone().unwrap_or_else(|| {
         resolved_paths
@@ -191,6 +252,23 @@ async fn main() -> Result<()> {
     let status_path = resolved_paths
         .bridge_workspace()
         .join("runtime/bridge_db_maintenance_status.json");
+
+    if cli.prepare_self_control_deployment_handoff {
+        let operator_actor = cli
+            .operator_actor
+            .as_deref()
+            .ok_or_else(|| anyhow::anyhow!("--operator-actor is required"))?;
+        let operator_ack = cli
+            .operator_ack
+            .as_deref()
+            .ok_or_else(|| anyhow::anyhow!("--operator-ack is required"))?;
+        let receipt =
+            autonomous::prepare_self_control_deployment_handoff(operator_actor, operator_ack)
+                .map_err(anyhow::Error::msg)?;
+        println!("{}", serde_json::to_string_pretty(&receipt)?);
+        return Ok(());
+    }
+
     let mut maintenance_config = BridgeMessageMaintenanceConfig::new(
         cli.retention_secs,
         archive_dir,
@@ -268,7 +346,12 @@ async fn main() -> Result<()> {
         // (scope=read_only_research + eligibility + green/yellow + action/TTL caps) and gate on
         // the CURRENT fill from minime's spectral_state.json — fail-safe REFUSE if we cannot
         // verify current safety. Web reach is an OPERATOR decision; the steward loop never
-        // auto-grants it. approve_research_budget returns a BLOCK record on
+        // auto-grants it. 2026-08-16: Mike explicitly delegated standing read-only-research
+        // approval to the deterministic scripts/research_budget_approver.py job (launchd
+        // com.astrid.research-budget-approver) after fifteen requests in a row expired
+        // ungranted in their 6h TTL windows with no operator present. The delegation adds
+        // PRESENCE only: this CLI still enforces every gate above on each invocation, and
+        // microdose / live-consequence grants remain manual and steward-explicit. approve_research_budget returns a BLOCK record on
         // scope/eligibility/safety/active-exists, so success == record_type research_budget_approval.
         let minime_ws = resolved_paths.minime_workspace();
         let safety = match authority_gate::read_minime_fill_pct(minime_ws) {
@@ -378,7 +461,18 @@ async fn main() -> Result<()> {
     let state = Arc::new(RwLock::new(BridgeState::new()));
 
     // Shutdown signal.
+    let mut signals = lifecycle::Signals::install()?;
     let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
+    let (io_shutdown_tx, io_shutdown_rx) = tokio::sync::watch::channel(false);
+    let lifecycle_status = if cli.autonomous {
+        Some(lifecycle::Status::new(
+            &resolved_paths
+                .astrid_root()
+                .join(".runtime/bridge-lifecycle"),
+        )?)
+    } else {
+        None
+    };
 
     // Sensory outbound channel — MCP tools and WASM component send here.
     let (sensory_tx, sensory_rx) = mpsc::channel(256);
@@ -391,7 +485,7 @@ async fn main() -> Result<()> {
         cli.minime_telemetry.clone(),
         Arc::clone(&state),
         Arc::clone(&db),
-        shutdown_rx.clone(),
+        io_shutdown_rx.clone(),
     );
 
     let sensory_enabled = rescue_policy::bridge_sensory_enabled();
@@ -402,7 +496,7 @@ async fn main() -> Result<()> {
             Arc::clone(&db),
             sensory_rx,
             addressed_sensory_rx,
-            shutdown_rx.clone(),
+            io_shutdown_rx.clone(),
         ))
     } else {
         info!("rescue profile disabled bridge sensory socket; running telemetry-only");
@@ -413,7 +507,7 @@ async fn main() -> Result<()> {
 
     // Spawn MCP server on stdio.
     let sensory_tx_mcp = sensory_tx.clone();
-    let mcp_handle = tokio::spawn(mcp::run_mcp_server(
+    let mut mcp_handle = tokio::spawn(mcp::run_mcp_server(
         Arc::clone(&state),
         Arc::clone(&db),
         sensory_tx_mcp,
@@ -430,7 +524,7 @@ async fn main() -> Result<()> {
     } else {
         false
     };
-    let _autonomous_handle = if autonomous_enabled {
+    let autonomous_handle = if autonomous_enabled {
         let interval = std::time::Duration::from_secs(cli.auto_interval_secs);
         Some(autonomous::spawn_autonomous_loop(
             interval,
@@ -452,14 +546,15 @@ async fn main() -> Result<()> {
     let maintenance_db = Arc::clone(&db);
     let maintenance_config_for_task = maintenance_config.clone();
     let mut maintenance_shutdown = shutdown_rx.clone();
-    let _maintenance_handle = tokio::spawn(async move {
+    let maintenance_handle = tokio::spawn(async move {
         let mut interval = tokio::time::interval(std::time::Duration::from_secs(
             cli.maintenance_interval_secs,
         ));
         interval.tick().await; // Skip the immediate first tick.
         loop {
             tokio::select! {
-                _ = maintenance_shutdown.changed() => return,
+                biased;
+                _ = lifecycle::stop_requested(&mut maintenance_shutdown) => return,
                 _ = interval.tick() => {
                     let db = Arc::clone(&maintenance_db);
                     let config = maintenance_config_for_task.clone();
@@ -490,38 +585,77 @@ async fn main() -> Result<()> {
 
     info!("spectral bridge running — WebSocket + MCP tasks spawned");
 
-    // Wait for shutdown: ctrl-c always, MCP exit only when not autonomous.
-    if cli.autonomous {
-        // In autonomous mode, don't exit on stdin close — run until ctrl-c.
-        tokio::signal::ctrl_c().await?;
-        info!("spectral bridge received ctrl-c");
+    if let Some(status) = &lifecycle_status
+        && let Err(error) = status.publish("running", None)
+    {
+        warn!(%error, "could not publish running lifecycle status");
+    }
+    let mut mcp_result = None;
+    let request = if cli.autonomous {
+        signals.next().await
     } else {
         tokio::select! {
-            _ = tokio::signal::ctrl_c() => {
-                info!("spectral bridge received ctrl-c");
-            }
-            _ = mcp_handle => {
-                info!("MCP server exited (stdin closed)");
+            request = signals.next() => request,
+            result = &mut mcp_handle => {
+                mcp_result = Some(result);
+                lifecycle::Request::Exit
             }
         }
-    }
+    };
 
-    info!("spectral bridge shutting down");
-
-    // Signal all tasks to stop.
+    info!("operator drain requested: closing producer admission");
+    // Keep transport alive while admitted work finishes and drops its senders.
     let _ = shutdown_tx.send(true);
-
-    // Wait for WebSocket tasks to finish.
-    let _ = tokio::time::timeout(std::time::Duration::from_secs(5), async {
-        let _ = telemetry_handle.await;
-        if let Some(handle) = sensory_handle {
-            let _ = handle.await;
+    if let Some(status) = &lifecycle_status
+        && let Err(error) = status.publish("draining", None)
+    {
+        warn!(%error, "could not publish drain progress");
+    }
+    let drain = async {
+        if let Some(handle) = autonomous_handle {
+            handle.await??;
         }
-    })
+        match mcp_result {
+            Some(result) => result??,
+            None => mcp_handle.await??,
+        }
+        maintenance_handle.await?;
+        lifecycle::wait_background().await?;
+        // Natural channel closure consumes queued local sends. Existing protocol
+        // receipts still distinguish unknown delivery from peer acknowledgement.
+        if let Some(handle) = sensory_handle {
+            handle.await?;
+        }
+        let _ = io_shutdown_tx.send(true);
+        telemetry_handle.await?;
+        lifecycle::queued::wait().await?;
+        message_archive::write_bridge_db_status(db.as_ref(), &maintenance_config)?;
+        if let Some(status) = &lifecycle_status {
+            let checkpoint = resolved_paths.state_path();
+            status.publish(
+                "drained",
+                autonomous_enabled.then_some(checkpoint.as_path()),
+            )?;
+        }
+        Ok::<(), anyhow::Error>(())
+    };
+    let (result, exit_requested) = lifecycle::complete_drain(
+        drain,
+        async || signals.next().await,
+        request == lifecycle::Request::Exit,
+    )
     .await;
 
-    if let Err(error) = message_archive::write_bridge_db_status(db.as_ref(), &maintenance_config) {
-        warn!(error = %error, "failed to refresh bridge DB maintenance status on shutdown");
+    if let Err(error) = result {
+        tracing::error!(%error, "drain failed; holding process for operator recovery, no forced exit");
+        if let Some(status) = &lifecycle_status {
+            let _ = status.publish("failed", None);
+        }
+        std::future::pending::<()>().await;
+    }
+    if !exit_requested {
+        info!("operator drain complete; holding without autonomous admission until TERM/INT");
+        while signals.next().await != lifecycle::Request::Exit {}
     }
 
     info!("spectral bridge stopped");

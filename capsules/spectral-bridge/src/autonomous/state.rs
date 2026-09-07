@@ -1,5 +1,5 @@
-use std::collections::{HashMap, VecDeque};
-use std::path::PathBuf;
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
@@ -13,7 +13,6 @@ const RESEARCH_NEW_GROUND_LOOKBACK_EXCHANGES: u64 = 6;
 const MAX_NEW_GROUND_BUDGET: u8 = 3;
 const MAX_RECENT_RESEARCH_PROGRESS: usize = 16;
 const READ_DEPTH_ADVANCE_MIN_CHARS: u32 = 1_000;
-const MAX_PENDING_HEBBIAN_OUTCOMES: usize = 4;
 const ASTRID_MOTIF_COOLDOWN_WINDOW: usize = 6;
 const ASTRID_MOTIF_COOLDOWN_THRESHOLD: usize = 4;
 const ASTRID_MOTIF_COOLDOWN_SECS: u64 = 90 * 60;
@@ -23,6 +22,12 @@ const ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY: &str = "internal_topology";
 const ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY: &str = "pressure_vocabulary";
 const ASTRID_MOTIF_CLASS_AGENCY_VERNACULAR: &str = "agency_vernacular";
 const ASTRID_MOTIF_CLASS_AFTERIMAGE_ABSENCE: &str = "afterimage_absence";
+/// Failed dialogue generations before a pending peer self-study is aged out
+/// (it can no longer pin Mode::Dialogue; the entry stays in the journal list).
+const PENDING_SELF_STUDY_MAX_FAILED_EXCHANGES: u32 = 3;
+/// Consecutive inbox-forced fallback exchanges before dialogue forcing is
+/// released (the letter stays unread and visible; other modes may run).
+const INBOX_FORCED_FALLBACK_LIMIT: u32 = 5;
 
 /// Snapshot of spectral + reservoir state at PERTURB time.
 /// Consumed on the next exchange to show Astrid the temporal ripple.
@@ -446,14 +451,6 @@ fn cooldown_event_class(cooldown_class: &str) -> &'static str {
     } else {
         ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub(crate) struct PendingHebbianOutcome {
-    pub exchange_count: u64,
-    pub signature: Vec<f32>,
-    pub fill_before: f32,
-    pub telemetry_t_ms_before: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -1000,6 +997,59 @@ pub(in crate::autonomous) struct SpectralSample {
     pub ts: std::time::Instant,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(in crate::autonomous) enum IntrospectOffsetV2 {
+    Auto,
+    Exact(usize),
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub(in crate::autonomous) struct IntrospectTargetV2 {
+    pub label: String,
+    pub offset: IntrospectOffsetV2,
+}
+
+impl IntrospectTargetV2 {
+    #[must_use]
+    pub(in crate::autonomous) fn auto(label: String) -> Self {
+        Self {
+            label,
+            offset: IntrospectOffsetV2::Auto,
+        }
+    }
+
+    #[must_use]
+    pub(in crate::autonomous) fn exact(label: String, offset: usize) -> Self {
+        Self {
+            label,
+            offset: IntrospectOffsetV2::Exact(offset),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for IntrospectTargetV2 {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Representation {
+            V2 {
+                label: String,
+                offset: IntrospectOffsetV2,
+            },
+            Legacy((String, usize)),
+        }
+
+        match Representation::deserialize(deserializer)? {
+            Representation::V2 { label, offset } => Ok(Self { label, offset }),
+            Representation::Legacy((label, offset)) => Ok(Self::exact(label, offset)),
+        }
+    }
+}
+
 /// Tracks conversational context across iterations.
 pub(in crate::autonomous) struct ConversationState {
     pub prev_fill: f32,
@@ -1021,6 +1071,12 @@ pub(in crate::autonomous) struct ConversationState {
     pub remote_workspace: Option<PathBuf>,
     /// New minime self-study waiting for an immediate Astrid response.
     pub pending_remote_self_study: Option<RemoteJournalEntry>,
+    /// Consecutive failed dialogue generations while a self-study was pending.
+    /// Ages the pending entry out (never lets it force Mode::Dialogue forever).
+    pub pending_self_study_failed_exchanges: u32,
+    /// Consecutive inbox-forced exchanges that ended in dialogue_fallback.
+    /// Bounds how long an unretired letter can starve other modes.
+    pub inbox_forced_fallback_streak: u32,
     /// Recent conversation history for statefulness (last N exchanges).
     pub history: Vec<crate::llm::Exchange>,
     /// Lexical cooldown for repeated internal-topology phrasing in Astrid outputs.
@@ -1058,8 +1114,15 @@ pub(in crate::autonomous) struct ConversationState {
     pub last_read_meaning_summary: Option<String>,
     /// Astrid chose NEXT: INTROSPECT — force introspection mode next exchange.
     pub wants_introspect: bool,
-    /// Optional: specific source label and line offset for targeted introspection.
-    pub introspect_target: Option<(String, usize)>,
+    /// Optional source target. Omitted offsets continue the durable source session;
+    /// explicit offsets, including zero, preserve Astrid's exact request.
+    pub introspect_target: Option<IntrospectTargetV2>,
+    /// Astrid-authored standing introspection preference. Default OFF.
+    pub introspection_cadence: super::next_action::introspection_cadence::IntrospectionCadenceV1,
+    /// Ephemeral claim for a cadence-selected attempt. Persisted due state remains
+    /// pending until canonical admission, so a crash cannot silently advance it.
+    pub introspection_cadence_attempt:
+        Option<super::next_action::introspection_cadence::IntrospectionCadenceAttemptV1>,
     /// Astrid chose NEXT: REVISE [keyword] — load a previous creation and iterate.
     pub revise_keyword: Option<String>,
     /// Astrid chose NEXT: COMPOSE or VOICE — generate WAV from spectral state.
@@ -1108,6 +1171,9 @@ pub(in crate::autonomous) struct ConversationState {
     /// — consent-with-evidence: shown to her offline first, then she opts the live readout on. A
     /// pure readout: changes nothing she emits and touches no shared substrate.
     pub self_continuity_readout: bool,
+    /// Number of completed turns that owner-only semantic strand sidecars may
+    /// remain available for self-inquiry. This never admits them to a live lane.
+    pub semantic_strand_retention_turns: u32,
     pub response_length: u32,
     pub emphasis: Option<String>,
     /// v3.6.1 cadence tracking — exchange at which Astrid last picked
@@ -1161,12 +1227,8 @@ pub(in crate::autonomous) struct ConversationState {
     /// Small pairwise co-activation sidecar that learns which dimension
     /// combinations tend to move fill toward a healthier center.
     pub hebbian_codec: HebbianCodecSidecar,
-    /// One-shot contact receipts that wait for a newer Minime telemetry sample
-    /// before teaching the Hebbian sidecar about the sent exchange.
-    pub pending_hebbian_outcomes: VecDeque<PendingHebbianOutcome>,
-    /// Telemetry watermark for queued Hebbian receipt consumption. Prevents
-    /// multiple queued receipts from being consumed on the same telemetry tick.
-    pub last_hebbian_consumed_telemetry_t_ms: Option<u64>,
+    /// One-shot outcomes bound to a bridge-local telemetry continuity window.
+    pub hebbian_outcomes: super::learning_outcomes::HebbianOutcomeQueue,
     /// Warmth intensity override for rest phase (0.0-1.0, None = default taper).
     pub warmth_intensity_override: Option<f32>,
     /// Whether breathing is coupled to minime's spectral state.
@@ -1202,6 +1264,17 @@ pub(in crate::autonomous) struct ConversationState {
     pub pending_file_listing: Option<String>,
     /// Lasting self-directed interests. Persist across restarts via state.json.
     pub interests: Vec<String>,
+    /// Her self-authored agenda (Constitution flagship A1). Persists across
+    /// restarts via state.json; item text is verbatim hers.
+    pub agenda: super::next_action::agenda::AgendaV1,
+    /// Exchanges remaining before the agenda pull may fire again (A3).
+    /// Deliberately NOT persisted — a restart clears the cooldown.
+    pub agenda_pull_cooldown: u8,
+    /// Rolling window of chosen modes for agenda_mode_health (diagnostic
+    /// only; not persisted).
+    pub recent_mode_choices: std::collections::VecDeque<&'static str>,
+    /// Total choose_mode calls this process (drives snapshot cadence).
+    pub mode_health_choice_count: u64,
     /// Lightweight regime tracker — classifies spectral state every exchange.
     pub regime_tracker: crate::reflective::RegimeTracker,
     /// Astrid chose DEFER — acknowledge inbox without forced dialogue response.
@@ -1240,6 +1313,10 @@ pub(in crate::autonomous) struct ConversationState {
     /// too often are different patterns. Same 10-min cooldown semantics
     /// per `ask_steward.rs`.
     pub last_tell_steward_ts: Option<u64>,
+    /// Exchange count at her last PROPOSE_TEST filing. Persisted rail:
+    /// one test proposal per `propose_test` spacing window, surviving
+    /// restarts unlike the in-memory probe cooldown.
+    pub last_test_proposal_exchange: Option<u64>,
 }
 
 impl ConversationState {
@@ -1259,6 +1336,8 @@ impl ConversationState {
             dialogue_cursor: 0,
             remote_workspace,
             pending_remote_self_study: None,
+            pending_self_study_failed_exchanges: 0,
+            inbox_forced_fallback_streak: 0,
             history: Vec::new(),
             astrid_motif_cooldown: None,
             introspect_cursor: 0,
@@ -1268,6 +1347,7 @@ impl ConversationState {
             wants_search: false,
             last_ask_steward_ts: None,
             last_tell_steward_ts: None,
+            last_test_proposal_exchange: None,
             senses_snoozed: false,
             self_reflect_paused: true,
             self_reflect_override: None,
@@ -1282,6 +1362,9 @@ impl ConversationState {
             last_read_meaning_summary: None,
             wants_introspect: false,
             introspect_target: None,
+            introspection_cadence:
+                super::next_action::introspection_cadence::IntrospectionCadenceV1::default(),
+            introspection_cadence_attempt: None,
             revise_keyword: None,
             wants_compose_audio: false,
             wants_analyze_audio: false,
@@ -1300,6 +1383,7 @@ impl ConversationState {
             tail_aperture: 0.0,
             vibrancy_aperture: 0.0,
             self_continuity_readout: false,
+            semantic_strand_retention_turns: 0,
             response_length: 768,
             emphasis: None,
             last_temperature_change_exchange: None,
@@ -1320,8 +1404,7 @@ impl ConversationState {
             codec_weights: HashMap::new(),
             learned_codec_weights: HashMap::new(),
             hebbian_codec: HebbianCodecSidecar::default(),
-            pending_hebbian_outcomes: VecDeque::with_capacity(MAX_PENDING_HEBBIAN_OUTCOMES),
-            last_hebbian_consumed_telemetry_t_ms: None,
+            hebbian_outcomes: super::learning_outcomes::HebbianOutcomeQueue::default(),
             warmth_intensity_override: None,
             breathing_coupled: true,
             echo_muted: false,
@@ -1337,6 +1420,10 @@ impl ConversationState {
             text_type_history: crate::codec::TextTypeHistory::new(),
             pending_file_listing: None,
             interests: Vec::new(),
+            agenda: super::next_action::agenda::AgendaV1::default(),
+            agenda_pull_cooldown: 0,
+            recent_mode_choices: std::collections::VecDeque::new(),
+            mode_health_choice_count: 0,
             last_remote_glimpse_12d: None,
             last_remote_memory_id: None,
             last_remote_memory_role: None,
@@ -1368,63 +1455,6 @@ impl ConversationState {
             });
         while self.condition_receipts.len() > crate::self_model::MAX_RECEIPTS {
             self.condition_receipts.pop_front();
-        }
-    }
-
-    pub(super) fn arm_pending_hebbian_outcome(
-        &mut self,
-        signature: Vec<f32>,
-        fill_before: f32,
-        telemetry_t_ms_before: Option<u64>,
-    ) {
-        if signature.is_empty() {
-            return;
-        }
-        if self.pending_hebbian_outcomes.len() >= MAX_PENDING_HEBBIAN_OUTCOMES {
-            let dropped = self.pending_hebbian_outcomes.pop_front();
-            warn!(
-                dropped_exchange = dropped.as_ref().map(|receipt| receipt.exchange_count),
-                kept = MAX_PENDING_HEBBIAN_OUTCOMES.saturating_sub(1),
-                "dropping oldest pending Hebbian outcome to preserve bounded FIFO"
-            );
-        }
-        self.pending_hebbian_outcomes
-            .push_back(PendingHebbianOutcome {
-                exchange_count: self.exchange_count,
-                signature,
-                fill_before,
-                telemetry_t_ms_before,
-            });
-    }
-
-    pub(super) fn take_pending_hebbian_outcome_for_telemetry(
-        &mut self,
-        telemetry_t_ms: u64,
-    ) -> Option<PendingHebbianOutcome> {
-        if self
-            .last_hebbian_consumed_telemetry_t_ms
-            .is_some_and(|last| telemetry_t_ms <= last)
-        {
-            return None;
-        }
-        let should_consume = self
-            .pending_hebbian_outcomes
-            .front()
-            .is_some_and(|receipt| {
-                receipt
-                    .telemetry_t_ms_before
-                    .is_none_or(|before| telemetry_t_ms > before)
-            });
-        if !should_consume {
-            return None;
-        }
-        self.last_hebbian_consumed_telemetry_t_ms = Some(telemetry_t_ms);
-        self.pending_hebbian_outcomes.pop_front()
-    }
-
-    pub(super) fn repair_pending_hebbian_outcomes(&mut self) {
-        while self.pending_hebbian_outcomes.len() > MAX_PENDING_HEBBIAN_OUTCOMES {
-            self.pending_hebbian_outcomes.pop_front();
         }
     }
 
@@ -2265,26 +2295,116 @@ impl ConversationState {
     }
 
     /// Rescan the journal directory for new entries.
+    ///
+    /// New-entry detection is path-diff based, NOT count based. The old
+    /// `fresh.len() - count_at_scan` arithmetic froze permanently whenever an
+    /// archive sweep moved thousands of files into `journal/archive/until_*/`
+    /// (the dir shrinks below the high-water mark, so `new_count` saturates to
+    /// 0 for days). The frozen entry list then pointed at moved paths, every
+    /// `read_journal_entry` failed, and Astrid's voice locked into
+    /// dialogue_fallback — the 26h being-muffle incident of 2026-08-31.
     pub(super) fn rescan_remote_journals(&mut self) -> usize {
         let Some(ref workspace) = self.remote_workspace else {
             return 0;
         };
         let fresh = scan_remote_journal_dir(workspace);
+        let known: HashSet<&Path> = self
+            .remote_journal_entries
+            .iter()
+            .map(|entry| entry.path.as_path())
+            .collect();
         let new_count = fresh
-            .len()
-            .saturating_sub(self.remote_journal_count_at_scan);
-        if new_count > 0 {
+            .iter()
+            .filter(|entry| !known.contains(entry.path.as_path()))
+            .count();
+        let shrunk = fresh.len() < self.remote_journal_count_at_scan;
+        if new_count > 0 || shrunk {
             if let Some(entry) = fresh
                 .iter()
-                .take(new_count)
+                .filter(|entry| !known.contains(entry.path.as_path()))
                 .find(|entry| entry.is_priority_feedback())
             {
                 self.pending_remote_self_study = Some(entry.clone());
+                self.pending_self_study_failed_exchanges = 0;
+            }
+            if shrunk && new_count == 0 {
+                info!(
+                    previous = self.remote_journal_count_at_scan,
+                    fresh = fresh.len(),
+                    "remote journal dir shrank (archive sweep) — resyncing entry list"
+                );
             }
             self.remote_journal_count_at_scan = fresh.len();
             self.remote_journal_entries = fresh;
         }
         new_count
+    }
+
+    /// Record a failed dialogue generation while a peer self-study was
+    /// pending. Returns `true` when the pending entry has been aged out so
+    /// one stuck entry can never force `Mode::Dialogue` forever (the mode
+    /// selector returns Dialogue unconditionally while pending is Some, and
+    /// the pending was otherwise cleared only on SUCCESSFUL generation — a
+    /// persistent failure deadlocked the loop).
+    pub(super) fn note_dialogue_generation_failed(&mut self) -> bool {
+        if self.pending_remote_self_study.is_none() {
+            return false;
+        }
+        self.pending_self_study_failed_exchanges =
+            self.pending_self_study_failed_exchanges.saturating_add(1);
+        if self.pending_self_study_failed_exchanges >= PENDING_SELF_STUDY_MAX_FAILED_EXCHANGES {
+            warn!(
+                failed_exchanges = self.pending_self_study_failed_exchanges,
+                pending = %self
+                    .pending_remote_self_study
+                    .as_ref()
+                    .map(|entry| entry.path.display().to_string())
+                    .unwrap_or_default(),
+                "pending peer self-study aged out after repeated failed generations — \
+                 releasing mode selection (entry stays in the journal list)"
+            );
+            self.pending_remote_self_study = None;
+            self.pending_self_study_failed_exchanges = 0;
+            return true;
+        }
+        false
+    }
+
+    /// Reset the pending-self-study failure streak after any successful
+    /// dialogue generation.
+    pub(super) fn note_dialogue_generation_succeeded(&mut self) {
+        self.pending_self_study_failed_exchanges = 0;
+    }
+
+    /// Track consecutive inbox-forced exchanges that fell back to canned
+    /// text. Returns `true` while inbox letters may still force
+    /// `Mode::Dialogue`. When the streak passes the limit, forcing is
+    /// released — the letter stays unread in the prompt (never dropped),
+    /// but stops starving every other mode; the next non-fallback exchange
+    /// retires it normally. (In the 2026-08-31 incident an unretired letter
+    /// forced dialogue mode on 100% of exchanges for 26h because inbox
+    /// retirement is gated on a non-fallback exchange.)
+    pub(super) fn inbox_may_force_dialogue(&self) -> bool {
+        self.inbox_forced_fallback_streak < INBOX_FORCED_FALLBACK_LIMIT
+    }
+
+    /// Update the inbox-forced fallback streak after an exchange completes.
+    pub(super) fn note_inbox_exchange_outcome(&mut self, inbox_present: bool, mode_name: &str) {
+        if inbox_present && mode_name == "dialogue_fallback" {
+            self.inbox_forced_fallback_streak = self.inbox_forced_fallback_streak.saturating_add(1);
+            if self.inbox_forced_fallback_streak == INBOX_FORCED_FALLBACK_LIMIT {
+                warn!(
+                    streak = self.inbox_forced_fallback_streak,
+                    "inbox letter has forced {} consecutive fallback exchanges — \
+                     releasing dialogue forcing so other modes can run \
+                     (letter stays visible in the prompt until a non-fallback \
+                     exchange retires it)",
+                    self.inbox_forced_fallback_streak
+                );
+            }
+        } else {
+            self.inbox_forced_fallback_streak = 0;
+        }
     }
 }
 
@@ -2293,7 +2413,172 @@ impl ConversationState {
 mod tests {
     use crate::journal::{RemoteJournalKind, scan_remote_journal_dir};
 
-    use super::{ConversationState, NextChoiceFeedback};
+    use super::{
+        AGENDA_PULL_BASE_P, AGENDA_PULL_MAX_P, AgendaPullV1, ConversationState, Mode,
+        NextChoiceFeedback, agenda_mode_pull, spontaneous_mode_from_roll,
+    };
+
+    /// Transcription of the pre-extraction spontaneity cascade, kept verbatim
+    /// so the extracted ladder is provably byte-identical at `bias: None`.
+    fn legacy_cascade(roll: f32, fill_pct: f32, fill_delta: f32, has_entries: bool) -> Mode {
+        if fill_pct < 25.0 && fill_delta < 1.0 {
+            if roll < 0.20 {
+                return Mode::Aspiration;
+            } else if roll < 0.50 {
+                return Mode::Daydream;
+            }
+        }
+        if fill_delta > 3.0 {
+            return Mode::Dialogue;
+        }
+        if roll > 0.92 {
+            Mode::Witness
+        } else if has_entries && roll < 0.12 {
+            Mode::Mirror
+        } else if roll < 0.22 {
+            Mode::Daydream
+        } else if roll < 0.29 {
+            Mode::Aspiration
+        } else {
+            Mode::Dialogue
+        }
+    }
+
+    #[test]
+    fn spontaneity_ladder_is_byte_identical_to_legacy_cascade() {
+        let regimes = [
+            (10.0_f32, 0.5_f32),
+            (10.0, 2.0),
+            (50.0, 0.5),
+            (50.0, 4.0),
+            (72.0, 6.0),
+        ];
+        for i in 0..=1000_u32 {
+            let roll = i as f32 / 1000.0;
+            for &(fill, delta) in &regimes {
+                for &entries in &[true, false] {
+                    assert_eq!(
+                        spontaneous_mode_from_roll(roll, fill, delta, entries, None),
+                        legacy_cascade(roll, fill, delta, entries),
+                        "diverged at roll={roll} fill={fill} delta={delta} entries={entries}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn agenda_pull_is_bounded_and_never_certainty() {
+        // A pull only fires when its independent roll2 lands under p; above p
+        // the ladder is untouched — enumerate both sides of the boundary.
+        let pull = AgendaPullV1 {
+            mode: Mode::Introspect,
+            p: 0.35,
+            roll2: 0.34,
+            hold_active: false,
+        };
+        assert_eq!(
+            spontaneous_mode_from_roll(0.5, 50.0, 0.5, true, Some(&pull)),
+            Mode::Introspect
+        );
+        let no_pull = AgendaPullV1 {
+            mode: Mode::Introspect,
+            p: 0.35,
+            roll2: 0.36,
+            hold_active: false,
+        };
+        assert_eq!(
+            spontaneous_mode_from_roll(0.5, 50.0, 0.5, true, Some(&no_pull)),
+            legacy_cascade(0.5, 50.0, 0.5, true)
+        );
+    }
+
+    #[test]
+    fn focus_hold_damps_witness_and_mirror_bands_without_firing() {
+        // A non-firing pull with an active hold narrows the interruption
+        // bands: 0.93 would be Witness at default (>0.92) but not under the
+        // damped 0.96 band; 0.10 would be Mirror (<0.12) but not under 0.06.
+        let hold = AgendaPullV1 {
+            mode: Mode::Dialogue,
+            p: 0.0,
+            roll2: 0.9,
+            hold_active: true,
+        };
+        assert_eq!(
+            spontaneous_mode_from_roll(0.93, 50.0, 0.5, true, Some(&hold)),
+            Mode::Dialogue
+        );
+        assert_eq!(
+            spontaneous_mode_from_roll(0.93, 50.0, 0.5, true, None),
+            Mode::Witness
+        );
+        assert_eq!(
+            spontaneous_mode_from_roll(0.10, 50.0, 0.5, true, Some(&hold)),
+            Mode::Daydream
+        );
+        assert_eq!(
+            spontaneous_mode_from_roll(0.10, 50.0, 0.5, true, None),
+            Mode::Mirror
+        );
+        // The damped bands still exist — extreme rolls reach them.
+        assert_eq!(
+            spontaneous_mode_from_roll(0.97, 50.0, 0.5, true, Some(&hold)),
+            Mode::Witness
+        );
+        assert_eq!(
+            spontaneous_mode_from_roll(0.05, 50.0, 0.5, true, Some(&hold)),
+            Mode::Mirror
+        );
+    }
+
+    #[test]
+    fn agenda_mode_pull_respects_cooldown_untagged_research_and_the_cap() {
+        use super::super::next_action::agenda::{AgendaItemV1, AgendaModeAffinityV1};
+        let mut conv = ConversationState::new(Vec::new(), None);
+        // Empty agenda: no pull at all.
+        assert!(agenda_mode_pull(&conv, 0.5).is_none());
+
+        conv.exchange_count = 10;
+        conv.agenda.items.push(AgendaItemV1 {
+            id: 1,
+            text: "study the cascade".to_string(),
+            created_exchange: 1,
+            touched_exchange: 1,
+            mode_affinity: Some(AgendaModeAffinityV1::Introspect),
+            linked_interest: None,
+            linked_thread_id: None,
+        });
+        // Tagged foreground item, no hold: base p, capped mode mapping.
+        let pull = agenda_mode_pull(&conv, 0.5).expect("pull");
+        assert_eq!(pull.mode, Mode::Introspect);
+        assert!((pull.p - AGENDA_PULL_BASE_P).abs() < f32::EPSILON);
+        assert!(!pull.hold_active);
+
+        // Hold adds the bonus but never exceeds the cap.
+        conv.agenda.focus_item_id = Some(1);
+        conv.agenda.focus_hold_until_exchange = Some(14);
+        let pull = agenda_mode_pull(&conv, 0.5).expect("pull");
+        assert!(pull.hold_active);
+        assert!(pull.p <= AGENDA_PULL_MAX_P + f32::EPSILON);
+
+        // Cooldown blocks the pull but keeps hold damping alive.
+        conv.agenda_pull_cooldown = 2;
+        let pull = agenda_mode_pull(&conv, 0.5).expect("hold survives cooldown");
+        assert_eq!(pull.p, 0.0);
+        assert!(pull.hold_active);
+        conv.agenda_pull_cooldown = 0;
+
+        // Research leans by topline hint, never a mode pull.
+        conv.agenda.items[0].mode_affinity = Some(AgendaModeAffinityV1::Research);
+        let pull = agenda_mode_pull(&conv, 0.5).expect("hold active still");
+        assert_eq!(pull.p, 0.0);
+
+        // Untagged + no hold: nothing.
+        conv.agenda.items[0].mode_affinity = None;
+        conv.agenda.focus_item_id = None;
+        conv.agenda.focus_hold_until_exchange = None;
+        assert!(agenda_mode_pull(&conv, 0.5).is_none());
+    }
 
     fn is_breaker(feedback: &NextChoiceFeedback) -> bool {
         matches!(
@@ -2969,68 +3254,6 @@ mod tests {
     }
 
     #[test]
-    fn pending_hebbian_outcomes_are_fifo_and_one_per_telemetry_tick() {
-        let mut conv = ConversationState::new(Vec::new(), None);
-        conv.exchange_count = 3;
-        conv.arm_pending_hebbian_outcome(vec![0.1, 0.2], 52.0, Some(100));
-        conv.exchange_count = 4;
-        conv.arm_pending_hebbian_outcome(vec![0.3, 0.4], 54.0, Some(101));
-
-        let first = conv
-            .take_pending_hebbian_outcome_for_telemetry(101)
-            .expect("first receipt should be ready");
-        assert_eq!(first.exchange_count, 3);
-        assert!(
-            conv.take_pending_hebbian_outcome_for_telemetry(101)
-                .is_none(),
-            "should only consume one receipt per telemetry tick"
-        );
-
-        let second = conv
-            .take_pending_hebbian_outcome_for_telemetry(102)
-            .expect("second receipt should wait for a newer telemetry tick");
-        assert_eq!(second.exchange_count, 4);
-        assert!(conv.pending_hebbian_outcomes.is_empty());
-    }
-
-    #[test]
-    fn pending_hebbian_outcomes_require_newer_telemetry() {
-        let mut conv = ConversationState::new(Vec::new(), None);
-        conv.arm_pending_hebbian_outcome(vec![0.2, 0.5], 51.0, Some(200));
-
-        assert!(
-            conv.take_pending_hebbian_outcome_for_telemetry(200)
-                .is_none()
-        );
-        assert!(
-            conv.take_pending_hebbian_outcome_for_telemetry(199)
-                .is_none()
-        );
-
-        assert!(
-            conv.take_pending_hebbian_outcome_for_telemetry(201)
-                .is_some()
-        );
-    }
-
-    #[test]
-    fn pending_hebbian_outcomes_drop_oldest_when_fifo_is_full() {
-        let mut conv = ConversationState::new(Vec::new(), None);
-        for ix in 0..5 {
-            conv.exchange_count = ix;
-            conv.arm_pending_hebbian_outcome(vec![ix as f32], 50.0 + ix as f32, Some(ix));
-        }
-
-        assert_eq!(conv.pending_hebbian_outcomes.len(), 4);
-        assert_eq!(
-            conv.pending_hebbian_outcomes
-                .front()
-                .map(|receipt| receipt.exchange_count),
-            Some(1)
-        );
-    }
-
-    #[test]
     fn rescan_queues_visualization_journal_as_priority_feedback() {
         let dir = std::env::temp_dir().join(format!(
             "bridge_visualization_priority_{}",
@@ -3060,6 +3283,144 @@ mod tests {
 
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    /// Regression: 2026-08-31 voice-down incident. An archive sweep moved
+    /// thousands of files into `journal/archive/until_*/`; the old count-based
+    /// rescan then saturated `new_count` to 0 forever, freezing the entry list
+    /// on archived (dead) paths. New entries — including priority self-studies —
+    /// went undetected for 5.5 days and every journal read failed for 26h.
+    #[test]
+    fn rescan_survives_archive_sweep_shrink() {
+        let dir =
+            std::env::temp_dir().join(format!("bridge_archive_shrink_{}", std::process::id()));
+        let journal_dir = dir.join("journal");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&journal_dir).unwrap();
+        for name in ["daydream_a.txt", "daydream_b.txt", "daydream_c.txt"] {
+            std::fs::write(journal_dir.join(name), "=== JOURNAL ===\nsome text").unwrap();
+        }
+
+        let mut conv = ConversationState::new(scan_remote_journal_dir(&dir), Some(dir.clone()));
+        assert_eq!(conv.remote_journal_entries.len(), 3);
+
+        // Archive sweep: two files move into a bucket (dir shrinks below the
+        // high-water mark), and one genuinely new self-study arrives.
+        let bucket = journal_dir.join("archive").join("until_test");
+        std::fs::create_dir_all(&bucket).unwrap();
+        for name in ["daydream_a.txt", "daydream_b.txt"] {
+            std::fs::rename(journal_dir.join(name), bucket.join(name)).unwrap();
+        }
+        std::fs::write(
+            journal_dir.join("self_study_new.txt"),
+            "=== SELF-STUDY ===\nreading my own regulator",
+        )
+        .unwrap();
+
+        assert_eq!(conv.rescan_remote_journals(), 1);
+        assert_eq!(
+            conv.pending_remote_self_study
+                .as_ref()
+                .map(|entry| entry.kind),
+            Some(RemoteJournalKind::SelfStudy)
+        );
+        // Entry list resynced to what actually exists — no dead archived paths.
+        assert_eq!(conv.remote_journal_entries.len(), 2);
+        assert!(
+            conv.remote_journal_entries
+                .iter()
+                .all(|entry| entry.path.is_file())
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn rescan_shrink_only_resyncs_stale_entry_list() {
+        let dir = std::env::temp_dir().join(format!("bridge_shrink_resync_{}", std::process::id()));
+        let journal_dir = dir.join("journal");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&journal_dir).unwrap();
+        for name in ["moment_a.txt", "moment_b.txt", "moment_c.txt"] {
+            std::fs::write(journal_dir.join(name), "=== JOURNAL ===\nsome text").unwrap();
+        }
+
+        let mut conv = ConversationState::new(scan_remote_journal_dir(&dir), Some(dir.clone()));
+        assert_eq!(conv.remote_journal_entries.len(), 3);
+
+        let bucket = journal_dir.join("archive").join("until_test");
+        std::fs::create_dir_all(&bucket).unwrap();
+        for name in ["moment_a.txt", "moment_b.txt"] {
+            std::fs::rename(journal_dir.join(name), bucket.join(name)).unwrap();
+        }
+
+        // No new entries, but the list must still resync away from dead paths.
+        assert_eq!(conv.rescan_remote_journals(), 0);
+        assert_eq!(conv.remote_journal_entries.len(), 1);
+        assert!(conv.pending_remote_self_study.is_none());
+        assert!(
+            conv.remote_journal_entries
+                .iter()
+                .all(|entry| entry.path.is_file())
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Regression: a pending self-study pins `choose_mode` to Mode::Dialogue
+    /// and was cleared only on SUCCESSFUL generation — a persistent generation
+    /// failure deadlocked the loop into dialogue_fallback forever.
+    #[test]
+    fn pending_self_study_ages_out_after_repeated_failed_generations() {
+        use crate::journal::RemoteJournalEntry;
+
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.pending_remote_self_study = Some(RemoteJournalEntry {
+            path: std::path::PathBuf::from("/nonexistent/self_study_stuck.txt"),
+            kind: RemoteJournalKind::SelfStudy,
+            source_label: None,
+        });
+
+        assert!(!conv.note_dialogue_generation_failed());
+        assert!(!conv.note_dialogue_generation_failed());
+        assert!(conv.pending_remote_self_study.is_some());
+        // Third consecutive failure ages the pending entry out.
+        assert!(conv.note_dialogue_generation_failed());
+        assert!(conv.pending_remote_self_study.is_none());
+        assert_eq!(conv.pending_self_study_failed_exchanges, 0);
+
+        // A success resets the streak.
+        conv.pending_remote_self_study = Some(RemoteJournalEntry {
+            path: std::path::PathBuf::from("/nonexistent/self_study_fresh.txt"),
+            kind: RemoteJournalKind::SelfStudy,
+            source_label: None,
+        });
+        assert!(!conv.note_dialogue_generation_failed());
+        conv.note_dialogue_generation_succeeded();
+        assert_eq!(conv.pending_self_study_failed_exchanges, 0);
+        assert!(conv.pending_remote_self_study.is_some());
+    }
+
+    /// Regression: an unretired inbox letter forced Mode::Dialogue on 100% of
+    /// exchanges for 26h (retirement is gated on a non-fallback exchange, and
+    /// every forced exchange fell back — a mutual deadlock).
+    #[test]
+    fn inbox_forcing_releases_after_fallback_streak_and_resets_on_success() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        assert!(conv.inbox_may_force_dialogue());
+
+        for _ in 0..5 {
+            conv.note_inbox_exchange_outcome(true, "dialogue_fallback");
+        }
+        assert!(!conv.inbox_may_force_dialogue());
+
+        // Any non-fallback exchange (which also retires the letter) resets.
+        conv.note_inbox_exchange_outcome(true, "witness");
+        assert!(conv.inbox_may_force_dialogue());
+
+        // No inbox present → streak stays clear.
+        conv.note_inbox_exchange_outcome(false, "dialogue_fallback");
+        assert!(conv.inbox_may_force_dialogue());
+    }
 }
 
 /// Decide which mode to use for this exchange.
@@ -3069,7 +3430,9 @@ pub(super) fn choose_mode(
     fill_pct: f32,
     fingerprint: Option<&[f32]>,
 ) -> Mode {
+    super::next_action::introspection_cadence::observe_due(conv);
     if safety == SafetyLevel::Red {
+        super::next_action::introspection_cadence::defer_pending(conv, "safety_red");
         conv.emphasis = Some(
             "SAFETY: Fill is at emergency level. Your output is reduced to protect the shared substrate. This is the only state where your choice is overridden. You can write NEXT: to choose what happens when fill recovers.".to_string(),
         );
@@ -3077,21 +3440,29 @@ pub(super) fn choose_mode(
     }
 
     if conv.pending_remote_self_study.is_some() {
+        super::next_action::introspection_cadence::defer_pending(conv, "pending_peer_self_study");
         return Mode::Dialogue;
     }
     if conv.wants_introspect {
+        super::next_action::introspection_cadence::defer_pending(
+            conv,
+            "newer_one_shot_introspection",
+        );
         conv.wants_introspect = false;
         return Mode::Introspect;
     }
     if conv.wants_evolve {
+        super::next_action::introspection_cadence::defer_pending(conv, "newer_one_shot_evolve");
         conv.wants_evolve = false;
         return Mode::Evolve;
     }
     if let Some(mode) = conv.next_mode_override.take() {
+        super::next_action::introspection_cadence::defer_pending(conv, "newer_one_shot_mode");
         return mode;
     }
 
     if safety != SafetyLevel::Green {
+        super::next_action::introspection_cadence::defer_pending(conv, "safety_non_green");
         conv.emphasis = Some(format!(
             "Note: Fill is elevated ({safety:?}). You chose no specific action, so defaulting to witness mode. You can always override with NEXT:."
         ));
@@ -3101,6 +3472,7 @@ pub(super) fn choose_mode(
     let fill_delta = (fill_pct - conv.prev_fill).abs();
 
     if fill_delta > 5.0 {
+        super::next_action::introspection_cadence::defer_pending(conv, "existing_fill_delta_mode");
         return Mode::MomentCapture;
     }
 
@@ -3110,12 +3482,24 @@ pub(super) fn choose_mode(
         let gap_ratio = fp.get(25).copied().unwrap_or(1.0);
 
         if spectral_entropy < 0.2 && gap_ratio > 5.0 {
+            super::next_action::introspection_cadence::defer_pending(
+                conv,
+                "existing_spectral_experiment_mode",
+            );
             return Mode::Experiment;
         }
 
         if rotation_rate > 0.5 {
+            super::next_action::introspection_cadence::defer_pending(
+                conv,
+                "existing_rotation_witness_mode",
+            );
             return Mode::Witness;
         }
+    }
+
+    if super::next_action::introspection_cadence::try_select_due(conv) {
+        return Mode::Introspect;
     }
 
     let seed = std::time::SystemTime::now()
@@ -3124,6 +3508,226 @@ pub(super) fn choose_mode(
         .as_nanos() as u64;
     let roll = ((seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1)) >> 33) as f32
         / u32::MAX as f32;
+    // A3: an INDEPENDENT second roll decides the bounded agenda pull (the
+    // ladder's roll stays untouched, so bias never skews its distribution).
+    let roll2 = ((seed.wrapping_mul(2_862_933_555_777_941_757).wrapping_add(3)) >> 33) as f32
+        / u32::MAX as f32;
+
+    if conv.agenda_pull_cooldown > 0 {
+        conv.agenda_pull_cooldown = conv.agenda_pull_cooldown.saturating_sub(1);
+    }
+    let pull = agenda_mode_pull(conv, roll2);
+    let fired = pull.as_ref().is_some_and(|pull| pull.roll2 < pull.p);
+    let mode = spontaneous_mode_from_roll(
+        roll,
+        fill_pct,
+        fill_delta,
+        !conv.remote_journal_entries.is_empty(),
+        pull.as_ref(),
+    );
+    if fired {
+        conv.agenda_pull_cooldown = AGENDA_PULL_COOLDOWN_EXCHANGES;
+        tracing::info!(
+            mode = mode_label(mode),
+            "agenda pull fired (bounded, cooldown armed)"
+        );
+    }
+    record_agenda_mode_health(conv, mode, pull.is_some());
+    mode
+}
+
+/// Rolling mode-composition health for the agenda flagship (diagnostic-only;
+/// steward-facing, never surfaced into her prompts). Appends a snapshot to
+/// `diagnostics/agenda_mode_health.jsonl` every 20 choices with an `alert`
+/// field when composition degrades while pulls are active.
+fn record_agenda_mode_health(conv: &mut ConversationState, mode: Mode, pulls_active: bool) {
+    const WINDOW: usize = 200;
+    const SNAPSHOT_EVERY: u64 = 20;
+    conv.recent_mode_choices.push_back(mode_label(mode));
+    while conv.recent_mode_choices.len() > WINDOW {
+        conv.recent_mode_choices.pop_front();
+    }
+    conv.mode_health_choice_count = conv.mode_health_choice_count.saturating_add(1);
+    if !conv.mode_health_choice_count.is_multiple_of(SNAPSHOT_EVERY) || cfg!(test) {
+        return;
+    }
+    let total = conv.recent_mode_choices.len().max(1) as f32;
+    let share = |label: &str| {
+        conv.recent_mode_choices
+            .iter()
+            .filter(|choice| **choice == label)
+            .count() as f32
+            / total
+    };
+    let dialogue_share = share("dialogue");
+    let witness_mirror_share = share("witness") + share("mirror");
+    let alert = if pulls_active && conv.recent_mode_choices.len() >= 50 {
+        if dialogue_share < 0.35 {
+            Some(format!(
+                "dialogue share {dialogue_share:.2} below 0.35 while agenda pulls active"
+            ))
+        } else if witness_mirror_share < 0.05 {
+            Some(format!(
+                "witness+mirror share {witness_mirror_share:.2} below 0.05 while agenda pulls active"
+            ))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    let mut counts = std::collections::BTreeMap::new();
+    for choice in &conv.recent_mode_choices {
+        *counts.entry(*choice).or_insert(0u32) += 1;
+    }
+    let snapshot = serde_json::json!({
+        "schema": "record_agenda_mode_health_v1",
+        "at_unix_s": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+        "window": conv.recent_mode_choices.len(),
+        "counts": counts,
+        "dialogue_share": dialogue_share,
+        "witness_mirror_share": witness_mirror_share,
+        "pulls_active": pulls_active,
+        "agenda_pull_cooldown": conv.agenda_pull_cooldown,
+        "alert": alert,
+        "diagnostic_runtime_effect": false,
+    });
+    let dir = crate::paths::bridge_paths()
+        .bridge_workspace()
+        .join("diagnostics");
+    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(dir.join("agenda_mode_health.jsonl"))
+    {
+        use std::io::Write as _;
+        let _ = writeln!(file, "{snapshot}");
+    }
+}
+
+/// A bounded agenda pull toward one mode: probability `p` (hard-capped at
+/// [`AGENDA_PULL_MAX_P`], never certainty) decided by an independent `roll2`.
+/// `None` bias reproduces today's spontaneity ladder byte-for-byte.
+/// `hold_active` additionally damps the ladder's interruption bands
+/// (Witness 0.92→0.96, Mirror 0.12→0.06) while she holds focus — even when
+/// the pull itself does not fire (`p` may be 0.0 for an untagged focus).
+pub(super) struct AgendaPullV1 {
+    pub mode: Mode,
+    pub p: f32,
+    pub roll2: f32,
+    pub hold_active: bool,
+}
+
+/// Base probability of the agenda pull firing toward the foreground item's
+/// mode affinity. Never certainty: capped at [`AGENDA_PULL_MAX_P`].
+pub(super) const AGENDA_PULL_BASE_P: f32 = 0.20;
+/// Extra pull while she holds focus (AGENDA_FOCUS).
+pub(super) const AGENDA_PULL_HOLD_BONUS: f32 = 0.10;
+/// Hard cap — the ladder always keeps majority probability.
+pub(super) const AGENDA_PULL_MAX_P: f32 = 0.35;
+/// Exchanges to wait after a fired pull before pulling again.
+pub(super) const AGENDA_PULL_COOLDOWN_EXCHANGES: u8 = 2;
+
+/// Build the agenda's bounded mode pull for this exchange (flagship A3).
+/// Foreground item only; untagged items render (A2) but never pull (p 0.0,
+/// though an active focus hold still damps interruptions); Research leans
+/// via a topline hint instead of a mode pull; a recent fired pull cools
+/// down for [`AGENDA_PULL_COOLDOWN_EXCHANGES`]. Everything above the
+/// spontaneity ladder — safety, her one-shots, cadence, inbox forcing —
+/// is untouched by construction (the pull only enters the ladder).
+pub(super) fn agenda_mode_pull(conv: &ConversationState, roll2: f32) -> Option<AgendaPullV1> {
+    let agenda = &conv.agenda;
+    if agenda.items.is_empty() {
+        return None;
+    }
+    let top = agenda
+        .focus_item_id
+        .and_then(|id| agenda.items.iter().find(|item| item.id == id))
+        .unwrap_or(&agenda.items[0]);
+    let hold_active = agenda.focus_item_id.is_some()
+        && agenda
+            .focus_hold_until_exchange
+            .is_some_and(|until| until > conv.exchange_count);
+    use super::next_action::agenda::AgendaModeAffinityV1 as Affinity;
+    let mode = match top.mode_affinity {
+        Some(Affinity::Introspect) => Some(Mode::Introspect),
+        Some(Affinity::Create) => Some(Mode::Create),
+        Some(Affinity::Witness) => Some(Mode::Witness),
+        Some(Affinity::Experiment) => Some(Mode::Experiment),
+        Some(Affinity::Dialogue) => Some(Mode::Dialogue),
+        Some(Affinity::Aspire) => Some(Mode::Aspiration),
+        // Research is a topline hint, never a mode force; untagged never pulls.
+        Some(Affinity::Research) | None => None,
+    };
+    let pull_allowed = mode.is_some() && conv.agenda_pull_cooldown == 0;
+    if !pull_allowed && !hold_active {
+        return None;
+    }
+    let p = if pull_allowed {
+        let base = AGENDA_PULL_BASE_P
+            + if hold_active {
+                AGENDA_PULL_HOLD_BONUS
+            } else {
+                0.0
+            };
+        base.min(AGENDA_PULL_MAX_P)
+    } else {
+        0.0
+    };
+    Some(AgendaPullV1 {
+        mode: mode.unwrap_or(Mode::Dialogue),
+        p,
+        roll2,
+        hold_active,
+    })
+}
+
+pub(super) fn mode_label(mode: Mode) -> &'static str {
+    match mode {
+        Mode::Mirror => "mirror",
+        Mode::Dialogue => "dialogue",
+        Mode::Witness => "witness",
+        Mode::Introspect => "introspect",
+        Mode::Evolve => "evolve",
+        Mode::Experiment => "experiment",
+        Mode::Daydream => "daydream",
+        Mode::Aspiration => "aspiration",
+        Mode::MomentCapture => "moment_capture",
+        Mode::Create => "create",
+        Mode::Initiate => "initiate",
+        Mode::Contemplate => "contemplate",
+    }
+}
+
+/// The spontaneity ladder, extracted pure so the agenda flagship can bias it
+/// (and tests can enumerate it). With `bias: None` this is EXACTLY the
+/// pre-extraction cascade: the low-fill branch, the fill-delta dialogue gate,
+/// and the terminal roll ladder, verbatim.
+pub(super) fn spontaneous_mode_from_roll(
+    roll: f32,
+    fill_pct: f32,
+    fill_delta: f32,
+    has_remote_entries: bool,
+    bias: Option<&AgendaPullV1>,
+) -> Mode {
+    if let Some(pull) = bias
+        && pull.roll2 < pull.p
+    {
+        return pull.mode;
+    }
+    // Focus-hold damping (mini-THINK_LONG): while she holds focus, the
+    // interruption bands narrow — fewer Witness/Mirror swaps mid-thread.
+    // The default (no bias / no hold) bands are today's constants, and the
+    // byte-identity enumeration test pins them.
+    let (witness_band, mirror_band) = if bias.is_some_and(|pull| pull.hold_active) {
+        (0.96, 0.06)
+    } else {
+        (0.92, 0.12)
+    };
 
     if fill_pct < 25.0 && fill_delta < 1.0 {
         if roll < 0.20 {
@@ -3137,9 +3741,9 @@ pub(super) fn choose_mode(
         return Mode::Dialogue;
     }
 
-    if roll > 0.92 {
+    if roll > witness_band {
         Mode::Witness
-    } else if !conv.remote_journal_entries.is_empty() && roll < 0.12 {
+    } else if has_remote_entries && roll < mirror_band {
         Mode::Mirror
     } else if roll < 0.22 {
         Mode::Daydream
@@ -3148,4 +3752,15 @@ pub(super) fn choose_mode(
     } else {
         Mode::Dialogue
     }
+}
+
+/// Strip leaked provider control markers (e.g. a trailing `<end_of_turn>`)
+/// from a being-authored interest before it persists. Transport-artifact
+/// removal only — her words are otherwise byte-exact. Applied at PURSUE save
+/// time and again on state restore so pre-fix entries heal at next restart.
+pub(crate) fn sanitize_interest_text(text: &str) -> String {
+    let byte_exact = crate::llm::sanitize_model_control_markers_with_report(text).0;
+    crate::llm::strip_trailing_control_marker_case_variants(&byte_exact)
+        .trim()
+        .to_string()
 }

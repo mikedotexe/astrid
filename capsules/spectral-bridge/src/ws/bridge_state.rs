@@ -245,6 +245,7 @@ pub struct PressurePorosityExpansionReadinessV1 {
 
 /// Shared mutable bridge state updated by `WebSocket` tasks.
 pub struct BridgeState {
+    pub(crate) learning_clock: crate::learning_clock::LearningClock,
     /// Latest telemetry from minime.
     pub latest_telemetry: Option<SpectralTelemetry>,
     /// Immutable producer truth decoded once at the Minime telemetry port.
@@ -341,6 +342,7 @@ impl BridgeState {
     #[must_use]
     pub fn new() -> Self {
         Self {
+            learning_clock: crate::learning_clock::LearningClock::default(),
             latest_telemetry: None,
             latest_minime_observation_v1: None,
             latest_bridge_evidence_v1: None,

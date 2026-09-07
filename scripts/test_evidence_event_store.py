@@ -563,11 +563,139 @@ class EvidenceEventStoreTests(unittest.TestCase):
             )
 
 
+class DurableCheckpointTests(unittest.TestCase):
+    """The verified-checkpoint producer (2026-08-15): fresh processes must
+    ride the indexed-tail path off a durable anchor, and every corruption
+    mode must fall back to the full chain verify — never silent trust."""
+
+    def _seeded_store(self, tmp: str) -> "EvidenceEventStore":
+        store = EvidenceEventStore(Path(tmp) / "store")
+        store.append_payloads(
+            "addressing",
+            [{"event_type": "claim_recorded", "claim_id": f"c{i}"} for i in range(3)],
+        )
+        return store
+
+    def test_append_and_verify_write_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            path = store.durable_checkpoint_path
+            self.assertTrue(path.is_file())
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+            value = json.loads(path.read_text())
+            self.assertEqual(value["schema"], "evidence_projection_session_v1")
+            self.assertEqual(value["verified_global_seq"], 3)
+            self.assertIn("content_sha256", value)
+
+    def test_fresh_process_rides_indexed_tail_from_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self._seeded_store(tmp)
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            verification = fresh.verify_indexed_tail()
+            self.assertTrue(verification.valid)
+            self.assertEqual(fresh._last_verification_mode, "indexed_tail")
+
+    def test_corrupt_checkpoint_triggers_full_reverify(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            store.durable_checkpoint_path.write_text("{not json", encoding="utf-8")
+            os.chmod(store.durable_checkpoint_path, 0o600)
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            verification = fresh.verify_indexed_tail()
+            self.assertTrue(verification.valid)
+            self.assertEqual(fresh._last_verification_mode, "full_chain")
+
+    def test_tampered_checkpoint_hash_triggers_full_reverify(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            value = json.loads(store.durable_checkpoint_path.read_text())
+            value["verified_global_seq"] = 99
+            store.durable_checkpoint_path.write_text(json.dumps(value), encoding="utf-8")
+            os.chmod(store.durable_checkpoint_path, 0o600)
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            fresh.verify_indexed_tail()
+            self.assertEqual(fresh._last_verification_mode, "full_chain")
+
+    def test_expired_or_lax_permission_checkpoint_triggers_full_reverify(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            os.chmod(store.durable_checkpoint_path, 0o644)
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            fresh.verify_indexed_tail()
+            self.assertEqual(fresh._last_verification_mode, "full_chain")
+
+    def test_force_full_env_bypasses_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self._seeded_store(tmp)
+            with patch.dict(os.environ, {"ASTRID_EVIDENCE_FORCE_FULL_VERIFY": "1"}):
+                fresh = EvidenceEventStore(Path(tmp) / "store")
+                fresh.verify_indexed_tail()
+                self.assertEqual(fresh._last_verification_mode, "full_chain")
+
+    def test_chain_tamper_still_fails_closed_with_checkpoint_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._seeded_store(tmp)
+            lines = store.events_path.read_text().splitlines()
+            tampered = lines[-1].replace("claim_recorded", "claim_forgeries")
+            store.events_path.write_text("\n".join(lines[:-1] + [tampered]) + "\n")
+            fresh = EvidenceEventStore(Path(tmp) / "store")
+            verification = fresh.verify()
+            self.assertFalse(verification.valid)
+
+
+class ReaderIsolationTests(unittest.TestCase):
+    """Readers must never contend for the write lock (2026-08-19): the rw
+    connection's `journal_mode` pragma needs an exclusive lock, so pure
+    readers used to hit 'database is locked' 1-in-5 against a live writer.
+    mode=ro readers + the reconcile read-only fast path fix that without
+    touching the write path's durability posture."""
+
+    def test_readers_succeed_while_writer_holds_reserved_lock(self):
+        import sqlite3
+
+        with tempfile.TemporaryDirectory() as tmp:
+            store = EvidenceEventStore(Path(tmp) / "store")
+            store.append_payloads(
+                "addressing",
+                [{"event_type": "claim_recorded", "claim_id": f"c{i}"} for i in range(3)],
+            )
+            index = store.read_index
+            index.reconcile()  # index exists and matches head
+            # Simulate the live writer: hold a RESERVED lock on the index db.
+            writer = sqlite3.connect(index.path, timeout=1)
+            try:
+                writer.execute("BEGIN IMMEDIATE")
+                writer.execute(
+                    "INSERT INTO metadata(key, value) VALUES ('t', '1') "
+                    "ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+                )
+                start = time.monotonic()
+                status = index.status()
+                self.assertTrue(status.get("matches_head"))
+                events = list(index.iter_stream("addressing"))
+                self.assertEqual(len(events), 3)
+                self.assertTrue(index.has_anchor(3, events[-1].event_sha256))
+                # reconcile's read-only fast path must also pass lock-free
+                reconciled = index.reconcile()
+                self.assertTrue(reconciled.get("matches_head"))
+                elapsed = time.monotonic() - start
+                # old behavior: each reader waited the 30s busy timeout
+                self.assertLess(elapsed, 5.0)
+            finally:
+                writer.rollback()
+                writer.close()
+
+
 if __name__ == "__main__":
     raise SystemExit(
         0
         if unittest.TextTestRunner(verbosity=2)
-        .run(unittest.defaultTestLoader.loadTestsFromTestCase(EvidenceEventStoreTests))
+        .run(
+            unittest.TestSuite(
+                unittest.defaultTestLoader.loadTestsFromTestCase(case)
+                for case in (EvidenceEventStoreTests, DurableCheckpointTests, ReaderIsolationTests)
+            )
+        )
         .wasSuccessful()
         else 1
     )

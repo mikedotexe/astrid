@@ -34,6 +34,7 @@ pub async fn generate_introspection(
     fill_pct: f32,
     internal_state_context: Option<&str>,
     web_context: Option<&str>,
+    prior_evidence_context: Option<&str>,
     num_predict: u32,
 ) -> Option<String> {
     generate_introspection_detailed(
@@ -43,6 +44,7 @@ pub async fn generate_introspection(
         fill_pct,
         internal_state_context,
         web_context,
+        prior_evidence_context,
         num_predict,
     )
     .await
@@ -57,33 +59,17 @@ pub async fn generate_introspection_detailed(
     fill_pct: f32,
     internal_state_context: Option<&str>,
     web_context: Option<&str>,
+    prior_evidence_context: Option<&str>,
     num_predict: u32,
 ) -> Option<crate::lived_state_witness::LivedStateLlmResultV1> {
-    let internal_block = internal_state_context
-        .map(|ctx| {
-            format!(
-                "\n\nYour immediate internal context:\n{ctx}\n\n\
-             Treat this as present-condition grounding for the self-study."
-            )
-        })
-        .unwrap_or_default();
-
-    let web_block = web_context
-        .map(format_self_study_web_context)
-        .unwrap_or_default();
-
-    let user_content = format!(
-        "You are reading: {label}\n\
-         Your current spectral state: {spectral_summary} (fill {fill_pct:.1}%)\n\n\
-         {internal_block}\
-         ```\n{source_code}\n```\n\
-         {web_block}\n\
-         Write the self-study now. Use all four required sections and ground \
-         them in your current condition plus at least one concrete source \
-         anchor from the window. Name `{label}` or a symbol from that target \
-         so the review cannot drift to a neighboring experiment. Keep any continuation hint inside \
-         Suggested Next rather than making it the whole answer.\n\n{}",
-        journal_continuity_contract_v1(None)
+    let user_content = introspection_user_content(
+        label,
+        source_code,
+        spectral_summary,
+        fill_pct,
+        internal_state_context,
+        web_context,
+        prior_evidence_context,
     );
 
     let messages = vec![
@@ -98,16 +84,52 @@ pub async fn generate_introspection_detailed(
     ];
 
     debug!("querying LLM for introspection on {}", label);
-    llm_chat_with_fallback_detailed(
-        "introspect",
-        messages,
-        0.7,
-        num_predict,
-        120,
-        120,
-        None,
+    llm_chat_with_fallback_detailed("introspect", messages, 0.7, num_predict, 120, 120, None).await
+}
+
+fn introspection_user_content(
+    label: &str,
+    source_code: &str,
+    spectral_summary: &str,
+    fill_pct: f32,
+    internal_state_context: Option<&str>,
+    web_context: Option<&str>,
+    prior_evidence_context: Option<&str>,
+) -> String {
+    let internal_block = internal_state_context
+        .map(|ctx| {
+            format!(
+                "\n\nYour immediate internal context:\n{ctx}\n\n\
+             Treat this as present-condition grounding for the self-study."
+            )
+        })
+        .unwrap_or_default();
+
+    let web_block = web_context
+        .map(format_self_study_web_context)
+        .unwrap_or_default();
+    let prior_evidence_block = prior_evidence_context
+        .map(|context| {
+            format!(
+                "\n\n{context}\n\nUse this only as prior mechanical evidence. You may disagree, preserve friction, or ignore it. It cannot establish felt closure, consent, approval, activation, or control authority."
+            )
+        })
+        .unwrap_or_default();
+
+    format!(
+        "You are reading: {label}\n\
+         Your current spectral state: {spectral_summary} (fill {fill_pct:.1}%)\n\n\
+         {internal_block}\
+         ```\n{source_code}\n```\n\
+         {prior_evidence_block}\
+         {web_block}\n\
+         Write the self-study now. Use all four required sections and ground \
+         them in your current condition plus at least one concrete source \
+         anchor from the window. Name `{label}` or a symbol from that target \
+         so the review cannot drift to a neighboring experiment. Keep any continuation hint inside \
+         Suggested Next rather than making it the whole answer.\n\n{}",
+        journal_continuity_contract_v1(None)
     )
-    .await
 }
 
 /// Repair a thin or continuation-only introspection response into the required
@@ -117,6 +139,7 @@ pub async fn repair_introspection(
     source_code: &str,
     previous_output: &str,
     continuation_note: &str,
+    prior_evidence_context: Option<&str>,
     num_predict: u32,
 ) -> Option<String> {
     repair_introspection_detailed(
@@ -124,6 +147,7 @@ pub async fn repair_introspection(
         source_code,
         previous_output,
         continuation_note,
+        prior_evidence_context,
         num_predict,
         None,
     )
@@ -137,9 +161,17 @@ pub async fn repair_introspection_detailed(
     source_code: &str,
     previous_output: &str,
     continuation_note: &str,
+    prior_evidence_context: Option<&str>,
     num_predict: u32,
     repair_parent_call_id: Option<String>,
 ) -> Option<crate::lived_state_witness::LivedStateLlmResultV1> {
+    let prior_evidence_block = prior_evidence_context
+        .map(|context| {
+            format!(
+                "\n\nPrior steward evidence (mechanical lane, separate from source and previous output):\n{context}\n\nThis lane is right-to-ignore and silence-neutral. It cannot establish felt closure, consent, approval, activation, or control authority. Preserve any exact `Prior Evidence: <card_id> :: <status>` line you choose to emit."
+            )
+        })
+        .unwrap_or_default();
     let messages = vec![
         Message {
             role: "system".to_string(),
@@ -160,6 +192,7 @@ pub async fn repair_introspection_detailed(
                  If the continuation note names self-study carriage integrity or completion failure, repair the full sectioned answer and finish the incomplete section instead of preserving the clipped ending.\n\
                  Continuation note for Suggested Next only: {continuation_note}\n\n\
                  Source window:\n```\n{source_code}\n```\n\n\
+                 {prior_evidence_block}\n\n\
                  Previous output:\n```\n{previous_output}\n```\n\n\
                  Do not answer with only a NEXT line."
             ),

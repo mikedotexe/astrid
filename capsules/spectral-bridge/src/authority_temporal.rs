@@ -260,8 +260,8 @@ fn pause_generation(bridge_workspace: &Path) -> u64 {
 }
 
 fn source_identity(bridge_workspace: &Path) -> String {
-    let manifest = bridge_workspace.join("deployment_manifests/spectral-bridge.json");
-    let value = fs::read(manifest)
+    let manifest = crate::deployment::manifest_path(bridge_workspace);
+    let value = crate::deployment::manifest_bytes(&manifest)
         .ok()
         .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
     value

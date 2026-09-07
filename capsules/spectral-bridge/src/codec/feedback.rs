@@ -412,13 +412,20 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         .resonance_density_v1
         .as_ref()
         .map(|resonance| {
+            let numeric_request = resonance.control.target_bias_pct.abs() > 0.000_1
+                || (resonance.control.wander_scale - 1.0).abs() > 0.000_1
+                || resonance.control.damping_coefficient > 0.000_1;
             format!(
-                " Resonance density: {:.2} ({}) with containment {:.2}, pressure risk {:.2}, local Minime target bias {:+.1}%.",
+                " Resonance density: {:.2} ({}) with containment {:.2}, pressure risk {:.2}; legacy-PI candidate target bias {:+.1}%, wander scale {:.2}, damping {:.2}, declared local={}, numeric request={} [source: resonance_density_v1].",
                 resonance.density,
                 surface_label(&resonance.quality),
                 resonance.containment_score,
                 resonance.pressure_risk,
                 resonance.control.target_bias_pct,
+                resonance.control.wander_scale,
+                resonance.control.damping_coefficient,
+                resonance.control.applied_locally,
+                numeric_request,
             )
         })
         .unwrap_or_default();
@@ -427,7 +434,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         .as_ref()
         .map(|pressure| {
             format!(
-                " Pressure source: {} ({}) with score {:.2}, porosity {:.2}; advisory only, local control applied={}.",
+                " Pressure source: {} ({}) with score {:.2}, porosity {:.2}; advisory only: diagnostic descriptor and not a PI input (producer applied flag={}) [source: pressure_source_v1].",
                 surface_label(&pressure.dominant_source),
                 surface_label(&pressure.quality),
                 pressure.pressure_score,
@@ -452,13 +459,32 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         .inhabitable_fluctuation_v1
         .as_ref()
         .map(|fluctuation| {
+            let numeric_request = fluctuation.control.target_bias_pct.abs() > 0.000_1
+                || (fluctuation.control.wander_scale - 1.0).abs() > 0.000_1;
             format!(
-                " Inhabitable fluctuation: {} with inhabitability {:.2}, fluctuation {:.2}, foothold {:.2}; Minime-local target bias {:+.1}% and Astrid observes only.",
+                " Inhabitable fluctuation: {} with inhabitability {:.2}, fluctuation {:.2}, foothold {:.2}; legacy-PI candidate target bias {:+.1}%, wander scale {:.2}, declared local={}, numeric request={}; Astrid observes only.",
                 surface_label(&fluctuation.quality),
                 fluctuation.inhabitability_score,
                 fluctuation.fluctuation_score,
                 fluctuation.foothold_stability,
                 fluctuation.control.target_bias_pct,
+                fluctuation.control.wander_scale,
+                fluctuation.control.applied_locally,
+                numeric_request,
+            )
+        })
+        .unwrap_or_default();
+    let regulator_participation_clause = telemetry
+        .regulator_participation_readout_v1()
+        .map(|readout| {
+            format!(
+                " Regulator participation: runtime path {}; combined PI candidate target bias {:+.1}%, wander scale {:.2}, numeric request={}; machine effect receipt={}, felt effect established={}.",
+                surface_label(&readout.runtime_path_state),
+                readout.combined_target_bias_pct,
+                readout.combined_wander_scale,
+                readout.numeric_pi_change_requested,
+                readout.machine_effect_established,
+                readout.felt_effect_established,
             )
         })
         .unwrap_or_default();
@@ -691,6 +717,6 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
             .unwrap_or_default();
 
     format!(
-        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{unattributed_tension_note}{fluctuation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{collab_note}{coupling_note}"
+        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{unattributed_tension_note}{fluctuation_clause}{regulator_participation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{collab_note}{coupling_note}"
     )
 }
