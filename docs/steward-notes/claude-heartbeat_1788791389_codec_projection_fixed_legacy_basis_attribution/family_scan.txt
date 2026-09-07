@@ -1,0 +1,11 @@
+families: 36 (batchable: 3), skipped: 0
+
+introspection_astrid_llm_1788784120  [astrid:llm lines1-400of744]
+  + introspection_astrid_llm_1788763694  sim=0.367  delta: after, any, attempts, balanced, behave, block
+
+introspection_minime_regulator_1788706380  [minime:regulator lines1-24of24]
+  + introspection_minime_regulator_1788542062  sim=0.367  delta: active, actually, added, been, between, body
+
+introspection_DOMAIN_BOUNDARIES.md_1788459415  [DOMAIN_BOUNDARIES.md lines1-89of89]
+  + introspection_DOMAIN_BOUNDARIES.md_1788406400  sim=0.364  delta: accumulating, acts, additions, autonomous, band, because
+  + introspection_DOMAIN_BOUNDARIES.md_1788394246  sim=0.556  delta: accumulated, attempt, autonomous, boundaries, breached, ceiling

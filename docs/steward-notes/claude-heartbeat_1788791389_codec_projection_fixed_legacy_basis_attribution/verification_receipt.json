@@ -1,0 +1,102 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "steward_control.py subprocess run adapter (lease controller-held; no session opened, no NDJSON ops, no pause/resume, no lease token read or persisted)",
+  "controller": {
+    "run_id": "run_1788786399252113000_c8bd381221",
+    "preprojection_generation_id": "projection_1788786402420203000_cd10a43f9b",
+    "preprojection_status": "passed",
+    "pause_generation": 382,
+    "postprojection_generation_id": "runs after this process exits; not observable from inside the child",
+    "child_started_at_unix": 1788790125,
+    "child_watchdog_sigint_at_unix": 1788795525,
+    "finish_outcome_signal": "child exit code 0"
+  },
+  "division": {
+    "cycle_review_due_at_round_start": false,
+    "completed_rounds_since_followup_before": 2,
+    "productive_round_recorded": true,
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_443db9054e829669b49970ef9e17e798",
+    "event_count": 284,
+    "event_head_sha256": "10b3cc703c2cc1d342927e0672aee31f292caec6150573269d59b077bdedfdcc",
+    "tier5_cadence_dossier": "not owed \u2014 the Division return interval was not due at round start (review_due=false), so no dossier was generated. No approval, grant, dispatch, or trial was made."
+  },
+  "addressing": {
+    "introspection_id": "introspection_astrid_codec_1788784520",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read_count": 1,
+    "claim_count": 6,
+    "evidence_link_count": 14,
+    "classifications": {
+      "verified_existing": 3,
+      "implemented_now": 1,
+      "observed": 2
+    }
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 1025900,
+    "last_event_sha256": "ad7d0c09c19fab409fbebcd2e1f7735bc1877999f5be9c72b65fec60247ccb5b",
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "status_stream_counts_enumerated": true,
+    "final_status_event_count": 1025913,
+    "final_status_head": "828514c4c6d9d38346d7943468ce6c17b4e3d7dc3b5ce8ce255e78604b68e047",
+    "note": "seq advanced from 1025900 to 1025913 between verify and status; the delta is steward_control only (19039 -> 19052), the controller's own heartbeats"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4615,
+    "canonical_fully_addressed": 3192,
+    "canonical_remaining": 1423,
+    "all_artifact_pending": 3137,
+    "noncanonical_pending": 1714
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 11828,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "domain_boundary_ratchet": {
+    "valid": true,
+    "violation_count": 0,
+    "red": false,
+    "unlisted_legacy_review_debt_count": 44,
+    "note": "pre-existing debt, unchanged by this round"
+  },
+  "anti_drop": {
+    "total": 90,
+    "gaps": 0,
+    "alarms_before": 2,
+    "alarms_after": 0,
+    "repaired_rows": [
+      "introspect_within_file_xref",
+      "introspect_cross_file_xref"
+    ]
+  },
+  "chronicle": {
+    "verify": "expected_stale",
+    "detail": "chronicle durable source inputs changed; project before verify \u2014 the round-record append precedes verify. Left for the controller postprojection; not a durable-integrity failure and not claimed as current."
+  },
+  "live_change": {
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "build_bridge": false,
+    "live_codec_gain_basis_width_or_control_change": false,
+    "statement": "No live substrate or control change was required, attempted, or authorized. Test-only and steward-tooling changes."
+  },
+  "git": {
+    "authority": "read_only for this run \u2014 nothing staged, committed, merged, pushed, stashed, reset, or amended",
+    "index_clean": true,
+    "foreign_paths_preserved_untouched": [
+      "docs/steward-notes/2026-09-07-afterimages-rollout-evidence.md",
+      "docs/steward-notes/claude-heartbeat_1788781320_llm_marker_annotation_scan_read/"
+    ]
+  }
+}

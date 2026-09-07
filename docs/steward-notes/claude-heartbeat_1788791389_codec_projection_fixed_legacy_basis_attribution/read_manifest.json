@@ -1,0 +1,29 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_codec_1788784520",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_codec_1788784520.txt",
+      "sha256": "235f2d098a5efbdfd5d15533f11c566d00757ddcabe2a5f7ab4cb9952b61e224",
+      "bytes": 3546,
+      "lines": 45,
+      "read": "complete",
+      "source_coverage_state": "partial",
+      "source_included_intervals": "1-400",
+      "source_uncovered_intervals": "401-1351"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_4b3a6b2176e6b2f2a2ac406f56eebbe28637553ba7d4cb6ede2a1b4b32aa6997",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4b3a6b2176e6b2f2a2ac406f56eebbe28637553ba7d4cb6ede2a1b4b32aa6997.json",
+      "sha256": "d918d3f9b0794e1ab3732011245416b939bbf563694c4cd90c617c2cc8185055",
+      "bytes": 23753,
+      "lines": 533,
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "canonical_body_binding_matches_repair_call_response": true
+    }
+  ]
+}
