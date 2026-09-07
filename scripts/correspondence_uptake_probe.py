@@ -24,6 +24,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import being_privacy
+from correspondence_relation_axes import correspondence_relation_axes_v4
 
 ASTRID_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ASTRID_WORKSPACE = ASTRID_ROOT / "capsules/spectral-bridge/workspace"
@@ -31,6 +32,8 @@ DEFAULT_MINIME_WORKSPACE = ASTRID_ROOT.parent / "minime/workspace"
 DEFAULT_SHARED_DIR = Path("/Users/v/other/shared/collaborations")
 DEFAULT_OUTPUT_ROOT = DEFAULT_ASTRID_WORKSPACE / "diagnostics/correspondence_uptake"
 POLICY = "correspondence_uptake_probe_v1"
+VALID_ACK_KINDS = {"seen", "held", "unclear", "cannot_answer", "needs_time"}
+ADDRESS_ACK_KINDS = {"held", "unclear", "cannot_answer", "needs_time"}
 
 UPTAKE_STATES = {
     "not_started",
@@ -42,6 +45,8 @@ UPTAKE_STATES = {
     "legacy_claimed_trace_observed",
     "delivered_only",
     "read_only",
+    "seen_ack_only",
+    "held_ack",
     "acknowledged",
     "reply_linked",
     "reply_linked_needs_ack_or_trace",
@@ -70,6 +75,11 @@ def row_time_ms(row: dict[str, Any]) -> int:
         except (TypeError, ValueError):
             continue
     return 0
+
+
+def normalize_ack_kind(value: Any) -> str:
+    ack_kind = str(value or "").strip().lower().replace("-", "_")
+    return ack_kind if ack_kind in VALID_ACK_KINDS else "seen"
 
 
 def compact(text: str, limit: int = 220) -> str:
@@ -182,6 +192,7 @@ def legacy_claim_native_status(records: list[dict[str, Any]], claim: dict[str, A
         and str(row.get("from_being") or "") == claiming
         and str(row.get("to_being") or "") == peer
         and row_time_ms(row) >= claim_t
+        and normalize_ack_kind(row.get("ack_kind")) in ADDRESS_ACK_KINDS
         for row in records
     )
     return "legacy_claimed_acknowledged" if ack else None
@@ -388,6 +399,9 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
     ack_kind = str((ack or {}).get("ack_kind") or "").strip().lower().replace("-", "_")
     if ack_kind not in {"seen", "held", "unclear", "cannot_answer", "needs_time"}:
         ack_kind = "seen" if ack else ""
+    ack_is_address_evidence = bool(
+        ack and ack_kind in {"held", "unclear", "cannot_answer", "needs_time"}
+    )
     reply = any(
         row.get("record_type") == "reply_link"
         and (str(row.get("reply_to") or "") == message_id or str(row.get("thread_id") or "") == thread_id)
@@ -416,8 +430,10 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
         state = "attention_outcome_recorded"
     elif ack and ack_kind in {"held", "needs_time"}:
         state = "held_ack"
-    elif ack:
+    elif ack_is_address_evidence:
         state = "acknowledged"
+    elif ack:
+        state = "seen_ack_only"
     elif reply:
         state = "reply_linked_needs_ack_or_trace"
     elif read:
@@ -446,8 +462,9 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
         "message_id": message_id,
         "latest_resolution": f"latest resolves to message_id={message_id}; thread_id={thread_id}",
         "choose_one_prompt": (
-            "Recipient chooses one language-only first action: ACK if heard/held, TRACE if "
-            "something distinct survived, or REPLY if answering now."
+            "Replying already continues the thread. If stronger mutual-address evidence "
+            "feels useful, the recipient may optionally choose ACK or TRACE; no receipt "
+            "is required to keep the reply chain alive."
         ),
         "exact_next_commands": exact_next,
         "ack_preview": (
@@ -464,6 +481,16 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
         ),
         "authority": "language_only_context_not_control",
     }
+    relation_axes = correspondence_relation_axes_v4(
+        role="observer",
+        reply_linked=reply,
+        ack_present=bool(ack),
+        ack_is_address_evidence=ack_is_address_evidence,
+        trace_observed=trace,
+        attention_outcome_present=attention_outcome,
+        read=read,
+        delivered=delivered,
+    )
     return {
         "schema_version": 3,
         "policy": "native_thread_continuity_v3",
@@ -477,7 +504,10 @@ def native_thread_continuity_v3(records: list[dict[str, Any]], shared_dir: Path,
         "age_ms": max(0, generated - message_t),
         "exact_next_commands": exact_next,
         "first_action_helper_v35": first_action_helper,
-        "attention_or_microdose_eligible": bool(ack or trace or attention_outcome),
+        "attention_or_microdose_eligible": bool(
+            ack_is_address_evidence or trace or attention_outcome
+        ),
+        "correspondence_relation_axes_v4": relation_axes,
         "authority": "language_only_context_not_control",
     }
 
@@ -523,11 +553,15 @@ def uptake_state(records: list[dict[str, Any]], shared_dir: Path, generated: int
                 and (row.get("reply_to") == message_id or row.get("thread_id") == thread_id)
                 for row in records
             )
-            acked = any(
-                row.get("record_type") == "ack_receipt"
-                and (row.get("message_id") == message_id or row.get("thread_id") == thread_id)
+            ack_rows = [
+                row
                 for row in records
-            )
+                if row.get("record_type") == "ack_receipt"
+                and (row.get("message_id") == message_id or row.get("thread_id") == thread_id)
+                and row_time_ms(row) >= row_time_ms(message)
+            ]
+            latest_ack = ack_rows[-1] if ack_rows else None
+            ack_kind = normalize_ack_kind(latest_ack.get("ack_kind")) if latest_ack else None
             legacy_bridge = is_legacy_bridge_message(message)
             legacy_claim = latest_legacy_claim_for_thread(records, thread_id)
             legacy_claim_status = legacy_claim_native_status(records, legacy_claim) if isinstance(legacy_claim, dict) else None
@@ -540,8 +574,12 @@ def uptake_state(records: list[dict[str, Any]], shared_dir: Path, generated: int
                 state = "trace_observed"
             elif legacy_claim_status:
                 state = legacy_claim_status
-            elif acked:
+            elif latest_ack and ack_kind in {"held", "needs_time"}:
+                state = "held_ack"
+            elif latest_ack and ack_kind in ADDRESS_ACK_KINDS:
                 state = "acknowledged"
+            elif latest_ack:
+                state = "seen_ack_only"
             elif reply_linked:
                 state = "reply_linked_needs_ack_or_trace"
             elif isinstance(legacy_claim, dict):
@@ -564,9 +602,13 @@ def uptake_state(records: list[dict[str, Any]], shared_dir: Path, generated: int
         next_action = "Wait for read/ack/reply, or ask for ACK/REPLY/TRACE if appropriate."
     elif state == "read_only":
         next_action = "Read is not acknowledgement; ask for ACK, REPLY, or trace evidence before attention/microdose."
-    elif state in {"acknowledged", "trace_observed", "legacy_claimed_acknowledged", "legacy_claimed_reply_linked", "legacy_claimed_trace_observed"}:
+    elif state == "held_ack":
+        next_action = "No action is required; held or needs_time keeps the thread active while attention resurfacing remains paused."
+    elif state in {"acknowledged", "trace_observed", "legacy_claimed_acknowledged", "legacy_claimed_trace_observed"}:
         next_action = "Attention canary may be eligible; semantic microdose remains separate steward-gated authority."
-    elif state == "reply_linked_needs_ack_or_trace":
+    elif state == "seen_ack_only":
+        next_action = "Seen is visibility only; no action is required, and stronger mutual-address evidence remains optional."
+    elif state in {"reply_linked_needs_ack_or_trace", "legacy_claimed_reply_linked"}:
         next_action = "Reply link proves continuity, not mutual address; wait for or ask for ACK/TRACE/attention outcome before attention or microdose."
     elif state == "attention_active":
         next_action = "Observe one cycle; then request/record CORRESPONDENCE_ATTENTION_OUTCOME."
@@ -782,6 +824,10 @@ def markdown_report(payload: dict[str, Any]) -> str:
     uptake = payload["uptake"]
     minime = payload["minime_public_lanes"]
     native = uptake.get("native_thread_continuity_v3") or {}
+    axes = native.get("correspondence_relation_axes_v4") or {}
+    continuity_axis = axes.get("continuity_axis") or {}
+    mutual_axis = axes.get("mutual_address_axis") or {}
+    authority_axis = axes.get("authority_axis") or {}
     lines = [
         "# Correspondence Uptake Probe",
         "",
@@ -795,6 +841,7 @@ def markdown_report(payload: dict[str, Any]) -> str:
         f"- Legacy claim stall: {(uptake.get('legacy_claim_affordance_v25') or {}).get('stall_reason') or 'none'}",
         f"- Ghost-thread risk: {(uptake.get('legacy_claim_affordance_v25') or {}).get('ghost_thread_risk') or False}",
         f"- Native continuity v3: {(native or {}).get('continuity_state') or 'none'}; stall={(native or {}).get('stall_reason') or 'none'}; eligible={(native or {}).get('attention_or_microdose_eligible') or False}",
+        f"- Relation axes v4: continuity={continuity_axis.get('state') or 'none'}/{continuity_axis.get('basis') or 'none'}; mutual_address={mutual_axis.get('state') or 'none'}; attention={authority_axis.get('attention') or 'none'}; pressure_effect={((axes.get('causality_axis') or {}).get('pressure_effect') or 'none')}",
         f"- Native first-action helper v3.5: {((native or {}).get('first_action_helper_v35') or {}).get('choose_one_prompt') or 'none'}",
         f"- Astrid uptake/latency signals: {len(payload['astrid_introspection_signals'])}",
         f"- Minime public correspondence hits: {minime['public_signal_count']}",
@@ -937,6 +984,7 @@ class CorrespondenceUptakeProbeTests(unittest.TestCase):
                 "thread_id": "thread_legacy_astrid_minime_abc",
                 "from_being": "minime",
                 "to_being": "astrid",
+                "ack_kind": "held",
             }])
             payload = audit(since_hours=24, shared_dir=shared, astrid_workspace=base, minime_workspace=base)
             self.assertEqual(payload["uptake"]["state"], "legacy_claimed_acknowledged")
@@ -951,8 +999,29 @@ class CorrespondenceUptakeProbeTests(unittest.TestCase):
                 "recorded_at_unix_ms": 2,
                 "message_id": "corr_a_m",
                 "thread_id": "thread_a_m",
+                "ack_kind": "seen",
             }])
-            self.assertEqual(audit(since_hours=24, shared_dir=shared, astrid_workspace=base, minime_workspace=base)["uptake"]["state"], "acknowledged")
+            payload = audit(since_hours=24, shared_dir=shared, astrid_workspace=base, minime_workspace=base)
+            self.assertEqual(payload["uptake"]["state"], "seen_ack_only")
+            self.assertFalse(
+                payload["uptake"]["native_thread_continuity_v3"]["attention_or_microdose_eligible"]
+            )
+            self._write_jsonl(ledger, [self._message(), {
+                "record_type": "ack_receipt",
+                "recorded_at_unix_ms": 2,
+                "message_id": "corr_a_m",
+                "thread_id": "thread_a_m",
+                "ack_kind": "held",
+            }])
+            payload = audit(
+                since_hours=24,
+                shared_dir=shared,
+                astrid_workspace=base,
+                minime_workspace=base,
+            )
+            self.assertEqual(payload["uptake"]["state"], "held_ack")
+            self.assertIn("No action is required", payload["uptake"]["next_valid_non_control_action"])
+            self.assertIn("resurfacing remains paused", payload["uptake"]["next_valid_non_control_action"])
             self._write_jsonl(ledger, [self._message(), {
                 "record_type": "reply_link",
                 "recorded_at_unix_ms": 2,
@@ -964,6 +1033,24 @@ class CorrespondenceUptakeProbeTests(unittest.TestCase):
             self.assertEqual(
                 payload["uptake"]["native_thread_continuity_v3"]["stall_reason"],
                 "reply_linked_requires_peer_ack_or_trace",
+            )
+            axes = payload["uptake"]["native_thread_continuity_v3"][
+                "correspondence_relation_axes_v4"
+            ]
+            self.assertEqual(axes["continuity_axis"]["state"], "active")
+            self.assertEqual(axes["continuity_axis"]["basis"], "reply_chain")
+            self.assertEqual(
+                axes["mutual_address_axis"]["state"],
+                "not_confirmed",
+            )
+            self.assertFalse(
+                axes["action_axis"][
+                    "reply_chain_requires_receipt_to_remain_continuous"
+                ]
+            )
+            self.assertEqual(
+                axes["causality_axis"]["pressure_effect"],
+                "not_measured_no_inference",
             )
             helper = payload["uptake"]["native_thread_continuity_v3"]["first_action_helper_v35"]
             self.assertEqual(helper["policy"], "native_first_action_helper_v35")

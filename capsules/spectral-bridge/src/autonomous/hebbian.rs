@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::codec::NAMED_CODEC_DIMS;
 
-const COMFORT_FILL_CENTER: f32 = 50.0;
 const COMFORT_FILL_SCALE: f32 = 20.0;
 const PAIR_TRACE_DECAY: f32 = 0.92;
 const PAIR_LEARNING_RATE: f32 = 0.25;
@@ -77,9 +76,9 @@ fn activation_strength(value: f32) -> f32 {
     value.abs().clamp(0.0, 1.0)
 }
 
-fn comfort_outcome(previous_fill: f32, current_fill: f32) -> f32 {
-    let previous_distance = (previous_fill - COMFORT_FILL_CENTER).abs();
-    let current_distance = (current_fill - COMFORT_FILL_CENTER).abs();
+fn comfort_outcome(previous_fill: f32, current_fill: f32, target_fill: f32) -> f32 {
+    let previous_distance = (previous_fill - target_fill).abs();
+    let current_distance = (current_fill - target_fill).abs();
     ((previous_distance - current_distance) / COMFORT_FILL_SCALE).clamp(-1.0, 1.0)
 }
 
@@ -107,8 +106,15 @@ impl HebbianCodecSidecar {
         previous_features: &[f32],
         previous_fill: f32,
         current_fill: f32,
+        target_fill: f32,
     ) -> bool {
-        let outcome = comfort_outcome(previous_fill, current_fill);
+        if [previous_fill, current_fill, target_fill]
+            .iter()
+            .any(|value| !value.is_finite() || !(0.0..=100.0).contains(value))
+        {
+            return false;
+        }
+        let outcome = comfort_outcome(previous_fill, current_fill, target_fill);
         if outcome.abs() < 0.05 {
             return false;
         }
@@ -223,6 +229,31 @@ impl HebbianCodecSidecar {
 mod tests {
     use super::*;
 
+    #[test]
+    fn current_target_reverses_the_legacy_incentive_below_the_hold_shelf() {
+        assert!(comfort_outcome(68.0, 66.0, 50.0) > 0.0);
+        assert!(comfort_outcome(68.0, 66.0, 68.0) < 0.0);
+        assert!(comfort_outcome(64.0, 66.0, 68.0) > 0.0);
+        assert!(comfort_outcome(72.0, 70.0, 68.0) > 0.0);
+        assert_eq!(comfort_outcome(66.0, 70.0, 68.0), 0.0);
+        assert!(comfort_outcome(64.0, 66.0, 63.0) < 0.0);
+    }
+
+    #[test]
+    fn invalid_fill_or_target_cannot_mutate_scores() {
+        let mut sidecar = HebbianCodecSidecar::default();
+        let before = serde_json::to_value(&sidecar).unwrap();
+        for (prior, current, target) in [
+            (f32::NAN, 70.0, 68.0),
+            (71.0, f32::INFINITY, 68.0),
+            (71.0, 70.0, f32::NAN),
+            (71.0, 70.0, 101.0),
+        ] {
+            assert!(!sidecar.observe_outcome(&[0.8; 48], prior, current, target));
+            assert_eq!(serde_json::to_value(&sidecar).unwrap(), before);
+        }
+    }
+
     fn feature_vector(dims: &[(&str, f32)]) -> Vec<f32> {
         let mut features = vec![0.0; 48];
         for (name, value) in dims {
@@ -242,7 +273,7 @@ mod tests {
 
         for _ in 0..5 {
             sidecar.decay_scores();
-            sidecar.observe_outcome(&previous, 74.0, 56.0);
+            sidecar.observe_outcome(&previous, 74.0, 56.0, 50.0);
         }
 
         let mut current = feature_vector(&[("warmth", 0.7), ("reflective", 0.7)]);
@@ -270,7 +301,7 @@ mod tests {
 
         for _ in 0..5 {
             sidecar.decay_scores();
-            sidecar.observe_outcome(&previous, 52.0, 72.0);
+            sidecar.observe_outcome(&previous, 52.0, 72.0, 50.0);
         }
 
         let current = feature_vector(&[("warmth", 0.7), ("reflective", 0.7)]);
@@ -295,7 +326,7 @@ mod tests {
         let previous = feature_vector(&[("warmth", 0.9), ("reflective", 0.8)]);
         for _ in 0..5 {
             sidecar.decay_scores();
-            sidecar.observe_outcome(&previous, 74.0, 56.0);
+            sidecar.observe_outcome(&previous, 74.0, 56.0, 50.0);
         }
 
         let current = feature_vector(&[("warmth", 0.7), ("reflective", 0.7)]);
@@ -312,7 +343,7 @@ mod tests {
         let previous = feature_vector(&[("warmth", 0.9), ("reflective", 0.8)]);
 
         sidecar.decay_scores();
-        assert!(sidecar.observe_outcome(&previous, 74.0, 56.0));
+        assert!(sidecar.observe_outcome(&previous, 74.0, 56.0, 50.0));
 
         assert_eq!(
             sidecar.pair_contact_updates("warmth", "reflective"),
@@ -331,7 +362,7 @@ mod tests {
         let previous = feature_vector(&[("warmth", 0.9), ("reflective", 0.8)]);
 
         sidecar.decay_scores();
-        assert!(!sidecar.observe_outcome(&previous, 50.4, 50.7));
+        assert!(!sidecar.observe_outcome(&previous, 50.4, 50.7, 50.0));
         assert_eq!(
             sidecar.pair_contact_updates("warmth", "reflective"),
             Some(0)
@@ -345,7 +376,7 @@ mod tests {
         let previous = feature_vector(&[("warmth", 0.9), ("reflective", 0.8)]);
 
         sidecar.decay_scores();
-        assert!(sidecar.observe_outcome(&previous, 74.0, 56.0));
+        assert!(sidecar.observe_outcome(&previous, 74.0, 56.0, 50.0));
 
         let json = serde_json::to_string(&sidecar).expect("serialize sidecar");
         let restored: HebbianCodecSidecar =

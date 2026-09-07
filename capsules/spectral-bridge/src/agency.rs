@@ -770,7 +770,7 @@ async fn call_introspector_tool(
     tool_name: &'static str,
     arguments: Value,
 ) -> Option<Value> {
-    tokio::task::spawn_blocking(move || {
+    crate::lifecycle::spawn_blocking_background(move || {
         call_introspector_tool_blocking(&script_path, tool_name, arguments)
     })
     .await

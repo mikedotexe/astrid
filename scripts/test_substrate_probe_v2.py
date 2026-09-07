@@ -3,11 +3,36 @@ import asyncio
 import base64
 import copy
 import json
+import importlib.util
+from pathlib import Path
+import shutil
 import struct
+import subprocess
+import tempfile
 import unittest
 from unittest.mock import patch
 
 import substrate_probe_v2 as probe
+
+
+class PackagedHelperTests(unittest.TestCase):
+    def test_staged_helper_runs_without_canonical_imports(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "substrate_probe_v2.py"
+            shutil.copyfile(Path(probe.__file__), target)
+            result = subprocess.run(["python3", "-I", "-B", str(target), "--help"],
+                                    cwd=directory, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("usage:", result.stdout)
+
+    def test_pinned_statistic_matches_legacy_definition(self):
+        path = Path(probe.__file__).with_name("substrate_probe.py")
+        spec = importlib.util.spec_from_file_location("legacy_probe_parity", path)
+        legacy = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(legacy)
+        for left, right in [([], []), ([1], [2]), ([1, 1], [2, 3]),
+                            ([1, 2, 3], [3, 2, 1]), ([0.1, 4, -3, 8], [2, 0, 4, 5])]:
+            self.assertEqual(probe._pearson(left, right), legacy._pearson(left, right))
 
 
 class Service:

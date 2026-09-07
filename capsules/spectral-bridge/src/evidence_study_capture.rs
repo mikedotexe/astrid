@@ -1,12 +1,13 @@
 //! Bounded, evidence-only capture for preregistered experiential studies.
 
+use crate::lifecycle::queued::{Sender as SyncSender, channel as sync_channel};
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::mpsc::{SyncSender, TrySendError, sync_channel};
+use std::sync::mpsc::TrySendError;
 use std::sync::{Mutex, OnceLock};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
@@ -387,20 +388,26 @@ fn writer() -> &'static StudyWriterV1 {
                 while let Ok(item) = receiver.recv() {
                     if item.dropped_before > 0 {
                         let gap = capture_gap(&item.window, "queue_exhausted", item.dropped_before);
-                        let _ = append_record(&item.window.window_id, &gap);
+                        if append_record(&item.window.window_id, &gap).is_err() {
+                            continue;
+                        }
                     }
                     let count = counts.entry(item.window.window_id.clone()).or_default();
                     if *count >= item.window.sample_limit {
                         // The preregistered ceiling is successful bounded capture, not
                         // missing evidence. Queue or write loss still emits a gap.
+                        item.complete();
                         continue;
                     }
                     if append_value(&item.window.window_id, &item.sample).is_ok() {
                         *count = count.saturating_add(1);
                     } else {
                         let gap = capture_gap(&item.window, "asynchronous_write_failed", 1);
-                        let _ = append_record(&item.window.window_id, &gap);
+                        if append_record(&item.window.window_id, &gap).is_err() {
+                            continue;
+                        }
                     }
+                    item.complete();
                 }
             })
             .expect("evidence study writer thread must start");

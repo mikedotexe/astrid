@@ -871,71 +871,7 @@ struct RenderBeingMemoryArgs {
 // MCP server loop
 // ---------------------------------------------------------------------------
 
-/// Run the MCP stdio server loop.
-///
-/// Reads JSON-RPC requests from stdin, dispatches to tool handlers,
-/// and writes responses to stdout. Runs until stdin closes or shutdown
-/// signal fires.
-pub async fn run_mcp_server(
-    state: Arc<RwLock<BridgeState>>,
-    db: Arc<BridgeDb>,
-    sensory_tx: mpsc::Sender<SensoryMsg>,
-    mut shutdown: tokio::sync::watch::Receiver<bool>,
-) {
-    let stdin = tokio::io::stdin();
-    let mut stdout = tokio::io::stdout();
-    let mut reader = BufReader::new(stdin);
-    let mut line = String::new();
-
-    info!("MCP server listening on stdio");
-
-    loop {
-        line.clear();
-
-        tokio::select! {
-            _ = shutdown.changed() => {
-                info!("MCP server shutting down");
-                return;
-            }
-            result = reader.read_line(&mut line) => {
-                match result {
-                    Ok(0) => {
-                        info!("MCP server stdin closed");
-                        return;
-                    }
-                    Ok(_) => {
-                        let trimmed = line.trim();
-                        if trimmed.is_empty() {
-                            continue;
-                        }
-
-                        debug!(request = %trimmed, "MCP request received");
-
-                        let response = handle_request(
-                            trimmed, &state, &db, &sensory_tx
-                        ).await;
-
-                        if let Some(resp) = response {
-                            let mut resp_json = serde_json::to_string(&resp)
-                                .unwrap_or_else(|_| r#"{"jsonrpc":"2.0","error":{"code":-32603,"message":"serialization failed"}}"#.to_string());
-                            resp_json.push('\n');
-
-                            if let Err(e) = stdout.write_all(resp_json.as_bytes()).await {
-                                error!(error = %e, "failed to write MCP response");
-                                return;
-                            }
-                            let _ = stdout.flush().await;
-                        }
-                    }
-                    Err(e) => {
-                        error!(error = %e, "MCP stdin read error");
-                        return;
-                    }
-                }
-            }
-        }
-    }
-}
+include!("mcp_server.rs");
 
 async fn handle_request(
     raw: &str,
@@ -2258,7 +2194,7 @@ async fn tool_render_chimera(arguments: &Value) -> Result<Value, (i32, String)> 
     let request: RenderChimeraRequest = serde_json::from_value(arguments.clone())
         .map_err(|e| (-32602, format!("invalid chimera render request: {e}")))?;
 
-    let result = tokio::task::spawn_blocking(move || chimera::render(&request))
+    let result = crate::lifecycle::spawn_blocking_background(move || chimera::render(&request))
         .await
         .map_err(|e| (-32603, format!("chimera render task failed: {e}")))?
         .map_err(|e| (-32603, format!("chimera render failed: {e:#}")))?;

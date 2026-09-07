@@ -128,6 +128,44 @@ fn projection_column_norms(
     norms
 }
 
+fn projection_column_correlation_stats(
+    matrix: &[[f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM],
+    norms: &[f32; EMBEDDING_PROJECT_DIM],
+) -> (f32, f32, (usize, usize), usize) {
+    let mut maximum_abs_cosine = 0.0_f32;
+    let mut maximum_abs_cosine_pair = (0, 1);
+    let mut absolute_cosine_sum = 0.0_f32;
+    let mut pair_count = 0_usize;
+    for left in 0..EMBEDDING_PROJECT_DIM {
+        for right in (left + 1)..EMBEDDING_PROJECT_DIM {
+            let denominator = norms[left] * norms[right];
+            let cosine = if denominator > 0.0 && denominator.is_finite() {
+                matrix.iter().map(|row| row[left] * row[right]).sum::<f32>() / denominator
+            } else {
+                f32::NAN
+            };
+            let absolute_cosine = cosine.abs();
+            if !absolute_cosine.is_finite() || absolute_cosine > maximum_abs_cosine {
+                maximum_abs_cosine = absolute_cosine;
+                maximum_abs_cosine_pair = (left, right);
+            }
+            absolute_cosine_sum += absolute_cosine;
+            pair_count += 1;
+        }
+    }
+    let mean_abs_cosine = if pair_count > 0 {
+        absolute_cosine_sum / pair_count as f32
+    } else {
+        0.0
+    };
+    (
+        maximum_abs_cosine,
+        mean_abs_cosine,
+        maximum_abs_cosine_pair,
+        pair_count,
+    )
+}
+
 /// Deterministic random projection matrix for embedding → 8D.
 /// Uses a fixed seed so the projection is reproducible across restarts.
 /// Each column is a normalized random vector (Johnson-Lindenstrauss).
@@ -169,8 +207,15 @@ pub struct ProjectionBasisHealthV1 {
     pub near_zero_column_indexes: Vec<usize>,
     pub all_norms_finite: bool,
     pub normalized_columns_near_unit: bool,
+    pub pairwise_column_count: usize,
+    pub maximum_abs_pairwise_column_cosine: f32,
+    pub mean_abs_pairwise_column_cosine: f32,
+    pub maximum_abs_pairwise_column_cosine_pair: (usize, usize),
+    pub maximum_abs_pairwise_column_cosine_threshold: f32,
+    pub columns_weakly_correlated: bool,
     pub dead_dimension_detected: bool,
     pub state: &'static str,
+    pub semantic_phrase_separation_requires_embeddings: bool,
     pub automatic_basis_rotation: bool,
     pub basis_change_policy: &'static str,
     pub unhealthy_basis_response: &'static str,
@@ -206,6 +251,19 @@ pub fn projection_basis_health_v1() -> ProjectionBasisHealthV1 {
     let normalized_columns_near_unit = normalized_column_norms
         .iter()
         .all(|norm| (*norm - 1.0).abs() <= 1.0e-4);
+    let (
+        maximum_abs_pairwise_column_cosine,
+        mean_abs_pairwise_column_cosine,
+        maximum_abs_pairwise_column_cosine_pair,
+        pairwise_column_count,
+    ) = projection_column_correlation_stats(
+        embedding_projection_matrix(),
+        &normalized_column_norms,
+    );
+    let maximum_abs_pairwise_column_cosine_threshold = 0.15_f32;
+    let columns_weakly_correlated = maximum_abs_pairwise_column_cosine.is_finite()
+        && mean_abs_pairwise_column_cosine.is_finite()
+        && maximum_abs_pairwise_column_cosine <= maximum_abs_pairwise_column_cosine_threshold;
     let dead_dimension_detected = !near_zero_column_indexes.is_empty();
     let minimum_threshold_margin_ratio = if PROJECTION_BASIS_NEAR_ZERO_NORM > 0.0 {
         minimum_raw_column_norm / PROJECTION_BASIS_NEAR_ZERO_NORM
@@ -218,8 +276,10 @@ pub fn projection_basis_health_v1() -> ProjectionBasisHealthV1 {
         "near_zero_projection_column_requires_review"
     } else if !normalized_columns_near_unit {
         "normalized_basis_drift_requires_review"
+    } else if !columns_weakly_correlated {
+        "projection_column_correlation_requires_review"
     } else {
-        "all_projection_columns_healthy"
+        "projection_columns_healthy_and_weakly_correlated"
     };
 
     ProjectionBasisHealthV1 {
@@ -236,12 +296,18 @@ pub fn projection_basis_health_v1() -> ProjectionBasisHealthV1 {
         near_zero_column_indexes,
         all_norms_finite,
         normalized_columns_near_unit,
+        pairwise_column_count,
+        maximum_abs_pairwise_column_cosine,
+        mean_abs_pairwise_column_cosine,
+        maximum_abs_pairwise_column_cosine_pair,
+        maximum_abs_pairwise_column_cosine_threshold,
+        columns_weakly_correlated,
         dead_dimension_detected,
         state,
+        semantic_phrase_separation_requires_embeddings: true,
         automatic_basis_rotation: false,
         basis_change_policy: "compatibility_pinned_no_automatic_basis_rotation",
-        unhealthy_basis_response:
-            "fail_test_gate_and_require_captured_replay_before_operator_approved_basis_epoch_change",
+        unhealthy_basis_response: "fail_basis_readiness_gate_and_require_captured_replay_before_operator_approved_basis_epoch_change",
         observational_only: true,
         live_projection_write: false,
         authority: "read_only_projection_basis_health_not_projection_kernel_or_live_vector_change",

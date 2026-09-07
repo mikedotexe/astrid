@@ -229,22 +229,48 @@ class StewardProjectionTests(unittest.TestCase):
                 "sandbox",
                 "corridor",
                 "signal_spine",
+                "contact_capacity_trace",
                 "lived_state_witness",
+                "grounded_introspection",
                 "reciprocal_uptake",
                 "representation_contracts",
+                "domain_boundary_audit",
                 "claim_families",
                 "experiment_dossiers",
                 "authority_temporal",
                 "model_qos",
                 "evidence_study_runtime",
+                "counterfactual_change_lab",
                 "felt_mechanism_concordance",
                 "agency_commons",
+                "division_chronicle",
+                "passage_observatory",
+                "temporal_bearing",
                 "felt_contracts",
                 "steward_work_selection",
+                "living_problem_registry",
+                "introspection_continuity",
+                "felt_constellation",
                 "experiential_epistemics",
             ],
         )
         steps = {step.step_id: step for step in source_first_steps()}
+        self.assertEqual(
+            steps["contact_capacity_trace"].dependencies,
+            ("signal_spine",),
+        )
+        self.assertEqual(
+            steps["grounded_introspection"].dependencies,
+            ("addressing", "lived_state_witness"),
+        )
+        self.assertEqual(
+            steps["domain_boundary_audit"].dependencies,
+            ("representation_contracts",),
+        )
+        self.assertEqual(
+            steps["counterfactual_change_lab"].dependencies,
+            ("evidence_study_runtime", "representation_contracts"),
+        )
         self.assertEqual(
             steps["lived_state_witness"].dependencies,
             ("signal_spine",),
@@ -284,6 +310,62 @@ class StewardProjectionTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
+            steps["division_chronicle"].dependencies,
+            (),
+        )
+        self.assertEqual(
+            steps["division_chronicle"].input_streams,
+            (),
+        )
+        self.assertIn(
+            "../../../../minime/workspace/division/followup/events_v1.jsonl",
+            steps["division_chronicle"].source_globs,
+        )
+        self.assertIn(
+            "../../../../minime/minime/src/runtime.rs",
+            steps["division_chronicle"].source_globs,
+        )
+        self.assertIn(
+            "../../../../minime/workspace/division/chronicle/chronicle_v1.json",
+            steps["division_chronicle"].outputs,
+        )
+        self.assertEqual(
+            steps["passage_observatory"].dependencies,
+            ("agency_commons", "division_chronicle"),
+        )
+        self.assertEqual(
+            steps["passage_observatory"].input_streams,
+            ("agency_commons",),
+        )
+        self.assertIn(
+            "../../../../minime/workspace/division/passage-observatory/observatory_v1.json",
+            steps["passage_observatory"].outputs,
+        )
+        self.assertIn(
+            "../../../../minime/workspace/division/passage-observatory/observatory_v2.json",
+            steps["passage_observatory"].outputs,
+        )
+        self.assertIn(
+            "../../../../shared/collaborations/phase_transitions_v1.jsonl",
+            steps["passage_observatory"].source_globs,
+        )
+        self.assertEqual(
+            steps["temporal_bearing"].dependencies,
+            (
+                "contact_capacity_trace",
+                "lived_state_witness",
+                "passage_observatory",
+            ),
+        )
+        self.assertIn(
+            "diagnostics/temporal_bearing_v1/latest.json",
+            steps["temporal_bearing"].outputs,
+        )
+        self.assertIn(
+            "shadow_cartography/trajectory_*.json",
+            steps["temporal_bearing"].source_globs,
+        )
+        self.assertEqual(
             steps["felt_contracts"].dependencies,
             (
                 "experiment_dossiers",
@@ -303,11 +385,49 @@ class StewardProjectionTests(unittest.TestCase):
             ("felt_contracts",),
         )
         self.assertEqual(
+            steps["living_problem_registry"].dependencies,
+            ("felt_contracts", "steward_work_selection"),
+        )
+        self.assertIn(
+            "diagnostics/living_problem_registry_v1/problems.jsonl",
+            steps["living_problem_registry"].outputs,
+        )
+        self.assertIn(
+            "diagnostics/living_problem_registry_v2/problems.jsonl",
+            steps["living_problem_registry"].outputs,
+        )
+        self.assertEqual(
+            steps["introspection_continuity"].dependencies,
+            (
+                "addressing",
+                "claim_families",
+                "felt_contracts",
+                "steward_work_selection",
+            ),
+        )
+        self.assertIn(
+            "diagnostics/introspection_continuity_v1/index.json",
+            steps["introspection_continuity"].outputs,
+        )
+        self.assertEqual(
+            steps["felt_constellation"].dependencies,
+            ("claim_families", "felt_contracts", "living_problem_registry"),
+        )
+        self.assertEqual(
             steps["experiential_epistemics"].dependencies,
             (
+                "contact_capacity_trace",
+                "counterfactual_change_lab",
+                "domain_boundary_audit",
                 "felt_contracts",
+                "felt_constellation",
                 "evidence_study_runtime",
+                "grounded_introspection",
+                "living_problem_registry",
+                "passage_observatory",
                 "steward_work_selection",
+                "introspection_continuity",
+                "temporal_bearing",
             ),
         )
 
@@ -400,6 +520,32 @@ class StewardProjectionTests(unittest.TestCase):
             first,
             hash_source_globs(self.workspace, ("source/*.json",)),
         )
+
+    def test_division_chronicle_hash_tracks_external_followup_events(
+        self,
+    ) -> None:
+        shared_root = self.root / "shared-tree"
+        workspace = (
+            shared_root
+            / "astrid/capsules/spectral-bridge/workspace"
+        )
+        workspace.mkdir(parents=True)
+        events = (
+            shared_root
+            / "minime/workspace/division/followup/events_v1.jsonl"
+        )
+        events.parent.mkdir(parents=True)
+        events.write_text('{"event":1}\n', encoding="utf-8")
+        pattern = (
+            "../../../../minime/workspace/division/followup/"
+            "events_v1.jsonl"
+        )
+
+        first = hash_source_globs(workspace, (pattern,))
+        events.write_text('{"event":1}\n{"event":2}\n', encoding="utf-8")
+        second = hash_source_globs(workspace, (pattern,))
+
+        self.assertNotEqual(first[pattern], second[pattern])
 
     def test_no_input_generation_reuses_all_steps_and_appends_no_events(
         self,

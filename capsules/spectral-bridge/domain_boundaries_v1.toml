@@ -1,0 +1,91 @@
+schema = "spectral_bridge_domain_boundaries_v1"
+schema_version = 1
+source_root = "capsules/spectral-bridge"
+documentation = "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md"
+legacy_large_file_baseline = "capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json"
+facade_line_limit = 1000
+large_file_review_threshold = 1000
+new_large_production_files_forbidden = true
+legacy_large_file_growth_forbidden = true
+test_path_markers = ["/tests/", "/tests.rs", "_tests.rs"]
+
+[[stable_facades]]
+path = "src/ws.rs"
+canonical_target = "ws/runtime.rs"
+
+[[stable_facades]]
+path = "src/autonomous.rs"
+canonical_target = "autonomous/runtime.rs"
+
+[[stable_facades]]
+path = "src/codec.rs"
+canonical_target = "codec/core.rs"
+
+[[stable_facades]]
+path = "src/llm.rs"
+canonical_target = "llm/provider.rs"
+
+[[stable_facades]]
+path = "src/types.rs"
+canonical_target = "types/schema.rs"
+
+[[stable_facades]]
+path = "src/action_continuity.rs"
+canonical_target = "action_continuity/runtime.rs"
+
+[[cohesion_exceptions]]
+path = "src/action_continuity/runtime/core.rs"
+maximum_unique_fn_signatures = 232
+maximum_lines = 10750
+
+[[cohesion_exceptions]]
+path = "src/autonomous/runtime/orchestration.rs"
+maximum_unique_fn_signatures = 7
+maximum_lines = 5023
+
+[[cohesion_exceptions]]
+path = "src/ws/bridge_state.rs"
+maximum_unique_fn_signatures = 27
+maximum_lines = 1650
+
+[[cohesion_exceptions]]
+path = "src/codec/structure.rs"
+maximum_unique_fn_signatures = 13
+maximum_lines = 1550
+
+[[cohesion_exceptions]]
+path = "src/codec/encoding.rs"
+maximum_unique_fn_signatures = 10
+maximum_lines = 1200
+
+[[cohesion_exceptions]]
+path = "src/llm/provider/fallback_weights.rs"
+maximum_unique_fn_signatures = 2
+maximum_lines = 1450
+
+[[cohesion_exceptions]]
+path = "src/llm/provider/transport.rs"
+maximum_unique_fn_signatures = 41
+maximum_lines = 1400
+
+[[forbidden_edges]]
+edge_id = "interpretation_cannot_enter_sensory_or_dispatch"
+from_globs = ["src/ws/sensory_delivery.rs", "src/autonomous/runtime/delivery.rs", "src/action_continuity/**/*.rs"]
+forbidden_symbols = ["AstridInterpretationV1"]
+
+[[forbidden_edges]]
+edge_id = "witness_frame_cannot_enter_sensory_or_dispatch"
+from_globs = ["src/ws/sensory_delivery.rs", "src/autonomous/runtime/delivery.rs", "src/action_continuity/**/*.rs"]
+forbidden_symbols = ["WitnessFrameV1"]
+
+[[forbidden_edges]]
+edge_id = "producer_observation_cannot_enter_dispatch"
+from_globs = ["src/autonomous/runtime/delivery.rs", "src/action_continuity/**/*.rs"]
+forbidden_symbols = ["MinimeObservationV1", "BridgeEvidenceV1"]
+
+[authority]
+runtime_consumed = false
+live_eligible_now = false
+auto_approved = false
+grants_approval = false
+edits_source_now = false

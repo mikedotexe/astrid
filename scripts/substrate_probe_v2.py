@@ -15,13 +15,27 @@ import struct
 import sys
 import uuid
 
-from substrate_probe import _pearson
-
 MAX_TICKS = 14
 MAX_POLE_BYTES = 2048
 REQUEST_SECONDS = 2
 RUN_SECONDS = 30
 CLEANUP_SECONDS = 10
+
+
+# Pin the existing statistic here so a staged helper has no mutable legacy import.
+def _pearson(xs, ys):
+    pts = [(x, y) for x, y in zip(xs, ys) if x is not None and y is not None]
+    n = len(pts)
+    if n < 3:
+        return None
+    mx = sum(p[0] for p in pts) / n
+    my = sum(p[1] for p in pts) / n
+    sx = sum((p[0] - mx) ** 2 for p in pts)
+    sy = sum((p[1] - my) ** 2 for p in pts)
+    if sx < 1e-12 or sy < 1e-12:
+        return None
+    cov = sum((p[0] - mx) * (p[1] - my) for p in pts)
+    return round(cov / (sx ** 0.5 * sy ** 0.5), 4)
 
 
 class ProbeError(ValueError):

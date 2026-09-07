@@ -462,7 +462,7 @@ async fn handle_telemetry_message_at(
         s.telemetry_heartbeat_delta_v1 = Some(heartbeat.clone());
         write_telemetry_heartbeat_snapshot(&heartbeat);
         s.previous_fill_pct = previous_fill_pct;
-        s.latest_telemetry = Some(telemetry.clone());
+        s.install_telemetry_observation(telemetry.clone(), pipeline_started);
         record_telemetry_protocol_status(
             &mut s,
             wire_packet,

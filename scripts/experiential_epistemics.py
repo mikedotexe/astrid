@@ -240,6 +240,15 @@ def lint_workspace(workspace: Path) -> dict[str, Any]:
             workspace / "diagnostics/felt_contract_graph_v1/status.json",
         )
     )
+    continuity_root = workspace / "diagnostics/introspection_continuity_v1"
+    paths.extend(
+        (
+            continuity_root / "status.json",
+            continuity_root / "index.json",
+        )
+    )
+    paths.extend(sorted((continuity_root / "cards").glob("*.json")))
+    paths.extend(sorted((continuity_root / "responses").glob("*.json")))
     issues: list[dict[str, str]] = []
     checked = 0
     for path in paths:

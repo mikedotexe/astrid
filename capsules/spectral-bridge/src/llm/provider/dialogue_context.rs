@@ -142,21 +142,30 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
     web_context: Option<&str>,
     modality_context: Option<&str>,
     continuity_context: Option<&str>,
+    agenda_context: Option<&str>,
     topline_hint: Option<&str>,
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
+    attention: Option<&PromptAttentionV1>,
 ) -> usize {
+    // The estimate must model what the assembly actually builds. It was
+    // 4-ways stale (fixed 2026-09-03, Constitution A0): it took 8 history
+    // entries with the legacy gradient while the canary assembly builds 6
+    // with a tighter one; it measured the legacy SYSTEM_PROMPT under the
+    // canary profile; and it used the unsplit perception cap. The stale
+    // over-estimate tripped the 512-token high-pressure cap early.
+    let profile = configured_mlx_profile();
+    let history_limit = attended_history_limit(profile, attention);
     let history_chars: usize = recent_history
         .iter()
         .rev()
-        .take(8)
+        .take(history_limit)
         .collect::<Vec<_>>()
         .into_iter()
         .rev()
         .enumerate()
         .map(|(idx, exchange)| {
-            // Match the gradient in generate_dialogue: oldest=150, newest=1200
-            let trim_len = 150usize.saturating_add(idx.saturating_mul(150).min(1050));
+            let trim_len = attended_history_trim_len(profile, idx, history_limit);
             exchange
                 .minime_said
                 .len()
@@ -165,17 +174,20 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
         })
         .sum();
 
-    SYSTEM_PROMPT
+    dialogue_system_prompt_for_profile(profile)
         .len()
         .saturating_add(history_chars)
-        .saturating_add(journal_text.len().min(DIALOGUE_JOURNAL_CAP))
+        .saturating_add(journal_text.len().min(attended_journal_caps(attention).0))
+        .saturating_add(perception_context.unwrap_or_default().len().min({
+            let (direct_cap, _, ambient_cap) = attended_perception_caps(attention);
+            direct_cap.saturating_add(ambient_cap)
+        }))
         .saturating_add(
-            perception_context
+            web_context
                 .unwrap_or_default()
                 .len()
-                .min(DIALOGUE_PERCEPTION_CAP),
+                .min(attended_web_cap(attention)),
         )
-        .saturating_add(web_context.unwrap_or_default().len().min(DIALOGUE_WEB_CAP))
         .saturating_add(
             modality_context
                 .unwrap_or_default()
@@ -186,7 +198,13 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
             continuity_context
                 .unwrap_or_default()
                 .len()
-                .min(DIALOGUE_CONTINUITY_CAP),
+                .min(attended_continuity_cap(attention)),
+        )
+        .saturating_add(
+            agenda_context
+                .unwrap_or_default()
+                .len()
+                .min(attended_agenda_cap(attention)),
         )
         .saturating_add(
             topline_hint

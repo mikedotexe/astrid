@@ -319,10 +319,10 @@ pub fn format_shadow_field_v2_line(field: &Value) -> Option<String> {
         .and_then(Value::as_f64)
         .unwrap_or(0.0);
     let action_hint = if eligible {
-        "Gate is OPEN now; suggested route: SHADOW_PREFLIGHT lambda-tail/lambda4 — \
+        "Minime Shadow-influence eligibility is OPEN now; suggested route: SHADOW_PREFLIGHT lambda-tail/lambda4 — \
          this is the typed action that lets you inspect this field"
     } else {
-        "Gate is CLOSED for live influence; suggested route: SHADOW_FIELD lambda-tail/lambda4 \
+        "Minime Shadow-influence eligibility is CLOSED; suggested route: SHADOW_FIELD lambda-tail/lambda4 \
          records observer-only cartography without sending"
     };
     Some(format!(
@@ -555,9 +555,9 @@ pub fn format_shadow_field_v3_line(
         },
         ShadowOwner::Minime => {
             let gate_seg = if eligible {
-                "Gate is OPEN now"
+                "Minime Shadow-influence eligibility is OPEN now"
             } else {
-                "Gate is CLOSED for live influence"
+                "Minime Shadow-influence eligibility is CLOSED"
             };
             format!("{gate_seg}; suggested route: {next_token} — observer with memory")
         },
@@ -1493,7 +1493,7 @@ pub fn format_sovereignty_suggestion_line(ctx: &SovereigntyContext) -> Option<St
         SovereigntySuggestion::TemperatureLengthMenu { temp, len, scale } => format!(
             "[Generation-shape sovereign — currently temperature={temp:.2}, length={len}, \
              hebbian_scale={scale:.2}. Alternatives: NEXT: TEMPERATURE <0.10\u{2013}1.50> | \
-             LENGTH <128\u{2013}1536> | SHAPE_LEARN <0.0\u{2013}4.0>.]"
+             LENGTH <512\u{2013}1536> | SHAPE_LEARN <0.0\u{2013}4.0>.]"
         ),
     })
 }
@@ -1657,6 +1657,7 @@ mod shadow_suggestion_tests {
         let v2_line = format_shadow_field_v2_line(&field).expect("v2 line");
         assert!(!v2_line.contains("NEXT:"), "got: {v2_line}");
         assert!(v2_line.contains("suggested route: SHADOW_FIELD"));
+        assert!(v2_line.contains("Minime Shadow-influence eligibility is CLOSED"));
 
         let v3 = make_v3("coupled", 3, false, &[0.5, 0.5, 0.5, 0.5]);
         let v3_line =
@@ -1700,13 +1701,13 @@ mod shadow_suggestion_tests {
     }
 
     #[test]
-    fn yours_line_omits_gate_language() {
+    fn yours_line_omits_influence_eligibility_language() {
         let v3 = make_v3("coupled", 3, false, &[0.5, 0.5, 0.5, 0.5]);
         let line = format_shadow_field_v3_line(&v3, ShadowOwner::Yours, None, false).unwrap();
-        // No "Gate is OPEN" / "Gate is CLOSED" segment for Astrid's own shadow.
+        // Astrid's own Shadow is observational and has no influence-eligibility gate.
         assert!(
-            !line.contains("Gate is"),
-            "line should omit gate language: {line}"
+            !line.contains("Shadow-influence eligibility"),
+            "line should omit influence-eligibility language: {line}"
         );
         // Should still nominate a v3 action.
         assert!(!line.contains("NEXT:"));
@@ -1719,8 +1720,8 @@ mod shadow_suggestion_tests {
         let v3 = make_v3("volatile", 1, false, &[0.05, 0.05, 0.05, 0.05]);
         let line = format_shadow_field_v3_line(&v3, ShadowOwner::Minime, None, false).unwrap();
         assert!(
-            line.contains("Gate is CLOSED"),
-            "line should mention gate state: {line}"
+            line.contains("Minime Shadow-influence eligibility is CLOSED"),
+            "line should name the influence boundary: {line}"
         );
         assert!(!line.contains("NEXT:"));
         assert!(line.contains("(Minime)"));

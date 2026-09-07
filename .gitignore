@@ -87,3 +87,6 @@ launchd/com.astrid.action-canonicalization-scorecard-once.plist
 
 # Private CPU-edge observations, backup inventories, and local candidate archives
 /.device-local/
+
+# Selected local releases, private checkpoints, and build/activation transactions
+/.runtime/

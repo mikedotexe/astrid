@@ -1,19 +1,46 @@
 /// Reads all `.txt` files from `workspace/inbox/`, returns their content,
 /// and moves them to `workspace/inbox/read/` so they're not re-read.
-fn check_inbox() -> Option<String> {
+fn check_inbox(cutoff: std::time::SystemTime) -> Option<contact_capacity::InboxReadBatchV1> {
     let inbox_dir = bridge_paths().astrid_inbox_dir();
-    check_inbox_at(inbox_dir.as_path())
+    let trace_root = bridge_paths()
+        .bridge_workspace()
+        .join("diagnostics/contact_capacity_trace_v1");
+    check_inbox_at_cutoff_with_trace(inbox_dir.as_path(), cutoff, &trace_root)
 }
 
-fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
+#[cfg(test)]
+fn check_inbox_at(inbox_dir: &Path) -> Option<contact_capacity::InboxReadBatchV1> {
+    check_inbox_at_cutoff(inbox_dir, std::time::SystemTime::now())
+}
+
+#[cfg(test)]
+fn check_inbox_at_cutoff(
+    inbox_dir: &Path,
+    cutoff: std::time::SystemTime,
+) -> Option<contact_capacity::InboxReadBatchV1> {
+    let trace_root = contact_capacity::trace_root_for_inbox(inbox_dir);
+    check_inbox_at_cutoff_with_trace(inbox_dir, cutoff, &trace_root)
+}
+
+fn check_inbox_at_cutoff_with_trace(
+    inbox_dir: &Path,
+    cutoff: std::time::SystemTime,
+    trace_root: &Path,
+) -> Option<contact_capacity::InboxReadBatchV1> {
     let entries: Vec<PathBuf> = std::fs::read_dir(inbox_dir)
         .ok()?
         .filter_map(|e| e.ok())
-        .filter(|e| {
+        .filter_map(|e| {
             let p = e.path();
-            p.is_file() && p.extension().is_some_and(|ext| ext == "txt")
+            let before_or_at_cutoff = e
+                .metadata()
+                .and_then(|metadata| metadata.modified())
+                .is_ok_and(|modified| modified <= cutoff);
+            (p.is_file()
+                && p.extension().is_some_and(|ext| ext == "txt")
+                && before_or_at_cutoff)
+                .then_some(p)
         })
-        .map(|e| e.path())
         .collect();
 
     if entries.is_empty() {
@@ -23,9 +50,10 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
     // Read WITHOUT moving. Messages stay in inbox until retire_inbox()
     // is called after the exchange succeeds. This prevents lost messages
     // when dialogue fails (the bug that ate Eugene's hello).
-    let mut messages = Vec::new();
+    let mut admitted = Vec::new();
     for path in &entries {
-        if let Ok(content) = std::fs::read_to_string(path)
+        if let Ok(source_bytes) = std::fs::read(path)
+            && let Ok(content) = std::str::from_utf8(&source_bytes)
             && !content.trim().is_empty()
         {
             // Steward query letters persist as a single-slot open question
@@ -33,25 +61,39 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
             if let Some(fname) = path.file_name().and_then(|name| name.to_str())
                 && fname.starts_with("mike_query")
             {
-                record_open_steward_query(fname, &content);
+                record_open_steward_query(fname, content);
             }
-            let content = if path
+            let identity = correspondence_v1::contact_source_identity_for_inbox_file(path, content);
+            let source_ref_fallback = path
+                .file_name()
+                .map_or_else(|| "unknown_inbox_source".into(), |name| name.to_string_lossy());
+            let source = contact_capacity::InboxSourceMaterialV1::new(
+                source_ref_fallback.into_owned(),
+                &source_bytes,
+                identity,
+            );
+            let prompt_content = if path
                 .file_name()
                 .and_then(|name| name.to_str())
                 .is_some_and(|name| name.starts_with("from_minime_"))
             {
-                sanitize_remote_journal_for_astrid_context(&content)
+                sanitize_remote_journal_for_astrid_context(content)
             } else {
-                content
+                content.to_string()
             };
-            messages.push(content.trim().to_string());
+            admitted.push((prompt_content.trim().to_string(), source));
         }
     }
 
-    if messages.is_empty() {
+    if admitted.is_empty() {
         None
     } else {
+        let messages = admitted
+            .iter()
+            .map(|(message, _)| message.as_str())
+            .collect::<Vec<_>>();
         let mut joined = messages.join("\n---\n");
+        let mut admitted_source_count = admitted.len();
         // Protect context window: truncate large inbox messages.
         // Full text preserved in inbox/read/ for self-study.
         const MAX_INBOX_CHARS: usize = 6000;
@@ -61,6 +103,18 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
             while trunc > 0 && !joined.is_char_boundary(trunc) {
                 trunc -= 1;
             }
+            let mut next_start = 0_usize;
+            admitted_source_count = 0;
+            for (index, (message, _)) in admitted.iter().enumerate() {
+                if next_start >= trunc {
+                    break;
+                }
+                admitted_source_count = admitted_source_count.saturating_add(1);
+                next_start = next_start.saturating_add(message.len());
+                if index.saturating_add(1) < admitted.len() {
+                    next_start = next_start.saturating_add("\n---\n".len());
+                }
+            }
             joined.truncate(trunc);
             joined.push_str(
                 "\n\n[... message truncated for context window. \
@@ -68,7 +122,14 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
                 or NEXT: INTROSPECT inbox/read/latest.txt with a concrete file path.]",
             );
         }
-        Some(joined)
+        let sources = admitted
+            .into_iter()
+            .take(admitted_source_count)
+            .map(|(_, source)| source)
+            .collect();
+        Some(contact_capacity::InboxReadBatchV1::capture(
+            joined, cutoff, sources, trace_root,
+        ))
     }
 }
 
@@ -375,52 +436,9 @@ fn clear_review_slot_after_successful_introspection(
 /// it. Her review-fulfilling INTROSPECTs were already exempt; this generalizes
 /// that grace to her self-directed inquiry, which the override was eating (e.g.
 /// repeated `INTROSPECT astrid:llm` to pursue a real fallback-contract concern).
+#[cfg(test)]
 fn is_self_directed_introspect(next_action: &str) -> bool {
     next_action.trim().to_uppercase().starts_with("INTROSPECT")
-}
-
-/// True if `next_action` is an INTROSPECT whose target matches a pending review
-/// invitation's `review_target`. The anti-stagnation diversity override must
-/// EXEMPT this — she is answering a steward review invitation, not stuck-repeating
-/// INTROSPECT (else her acceptance of an invitation gets silently eaten).
-fn introspect_fulfills_pending_review(next_action: &str) -> bool {
-    let trimmed = next_action.trim();
-    if !trimmed.to_uppercase().starts_with("INTROSPECT") {
-        return false;
-    }
-    let path = bridge_paths().open_steward_query_path();
-    let Ok(content) = std::fs::read_to_string(&path) else {
-        return false;
-    };
-    let Ok(slot) = serde_json::from_str::<Value>(&content) else {
-        return false;
-    };
-    let Some(rt) = slot
-        .get("review_target")
-        .and_then(Value::as_str)
-        .filter(|s| !s.is_empty())
-    else {
-        return false;
-    };
-    let arg = trimmed
-        .get("INTROSPECT".len()..)
-        .unwrap_or("")
-        .split_whitespace()
-        .next()
-        .unwrap_or("");
-    if arg.is_empty() {
-        return false;
-    }
-    let rt_basis = review_target_match_basis(rt);
-    let rt_canon = introspect::canonicalize_introspect_target_label(rt_basis);
-    let arg_canon = introspect::canonicalize_introspect_target_label(arg);
-    let rt_base = std::path::Path::new(rt_basis)
-        .file_name()
-        .and_then(|n| n.to_str());
-    let arg_base = std::path::Path::new(arg)
-        .file_name()
-        .and_then(|n| n.to_str());
-    rt_canon == arg_canon || (rt_base.is_some() && rt_base == arg_base)
 }
 
 /// Co-regulation: read what minime is reaching for (density/aperture/steady)
@@ -550,10 +568,13 @@ fn retire_inbox_at(inbox_dir: &Path, cutoff: std::time::SystemTime) {
                 // newer than the cutoff) was never read or recorded — leave it for
                 // the next check_inbox to surface + seed its slot, rather than
                 // sweeping it into read/ unread (the slot-seed race).
+                // Unknown mtime fails toward KEEPING the file: never retire
+                // what was never provably admitted (review finding 2026-08-17).
                 let arrived_after_read = entry
                     .metadata()
                     .and_then(|meta| meta.modified())
-                    .is_ok_and(|mtime| mtime > cutoff);
+                    .map(|mtime| mtime > cutoff)
+                    .unwrap_or(true);
                 if arrived_after_read {
                     continue;
                 }

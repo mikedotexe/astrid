@@ -961,8 +961,8 @@ struct CollabReservoirSnapshot {
     /// Kink #1 fix (2026-05-14): seconds since the handle was last
     /// "live-ticked" (per reservoir_service.py:read_state response field
     /// `seconds_since_live`). Used by `render_joint_trace_clause` to gate
-    /// suffix render — fresh data shows normally, stalled data shows a
-    /// warning, dead handles drop the values entirely. Prevents the
+    /// suffix render — fresh data shows normally, idle joint-trace input shows
+    /// a scoped warning, dead handles drop the values entirely. Prevents the
     /// 14-hour silent-stale incident that motivated this fix.
     last_live_s: Option<f32>,
     cached_at_unix_s: u64,
@@ -1028,10 +1028,10 @@ fn read_collab_reservoir_state(handle: &str) -> Option<CollabReservoirSnapshot> 
 /// any indication the source had stopped ticking. Three tiers:
 ///
 ///   `< 30s`     — render normally; the feeder ticks every ~2s so this is healthy.
-///   `30s..300s` — render with `(stalled <Nm>)` suffix; values still shown
-///                 but the warning makes the lag visible.
-///   `>= 300s`   — drop h_norms+ticks entirely; render `handle quiet (<age>
-///                 stale)` so the dead-source state becomes the message.
+///   `30s..300s` — retain values with an input-idle suffix that does not imply
+///                 other semantic or runtime processing is inactive.
+///   `>= 300s`   — drop h_norms+ticks entirely; render the joint-trace input
+///                 as quiet while leaving other processing explicitly unassessed.
 ///
 /// `None` (older snapshots predating the freshness field) is treated as
 /// fresh for backward compatibility.
@@ -1045,14 +1045,17 @@ fn render_joint_trace_clause(snap: &CollabReservoirSnapshot) -> String {
             snap.h1, snap.h2, snap.h3, snap.ticks
         )
     } else if age < quiet_floor_s {
-        let stalled_age = humanize_age(age as u64);
+        let idle_age = humanize_age(age as u64);
         format!(
-            " Joint trace [{:.2},{:.2},{:.2}], {} ticks (stalled {}).",
-            snap.h1, snap.h2, snap.h3, snap.ticks, stalled_age
+            " Joint trace [{:.2},{:.2},{:.2}], {} ticks (joint trace input idle {}; other processing not assessed).",
+            snap.h1, snap.h2, snap.h3, snap.ticks, idle_age
         )
     } else {
         let quiet_age = humanize_age(age as u64);
-        format!(" Joint trace handle quiet ({} stale).", quiet_age)
+        format!(
+            " Joint trace input quiet ({} since live tick; other processing not assessed).",
+            quiet_age
+        )
     }
 }
 
@@ -1694,23 +1697,27 @@ mod tests {
     }
 
     #[test]
-    fn render_joint_trace_clause_stalled() {
+    fn render_joint_trace_clause_scopes_idle_input() {
         let s = render_joint_trace_clause(&snapshot_with_age(Some(120.0)));
         assert!(
             s.contains("[12.41,10.32,10.47]"),
-            "stalled should still show values: {s}"
+            "idle input should still show values: {s}"
         );
         assert!(
             s.contains("42111 ticks"),
-            "stalled should still show ticks: {s}"
+            "idle input should still show ticks: {s}"
         );
         assert!(
-            s.contains("stalled"),
-            "stalled should include stalled marker: {s}"
+            s.contains("joint trace input idle"),
+            "idle input should include a scoped marker: {s}"
+        );
+        assert!(
+            s.contains("other processing not assessed"),
+            "idle input must not imply global inactivity: {s}"
         );
         assert!(
             s.contains("2m"),
-            "stalled at 120s should humanize as 2m: {s}"
+            "idle input at 120s should humanize as 2m: {s}"
         );
     }
 
@@ -1726,8 +1733,12 @@ mod tests {
             "quiet should drop tick count: {s}"
         );
         assert!(
-            s.contains("quiet"),
+            s.contains("Joint trace input quiet"),
             "quiet should announce dead handle: {s}"
+        );
+        assert!(
+            s.contains("other processing not assessed"),
+            "quiet input must not imply global inactivity: {s}"
         );
         assert!(
             s.contains("14h"),

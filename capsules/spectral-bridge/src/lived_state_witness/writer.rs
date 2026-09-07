@@ -1,10 +1,11 @@
+use crate::lifecycle::queued::{Sender as SyncSender, channel as sync_channel};
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
-use std::sync::mpsc::{SyncSender, TrySendError, sync_channel};
+use std::sync::mpsc::TrySendError;
 
 use sha2::{Digest, Sha256};
 use tracing::warn;
@@ -133,6 +134,7 @@ impl WitnessWriterV1 {
                                         job.root.clone(),
                                         job.witness.witness_id().to_string(),
                                     );
+                                    job.complete();
                                 },
                                 Err(error) => {
                                     let error_sha256 = format!(
@@ -155,6 +157,8 @@ impl WitnessWriterV1 {
                                             witness_id = job.witness.witness_id(),
                                             "lived-state witness and gap writes both failed"
                                         );
+                                    } else {
+                                        job.complete();
                                     }
                                 },
                             }

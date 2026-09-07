@@ -213,6 +213,28 @@ mod tests {
         assert_eq!(trace.last_error.as_deref(), Some("send_error:closed"));
     }
 
+    // Grounds introspection_astrid_ws_1788120514 snag #1: a received Pong is not
+    // "only a debug log." record_ws_message_received("pong") records it on the
+    // received side (pongs_received/messages_received/timestamp) and, correctly,
+    // does not count as a send. The bundled lifecycle test above asserts
+    // pongs_received==1 but also calls record_ws_message_sent, so it cannot
+    // isolate that a received pong is a receive-side recording, not an echo/send.
+    #[test]
+    fn telemetry_pong_received_is_recorded_not_sent() {
+        let mut state = BridgeState::new();
+        let connection_id = record_connect_attempt(&mut state, WsLane::Telemetry);
+        record_connected(&mut state, WsLane::Telemetry, connection_id, 7.0);
+
+        record_ws_message_received(&mut state, WsLane::Telemetry, "pong");
+
+        let trace = &state.telemetry_ws;
+        assert_eq!(trace.pongs_received, 1);
+        assert_eq!(trace.messages_received, 1);
+        assert_eq!(trace.pings_received, 0);
+        assert_eq!(trace.messages_sent, 0);
+        assert!(trace.last_message_at_unix_s.is_some());
+    }
+
     #[test]
     fn ws_trace_records_first_valid_payload_and_resets_it_on_reconnect() {
         let mut state = BridgeState::new();
@@ -4163,6 +4185,58 @@ mod tests {
     }
 
     #[test]
+    fn telemetry_heartbeat_normal_jitter_window_has_deterministic_stddev() {
+        let mut state = BridgeState::new();
+        for observed_at_unix_s in [100.0, 101.0, 102.25] {
+            let sample = make_pressure_telemetry(0.70, 0.20, 0.40);
+            record_pressure_trend_sample_v1(
+                &mut state,
+                &sample,
+                70.0,
+                observed_at_unix_s,
+            );
+        }
+        let mut heartbeat = build_telemetry_heartbeat_delta_v1(
+            Some(102.25),
+            103.75,
+            &WebSocketLaneTrace::default(),
+        );
+        attach_rolling_arrival_cadence_v1(
+            &mut heartbeat,
+            &state.pressure_trend_samples_v1,
+            103.75,
+            4,
+        );
+
+        assert_eq!(heartbeat.jitter_class, "normal");
+        assert_eq!(heartbeat.inter_arrival_ms, Some(1_500.0));
+        assert_eq!(heartbeat.rolling_inter_arrival_sample_count, 3);
+        assert_eq!(heartbeat.rolling_inter_arrival_mean_ms, Some(1_250.0));
+        assert!(
+            (heartbeat
+                .rolling_inter_arrival_variance_ms2
+                .unwrap_or_default()
+                - 41_666.668)
+                .abs()
+                < 0.01
+        );
+        assert!(
+            (heartbeat
+                .rolling_inter_arrival_stddev_ms
+                .unwrap_or_default()
+                - 204.124_15)
+                .abs()
+                < 0.001
+        );
+        assert_eq!(heartbeat.rolling_inter_arrival_range_ms, Some(500.0));
+        assert_eq!(heartbeat.rolling_inter_arrival_change_ms, Some(500.0));
+        assert_eq!(
+            heartbeat.rolling_inter_arrival_state,
+            "arrival_intervals_lengthening"
+        );
+    }
+
+    #[test]
     fn telemetry_integration_health_separates_pipeline_wait_and_hold() {
         let clear = build_telemetry_integration_health_v1(None, 4.0, 0.2, 1.0);
         assert_eq!(clear.classification, "clear_at_latest_sample");
@@ -4185,6 +4259,33 @@ mod tests {
         assert_eq!(held.max_prewrite_pipeline_ms, 120.0);
         assert_eq!(held.max_write_lock_hold_ms, 30.0);
         assert_eq!(held.authority, "diagnostic_timing_evidence_not_control");
+    }
+
+    #[test]
+    fn telemetry_integration_health_flags_heavy_prewrite_pipeline() {
+        // Astrid's astrid:ws snag (introspection_astrid_ws_1787875902): the
+        // pre-write classify pipeline inside handle_telemetry_message runs
+        // inline (awaited, not spawned) before the write lock is taken, so
+        // heavy computation there — not lock contention — is the head-of-line
+        // pressure she flagged. The prior test never isolates that branch
+        // because its "held" sample (120.0, 0.1, 30.0) trips the earlier
+        // write_lock_hold check. Isolate prewrite_pipeline_heavy directly:
+        // heavy prewrite pipeline, negligible lock wait and hold.
+        let heavy_prewrite = build_telemetry_integration_health_v1(None, 150.0, 0.3, 2.0);
+        assert_eq!(heavy_prewrite.classification, "prewrite_pipeline_heavy");
+        assert_eq!(heavy_prewrite.latest_prewrite_pipeline_ms, 150.0);
+        assert_eq!(heavy_prewrite.max_prewrite_pipeline_ms, 150.0);
+        assert_eq!(heavy_prewrite.sample_count, 1);
+        // The timing surfaces the concern; it does not by itself establish her
+        // felt micro-stutter, and it carries no control authority.
+        assert_eq!(
+            heavy_prewrite.causal_attribution,
+            "not_established_by_timing_alone"
+        );
+        assert_eq!(
+            heavy_prewrite.authority,
+            "diagnostic_timing_evidence_not_control"
+        );
     }
 
     #[tokio::test]

@@ -1448,6 +1448,83 @@ mod tests {
     }
 
     #[test]
+    fn viscosity_transport_mode_packing_spike_is_monotonic_without_felt_overclaim() {
+        let baseline_components = ResonanceDensityComponents {
+            active_energy: 0.64,
+            mode_packing: 0.32,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.66,
+            viscosity_index: 0.0,
+            viscosity_persistence_coefficient: 0.48,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.42),
+            porosity_gradient: Some(0.60),
+            dynamic_fluidity_index: Some(0.58),
+            semantic_friction_coefficient: Some(0.18),
+            cohesion_score: Some(0.66),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.58,
+            comfort_gate: 0.70,
+            comfort_gate_range: None,
+        };
+        let fingerprint = SpectralFingerprintV1 {
+            policy: "spectral_fingerprint_v1".to_string(),
+            schema_version: 1,
+            eigenvalues: [1.0, 0.62, 0.45, 0.30, 0.22, 0.18, 0.12, 0.08],
+            eigenvector_concentration_top4: [0.0; 8],
+            inter_mode_cosine_top_abs: [0.0; 8],
+            spectral_entropy: 0.90,
+            lambda1_lambda2_gap: 0.38,
+            v1_rotation_similarity: 0.90,
+            v1_rotation_delta: 0.10,
+            geom_rel: 1.0,
+            adjacent_gap_ratios: [1.08, 1.12, 1.00, 1.05],
+        };
+        let mut spiked_components = baseline_components.clone();
+        spiked_components.mode_packing = 0.60;
+
+        let baseline = viscosity_porosity_transport_review_with_fingerprint_v1(
+            &baseline_components,
+            Some(&fingerprint),
+            None,
+        );
+        let spiked = viscosity_porosity_transport_review_with_fingerprint_v1(
+            &spiked_components,
+            Some(&fingerprint),
+            None,
+        );
+        let baseline_resistance = baseline
+            .directional_resistance_vector_v1
+            .as_ref()
+            .expect("baseline resistance");
+        let spiked_resistance = spiked
+            .directional_resistance_vector_v1
+            .as_ref()
+            .expect("spiked resistance");
+
+        assert!(
+            spiked.viscosity_index > baseline.viscosity_index,
+            "mode-packing spike should increase diagnostic viscosity: {baseline:?} -> {spiked:?}"
+        );
+        assert!(
+            spiked_resistance.dynamic_friction_coefficient
+                > baseline_resistance.dynamic_friction_coefficient,
+            "mode-packing spike should increase diagnostic resistance: \
+             {baseline_resistance:?} -> {spiked_resistance:?}"
+        );
+        assert_eq!(
+            spiked.authority,
+            "diagnostic_transport_not_porosity_pressure_fill_pi_or_control"
+        );
+        assert_eq!(
+            spiked_resistance.authority,
+            "diagnostic_directional_resistance_not_pressure_fill_pi_porosity_or_control"
+        );
+    }
+
+    #[test]
     fn viscosity_transport_keeps_low_intensity_absence_from_false_thickening() {
         let components = ResonanceDensityComponents {
             active_energy: 0.30,
@@ -3278,10 +3355,34 @@ mod tests {
             .pop();
         let short_integrity = telemetry.spectral_fingerprint_integrity_v1();
         assert_eq!(short_integrity.legacy_vector_len, Some(31));
+        assert!(short_integrity.typed_precedence_over_legacy);
         assert_eq!(short_integrity.hybrid_coherence_index, None);
         assert_eq!(short_integrity.hybrid_max_abs_delta, None);
         assert_eq!(
             short_integrity.hybrid_coherence_state,
+            "unavailable_malformed_legacy"
+        );
+        assert!(
+            short_integrity
+                .issues
+                .contains(&"legacy_vector_len_31_expected_32".to_string())
+        );
+
+        telemetry.spectral_fingerprint = telemetry
+            .spectral_fingerprint_v1
+            .as_ref()
+            .map(SpectralFingerprintV1::to_legacy_slots);
+        telemetry
+            .spectral_fingerprint
+            .as_mut()
+            .expect("legacy fingerprint")
+            .push(0.0);
+        let long_integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert_eq!(long_integrity.legacy_vector_len, Some(33));
+        assert_eq!(long_integrity.hybrid_coherence_index, None);
+        assert_eq!(long_integrity.hybrid_max_abs_delta, None);
+        assert_eq!(
+            long_integrity.hybrid_coherence_state,
             "unavailable_malformed_legacy"
         );
     }

@@ -23,6 +23,7 @@ include!("schema/transport_evidence.rs");
 include!("schema/texture_evidence.rs");
 include!("schema/inhabitable_fluctuation.rs");
 include!("schema/telemetry.rs");
+include!("schema/regulator_participation.rs");
 include!("schema/sensory.rs");
 include!("schema/bridge_status.rs");
 include!("schema/status_enums.rs");

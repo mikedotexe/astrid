@@ -1428,12 +1428,26 @@ fn peer_experiment_refs_are_advisory_not_local_selectors() {
             "exp_minime_20990101_sensory-grounding --title Sensory Grounding",
         )
         .expect("peer start notice");
+    let unavailable_compare = store
+        .experiment_compare_command(Some("current WITH exp_minime_receptivity_bias"))
+        .expect("advisory peer comparison");
 
     assert!(plan.contains("Peer experiment reference"));
     assert!(plan.contains("belongs to minime"));
     assert!(status.contains("Peer experiment reference"));
     assert!(review.contains("Suggested local next"));
     assert!(notice.contains("cannot bind runs"));
+    assert!(
+        unavailable_compare.contains(
+            "Peer experiment reference (EXPERIMENT_COMPARE) `exp_minime_receptivity_bias`"
+        )
+    );
+    assert!(unavailable_compare.contains("belongs to minime"));
+    assert!(
+        unavailable_compare
+            .contains("Peer snapshot: not available from local action-thread files.")
+    );
+    assert!(unavailable_compare.contains("cannot bind runs, close, or mutate"));
     assert!(is_peer_experiment_selector(
         "exp_minime_20990101_sensory-grounding --title Sensory Grounding"
     ));

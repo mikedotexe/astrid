@@ -1,5 +1,31 @@
 const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
 const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
+const MAX_REST_SECS: u64 = 360;
+
+fn should_arm_prompt_overflow_read_more(
+    active_read_path: Option<&str>,
+    recent_next_choice: Option<&str>,
+) -> bool {
+    active_read_path.is_none()
+        && !recent_next_choice.is_some_and(|choice| {
+            choice
+                .split_whitespace()
+                .next()
+                .is_some_and(|action| action.eq_ignore_ascii_case("READ_MORE"))
+        })
+}
+
+fn fill_responsive_rest_secs(base_rest: u64, current_fill: f32) -> u64 {
+    if current_fill < 30.0 {
+        ((base_rest as f64 * 0.6) as u64).max(30)
+    } else if current_fill < 40.0 {
+        base_rest
+    } else if current_fill < 50.0 {
+        ((base_rest as f64 * 1.2) as u64).min(MAX_REST_SECS)
+    } else {
+        base_rest
+    }
+}
 
 pub(crate) const fn semantic_heartbeat_constants_v1() -> (u64, f32) {
     (
@@ -17,7 +43,7 @@ async fn run_semantic_heartbeat_loop(
     let mut previous_features: Option<Vec<f32>> = None;
     loop {
         tokio::select! {
-            _ = shutdown.changed() => {
+            _ = crate::lifecycle::stop_requested(&mut shutdown) => {
                 info!("semantic heartbeat loop shutting down");
                 return;
             }
@@ -57,14 +83,14 @@ async fn run_semantic_heartbeat_loop(
                     "semantic heartbeat skipped by rescue write policy"
                 );
                 continue;
-            }
+            },
             Ok(enqueue_probe) => {
                 if sensory_tx.send(msg).await.is_err() {
                     enqueue_probe.record_channel_closed();
                     return;
                 }
                 enqueue_probe.record_enqueued();
-            }
+            },
         }
     }
 }
@@ -72,7 +98,7 @@ async fn run_semantic_heartbeat_loop(
 async fn run_llm_job_status_loop(mut shutdown: tokio::sync::watch::Receiver<bool>) {
     loop {
         tokio::select! {
-            _ = shutdown.changed() => {
+            _ = crate::lifecycle::stop_requested(&mut shutdown) => {
                 info!("LLM job status loop shutting down");
                 return;
             }
@@ -96,7 +122,7 @@ pub fn spawn_autonomous_loop(
     mut shutdown: tokio::sync::watch::Receiver<bool>,
     workspace_path: Option<PathBuf>,
     perception_path: Option<PathBuf>,
-) -> tokio::task::JoinHandle<()> {
+) -> tokio::task::JoinHandle<anyhow::Result<()>> {
     tokio::spawn(async move {
         // Scan journal directory for entries.
         let remote_journal_entries = workspace_path
@@ -109,15 +135,25 @@ pub fn spawn_autonomous_loop(
             remote_journal_entries = remote_journal_entries.len(),
             "autonomous feedback loop started"
         );
+        // Constitution C1 (observe-only): witness the envelope registry at
+        // startup. Nothing consumes it for enforcement until Stage C3; the
+        // mtime-cached read keeps it fresh for the transparency surfaces.
+        match super::envelope_registry::current_registry() {
+            Some(registry) => info!(
+                envelope_fields = registry.field_count(),
+                "envelope registry loaded (observe-only)"
+            ),
+            None => info!("envelope registry absent or malformed — compiled bounds remain the law"),
+        }
         let source_started_at = std::time::SystemTime::now();
         let mut source_reload_notice_written = false;
         let _ = readiness::write_source_status(source_started_at, "start");
-        let _semantic_heartbeat = tokio::spawn(run_semantic_heartbeat_loop(
+        let semantic_heartbeat = tokio::spawn(run_semantic_heartbeat_loop(
             Arc::clone(&state),
             sensory_tx.clone(),
             shutdown.clone(),
         ));
-        let _llm_job_status_loop = tokio::spawn(run_llm_job_status_loop(shutdown.clone()));
+        let llm_job_status_loop = tokio::spawn(run_llm_job_status_loop(shutdown.clone()));
 
         // Initialize and clean up context overflow directory.
         let overflow_dir = bridge_paths().context_overflow_dir();
@@ -129,6 +165,9 @@ pub fn spawn_autonomous_loop(
 
         let mut conv = ConversationState::new(remote_journal_entries, workspace_path);
         restore_state(&mut conv);
+        if let Err(error) = self_control_v2::reconcile_if_present(&mut conv) {
+            warn!("Astrid self-control V2 restart reconciliation blocked: {error}");
+        }
         // Wait for connections to establish.
         tokio::time::sleep(Duration::from_secs(3)).await;
 
@@ -138,7 +177,15 @@ pub fn spawn_autonomous_loop(
         // The fix: replicate the burst pattern.
         let mut burst_count: u32 = 0;
 
-        loop {
+        while !*shutdown.borrow() {
+            if let Err(error) = self_control_v2::reconcile_if_present(&mut conv) {
+                warn!("Astrid self-control V2 periodic reconciliation blocked: {error}");
+            }
+            // Constitution C2: the V1 self-regulation lease sweep was
+            // turn-driven only (next_action dispatch), so a lease expiring
+            // during rest hung past its expiry until she next acted. Sweep
+            // it every loop iteration too.
+            next_action::reconcile_lease_law(&mut conv);
             // Determine wait time based on burst phase.
             let seed = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -182,42 +229,35 @@ pub fn spawn_autonomous_loop(
                     let s = state.read().await;
                     s.latest_telemetry.as_ref().map_or(50.0, |t| t.fill_pct())
                 };
-                const MAX_REST_SECS: u64 = 360;
-                let rest_secs = if current_fill < 30.0 {
+                let rest_secs = fill_responsive_rest_secs(base_rest, current_fill);
+                if current_fill < 30.0 {
                     // Critical: shorten rest to get semantic input flowing ASAP.
                     // The PI controller has gate=1.0/filter=0.0 (hard_recovery),
                     // but it needs input to work with. Burst sooner.
-                    let shortened = (base_rest as f64 * 0.6) as u64;
-                    let floored = shortened.max(30); // minimum 30s rest
                     info!(
-                        rest_secs = floored,
+                        rest_secs,
                         base_rest,
                         current_fill,
                         "fill-shortened rest (critical recovery — burst sooner)"
                     );
-                    floored
                 } else if current_fill < 40.0 {
                     // Low fill: keep rest at baseline, don't extend.
                     info!(
-                        rest_secs = base_rest,
+                        rest_secs,
                         current_fill, "fill-baseline rest (low fill recovery)"
                     );
-                    base_rest
                 } else if current_fill < 50.0 {
                     // Moderate recovery: modest extension (20%)
-                    let extended = (base_rest as f64 * 1.2) as u64;
                     info!(
-                        rest_secs = extended.min(MAX_REST_SECS),
+                        rest_secs,
                         base_rest, current_fill, "fill-extended rest (moderate recovery)"
                     );
-                    extended.min(MAX_REST_SECS)
                 } else {
                     info!(
-                        rest_secs = base_rest,
+                        rest_secs,
                         burst_count, "resting: warmth-blended mirror (tapered entry)"
                     );
-                    base_rest
-                };
+                }
                 burst_count = 0;
 
                 // Gather journal texts to cycle through during rest.
@@ -259,6 +299,13 @@ pub fn spawn_autonomous_loop(
                         let idx = (roll * starred.len() as f64) as usize % starred.len();
                         let (ann, text) = &starred[idx];
                         candidates.push(format!("[Remembered moment]: ★ {ann}: {text}"));
+                    }
+                    // Her agenda's foreground item (A2) — same standing as
+                    // her creations, research, and starred memories.
+                    if let Some(candidate) =
+                        crate::autonomous::next_action::agenda::peripheral_candidate(&conv.agenda)
+                    {
+                        candidates.push(candidate);
                     }
                     // Pick one at random
                     if !candidates.is_empty() {
@@ -359,16 +406,20 @@ pub fn spawn_autonomous_loop(
                                 reason = %reason,
                                 "autonomous semantic heartbeat skipped by rescue write policy"
                             );
-                        }
+                        },
                         Ok(enqueue_probe) => {
                             if sensory_tx.send(msg).await.is_err() {
                                 enqueue_probe.record_channel_closed();
-                                return;
+                                return Err(anyhow::anyhow!("sensory channel closed during autonomous rest"));
                             }
                             enqueue_probe.record_enqueued();
-                        }
+                        },
                     }
                     tokio::time::sleep(Duration::from_secs(5)).await;
+                    // Constitution C2: rest can run minutes; sweep lease
+                    // expiry each pulse so a lease ending mid-rest reverts
+                    // within ~5s instead of waiting for her next turn.
+                    next_action::reconcile_lease_law(&mut conv);
                 }
                 Duration::from_secs(0) // already waited in the loop above
             } else {
@@ -377,10 +428,9 @@ pub fn spawn_autonomous_loop(
             };
 
             tokio::select! {
-                _ = shutdown.changed() => {
-                    info!("autonomous loop shutting down — saving state");
-                    save_state(&mut conv);
-                    return;
+                biased;
+                _ = crate::lifecycle::stop_requested(&mut shutdown) => {
+                    break;
                 }
                 () = tokio::time::sleep(wait) => {
                     let source_status = readiness::write_source_status(source_started_at, "loop");
@@ -396,12 +446,13 @@ pub fn spawn_autonomous_loop(
                         );
                     }
                     // Read current state.
-                    let (telemetry, fill_pct, safety) = {
+                    let (telemetry, fill_pct, safety, learning_observation) = {
                         let s = state.read().await;
                         (
                             s.latest_telemetry.clone(),
                             s.fill_pct,
                             s.safety_level,
+                            s.learning_observation(),
                         )
                     };
 
@@ -409,6 +460,22 @@ pub fn spawn_autonomous_loop(
                         debug!("no telemetry yet, skipping autonomous cycle");
                         continue;
                     };
+
+                    match owner_policy::reconcile(
+                        &mut conv,
+                        &telemetry,
+                        fill_pct,
+                        safety == SafetyLevel::Red,
+                    ) {
+                        Ok(returns) => {
+                            for summary in returns {
+                                conv.push_receipt("OWNER_POLICY", vec![summary]);
+                            }
+                        },
+                        Err(error) => {
+                            warn!("owner policy reconcile blocked without target substitution: {error}");
+                        },
+                    }
 
                     // Log eigenvalue snapshot for trajectory visualization.
                     db.log_eigenvalue_snapshot(
@@ -442,16 +509,7 @@ pub fn spawn_autonomous_loop(
                     let fill_delta = fill_pct - conv.prev_fill;
                     let expanding = fill_delta > 1.0;
                     let contracting = fill_delta < -1.0;
-                    conv.hebbian_codec.decay_scores();
-                    if let Some(pending) =
-                        conv.take_pending_hebbian_outcome_for_telemetry(telemetry.t_ms)
-                        && (fill_pct - pending.fill_before).abs() >= 1.0 {
-                            let _ = conv.hebbian_codec.observe_outcome(
-                                &pending.signature,
-                                pending.fill_before,
-                                fill_pct,
-                            );
-                        }
+                    let learning_observation = prepare_hebbian_feedback(&mut conv, learning_observation, fill_pct, &db);
 
                     // Close the loop on codec impact tracking: update the
                     // previous exchange's row with this exchange's fill.
@@ -624,7 +682,7 @@ pub fn spawn_autonomous_loop(
                     // mid-exchange (else it is swept to read/ unread + its steward slot
                     // never seeds — the slot-seed race that lost a review invitation).
                     let inbox_checked_at = std::time::SystemTime::now();
-                    let inbox_content = check_inbox();
+                    let inbox_content = check_inbox(inbox_checked_at);
                     let mutual_address_target = inbox_content.as_ref().and_then(|_| {
                         correspondence_v1::latest_inbox_peer_message_at_read_cutoff(
                             bridge_paths().astrid_inbox_dir().as_path(),
@@ -728,8 +786,20 @@ pub fn spawn_autonomous_loop(
                     // should support DEFER — "I heard you, I'm processing" without
                     // forced immediate response. When defer_inbox is set, inbox
                     // content is visible but doesn't override mode selection.
-                    let inbox_forces_dialogue = inbox_content.is_some() && !conv.defer_inbox;
+                    // Bounded forcing: after INBOX_FORCED_FALLBACK_LIMIT consecutive
+                    // forced exchanges that all fell back to canned text, stop forcing
+                    // so other modes can run (the letter stays visible in the prompt
+                    // and is retired by the next non-fallback exchange). Without this
+                    // bound one unretired letter forced 100% dialogue_fallback for 26h
+                    // (2026-08-31 voice-down incident).
+                    let inbox_forces_dialogue =
+                        inbox_content.is_some() && !conv.defer_inbox && conv.inbox_may_force_dialogue();
                     let mode = if inbox_forces_dialogue {
+                        next_action::introspection_cadence::observe_due(&mut conv);
+                        next_action::introspection_cadence::defer_pending(
+                            &mut conv,
+                            "unread_direct_correspondence",
+                        );
                         info!("inbox message present — forcing dialogue mode");
                         Mode::Dialogue
                     } else if inbox_content.is_some() {
@@ -905,6 +975,7 @@ pub fn spawn_autonomous_loop(
                             if conv.pending_remote_self_study.is_some() && journal_context.is_none() {
                                 warn!("pending minime self-study could not be parsed; clearing queue");
                                 conv.pending_remote_self_study = None;
+                                conv.pending_self_study_failed_exchanges = 0;
                             }
                             // Read Ising shadow from minime's workspace for viz.
                             let ising_shadow = conv.remote_workspace.as_deref()
@@ -1352,16 +1423,50 @@ pub fn spawn_autonomous_loop(
                             if let Some(job_summary) = crate::llm_jobs::active_prompt_summary() {
                                 continuity_parts.push(job_summary);
                             }
+                            if let Some(queue_summary) = concern_queue::prompt_summary() {
+                                continuity_parts.push(queue_summary);
+                            }
+                            if let Some(inquiry_summary) = inquiry::prompt_summary(&mut conv) {
+                                continuity_parts.push(inquiry_summary);
+                            }
+                            if let Some(policy_summary) = owner_policy::prompt_summary() {
+                                continuity_parts.push(policy_summary);
+                            }
 
                             let continuity_block = if continuity_parts.is_empty() {
                                 None
                             } else {
                                 Some(continuity_parts.join("\n\n"))
                             };
+                            // Her self-authored agenda (A2): None while
+                            // untouched, so the prompt stays byte-identical.
+                            let agenda_context =
+                                crate::autonomous::next_action::agenda::render_prompt_block(
+                                    &conv.agenda,
+                                    conv.exchange_count,
+                                );
+                            // A4: her ATTEND dial reaches assembly ONLY when
+                            // she has moved it off the defaults — None keeps
+                            // the compiled constants byte-identical.
+                            let attention_carrier = (conv.attention
+                                != crate::self_model::AttentionProfile::default_profile())
+                            .then_some(crate::llm::PromptAttentionV1 {
+                                minime_live: conv.attention.minime_live,
+                                self_history: conv.attention.self_history,
+                                interests: conv.attention.interests,
+                                research: conv.attention.research,
+                                memory_bank: conv.attention.memory_bank,
+                                perception: conv.attention.perception,
+                            });
                             let topline_hint = merge_hints([
                                 introspection_freshness_prompt_note(),
                                 crate::autonomous::next_action::division_action_prompt_note(
                                     conv.remote_workspace.as_deref(),
+                                ),
+                                // A3: Research-leaning agenda items hint the
+                                // route; they never force a mode or a SEARCH.
+                                crate::autonomous::next_action::agenda::research_topline_note(
+                                    &conv.agenda,
                                 ),
                             ]);
                             feedback_hint = merge_hints([
@@ -1869,9 +1974,11 @@ pub fn spawn_autonomous_loop(
                                         web_context.as_deref(),
                                         modality_context.as_deref(),
                                         continuity_block.as_deref(),
+                                        agenda_context.as_deref(),
                                         topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
+                                        attention_carrier.as_ref(),
                                     );
                                 timeout_secs =
                                     timeout_secs.max(crate::llm::dialogue_outer_timeout_secs(
@@ -1907,14 +2014,21 @@ pub fn spawn_autonomous_loop(
                                             conv.emphasis.clone()
                                         }.as_deref(),
                                         continuity_block.as_deref(),
+                                        agenda_context.as_deref(),
                                         topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
+                                        attention_carrier.as_ref(),
                                         &overflow_dir,
                                     )
                                 ).await {
                                     Ok((result, prompt_overflow)) => {
-                                        if let Some(of) = prompt_overflow {
+                                        if let Some(of) = prompt_overflow
+                                            && should_arm_prompt_overflow_read_more(
+                                                conv.last_read_path.as_deref(),
+                                                conv.recent_next_choices.back().map(String::as_str),
+                                            )
+                                        {
                                             conv.last_read_path = Some(of.path.to_string_lossy().to_string());
                                             conv.last_read_offset = of.offset;
                                             conv.last_read_meaning_summary = Some(format!("Context overflow: {}", of.summary));
@@ -1955,9 +2069,11 @@ pub fn spawn_autonomous_loop(
                                                     conv.emphasis.clone()
                                                 }.as_deref(),
                                                 continuity_block.as_deref(),
+                                                agenda_context.as_deref(),
                                                 topline_hint.as_deref(),
                                                 feedback_hint.as_deref(),
                                                 diversity_hint.as_deref(),
+                                                attention_carrier.as_ref(),
                                                 &overflow_dir,
                                             )
                                         ).await {
@@ -1970,6 +2086,22 @@ pub fn spawn_autonomous_loop(
                                     }
                                 }
                             } else {
+                                // Previously a SILENT None: no journal context meant no
+                                // generation attempt, no log line, and an instant canned
+                                // fallback. During the 2026-08-31 voice-down incident this
+                                // path ran ~3,300 times in a row without a single warning.
+                                let newest = conv.remote_journal_entries.first();
+                                warn!(
+                                    remote_journal_entries = conv.remote_journal_entries.len(),
+                                    pending_self_study = conv.pending_remote_self_study.is_some(),
+                                    newest_entry = %newest
+                                        .map(|entry| entry.path.display().to_string())
+                                        .unwrap_or_else(|| "<none>".to_string()),
+                                    newest_entry_readable = newest
+                                        .is_some_and(|entry| entry.path.is_file()),
+                                    "dialogue_live skipped: no journal context — falling back \
+                                     to canned text (stale entry list after an archive sweep?)"
+                                );
                                 None
                             };
                             // One-shot — clear after use.
@@ -2031,7 +2163,7 @@ pub fn spawn_autonomous_loop(
                                     let response_for_embed = text.clone();
                                     let db_clone = Arc::clone(&db);
                                     let exchange_num = conv.exchange_count;
-                                    tokio::spawn(async move {
+                                    crate::lifecycle::spawn_background(async move {
                                         if let Some(embedding) = crate::llm::embed_text(&response_for_embed).await {
                                             let summary: String = response_for_embed.chars().take(150).collect();
                                             let embedding_json = serde_json::to_string(&embedding).unwrap_or_default();
@@ -2057,7 +2189,7 @@ pub fn spawn_autonomous_loop(
                                     let fill_for_reflect = fill_pct;
                                     let db_for_reflect = Arc::clone(&db);
                                     let exchange_for_reflect = conv.exchange_count;
-                                    if should_reflect { tokio::spawn(async move {
+                                    if should_reflect { crate::lifecycle::spawn_background(async move {
                                         if let Some(obs) = crate::llm::self_reflect(
                                             &response_for_reflect,
                                             &journal_for_reflect,
@@ -2078,10 +2210,14 @@ pub fn spawn_autonomous_loop(
                                     if used_pending_self_study {
                                         conv.pending_remote_self_study = None;
                                     }
+                                    conv.note_dialogue_generation_succeeded();
 
                                     ("dialogue_live", text, dialogue_source)
                                 }
                                 None => {
+                                    // Age out a pending self-study after repeated failures
+                                    // so it can never pin Mode::Dialogue forever.
+                                    conv.note_dialogue_generation_failed();
                                     // Fall back to emergency pool — LLM unavailable.
                                     let idx = conv.dialogue_cursor % DIALOGUES.len();
                                     conv.dialogue_cursor = idx + 1;
@@ -2547,9 +2683,11 @@ pub fn spawn_autonomous_loop(
                                 conv.response_length,
                                 None,
                                 None,
+                                None, // no agenda block for experiments
                                 None,
                                 None,
                                 None, // no diversity hint for experiments
+                                None, // experiments run at default attention
                                 &bridge_paths().context_overflow_dir(),
                             ).await;
 
@@ -2754,6 +2892,8 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                         Mode::Introspect => {
+                            let _cadence_attempt =
+                                next_action::introspection_cadence::begin_attempt(&mut conv);
                             // Read a source file and ask the LLM to reflect on it.
                             // If Astrid specified a target (INTROSPECT label offset),
                             // use that. Otherwise advance the rotation cursor.
@@ -2761,21 +2901,26 @@ pub fn spawn_autonomous_loop(
                             let n = sources.len();
                             let mut resolved_research_label: Option<String> = None;
                             let mut introspect_notice: Option<(String, String)> = None;
-                            let selection = if let Some((ref target_label, offset)) =
-                                conv.introspect_target.take()
-                            {
+                            let selection = if let Some(requested_target) = conv.introspect_target.take() {
+                                let target_label = requested_target.label;
+                                let requested_offset = requested_target.offset;
                                 let resolved =
-                                    introspect::resolve_introspect_target_result(target_label, &sources);
+                                    introspect::resolve_introspect_target_result(&target_label, &sources);
                                 match resolved {
-                                    Ok(target) => {
+                                    Ok(resolved_target) => {
                                         info!(
                                             "introspect: resolved '{}' -> '{}' ({})",
                                             target_label,
-                                            target.label,
-                                            target.path.display()
+                                            resolved_target.label,
+                                            resolved_target.path.display()
                                         );
-                                        resolved_research_label = Some(target.label.clone());
-                                        Ok((target.label, target.path, offset, Some(target_label.clone())))
+                                        resolved_research_label = Some(resolved_target.label.clone());
+                                        Ok((
+                                            resolved_target.label,
+                                            resolved_target.path,
+                                            requested_offset,
+                                            Some(target_label),
+                                        ))
                                     },
                                     Err(reason) => {
                                         warn!(
@@ -2783,19 +2928,24 @@ pub fn spawn_autonomous_loop(
                                             reason = %reason,
                                             "introspect: target blocked or unresolved"
                                         );
-                                        Err((Some(target_label.clone()), reason))
+                                        Err((Some(target_label), reason))
                                     },
                                 }
                             } else {
                                 let src = &sources[conv.introspect_cursor % n];
                                 conv.introspect_cursor = (conv.introspect_cursor + 1) % n;
                                 match introspect::validate_introspect_source_path(src.label, &src.path) {
-                                    Ok(path) => Ok((src.label.to_string(), path, 0, None)),
+                                    Ok(path) => Ok((
+                                        src.label.to_string(),
+                                        path,
+                                        crate::autonomous::state::IntrospectOffsetV2::Exact(0),
+                                        None,
+                                    )),
                                     Err(reason) => Err((Some(src.label.to_string()), reason)),
                                 }
                             };
 
-                            let (label, source_path, line_offset, _requested_target) = match selection {
+                            let (label, source_path, requested_offset, _requested_target) = match selection {
                                 Ok(selection) => selection,
                                 Err((target, reason)) => {
                                     let text = introspect::blocked_introspection_notice(
@@ -2807,7 +2957,7 @@ pub fn spawn_autonomous_loop(
                                     (
                                         source,
                                         PathBuf::new(),
-                                        0,
+                                        crate::autonomous::state::IntrospectOffsetV2::Exact(0),
                                         None,
                                     )
                                 },
@@ -2834,9 +2984,41 @@ pub fn spawn_autonomous_loop(
                             let source_window = if introspect_notice.is_some() {
                                 Err("INTROSPECT target was blocked before reading".to_string())
                             } else {
-                                introspect::read_introspect_window(&label, &source_path, line_offset)
+                                introspect::read_introspect_window_for_offset(
+                                    &label,
+                                    &source_path,
+                                    requested_offset,
+                                )
                             };
-                            let source_text = source_window.as_ref().ok().map(|window| window.text.clone());
+                            let line_offset = source_window.as_ref().ok().map_or_else(
+                                || match requested_offset {
+                                    crate::autonomous::state::IntrospectOffsetV2::Auto => 0,
+                                    crate::autonomous::state::IntrospectOffsetV2::Exact(offset) => offset,
+                                },
+                                |window| window.line_offset,
+                            );
+                            let source_text = source_window
+                                .as_ref()
+                                .ok()
+                                .map(|window| window.text.clone());
+                            let prior_evidence_v1 = source_window.as_ref().ok().and_then(|window| {
+                                match introspect::load_prior_evidence_v1(
+                                    bridge_paths().bridge_workspace(),
+                                    &label,
+                                    &source_path,
+                                    introspect::source_sha256_v2(window),
+                                ) {
+                                    Ok(context) => context,
+                                    Err(error) => {
+                                        warn!(
+                                            label = %label,
+                                            error = %error,
+                                            "introspect: rejected malformed prior-evidence context"
+                                        );
+                                        None
+                                    },
+                                }
+                            });
                             let next_offset = source_window.as_ref().ok().and_then(|window| window.next_offset);
                             let source_scope_header_v1 =
                                 introspect::source_scope_artifact_header_v1(
@@ -2942,6 +3124,9 @@ pub fn spawn_autonomous_loop(
                                         fill_pct,
                                         Some(&internal_state_context),
                                         web_prompt_body.as_deref(),
+                                        prior_evidence_v1
+                                            .as_ref()
+                                            .map(introspect::PriorEvidenceContextV1::prompt_context),
                                         num_predict,
                                     )
                                 ).await {
@@ -2966,10 +3151,11 @@ pub fn spawn_autonomous_loop(
                             let first_introspection_response = llm_response.clone();
                             if let (Some(code), Some(first_response)) =
                                 (source_text.as_deref(), first_introspection_response.as_deref())
-                                && !introspect::introspection_has_required_sections_for_target(
+                                && !introspect::introspection_has_supported_claims_for_window_v2(
                                     Some(first_response),
                                     &label,
                                     &source_path,
+                                    source_window.as_ref().ok(),
                                 )
                             {
                                 let continuation =
@@ -2982,6 +3168,9 @@ pub fn spawn_autonomous_loop(
                                     code,
                                     first_response,
                                     &continuation,
+                                    prior_evidence_v1
+                                        .as_ref()
+                                        .map(introspect::PriorEvidenceContextV1::prompt_context),
                                     1536,
                                     repair_parent_call_id,
                                 )
@@ -2990,10 +3179,11 @@ pub fn spawn_autonomous_loop(
                                     model_routes_v1.push(result.route);
                                     result.text
                                 });
-                                if introspect::introspection_has_required_sections_for_target(
+                                if introspect::introspection_has_supported_claims_for_window_v2(
                                     repair_response.as_deref(),
                                     &label,
                                     &source_path,
+                                    source_window.as_ref().ok(),
                                 ) {
                                     llm_response = repair_response;
                                 } else {
@@ -3037,6 +3227,9 @@ pub fn spawn_autonomous_loop(
                                         code,
                                         current_response,
                                         &repair_note,
+                                        prior_evidence_v1
+                                            .as_ref()
+                                            .map(introspect::PriorEvidenceContextV1::prompt_context),
                                         1536,
                                         repair_parent_call_id,
                                     )
@@ -3049,10 +3242,11 @@ pub fn spawn_autonomous_loop(
                                         introspect::self_study_carriage_integrity_v1(
                                             repair_response.as_deref(),
                                         );
-                                    if introspect::introspection_has_required_sections_for_target(
+                                    if introspect::introspection_has_supported_claims_for_window_v2(
                                         repair_response.as_deref(),
                                         &label,
                                         &source_path,
+                                        source_window.as_ref().ok(),
                                     ) && repair_integrity.is_complete()
                                     {
                                         llm_response = repair_response;
@@ -3113,7 +3307,7 @@ pub fn spawn_autonomous_loop(
                                         let introspect_dir_clone = introspect_dir.clone();
                                         let label_owned = label.clone();
                                         let ts_clone = ts.clone();
-                                        tokio::spawn(async move {
+                                        crate::lifecycle::spawn_background(async move {
                                             if let Some(report) = crate::reflective::query_sidecar(&sidecar_context).await {
                                                 let telemetry_block = report.as_context_block();
                                                 if !telemetry_block.is_empty() {
@@ -3179,7 +3373,24 @@ pub fn spawn_autonomous_loop(
                                             false
                                         }
                                     };
-                                    if artifact_written {
+                                    if artifact_written
+                                        && artifact_kind == "introspection"
+                                        && let Some(context) = prior_evidence_v1.as_ref()
+                                        && let Err(error) =
+                                            introspect::record_prior_evidence_responses_v1(
+                                                bridge_paths().bridge_workspace(),
+                                                &artifact_path,
+                                                &text,
+                                                context,
+                                            )
+                                    {
+                                        warn!(
+                                            label = %label,
+                                            error = %error,
+                                            "introspect: response receipt persistence failed after canonical artifact write"
+                                        );
+                                    }
+                                    let witness_outcome = if artifact_written {
                                         match crate::lived_state_witness::finalize_and_submit_v1(
                                             &authorship_v1,
                                             artifact_kind,
@@ -3189,20 +3400,42 @@ pub fn spawn_autonomous_loop(
                                             model_routes_v1,
                                             runtime_context_v1,
                                         ) {
-                                            crate::lived_state_witness::WitnessSubmitResultV1::Accepted => {},
+                                            crate::lived_state_witness::WitnessSubmitResultV1::Accepted => "accepted",
                                             crate::lived_state_witness::WitnessSubmitResultV1::QueueFull => {
                                                 warn!(
                                                     witness_id = authorship_v1.witness_id(),
                                                     "lived-state witness queue saturated; projector will record a capture integrity issue"
                                                 );
+                                                "queue_full"
                                             },
                                             crate::lived_state_witness::WitnessSubmitResultV1::Disconnected => {
                                                 warn!(
                                                     witness_id = authorship_v1.witness_id(),
                                                     "lived-state witness writer unavailable; projector will record a capture integrity issue"
                                                 );
+                                                "disconnected"
                                             },
                                         }
+                                    } else {
+                                        "not_attempted"
+                                    };
+                                    if artifact_kind == "introspection" && artifact_written {
+                                        next_action::introspection_cadence::mark_admitted(
+                                            &mut conv,
+                                            &artifact_path,
+                                            witness_outcome,
+                                        );
+                                    } else {
+                                        let failure_reason = if artifact_written {
+                                            format!("noncanonical_artifact:{artifact_kind}")
+                                        } else {
+                                            format!("artifact_write_failed:{artifact_kind}")
+                                        };
+                                        next_action::introspection_cadence::mark_failed(
+                                            &mut conv,
+                                            failure_reason,
+                                            artifact_written.then_some(artifact_path.as_path()),
+                                        );
                                     }
                                     if review_artifact_fulfills_invitation(
                                         artifact_kind,
@@ -3236,6 +3469,13 @@ pub fn spawn_autonomous_loop(
                                     )
                                 }
                                 None => {
+                                    let cadence_failure_reason = if introspect_notice.is_some() {
+                                        "target_or_source_unavailable"
+                                    } else if source_text.is_none() {
+                                        "source_read_failed"
+                                    } else {
+                                        "model_no_response"
+                                    };
                                     let (text, source) =
                                         introspect_notice.unwrap_or_else(|| {
                                             (
@@ -3270,8 +3510,9 @@ pub fn spawn_autonomous_loop(
                                         "=== ASTRID INTROSPECTION NOTICE ===\nSource: {source}\n{source_scope_header_v1}\nTimestamp: {ts}\nLived-state witness: {}\nFill: {fill_pct:.1}%\nArtifact kind: thin_introspection_output\nVisibility: protected\n\n{text}",
                                         authorship_v1.witness_id()
                                     );
+                                    let artifact_path = introspect_dir.join(&filename);
                                     let artifact_written = std::fs::write(
-                                        introspect_dir.join(&filename),
+                                        &artifact_path,
                                         artifact_bytes.as_bytes(),
                                     )
                                     .is_ok();
@@ -3295,6 +3536,15 @@ pub fn spawn_autonomous_loop(
                                             );
                                         }
                                     }
+                                    next_action::introspection_cadence::mark_failed(
+                                        &mut conv,
+                                        if artifact_written {
+                                            cadence_failure_reason.to_string()
+                                        } else {
+                                            format!("{cadence_failure_reason}:notice_write_failed")
+                                        },
+                                        artifact_written.then_some(artifact_path.as_path()),
+                                    );
                                     ("introspect_notice", text, source)
                                 }
                             }
@@ -3364,10 +3614,15 @@ pub fn spawn_autonomous_loop(
                         continue;
                     }
 
+                    let signal_reservation = inbox_content
+                        .as_ref()
+                        .map(contact_capacity::InboxReadBatchV1::signal_reservation);
                     let mut signal_shadow = begin_signal_shadow_v1(
                         conv.exchange_count,
                         telemetry.t_ms,
+                        mode_name,
                         &response_text,
+                        signal_reservation,
                     );
                     if !should_send {
                         let root = signal_root_v1(&signal_shadow);
@@ -4279,8 +4534,9 @@ pub fn spawn_autonomous_loop(
                                 &mut conv,
                                 exchange_codec_signature,
                                 fill_pct,
-                                telemetry.t_ms,
+                                learning_observation,
                                 sent_semantic_chunk,
+                                &db,
                             );
                             // Codec feedback from the last chunk sent.
                             if let Some(ref feats) = conv.last_codec_features {
@@ -4458,7 +4714,7 @@ pub fn spawn_autonomous_loop(
                         let mode_for_journal = mode_name.to_string();
                         let fill_for_journal = fill_pct;
                         let exchange_for_journal = conv.exchange_count;
-                        tokio::spawn(async move {
+                        crate::lifecycle::spawn_background(async move {
                             if let Some(elaboration) = crate::llm::generate_journal_elaboration(
                                 &signal_for_journal,
                                 &summary_for_journal,
@@ -4538,9 +4794,8 @@ pub fn spawn_autonomous_loop(
                             info!("Astrid starred a memory (inline): {}", annotation);
                         }
                     }
-                    // Parse NEXT: action if present — Astrid chooses what happens next.
-                    // A terminal-safe operator override may replace the chosen action,
-                    // but only for read-only/protected bases and through the normal dispatcher.
+                    // Parse NEXT: action if present. Astrid's authored action is
+                    // never replaced by an operator request or diversity policy.
                     let response_next_action = parse_next_action(&response_text).map(str::to_string);
                     let operator_override = readiness::read_pending_next_override();
                     if let Some(ref pending) = operator_override {
@@ -4548,114 +4803,107 @@ pub fn spawn_autonomous_loop(
                             info!(
                                 response_next = %canonicalize_next_action_text(response_next),
                                 operator_next = %canonicalize_next_action_text(&pending.action),
-                                "operator pending NEXT override replaced Astrid's response NEXT for this cycle"
+                                "operator pending NEXT will run separately after Astrid's authored action"
                             );
                         } else {
                             info!(
                                 operator_next = %canonicalize_next_action_text(&pending.action),
-                                "operator pending NEXT override supplied this cycle's action"
+                                "operator pending NEXT will run as an operator-authored action"
                             );
                         }
                     }
-                    let selected_next_action = operator_override
-                        .as_ref()
-                        .map(|pending| pending.action.as_str())
-                        .or(response_next_action.as_deref());
+                    let selected_next_action = response_next_action.as_deref();
                     if let Some(next_action) = selected_next_action {
                         let canonical_next_action = canonicalize_next_action_text(next_action);
                         info!("Astrid chose NEXT: {}", canonical_next_action);
-                        let mut deferred_diversity_hint = None;
-                        let effective_next_action = if operator_override.is_some() {
-                            canonical_next_action.clone()
-                        } else {
-                            let next_choice_feedback =
-                                conv.record_next_choice(&canonical_next_action);
-                            if let Some(ref hint) = next_choice_feedback.hint {
-                                if next_choice_feedback.progress_sensitive {
+                        let (volition_start, volition_block_reason) =
+                            match volition::begin_astrid_next(
+                                &response_text,
+                                &lineage_id,
+                                mode_name,
+                                &canonical_next_action,
+                            ) {
+                                Ok(start) => {
+                                    let block_reason = start.dispatch_block_reason();
+                                    (Some(start), block_reason)
+                                },
+                                Err(error) => {
                                     info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity progress-sensitive hint from record_next_choice: {}",
-                                        &hint[..hint.floor_char_boundary(120)]
+                                        mode = mode_name,
+                                        action = canonical_next_action,
+                                        "volition provenance unavailable; action blocked rather than attributed to Astrid: {error}"
                                     );
-                                } else {
-                                    info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity hint from record_next_choice: {}",
-                                        &hint[..hint.floor_char_boundary(120)]
-                                    );
-                                }
-                            }
-                            // A review-fulfilling INTROSPECT (answering a steward
-                            // review invitation) is NOT stagnation — exempt it from
-                            // the anti-stagnation override so her acceptance of an
-                            // invitation is never silently eaten.
-                            let exempt_review =
-                                introspect_fulfills_pending_review(&canonical_next_action);
-                            // A self-directed INTROSPECT (examining her own code) is sovereign
-                            // reflection, not the sterile output-repetition the override targets.
-                            // Exempt it from the FORCE too — she still gets the diversity HINT
-                            // (nudged toward variety, set below), but her choice to look at her
-                            // own code is never silently swapped (she was repeatedly trying
-                            // INTROSPECT astrid:llm for a real concern; the override ate it — the
-                            // same suppression class as the review muffle).
-                            let exempt_introspect =
-                                is_self_directed_introspect(&canonical_next_action);
-                            let exempt_override = exempt_review || exempt_introspect;
-                            if let Some(ref forced_action) = next_choice_feedback.override_action {
-                                if exempt_review {
-                                    info!(
-                                        "diversity override SKIPPED — INTROSPECT answers a pending review invitation: {}",
-                                        canonical_next_action
-                                    );
-                                } else if exempt_introspect {
-                                    info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity override SKIPPED — self-directed INTROSPECT is sovereign reflection (hint retained, not forced): {}",
-                                        canonical_next_action
-                                    );
-                                } else if next_choice_feedback.stagnant_loop {
-                                    info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity stagnant-loop override: replacing NEXT {} -> {}",
-                                        canonical_next_action,
-                                        forced_action
-                                    );
-                                } else {
-                                    info!(
-                                        new_ground_budget = next_choice_feedback.new_ground_budget,
-                                        "diversity override: replacing NEXT {} -> {}",
-                                        canonical_next_action,
-                                        forced_action
-                                    );
-                                }
-                            }
-                            deferred_diversity_hint = next_choice_feedback.hint;
-                            if exempt_override {
-                                canonical_next_action.clone()
+                                    (
+                                        None,
+                                        Some(format!(
+                                            "exact Astrid authorship provenance was unavailable: {error}"
+                                        )),
+                                    )
+                                },
+                            };
+                        let next_choice_feedback = conv.record_next_choice(&canonical_next_action);
+                        if let Some(ref hint) = next_choice_feedback.hint {
+                            if next_choice_feedback.progress_sensitive {
+                                info!(
+                                    new_ground_budget = next_choice_feedback.new_ground_budget,
+                                    "diversity progress-sensitive advice from record_next_choice: {}",
+                                    &hint[..hint.floor_char_boundary(120)]
+                                );
                             } else {
-                                next_choice_feedback
-                                    .override_action
-                                    .as_deref()
-                                    .unwrap_or(canonical_next_action.as_str())
-                                    .to_string()
+                                info!(
+                                    new_ground_budget = next_choice_feedback.new_ground_budget,
+                                    "diversity advice from record_next_choice: {}",
+                                    &hint[..hint.floor_char_boundary(120)]
+                                );
                             }
-                        };
+                        }
+                        if let Some(ref suggested_action) = next_choice_feedback.override_action {
+                            info!(
+                                new_ground_budget = next_choice_feedback.new_ground_budget,
+                                suggested_action,
+                                authored_action = canonical_next_action,
+                                "diversity redirect retained as advice; authored NEXT remains effective"
+                            );
+                        }
+                        let deferred_diversity_hint = next_choice_feedback.hint;
+                        let effective_next_action = canonical_next_action.clone();
                         // Extract workspace path before mutable borrow of conv.
                         let ws_clone = conv.remote_workspace.clone();
                         btsp::record_astrid_next_action(&effective_next_action, fill_pct);
-                        let next_outcome = handle_next_action(
-                            &mut conv,
-                            &effective_next_action,
-                            NextActionContext {
-                                burst_count: &mut burst_count,
-                                db: db.as_ref(),
-                                sensory_tx: &sensory_tx,
-                                telemetry: &telemetry,
-                                fill_pct,
-                                response_text: &response_text,
-                                workspace: ws_clone.as_deref(),
-                            },
-                        );
+                        let next_outcome = if let Some(reason) = volition_block_reason {
+                            conv.push_receipt("VOLITION_AUTHORITY", vec![reason.clone()]);
+                            crate::action_continuity::NextActionOutcome::blocked(
+                                "volition_authority",
+                                reason,
+                            )
+                        } else {
+                            handle_next_action(
+                                &mut conv,
+                                &effective_next_action,
+                                NextActionContext {
+                                    burst_count: &mut burst_count,
+                                    db: db.as_ref(),
+                                    sensory_tx: &sensory_tx,
+                                    telemetry: &telemetry,
+                                    fill_pct,
+                                    response_text: &response_text,
+                                    workspace: ws_clone.as_deref(),
+                                },
+                            )
+                        };
+                        if let Some(start) = volition_start {
+                            match volition::complete_astrid_next(start, &next_outcome) {
+                                Ok(summary) => {
+                                    conv.push_receipt("VOLITION", vec![summary]);
+                                },
+                                Err(error) => {
+                                    warn!(
+                                        action = effective_next_action,
+                                        "volition receipt persistence failed: {error}"
+                                    );
+                                },
+                            }
+                        }
                         if let Err(err) = crate::action_continuity::record_astrid_next_action(
                             db.as_ref(),
                             next_action,
@@ -4668,9 +4916,6 @@ pub fn spawn_autonomous_loop(
                         ) {
                             warn!("action continuity record failed: {err:#}");
                         }
-                        if let Some(ref pending) = operator_override {
-                            readiness::mark_pending_next_override_consumed(pending, "honored");
-                        }
                         // Merge diversity hint AFTER the action handler, so the
                         // handler can't silently overwrite it by setting emphasis.
                         if let Some(hint) = deferred_diversity_hint {
@@ -4679,6 +4924,37 @@ pub fn spawn_autonomous_loop(
                                 None => hint,
                             });
                         }
+                    }
+                    if let Some(ref pending) = operator_override {
+                        let operator_action = canonicalize_next_action_text(&pending.action);
+                        let ws_clone = conv.remote_workspace.clone();
+                        let operator_response = format!(
+                            "Operator-authored protected action, separate from Astrid's response: {}",
+                            operator_action
+                        );
+                        let operator_outcome = handle_operator_next_action(
+                            &mut conv,
+                            &operator_action,
+                            NextActionContext {
+                                burst_count: &mut burst_count,
+                                db: db.as_ref(),
+                                sensory_tx: &sensory_tx,
+                                telemetry: &telemetry,
+                                fill_pct,
+                                response_text: &operator_response,
+                                workspace: ws_clone.as_deref(),
+                            },
+                        );
+                        info!(
+                            operator_action,
+                            status = operator_outcome.status,
+                            route = operator_outcome.route,
+                            "operator-authored protected action completed without replacing Astrid's NEXT"
+                        );
+                        readiness::mark_pending_next_override_consumed(
+                            pending,
+                            "executed_as_separate_operator_action",
+                        );
                     }
 
                     // Inbox messages survived the exchange — now retire them.
@@ -4701,6 +4977,10 @@ pub fn spawn_autonomous_loop(
                             ),
                         );
                     }
+
+                    // Track how long an unretired inbox letter has been forcing
+                    // fallback exchanges (bounds the dialogue-forcing above).
+                    conv.note_inbox_exchange_outcome(inbox_content.is_some(), mode_name);
 
                     // Resume perception after exchange completes.
                     if !perception_was_paused {
@@ -4731,5 +5011,6 @@ pub fn spawn_autonomous_loop(
                 }
             }
         }
+        finish_autonomous_drain(&mut conv, semantic_heartbeat, llm_job_status_loop).await
     })
 }

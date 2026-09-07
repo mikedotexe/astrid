@@ -586,6 +586,24 @@ fn update_thread_pointer(root: &Path, candidate: &RepairCandidate, now: &str) ->
 fn capability_specs() -> Vec<Value> {
     vec![
         spec(
+            "PROPOSE_TEST",
+            &[],
+            "test_proposal",
+            "files a being-authored Rust test proposal (test code only, append-only allowlist); a deterministic out-of-process validator compiles and runs it and lands passes in git with the being as commit author",
+            &[
+                "tests: parse_spec_accepts_target_and_name",
+                "tests: fence_extraction_prefers_test_block",
+                "tests: denylist_blocks_accident_hazards",
+            ],
+        ),
+        spec(
+            "DIVISION_CEREMONY_STATUS",
+            &[],
+            "division_ceremony",
+            "renders the read-only Division ceremony status: both rails, native runtime state, and the bounded fields any posture Action would need; produces no ledger entry and recommends nothing — every posture remains optional, self-authored only, with silence neutral",
+            &["tests: division handler rejects unknown actions"],
+        ),
+        spec(
             "FACULTIES",
             &["CAPABILITY_MAP"],
             "action_continuity",

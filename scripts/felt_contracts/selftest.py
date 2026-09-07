@@ -38,6 +38,30 @@ def _authority(state: str = "evidence_only") -> dict[str, object]:
     }
 
 
+class BoundedDispositionTests(unittest.TestCase):
+    def test_short_text_passes_byte_exact(self) -> None:
+        from .sources import bounded_disposition_text
+
+        self.assertEqual(bounded_disposition_text("fine"), "fine")
+        exact = "x" * 500
+        self.assertEqual(bounded_disposition_text(exact), exact)
+
+    def test_over_long_disposition_truncates_honestly_not_poisons(self) -> None:
+        import hashlib
+
+        from .model import _bounded_metadata
+        from .sources import bounded_disposition_text
+
+        long_text = "y" * 871
+        bounded = bounded_disposition_text(long_text)
+        self.assertLessEqual(len(bounded), 500)
+        self.assertIn("truncated; full 871 chars", bounded)
+        self.assertIn(hashlib.sha256(long_text.encode()).hexdigest()[:12], bounded)
+        # The exact 2026-08-15 failure: this string must now VALIDATE instead
+        # of raising and killing the entire projection.
+        _bounded_metadata({"disposition": bounded})
+
+
 class FeltContractGraphTests(unittest.TestCase):
     def setUp(self) -> None:
         self.claim_id = "introspection_astrid_codec_1784301105:c001"

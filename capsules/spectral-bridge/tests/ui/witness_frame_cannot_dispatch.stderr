@@ -1,0 +1,15 @@
+error[E0308]: mismatched types
+ --> tests/ui/witness_frame_cannot_dispatch.rs:7:41
+  |
+7 |     let _ = dispatch_semantic_microdose(frame, tx);
+  |             --------------------------- ^^^^^ expected `LiveExecutable<SemanticMicrodose>`, found `WitnessFrameV1`
+  |             |
+  |             arguments to this function are incorrect
+  |
+  = note: expected struct `LiveExecutable<SemanticMicrodose>`
+             found struct `WitnessFrameV1`
+note: function defined here
+ --> src/authority_types.rs
+  |
+  | pub fn dispatch_semantic_microdose(
+  |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^

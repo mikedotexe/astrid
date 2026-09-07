@@ -41,7 +41,7 @@ fn write_canonical_json(value: &Value, output: &mut String) {
     }
 }
 
-fn canonical_sha256(value: &Value) -> String {
+pub(crate) fn canonical_sha256(value: &Value) -> String {
     let mut encoded = String::new();
     write_canonical_json(value, &mut encoded);
     format!("{:x}", Sha256::digest(encoded.as_bytes()))
@@ -146,6 +146,114 @@ pub enum SignalOwnershipDomainV1 {
     BridgeSafety,
     BridgeDispatch,
     MinimeObserved,
+}
+
+#[allow(dead_code)] // Operator and legacy values are projection-visible historical categories.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum SignalJourneyOriginKindV1 {
+    Contact,
+    IngressGap,
+    Autonomous,
+    Operator,
+    LegacyUnknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub(crate) struct SignalJourneyOriginV1 {
+    kind: SignalJourneyOriginKindV1,
+    input_root_expected: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    contact_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ingress_gap_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ingress_gap_reason: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    evidence_sha256: Option<String>,
+    local_provenance_validation_only: bool,
+    cryptographic_sender_authentication: bool,
+}
+
+impl SignalJourneyOriginV1 {
+    #[must_use]
+    pub(crate) fn contact(contact_id: String, evidence_sha256: String) -> Self {
+        Self {
+            kind: SignalJourneyOriginKindV1::Contact,
+            input_root_expected: true,
+            contact_id: Some(contact_id),
+            ingress_gap_id: None,
+            ingress_gap_reason: None,
+            evidence_sha256: Some(evidence_sha256),
+            local_provenance_validation_only: true,
+            cryptographic_sender_authentication: false,
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn ingress_gap(
+        gap_id: String,
+        reason: impl Into<String>,
+        evidence_sha256: Option<String>,
+    ) -> Self {
+        Self {
+            kind: SignalJourneyOriginKindV1::IngressGap,
+            input_root_expected: false,
+            contact_id: None,
+            ingress_gap_id: Some(gap_id),
+            ingress_gap_reason: Some(reason.into()),
+            evidence_sha256,
+            local_provenance_validation_only: true,
+            cryptographic_sender_authentication: false,
+        }
+    }
+
+    #[must_use]
+    pub(crate) const fn autonomous() -> Self {
+        Self {
+            kind: SignalJourneyOriginKindV1::Autonomous,
+            input_root_expected: false,
+            contact_id: None,
+            ingress_gap_id: None,
+            ingress_gap_reason: None,
+            evidence_sha256: None,
+            local_provenance_validation_only: false,
+            cryptographic_sender_authentication: false,
+        }
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) const fn kind(&self) -> SignalJourneyOriginKindV1 {
+        self.kind
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum SignalResponseOriginV1 {
+    ModelAuthored,
+    StaticFallback,
+    Mirror,
+    SelfStudy,
+    Introspection,
+    Witness,
+    Other,
+}
+
+impl SignalResponseOriginV1 {
+    #[must_use]
+    pub(crate) fn from_mode_name(mode_name: &str) -> Self {
+        match mode_name {
+            "dialogue" | "dialogue_live" => Self::ModelAuthored,
+            "dialogue_fallback" => Self::StaticFallback,
+            "mirror" => Self::Mirror,
+            "self_study" => Self::SelfStudy,
+            "introspect" | "moment_capture" => Self::Introspection,
+            "witness" => Self::Witness,
+            _ => Self::Other,
+        }
+    }
 }
 
 impl SignalOwnershipDomainV1 {
@@ -301,15 +409,29 @@ pub struct SignalProcessIdentityV1 {
     pid: u32,
     executable: String,
     deployment_identity: String,
+    process_started_at_unix_ms: u64,
+    clock_scope_id: String,
 }
 
 impl SignalProcessIdentityV1 {
-    pub(super) fn current(deployment_identity: String) -> Self {
+    pub(crate) fn current(deployment_identity: String) -> Self {
         Self {
             pid: std::process::id(),
             executable: super::recorder::executable_name().to_string(),
             deployment_identity,
+            process_started_at_unix_ms: super::recorder::process_started_at_unix_ms(),
+            clock_scope_id: super::recorder::signal_clock_scope_id_v1(),
         }
+    }
+
+    #[must_use]
+    pub(crate) fn canonical_sha256(&self) -> String {
+        canonical_sha256(&serde_json::to_value(self).unwrap_or(Value::Null))
+    }
+
+    #[must_use]
+    pub(crate) fn clock_scope_id(&self) -> &str {
+        &self.clock_scope_id
     }
 }
 

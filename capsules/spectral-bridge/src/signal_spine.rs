@@ -19,9 +19,15 @@ pub(crate) use association::{
 };
 pub(crate) use recorder::{
     ShadowSignalJourneyV1, SignalJourneyContextV1, SignalStageHandleV1,
-    persist_shadow_signal_journey_v1, signal_deployment_identity_v1,
+    persist_shadow_signal_journey_v1, signal_deployment_identity_v1, signal_monotonic_ns_v1,
+    signal_process_identity_v1, signal_unix_ms_v1,
 };
-pub(crate) use types::SignalOwnershipDomainV1;
+#[cfg(test)]
+pub(crate) use types::SignalJourneyOriginKindV1;
+pub(crate) use types::{
+    SignalJourneyOriginV1, SignalOwnershipDomainV1, SignalProcessIdentityV1,
+    SignalResponseOriginV1, canonical_sha256,
+};
 
 #[cfg(test)]
 mod tests;

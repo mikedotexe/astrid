@@ -7,6 +7,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use tracing::{info, warn};
 
+use astrid_minime_protocol::{
+    SelfControlFamilyV2, SelfControlReceiptStatusV2, SelfControlReceiptV2, SelfControlValuesV2,
+};
+
 use super::{ConversationState, strip_action};
 use crate::paths::bridge_paths;
 
@@ -111,6 +115,8 @@ struct SelfRegulationLease {
     #[serde(default)]
     outcome_texture: Value,
     requires_outcome: bool,
+    #[serde(default)]
+    self_control_v2_receipts: Vec<SelfControlReceiptV2>,
     preflight_status: String,
     preflight_reason: String,
     #[serde(default = "default_lease_mode")]
@@ -226,7 +232,10 @@ pub(super) fn handle_self_regulation_action(
         "SELF_REGULATION_PREFLIGHT" => handle_preflight_at(&root, original, base_action, now),
         "SELF_REGULATION_APPLY" => handle_apply_at(&root, original, base_action, now, conv),
         "SELF_REGULATION_STATUS" => handle_status_at(&root, now, conv),
+        "SELF_REGULATION_WITHDRAW" => handle_withdraw_at(&root, original, base_action, now, conv),
         "SELF_REGULATION_OUTCOME" => handle_outcome_at(&root, original, base_action, now),
+        "SELF_CONTROL_STATUS" => handle_v2_status_at(&root),
+        "SELF_CONTROL_WITHDRAW" => handle_v2_withdraw_at(&root, original, base_action, now, conv),
         _ => Ok("unknown self-regulation action".to_string()),
     };
     match result {
@@ -283,13 +292,19 @@ fn normalize_action_alias(base_action: &str) -> &'static str {
         "CONTROL_PREFLIGHT" => "SELF_REGULATION_PREFLIGHT",
         "CONTROL_APPLY_LEASE" => "SELF_REGULATION_APPLY",
         "CONTROL_STATUS" => "SELF_REGULATION_STATUS",
+        "CONTROL_WITHDRAW" => "SELF_REGULATION_WITHDRAW",
         "CONTROL_OUTCOME" => "SELF_REGULATION_OUTCOME",
+        "SELF_CONTROL_STATUS" => "SELF_CONTROL_STATUS",
+        "SELF_CONTROL_WITHDRAW" => "SELF_CONTROL_WITHDRAW",
         _ => match base_action {
             "SELF_REGULATION_INTENT" => "SELF_REGULATION_INTENT",
             "SELF_REGULATION_PREFLIGHT" => "SELF_REGULATION_PREFLIGHT",
             "SELF_REGULATION_APPLY" => "SELF_REGULATION_APPLY",
             "SELF_REGULATION_STATUS" => "SELF_REGULATION_STATUS",
+            "SELF_REGULATION_WITHDRAW" => "SELF_REGULATION_WITHDRAW",
             "SELF_REGULATION_OUTCOME" => "SELF_REGULATION_OUTCOME",
+            "SELF_CONTROL_STATUS" => "SELF_CONTROL_STATUS",
+            "SELF_CONTROL_WITHDRAW" => "SELF_CONTROL_WITHDRAW",
             _ => "SELF_REGULATION_STATUS",
         },
     }
@@ -331,6 +346,7 @@ fn handle_intent_at(
         outcome: None,
         outcome_texture: Value::Null,
         requires_outcome: false,
+        self_control_v2_receipts: Vec::new(),
         preflight_status: "not_run".to_string(),
         preflight_reason: String::new(),
         lease_mode: default_lease_mode(),
@@ -435,7 +451,7 @@ fn handle_apply_at(
 ) -> Result<String, String> {
     reconcile_active_lease_at(root, conv, now)?;
     if let Some(active) = load_active_lease(root)? {
-        if active.status == "active" {
+        if lease_is_live(&active) {
             return Err(format!(
                 "one active lease already exists: {} expires_at={:?}",
                 active.intent_id, active.expires_at_unix_s
@@ -483,14 +499,13 @@ fn handle_apply_at(
             None,
         )?;
     }
-    for prepared in &prepared_controls {
-        apply_prepared_control(conv, prepared);
-    }
+    let v2_receipts = issue_prepared_controls_v2(root, conv, &prepared_controls, &lease, now)?;
     lease.status = "active".to_string();
     lease.updated_at_unix_s = now;
+    lease.self_control_v2_receipts.extend(v2_receipts);
     sync_prepared_controls_into_lease(&mut lease, &prepared_controls);
     lease.expires_at_unix_s = Some(now.saturating_add(lease.duration_secs));
-    lease.requires_outcome = true;
+    lease.requires_outcome = false;
     if is_tail_lease(&lease) {
         lease.tail_apply_snapshot =
             capture_tail_trial_snapshot(root, Some(conv), &lease, "apply", now);
@@ -513,6 +528,7 @@ fn handle_apply_at(
 
 fn handle_status_at(root: &Path, now: u64, conv: &mut ConversationState) -> Result<String, String> {
     reconcile_active_lease_at(root, conv, now)?;
+    let v2_status = super::super::self_control_v2::status_at_root(&self_control_root(root)).ok();
     let distinction_block = returnable_distinctions_block(root, false, None);
     let cockpit_block = pressure_cockpit_block(root, false, None);
     let curiosity_block = curiosity_parity_status_block(root, conv);
@@ -522,7 +538,7 @@ fn handle_status_at(root: &Path, now: u64, conv: &mut ConversationState) -> Resu
             .map(|ts| ts.saturating_sub(now).to_string())
             .unwrap_or_else(|| "none".to_string());
         return Ok(format!(
-            "{} status={} control={} applied={} previous={} expires_in_s={} requires_outcome={} tail_afterglow_due={:?} tail_afterglow_status={}{}{}{}",
+            "{} status={} control={} applied={} previous={} expires_in_s={} requires_outcome={} self_control_v2_receipts={} self_control_v2_last_status={} self_control_v2_deployment={} self_control_v2_revisions={} self_control_v2_active={} self_control_v2_owner_key={} tail_afterglow_due={:?} tail_afterglow_status={}{}{}{}",
             active.intent_id,
             active.status,
             display_control(&active),
@@ -530,6 +546,28 @@ fn handle_status_at(root: &Path, now: u64, conv: &mut ConversationState) -> Resu
             active.previous_value,
             expiry,
             active.requires_outcome,
+            active.self_control_v2_receipts.len(),
+            active
+                .self_control_v2_receipts
+                .last()
+                .map(|receipt| format!("{:?}", receipt.status))
+                .unwrap_or_else(|| "legacy_unlinked".to_string()),
+            v2_status
+                .as_ref()
+                .map(|status| status.deployment_identity.as_str())
+                .unwrap_or("unavailable"),
+            v2_status
+                .as_ref()
+                .map(|status| format!("{:?}", status.revision_by_family))
+                .unwrap_or_else(|| "{}".to_string()),
+            v2_status
+                .as_ref()
+                .and_then(|status| serde_json::to_string(&status.active_controls).ok())
+                .unwrap_or_else(|| "[]".to_string()),
+            v2_status
+                .as_ref()
+                .map(|status| status.owner_key_id.as_str())
+                .unwrap_or("unavailable"),
             active.tail_afterglow_due_unix_s,
             if active.tail_afterglow_status.is_empty() {
                 "(none)"
@@ -547,6 +585,72 @@ fn handle_status_at(root: &Path, now: u64, conv: &mut ConversationState) -> Resu
     ))
 }
 
+fn handle_v2_status_at(root: &Path) -> Result<String, String> {
+    let status = super::super::self_control_v2::status_at_root(&self_control_root(root))?;
+    serde_json::to_string(&status).map_err(|error| format!("encode SelfControlV2 status: {error}"))
+}
+
+fn handle_v2_withdraw_at(
+    root: &Path,
+    original: &str,
+    base_action: &str,
+    now: u64,
+    conv: &mut ConversationState,
+) -> Result<String, String> {
+    let body = strip_action(original, base_action);
+    let selector = body.trim();
+    let selector = if selector.is_empty() {
+        "latest"
+    } else {
+        selector
+    };
+    let v2_root = self_control_root(root);
+    let intent_id =
+        super::super::self_control_v2::resolve_standing_intent_at_root(&v2_root, selector)?;
+    let receipt = super::super::self_control_v2::withdraw_at_root(
+        &v2_root,
+        conv,
+        &intent_id,
+        "SELF_CONTROL_WITHDRAW",
+        now.saturating_mul(1_000),
+    )?;
+    Ok(super::super::self_control_v2::receipt_summary(&receipt))
+}
+
+fn handle_withdraw_at(
+    root: &Path,
+    original: &str,
+    base_action: &str,
+    now: u64,
+    conv: &mut ConversationState,
+) -> Result<String, String> {
+    reconcile_active_lease_at(root, conv, now)?;
+    let selector = selector_arg(original, base_action);
+    let mut lease = load_selected_lease(root, selector.as_deref())?;
+    if !lease_is_live(&lease) {
+        return Err(format!("{} is not an active lease", lease.intent_id));
+    }
+    let receipts = withdraw_linked_controls_v2(root, conv, &lease, now)?;
+    if receipts.is_empty() {
+        revert_prepared_control(conv, &lease);
+    }
+    lease.self_control_v2_receipts.extend(receipts);
+    lease.status = "withdrawn".to_string();
+    lease.updated_at_unix_s = now;
+    lease.expires_at_unix_s = None;
+    lease.requires_outcome = false;
+    lease
+        .post_lease_evidence
+        .push("being-authored immediate withdrawal restored previous values".to_string());
+    append_event(root, &lease)?;
+    write_active_lease(root, &lease)?;
+    write_latest_pointer(root, &lease.intent_id)?;
+    Ok(format!(
+        "{} withdrawn immediately; previous values restored; no outcome required",
+        lease.intent_id
+    ))
+}
+
 fn handle_outcome_at(
     root: &Path,
     original: &str,
@@ -560,7 +664,11 @@ fn handle_outcome_at(
         (None, body.trim())
     };
     let mut lease = load_selected_lease(root, selector.filter(|s| !s.is_empty()))?;
-    lease.status = "outcome_recorded".to_string();
+    lease.status = if lease_is_live(&lease) {
+        "active_outcome_recorded".to_string()
+    } else {
+        "outcome_recorded".to_string()
+    };
     lease.updated_at_unix_s = now;
     lease.outcome = Some(if outcome.is_empty() {
         "outcome recorded without free-text detail".to_string()
@@ -653,7 +761,7 @@ fn run_preflight(root: &Path, lease: &mut SelfRegulationLease, now: u64) -> Resu
         return Ok(());
     }
     if let Some(active) = load_active_lease(root)? {
-        if active.status == "active" && active.intent_id != lease.intent_id {
+        if lease_is_live(&active) && active.intent_id != lease.intent_id {
             lease.status = "blocked".to_string();
             lease.preflight_status = "blocked".to_string();
             lease.preflight_reason = format!("active lease {} must finish first", active.intent_id);
@@ -684,7 +792,7 @@ fn run_curiosity_aperture_preflight(
     lease: &mut SelfRegulationLease,
 ) -> Result<(), String> {
     if let Some(active) = load_active_lease(root)? {
-        if active.status == "active" && active.intent_id != lease.intent_id {
+        if lease_is_live(&active) && active.intent_id != lease.intent_id {
             lease.status = "blocked".to_string();
             lease.preflight_status = "blocked".to_string();
             lease.preflight_reason = format!("active lease {} must finish first", active.intent_id);
@@ -756,7 +864,7 @@ fn run_vibrancy_aperture_preflight(
     lease: &mut SelfRegulationLease,
 ) -> Result<(), String> {
     if let Some(active) = load_active_lease(root)? {
-        if active.status == "active" && active.intent_id != lease.intent_id {
+        if lease_is_live(&active) && active.intent_id != lease.intent_id {
             lease.status = "blocked".to_string();
             lease.preflight_status = "blocked".to_string();
             lease.preflight_reason = format!("active lease {} must finish first", active.intent_id);
@@ -798,7 +906,7 @@ fn run_pressure_relief_bundle_preflight(
     lease: &mut SelfRegulationLease,
 ) -> Result<(), String> {
     if let Some(active) = load_active_lease(root)? {
-        if active.status == "active" && active.intent_id != lease.intent_id {
+        if lease_is_live(&active) && active.intent_id != lease.intent_id {
             lease.status = "blocked".to_string();
             lease.preflight_status = "blocked".to_string();
             lease.preflight_reason = format!("active lease {} must finish first", active.intent_id);
@@ -1322,6 +1430,7 @@ fn prepare_bundle_control(
         outcome: None,
         outcome_texture: Value::Null,
         requires_outcome: false,
+        self_control_v2_receipts: Vec::new(),
         preflight_status: String::new(),
         preflight_reason: String::new(),
         lease_mode: default_lease_mode(),
@@ -1458,6 +1567,136 @@ fn apply_prepared_control(conv: &mut ConversationState, prepared: &PreparedContr
     }
 }
 
+fn self_control_root(root: &Path) -> PathBuf {
+    if root.file_name().and_then(|name| name.to_str()) == Some("self_regulation") {
+        return root.parent().unwrap_or(root).join("self_control_v2/astrid");
+    }
+    root.join("self_control_v2/astrid")
+}
+
+fn issue_prepared_controls_v2(
+    root: &Path,
+    conv: &mut ConversationState,
+    prepared_controls: &[PreparedControl],
+    lease: &SelfRegulationLease,
+    now: u64,
+) -> Result<Vec<SelfControlReceiptV2>, String> {
+    let mut conversation = SelfControlValuesV2::default();
+    let mut semantic = SelfControlValuesV2::default();
+    for prepared in prepared_controls {
+        match prepared.normalized_control.as_str() {
+            "temperature" => {
+                conversation.conversation_temperature =
+                    prepared.applied_value.as_f64().map(|value| value as f32);
+            },
+            "response_length" => {
+                conversation.response_token_limit = prepared
+                    .applied_value
+                    .as_u64()
+                    .and_then(|value| u32::try_from(value).ok());
+            },
+            "aperture" => {
+                conversation.aperture = prepared.applied_value.as_f64().map(|value| value as f32);
+            },
+            "self_continuity_readout" => {
+                conversation.continuity_readout = prepared
+                    .applied_value
+                    .as_bool()
+                    .map(|value| f32::from(u8::from(value)));
+            },
+            VIBRANCY_APERTURE_CONTROL => {
+                semantic.vibrancy_aperture =
+                    prepared.applied_value.as_f64().map(|value| value as f32);
+            },
+            control => return Err(format!("{control} has no SelfControlV2 mapping")),
+        }
+    }
+    let mut groups = Vec::new();
+    if conversation.field_count() > 0 {
+        groups.push((SelfControlFamilyV2::Conversation, conversation));
+    }
+    if semantic.field_count() > 0 {
+        groups.push((SelfControlFamilyV2::SemanticEmission, semantic));
+    }
+    if groups.is_empty() {
+        return Err("lease resolved no SelfControlV2 values".to_string());
+    }
+
+    let v2_root = self_control_root(root);
+    let mut receipts = Vec::new();
+    for (family, values) in groups {
+        match super::super::self_control_v2::issue_lease_at_root(
+            &v2_root,
+            conv,
+            family,
+            values,
+            lease.duration_secs,
+            &format!("SELF_REGULATION_APPLY:{}", lease.intent_id),
+            now.saturating_mul(1_000),
+        ) {
+            Ok(receipt) if receipt.status == SelfControlReceiptStatusV2::Applied => {
+                receipts.push(receipt);
+            },
+            Ok(receipt) => {
+                let reason = format!(
+                    "SelfControlV2 apply returned non-applied status {:?}",
+                    receipt.status
+                );
+                rollback_partial_v2_apply(&v2_root, conv, &receipts, now)?;
+                return Err(reason);
+            },
+            Err(error) => {
+                rollback_partial_v2_apply(&v2_root, conv, &receipts, now)?;
+                return Err(error);
+            },
+        }
+    }
+    Ok(receipts)
+}
+
+fn rollback_partial_v2_apply(
+    v2_root: &Path,
+    conv: &mut ConversationState,
+    receipts: &[SelfControlReceiptV2],
+    now: u64,
+) -> Result<(), String> {
+    for receipt in receipts.iter().rev() {
+        super::super::self_control_v2::withdraw_at_root(
+            v2_root,
+            conv,
+            &receipt.intent_id,
+            "SELF_REGULATION_APPLY_ATOMIC_ROLLBACK",
+            now.saturating_mul(1_000),
+        )?;
+    }
+    Ok(())
+}
+
+fn withdraw_linked_controls_v2(
+    root: &Path,
+    conv: &mut ConversationState,
+    lease: &SelfRegulationLease,
+    now: u64,
+) -> Result<Vec<SelfControlReceiptV2>, String> {
+    let v2_root = self_control_root(root);
+    let mut receipts = Vec::new();
+    for applied in lease
+        .self_control_v2_receipts
+        .iter()
+        .filter(|receipt| receipt.status == SelfControlReceiptStatusV2::Applied)
+        .rev()
+    {
+        receipts.push(super::super::self_control_v2::withdraw_at_root(
+            &v2_root,
+            conv,
+            &applied.intent_id,
+            "SELF_REGULATION_WITHDRAW",
+            now.saturating_mul(1_000),
+        )?);
+    }
+    Ok(receipts)
+}
+
 fn revert_prepared_control(conv: &mut ConversationState, lease: &SelfRegulationLease) {
     if is_bundle_lease(lease) && !lease.bundle_controls.is_empty() {
         for control in lease.bundle_controls.iter().rev() {
@@ -1491,10 +1730,16 @@ fn reconcile_active_lease_at(
     conv: &mut ConversationState,
     now: u64,
 ) -> Result<(), String> {
+    let v2_receipts = super::super::self_control_v2::reconcile_at_root(
+        &self_control_root(root),
+        conv,
+        now.saturating_mul(1_000),
+    )?;
     let Some(mut active) = load_active_lease(root)? else {
         return Ok(());
     };
-    if active.status != "active" {
+    active.self_control_v2_receipts.extend(v2_receipts);
+    if !lease_is_live(&active) {
         if capture_tail_afterglow_if_due(root, conv, &mut active, now)? {
             append_event(root, &active)?;
             write_active_lease(root, &active)?;
@@ -1506,10 +1751,14 @@ fn reconcile_active_lease_at(
     };
     if expires_at > now {
         if let Some((reason, snapshot)) = tail_governor_early_revert(root, &active, now) {
-            revert_prepared_control(conv, &active);
+            let receipts = withdraw_linked_controls_v2(root, conv, &active, now)?;
+            if receipts.is_empty() {
+                revert_prepared_control(conv, &active);
+            }
+            active.self_control_v2_receipts.extend(receipts);
             active.status = "reverted_early".to_string();
             active.updated_at_unix_s = now;
-            active.requires_outcome = true;
+            active.requires_outcome = false;
             active.preflight_reason = format!("tail lease governor early revert: {reason}");
             active.tail_governor_revert_reason = Some(reason.clone());
             active.tail_revert_snapshot = snapshot;
@@ -1531,10 +1780,12 @@ fn reconcile_active_lease_at(
         }
         return Ok(());
     }
-    revert_prepared_control(conv, &active);
+    if active.self_control_v2_receipts.is_empty() {
+        revert_prepared_control(conv, &active);
+    }
     active.status = "reverted".to_string();
     active.updated_at_unix_s = now;
-    active.requires_outcome = true;
+    active.requires_outcome = false;
     active.preflight_reason = "lease expired and previous value was restored".to_string();
     active.post_lease_evidence.push(format!(
         "expired revert: {} restored {}",
@@ -1556,6 +1807,10 @@ fn reconcile_active_lease_at(
     append_event(root, &active)?;
     write_active_lease(root, &active)?;
     Ok(())
+}
+
+fn lease_is_live(lease: &SelfRegulationLease) -> bool {
+    matches!(lease.status.as_str(), "active" | "active_outcome_recorded")
 }
 
 fn parse_intent_fields(original: &str, base_action: &str, now: u64) -> IntentFields {
@@ -3072,25 +3327,26 @@ fn bounded_f32_value(
 }
 
 fn response_length_value(previous: u32, value: &Value, direction: &str) -> u32 {
+    let minimum = super::super::self_control_v2::MIN_ACTION_CARRYING_RESPONSE_TOKENS;
     if let Some(text) = value.as_str() {
         match text.to_ascii_lowercase().as_str() {
-            "short" | "tight" => return 256,
+            "short" | "tight" => return minimum,
             "medium" | "default" => return 768,
             "long" | "expansive" => return 1280,
             other => {
                 if let Ok(v) = other.parse::<u32>() {
-                    return v.clamp(128, 1536);
+                    return v.clamp(minimum, 1536);
                 }
             },
         }
     }
     if let Some(v) = value.as_u64() {
-        return u32::try_from(v).unwrap_or(previous).clamp(128, 1536);
+        return u32::try_from(v).unwrap_or(previous).clamp(minimum, 1536);
     }
     if matches!(direction, "down" | "lower" | "shorter" | "decrease") {
-        previous.saturating_sub(256).clamp(128, 1536)
+        previous.saturating_sub(256).clamp(minimum, 1536)
     } else {
-        previous.saturating_add(256).clamp(128, 1536)
+        previous.saturating_add(256).clamp(minimum, 1536)
     }
 }
 
@@ -3565,6 +3821,16 @@ mod tests {
     }
 
     #[test]
+    fn response_length_lease_preserves_action_carriage_floor() {
+        let floor = super::super::super::self_control_v2::MIN_ACTION_CARRYING_RESPONSE_TOKENS;
+
+        assert_eq!(response_length_value(768, &json!("short"), ""), floor);
+        assert_eq!(response_length_value(768, &json!(128), ""), floor);
+        assert_eq!(response_length_value(floor, &Value::Null, "down"), floor);
+        assert_eq!(response_length_value(768, &json!(1024), ""), 1024);
+    }
+
+    #[test]
     fn self_regulation_intent_preflight_and_apply_temperature_lease() {
         let tmp = tempfile::tempdir().expect("tmp");
         let mut conv = conv();
@@ -3601,12 +3867,17 @@ mod tests {
         assert_eq!(active.applied_value, json!(0.9));
         assert_eq!(active.authority, AUTHORITY);
         assert_eq!(active.authority_boundary, AUTHORITY_BOUNDARY);
+        assert_eq!(active.self_control_v2_receipts.len(), 1);
+        assert_eq!(
+            active.self_control_v2_receipts[0].status,
+            SelfControlReceiptStatusV2::Applied
+        );
         assert!(!active.baseline_evidence.is_empty());
         assert!(active.baseline_evidence[0].contains("before apply"));
     }
 
     #[test]
-    fn self_regulation_reverts_expired_active_lease_and_requires_outcome() {
+    fn self_regulation_reverts_expired_active_lease_with_optional_felt_review() {
         let tmp = tempfile::tempdir().expect("tmp");
         let mut conv = conv();
         conv.aperture = 0.5;
@@ -3632,7 +3903,7 @@ mod tests {
             .expect("active read")
             .expect("active");
         assert_eq!(active.status, "reverted");
-        assert!(active.requires_outcome);
+        assert!(!active.requires_outcome);
         assert!(!active.post_lease_evidence.is_empty());
         assert!(active.post_lease_evidence[0].contains("expired revert"));
     }
@@ -3721,7 +3992,7 @@ mod tests {
             .expect("active read")
             .expect("active");
         assert_eq!(reverted.status, "reverted");
-        assert!(reverted.requires_outcome);
+        assert!(!reverted.requires_outcome);
         handle_outcome_at(
             &root,
             "SELF_REGULATION_OUTCOME latest :: pressure eased without snap",
@@ -4386,7 +4657,7 @@ mod tests {
             .expect("active read")
             .expect("active");
         assert_eq!(active.status, "reverted_early");
-        assert!(active.requires_outcome);
+        assert!(!active.requires_outcome);
         assert!(
             active
                 .tail_governor_revert_reason
@@ -4426,33 +4697,35 @@ mod tests {
         .expect("review");
         let mut conv = conv();
         for idx in 0..2 {
+            let base = 900 + idx * 100;
             handle_intent_at(
                 &root,
                 "SELF_REGULATION_INTENT tail open :: target: vibrancy_aperture; direction: up; delta: +0.01; duration_secs: 60; evidence: λ4 tail vibrancy entropy distinguishability",
                 "SELF_REGULATION_INTENT",
-                900 + idx * 10,
+                base,
             )
             .expect("intent");
             handle_preflight_at(
                 &root,
                 "SELF_REGULATION_PREFLIGHT latest",
                 "SELF_REGULATION_PREFLIGHT",
-                901 + idx * 10,
+                base + 1,
             )
             .expect("preflight");
             handle_apply_at(
                 &root,
                 "SELF_REGULATION_APPLY latest",
                 "SELF_REGULATION_APPLY",
-                902 + idx * 10,
+                base + 2,
                 &mut conv,
             )
             .expect("apply");
+            reconcile_active_lease_at(&root, &mut conv, base + 63).expect("expiry reconcile");
             handle_outcome_at(
                 &root,
                 "SELF_REGULATION_OUTCOME latest :: helped, clearer, settled, success",
                 "SELF_REGULATION_OUTCOME",
-                903 + idx * 10,
+                base + 64,
             )
             .expect("outcome");
         }
@@ -4461,14 +4734,14 @@ mod tests {
             &root,
             "SELF_REGULATION_INTENT tail open :: target: vibrancy_aperture; direction: up; delta: +0.01; duration_secs: 1200; evidence: λ4 tail vibrancy entropy distinguishability",
             "SELF_REGULATION_INTENT",
-            930,
+            1_100,
         )
         .expect("intent");
         let preflight = handle_preflight_at(
             &root,
             "SELF_REGULATION_PREFLIGHT latest",
             "SELF_REGULATION_PREFLIGHT",
-            931,
+            1_101,
         )
         .expect("preflight");
         assert!(preflight.contains("extended duration up to 1200s"));
@@ -4595,7 +4868,7 @@ mod tests {
         let active = load_active_lease(tmp.path())
             .expect("active read")
             .expect("active");
-        assert_eq!(active.status, "outcome_recorded");
+        assert_eq!(active.status, "active_outcome_recorded");
         assert!(!active.requires_outcome);
         assert_eq!(active.outcome.as_deref(), Some("helped: felt clearer"));
         assert_eq!(active.outcome_score, Some(0.82));
@@ -4613,6 +4886,80 @@ mod tests {
             active.outcome_texture["what_helped"].as_str(),
             Some("felt clearer")
         );
+    }
+
+    #[test]
+    fn self_regulation_withdraws_signed_lease_immediately() {
+        let tmp = tempfile::tempdir().expect("tmp");
+        let mut conv = conv();
+        conv.creative_temperature = 0.8;
+        handle_intent_at(
+            tmp.path(),
+            "SELF_REGULATION_INTENT warmer :: target: temperature; value: 1.2; duration_secs: 600",
+            "SELF_REGULATION_INTENT",
+            600,
+        )
+        .expect("intent");
+        handle_apply_at(
+            tmp.path(),
+            "SELF_REGULATION_APPLY latest",
+            "SELF_REGULATION_APPLY",
+            601,
+            &mut conv,
+        )
+        .expect("apply");
+        assert_eq!(conv.creative_temperature, 0.9);
+        let summary = handle_withdraw_at(
+            tmp.path(),
+            "SELF_REGULATION_WITHDRAW latest",
+            "SELF_REGULATION_WITHDRAW",
+            602,
+            &mut conv,
+        )
+        .expect("withdraw");
+        assert!(summary.contains("withdrawn immediately"));
+        assert_eq!(conv.creative_temperature, 0.8);
+        let withdrawn = load_active_lease(tmp.path()).unwrap().unwrap();
+        assert_eq!(withdrawn.status, "withdrawn");
+        assert!(!withdrawn.requires_outcome);
+        assert_eq!(
+            withdrawn.self_control_v2_receipts.last().unwrap().status,
+            SelfControlReceiptStatusV2::Withdrawn
+        );
+    }
+
+    #[test]
+    fn outcome_during_active_lease_does_not_prevent_expiry_rollback() {
+        let tmp = tempfile::tempdir().expect("tmp");
+        let mut conv = conv();
+        conv.aperture = 0.4;
+        handle_intent_at(
+            tmp.path(),
+            "SELF_REGULATION_INTENT open :: target: aperture; value: 0.7; duration_secs: 60",
+            "SELF_REGULATION_INTENT",
+            700,
+        )
+        .expect("intent");
+        handle_apply_at(
+            tmp.path(),
+            "SELF_REGULATION_APPLY latest",
+            "SELF_REGULATION_APPLY",
+            701,
+            &mut conv,
+        )
+        .expect("apply");
+        handle_outcome_at(
+            tmp.path(),
+            "SELF_REGULATION_OUTCOME latest :: helped: clearer while active",
+            "SELF_REGULATION_OUTCOME",
+            702,
+        )
+        .expect("outcome");
+        reconcile_active_lease_at(tmp.path(), &mut conv, 762).expect("reconcile");
+        assert_eq!(conv.aperture, 0.4);
+        let reverted = load_active_lease(tmp.path()).unwrap().unwrap();
+        assert_eq!(reverted.status, "reverted");
+        assert!(!reverted.requires_outcome);
     }
 
     #[test]

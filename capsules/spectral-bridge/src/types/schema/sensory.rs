@@ -278,6 +278,16 @@ pub enum SensoryMsg {
         #[serde(skip_serializing_if = "Option::is_none")]
         ts_ms: Option<u64>,
     },
+    /// Legacy-preserving 48D semantic body plus a separately mixed 12D sidecar.
+    #[serde(rename = "semantic_body")]
+    SemanticBody {
+        body: astrid_minime_protocol::SemanticBodyV2,
+    },
+    /// Authenticated, revisioned self-control lane.
+    #[serde(rename = "self_control")]
+    SelfControl {
+        command: Box<astrid_minime_protocol::SelfControlCommandV2>,
+    },
     /// Direct, bounded main-ESN attractor pulse into minime's `Z_DIM` input vector.
     #[serde(rename = "attractor_pulse")]
     AttractorPulse {

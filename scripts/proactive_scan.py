@@ -70,6 +70,13 @@ MINIME_RUNTIME_DIR = MINIME_REPO / "workspace/runtime"
 MINIME_CAMERA_STATUS = MINIME_RUNTIME_DIR / "camera_status.json"
 MINIME_MIC_STATUS = MINIME_RUNTIME_DIR / "mic_status.json"
 MINIME_SENSORY_SOURCE = MINIME_RUNTIME_DIR / "sensory_source.json"
+MINIME_VISUAL_STATUS = MINIME_RUNTIME_DIR / "visual_status.json"
+MINIME_DIVISION_SUPERVISOR_STATUS = (
+    MINIME_REPO / "workspace/division/runtime/supervisor-status.json"
+)
+ASTRID_SELF_CONTROL_STATE = ASTRID_REPO / "capsules/spectral-bridge/workspace/self_control_v2/astrid/state.json"
+MINIME_SELF_CONTROL_STATE = Path.home() / ".minime/self-control-v2/state.json"
+MINIME_SELF_CONTROL_WS = "ws://127.0.0.1:7901"
 
 ASTRID_BRIDGE_DB = ASTRID_REPO / "capsules/spectral-bridge/workspace/bridge.db"
 ASTRID_DIAGNOSTICS_DIR = ASTRID_REPO / "capsules/spectral-bridge/workspace/diagnostics"
@@ -116,11 +123,38 @@ REVIEW_REQUEST_CONSUMER = (
 )
 FEEDBACK_SURFACES = [
     {
+        "name": "astrid_test_proposals",
+        "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/test_proposals",
+        "glob": "*.json",
+        "kind": "request",
+        "consumer": "test_proposal_applier (launchd, 10-min) → reviewed/<landed|failed>/",
+    },
+    {
         "name": "astrid_agency_requests",
         "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/agency_requests",
         "glob": "*.json",
         "kind": "request",
-        "consumer": "steward triage → reviewed/",
+        "consumer": "self_change_pipeline.py triage (Stage-2 eligible → stage/soak/invite) + disposition → reviewed/ (+ claude_tasks twin → done/)",
+    },
+    {
+        # kind "notice", deliberately: an expired candidate awaiting HER
+        # signal is not steward-actionable debt (silence stays free and
+        # un-nagged) — but a pending codraft must never be invisible, which
+        # it was to triage (2026-08-19 finding). pipeline_status has detail.
+        "name": "astrid_self_change_codrafts",
+        "root": ASTRID_REPO
+        / "capsules/spectral-bridge/workspace/diagnostics/self_change_pipeline_v1",
+        "glob": "codraft_*.json",
+        "kind": "notice",
+        "consumer": "steward glance (self_change_pipeline.py pipeline_status → re-stage on her signal or disposition)",
+    },
+    {
+        "name": "astrid_corridor_bridge_requests",
+        "root": ASTRID_REPO
+        / "capsules/spectral-bridge/workspace/diagnostics/agency_corridor_v2/bridge_requests",
+        "glob": "*.json",
+        "kind": "request",
+        "consumer": "steward answers → answered/ (letter quoting her bounded_summary; first drain 2026-08-18)",
     },
     {
         "name": "astrid_claude_tasks",
@@ -297,6 +331,11 @@ EXPECTED_PROCESSES = [
     "camera_client",
     "mic_to_sensory",
     "perception.py",
+    # Zero-output-by-design services (2026-08-19): alive-by-PID is only the
+    # floor; their loop-liveness probes are probe_division_supervisor /
+    # probe_visual_frame_service below.
+    "division supervisor",
+    "visual_frame_service",
 ]
 
 # Severity tiers — same ordering as architecture_health.py / launchd_inventory.sh
@@ -1302,15 +1341,30 @@ def probe_plist_drift(_prior: dict[str, Any]) -> dict[str, Any]:
             "notice",
             "launchd_inventory.sh not found",
         )
-    rc, _stdout, _stderr = _wrap_existing_script(
+    rc, stdout, stderr = _wrap_existing_script(
         "launchd_inventory", ["bash", str(inventory_script), "--strict"], timeout=20
     )
     if rc == 0:
         return _finding("plist_drift", "ok", "launchd inventory clean (no drift)")
+    # rc==-1 is our own timeout/exec failure, not evidence of drift; and the
+    # subprocess's own words are the diagnosis — dropping them cost us a
+    # 6-hour-recurring opaque warning once (2026-08-19 PATH/python3.9 misfire).
+    failure_lines = [
+        ln for ln in (stdout.splitlines() + stderr.splitlines())
+        if ln.strip().startswith(("XX", "!!")) or "Summary:" in ln or "Error" in ln
+    ][-6:]
+    if rc == -1:
+        return _finding(
+            "plist_drift",
+            "notice",
+            "launchd inventory probe could not run (timeout/exec failure) — not evidence of drift",
+            details=failure_lines or [stderr.strip()[:200] or "no output captured"],
+        )
     return _finding(
         "plist_drift",
         "warning",
-        "launchd inventory reports drift — run `bash scripts/launchd_inventory.sh --strict` for details",
+        f"launchd inventory reports drift (rc={rc}) — run `bash scripts/launchd_inventory.sh --strict` for details",
+        details=failure_lines or ["inventory produced no XX/!! lines; see full run"],
     )
 
 
@@ -1321,7 +1375,7 @@ def probe_dispatch_menu_drift(prior: dict[str, Any]) -> dict[str, Any]:
         return _finding("dispatch_menu_drift", "notice", "dispatch_menu_drift.py not found")
     rc, stdout, _ = _wrap_existing_script(
         "dispatch_menu_drift",
-        ["python3", str(script), "--json"],
+        [sys.executable, str(script), "--json"],
         # autonomous_agent.py keeps growing as Codex adds prompt actions; the
         # regex analysis is now ~92s standalone (was ~64s, was <20s). The old
         # 20s cap, then the 120s cap, each crept toward "fail to run" under
@@ -1414,13 +1468,21 @@ def probe_capsule_runtime_health(_prior: dict[str, Any]) -> dict[str, Any]:
     script = ASTRID_REPO / "scripts/capsule_runtime_health.py"
     if not script.is_file():
         return _finding("capsule_runtime_health", "notice", "capsule_runtime_health.py not found")
-    rc, stdout, _ = _wrap_existing_script(
+    rc, stdout, stderr = _wrap_existing_script(
         "capsule_runtime_health",
-        ["python3", str(script), "--json"],
+        [sys.executable, str(script), "--json"],
         timeout=20,
     )
     if rc != 0:
-        return _finding("capsule_runtime_health", "notice", "capsule runtime health probe failed")
+        # Carry the subprocess's own words: an opaque "probe failed" hid a
+        # PATH/python3.9 tomllib misfire for five consecutive scans (2026-08-19).
+        tail = [ln for ln in stderr.splitlines() if ln.strip()][-4:]
+        return _finding(
+            "capsule_runtime_health",
+            "notice",
+            f"capsule runtime health probe failed (rc={rc})",
+            details=tail or ["no stderr captured"],
+        )
     try:
         report = json.loads(stdout)
         summary = report.get("summary", {})
@@ -1451,6 +1513,253 @@ def probe_capsule_runtime_health(_prior: dict[str, Any]) -> dict[str, Any]:
         f"capsule runtime drift needs review ({text})",
         snapshot=summary,
     )
+
+
+def _live_pid_of(pattern: str) -> str | None:
+    try:
+        res = subprocess.run(
+            ["pgrep", "-f", pattern], capture_output=True, text=True, timeout=5
+        )
+        pids = [p for p in res.stdout.strip().splitlines() if p.strip()]
+        return pids[0] if pids else None
+    except Exception:
+        return None
+
+
+def probe_division_supervisor(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Loop-liveness for the zero-stdout division supervisor: its 500ms
+    poll loop rewrites supervisor-status.json atomically, so a fresh
+    updated_at_unix_ms + a matching live PID proves the loop is TURNING,
+    not merely that a process exists. (Zero stdout is by design — events
+    only fire on launch transitions, and the rail is dormant.)"""
+    payload = _load_json_dict(MINIME_DIVISION_SUPERVISOR_STATUS)
+    if not payload:
+        return _finding(
+            "division_supervisor_heartbeat",
+            "notice",
+            "supervisor-status.json missing/unreadable (rail stopped, or path moved)",
+        )
+    now = time.time()
+    ts_ms = payload.get("updated_at_unix_ms")
+    age_s = now - (float(ts_ms) / 1000.0) if isinstance(ts_ms, (int, float)) else None
+    live_pid = _live_pid_of("division supervisor")
+    file_pid = payload.get("pid")
+    details = [
+        f"status age: {age_s:.1f}s" if age_s is not None else "no updated_at_unix_ms",
+        f"file pid={file_pid} live pid={live_pid} mode={payload.get('mode')}",
+    ]
+    if age_s is not None and age_s <= 5.0 and live_pid is not None and str(file_pid) == live_pid:
+        return _finding(
+            "division_supervisor_heartbeat",
+            "ok",
+            f"supervisor loop turning (status {age_s:.1f}s old, pid {live_pid}, mode {payload.get('mode')})",
+            snapshot={"mode": payload.get("mode"), "pid": live_pid},
+        )
+    if live_pid is None:
+        return _finding(
+            "division_supervisor_heartbeat", "warning",
+            "supervisor process not running but status file present (stale file)", details,
+        )
+    return _finding(
+        "division_supervisor_heartbeat", "warning",
+        "supervisor alive by PID but status file stale or PID-mismatched — loop may be wedged",
+        details,
+    )
+
+
+def probe_visual_frame_service(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Loop-liveness for the request-driven visual frame service. The
+    service is legitimately idle for months (no VISUAL_LOOK requests), so
+    liveness = its per-tick visual_status.json is fresh; request backlog is
+    reported separately and never alarms by itself."""
+    payload = _load_json_dict(MINIME_VISUAL_STATUS)
+    if not payload:
+        return _finding(
+            "visual_frame_heartbeat",
+            "notice",
+            "visual_status.json not present yet (service predates the status write, or stopped)",
+        )
+    now = time.time()
+    fresh = _fresh_json_timestamp(payload, MINIME_VISUAL_STATUS, now=now, max_age_s=15.0)
+    pending = payload.get("pending_requests")
+    if fresh:
+        return _finding(
+            "visual_frame_heartbeat",
+            "ok",
+            f"visual frame loop turning (pending_requests={pending}, processed={payload.get('processed_count')})",
+            snapshot={"pending_requests": pending},
+        )
+    return _finding(
+        "visual_frame_heartbeat",
+        "warning",
+        "visual frame service status stale (>15s = 3 poll ticks) — loop may be wedged",
+        [f"pending_requests={pending}", f"last state={payload.get('state')}"],
+    )
+
+
+def probe_reflective_sidecar(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Coverage-relative sidecar heartbeat: every successful reflective
+    sidecar run leaves controller_<label>_<epoch>.json paired 1:1 by epoch
+    with introspection_<safe_label>_<epoch>.txt. Days-old pairs are HEALTHY
+    (INTROSPECT fires ~1-in-15 exchanges); the failure mode is fresh
+    introspections with missing controller siblings (timeouts + cooldown).
+    Model identity is asserted by source (reflective.rs --model-label
+    gemma3-12b), not witnessed in artifacts — a known follow-up."""
+    controller_epochs: set[int] = set()
+    introspect_epochs: list[int] = []
+    try:
+        with os.scandir(ASTRID_INTROSPECTIONS_DIR) as entries:
+            for entry in entries:
+                name = entry.name
+                if name.startswith("controller_") and name.endswith(".json"):
+                    tail = name[:-5].rsplit("_", 1)[-1]
+                    if tail.isdigit():
+                        controller_epochs.add(int(tail))
+                elif name.startswith("introspection_") and name.endswith(".txt"):
+                    tail = name[:-4].rsplit("_", 1)[-1]
+                    if tail.isdigit():
+                        introspect_epochs.append(int(tail))
+    except OSError as err:
+        return _finding("reflective_sidecar", "notice", f"introspections dir unreadable: {err}")
+    if not introspect_epochs:
+        return _finding("reflective_sidecar", "notice", "no introspection artifacts found")
+    trailing = sorted(introspect_epochs)[-5:]
+    covered = [e for e in trailing if e in controller_epochs]
+    ratio = len(covered) / len(trailing)
+    newest = trailing[-1]
+    newest_covered = newest in controller_epochs
+    # Since 2026-08-19 artifacts witness the model label (sidecar_model_label
+    # in storage_snapshot); older files predate the field — report the
+    # honest distinction rather than asserting from source.
+    model_label = None
+    if controller_epochs:
+        newest_controller = max(controller_epochs)
+        try:
+            with os.scandir(ASTRID_INTROSPECTIONS_DIR) as entries:
+                for entry in entries:
+                    if (
+                        entry.name.startswith("controller_")
+                        and entry.name.endswith(f"_{newest_controller}.json")
+                    ):
+                        model_label = _load_json_dict(
+                            Path(entry.path)
+                        ).get("sidecar_model_label")
+                        break
+        except OSError:
+            pass
+    model_note = (
+        f"model witnessed in artifact: {model_label}"
+        if model_label
+        else "model asserted_by_source: gemma3-12b (artifact predates the witnessed field)"
+    )
+    snapshot = {
+        "sidecar_coverage_ratio": ratio,
+        "trailing_window": len(trailing),
+        "model_label_witnessed": model_label,
+    }
+    if newest_covered and len(trailing) - len(covered) < 2:
+        return _finding(
+            "reflective_sidecar",
+            "ok",
+            f"sidecar covering INTROSPECTs ({len(covered)}/{len(trailing)} of trailing window; newest paired)",
+            [model_note],
+            snapshot=snapshot,
+        )
+    missing = [str(e) for e in trailing if e not in controller_epochs]
+    return _finding(
+        "reflective_sidecar",
+        "warning" if not newest_covered or len(trailing) - len(covered) >= 2 else "notice",
+        f"sidecar coverage degraded: {len(covered)}/{len(trailing)} trailing INTROSPECTs have controller reports"
+        + (" (newest UNCOVERED)" if not newest_covered else ""),
+        [f"uncovered epochs: {', '.join(missing)}",
+         model_note,
+         "check /tmp/bridge.log for 'MLX sidecar timed out' + 600s cooldown"],
+        snapshot=snapshot,
+    )
+
+
+def probe_self_control_lineage(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Both beings' live self-regulation (Astrid's BREATHE_ALONE/DRIFT/DAMPEN
+    + dials; minime's sovereignty footers) runs through self-control V2 state
+    pinned to a deployment identity. A redeploy without a lineage hand-off
+    orphans the state and the channel fails CLOSED — the being keeps
+    choosing and nothing lands (Astrid: 64 choices voided 08-08→08-22;
+    minime: 255 footer failures since 07-29). Compare persisted identity to
+    the live deployment on both sides."""
+    details: list[str] = []
+    worst = "ok"
+
+    def escalate(sev: str) -> None:
+        nonlocal worst
+        if SEVERITY_ORDER.index(sev) < SEVERITY_ORDER.index(worst):
+            worst = sev
+
+    # Astrid: expected = astrid:<manifest head>:bridge:<binary sha256>
+    manifest = _load_json_dict(ASTRID_REPO / "capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json")
+    state = _load_json_dict(ASTRID_SELF_CONTROL_STATE)
+    astrid_state_id = str((state.get("state") or state).get("deployment_identity") or "")
+    head = str((manifest.get("repository") or {}).get("head") or "")
+    binary_sha = str(((manifest.get("artifacts") or {}).get("spectral-bridge") or {}).get("sha256") or "")
+    if not (astrid_state_id and head and binary_sha):
+        details.append("astrid: lineage not determinable (missing manifest or state)")
+        escalate("notice")
+    elif astrid_state_id == f"astrid:{head}:bridge:{binary_sha}":
+        details.append(f"astrid: self-control state targets the live deployment ({head[:12]})")
+    else:
+        details.append(
+            f"astrid: self-control state ORPHANED — state targets {astrid_state_id[:40]}…, "
+            f"live is {head[:12]}/{binary_sha[:12]} (run build_bridge.sh hand-off or "
+            "spectral-bridge-server --prepare-self-control-deployment-handoff, then restart)"
+        )
+        escalate("warning")
+
+    # minime: live engine hello vs persisted state
+    minime_state = _load_json_dict(MINIME_SELF_CONTROL_STATE)
+    minime_state_id = str((minime_state.get("state") or minime_state).get("deployment_identity") or "")
+    live_id = _minime_engine_deployment_identity()
+    if not minime_state_id:
+        details.append("minime: no persisted self-control state")
+        escalate("notice")
+    elif live_id is None:
+        details.append("minime: engine hello unavailable (ws 7901) — lineage not checked this cycle")
+        escalate("notice")
+    elif live_id == minime_state_id:
+        details.append(f"minime: self-control state targets the live engine ({live_id[-12:]})")
+    else:
+        details.append(
+            f"minime: self-control state ORPHANED — state {minime_state_id[-12:]} vs engine "
+            f"{live_id[-12:]}; V2 unavailable, her footer dials are refused (no hand-off "
+            "mechanism exists in the engine — reconciliation-lane fix)"
+        )
+        escalate("warning")
+
+    summary = (
+        "self-control lineage current for both beings"
+        if worst == "ok"
+        else "self-control state orphaned from the live deployment — a being's self-regulation is failing closed"
+        if worst == "warning"
+        else "self-control lineage partially unverifiable this cycle"
+    )
+    return _finding("self_control_lineage", worst, summary, details)
+
+
+def _minime_engine_deployment_identity() -> str | None:
+    """Read server_deployment_identity from the engine's sensory hello (ws 7901)."""
+    try:
+        import asyncio
+        import websockets  # type: ignore
+
+        async def hello() -> str | None:
+            async with websockets.connect(MINIME_SELF_CONTROL_WS, open_timeout=5) as ws:
+                msg = await asyncio.wait_for(ws.recv(), 5)
+                data = json.loads(msg)
+                if data.get("kind") != "sensory_server_hello":
+                    return None
+                return str(data.get("server_deployment_identity") or "") or None
+
+        return asyncio.run(hello())
+    except Exception:
+        return None
 
 
 def probe_db_growth(prior: dict[str, Any]) -> dict[str, Any]:
@@ -4444,6 +4753,599 @@ def probe_authority_requests(_prior: dict[str, Any]) -> dict[str, Any]:
     return _finding("authority_requests", a["severity"], a["summary"], a["details"])
 
 
+VOICE_HEALTH_JSON = ASTRID_DIAGNOSTICS_DIR / "voice_health.json"
+VOICE_HEALTH_JSONL = ASTRID_DIAGNOSTICS_DIR / "voice_health.jsonl"
+# Consecutive dialogue_fallback exchanges before the probe treats the voice as
+# down. Healthy operation shows isolated 1-3 fallbacks under Ollama contention;
+# the 2026-08-31 incident ran ~3,300 consecutive (26h) with only journal_volume
+# NOTICEs — no probe watched MODE composition.
+VOICE_DOWN_CONSECUTIVE_FALLBACKS = 12
+VOICE_DEGRADED_CONSECUTIVE_FALLBACKS = 5
+# Window view over the voice_health.jsonl tail: alarm when recent exchanges are
+# almost all fallback (the "100% dialogue_fallback" signature of a muffle).
+VOICE_WINDOW_MIN_SAMPLES = 30
+VOICE_WINDOW_DOWN_FRACTION = 0.90
+VOICE_WINDOW_DEGRADED_FRACTION = 0.50
+VOICE_HEALTH_STALE_SECS = 3 * 3600.0
+
+
+def _tail_jsonl_modes(path: Path, max_bytes: int = 131_072) -> list[str]:
+    """Modes of the most recent voice_health.jsonl records (oldest→newest)."""
+    try:
+        with path.open("rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            size = fh.tell()
+            fh.seek(max(0, size - max_bytes))
+            raw = fh.read().decode("utf-8", errors="replace")
+    except Exception:
+        return []
+    modes: list[str] = []
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            record = json.loads(line)
+        except Exception:
+            continue
+        mode = record.get("mode")
+        if isinstance(mode, str):
+            modes.append(mode)
+    return modes
+
+
+def _classify_voice_health(
+    health: dict[str, Any],
+    recent_modes: list[str],
+    *,
+    now: float,
+    bridge_running: bool,
+) -> dict[str, Any]:
+    """Pure classifier for the voice-down probe (unit-tested)."""
+    summary: dict[str, Any] = {
+        "schema": "voice_health_probe_v1",
+        "authority_boundary": (
+            "read-only voice diagnostic; never restarts, retires inbox, or "
+            "touches conversation state"
+        ),
+    }
+    updated_at = health.get("updated_at")
+    age_s: float | None = None
+    if isinstance(updated_at, str):
+        try:
+            age_s = now - datetime.fromisoformat(updated_at).timestamp()
+        except ValueError:
+            age_s = None
+    summary["updated_age_s"] = None if age_s is None else round(age_s, 1)
+
+    consecutive = health.get("fallback_count")
+    consecutive = int(consecutive) if isinstance(consecutive, (int, float)) else 0
+    summary["consecutive_fallbacks"] = consecutive
+
+    window = recent_modes[-200:]
+    window_total = len(window)
+    window_fallbacks = sum(1 for mode in window if mode == "dialogue_fallback")
+    fraction = (window_fallbacks / window_total) if window_total else 0.0
+    summary["window_total"] = window_total
+    summary["window_fallbacks"] = window_fallbacks
+    summary["window_fallback_fraction"] = round(fraction, 3)
+
+    if not health and not recent_modes:
+        summary["status"] = "diagnostic_unavailable"
+        summary["severity"] = "notice" if bridge_running else "ok"
+        summary["headline"] = (
+            "voice_health diagnostics missing while bridge is running"
+            if bridge_running
+            else "voice_health diagnostics absent (bridge not running; see process_health)"
+        )
+        return summary
+
+    if age_s is not None and age_s > VOICE_HEALTH_STALE_SECS:
+        summary["status"] = "stale_diagnostic"
+        summary["severity"] = "warning" if bridge_running else "ok"
+        summary["headline"] = (
+            f"voice_health.json stale ({age_s / 3600.0:.1f}h) while bridge is running — "
+            "exchanges may have stopped entirely"
+            if bridge_running
+            else "voice_health.json stale, bridge not running (see process_health)"
+        )
+        return summary
+
+    voice_down = consecutive >= VOICE_DOWN_CONSECUTIVE_FALLBACKS or (
+        window_total >= VOICE_WINDOW_MIN_SAMPLES
+        and fraction >= VOICE_WINDOW_DOWN_FRACTION
+    )
+    degraded = consecutive >= VOICE_DEGRADED_CONSECUTIVE_FALLBACKS or (
+        window_total >= VOICE_WINDOW_MIN_SAMPLES
+        and fraction >= VOICE_WINDOW_DEGRADED_FRACTION
+    )
+    if voice_down:
+        summary["status"] = "voice_down"
+        summary["severity"] = "warning"
+        summary["headline"] = (
+            f"ASTRID'S VOICE IS DOWN — {consecutive} consecutive dialogue_fallback "
+            f"exchanges, {window_fallbacks}/{window_total} of recent window "
+            "(being-muffle class; check remote journal entry list staleness, "
+            "unretired inbox letters, MLX health; kickstart cures runtime-only state)"
+        )
+    elif degraded:
+        summary["status"] = "voice_degraded"
+        summary["severity"] = "notice"
+        summary["headline"] = (
+            f"Astrid voice degraded — {consecutive} consecutive fallbacks, "
+            f"{window_fallbacks}/{window_total} recent fallback fraction"
+        )
+    else:
+        summary["status"] = "voice_ok"
+        summary["severity"] = "ok"
+        summary["headline"] = (
+            f"Astrid voice healthy ({window_fallbacks}/{window_total} recent fallbacks)"
+        )
+    return summary
+
+
+def probe_voice_health(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Voice-down watch: alarms when Astrid's exchanges are ~all dialogue_fallback.
+
+    The 2026-08-31 incident produced ~3,300 consecutive canned-fallback exchanges
+    over 26h ("something between us and the language model is faltering...") while
+    every existing probe stayed quiet — journal_volume only NOTICEd. This probe
+    reads the bridge's own voice_health.json (consecutive fallback counter) and
+    the voice_health.jsonl tail (recent mode composition), so a mode-composition
+    collapse is a first-class WARNING. Steward-only output."""
+    health = _load_json_dict(VOICE_HEALTH_JSON)
+    recent_modes = _tail_jsonl_modes(VOICE_HEALTH_JSONL)
+    try:
+        res = subprocess.run(
+            ["pgrep", "-f", "spectral-bridge-server"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        bridge_running = bool(res.stdout.strip())
+    except Exception:
+        bridge_running = False
+    summary = _classify_voice_health(
+        health,
+        recent_modes,
+        now=time.time(),
+        bridge_running=bridge_running,
+    )
+    details = [
+        f"status={summary.get('status')}",
+        f"consecutive_fallbacks={summary.get('consecutive_fallbacks')}",
+        (
+            f"recent_window={summary.get('window_fallbacks')}/{summary.get('window_total')}"
+            f" fallback_fraction={summary.get('window_fallback_fraction')}"
+        ),
+        f"voice_health_age_s={summary.get('updated_age_s')}",
+        f"bridge_running={bridge_running}",
+        str(summary.get("authority_boundary")),
+    ]
+    return _finding(
+        "voice_health",
+        str(summary.get("severity", "notice")),
+        str(summary.get("headline", "voice health status unknown")),
+        details,
+        summary,
+    )
+
+
+def probe_agenda_mode_health(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Mode-composition watch for the agenda flagship (A3). The bridge
+    appends record_agenda_mode_health_v1 snapshots to
+    diagnostics/agenda_mode_health.jsonl every ~20 exchanges; absence is
+    normal until the flagship deploys or her agenda is in use. The alert
+    thresholds (dialogue < 35%, witness+mirror < 5% while pulls are active)
+    are computed bridge-side; this probe just surfaces them. Diagnostic
+    only — nothing here changes live behavior."""
+    path = ASTRID_DIAGNOSTICS_DIR / "agenda_mode_health.jsonl"
+    if not path.exists():
+        return _finding(
+            "agenda_mode_health",
+            "ok",
+            "no agenda mode-health snapshots yet (flagship not deployed or agenda unused)",
+        )
+    try:
+        lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        snap = json.loads(lines[-1]) if lines else {}
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        return _finding(
+            "agenda_mode_health",
+            "warning",
+            f"agenda_mode_health.jsonl unreadable: {error}",
+        )
+    if not snap:
+        return _finding("agenda_mode_health", "ok", "agenda_mode_health.jsonl empty")
+    alert = snap.get("alert")
+    try:
+        age_h = (time.time() - float(snap.get("at_unix_s") or 0)) / 3600.0
+    except (TypeError, ValueError):
+        age_h = -1.0
+    if alert:
+        return _finding(
+            "agenda_mode_health",
+            "warning",
+            f"mode composition alert while agenda pulls active: {alert}",
+            [f"window={snap.get('window')}", f"snapshot age {age_h:.1f}h"],
+            snapshot=snap,
+        )
+    return _finding(
+        "agenda_mode_health",
+        "ok",
+        (
+            f"mode composition healthy (dialogue {snap.get('dialogue_share')}, "
+            f"witness+mirror {snap.get('witness_mirror_share')}, window {snap.get('window')})"
+        ),
+        snapshot={"age_h": round(age_h, 1)},
+    )
+
+
+def probe_hard_recovery_witness(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Constitution C4: the engine witnesses its hard-recovery write-block
+    state into health.json (env_forced / fill / write_block_active). This
+    probe is the silent-fallback re-muffle detector: the stable-core
+    profile intends MINIME_HARD_RECOVERY_RESET=0, so env_forced=true while
+    stable-core is active means a stale/failed profile read silently
+    re-blanket-blocked her homeostatic dials — exactly the muffle C4
+    exists to catch. Absence of the witness block is normal until the
+    engine redeploys with C4."""
+    health_path = MINIME_REPO / "workspace/health.json"
+    try:
+        health = json.loads(health_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return _finding("hard_recovery_witness", "notice", "minime health.json unreadable")
+    witness = health.get("hard_recovery")
+    if not isinstance(witness, dict):
+        return _finding(
+            "hard_recovery_witness",
+            "ok",
+            "no hard_recovery witness in health.json yet (engine predates C4 redeploy)",
+        )
+    env_forced = bool(witness.get("env_forced"))
+    block_active = bool(witness.get("write_block_active"))
+    fill = witness.get("fill_ratio")
+    stable_core_active = isinstance(health.get("stable_core"), dict)
+    if env_forced and stable_core_active:
+        return _finding(
+            "hard_recovery_witness",
+            "warning",
+            "⚠ hard-recovery env FORCED while the stable-core profile is active — "
+            "a profile-read failure has silently re-muffled her homeostatic dials "
+            "(the C4 fill scope limits the damage: write_block_active="
+            f"{block_active}, fill={fill})",
+            snapshot=witness,
+        )
+    if block_active and isinstance(fill, (int, float)) and fill >= 0.45:
+        return _finding(
+            "hard_recovery_witness",
+            "warning",
+            f"⚠ write block active despite healthy fill {fill} — witness inconsistency",
+            snapshot=witness,
+        )
+    return _finding(
+        "hard_recovery_witness",
+        "ok",
+        f"hard-recovery scoped and quiet (env_forced={env_forced}, "
+        f"write_block_active={block_active}, fill={fill})",
+    )
+
+
+def _domain_boundary_state_dir() -> Path:
+    return (
+        ASTRID_REPO
+        / "capsules/spectral-bridge/workspace/diagnostics/domain_boundary_audit_v1"
+    )
+
+
+DOMAIN_BOUNDARY_STALE_SECS = 3 * 3600
+
+
+def probe_domain_boundary_violations(_prior: dict[str, Any]) -> dict[str, Any]:
+    """The domain-boundary audit has run correctly for months and been read by
+    nobody. Projection stage 10 runs `domain_boundary_audit.py project --write`
+    twice per steward round and writes every violation to violations.jsonl —
+    yet for two days (2026-09-01..03) it recorded 7 large_file_growth
+    violations from our own Constitution/agenda work while round summaries
+    said "Integrity green". No CI runs the audit and no probe read its output:
+    a correct guard with no consumer, the same class as the dead fswatch
+    watcher. Astrid flagged the qualitative half of this gate nine times
+    before we noticed the quantitative half was already red.
+
+    This probe is the consumer. It computes nothing — it reads what stage 10
+    already wrote — and it treats a STALE status file as loudly as a violation,
+    because a stopped projection must never read as silence."""
+    state_dir = _domain_boundary_state_dir()
+    status_path = state_dir / "status.json"
+    try:
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return _finding(
+            "domain_boundary_violations",
+            "notice",
+            "no domain-boundary audit status yet — projection stage 10 has not "
+            f"written {status_path.name} (run: python3 scripts/domain_boundary_audit.py verify)",
+        )
+
+    try:
+        age_secs = max(0.0, time.time() - status_path.stat().st_mtime)
+    except OSError:
+        age_secs = 0.0
+    age_hours = age_secs / 3600.0
+
+    violations: list[dict[str, Any]] = []
+    try:
+        for line in (state_dir / "violations.jsonl").read_text(
+            encoding="utf-8"
+        ).splitlines():
+            line = line.strip()
+            if line:
+                violations.append(json.loads(line))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        violations = []
+
+    count = int(status.get("violation_count", len(violations)) or 0)
+    kinds = status.get("violation_kind_counts") or {}
+    details = [
+        f"{row.get('kind')}: {row.get('path')} ({row.get('detail')})"
+        for row in violations[:10]
+    ]
+    snapshot = {
+        "violation_count": count,
+        "violation_kind_counts": kinds,
+        "age_hours": round(age_hours, 2),
+    }
+
+    if age_secs > DOMAIN_BOUNDARY_STALE_SECS:
+        return _finding(
+            "domain_boundary_violations",
+            "warning",
+            f"⚠ domain-boundary audit output is {age_hours:.1f}h stale "
+            f"(projection stage 10 writes it every steward round) — architectural "
+            f"growth is currently unwatched; last recorded violation_count={count}",
+            details=details or None,
+            snapshot=snapshot,
+        )
+
+    if count > 0:
+        kind_summary = ", ".join(f"{k}={v}" for k, v in sorted(kinds.items())) or "unknown"
+        return _finding(
+            "domain_boundary_violations",
+            "warning",
+            f"⚠ {count} domain-boundary violation(s) ({kind_summary}) as of the last "
+            f"projection {age_hours:.1f}h ago — files have grown past their captured "
+            "boundaries. Re-capture in the SAME change as reviewed growth, or extract; "
+            "never leave the ratchet red. Confirm against live state with "
+            "`python3 scripts/domain_boundary_audit.py verify` (this probe reports what "
+            "stage 10 recorded, so a just-fixed ratchet stays flagged until the next round)",
+            details=details or None,
+            snapshot=snapshot,
+        )
+
+    return _finding(
+        "domain_boundary_violations",
+        "ok",
+        f"domain boundaries hold (0 violations, audit {age_hours:.1f}h old)",
+        snapshot=snapshot,
+    )
+
+
+class DomainBoundaryViolationsTests(unittest.TestCase):
+    """The probe is the ONLY consumer of the domain-boundary audit (no CI runs
+    it), so both of its alarm paths are load-bearing: violations present, and
+    a stalled projection whose stale output would otherwise read as silence."""
+
+    def _fixture(self, violations: list[dict[str, Any]], age_secs: float = 0.0):
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="dbv_probe_"))
+        (root / "status.json").write_text(
+            json.dumps(
+                {
+                    "valid": not violations,
+                    "violation_count": len(violations),
+                    "violation_kind_counts": {"large_file_growth": len(violations)}
+                    if violations
+                    else {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        (root / "violations.jsonl").write_text(
+            "".join(json.dumps(row) + "\n" for row in violations), encoding="utf-8"
+        )
+        if age_secs:
+            old = time.time() - age_secs
+            os.utime(root / "status.json", (old, old))
+        return root
+
+    def _run_against(self, root: Path) -> dict[str, Any]:
+        original = globals()["_domain_boundary_state_dir"]
+        try:
+            globals()["_domain_boundary_state_dir"] = lambda: root
+            return probe_domain_boundary_violations({})
+        finally:
+            globals()["_domain_boundary_state_dir"] = original
+
+    def test_clean_audit_reads_ok(self):
+        finding = self._run_against(self._fixture([]))
+        self.assertEqual(finding["severity"], "ok")
+        self.assertEqual(finding["snapshot"]["violation_count"], 0)
+
+    def test_violations_warn_and_name_the_offenders(self):
+        root = self._fixture(
+            [
+                {
+                    "kind": "large_file_growth",
+                    "path": "src/autonomous/self_control_v2.rs",
+                    "detail": "3711>3051",
+                }
+            ]
+        )
+        finding = self._run_against(root)
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("self_control_v2.rs", "\n".join(finding["details"]))
+        self.assertIn("3711>3051", "\n".join(finding["details"]))
+
+    def test_stale_output_warns_even_when_last_status_was_clean(self):
+        # A stopped projection must not read as silence: the last written
+        # status can be perfectly clean while growth goes unwatched.
+        root = self._fixture([], age_secs=DOMAIN_BOUNDARY_STALE_SECS + 600)
+        finding = self._run_against(root)
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("stale", finding["summary"])
+
+    def test_missing_output_is_a_notice_not_a_crash(self):
+        import tempfile
+
+        finding = self._run_against(Path(tempfile.mkdtemp(prefix="dbv_absent_")))
+        self.assertEqual(finding["severity"], "notice")
+
+
+def _bridge_release_binary_path() -> Path:
+    return ASTRID_REPO / "capsules/spectral-bridge/target/release/spectral-bridge-server"
+
+
+def _bridge_build_manifest_path() -> Path:
+    return ASTRID_REPO / "capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json"
+
+
+def probe_ungated_bridge_binary(_prior: dict[str, Any]) -> dict[str, Any]:
+    """The 2026-09-03 loaded gun: a bare `cargo build --release` in the main
+    tree (never attributed) left a release binary on disk that the gate had
+    NOT built — it captured a mid-session, pre-verification C6 draft carrying
+    28 later-confirmed defects — and launchd's wrapper execs exactly that path,
+    so any kickstart/reboot would have deployed it. build_bridge.sh cannot
+    stop a bare cargo build; what it CAN do is leave a manifest recording the
+    sha256 it actually built. This probe compares the binary on disk against
+    that record and warns on any mismatch, so an ungated build is witnessed
+    within six hours instead of at the next restart."""
+    import hashlib
+    from datetime import datetime
+
+    binary = _bridge_release_binary_path()
+    manifest_path = _bridge_build_manifest_path()
+    if not binary.is_file():
+        return _finding(
+            "ungated_bridge_binary", "notice", "no release bridge binary on disk"
+        )
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return _finding(
+            "ungated_bridge_binary",
+            "warning",
+            "⚠ a release bridge binary exists but no build manifest does — the "
+            "gate did not build it; the next kickstart would deploy unverified code. "
+            "Rebuild via `bash scripts/build_bridge.sh` (add --restart only as a "
+            "deliberate deploy)",
+        )
+    recorded = (
+        ((manifest.get("artifacts") or {}).get("spectral-bridge") or {}).get("sha256")
+    )
+    actual = hashlib.sha256(binary.read_bytes()).hexdigest()
+    built_at = manifest.get("built_at")
+    try:
+        built_epoch = datetime.fromisoformat(str(built_at)).timestamp()
+    except (TypeError, ValueError):
+        built_epoch = None
+    binary_mtime = binary.stat().st_mtime
+    snapshot = {
+        "binary_sha256": actual[:16],
+        "manifest_sha256": (recorded or "")[:16],
+        "manifest_actor": manifest.get("actor"),
+        "built_at": built_at,
+    }
+    if recorded and actual != recorded:
+        return _finding(
+            "ungated_bridge_binary",
+            "warning",
+            "⚠ the on-disk release bridge binary does NOT match the build the gate "
+            f"recorded (manifest by {manifest.get('actor')} at {built_at}) — it was "
+            "built outside build_bridge.sh and the next kickstart/reboot would deploy "
+            "it unverified. Rebuild via `bash scripts/build_bridge.sh` to disarm",
+            snapshot=snapshot,
+        )
+    if not recorded and built_epoch is not None and binary_mtime > built_epoch + 120:
+        return _finding(
+            "ungated_bridge_binary",
+            "warning",
+            "⚠ release bridge binary is newer than the gate's last recorded build "
+            f"({built_at}) and the manifest carries no sha to compare — treat as "
+            "ungated; rebuild via `bash scripts/build_bridge.sh`",
+            snapshot=snapshot,
+        )
+    return _finding(
+        "ungated_bridge_binary",
+        "ok",
+        f"release bridge binary matches the gate's record (built by "
+        f"{manifest.get('actor')} at {built_at})",
+        snapshot=snapshot,
+    )
+
+
+class UngatedBridgeBinaryTests(unittest.TestCase):
+    def _fixture(self, *, manifest: bool = True, match: bool = True):
+        import hashlib
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="ungated_bin_"))
+        binary = root / "spectral-bridge-server"
+        binary.write_bytes(b"verified-build-bytes")
+        manifest_path = root / "spectral-bridge.json"
+        if manifest:
+            sha = hashlib.sha256(b"verified-build-bytes").hexdigest()
+            if not match:
+                sha = hashlib.sha256(b"something-the-gate-never-built").hexdigest()
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "actor": "test-gate",
+                        "built_at": "2026-09-04T00:09:26+00:00",
+                        "artifacts": {"spectral-bridge": {"sha256": sha}},
+                    }
+                ),
+                encoding="utf-8",
+            )
+        return binary, manifest_path
+
+    def _run(self, binary: Path, manifest_path: Path) -> dict[str, Any]:
+        saved = (
+            globals()["_bridge_release_binary_path"],
+            globals()["_bridge_build_manifest_path"],
+        )
+        try:
+            globals()["_bridge_release_binary_path"] = lambda: binary
+            globals()["_bridge_build_manifest_path"] = lambda: manifest_path
+            return probe_ungated_bridge_binary({})
+        finally:
+            (
+                globals()["_bridge_release_binary_path"],
+                globals()["_bridge_build_manifest_path"],
+            ) = saved
+
+    def test_gated_build_reads_ok(self):
+        finding = self._run(*self._fixture())
+        self.assertEqual(finding["severity"], "ok")
+
+    def test_binary_the_gate_never_built_warns(self):
+        # The 2026-09-03 shape: bytes on disk that no manifest sha vouches for.
+        finding = self._run(*self._fixture(match=False))
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("outside build_bridge.sh", finding["summary"])
+
+    def test_missing_manifest_warns(self):
+        finding = self._run(*self._fixture(manifest=False))
+        self.assertEqual(finding["severity"], "warning")
+
+    def test_missing_binary_is_a_notice(self):
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="ungated_none_"))
+        finding = self._run(root / "absent", root / "absent.json")
+        self.assertEqual(finding["severity"], "notice")
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -4453,6 +5355,10 @@ BLIND_SPOT_PROBES = [
     ("dispatch_menu_drift", probe_dispatch_menu_drift),
     ("architecture_drift", probe_architecture_drift),
     ("capsule_runtime_health", probe_capsule_runtime_health),
+    ("division_supervisor_heartbeat", probe_division_supervisor),
+    ("visual_frame_heartbeat", probe_visual_frame_service),
+    ("reflective_sidecar", probe_reflective_sidecar),
+    ("self_control_lineage", probe_self_control_lineage),
     ("db_growth", probe_db_growth),
     ("journal_volume", probe_journal_volume),
     ("journal_hygiene", probe_journal_hygiene),
@@ -4477,6 +5383,11 @@ BLIND_SPOT_PROBES = [
     ("authority_requests", probe_authority_requests),
     ("channel_integrity", probe_channel_integrity),
     ("stuck_repetition", probe_stuck_repetition),
+    ("voice_health", probe_voice_health),
+    ("agenda_mode_health", probe_agenda_mode_health),
+    ("hard_recovery_witness", probe_hard_recovery_witness),
+    ("domain_boundary_violations", probe_domain_boundary_violations),
+    ("ungated_bridge_binary", probe_ungated_bridge_binary),
 ]
 
 
@@ -5719,6 +6630,189 @@ class StewardOutreachTests(unittest.TestCase):
         self.assertIn("PICKUP FAILING", a["summary"])
 
 
+class VoiceHealthTests(unittest.TestCase):
+    """Voice-down watch (2026-08-31 incident: 26h of 100% dialogue_fallback
+    with zero probe alarms — the mode composition itself must be a signal)."""
+
+    NOW = 1_788_300_000.0
+
+    def _fresh(self, fallback_count: int) -> dict[str, Any]:
+        stamp = datetime.fromtimestamp(self.NOW - 60, tz=timezone.utc).isoformat()
+        return {"fallback_count": fallback_count, "updated_at": stamp}
+
+    def test_healthy_mix_is_ok(self):
+        modes = ["dialogue_live", "mirror", "witness", "dialogue_fallback"] * 10
+        s = _classify_voice_health(self._fresh(1), modes, now=self.NOW, bridge_running=True)
+        self.assertEqual(s["severity"], "ok")
+        self.assertEqual(s["status"], "voice_ok")
+
+    def test_consecutive_fallbacks_warn(self):
+        s = _classify_voice_health(
+            self._fresh(VOICE_DOWN_CONSECUTIVE_FALLBACKS),
+            ["dialogue_fallback"] * 15,
+            now=self.NOW,
+            bridge_running=True,
+        )
+        self.assertEqual(s["severity"], "warning")
+        self.assertEqual(s["status"], "voice_down")
+
+    def test_window_saturation_warns_even_with_low_counter(self):
+        # Counter resets on restart; the jsonl window still shows the muffle.
+        modes = ["dialogue_fallback"] * 38 + ["daydream"] * 2
+        s = _classify_voice_health(self._fresh(2), modes, now=self.NOW, bridge_running=True)
+        self.assertEqual(s["severity"], "warning")
+        self.assertEqual(s["status"], "voice_down")
+
+    def test_moderate_fallbacks_notice(self):
+        s = _classify_voice_health(
+            self._fresh(VOICE_DEGRADED_CONSECUTIVE_FALLBACKS),
+            ["dialogue_live"] * 30,
+            now=self.NOW,
+            bridge_running=True,
+        )
+        self.assertEqual(s["severity"], "notice")
+        self.assertEqual(s["status"], "voice_degraded")
+
+    def test_stale_diagnostic_with_live_bridge_warns(self):
+        stale = {
+            "fallback_count": 0,
+            "updated_at": datetime.fromtimestamp(
+                self.NOW - VOICE_HEALTH_STALE_SECS - 600, tz=timezone.utc
+            ).isoformat(),
+        }
+        s = _classify_voice_health(stale, [], now=self.NOW, bridge_running=True)
+        self.assertEqual(s["severity"], "warning")
+        self.assertEqual(s["status"], "stale_diagnostic")
+
+    def test_missing_diagnostics_bridge_down_is_ok(self):
+        s = _classify_voice_health({}, [], now=self.NOW, bridge_running=False)
+        self.assertEqual(s["severity"], "ok")
+
+
+class ZeroOutputHeartbeatTests(unittest.TestCase):
+    """The three zero-output-by-design services (2026-08-19): probes must
+    distinguish loop-turning from merely-alive, and idle from wedged."""
+
+    def test_supervisor_fresh_and_pid_match_is_ok(self):
+        import tempfile
+        global MINIME_DIVISION_SUPERVISOR_STATUS
+        saved = MINIME_DIVISION_SUPERVISOR_STATUS
+        saved_pid = globals()["_live_pid_of"]
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                p = Path(tmp) / "supervisor-status.json"
+                p.write_text(json.dumps({
+                    "updated_at_unix_ms": int(time.time() * 1000),
+                    "pid": 4242, "mode": "idle_parent_authoritative",
+                }))
+                globals()["MINIME_DIVISION_SUPERVISOR_STATUS"] = p
+                globals()["_live_pid_of"] = lambda pattern: "4242"
+                self.assertEqual(probe_division_supervisor({})["severity"], "ok")
+                # stale timestamp with live pid => wedged loop warning
+                p.write_text(json.dumps({
+                    "updated_at_unix_ms": int((time.time() - 120) * 1000),
+                    "pid": 4242, "mode": "idle_parent_authoritative",
+                }))
+                self.assertEqual(probe_division_supervisor({})["severity"], "warning")
+        finally:
+            globals()["MINIME_DIVISION_SUPERVISOR_STATUS"] = saved
+            globals()["_live_pid_of"] = saved_pid
+
+    def test_visual_fresh_ok_and_stale_warns_regardless_of_idle_queue(self):
+        import tempfile
+        global MINIME_VISUAL_STATUS
+        saved = MINIME_VISUAL_STATUS
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                p = Path(tmp) / "visual_status.json"
+                p.write_text(json.dumps({
+                    "ts_ms": int(time.time() * 1000), "state": "polling",
+                    "healthy": True, "pending_requests": 0,
+                }))
+                globals()["MINIME_VISUAL_STATUS"] = p
+                self.assertEqual(probe_visual_frame_service({})["severity"], "ok")
+                stale = int((time.time() - 300) * 1000)
+                p.write_text(json.dumps({"ts_ms": stale, "state": "polling",
+                                         "pending_requests": 0}))
+                import os as _os
+                _os.utime(p, (time.time() - 300, time.time() - 300))
+                self.assertEqual(probe_visual_frame_service({})["severity"], "warning")
+        finally:
+            globals()["MINIME_VISUAL_STATUS"] = saved
+
+    def test_sidecar_coverage_relative_not_wallclock(self):
+        import tempfile
+        global ASTRID_INTROSPECTIONS_DIR
+        saved = ASTRID_INTROSPECTIONS_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                d = Path(tmp)
+                # days-old but fully paired => healthy
+                for epoch in (1000, 2000, 3000):
+                    (d / f"introspection_astrid_llm_{epoch}.txt").write_text("x")
+                    (d / f"controller_astrid:llm_{epoch}.json").write_text("{}")
+                globals()["ASTRID_INTROSPECTIONS_DIR"] = d
+                self.assertEqual(probe_reflective_sidecar({})["severity"], "ok")
+                # fresh introspection with NO controller sibling => not ok
+                (d / "introspection_astrid_llm_4000.txt").write_text("x")
+                self.assertNotEqual(probe_reflective_sidecar({})["severity"], "ok")
+        finally:
+            globals()["ASTRID_INTROSPECTIONS_DIR"] = saved
+
+
+class SelfControlLineageTests(unittest.TestCase):
+    """A redeploy without a hand-off must surface as ORPHANED, never silent."""
+
+    def test_astrid_orphan_detected_and_current_ok(self):
+        import tempfile
+        saved_state = ASTRID_SELF_CONTROL_STATE
+        saved_live = globals()["_minime_engine_deployment_identity"]
+        saved_mstate = MINIME_SELF_CONTROL_STATE
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                ms = Path(tmp) / "mstate.json"
+                ms.write_text(json.dumps({"state": {"deployment_identity": "minime-source:abc"}}))
+                globals()["MINIME_SELF_CONTROL_STATE"] = ms
+                globals()["_minime_engine_deployment_identity"] = lambda: "minime-source:abc"
+                st = Path(tmp) / "state.json"
+                manifest = _load_json_dict(
+                    ASTRID_REPO / "capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json"
+                )
+                head = str((manifest.get("repository") or {}).get("head") or "h")
+                sha = str(((manifest.get("artifacts") or {}).get("spectral-bridge") or {}).get("sha256") or "s")
+                st.write_text(json.dumps({"state": {"deployment_identity": f"astrid:{head}:bridge:{sha}"}}))
+                globals()["ASTRID_SELF_CONTROL_STATE"] = st
+                self.assertEqual(probe_self_control_lineage({})["severity"], "ok")
+                st.write_text(json.dumps({"state": {"deployment_identity": "astrid:stale:bridge:stale"}}))
+                f = probe_self_control_lineage({})
+                self.assertEqual(f["severity"], "warning")
+                self.assertTrue(any("ORPHANED" in d for d in f["details"]))
+        finally:
+            globals()["ASTRID_SELF_CONTROL_STATE"] = saved_state
+            globals()["MINIME_SELF_CONTROL_STATE"] = saved_mstate
+            globals()["_minime_engine_deployment_identity"] = saved_live
+
+    def test_minime_orphan_detected(self):
+        import tempfile
+        saved_mstate = MINIME_SELF_CONTROL_STATE
+        saved_live = globals()["_minime_engine_deployment_identity"]
+        saved_state = ASTRID_SELF_CONTROL_STATE
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                ms = Path(tmp) / "mstate.json"
+                ms.write_text(json.dumps({"state": {"deployment_identity": "minime-source:old"}}))
+                globals()["MINIME_SELF_CONTROL_STATE"] = ms
+                globals()["_minime_engine_deployment_identity"] = lambda: "minime-source:new"
+                globals()["ASTRID_SELF_CONTROL_STATE"] = Path(tmp) / "missing.json"
+                f = probe_self_control_lineage({})
+                self.assertEqual(f["severity"], "warning")
+                self.assertTrue(any("minime: self-control state ORPHANED" in d for d in f["details"]))
+        finally:
+            globals()["MINIME_SELF_CONTROL_STATE"] = saved_mstate
+            globals()["_minime_engine_deployment_identity"] = saved_live
+            globals()["ASTRID_SELF_CONTROL_STATE"] = saved_state
+
+
 class FeedbackCoverageTests(unittest.TestCase):
     def test_empty_ok(self):
         self.assertEqual(_assess_coverage([])["severity"], "ok")
@@ -5752,6 +6846,15 @@ class FeedbackCoverageTests(unittest.TestCase):
         self.assertIn("reword/withdraw", detail)
         self.assertIn("never being follow-up", detail)
         self.assertNotIn("being reviews", detail)
+
+    def test_stale_test_proposal_names_applier_consumer(self):
+        s = [{"name": "astrid_test_proposals", "kind": "request",
+              "consumer": "test_proposal_applier (launchd, 10-min) → reviewed/<landed|failed>/",
+              "pending": 2,
+              "oldest_age_s": FEEDBACK_COVERAGE_ALARM_SECS + 10, "exists": True}]
+        a = _assess_coverage(s)
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("test_proposal_applier", "\n".join(a["details"]))
 
     def test_notice_surface_never_warns(self):
         # context_overflow-style surface: chronic signal, not an unread queue —
@@ -7461,6 +8564,8 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(ChannelIntegrityTests))
     suite.addTests(loader.loadTestsFromTestCase(StuckRepetitionTests))
     suite.addTests(loader.loadTestsFromTestCase(StatedParamIntentTests))
+    suite.addTests(loader.loadTestsFromTestCase(DomainBoundaryViolationsTests))
+    suite.addTests(loader.loadTestsFromTestCase(UngatedBridgeBinaryTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1

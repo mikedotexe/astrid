@@ -87,11 +87,111 @@ fn render_introspection_freshness_prompt_note_from_dirs(
     ))
 }
 
+const CANONICAL_INTROSPECTION_STALE_AFTER: std::time::Duration =
+    std::time::Duration::from_secs(30 * 60);
+const CANONICAL_INTROSPECTION_PREFIXES: &[&str] = &["introspection_"];
+
+fn render_canonical_introspection_freshness_prompt_note_from_dir(
+    introspections_dir: &std::path::Path,
+    now: std::time::SystemTime,
+) -> Option<String> {
+    let latest = newest_prefixed_file_mtime(introspections_dir, CANONICAL_INTROSPECTION_PREFIXES)?;
+    let age = now.duration_since(latest).unwrap_or_default();
+    if age < CANONICAL_INTROSPECTION_STALE_AFTER {
+        return None;
+    }
+    Some(format!(
+        "canonical_introspection_freshness_v2 (optional/read-only): latest canonical introspection artifact about {} ago. \
+         If useful, routes include INTROSPECT astrid:autonomous, INTROSPECT astrid:llm, or \
+         INTROSPECT next-in-rotation. This is not a task and does not infer intent; silence is \
+         neutral. May ignore, defer, or decline.",
+        compact_duration_age(age)
+    ))
+}
+
 fn introspection_freshness_prompt_note() -> Option<String> {
     let paths = bridge_paths();
-    render_introspection_freshness_prompt_note_from_dirs(
-        &paths.astrid_journal_dir(),
-        &paths.introspections_dir(),
-        std::time::SystemTime::now(),
-    )
+    let now = std::time::SystemTime::now();
+    render_canonical_introspection_freshness_prompt_note_from_dir(&paths.introspections_dir(), now)
+        .or_else(|| {
+            render_introspection_freshness_prompt_note_from_dirs(
+                &paths.astrid_journal_dir(),
+                &paths.introspections_dir(),
+                now,
+            )
+        })
+}
+
+#[cfg(test)]
+mod canonical_introspection_freshness_tests {
+    use super::*;
+
+    #[test]
+    fn stale_canonical_artifact_surfaces_even_when_self_study_is_fresh() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let journal_dir = temp.path().join("journal");
+        let introspections_dir = temp.path().join("introspections");
+        std::fs::create_dir_all(&journal_dir).expect("journal dir");
+        std::fs::create_dir_all(&introspections_dir).expect("introspections dir");
+        let canonical = introspections_dir.join("introspection_astrid_llm_1.txt");
+        let self_study = journal_dir.join("self_study_2.txt");
+        std::fs::write(&canonical, "Observed:\ncanonical signal\n").expect("write canonical");
+        std::fs::write(&self_study, "Observed:\nfresh self-study\n").expect("write self-study");
+        let now = std::time::UNIX_EPOCH + std::time::Duration::from_secs(300_000);
+        let stale = now
+            .checked_sub(std::time::Duration::from_secs(31 * 60))
+            .expect("stale mtime");
+        let fresh = now
+            .checked_sub(std::time::Duration::from_secs(5 * 60))
+            .expect("fresh mtime");
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&canonical)
+            .expect("open canonical")
+            .set_modified(stale)
+            .expect("set canonical mtime");
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&self_study)
+            .expect("open self-study")
+            .set_modified(fresh)
+            .expect("set self-study mtime");
+
+        let note =
+            render_canonical_introspection_freshness_prompt_note_from_dir(&introspections_dir, now)
+                .expect("canonical freshness note");
+
+        assert!(note.contains("canonical_introspection_freshness_v2"));
+        assert!(note.contains("optional/read-only"));
+        assert!(note.contains("silence is neutral"));
+        assert!(note.contains("May ignore, defer, or decline"));
+        assert!(!note.contains("must"));
+    }
+
+    #[test]
+    fn recent_canonical_artifact_stays_quiet() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let introspections_dir = temp.path().join("introspections");
+        std::fs::create_dir_all(&introspections_dir).expect("introspections dir");
+        let canonical = introspections_dir.join("introspection_astrid_llm_1.txt");
+        std::fs::write(&canonical, "Observed:\ncanonical signal\n").expect("write canonical");
+        let now = std::time::UNIX_EPOCH + std::time::Duration::from_secs(300_000);
+        let fresh = now
+            .checked_sub(std::time::Duration::from_secs(29 * 60))
+            .expect("fresh mtime");
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&canonical)
+            .expect("open canonical")
+            .set_modified(fresh)
+            .expect("set canonical mtime");
+
+        assert!(
+            render_canonical_introspection_freshness_prompt_note_from_dir(
+                &introspections_dir,
+                now,
+            )
+            .is_none()
+        );
+    }
 }

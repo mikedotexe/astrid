@@ -1,5 +1,140 @@
 #[cfg(test)]
 mod context_retrieval_tests {
+    #[test]
+    fn requested_reading_survives_attended_pressure_with_full_source_recovery() {
+        use super::*;
+
+        let passage = format!(
+            "[Directory listing you requested:]\n{}REQUESTED_READING_TAIL",
+            "A saved reading passage λ🌊. ".repeat(400)
+        );
+        let perception = format!("The room is quiet.\n{passage}");
+        let (direct, ambient) = split_dialogue_perception_context(Some(&perception));
+        assert_eq!(direct.as_deref(), Some(passage.as_str()));
+        assert_eq!(ambient.as_deref(), Some("The room is quiet."));
+        let direct = format_dialogue_direct_perception_block(direct.as_deref().unwrap());
+        let agenda = format!(
+            "Your agenda: {}",
+            "Continue my chosen reading. ".repeat(100)
+        );
+        let continuity = "Background continuity. ".repeat(300);
+        let input = DialogueContextInput {
+            direct_perception: &direct,
+            ambient_perception: ambient.as_deref().unwrap(),
+            agenda: &agenda,
+            continuity: &continuity,
+            ..DialogueContextInput::default()
+        };
+
+        for weight in [0.0, 1.0] {
+            let attention = PromptAttentionV1 {
+                minime_live: weight,
+                self_history: weight,
+                interests: weight,
+                research: weight,
+                memory_bank: weight,
+                perception: weight,
+            };
+            for budget in [0, 500, 20_000] {
+                let dir = tempfile::tempdir().unwrap();
+                let existing_overflow = dir.path().join("earlier-reading.txt");
+                std::fs::write(&existing_overflow, "Earlier continuation λ🌊").unwrap();
+                let (blocks, sources) = dialogue_context_blocks(&input, Some(&attention));
+                let (text, overflow, report) =
+                    assemble_within_budget_with_sources(blocks, budget, dir.path(), sources.0);
+                assert!(text.contains("[Directory listing you requested:]"));
+                assert!(text.contains(&agenda[..DIALOGUE_AGENDA_MIN_CHARS]));
+                if let Some(report) = report {
+                    let direct = report
+                        .trimmed_blocks
+                        .iter()
+                        .find(|block| block.label == "direct_perception")
+                        .expect("pressure reaches the protected requested passage");
+                    assert!(!direct.fully_removed);
+                    assert!(direct.kept_chars >= ATTEND_PERCEPTION_MIN_FLOOR);
+                }
+                let overflow = overflow.expect("capped requested passage remains recoverable");
+                assert_eq!(overflow.offset, 0);
+                assert_ne!(overflow.path, existing_overflow);
+                let saved = std::fs::read_to_string(overflow.path).unwrap();
+                assert!(saved.contains(&format!("=== [direct_perception] ===\n\n{direct}\n")));
+                assert_eq!(saved.matches("REQUESTED_READING_TAIL").count(), 1);
+                assert_eq!(
+                    std::fs::read_to_string(existing_overflow).unwrap(),
+                    "Earlier continuation λ🌊"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn production_blocks_retain_agenda_and_attend_contracts() {
+        use super::*;
+        let agenda = format!("Your agenda: {}SELF_TAIL", "chosen study ".repeat(300));
+        let peer = format!("Minime wrote: {}PEER_TAIL", "peer report ".repeat(400));
+        let history = "Shared continuity ".repeat(500);
+        let input = DialogueContextInput {
+            agenda: &agenda,
+            journal: &peer,
+            continuity: &history,
+            ..DialogueContextInput::default()
+        };
+        for weight in [None, Some(0.0), Some(1.0)] {
+            let attention = weight.map(|w| PromptAttentionV1 {
+                minime_live: w,
+                self_history: w,
+                interests: w,
+                research: w,
+                memory_bank: w,
+                perception: w,
+            });
+            let (blocks, sources) = dialogue_context_blocks(&input, attention.as_ref());
+            assert_eq!(blocks.len(), 11);
+            assert_eq!(sources.0.len(), 11);
+            assert_eq!(
+                blocks.iter().map(|b| b.label).collect::<Vec<_>>(),
+                [
+                    "spectral",
+                    "journal",
+                    "direct_perception",
+                    "topline",
+                    "ambient_perception",
+                    "modality",
+                    "web",
+                    "continuity",
+                    "agenda",
+                    "feedback",
+                    "diversity"
+                ]
+            );
+            assert_eq!(blocks[8].min_chars, DIALOGUE_AGENDA_MIN_CHARS);
+            assert_eq!(
+                blocks[8].content,
+                cap_dialogue_block("agenda", &agenda, attended_agenda_cap(attention.as_ref()))
+            );
+            assert_eq!(
+                blocks[1].min_chars,
+                attended_journal_caps(attention.as_ref()).1
+            );
+            assert_eq!(blocks[7].priority, 7);
+            for budget in [0, 20_000] {
+                let before_dir = tempfile::tempdir().unwrap();
+                let after_dir = tempfile::tempdir().unwrap();
+                let (before, _) = dialogue_context_blocks(&input, attention.as_ref());
+                let before = assemble_within_budget(before, budget, before_dir.path());
+                let (after, sources) = dialogue_context_blocks(&input, attention.as_ref());
+                let after =
+                    assemble_within_budget_with_sources(after, budget, after_dir.path(), sources.0);
+                assert_eq!(before.0, after.0);
+                assert!(after.0.contains(&agenda[..DIALOGUE_AGENDA_MIN_CHARS]));
+                let saved = std::fs::read_to_string(after.1.unwrap().path).unwrap();
+                assert!(saved.contains(&format!("=== [agenda] ===\n\n{agenda}\n")));
+                assert!(saved.contains(&format!("=== [journal] ===\n\n{peer}\n")));
+                assert_eq!(saved.matches("SELF_TAIL").count(), 1);
+            }
+        }
+    }
+
     use super::{DialogueBlockSources, cap_dialogue_block};
     use crate::prompt_budget::{
         PromptBlock, assemble_within_budget, assemble_within_budget_with_sources,

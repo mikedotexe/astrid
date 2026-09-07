@@ -679,40 +679,20 @@ async fn mlx_chat_with_failure_log_mode_detailed(
         .model_qos_timing_v1
         .and_then(ModelQosTimingV1::validated);
     let raw_text = match chat.choices.first().and_then(|c| c.message.as_ref()) {
-        Some(msg) => msg.content.trim().to_string(),
+        Some(msg) => msg.content.clone(),
         None => {
             warn!("MLX response had no message in choices");
             return None;
         },
     };
-    if raw_text.is_empty() {
-        return None;
-    }
-
-    // Strip leaked model tokens early so they don't pollute downstream ratio
-    // checks or end up stored in journals.
-    let (stripped_text, strip_report) =
-        sanitize_model_control_markers_with_report(&raw_text);
-    if let Some(report) = strip_report {
-        if report.removed_total > 0 {
-            warn!(
-                removed_total = report.removed_total,
-                preserved_explicit_reference_total = report.preserved_explicit_reference_total,
-                before_chars = report.before_chars,
-                after_chars = report.after_chars,
-                "mlx_chat handled model control markers"
-            );
-        } else {
-            debug!(
-                preserved_explicit_reference_total = report.preserved_explicit_reference_total,
-                "mlx_chat preserved explicitly referenced model control markers"
-            );
-        }
-        let diagnostic =
-            control_marker_cleanup_diagnostic(&report, &stripped_text, label, profile);
-        append_llm_diagnostic_jsonl("control_marker_cleanup.jsonl", &diagnostic);
-    }
-    let text = stripped_text.trim().to_string();
+    let normalization = normalize_provider_output_v1(&raw_text);
+    record_provider_output_normalization_v1(
+        &normalization,
+        label,
+        "mlx",
+        profile.as_str(),
+    );
+    let text = normalization.text;
     if text.is_empty() {
         return None;
     }
@@ -900,11 +880,19 @@ async fn ollama_chat(
                 continue;
             },
         };
-        let text = chat
+        let raw_text = chat
             .message
             .as_ref()
-            .map(|m| m.content.trim().to_string())
+            .map(|m| m.content.clone())
             .unwrap_or_default();
+        let normalization = normalize_provider_output_v1(&raw_text);
+        record_provider_output_normalization_v1(
+            &normalization,
+            label,
+            "ollama",
+            &fallback_model,
+        );
+        let text = normalization.text;
         if !text.is_empty() {
             return Some(OllamaFallbackResponse {
                 text,
