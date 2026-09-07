@@ -1,5 +1,9 @@
 # Addressed human replies
 
+The later [verified live rollout](2026-09-06-addressed-human-replies-rollout.md)
+completed on September 6, 2026 Pacific time. This note preserves the original
+source-review phase and its validation record.
+
 Implemented on `codex/astrid-addressed-human-replies` from local main
 `162f0276787acc29357d52b9425bb3a4b2ce4779`. The verified remote main tip was
 `888c1708dcb3d4669e9219c2d0b9be1185984f4d`; this branch deliberately preserves the
