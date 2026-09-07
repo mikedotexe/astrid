@@ -3,6 +3,13 @@ set -euo pipefail
 
 BRIDGE_BIN="/Users/v/other/astrid/capsules/spectral-bridge/target/release/spectral-bridge-server"
 BRIDGE_DIR="/Users/v/other/astrid/capsules/spectral-bridge"
+DEPLOYMENT_CONTROL="/Users/v/other/astrid/.runtime/bridge-deployment"
+
+# KeepAlive retries must not admit either release during an operator transition.
+if [ -e "$DEPLOYMENT_CONTROL/hold.json" ] || [ -L "$DEPLOYMENT_CONTROL/hold.json" ]; then
+    echo "bridge launch held for operator deployment" >&2
+    exit 73
+fi
 
 launchctl_env() {
     local key="$1"
@@ -44,6 +51,10 @@ done
 [ -n "${ASTRID_PRESSURE_ATTENUATION:-}" ] && /bin/launchctl setenv ASTRID_PRESSURE_ATTENUATION "$ASTRID_PRESSURE_ATTENUATION" 2>/dev/null || true
 
 cd "$BRIDGE_DIR"
+
+if [ -e "$DEPLOYMENT_CONTROL/active.json" ] || [ -L "$DEPLOYMENT_CONTROL/active.json" ]; then
+    exec python3 -B /Users/v/other/astrid/scripts/bridge_release_launch.py --root /Users/v/other/astrid
+fi
 
 exec "$BRIDGE_BIN" \
     --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db \
