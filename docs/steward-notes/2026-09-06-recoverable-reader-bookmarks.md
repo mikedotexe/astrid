@@ -1,5 +1,10 @@
 # Recoverable reader bookmarks: first implementation tranche
 
+> **Checkpoint history:** this records the mechanical store tranche at `d1cf8fbe20`.
+> The subsequent [runtime integration](2026-09-06-reading-mailbox-runtime.md) connects
+> operational reading, provider receipts and durable mailbox admission. Statements
+> below about adapters being pending describe this earlier checkpoint.
+
 September 6, 2026. Mike authorized beginning the activity implementation after
 reconciling the two preceding tasks. Canonical source foundation:
 `7b9f4d544d9661491eb9a57286daeca929e7d760`. Feature checkout:

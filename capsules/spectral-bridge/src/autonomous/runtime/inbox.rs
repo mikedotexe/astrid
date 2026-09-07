@@ -1,13 +1,5 @@
 /// Reads all `.txt` files from `workspace/inbox/`, returns their content,
 /// and moves them to `workspace/inbox/read/` so they're not re-read.
-fn check_inbox(cutoff: std::time::SystemTime) -> Option<contact_capacity::InboxReadBatchV1> {
-    let inbox_dir = bridge_paths().astrid_inbox_dir();
-    let trace_root = bridge_paths()
-        .bridge_workspace()
-        .join("diagnostics/contact_capacity_trace_v1");
-    check_inbox_at_cutoff_with_trace(inbox_dir.as_path(), cutoff, &trace_root)
-}
-
 #[cfg(test)]
 fn check_inbox_at(inbox_dir: &Path) -> Option<contact_capacity::InboxReadBatchV1> {
     check_inbox_at_cutoff(inbox_dir, std::time::SystemTime::now())
@@ -22,6 +14,7 @@ fn check_inbox_at_cutoff(
     check_inbox_at_cutoff_with_trace(inbox_dir, cutoff, &trace_root)
 }
 
+#[cfg(test)]
 fn check_inbox_at_cutoff_with_trace(
     inbox_dir: &Path,
     cutoff: std::time::SystemTime,
@@ -522,14 +515,7 @@ fn render_gift_exchange_line() -> Option<String> {
     Some(format!("[Gift exchange, last day] {}.", parts.join(", ")))
 }
 
-/// Move consumed inbox messages to read/ AFTER the exchange succeeds.
-/// This prevents the bug where messages are eaten but never acted on
-/// because the dialogue call failed (the "Eugene's hello" bug).
-fn retire_inbox(cutoff: std::time::SystemTime) {
-    let inbox_dir = bridge_paths().astrid_inbox_dir();
-    retire_inbox_at(inbox_dir.as_path(), cutoff);
-}
-
+/// Make deliberately deferred legacy notes available to queue discovery.
 fn promote_deferred_inbox_notes() {
     let inbox_dir = bridge_paths().astrid_inbox_dir();
     promote_deferred_inbox_notes_at(inbox_dir.as_path());
@@ -557,6 +543,7 @@ fn promote_deferred_inbox_notes_at(inbox_dir: &Path) {
     }
 }
 
+#[cfg(test)]
 fn retire_inbox_at(inbox_dir: &Path, cutoff: std::time::SystemTime) {
     let read_dir = inbox_dir.join("read");
     let _ = std::fs::create_dir_all(&read_dir);

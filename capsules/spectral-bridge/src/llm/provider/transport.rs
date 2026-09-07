@@ -50,20 +50,14 @@ struct MlxChatResultV1 {
     request_content_anchor_sha256: String,
     queue_wait_ms: Option<u64>,
     active_generation_and_reservoir_ms: Option<u64>,
+    delivery_attempt: Option<SubmittedDeliveryAttemptV1>,
 }
 
 fn model_qos_class_for_label(label: &str) -> ModelQosClassV1 {
     match label {
-        "dialogue_live" | "correspondence_reply" | "live_reply" => {
-            ModelQosClassV1::Interactive
-        },
-        "introspect"
-        | "witness"
-        | "witness_context"
-        | "self_study"
-        | "evolve"
-        | "evolve_request"
-        | "evolution" => ModelQosClassV1::Reflective,
+        "dialogue_live" | "correspondence_reply" | "live_reply" => ModelQosClassV1::Interactive,
+        "introspect" | "witness" | "witness_context" | "self_study" | "evolve"
+        | "evolve_request" | "evolution" => ModelQosClassV1::Reflective,
         "daydream"
         | "aspiration"
         | "creation"
@@ -82,8 +76,7 @@ fn model_qos_v1(
     max_tokens: u32,
     request_timeout_secs: u64,
 ) -> ModelQosV1 {
-    static REQUEST_SEQUENCE: std::sync::atomic::AtomicU64 =
-        std::sync::atomic::AtomicU64::new(0);
+    static REQUEST_SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
     let qos_class = model_qos_class_for_label(label);
     let queue_timeout_secs = qos_class
@@ -118,6 +111,8 @@ fn model_qos_v1(
 /// MLX response — OpenAI-compatible format.
 #[derive(Deserialize)]
 struct MlxResponse {
+    #[serde(default)]
+    model: Option<String>,
     choices: Vec<MlxChoice>,
     #[serde(default)]
     model_qos_timing_v1: Option<ModelQosTimingV1>,
@@ -139,16 +134,12 @@ impl ModelQosTimingV1 {
     fn validated(self) -> Option<(u64, u64)> {
         (self.schema == "model_qos_timing_v1"
             && self.schema_version == 1
-            && self.queue_wait_scope
-                == "request_enqueue_to_worker_selection_not_experiential_wait"
+            && self.queue_wait_scope == "request_enqueue_to_worker_selection_not_experiential_wait"
             && self.active_work_scope
                 == "worker_selection_to_response_after_reservoir_checkin_not_cognitive_effort"
             && self.queue_wait_ms <= Self::MAX_BOUNDED_TIMING_MS
             && self.active_generation_and_reservoir_ms <= Self::MAX_BOUNDED_TIMING_MS)
-            .then_some((
-                self.queue_wait_ms,
-                self.active_generation_and_reservoir_ms,
-            ))
+            .then_some((self.queue_wait_ms, self.active_generation_and_reservoir_ms))
     }
 }
 
@@ -545,243 +536,10 @@ impl FetchedPage {
 #[allow(dead_code)]
 struct ChatResponse {
     message: Option<Message>,
-}
-
-/// Send a chat request to the MLX server and extract the response text.
-async fn mlx_chat_with_failure_log_mode_detailed(
-    label: &str,
-    messages: Vec<Message>,
-    temperature: f32,
-    max_tokens: u32,
-    timeout_secs: u64,
-    failure_log_mode: MlxFailureLogMode,
-) -> Option<MlxChatResultV1> {
-    let profile = configured_mlx_profile();
-    let policy = apply_mlx_request_policy(label, profile, messages, max_tokens, timeout_secs);
-    if let Some(ref diagnostic) = policy.diagnostic {
-        append_llm_diagnostic_jsonl("mlx_request_policy.jsonl", diagnostic);
-    }
-
-    let mut messages = policy.messages;
-    let max_tokens = policy.max_tokens;
-    let timeout_secs = policy.timeout_secs;
-
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(timeout_secs))
-        .build()
-        .ok()?;
-
-    let msg_count = messages.len();
-    let prompt_chars: usize = messages.iter().map(|m| m.content.len()).sum();
-    let mlx_url = configured_mlx_url();
-
-    // Safety net: if total prompt exceeds budget, truncate the longest
-    // non-system message. Prevents prefill timeouts on any caller.
-    // Legacy profile safety net. The adopted Gemma 4 profile applies tighter
-    // per-label caps before this generic budget is reached.
-    const MAX_PROMPT_CHARS: usize = 48_000;
-    if !profile.is_gemma4_canary() && prompt_chars > MAX_PROMPT_CHARS {
-        let excess = prompt_chars.saturating_sub(MAX_PROMPT_CHARS);
-        warn!(
-            "Prompt budget exceeded ({prompt_chars} > {MAX_PROMPT_CHARS}), trimming {excess} chars"
-        );
-        // Find the longest non-system message and truncate it.
-        if let Some(longest) = messages
-            .iter_mut()
-            .filter(|m| m.role != "system")
-            .max_by_key(|m| m.content.len())
-        {
-            let new_len = longest.content.len().saturating_sub(excess);
-            longest.content = longest.content.chars().take(new_len).collect();
-        }
-    }
-
-    let temperature = temperature_for_mlx_profile(label, profile, temperature);
-    let model_qos = model_qos_v1(
-        label,
-        &messages,
-        temperature,
-        max_tokens,
-        timeout_secs,
-    );
-    let qos_request_identity_sha256 = serde_json::to_vec(&model_qos)
-        .ok()
-        .map(|encoded| format!("{:x}", Sha256::digest(encoded)))?;
-    let request_content_anchor_sha256 = model_qos.idempotency_key.clone();
-    let request = MlxRequest {
-        messages,
-        max_tokens,
-        temperature,
-        stream: false,
-        aperture: Some(astrid_aperture()),
-        model_qos_v1: Some(model_qos),
-    };
-
-    let response = match client.post(&mlx_url).json(&request).send().await {
-        Ok(r) => r,
-        Err(e) => {
-            match failure_log_mode {
-                MlxFailureLogMode::FallbackEligible => {
-                    warn!(
-                        "MLX request failed at {mlx_url}: {e} (timeout={timeout_secs}s, max_tokens={max_tokens}, msg_count={msg_count}, prompt_chars={prompt_chars})",
-                    );
-                },
-                MlxFailureLogMode::LocalDegrade => {
-                    let diagnostic = MlxOptionalMissDiagnostic {
-                        timestamp: unix_timestamp_string(),
-                        label: label.to_string(),
-                        profile: profile.as_str(),
-                        url: mlx_url.clone(),
-                        error: e.to_string(),
-                        timeout_secs,
-                        max_tokens,
-                        msg_count,
-                        prompt_chars,
-                        degrade_path: local_degrade_path_for_label(label),
-                    };
-                    warn!(
-                        label = %label,
-                        timeout_secs,
-                        max_tokens,
-                        msg_count,
-                        prompt_chars,
-                        degrade_path = diagnostic.degrade_path,
-                        "optional MLX lane unavailable; using local degrade path"
-                    );
-                    append_llm_diagnostic_jsonl("mlx_optional_miss.jsonl", &diagnostic);
-                },
-            }
-            return None;
-        },
-    };
-    if !response.status().is_success() {
-        warn!("MLX returned status {} from {mlx_url}", response.status());
-        return None;
-    }
-    let body = match response.text().await {
-        Ok(b) => b,
-        Err(e) => {
-            warn!("MLX response body read failed: {e}");
-            return None;
-        },
-    };
-    let chat: MlxResponse = match serde_json::from_str(&body) {
-        Ok(c) => c,
-        Err(e) => {
-            warn!(
-                "MLX response parse failed from {mlx_url}: {e} — body: {}",
-                &body[..body.floor_char_boundary(200)]
-            );
-            return None;
-        },
-    };
-    let provider_timing = chat
-        .model_qos_timing_v1
-        .and_then(ModelQosTimingV1::validated);
-    let raw_text = match chat.choices.first().and_then(|c| c.message.as_ref()) {
-        Some(msg) => msg.content.clone(),
-        None => {
-            warn!("MLX response had no message in choices");
-            return None;
-        },
-    };
-    let normalization = normalize_provider_output_v1(&raw_text);
-    record_provider_output_normalization_v1(
-        &normalization,
-        label,
-        "mlx",
-        profile.as_str(),
-    );
-    let text = normalization.text;
-    if text.is_empty() {
-        return None;
-    }
-
-    // Gibberish gate: reject text that is mostly non-alphabetic.
-    // Normal English is 70-85% alpha; degenerate coupling output was ~30%.
-    let alpha_count = text.chars().filter(|c| c.is_alphabetic()).count();
-    let total_count = text.chars().count();
-    if total_count > 3 && (alpha_count as f64 / total_count as f64) < 0.4 {
-        warn!(
-            "MLX response rejected as degenerate (alpha ratio {:.2}): {}",
-            alpha_count as f64 / total_count as f64,
-            &text[..text.floor_char_boundary(120)]
-        );
-        return None;
-    }
-
-    if profile.is_gemma4_canary() {
-        match sanitize_gemma4_canary_output_for_label(label, &text) {
-            Some(sanitized) if sanitized != text => {
-                warn!(
-                    "{label}: Gemma 4 profile sanitized legacy selfhood wording before persistence: {}",
-                    &text[..text.floor_char_boundary(120)]
-                );
-                return Some(MlxChatResultV1 {
-                    text: sanitized.trim().to_string(),
-                    qos_request_identity_sha256,
-                    request_content_anchor_sha256,
-                    queue_wait_ms: provider_timing.map(|timing| timing.0),
-                    active_generation_and_reservoir_ms: provider_timing
-                        .map(|timing| timing.1),
-                });
-            },
-            Some(_) => {},
-            None => {
-                warn!(
-                    "{label}: Gemma 4 profile response rejected for deprecated runtime language: {}",
-                    &text[..text.floor_char_boundary(120)]
-                );
-                return None;
-            },
-        }
-    }
-
-    Some(MlxChatResultV1 {
-        text,
-        qos_request_identity_sha256,
-        request_content_anchor_sha256,
-        queue_wait_ms: provider_timing.map(|timing| timing.0),
-        active_generation_and_reservoir_ms: provider_timing.map(|timing| timing.1),
-    })
-}
-
-async fn mlx_chat_with_failure_log_mode(
-    label: &str,
-    messages: Vec<Message>,
-    temperature: f32,
-    max_tokens: u32,
-    timeout_secs: u64,
-    failure_log_mode: MlxFailureLogMode,
-) -> Option<String> {
-    mlx_chat_with_failure_log_mode_detailed(
-        label,
-        messages,
-        temperature,
-        max_tokens,
-        timeout_secs,
-        failure_log_mode,
-    )
-    .await
-    .map(|result| result.text)
-}
-
-async fn mlx_chat(
-    label: &str,
-    messages: Vec<Message>,
-    temperature: f32,
-    max_tokens: u32,
-    timeout_secs: u64,
-) -> Option<String> {
-    mlx_chat_with_failure_log_mode(
-        label,
-        messages,
-        temperature,
-        max_tokens,
-        timeout_secs,
-        MlxFailureLogMode::FallbackEligible,
-    )
-    .await
+    #[serde(default)]
+    model: Option<String>,
+    #[serde(default)]
+    done: Option<bool>,
 }
 
 /// Ollama chat request — used as fallback when MLX is busy (e.g., witness mode
@@ -797,6 +555,7 @@ struct OllamaChatRequest {
 struct OllamaFallbackResponse {
     text: String,
     model: String,
+    delivery_attempt: Option<SubmittedDeliveryAttemptV1>,
 }
 
 #[derive(Serialize)]
@@ -824,83 +583,6 @@ fn build_ollama_chat_request(
             num_ctx: 8192,
         },
     }
-}
-
-async fn ollama_chat(
-    label: &str,
-    messages: Vec<Message>,
-    temperature: f32,
-    max_tokens: u32,
-    timeout_secs: u64,
-    fallback_budget: Option<&FallbackContinuityBudget>,
-) -> Option<OllamaFallbackResponse> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(timeout_secs))
-        .build()
-        .ok()?;
-    let ollama_url = configured_ollama_url();
-    let fallback_models = configured_ollama_fallback_model_chain_for_budget(fallback_budget);
-    for fallback_model in fallback_models {
-        let request = build_ollama_chat_request(
-            label,
-            messages.clone(),
-            temperature,
-            max_tokens,
-            fallback_model.clone(),
-        );
-
-        let response = match client.post(&ollama_url).json(&request).send().await {
-            Ok(r) => r,
-            Err(e) => {
-                warn!("Ollama fallback request failed at {ollama_url} with {fallback_model}: {e}");
-                continue;
-            },
-        };
-        if !response.status().is_success() {
-            warn!(
-                "Ollama fallback returned status {} from {ollama_url} with {fallback_model}",
-                response.status()
-            );
-            continue;
-        }
-        let body = match response.text().await {
-            Ok(b) => b,
-            Err(e) => {
-                warn!("Ollama fallback response body read failed with {fallback_model}: {e}");
-                continue;
-            },
-        };
-        let chat: ChatResponse = match serde_json::from_str(&body) {
-            Ok(c) => c,
-            Err(e) => {
-                warn!(
-                    "Ollama fallback response parse failed from {ollama_url} with {fallback_model}: {e} — body: {}",
-                    &body[..body.floor_char_boundary(200)]
-                );
-                continue;
-            },
-        };
-        let raw_text = chat
-            .message
-            .as_ref()
-            .map(|m| m.content.clone())
-            .unwrap_or_default();
-        let normalization = normalize_provider_output_v1(&raw_text);
-        record_provider_output_normalization_v1(
-            &normalization,
-            label,
-            "ollama",
-            &fallback_model,
-        );
-        let text = normalization.text;
-        if !text.is_empty() {
-            return Some(OllamaFallbackResponse {
-                text,
-                model: fallback_model,
-            });
-        }
-    }
-    None
 }
 
 fn append_contract_once(content: &mut String, marker: &str, contract: &str) {

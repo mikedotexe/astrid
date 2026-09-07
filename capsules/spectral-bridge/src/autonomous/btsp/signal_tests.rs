@@ -213,3 +213,21 @@ fn anti_loop_active_rewrites_matched_status_as_withheld() {
             .contains(&"causal_lab_holdout_active".to_string())
     );
 }
+
+#[test]
+fn unread_minime_inbox_is_not_a_background_owner_artifact_source() {
+    let sources = owner_sources(OWNER_MINIME);
+    let unread = bridge_paths().astrid_inbox_dir();
+    assert!(sources.iter().all(|(path, _, _, _, _)| path != &unread));
+    assert!(
+        sources
+            .iter()
+            .any(|(path, _, _, _, _)| path == &bridge_paths().minime_workspace().join("journal"))
+    );
+    assert!(
+        sources
+            .iter()
+            .any(|(path, prefix, _, _, _)| path == &unread.join("read")
+                && *prefix == Some("from_minime_"))
+    );
+}

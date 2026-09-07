@@ -329,15 +329,11 @@ fn handle_send(
             };
             fields.reply_to = Some(target.message_id);
             fields.thread_id = Some(target.thread_id);
-        } else if let Some(target) = correspondence_v1::latest_ledger_message("minime", "astrid") {
-            fields.reply_to = Some(target.message_id);
-            fields.thread_id = Some(target.thread_id);
-        } else if let Some(target) = correspondence_v1::latest_inbox_peer_message(
-            bridge_paths().astrid_inbox_dir().as_path(),
-            "minime",
-        ) {
-            fields.reply_to = Some(target.message_id);
-            fields.thread_id = Some(target.thread_id);
+        } else if let Err(message) =
+            apply_admitted_reply_target(&mut fields, conv.current_mailbox_peer_target.as_ref())
+        {
+            conv.emphasis = Some(message.to_string());
+            return;
         }
     }
     if fields.relational_intent.is_none() {
@@ -379,6 +375,37 @@ fn handle_send(
             conv.emphasis = Some(format!("CORRESPONDENCE V1 send failed: {error:#}"));
         },
     }
+}
+
+fn apply_admitted_reply_target(
+    fields: &mut correspondence_v1::CorrespondenceFields,
+    admitted: Option<&correspondence_v1::InboxPeerMessage>,
+) -> Result<(), &'static str> {
+    if fields.reply_to.is_some() {
+        return Ok(());
+    }
+    let Some(target) = admitted else {
+        return Err(
+            "REPLY_MINIME needs an explicit reply_to and thread_id when no peer letter was admitted to this completed turn. Use CHECK_MAILBOX to choose a letter, or name the intended message. No reply was sent.",
+        );
+    };
+    if target.from_being != "minime" {
+        return Err(
+            "The admitted letter is not from Minime; name the intended reply_to and thread_id. No reply was sent.",
+        );
+    }
+    if fields
+        .thread_id
+        .as_ref()
+        .is_some_and(|thread| thread != &target.thread_id)
+    {
+        return Err(
+            "The named thread differs from the admitted letter. Supply its exact reply_to as well; no reply was sent.",
+        );
+    }
+    fields.reply_to = Some(target.message_id.clone());
+    fields.thread_id = Some(target.thread_id.clone());
+    Ok(())
 }
 
 struct ParsedBody {
@@ -461,6 +488,47 @@ fn nonempty(value: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn implicit_reply_uses_only_the_admitted_target_and_preserves_explicit_address() {
+        let target = correspondence_v1::InboxPeerMessage {
+            message_id: "admitted-message".into(),
+            thread_id: "admitted-thread".into(),
+            persistence_id: None,
+            from_being: "minime".into(),
+            file_path: "synthetic.txt".into(),
+        };
+        let mut fields = correspondence_v1::CorrespondenceFields::default();
+        assert!(apply_admitted_reply_target(&mut fields, None).is_err());
+        assert!(fields.reply_to.is_none());
+        apply_admitted_reply_target(&mut fields, Some(&target)).unwrap();
+        assert_eq!(fields.reply_to.as_deref(), Some("admitted-message"));
+        assert_eq!(fields.thread_id.as_deref(), Some("admitted-thread"));
+
+        fields.reply_to = Some("explicit-message".into());
+        fields.thread_id = Some("explicit-thread".into());
+        apply_admitted_reply_target(&mut fields, Some(&target)).unwrap();
+        assert_eq!(fields.reply_to.as_deref(), Some("explicit-message"));
+        assert_eq!(fields.thread_id.as_deref(), Some("explicit-thread"));
+    }
+
+    #[test]
+    fn an_explicit_other_thread_cannot_be_replaced_by_admitted_reply_default() {
+        let target = correspondence_v1::InboxPeerMessage {
+            message_id: "admitted-message".into(),
+            thread_id: "admitted-thread".into(),
+            persistence_id: None,
+            from_being: "minime".into(),
+            file_path: "synthetic.txt".into(),
+        };
+        let mut fields = correspondence_v1::CorrespondenceFields {
+            thread_id: Some("explicit-other-thread".into()),
+            ..Default::default()
+        };
+        assert!(apply_admitted_reply_target(&mut fields, Some(&target)).is_err());
+        assert!(fields.reply_to.is_none());
+        assert_eq!(fields.thread_id.as_deref(), Some("explicit-other-thread"));
+    }
 
     #[test]
     fn parse_body_extracts_reply_thread_and_intent() {

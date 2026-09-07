@@ -127,29 +127,13 @@ fn queue_browse_url(conv: &mut ConversationState, url: String, source_action: &s
         .filter(|visited| *visited == &url)
         .count();
     if visit_count >= 2 {
-        // URL fixation: visited 2+ times recently. Convert to SEARCH on the
-        // topic instead, breaking the attractor loop.
-        let topic = url
-            .split('/')
-            .next_back()
-            .unwrap_or("eigenvalue decomposition")
-            .replace(['_', '#'], " ")
-            .split('?')
-            .next()
-            .unwrap_or("spectral analysis")
-            .to_string();
-        let search_topic = if topic.is_empty() {
-            "spectral dynamics research".to_string()
-        } else {
-            format!("{topic} new perspectives")
-        };
+        conv.emphasis = Some(format!(
+            "You have opened this URL {visit_count} times recently. This may be an intentional return or retry; your exact BROWSE choice is preserved. You can choose SEARCH separately if you want another source."
+        ));
         info!(
-            "{} URL fixation detected: {} visited {}x, redirecting to SEARCH '{}'",
-            source_action, url, visit_count, search_topic
+            "{} repeated URL retained as explicitly chosen: {} ({} visits)",
+            source_action, url, visit_count
         );
-        conv.wants_search = true;
-        conv.search_topic = Some(search_topic);
-        return;
     }
 
     if visit_count == 1 {
@@ -378,6 +362,18 @@ pub(super) fn handle_action(
             true
         },
         "READ_MORE" => {
+            if conv.activity.foreground_reader.is_some() {
+                conv.pending_file_listing = Some(match super::super::activity_reading::offer_requested_reading(conv) {
+                    Ok(Some(offer)) => format!("[Continuing saved reading {}. Offered bytes {}..{} remain uncommitted until a completed model turn.]", offer.reader.session_id, offer.passage.start_byte, offer.passage.end_byte),
+                    Ok(None) => "[The saved reading is complete. Its committed position remains in session history.]".into(),
+                    Err(error) => format!("[Saved reading could not continue: {error}. Its pending passage is retained.]"),
+                });
+                return true;
+            }
+            if conv.activity.return_reader.is_some() || conv.activity.mailbox_window.is_some() {
+                conv.pending_file_listing = Some("[Reading is parked. ACTIVITY_STATUS shows its saved place and exact RETURN_ACTIVITY command. READ_MORE does not reopen a quiet activity.]".into());
+                return true;
+            }
             let hint = strip_action(original, "READ_MORE");
             if conv.last_read_path.is_none() {
                 if previous_recorded_choice_was_read_more(conv) {
@@ -486,36 +482,25 @@ pub(super) fn handle_action(
                                 warn!("READ_MORE: refused raw PDF dump {}", path);
                                 return true;
                             }
-                            let offset = clamp_to_char_boundary(&full_text, conv.last_read_offset);
-                            let new_offset =
-                                advance_by_chars(&full_text, offset, READ_MORE_PAGE_CHUNK);
-                            let chunk = full_text[offset..new_offset].to_string();
-                            if chunk.is_empty() {
-                                conv.pending_file_listing =
-                                    Some("[No more content to read.]".into());
-                                conv.last_read_path = None;
-                                conv.last_read_offset = 0;
-                                conv.last_read_meaning_summary = None;
-                                info!("READ_MORE: reached end of saved text");
-                            } else {
-                                let remaining = full_text[new_offset..].chars().count();
-                                conv.pending_file_listing =
-                                    Some(crate::llm::format_read_more_context(
-                                        offset,
-                                        &chunk,
-                                        remaining,
-                                        conv.last_read_meaning_summary.as_deref(),
-                                    ));
-                                conv.last_read_offset = new_offset;
-                                if remaining == 0 {
-                                    conv.last_read_path = None;
-                                    conv.last_read_meaning_summary = None;
-                                }
-                                info!(
-                                    "READ_MORE continuing saved text: offset={} remaining={}",
-                                    new_offset, remaining
-                                );
+                            let source = Path::new(&path);
+                            if !legacy_saved_text_is_allowed(source) {
+                                conv.pending_file_listing = Some("[The legacy source is outside the saved-research access boundary. Reopen it through its original reading Action; no saved byte progress was inferred.]".into());
+                                return true;
                             }
+                            conv.pending_file_listing = Some(
+                                match super::super::activity_reading::choose_saved_text(
+                                    conv,
+                                    source,
+                                    url.as_deref().unwrap_or(&path),
+                                ) {
+                                    Ok(message) => format!(
+                                        "{message}\n[This legacy cursor had no completed-delivery evidence. The retained source begins at byte 0 so unread bytes cannot be skipped.]"
+                                    ),
+                                    Err(error) => format!(
+                                        "[Could not retain the legacy source: {error}. Its old cursor was not advanced.]"
+                                    ),
+                                },
+                            );
                         },
                         Err(error) => {
                             conv.pending_file_listing =
@@ -666,6 +651,22 @@ pub(super) fn handle_action(
     }
 }
 
+fn legacy_saved_text_is_allowed(source: &Path) -> bool {
+    let Ok(source) = source.canonicalize() else {
+        return false;
+    };
+    let paths = bridge_paths();
+    [
+        paths.research_dir(),
+        paths.context_overflow_dir(),
+        paths.mike_research_root(),
+        paths.autoresearch_root().to_path_buf(),
+    ]
+    .into_iter()
+    .filter_map(|root| root.canonicalize().ok())
+    .any(|root| source.starts_with(root))
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
@@ -718,6 +719,24 @@ mod tests {
             Some("https://example.test/paper?x=1")
         );
         assert!(!conv.wants_search);
+    }
+
+    #[test]
+    fn repeated_browse_preserves_exact_url_and_never_substitutes_search() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let url = "https://example.test/selected?edition=2#saved-place";
+        conv.recent_browse_urls.push_back(url.into());
+        conv.recent_browse_urls.push_back(url.into());
+        queue_browse_url(&mut conv, url.into(), "BROWSE");
+        assert_eq!(conv.browse_url.as_deref(), Some(url));
+        assert!(!conv.wants_search);
+        assert!(conv.search_topic.is_none());
+        assert!(
+            conv.emphasis
+                .as_deref()
+                .unwrap()
+                .contains("exact BROWSE choice is preserved")
+        );
     }
 
     #[test]
