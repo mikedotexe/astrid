@@ -38,7 +38,14 @@ mod persistence;
 pub use guards::{CharterReason, CharterRequiredGuardAssessment, ResearchBudgetGuardAssessment};
 
 include!("runtime/core.rs");
+include!("runtime/session_lifecycle.rs");
 include!("runtime/session_contract.rs");
+#[path = "runtime/reader_bookmark_io.rs"]
+mod reader_bookmark_io;
+#[path = "runtime/reader_bookmark_types.rs"]
+mod reader_bookmark_types;
+pub use reader_bookmark_types::*;
+include!("runtime/reader_bookmarks.rs");
 include!("runtime/self_study_contract.rs");
 include!("runtime/prompt_projection.rs");
 include!("runtime/command_dispatch.rs");
@@ -61,6 +68,10 @@ mod tests;
 #[cfg(test)]
 #[path = "session_contract_tests.rs"]
 mod session_contract_tests;
+
+#[cfg(test)]
+#[path = "reader_bookmark_tests.rs"]
+mod reader_bookmark_tests;
 
 #[cfg(test)]
 #[path = "self_study_contract_tests.rs"]

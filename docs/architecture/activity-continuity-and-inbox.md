@@ -3,11 +3,16 @@
 September 6, 2026. Implementation preparation following Mike's
 [spectral-bridge discussion](../research/2026-09-05-spectral-bridge-feature-map.md).
 
-**Status:** the episode, boundaries, and acceptance cases below are design work.
-They have not been implemented or executed by this pass. Mike has asked us to
-round out the plan while two other project tasks finish, then move toward
-implementation. Source edits must begin from a fresh shared-tree reconciliation
-after that work; deployment is a separate operation.
+**Status:** the [runtime integration](../steward-notes/2026-09-06-reading-mailbox-runtime.md)
+now connects the [first bookmark tranche](../steward-notes/2026-09-06-recoverable-reader-bookmarks.md)
+to foreground reading, explicit mailbox windows, final-provider delivery receipts
+and recovery of accepted completions. All 2,100 distinct bridge library tests and
+the final lint, formatting and domain-boundary checks pass. The
+[completed rollout](../steward-notes/2026-09-06-reading-mailbox-rollout.md) records
+live availability, exact checkpoint continuity and subsequent natural exchanges.
+This document preserves the design contract; the runtime record names actual
+limits, evidence and remaining exceptions. Live availability does not establish
+adoption or felt benefit.
 
 The accompanying [preimplementation findings](../steward-notes/2026-09-06-activity-continuity-preflight-findings.md)
 record concrete source paths, failure conditions, and proposed characterization
@@ -281,7 +286,7 @@ implementation, then run the applicable full checks once changes are coherent.
 Gateway reattachment has its own fake-worker characterization case in the
 findings note; passing the Rust episode does not validate that Python path.
 
-## Coordination and verification for this planning pass
+## Historical coordination and verification for the original planning pass
 
 A read-only task snapshot found **Prepare repo for Avado work** completed and
 **Find top signal logs** still active on deployment identity. Those are the

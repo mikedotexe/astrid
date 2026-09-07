@@ -113,6 +113,7 @@ const ATTENTION_HELD_AS_KINDS: &[&str] = &[
 ];
 const ATTENTION_FLATTENING_OBSERVED: &[&str] = &["yes", "no", "mixed", "unknown"];
 const LEGACY_SOURCE_ROUTE: &str = "legacy_correspondence_bridge_v1";
+#[cfg(test)]
 const LEGACY_SHARED_ANCHOR: &str = "legacy_correspondence_bridge_v1";
 const LEGACY_CLAIM_POLICY: &str = "legacy_correspondence_claim_v1";
 const LEGACY_CLAIM_FELT_LIKE: &[&str] = &["address", "pressure", "mail", "ambient_echo", "unknown"];
@@ -652,6 +653,7 @@ fn append_record(value: &Value) -> io::Result<()> {
     append_record_at(&ledger_path(), value)
 }
 
+#[cfg(test)]
 fn file_mtime_ms(path: &Path) -> u64 {
     path.metadata()
         .and_then(|meta| meta.modified())
@@ -720,6 +722,7 @@ fn legacy_message_id(
     )
 }
 
+#[cfg(test)]
 fn legacy_row_exists(
     records: &[Value],
     record_type: &str,
@@ -733,6 +736,7 @@ fn legacy_row_exists(
     })
 }
 
+#[cfg(test)]
 fn append_legacy_record_once(
     ledger_path: &Path,
     records: &[Value],
@@ -754,6 +758,7 @@ fn append_legacy_record_once(
     Ok(true)
 }
 
+#[cfg(test)]
 fn legacy_common_fields(
     path: &Path,
     content: &str,
@@ -784,6 +789,7 @@ fn silt_continuity_from_text(text: &str) -> bool {
         .any(|term| lower.contains(term))
 }
 
+#[cfg(test)]
 fn mirror_legacy_correspondence_file_at(
     ledger_path: &Path,
     reader: &str,
@@ -873,6 +879,7 @@ fn mirror_legacy_correspondence_file_at(
     Ok(appended)
 }
 
+#[cfg(test)]
 fn merge_json_object(mut base: Value, extra: &Value) -> Value {
     if let (Some(base_obj), Some(extra_obj)) = (base.as_object_mut(), extra.as_object()) {
         for (key, value) in extra_obj {
@@ -882,6 +889,7 @@ fn merge_json_object(mut base: Value, extra: &Value) -> Value {
     base
 }
 
+#[cfg(test)]
 pub(crate) fn mirror_legacy_correspondence_file(
     reader: &str,
     path: &Path,
@@ -1009,6 +1017,7 @@ pub(crate) fn append_read_receipt(
     append_read_receipt_at(&ledger_path(), reader, message_id, thread_id, file_path)
 }
 
+#[cfg(test)]
 pub(crate) fn record_read_receipt_for_inbox_file(reader: &str, path: &Path) {
     let Ok(content) = std::fs::read_to_string(path) else {
         return;
@@ -1390,14 +1399,7 @@ pub(crate) fn deliver_to_inbox(
 }
 
 #[must_use]
-pub(crate) fn latest_inbox_peer_message(
-    inbox_dir: &Path,
-    from_being: &str,
-) -> Option<InboxPeerMessage> {
-    latest_inbox_peer_message_at_cutoff(inbox_dir, from_being, None)
-}
-
-#[must_use]
+#[cfg(test)]
 pub(crate) fn latest_inbox_peer_message_at_read_cutoff(
     inbox_dir: &Path,
     from_being: &str,
@@ -1406,6 +1408,7 @@ pub(crate) fn latest_inbox_peer_message_at_read_cutoff(
     latest_inbox_peer_message_at_cutoff(inbox_dir, from_being, Some(read_cutoff))
 }
 
+#[cfg(test)]
 fn latest_inbox_peer_message_at_cutoff(
     inbox_dir: &Path,
     from_being: &str,
@@ -1465,48 +1468,6 @@ fn latest_inbox_peer_message_at_cutoff(
         .collect::<Vec<_>>();
     candidates.sort_by_key(|(modified, _)| *modified);
     candidates.pop().map(|(_, message)| message)
-}
-
-#[must_use]
-pub(crate) fn latest_ledger_message(from_being: &str, to_being: &str) -> Option<InboxPeerMessage> {
-    let ledger = std::fs::read_to_string(ledger_path()).ok()?;
-    let from = normalize_being(from_being);
-    let to = normalize_being(to_being);
-    ledger
-        .lines()
-        .filter_map(|line| {
-            let value: Value = serde_json::from_str(line).ok()?;
-            if value.get("record_type").and_then(Value::as_str) != Some("message") {
-                return None;
-            }
-            if value.get("from_being").and_then(Value::as_str) != Some(from.as_str())
-                || value.get("to_being").and_then(Value::as_str) != Some(to.as_str())
-            {
-                return None;
-            }
-            let message_id = value.get("message_id")?.as_str()?.to_string();
-            let thread_id = value.get("thread_id")?.as_str()?.to_string();
-            let persistence_id = value
-                .get("persistence_id")
-                .and_then(Value::as_str)
-                .map(str::to_string);
-            let recorded = value
-                .get("recorded_at_unix_ms")
-                .and_then(Value::as_u64)
-                .unwrap_or_default();
-            Some((
-                recorded,
-                InboxPeerMessage {
-                    message_id,
-                    thread_id,
-                    persistence_id,
-                    from_being: from.clone(),
-                    file_path: PathBuf::new(),
-                },
-            ))
-        })
-        .max_by_key(|(recorded, _)| *recorded)
-        .map(|(_, message)| message)
 }
 
 #[must_use]

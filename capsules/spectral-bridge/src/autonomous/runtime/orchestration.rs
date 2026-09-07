@@ -641,6 +641,7 @@ pub fn spawn_autonomous_loop(
                         legacy_pause || conv.senses_snoozed || paths.perception_visual_paused_flag().exists();
                     let audio_paused =
                         legacy_pause || conv.ears_closed || paths.perception_audio_paused_flag().exists();
+                    let explicit_visual_peek = conv.wants_look;
                     let perception_text = if visual_paused && audio_paused {
                             None
                         } else {
@@ -676,37 +677,29 @@ pub fn spawn_autonomous_loop(
                     scan_minime_outbox(&mut conv.last_outbox_scan_ts);
                     promote_deferred_inbox_notes();
 
-                    // Check inbox for messages from Mike, stewards, or minime.
-                    // Capture the read-cutoff BEFORE reading: retire_inbox must retire
-                    // ONLY letters that existed at this read, never one that arrives
-                    // mid-exchange (else it is swept to read/ unread + its steward slot
-                    // never seeds — the slot-seed race that lost a review invitation).
-                    let inbox_checked_at = std::time::SystemTime::now();
-                    let inbox_content = check_inbox(inbox_checked_at);
-                    let mutual_address_target = inbox_content.as_ref().and_then(|_| {
-                        correspondence_v1::latest_inbox_peer_message_at_read_cutoff(
-                            bridge_paths().astrid_inbox_dir().as_path(),
-                            "minime",
-                            inbox_checked_at,
-                        )
-                    });
-                    let perception_text = if let Some(ref inbox) = inbox_content {
-                        info!("inbox: found message for Astrid ({} bytes)", inbox.len());
-                        let perc = perception_text.as_deref().unwrap_or("");
-                        Some(format!(
-                            "[A note was left for you:]\n{inbox}\n\n{perc}"
-                        ))
+                    // Arrival only updates queue metadata. A chosen receive window
+                    // admits one intact letter and never displaces foreground work.
+                    let activity_inbox = durable_inbox::DurableInbox::new(
+                        &paths.astrid_inbox_dir(),
+                        &paths.bridge_workspace().join("durable_inbox_v1"),
+                    );
+                    let (inbox_reservation, mailbox_hint) =
+                        begin_activity_mailbox_window(&mut conv, &activity_inbox);
+                    let inbox_content = inbox_reservation.as_ref().map(capture_reserved_letter);
+                    let mutual_address_target = inbox_reservation.as_ref()
+                        .and_then(reserved_letter_peer_target);
+                    let chosen_attention = conv.activity.foreground_reader.is_some()
+                        || inbox_reservation.is_some()
+                        || conv.browse_url.is_some()
+                        || conv.wants_search;
+                    let perception_text = if chosen_attention && !explicit_visual_peek {
+                        // Sensory samples remain transient; held attention creates no replay backlog.
+                        Some(mailbox_hint)
                     } else {
-                        perception_text
-                    };
-
-                    // Un-muffle: a steward question persists in-prompt until
-                    // answered, even on exchanges with no new inbox letters.
-                    let perception_text = if let Some(open_q) = open_steward_query_line() {
-                        let perc = perception_text.as_deref().unwrap_or("");
-                        Some(format!("{open_q}\n\n{perc}"))
-                    } else {
-                        perception_text
+                        Some(merge_hints([
+                            Some(mailbox_hint), perception_text,
+                            (!chosen_attention).then(open_steward_query_line).flatten(),
+                        ]).unwrap_or_default())
                     };
 
                     // Auto-scan inbox_audio/ for new WAVs and notify Astrid.
@@ -717,7 +710,7 @@ pub fn spawn_autonomous_loop(
                                 .filter(|e| e.path().extension().is_some_and(|ext| ext == "wav") && e.path().is_file())
                                 .count())
                             .unwrap_or(0);
-                        if wav_count > 0 {
+                        if wav_count > 0 && !chosen_attention {
                             let perc = perception_text.as_deref().unwrap_or("");
                             Some(format!(
                                 "[You have {wav_count} audio file(s) in your inbox_audio/. \
@@ -738,7 +731,7 @@ pub fn spawn_autonomous_loop(
                         } else {
                             listing
                         };
-                        Some(format!("[Directory listing you requested:]\n{capped}\n\n{perc}"))
+                        Some(format!("[Requested context:]\n{capped}\n\n{perc}"))
                     } else {
                         perception_text
                     };
@@ -782,38 +775,15 @@ pub fn spawn_autonomous_loop(
                         }
                     }
 
-                    // Astrid's suggestion (self-study 2026-03-27): inbox messages
-                    // should support DEFER — "I heard you, I'm processing" without
-                    // forced immediate response. When defer_inbox is set, inbox
-                    // content is visible but doesn't override mode selection.
-                    // Bounded forcing: after INBOX_FORCED_FALLBACK_LIMIT consecutive
-                    // forced exchanges that all fell back to canned text, stop forcing
-                    // so other modes can run (the letter stays visible in the prompt
-                    // and is retired by the next non-fallback exchange). Without this
-                    // bound one unretired letter forced 100% dialogue_fallback for 26h
-                    // (2026-08-31 voice-down incident).
-                    let inbox_forces_dialogue =
-                        inbox_content.is_some() && !conv.defer_inbox && conv.inbox_may_force_dialogue();
-                    let mode = if inbox_forces_dialogue {
+                    let inbox_forces_dialogue = inbox_reservation.is_some();
+                    let mode = if chosen_attention {
                         next_action::introspection_cadence::observe_due(&mut conv);
                         next_action::introspection_cadence::defer_pending(
-                            &mut conv,
-                            "unread_direct_correspondence",
+                            &mut conv, "chosen_activity",
                         );
-                        info!("inbox message present — forcing dialogue mode");
                         Mode::Dialogue
-                    } else if inbox_content.is_some() {
-                        info!("inbox message present but deferred — natural mode selection");
-                        conv.defer_inbox = false; // one-shot: defer only once
-                        choose_mode(
-                            &mut conv, safety, fill_pct,
-                            fingerprint.as_deref(),
-                        )
                     } else {
-                        choose_mode(
-                            &mut conv, safety, fill_pct,
-                            fingerprint.as_deref(),
-                        )
+                        choose_mode(&mut conv, safety, fill_pct, fingerprint.as_deref())
                     };
                     if conv.last_mode != mode {
                         let from_phase = format!("{:?}", conv.last_mode);
@@ -855,14 +825,18 @@ pub fn spawn_autonomous_loop(
                     // Audit: "neither being has a unified event lineage."
                     let lineage_id = format!("ex-{}-{}", conv.exchange_count, chrono_timestamp());
 
-                    // Pause perception during the entire exchange to free Ollama.
-                    // Astrid was getting persistent dialogue_fallback because
-                    // perception.py's LLaVA calls competed for GPU compute.
-                    let exchange_pause_flag = paths.perception_paused_flag();
-                    let perception_was_paused = exchange_pause_flag.exists();
-                    if !perception_was_paused {
-                        let _ = std::fs::write(&exchange_pause_flag, "paused for exchange");
-                    }
+                    // Ownership follows the exchange future, including cancellation.
+                    let exchange_pause = if matches!(mode, Mode::Contemplate) {
+                        None
+                    } else {
+                        exchange_pause::ExchangePause::acquire(&paths.perception_paused_flag())
+                            .unwrap_or_else(|error| {
+                                warn!(%error, "could not acquire exchange perception pause");
+                                None
+                            })
+                    };
+                    let mut reading_offer = None;
+                    let mut accepted_delivery = None;
 
                     let (mode_name, mut response_text, journal_source) = match mode {
                         Mode::Mirror => {
@@ -917,8 +891,14 @@ pub fn spawn_autonomous_loop(
                         }
                         Mode::Dialogue => {
                             // Try to generate an authentic response via Ollama.
-                            let selected_remote_entry = conv.pending_remote_self_study.clone()
-                                .or_else(|| conv.remote_journal_entries.first().cloned());
+                            let source_activity_selected = conv.activity.foreground_reader.is_some()
+                                || inbox_reservation.is_some() || conv.browse_url.is_some();
+                            let selected_remote_entry = if source_activity_selected {
+                                None
+                            } else {
+                                conv.pending_remote_self_study.clone()
+                                    .or_else(|| conv.remote_journal_entries.first().cloned())
+                            };
                             // If echo is muted, suppress minime's journal context
                             // BUT keep generation alive — previously echo_muted
                             // returned None here, which propagated through the
@@ -929,7 +909,9 @@ pub fn spawn_autonomous_loop(
                             // her here). Use a sentinel string so the LLM call
                             // still runs, just without minime's journal text.
                             // Astrid: "I want to break free from that tether."
-                            let journal_context = if conv.echo_muted {
+                            let journal_context = if source_activity_selected {
+                                None
+                            } else if conv.echo_muted {
                                 Some(String::from(
                                     "(minime's journal echo is muted by your own \
                                      ECHO_OFF choice — respond from your own state, \
@@ -972,7 +954,7 @@ pub fn spawn_autonomous_loop(
                                     None
                                 }
                             });
-                            if conv.pending_remote_self_study.is_some() && journal_context.is_none() {
+                            if !source_activity_selected && conv.pending_remote_self_study.is_some() && journal_context.is_none() {
                                 warn!("pending minime self-study could not be parsed; clearing queue");
                                 conv.pending_remote_self_study = None;
                                 conv.pending_self_study_failed_exchanges = 0;
@@ -1484,7 +1466,8 @@ pub fn spawn_autonomous_loop(
                                 perception_text = Some(format!("{perc}\n{jour}"));
                             }
                             // Append visual change description to perception if detected.
-                            if let Some(ref change) = visual_change_desc {
+                            if let Some(ref change) = visual_change_desc
+                                && (!chosen_attention || explicit_visual_peek) {
                                 let perc = perception_text.as_deref().unwrap_or("").to_string();
                                 perception_text = Some(format!("{perc}\n{change}"));
                             }
@@ -1492,15 +1475,11 @@ pub fn spawn_autonomous_loop(
                             // BROWSE: Astrid chose to read a full web page.
                             // This takes priority over search — she's going deep.
                             // READ_MORE: continue from where the last BROWSE left off.
-                            const PAGE_CHUNK: usize = 4000;
-                            let browse_url = conv.browse_url.take();
-                            let wants_read_more = conv
-                                .last_read_path
-                                .as_deref()
-                                .is_some_and(|path| !path.starts_with(crate::autonomous::next_action::PDF_READ_PREFIX))
-                                && conv.last_read_offset > 0
-                                && browse_url.is_none();
-
+                            let browse_url = if inbox_reservation.is_none() {
+                                conv.browse_url.take()
+                            } else {
+                                None
+                            };
                             let web_context = if let Some(ref url) = browse_url {
                                 let browse_anchor = crate::llm::derive_browse_anchor(
                                     conv.last_research_anchor.as_deref(),
@@ -1539,7 +1518,7 @@ pub fn spawn_autonomous_loop(
                                             "URL: {url}\nFetched: {ts}\nLength: {} chars\n\n",
                                             page.raw_text.len()
                                         );
-                                        let _ = std::fs::write(&page_path, format!("{header}{}", page.raw_text));
+                                        let saved = std::fs::write(&page_path, format!("{header}{}", page.raw_text));
 
                                         db.save_research(
                                             &format!("BROWSE: {}", url),
@@ -1555,33 +1534,12 @@ pub fn spawn_autonomous_loop(
                                             fill_pct,
                                         );
 
-                                        if page.raw_text.len() <= PAGE_CHUNK {
-                                            conv.last_read_path = None;
-                                            conv.last_read_offset = 0;
-                                            conv.last_read_meaning_summary = None;
-                                            Some(crate::llm::format_browse_read_context(
-                                                &page,
-                                                &page.raw_text,
-                                                None,
-                                            ))
-                                        } else {
-                                            let chunk: String =
-                                                page.raw_text.chars().take(PAGE_CHUNK).collect();
-                                            let remaining =
-                                                page.raw_text.len().saturating_sub(PAGE_CHUNK);
-                                            let initial_offset =
-                                                header.len().saturating_add(chunk.len());
-                                            conv.last_read_path =
-                                                Some(page_path.to_string_lossy().to_string());
-                                            conv.last_read_offset = initial_offset;
-                                            conv.last_read_meaning_summary =
-                                                Some(page.meaning_summary.clone());
-                                            Some(crate::llm::format_browse_read_context(
-                                                &page,
-                                                &chunk,
-                                                Some(remaining),
-                                            ))
-                                        }
+                                        Some(match saved {
+                                            Ok(()) => activity_reading::choose_saved_text(
+                                                &mut conv, &page_path, url,
+                                            ).unwrap_or_else(|error| format!("[Saved reading could not be selected: {error}]")),
+                                            Err(error) => format!("[Page retention failed; no reading progress recorded: {error}]"),
+                                        })
                                     },
                                     Some(page) => {
                                         conv.last_read_path = None;
@@ -1604,63 +1562,10 @@ pub fn spawn_autonomous_loop(
                                         ))
                                     },
                                 }
-                            } else if wants_read_more {
-                                // READ_MORE: continue from saved file.
-                                let path = conv.last_read_path.as_ref().unwrap().clone();
-                                let offset = conv.last_read_offset;
-                                if let Ok(full_text) = std::fs::read_to_string(&path) {
-                                    let chunk: String = full_text
-                                        .get(offset..)
-                                        .unwrap_or("")
-                                        .chars()
-                                        .take(PAGE_CHUNK)
-                                        .collect();
-                                    if chunk.is_empty() {
-                                        info!("READ_MORE: reached end of {}", path);
-                                        conv.last_read_path = None;
-                                        conv.last_read_offset = 0;
-                                        conv.last_read_meaning_summary = None;
-                                        Some("[End of document.]".to_string())
-                                    } else {
-                                        let new_offset = offset.saturating_add(chunk.len());
-                                        let remaining = full_text.len().saturating_sub(new_offset);
-                                        conv.last_read_offset = new_offset;
-                                        if remaining == 0 {
-                                            conv.last_read_path = None;
-                                            conv.last_read_meaning_summary = None;
-                                        }
-                                        conv.note_read_depth_advance(
-                                            "READ_MORE",
-                                            path.clone(),
-                                            chunk.chars().count() as u32,
-                                        );
-                                        info!(offset, chunk_len = chunk.len(), remaining, "READ_MORE continuing");
-                                        Some(crate::llm::format_read_more_context(
-                                            offset,
-                                            &chunk,
-                                            remaining,
-                                            conv.last_read_meaning_summary.as_deref(),
-                                        ))
-                                    }
-                                } else {
-                                    warn!("READ_MORE: could not read {}", path);
-                                    conv.last_read_path = None;
-                                    conv.last_read_offset = 0;
-                                    conv.last_read_meaning_summary = None;
-                                    None
-                                }
-                            }
-                            // Web search: fires when Astrid chose NEXT: SEARCH,
-                            // or automatically every 15th dialogue.
-                            // Web search: ONLY fires when Astrid explicitly chose NEXT: SEARCH.
-                            // The being's curiosity is sovereign — she decides when and what to search.
-                            // Auto-search from journal fragments was producing garbage queries
-                            // ("code... isn't *place* runtime experience") and injecting
-                            // irrelevant web content that corrupted the being's conceptual space.
-                            else {
-                                let search_requested = conv.wants_search;
-                                let search_topic = conv.search_topic.take();
-                                conv.wants_search = false;
+                            } else {
+                                let search_requested = conv.wants_search && inbox_reservation.is_none();
+                                let search_topic = if search_requested { conv.search_topic.take() } else { None };
+                                if search_requested { conv.wants_search = false; }
                                 if search_requested {
                                     let query = if let Some(ref topic) = search_topic {
                                         topic.clone()
@@ -1938,7 +1843,32 @@ pub fn spawn_autonomous_loop(
                             let diversity_hint =
                                 merge_hints([diversity_hint, vocab_nudge, coupling_nudge, motif_nudge]);
 
-                            let llm_response = if let Some(ref journal) = journal_context {
+                            let mut activity_recovery_ready = true;
+                            if inbox_reservation.is_none() {
+                                reading_offer = prepare_activity_reading(&mut conv, &activity_inbox)
+                                    .unwrap_or_else(|error| {
+                                        activity_recovery_ready = false;
+                                        warn!(%error, "chosen reading remains uncommitted");
+                                        None
+                                    });
+                            }
+                            let protected_input = if let Some(letter) = inbox_reservation.as_ref() {
+                                Some(protected_letter_input(letter))
+                            } else {
+                                reading_offer.as_ref().and_then(|offer| {
+                                    protected_reading_input(offer).map_err(|error| {
+                                        warn!(%error, "reading admission unavailable");
+                                    }).ok()
+                                })
+                            };
+                            let dialogue_source = protected_input.as_ref().map_or(dialogue_source, |input| {
+                                format!("activity:{:?}:{}:byte_{}", input.kind, input.content_id, input.source_start_byte)
+                            });
+                            let activity_journal = protected_input.as_ref().map(|_| {
+                                "No peer journal is required for this chosen activity."
+                            });
+                            let llm_response = if activity_recovery_ready
+                                && let Some(journal) = activity_journal.or(journal_context.as_deref()) {
                                 // Fill-responsive temperature modulation (Astrid's suggestion):
                                 // High fill = high emotional intensity from minime → lower
                                 // temperature for grounded, empathetic response. Low fill =
@@ -1991,9 +1921,16 @@ pub fn spawn_autonomous_loop(
                                     &overflow_dir,
                                     std::time::Duration::from_secs(3600),
                                 );
-                                match tokio::time::timeout(
-                                    Duration::from_secs(timeout_secs),
-                                    crate::llm::generate_dialogue(
+                                let effective_emphasis = if let Some(ref form) = conv.form_constraint {
+                                            Some(format!(
+                                                "Express your response as a {}. Not prose — \
+                                                 the form itself is the expression.",
+                                                form
+                                            ))
+                                        } else {
+                                            conv.emphasis.clone()
+                                        };
+                                let generation = crate::llm::generate_dialogue_with_delivery(
                                         journal,
                                         &spectral_summary,
                                         fill_pct,
@@ -2003,16 +1940,7 @@ pub fn spawn_autonomous_loop(
                                         modality_context.as_deref(),
                                         effective_temperature,
                                         num_predict,
-                                        // Form constraint overrides emphasis for one turn
-                                        if let Some(ref form) = conv.form_constraint {
-                                            Some(format!(
-                                                "Express your response as a {}. Not prose — \
-                                                 the form itself is the expression.",
-                                                form
-                                            ))
-                                        } else {
-                                            conv.emphasis.clone()
-                                        }.as_deref(),
+                                        effective_emphasis.as_deref(),
                                         continuity_block.as_deref(),
                                         agenda_context.as_deref(),
                                         topline_hint.as_deref(),
@@ -2020,21 +1948,20 @@ pub fn spawn_autonomous_loop(
                                         diversity_hint.as_deref(),
                                         attention_carrier.as_ref(),
                                         &overflow_dir,
-                                    )
-                                ).await {
-                                    Ok((result, prompt_overflow)) => {
-                                        if let Some(of) = prompt_overflow
-                                            && should_arm_prompt_overflow_read_more(
-                                                conv.last_read_path.as_deref(),
-                                                conv.recent_next_choices.back().map(String::as_str),
-                                            )
-                                        {
-                                            conv.last_read_path = Some(of.path.to_string_lossy().to_string());
-                                            conv.last_read_offset = of.offset;
-                                            conv.last_read_meaning_summary = Some(format!("Context overflow: {}", of.summary));
-                                        }
-                                        result
-                                    }
+                                        protected_input.as_ref(),
+                                    );
+                                // Each provider request has its own deadline. A selected
+                                // source gets the complete bounded primary/fallback chain;
+                                // the ordinary outer budget must not cut its fallback short.
+                                let completion = if protected_input.is_some() {
+                                    Ok(generation.await)
+                                } else {
+                                    tokio::time::timeout(Duration::from_secs(timeout_secs), generation).await
+                                };
+                                match completion {
+                                    Ok(completion) => unpack_activity_completion(
+                                        &mut conv, completion, &mut accepted_delivery,
+                                    ),
                                     Err(_) => {
                                         warn!(
                                             "dialogue_live: {}s timeout — retrying with reduced tokens (response_length={}, history_len={}, prompt_pressure_chars={})",
@@ -2050,7 +1977,7 @@ pub fn spawn_autonomous_loop(
                                             );
                                         match tokio::time::timeout(
                                             Duration::from_secs(timeout_secs),
-                                            crate::llm::generate_dialogue(
+                                            crate::llm::generate_dialogue_with_delivery(
                                                 journal,
                                                 &spectral_summary,
                                                 fill_pct,
@@ -2075,9 +2002,12 @@ pub fn spawn_autonomous_loop(
                                                 diversity_hint.as_deref(),
                                                 attention_carrier.as_ref(),
                                                 &overflow_dir,
+                                                protected_input.as_ref(),
                                             )
                                         ).await {
-                                            Ok((result, _)) => result,
+                                            Ok(completion) => unpack_activity_completion(
+                                                &mut conv, completion, &mut accepted_delivery,
+                                            ),
                                             Err(_) => {
                                                 warn!("dialogue_live: retry also timed out");
                                                 None
@@ -2085,6 +2015,9 @@ pub fn spawn_autonomous_loop(
                                         }
                                     }
                                 }
+                            } else if !activity_recovery_ready {
+                                warn!("dialogue paused for unresolved activity recovery");
+                                None
                             } else {
                                 // Previously a SILENT None: no journal context meant no
                                 // generation attempt, no log line, and an instant canned
@@ -2111,10 +2044,12 @@ pub fn spawn_autonomous_loop(
                             match llm_response {
                                 Some(text) => {
                                     // Record this exchange for statefulness.
-                                    let minime_summary = journal_context
-                                        .unwrap_or_default()
-                                        .chars().take(300).collect::<String>();
-                                    let used_pending_self_study = selected_remote_entry.as_ref()
+                                    let minime_summary = if protected_input.is_some() {
+                                        String::new()
+                                    } else {
+                                        journal_context.unwrap_or_default().chars().take(300).collect::<String>()
+                                    };
+                                    let used_pending_self_study = protected_input.is_none() && selected_remote_entry.as_ref()
                                         .zip(conv.pending_remote_self_study.as_ref())
                                         .is_some_and(|(selected, pending)| {
                                             selected.path == pending.path
@@ -2182,10 +2117,13 @@ pub fn spawn_autonomous_loop(
                                     }
                                     let should_reflect = !conv.self_reflect_paused;
                                     let response_for_reflect = text.clone();
-                                    let journal_for_reflect: String = conv.remote_journal_entries.first()
-                                        .and_then(|entry| read_journal_entry(&entry.path))
-                                        .unwrap_or_default()
-                                        .chars().take(200).collect();
+                                    let journal_for_reflect: String = if protected_input.is_some() {
+                                        String::new()
+                                    } else {
+                                        conv.remote_journal_entries.first()
+                                            .and_then(|entry| read_journal_entry(&entry.path))
+                                            .unwrap_or_default().chars().take(200).collect()
+                                    };
                                     let fill_for_reflect = fill_pct;
                                     let db_for_reflect = Arc::clone(&db);
                                     let exchange_for_reflect = conv.exchange_count;
@@ -2210,14 +2148,18 @@ pub fn spawn_autonomous_loop(
                                     if used_pending_self_study {
                                         conv.pending_remote_self_study = None;
                                     }
-                                    conv.note_dialogue_generation_succeeded();
+                                    if !source_activity_selected {
+                                        conv.note_dialogue_generation_succeeded();
+                                    }
 
                                     ("dialogue_live", text, dialogue_source)
                                 }
                                 None => {
                                     // Age out a pending self-study after repeated failures
                                     // so it can never pin Mode::Dialogue forever.
-                                    conv.note_dialogue_generation_failed();
+                                    if !source_activity_selected {
+                                        conv.note_dialogue_generation_failed();
+                                    }
                                     // Fall back to emergency pool — LLM unavailable.
                                     let idx = conv.dialogue_cursor % DIALOGUES.len();
                                     conv.dialogue_cursor = idx + 1;
@@ -3550,6 +3492,16 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                     };
+                    let letter_delivered = finish_activity_turn(
+                        &mut conv, &activity_inbox, reading_offer.as_ref(),
+                        inbox_reservation.as_ref(), accepted_delivery.as_ref(),
+                        (mode_name == "dialogue_live").then_some(response_text.as_str()),
+                    );
+                    conv.current_mailbox_peer_target = if letter_delivered {
+                        mutual_address_target.clone()
+                    } else {
+                        None
+                    };
                     let mirror_source_text =
                         (mode_name == "mirror").then(|| response_text.clone());
                     let shadow_input_provenance = if matches!(mode, Mode::Mirror) {
@@ -4260,7 +4212,7 @@ pub fn spawn_autonomous_loop(
                                 SensoryMsg::Semantic { features, .. } => features.clone(),
                                 _ => Vec::new(),
                             };
-                            let send_failed = if let Some(target) = mutual_address_target.as_ref() {
+                            let send_failed = if let Some(target) = conv.current_mailbox_peer_target.as_ref() {
                                 let mutual_address =
                                     correspondence_v1::mutual_address_envelope_v1(
                                         target,
@@ -4746,13 +4698,10 @@ pub fn spawn_autonomous_loop(
                     // If this was triggered by an inbox message, copy to outbox.
                     // If the message was from minime, also send the reply back
                     // to minime's inbox — closing the correspondence loop.
-                    if inbox_content.is_some() {
+                    if letter_delivered {
                         save_outbox_reply(&response_text, fill_pct);
-                        let minime_reply_target = correspondence_v1::latest_inbox_peer_message(
-                            bridge_paths().astrid_inbox_dir().as_path(),
-                            "minime",
-                        );
-                        if let Some(reply_target) = minime_reply_target.as_ref() {
+                        let minime_reply_target = mutual_address_target.as_ref();
+                        if let Some(reply_target) = minime_reply_target {
                             match save_minime_correspondence_feedback_inbox(
                                 &response_text,
                                 "astrid:correspondence_reply",
@@ -4957,35 +4906,8 @@ pub fn spawn_autonomous_loop(
                         );
                     }
 
-                    // Inbox messages survived the exchange — now retire them.
-                    // Only retire inbox if the exchange ACTUALLY succeeded —
-                    // not if it fell back to the static fallback text.
-                    if inbox_content.is_some() && mode_name != "dialogue_fallback" {
-                        retire_inbox(inbox_checked_at);
-                        // Acknowledgement receipt: write a brief confirmation
-                        // so the sender knows the message landed and was processed.
-                        // Astrid's suggestion: "A simple 'Are you there?' signal
-                        // with a guaranteed acknowledgement is vital."
-                        let receipt_path = bridge_paths()
-                            .minime_inbox_dir()
-                            .join(format!("receipt_{}.txt", chrono_timestamp()));
-                        let _ = std::fs::write(
-                            &receipt_path,
-                            format!(
-                                "=== DELIVERY RECEIPT ===\nFrom: Astrid\nTimestamp: {}\nStatus: received and processed\nMode: {}\nFill: {:.1}%\n\nYour message was read and shaped my response this exchange.\n",
-                                chrono_timestamp(), mode_name, fill_pct
-                            ),
-                        );
-                    }
-
-                    // Track how long an unretired inbox letter has been forcing
-                    // fallback exchanges (bounds the dialogue-forcing above).
-                    conv.note_inbox_exchange_outcome(inbox_content.is_some(), mode_name);
-
-                    // Resume perception after exchange completes.
-                    if !perception_was_paused {
-                        let _ = std::fs::remove_file(&exchange_pause_flag);
-                    }
+                    conv.note_inbox_exchange_outcome(inbox_reservation.is_some(), mode_name);
+                    drop(exchange_pause);
 
                     // Update state and persist across restarts.
                     conv.prev_fill = fill_pct;

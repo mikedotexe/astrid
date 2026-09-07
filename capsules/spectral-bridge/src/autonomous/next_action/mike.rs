@@ -93,6 +93,14 @@ pub(super) fn handle_action(
                 match super::pdf::read_pdf_window(&file_path, &root, 1, super::pdf::PDF_CHAR_BUDGET)
                 {
                     Ok(window) => {
+                        if let Err(error) =
+                            super::super::activity_reading::observe_chosen_action(conv, "BROWSE")
+                        {
+                            conv.pending_file_listing = Some(format!(
+                                "[Could not park the saved reader before selecting a PDF: {error}]"
+                            ));
+                            return true;
+                        }
                         conv.pending_file_listing =
                             Some(super::pdf::format_initial_window(&path_arg, &window));
                         if let Some(next_page) = window.next_page {
@@ -129,14 +137,16 @@ pub(super) fn handle_action(
                 ));
                 return true;
             }
-            let content = read_file_paginated(&file_path, conv.last_read_offset);
-            conv.pending_file_listing = Some(format!("[Research file: {path_arg}]\n{content}"));
-            conv.last_read_path = Some(file_path.to_string_lossy().into());
-            // Advance offset for READ_MORE
-            let lines_shown = content.lines().count();
-            conv.last_read_offset = conv.last_read_offset.saturating_add(lines_shown);
-            conv.last_read_meaning_summary = None;
-            info!("Astrid read MIKE file: {path_arg}");
+            conv.pending_file_listing = Some(
+                match super::super::activity_reading::choose_saved_text(conv, &file_path, &path_arg)
+                {
+                    Ok(message) => message,
+                    Err(error) => format!(
+                        "[Could not select saved reading {path_arg}: {error}. The prior bookmark is retained.]"
+                    ),
+                },
+            );
+            info!("Astrid selected MIKE saved text: {path_arg}");
             true
         },
         "MIKE_SEARCH" => {
@@ -359,33 +369,6 @@ fn mike_search(root: &Path, pattern: &str) -> String {
             }
         },
         Err(e) => format!("[MIKE_SEARCH failed: {e}]"),
-    }
-}
-
-/// Read a file with pagination (400 lines per page).
-fn read_file_paginated(path: &Path, offset: usize) -> String {
-    const PAGE_SIZE: usize = 400;
-    match fs::read_to_string(path) {
-        Ok(content) => {
-            let lines: Vec<&str> = content.lines().collect();
-            let total = lines.len();
-            let start = offset.min(total);
-            let end = (start + PAGE_SIZE).min(total);
-            let page = lines[start..end].join("\n");
-            if end < total {
-                format!(
-                    "{page}\n\n[Showing lines {}-{} of {}. Use NEXT: READ_MORE to continue.]",
-                    start + 1,
-                    end,
-                    total
-                )
-            } else if start > 0 {
-                format!("{page}\n\n[End of file ({total} lines total).]")
-            } else {
-                page
-            }
-        },
-        Err(e) => format!("[Could not read file: {e}]"),
     }
 }
 

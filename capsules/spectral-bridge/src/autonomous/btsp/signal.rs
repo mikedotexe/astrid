@@ -761,13 +761,10 @@ fn owner_sources(owner: &str) -> Vec<(PathBuf, Option<&'static str>, bool, bool,
                 true,
                 0,
             ),
-            (
-                bridge_paths().astrid_inbox_dir(),
-                Some("from_minime_"),
-                false,
-                false,
-                1,
-            ),
+            // Unread inbox bodies belong to explicit durable delivery. Sampling
+            // them here would bypass that admission boundary through BTSP hints.
+            // Legacy acknowledged filenames remain an established source below;
+            // version-addressed new archives require typed provenance, not guessing.
             (
                 bridge_paths().astrid_inbox_dir().join("read"),
                 Some("from_minime_"),

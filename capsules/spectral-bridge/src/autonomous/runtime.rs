@@ -19,6 +19,8 @@
 
 #![allow(clippy::arithmetic_side_effects)]
 
+#[path = "activity_reading.rs"]
+pub(crate) mod activity_reading;
 #[path = "btsp/mod.rs"]
 pub(crate) mod btsp;
 #[path = "concern_queue.rs"]
@@ -31,6 +33,10 @@ mod correspondence_v1;
 mod delegated_capability;
 #[path = "runtime/deployment_startup.rs"]
 mod deployment_startup;
+#[path = "durable_inbox.rs"]
+mod durable_inbox;
+#[path = "runtime/exchange_pause.rs"]
+mod exchange_pause;
 pub use deployment_startup::{apply_deployment_startup, inspect_deployment_inputs};
 #[path = "division_ceremony.rs"]
 mod division_ceremony;
@@ -110,6 +116,9 @@ include!("runtime/perception.rs");
 include!("runtime/spectral_state.rs");
 include!("runtime/interpretation.rs");
 include!("runtime/inbox.rs");
+include!("runtime/activity_delivery.rs");
+include!("runtime/activity_recovery.rs");
+include!("runtime/activity_exchange.rs");
 include!("runtime/state_persistence.rs");
 include!("runtime/learning_feedback.rs");
 include!("runtime/journal.rs");

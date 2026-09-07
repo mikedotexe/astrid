@@ -163,11 +163,92 @@ fn session_explicit_bookmark_outlives_recent_projection_window() {
         writeln!(file, "{}", json!({"record_schema":"continuity_session_v1", "record_type":"session_start", "session_id":format!("fixture_{index}"), "status":"complete"})).unwrap();
     }
     drop(file);
+    let status = store
+        .continuity_session_status_command(bookmark["session_id"].as_str().unwrap())
+        .unwrap();
+    let projected: Value =
+        serde_json::from_str(status.strip_prefix("continuity_session_v1:\n").unwrap()).unwrap();
+    assert_eq!(projected["latest_session"], bookmark);
+    assert_eq!(projected["session_count"], 261);
+    let unknown = store
+        .continuity_session_summary_v1(&thread, Some("missing_bookmark"), 8)
+        .unwrap();
+    assert!(unknown["latest_session"].is_null());
+    assert!(unknown["recent_records"].as_array().unwrap().is_empty());
     let reply = store
         .continuity_session_resume_command(bookmark["session_id"].as_str().unwrap())
         .unwrap();
     assert!(reply.contains("My stopping point"));
     assert!(reply.contains("INTROSPECT regulator 800"));
+    fs::remove_dir_all(store.root()).unwrap();
+}
+
+#[test]
+fn session_status_is_pure_even_without_a_store_or_with_stale_projections() {
+    let store = store("pure_status");
+    assert!(!store.root().exists());
+    assert!(
+        store
+            .continuity_session_status_command("latest")
+            .unwrap()
+            .contains("nothing was created")
+    );
+    assert!(!store.root().exists());
+    let thread = store.create_thread(None, "Pure status", None).unwrap();
+    store
+        .continuity_session_start_command("current :: title: Read quietly")
+        .unwrap();
+    let thread_path = store.thread_dir(&thread.thread_id).join("thread.json");
+    let mut snapshot: Value = serde_json::from_slice(&fs::read(&thread_path).unwrap()).unwrap();
+    snapshot["projection_freshness_v1"] = Value::Null;
+    fs::write(&thread_path, serde_json::to_vec(&snapshot).unwrap()).unwrap();
+    let before = fs::read(&thread_path).unwrap();
+    let index_before = fs::read(store.index_path()).unwrap();
+    let log_before = fs::read(store.continuity_sessions_path(&thread.thread_id)).unwrap();
+    store.continuity_session_status_command("latest").unwrap();
+    assert_eq!(fs::read(&thread_path).unwrap(), before);
+    assert_eq!(fs::read(store.index_path()).unwrap(), index_before);
+    assert_eq!(
+        fs::read(store.continuity_sessions_path(&thread.thread_id)).unwrap(),
+        log_before
+    );
+    fs::remove_dir_all(store.root()).unwrap();
+}
+
+#[test]
+fn stale_session_update_and_incomplete_log_fail_without_appending() {
+    let store = store("stale_append");
+    let thread = store
+        .create_thread(None, "Concurrent update", None)
+        .unwrap();
+    store
+        .continuity_session_start_command("current :: title: Original")
+        .unwrap();
+    let old = store
+        .resolve_continuity_session(&thread, None)
+        .unwrap()
+        .unwrap();
+    store
+        .continuity_session_finalize_command("latest :: outcome: park")
+        .unwrap();
+    let path = store.continuity_sessions_path(&thread.thread_id);
+    let before = fs::read(&path).unwrap();
+    let mut stale = old.clone();
+    stale["record_type"] = json!("session_capture");
+    stale["expected_session_record_id"] = old["record_id"].clone();
+    stale["record_id"] = json!("stale-capture");
+    assert!(store.append_jsonl(&path, &stale).is_err());
+    assert_eq!(fs::read(&path).unwrap(), before);
+    OpenOptions::new()
+        .append(true)
+        .open(&path)
+        .unwrap()
+        .write_all(b"{\"incomplete\"")
+        .unwrap();
+    let damaged = fs::read(&path).unwrap();
+    assert!(store.continuity_session_status_command("latest").is_err());
+    assert!(store.append_jsonl(&path, &old).is_err());
+    assert_eq!(fs::read(&path).unwrap(), damaged);
     fs::remove_dir_all(store.root()).unwrap();
 }
 

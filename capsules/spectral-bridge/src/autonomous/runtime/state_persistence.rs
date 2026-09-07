@@ -82,6 +82,8 @@ struct SavedState {
     #[serde(default)]
     last_read_meaning_summary: Option<String>,
     #[serde(default)]
+    activity: activity_reading::ActivityRuntimeV1,
+    #[serde(default)]
     wants_introspect: bool,
     #[serde(default)]
     wants_deep_think: bool,
@@ -266,6 +268,7 @@ fn save_state_checked(conv: &mut ConversationState) -> anyhow::Result<()> {
         recent_research_progress: conv.recent_research_progress.clone(),
         last_research_anchor: conv.last_research_anchor.clone(),
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
+        activity: conv.activity.clone(),
         wants_introspect: conv.wants_introspect,
         wants_deep_think: conv.wants_deep_think,
         introspect_target: conv.introspect_target.clone(),
@@ -295,7 +298,25 @@ fn save_state_checked(conv: &mut ConversationState) -> anyhow::Result<()> {
 
 fn restore_state(conv: &mut ConversationState) {
     let state_path = bridge_paths().state_path();
-    let json = match std::fs::read_to_string(&state_path) {
+    restore_state_from_paths(
+        conv,
+        &state_path,
+        &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
+    );
+}
+
+fn restore_state_from_paths(
+    conv: &mut ConversationState,
+    state_path: &std::path::Path,
+    activity_store: &crate::action_continuity::ActionContinuityStore,
+) {
+    // The selection is synced independently of end-of-exchange state. Restore it
+    // even when this is the first exchange or the older checkpoint is corrupt.
+    conv.activity = activity_reading::load_activity(activity_store).unwrap_or_else(|error| {
+        warn!(error = %error, "activity restore unavailable; leaving foreground quiet");
+        activity_reading::ActivityRuntimeV1::default()
+    });
+    let json = match std::fs::read_to_string(state_path) {
         Ok(j) => j,
         Err(_) => return,
     };
@@ -423,6 +444,31 @@ mod cadence_saved_state_tests {
             "recent_next_choices": [],
             "history": []
         })
+    }
+
+    #[test]
+    fn activity_restores_before_missing_or_corrupt_conversation_checkpoint_return() {
+        let directory = tempfile::tempdir().unwrap();
+        let store =
+            crate::action_continuity::ActionContinuityStore::new(directory.path().join("threads"));
+        let source = directory.path().join("source.txt");
+        std::fs::write(&source, "Synthetic saved reading.").unwrap();
+        let mut original = ConversationState::new(Vec::new(), None);
+        activity_reading::choose_saved_text_in(&store, &mut original, &source, "Fixture").unwrap();
+        let state_path = directory.path().join("conversation.json");
+        let mut missing = ConversationState::new(Vec::new(), None);
+        restore_state_from_paths(&mut missing, &state_path, &store);
+        assert_eq!(missing.activity, original.activity);
+        assert!(!state_path.exists());
+
+        std::fs::write(&state_path, "{partial checkpoint").unwrap();
+        let mut corrupt = ConversationState::new(Vec::new(), None);
+        restore_state_from_paths(&mut corrupt, &state_path, &store);
+        assert_eq!(corrupt.activity, original.activity);
+        assert_eq!(
+            std::fs::read_to_string(&state_path).unwrap(),
+            "{partial checkpoint"
+        );
     }
 
     #[test]
