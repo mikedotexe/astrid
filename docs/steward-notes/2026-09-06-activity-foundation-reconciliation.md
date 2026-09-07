@@ -84,6 +84,7 @@ them to produce an inflated unique-test total.
 | Retained edge scripts | 125 Python tests and the CPU-edge packaging fixture suite passed. |
 | Deployment and source helpers | 105 tests passed across stage, activation, drain, selected-release launcher, graceful reload, Minime binding, boundary audit, wrapper and synthetic probe integration. |
 | Probe/witness/preflight merge | 42 Python tests and 11 preflight self-tests passed. |
+| Additional imported Python modules | 74 tests passed, covering projection/introspection, replay campaigns, proposal wrappers, Division and canary isolation. The production proposal-applier CLI was not executed. |
 | Domain audit | Valid, zero violations; no exception ceiling increased. |
 
 Tests used private stores, copied source-only introspection fixtures, fake control
@@ -92,6 +93,16 @@ specifically asserts the absence of overrides, so it was executed separately.
 Initial fixture failures and the omitted committed seed were resolved without
 relaxing assertions. There were no live model calls, service signals, state
 resets, forced transitions or deployment operations.
+
+The additional module pass recovered five reviewed static assets: the felt
+constellation policy, public codec corpus and embeddings, the frozen replay
+campaign manifest, and the steward loop prompt. They are source inputs, not
+activation instructions. The frozen manifest contains typed claim summaries and
+hash/path references; its 35 owner-only source snapshots remain excluded, so
+historical replay is not available from this checkout alone. Two historical docs
+referenced by the loop prompt also remain outside this import. Synthetic replay
+tests exercise the actual freeze/replay implementation with temporary inputs;
+canary tests now keep positional checkouts inside their own temporary directory.
 
 ## Main and release remain distinct
 

@@ -2376,8 +2376,8 @@
       "base_sha256": null,
       "main_sha256": null,
       "live_sha256": "56fe74d3d66cf31547ee4979337432aa4c59063b17fe47ad7e2d4cb6d72079fb",
-      "resolution": "preserve_live",
-      "integrated_sha256": "56fe74d3d66cf31547ee4979337432aa4c59063b17fe47ad7e2d4cb6d72079fb"
+      "resolution": "preserve_behavior_with_synthetic_test_isolation",
+      "integrated_sha256": "97c4bd9d33ff29946da0aea7328ee707be871fd6271a28d9e20ef0ae7150283f"
     },
     {
       "path": "scripts/test_bridge_activate.py",
@@ -2619,8 +2619,8 @@
       "base_sha256": null,
       "main_sha256": null,
       "live_sha256": "388fefd1aac5d9ec5065d0bb6d57c4f957638acc8f4e236de52816da3a37c9a3",
-      "resolution": "preserve_live",
-      "integrated_sha256": "388fefd1aac5d9ec5065d0bb6d57c4f957638acc8f4e236de52816da3a37c9a3"
+      "resolution": "preserve_behavior_with_synthetic_test_isolation",
+      "integrated_sha256": "b4412b65a3e25902201e9627c6fa15dd1b30d093f4579576cfce03f9922f7fab"
     },
     {
       "path": "scripts/test_steward_control.py",
@@ -2690,5 +2690,37 @@
     "historical evidence directories",
     "root dependency rollback",
     "crates/astrid-storage/src/db.rs"
+  ],
+  "additional_static_assets": [
+    {
+      "path": "scripts/felt_constellation/policy_v1.json",
+      "live_sha256": "85f1cb20714d368419c33238d8c12bb8a28feb003809c44ecff094681dbc32cc",
+      "integrated_sha256": "85f1cb20714d368419c33238d8c12bb8a28feb003809c44ecff094681dbc32cc",
+      "resolution": "reviewed_static_source_asset"
+    },
+    {
+      "path": "scripts/counterfactual_change_lab/fixtures/codec_basis_public_corpus_v1.json",
+      "live_sha256": "aeea8977b75c143dfcfd56402c20dd773a68a4576ca20177726cc39308d516ab",
+      "integrated_sha256": "aeea8977b75c143dfcfd56402c20dd773a68a4576ca20177726cc39308d516ab",
+      "resolution": "reviewed_static_source_asset"
+    },
+    {
+      "path": "scripts/counterfactual_change_lab/fixtures/codec_basis_public_embeddings_v1.json",
+      "live_sha256": "17d82a711f050e0cef23f0b24050605459695b66f71791e2927321c4127b98b6",
+      "integrated_sha256": "17d82a711f050e0cef23f0b24050605459695b66f71791e2927321c4127b98b6",
+      "resolution": "reviewed_static_source_asset"
+    },
+    {
+      "path": "scripts/evidence_study_runtime/manifests/ai_beings_offline_replay_campaigns_v1.json",
+      "live_sha256": "e216c0f14d8d15bc7b50735d143f7f5e296b72433de29774256f74877dc2cf28",
+      "integrated_sha256": "e216c0f14d8d15bc7b50735d143f7f5e296b72433de29774256f74877dc2cf28",
+      "resolution": "reviewed_static_source_asset"
+    },
+    {
+      "path": "scripts/flywheel_loop_prompt.txt",
+      "live_sha256": "4346f0fa28f128107dadb90f1deb371e65a511e1206110272cecea9d56d4e406",
+      "integrated_sha256": "4346f0fa28f128107dadb90f1deb371e65a511e1206110272cecea9d56d4e406",
+      "resolution": "reviewed_static_source_asset"
+    }
   ]
 }

@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from argparse import Namespace
 from pathlib import Path
+from unittest import mock
 
 import self_change_canary as canary
 
@@ -23,6 +24,15 @@ def git(repo: Path, *args: str) -> str:
 
 
 class SelfChangeCanaryTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="self-change-position-test-")
+        self.addCleanup(temporary.cleanup)
+        self.positional_parent = Path(temporary.name).resolve()
+        self.enterContext(mock.patch.dict(
+            canary.PROFILES["spectral-bridge"],
+            {"positional_checkout_parent": str(self.positional_parent)},
+        ))
+
     def identity(
         self,
         root: Path,
@@ -165,6 +175,11 @@ class SelfChangeCanaryTests(unittest.TestCase):
                 )
             )
             candidate = output / "astrid" / record["candidate_id"]
+            self.assertTrue((candidate / "checkout").is_symlink())
+            self.assertEqual(
+                (candidate / "checkout").resolve().parent,
+                self.positional_parent,
+            )
             self.assertEqual(
                 (candidate / "checkout/README.md").read_text(),
                 "after\n",

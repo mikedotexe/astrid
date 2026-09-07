@@ -5,9 +5,11 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 try:
     import ai_beings_offline_replay_campaigns as campaigns
@@ -21,6 +23,68 @@ FROZEN_TEST_TIME = 1785316300.0
 class OfflineReplayCampaignTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        # The production sandbox defaults point at the canonical runtime. Keep
+        # its real loader, source selection, freeze, and replay implementations,
+        # but give every runtime input a disposable synthetic source.
+        temporary = tempfile.TemporaryDirectory(
+            prefix="offline-replay-test-", dir=campaigns.ASTRID_ROOT
+        )
+        cls.addClassCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        workspace = root / "workspace"
+        sandbox = campaigns.sandbox
+        for name, relative in (
+            ("ASTRID_JOURNAL", "journal"),
+            ("ASTRID_CONTEXT_OVERFLOW", "context_overflow"),
+            ("ASTRID_SHADOW_SAMPLES", "shadow_samples"),
+        ):
+            directory = workspace / relative
+            directory.mkdir(parents=True)
+            cls.enterClassContext(patch.object(sandbox, name, directory))
+        public = workspace / "journal/public_texture.txt"
+        public.write_text(
+            "Shadow-v3: a settled interwoven lattice transition.\n"
+            "Shimmering pressure has an open gradient and movement.\n",
+            encoding="utf-8",
+        )
+        private = workspace / "journal/moment_synthetic.txt"
+        private.write_text("Excluded synthetic private moment.\n", encoding="utf-8")
+        for path in (public, private):
+            os.utime(path, (FROZEN_TEST_TIME, FROZEN_TEST_TIME))
+        fallback = root / "fallback.rs"
+        fallback.write_text(
+            "// synthetic fallback_dynamic_texture_weight_v1 "
+            "dynamic_texture_weight texture_trajectory_v1\n",
+            encoding="utf-8",
+        )
+        cls.enterClassContext(patch.object(sandbox, "FALLBACK_SOURCE_PATHS", (fallback,)))
+        codec_source = root / "codec_source.txt"
+        codec_source.write_text("Synthetic codec comparison source.\n", encoding="utf-8")
+        cls.enterClassContext(
+            patch.object(campaigns.codec_lab, "SOURCE_INTROSPECTION", codec_source)
+        )
+        trials = {
+            f"fixture_{adapter}": {
+                "trial_id": f"fixture_{adapter}",
+                "adapter": adapter,
+                "trial_mode": "sandbox_replay",
+                "status": "ready_for_sandbox",
+                "runnable": True,
+                "being": "synthetic",
+                "hypothesis": "Compare bounded replay evidence.",
+            }
+            for adapter in campaigns.ADAPTER_TO_CAMPAIGN
+        }
+        cls.fixture_trial_ids = set(trials)
+        state = workspace / "diagnostics/sandbox_trial_queue_v1"
+        state.mkdir(parents=True)
+        (state / sandbox.STATUS_FILE).write_text(
+            json.dumps({**sandbox.empty_status(), "trials": trials}), encoding="utf-8"
+        )
+        load_status = sandbox.load_status
+        cls.enterClassContext(
+            patch.object(sandbox, "load_status", side_effect=lambda: load_status(state))
+        )
         cls.manifest = campaigns.freeze_manifest(frozen_at_unix=FROZEN_TEST_TIME)
         cls.report = campaigns.build_report(cls.manifest)
 
@@ -32,6 +96,7 @@ class OfflineReplayCampaignTests(unittest.TestCase):
         ]
         self.assertEqual(len(campaign_trials), self.manifest["runnable_trial_count"])
         self.assertEqual(len(campaign_trials), len(set(campaign_trials)))
+        self.assertEqual(set(campaign_trials), self.fixture_trial_ids)
         self.assertEqual(
             [campaign["campaign_key"] for campaign in self.manifest["campaigns"]],
             list(campaigns.CAMPAIGN_ORDER),
@@ -46,6 +111,10 @@ class OfflineReplayCampaignTests(unittest.TestCase):
                 Path(source["path"]).name.startswith("moment_")
                 for source in self.manifest["sources"]
             )
+        )
+        self.assertTrue(
+            any(Path(source["path"]).name == "public_texture.txt"
+                for source in self.manifest["sources"])
         )
         for campaign in self.manifest["campaigns"]:
             for row in campaign["trials"]:
