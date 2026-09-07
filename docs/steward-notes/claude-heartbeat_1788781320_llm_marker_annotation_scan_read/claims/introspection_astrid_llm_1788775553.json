@@ -1,0 +1,43 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788775553",
+  "recorded": false,
+  "recorded_note": "PREPARED ONLY. Reading and source verification are complete; no record-read, link-evidence-batch, or close was submitted, because the controller watchdog left under 14 minutes. Reuse verbatim next round after re-verifying the source SHA.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "dialogue_runtime.rs runs a multi-pass control-marker scan that separates raw byte matches from semantic relations, and first_word_after_skipping_bracketed_annotations (L147) is an additive second scan that only ever widens marker visibility.",
+      "disposition": "Verified from complete source at SHA 891f76e7. L74-79 ORs the unchanged plain scan with the annotation-skipping scan, so the preserved set can only grow; the doc comment at L62-73 states the same contract and pins the adverb boundary. Her L147 citation is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Snag: interaction of trimmed.ends_with(close) and the depth walk in is_self_contained_bracketed_annotation (L111-143) could misjudge closure when a chunk carries a trailing character outside the tolerated punctuation set, causing the scanner to skip words it shouldn't or vice versa.",
+      "disposition": "Half confirmed, direction corrected. L112 trims only . , ; : ! ? so '[sic]—' fails ends_with(']') and is NOT skipped: the aside then degrades to the word 'sic' and the marker is removed. The 'skip words it shouldn't' direction is real but different: a self-contained group CONTAINING the relation word ('[sic] (appears) x') is skipped by scan 2 while scan 1 is blocked by '[sic]', so both miss. Neither breaks additivity: no previously preserved reference is lost, only preservation is missed.",
+      "classification": "needs_steward_followup"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "to_ascii_lowercase() at L154/L163 assumes ASCII relation words, so a non-ASCII relation word might fail the comparison in is_exact_token_relation_word (L82-103).",
+      "disposition": "Verified with a technical correction, not a defect. Every entry of the L85-102 allowlist is ASCII lowercase, so to_ascii_lowercase can never cause a mismatch for a word the allowlist accepts. A non-ASCII relation word is out of scope by construction of the exact-token allowlist, not lost by the lowercasing step. The scope boundary is undocumented at the fn, which is the only actionable residue.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Proposed test 1 (Relation Visibility): '[MARKER] [sic] appears' should make followed_by_explicit_exact_token_relation (L74) return true because the scan skips [sic] to find 'appears'.",
+      "disposition": "Already covered exactly. capsules/spectral-bridge/src/llm/provider/tests.rs:1905 control_marker_cleanup referenced_marker_after_bracketed_annotation_stays_visible asserts on 'the <end_of_turn> [sic] appears at the boundary' that the marker stays visible with preserved_explicit_reference_total 1 and removed_total 0. tests.rs:1938 also pins the nested '((sic))' variant.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Proposed test 2 (Bracket Depth): '(as a test)' should be identified as NOT self-contained by is_self_contained_bracketed_annotation (L111) due to the leading 'as', keeping the existing reference path intact.",
+      "disposition": "Already covered, with one mechanism refinement. The predicate is applied per whitespace chunk, so '(as a test)' never reaches it whole; the chunk '(as' does, and tests.rs:1948 self_contained_annotation_predicate_matches_asides_only asserts !aside(\"(as\") and !aside(\"test)\"). tests.rs:1889 keeps her original '(as a test)' reference path preserved end-to-end. Her expected outcome holds; the cause is chunk-level non-closure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Suggested Next: verify multi-byte UTF-8 handling in first_word_after (L157) so trim_matches and split_whitespace neither split a multi-byte character nor fail on a non-ASCII relation word.",
+      "disposition": "Verified from source and existing tests. Both APIs are char-based, so a multi-byte character cannot be split, and text[end..] slices at a marker-token boundary. Pinned by tests.rs:2320 (byte-exact advance across multibyte text), 2333 (Unicode alphanumerics kept together), 3406 (multibyte symbol before relation), 3445 (four-byte astral chars abutting the marker). The non-ASCII relation-word half is answered by c003.",
+      "classification": "verified_existing"
+    }
+  ]
+}

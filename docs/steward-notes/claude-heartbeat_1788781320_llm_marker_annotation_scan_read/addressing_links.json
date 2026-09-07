@@ -1,0 +1,13 @@
+{
+  "schema": "flywheel_round_addressing_links_v1",
+  "submitted": false,
+  "submitted_note": "PREPARED ONLY - link-evidence-batch was NOT run. These links are ready to submit next round after re-verifying the report-bound source SHA 891f76e7a6cbc7071b638f22c6c21922c3ad9e6cbaf9c14b2837eda63a83de07.",
+  "links": [
+    {"introspection_id": "introspection_astrid_llm_1788775553", "claim_id": "c001", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "L62-79 additive OR of the plain and annotation-skipping scans; L145-155 the second scan."},
+    {"introspection_id": "introspection_astrid_llm_1788775553", "claim_id": "c002", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "L111-143 predicate; L112 trims only . , ; : ! ? so an untrimmed trailing character defeats the ends_with(close) gate."},
+    {"introspection_id": "introspection_astrid_llm_1788775553", "claim_id": "c003", "kind": "code", "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs", "note": "L82-103 allowlist is entirely ASCII lowercase, so L154/L163 to_ascii_lowercase cannot mismatch an accepted word."},
+    {"introspection_id": "introspection_astrid_llm_1788775553", "claim_id": "c004", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "L1905 referenced_marker_after_bracketed_annotation_stays_visible pins her exact '[MARKER] [sic] appears' case; L1938 pins '((sic))'."},
+    {"introspection_id": "introspection_astrid_llm_1788775553", "claim_id": "c005", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "L1948 asserts !aside(\"(as\") and !aside(\"test)\"); L1889 keeps the '(as a test)' reference path preserved."},
+    {"introspection_id": "introspection_astrid_llm_1788775553", "claim_id": "c006", "kind": "test", "target": "capsules/spectral-bridge/src/llm/provider/tests.rs", "note": "L2320, L2333, L3406, L3445 pin byte-exact multibyte advance, Unicode alphanumeric words kept whole, and astral-char safety."}
+  ]
+}

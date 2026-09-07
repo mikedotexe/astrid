@@ -1,0 +1,95 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round_status": "incomplete_budget_standdown",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1788776746818032000_bf3d783806",
+    "preprojection_generation_id": "projection_1788776754848580000_6745a6adfa",
+    "preprojection_status": "passed",
+    "pause_generation": 382,
+    "adapter_kind": "subprocess",
+    "watchdog_max_secs": 5400,
+    "watchdog_sigint_at_unix": 1788782146
+  },
+  "division": {
+    "cycle_sequence": 41,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "last_round_event_id": "division_followup_event_3ee6b3b4db00fa21be3602502cb611c6",
+    "event_count": 283,
+    "event_head_sha256": "f94f01632499fdd900ea81459edeccbdcff899f99b40d94b6eb4ed3d3bb01496",
+    "productive_round_recorded_this_run": false,
+    "tier5_cadence_dossier_required": false,
+    "tier5_cadence_dossier_reason": "review_due=false, so no Division return and no dossier was owed"
+  },
+  "verified_read_only": [
+    "Division followup verify and status (both clean, review_due=false)",
+    "introspection_addressing_audit.py next --limit 40 --json (canonical order frozen and archived in queue_next40.json)",
+    "introspection_family_scan.py over that queue (36 families, 2 batchable; the queue HEAD is in neither, so family batching did not apply)",
+    "Report-bound source SHA-256 equality between the cited worktree copy and main's working copy"
+  ],
+  "durable_mutations": {
+    "addressing_store": "none",
+    "evidence_event_store": "none",
+    "division_tracker": "none",
+    "repository_source": "none",
+    "files_created": [
+      "docs/steward-notes/claude-heartbeat_1788781320_llm_marker_annotation_scan_read/ (packet, 10 files)",
+      "capsules/spectral-bridge/workspace/logs/flywheel_loop.log (one appended line)"
+    ]
+  },
+  "live_surface": {
+    "build": "not attempted",
+    "deploy": "not attempted",
+    "launchctl": "not attempted",
+    "restart_required": false
+  },
+  "git": {
+    "read_only": true,
+    "branch": "main",
+    "head": "bc66a62b0bf02a515a551334dd9bea502c473578",
+    "index_clean": true,
+    "staged": false
+  },
+  "integrity_partial": {
+    "note": "Two cheap read-only suites fit in the remaining window; the rest are debt for the next round.",
+    "domain_boundary_audit_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "forbidden_edge_match_count": 0,
+      "legacy_large_file_count": 51,
+      "unlisted_legacy_review_debt_count": 44,
+      "resolved_large_file_debt_count": 3,
+      "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4",
+      "ratchet": "GREEN"
+    },
+    "anti_drop_catalog_verify": {
+      "total": 90,
+      "alarms": 2,
+      "gaps": 0,
+      "alarm_rows": [
+        {
+          "id": "introspect_within_file_xref",
+          "problem": "TEST gone: astrid/capsules/spectral-bridge/src/autonomous/introspect.rs::within_file_xrefs_links_definition_to_distant_use"
+        },
+        {
+          "id": "introspect_cross_file_xref",
+          "problem": "TEST gone: astrid/capsules/spectral-bridge/src/autonomous/introspect.rs::cross_file_xref_sections_links_symbol_to_sibling_file"
+        }
+      ],
+      "ground_truthed": "FALSE ALARM - stale catalog paths, not lost guards. Both tests still exist, moved to capsules/spectral-bridge/src/autonomous/introspect_tests.rs at lines 79 and 215. The catalog rows need their path updated; the guards themselves are intact.",
+      "verified_by": "grep over capsules/spectral-bridge/src/ for both exact test names"
+    },
+    "not_run": [
+      "addressing self-test",
+      "evidence_event_store verify/status",
+      "test_steward_control",
+      "test_steward_projection",
+      "Division/Chronicle/cursor suites",
+      "cadence audit",
+      "experiential_epistemics verify",
+      "audit-counters"
+    ]
+  }
+}

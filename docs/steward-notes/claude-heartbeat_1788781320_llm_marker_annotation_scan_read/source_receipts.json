@@ -1,0 +1,36 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788775553",
+      "report_bound_source_path": "/Users/v/other/worktrees/astrid-human-replies-release-20260906/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "report_bound_source_sha256": "891f76e7a6cbc7071b638f22c6c21922c3ad9e6cbaf9c14b2837eda63a83de07",
+      "verified_working_copy_path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "verified_working_copy_sha256": "891f76e7a6cbc7071b638f22c6c21922c3ad9e6cbaf9c14b2837eda63a83de07",
+      "hash_match": true,
+      "hash_match_note": "The report cites a sibling worktree path, but main's working copy is byte-identical at the report-bound SHA. No report-time snapshot recovery was needed.",
+      "total_lines": 744,
+      "total_bytes": 27024,
+      "read_scope": "complete: lines 1-200, 200-440, 440-744",
+      "report_declared_window": "lines 1-400 of 744 (coverage state multi_window_complete, included intervals 1-744)",
+      "git_state": "committed at HEAD bc66a62b0b; not dirty"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788775553",
+      "adjacent_evidence_path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "11457dd292e518c588a48cd7bf51cba129d18979cb9cbb56caf5804fcfefcf4b",
+      "total_lines": 5101,
+      "total_bytes": 229477,
+      "read_scope": "scoped: control-marker test index (full fn-name listing) plus complete bodies of lines 1880-1970, 2320-2345, 3406-3445",
+      "purpose": "verify whether the report's two proposed tests and its Suggested Next already have exact coverage"
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788775553",
+      "adjacent_evidence_path": "capsules/spectral-bridge/src/llm/provider/human_reply_quality_tests.rs",
+      "sha256": "0146a468b786941e1abdde916fbfc89222d54ef3e3caac0a26104f34af74693f",
+      "total_lines": 104,
+      "total_bytes": 4637,
+      "read_scope": "index only: confirmed it carries no control-marker tests (they live in tests.rs)"
+    }
+  ]
+}

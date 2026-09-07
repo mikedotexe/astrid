@@ -1,0 +1,7 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "tests_run": [],
+  "reason": "No source, test, or tooling file was modified this round, so no focused test was owed. The verification performed was read-only: exact SHA comparison of the report-bound source against main's working copy, a complete 744-line source read, and an index-plus-body read of the existing control-marker regression corpus in capsules/spectral-bridge/src/llm/provider/tests.rs.",
+  "integrity_suites_run": [],
+  "integrity_suites_skipped_reason": "Budget stand-down before any durable addressing write; running the suites would have consumed the remaining window without a round to certify."
+}
