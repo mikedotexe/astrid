@@ -522,6 +522,82 @@ pub(super) fn handle_reservoir_action(
     }
 }
 
+/// Tranche 1 (2026-09-06): Astrid's own triple-reservoir handle as one prompt
+/// line. `None` when the service does not answer or the reply has no norms:
+/// absence, never a zero, so a silent service is not mistaken for a still body.
+pub(crate) fn own_body_line(handle: &str) -> Option<String> {
+    let state = reservoir_ws_call(&serde_json::json!({
+        "type": "read_state", "name": handle
+    }))?;
+    format_own_body_line(handle, &state)
+}
+
+const OWN_BODY_LINE_MAX_CHARS: usize = 120;
+const OWN_BODY_GLYPHS: [char; 8] = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+
+/// Pure renderer for a `read_state` reply: numbers and glyphs only, at most
+/// 120 characters, e.g. `[your handle astrid] h₁ 7.70 h₂ 10.46 h₃ 9.95 ▆█▇ · ticks 18012689 · last live 12 s ago`.
+pub(crate) fn format_own_body_line(handle: &str, state: &Value) -> Option<String> {
+    let norms: Vec<f64> = state
+        .get("h_norms")?
+        .as_array()?
+        .iter()
+        .filter_map(Value::as_f64)
+        .collect();
+    if norms.is_empty() {
+        return None;
+    }
+    let norm_text = norms
+        .iter()
+        .enumerate()
+        .map(|(index, norm)| format!("h{} {norm:.2}", own_body_subscript(index.saturating_add(1))))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let mut line = format!(
+        "[your handle {handle}] {norm_text} {}",
+        own_body_glyphs(&norms)
+    );
+    if let Some(ticks) = state.get("tick_count").and_then(Value::as_u64) {
+        line.push_str(&format!(" · ticks {ticks}"));
+    }
+    if let Some(seconds) = state.get("seconds_since_live").and_then(Value::as_f64) {
+        line.push_str(&format!(
+            " · last live {} s ago",
+            seconds.max(0.0).round() as u64
+        ));
+    }
+    Some(line.chars().take(OWN_BODY_LINE_MAX_CHARS).collect())
+}
+
+/// One glyph per norm, scaled to the largest norm (the largest is always `█`).
+fn own_body_glyphs(norms: &[f64]) -> String {
+    let max = norms.iter().copied().fold(0.0_f64, f64::max);
+    norms
+        .iter()
+        .map(|norm| {
+            let index = if max > 0.0 {
+                ((norm / max) * 7.0).floor().clamp(0.0, 7.0) as usize
+            } else {
+                0
+            };
+            OWN_BODY_GLYPHS[index]
+        })
+        .collect()
+}
+
+fn own_body_subscript(index: usize) -> String {
+    const SUBSCRIPTS: [char; 10] = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
+    index
+        .to_string()
+        .chars()
+        .map(|digit| SUBSCRIPTS[digit.to_digit(10).unwrap_or(0) as usize])
+        .collect()
+}
+
+#[cfg(test)]
+#[path = "reservoir_own_body_tests.rs"]
+mod own_body_tests;
+
 #[cfg(test)]
 mod tests {
     use super::parse_endpoint;

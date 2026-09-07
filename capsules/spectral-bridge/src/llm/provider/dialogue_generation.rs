@@ -197,6 +197,7 @@ pub async fn generate_dialogue_with_delivery(
     } else {
         format!("Minime wrote: {journal_text_for_dialogue}")
     };
+    let own_body = own_body_line_for_dialogue().await;
     let (blocks, sources) = dialogue_context_blocks(
         &DialogueContextInput {
             spectral: spectral_summary,
@@ -213,6 +214,7 @@ pub async fn generate_dialogue_with_delivery(
         },
         attention,
     );
+    let (blocks, sources) = append_own_body_block(blocks, sources, own_body.line.as_deref());
     let context_packing_originals = context_packing_original_blocks(&blocks);
     let (assembled, overflow, budget_report) =
         assemble_within_budget_with_sources(blocks, user_content_budget, overflow_dir, sources.0);
@@ -296,7 +298,25 @@ pub async fn generate_dialogue_with_delivery(
             fallback_continuity_budget,
         )
     };
-    let result = mlx_chat_with_protected_delivery(
+    let generation_record_ctx = DialogueGenerationRecordContext::capture(
+        &messages,
+        &ollama_fallback_messages,
+        &own_body,
+        DialogueGenerationPromptFacts {
+            fill_pct,
+            requested_tokens: num_predict,
+            effective_tokens: effective_num_predict,
+            final_prompt_chars,
+            user_content_budget,
+            mlx_profile: mlx_profile.as_str(),
+        },
+        budget_diag.budget_report.as_ref(),
+        overflow
+            .as_ref()
+            .map(|value| value.path.display().to_string()),
+    );
+    let primary_started = std::time::Instant::now();
+    let primary_response = mlx_chat_with_protected_delivery(
         "dialogue_live",
         messages,
         temperature,
@@ -305,8 +325,28 @@ pub async fn generate_dialogue_with_delivery(
         MlxFailureLogMode::FallbackEligible,
         protected,
     )
-    .await
-    .and_then(|response| accept_primary_dialogue_attempt(response, mlx_profile));
+    .await;
+    let primary_elapsed_s = primary_started.elapsed().as_secs_f64();
+    let primary_raw = primary_response
+        .as_ref()
+        .map(|response| response.text.clone());
+    let result =
+        primary_response.and_then(|response| accept_primary_dialogue_attempt(response, mlx_profile));
+    record_dialogue_attempt(
+        &generation_record_ctx,
+        DialogueGenerationAttempt {
+            backend: GENERATION_BACKEND_PRIMARY,
+            model: format!("mlx_profile:{}", mlx_profile.as_str()),
+            attempt_index: 0,
+            timeout_s: timeout_secs,
+            elapsed_s: primary_elapsed_s,
+            status: generation_attempt_status(
+                primary_raw.as_deref(),
+                result.as_ref().map(|(text, _)| text.as_str()),
+            ),
+            response_text: primary_raw,
+        },
+    );
     let result = match result {
         Some(text) => Some(text),
         None => {
@@ -324,17 +364,42 @@ pub async fn generate_dialogue_with_delivery(
                 texture_family = fallback_trace.fallback_shadow_texture_selector.texture_family,
                 "dialogue_live Ollama fallback transition spectral context"
             );
-            ollama_chat_with_protected_delivery(
+            let fallback_started = std::time::Instant::now();
+            let fallback_response = ollama_chat_with_protected_delivery(
                 "dialogue_live",
                 ollama_fallback_messages,
                 temperature,
                 effective_num_predict.min(512),
-                75,
+                DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS,
                 Some(&fallback_trace),
                 protected,
             )
-            .await
-            .and_then(|response| accept_ollama_dialogue_attempt(response, mlx_profile))
+            .await;
+            let fallback_elapsed_s = fallback_started.elapsed().as_secs_f64();
+            let fallback_model = fallback_response
+                .as_ref()
+                .map(|response| response.model.clone());
+            let fallback_raw = fallback_response.as_ref().map(|response| {
+                repair_ollama_dialogue_fallback_next(&response.text, mlx_profile)
+            });
+            let fallback_result = fallback_response
+                .and_then(|response| accept_ollama_dialogue_attempt(response, mlx_profile));
+            record_dialogue_attempt(
+                &generation_record_ctx,
+                DialogueGenerationAttempt {
+                    backend: GENERATION_BACKEND_FALLBACK,
+                    model: fallback_model.unwrap_or_else(|| "ollama:unavailable".to_string()),
+                    attempt_index: 1,
+                    timeout_s: DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS,
+                    elapsed_s: fallback_elapsed_s,
+                    status: generation_attempt_status(
+                        fallback_raw.as_deref(),
+                        fallback_result.as_ref().map(|(text, _)| text.as_str()),
+                    ),
+                    response_text: fallback_raw,
+                },
+            );
+            fallback_result
         },
     };
     let root = bridge_paths()
