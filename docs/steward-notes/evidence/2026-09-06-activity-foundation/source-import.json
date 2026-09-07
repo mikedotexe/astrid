@@ -1773,8 +1773,8 @@
       "base_sha256": null,
       "main_sha256": null,
       "live_sha256": "cf24c95275dc4695533322b89e2869027982d66d0fd7bc7e9f90b54bdc0780bd",
-      "resolution": "preserve_live",
-      "integrated_sha256": "cf24c95275dc4695533322b89e2869027982d66d0fd7bc7e9f90b54bdc0780bd"
+      "resolution": "live_source_with_terminal_whitespace_normalized",
+      "integrated_sha256": "a71cc410f3232a8354544fc2cd9b13471666000eab11243b25cf01fdad395815"
     },
     {
       "path": "scripts/counterfactual_change_lab/cli.py",
