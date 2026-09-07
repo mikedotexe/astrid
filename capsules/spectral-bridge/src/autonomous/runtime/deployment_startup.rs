@@ -6,6 +6,9 @@ use std::path::Path;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
+use super::runtime_action_feedback::{
+    PENDING_RUNTIME_FEEDBACK_FILE, pending_runtime_feedback_descriptor_at,
+};
 use super::{SavedState, self_control_v2::deployment_handoff};
 
 fn checkpoint(path: &Path) -> Result<Value, String> {
@@ -21,9 +24,12 @@ fn checkpoint(path: &Path) -> Result<Value, String> {
     }
     let state: SavedState = serde_json::from_slice(&bytes)
         .map_err(|error| format!("invalid deployment checkpoint: {error}"))?;
+    let feedback =
+        pending_runtime_feedback_descriptor_at(&path.with_file_name(PENDING_RUNTIME_FEEDBACK_FILE))
+            .map_err(|error| format!("invalid deployment runtime feedback checkpoint: {error}"))?;
     Ok(
         json!({"sha256":hex::encode(Sha256::digest(&bytes)), "exchange_count":state.exchange_count,
-        "decoded_by_runtime_schema":true}),
+        "decoded_by_runtime_schema":true, "runtime_action_feedback":feedback}),
     )
 }
 
@@ -62,5 +68,42 @@ mod tests {
         );
         std::fs::write(&path, b"{\"exchange_count\":3}").unwrap();
         assert!(checkpoint(&path).is_err());
+    }
+
+    #[test]
+    fn deployment_checkpoint_binds_optional_feedback_and_refuses_unknown_state() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("state.json");
+        std::fs::write(
+            &path,
+            serde_json::to_vec(&json!({
+                "exchange_count":3, "creative_temperature":0.7, "response_length":128,
+                "self_reflect_paused":false, "ears_closed":false, "senses_snoozed":false,
+                "recent_next_choices":[], "history":[]
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            checkpoint(&path).unwrap()["runtime_action_feedback"],
+            json!({"present":false})
+        );
+        let sidecar = path.with_file_name(PENDING_RUNTIME_FEEDBACK_FILE);
+        let bytes =
+            br#"{"schema":"pending_runtime_action_feedback_v1","pending_runtime_feedback":[]}"#;
+        std::fs::write(&sidecar, bytes).unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt as _;
+            std::fs::set_permissions(&sidecar, std::fs::Permissions::from_mode(0o600)).unwrap();
+        }
+        let check = checkpoint(&path).unwrap();
+        assert_eq!(
+            check["runtime_action_feedback"]["sha256"],
+            hex::encode(Sha256::digest(bytes))
+        );
+        assert_eq!(check["runtime_action_feedback"]["pending_count"], 0);
+        std::fs::write(&sidecar, b"{}").unwrap();
+        assert!(checkpoint(&path).unwrap_err().contains("runtime feedback"));
     }
 }

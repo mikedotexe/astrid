@@ -165,9 +165,19 @@ async fn finish_autonomous_drain(
     // must finish too, before the final durable conversation checkpoint.
     heartbeat.await?;
     job_status.await?;
-    save_state_checked(conv)?;
+    checkpoint_autonomous_drain(conv, save_state_checked)?;
     info!("autonomous work drained and conversation checkpoint persisted");
     Ok(())
+}
+
+fn checkpoint_autonomous_drain(
+    conv: &mut ConversationState,
+    checkpoint: impl FnOnce(&mut ConversationState) -> anyhow::Result<()>,
+) -> anyhow::Result<()> {
+    // An earlier enqueue may have survived only in memory. Do not publish a
+    // durable drain if that queue cannot be flushed or safely read back.
+    conv.flush_pending_runtime_feedback_checked()?;
+    checkpoint(conv)
 }
 
 fn save_state_checked(conv: &mut ConversationState) -> anyhow::Result<()> {

@@ -129,6 +129,11 @@ pub(in crate::autonomous) struct ConversationState {
     pub semantic_strand_retention_turns: u32,
     pub response_length: u32,
     pub emphasis: Option<String>,
+    /// Runtime-owned results awaiting verified inclusion in an accepted request.
+    /// Undelivered entries are never evicted to satisfy a per-request limit.
+    pub pending_runtime_feedback: Vec<crate::runtime_action_feedback::RuntimeActionFeedbackV1>,
+    pub(super) runtime_feedback_persistence:
+        super::runtime_action_feedback::RuntimeFeedbackPersistence,
     /// v3.6.1 cadence tracking — exchange at which Astrid last picked
     /// TEMPERATURE or LENGTH, drives sovereignty-curriculum throttling.
     pub last_temperature_change_exchange: Option<u64>,

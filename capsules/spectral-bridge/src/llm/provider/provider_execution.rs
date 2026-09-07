@@ -49,6 +49,29 @@ async fn mlx_chat_with_protected_delivery(
     failure_log_mode: MlxFailureLogMode,
     protected: Option<&ProtectedDialogueInputV1>,
 ) -> Option<MlxChatResultV1> {
+    mlx_chat_with_runtime_feedback(
+        label,
+        messages,
+        temperature,
+        max_tokens,
+        timeout_secs,
+        failure_log_mode,
+        protected,
+        &[],
+    )
+    .await
+}
+
+async fn mlx_chat_with_runtime_feedback(
+    label: &str,
+    messages: Vec<Message>,
+    temperature: f32,
+    max_tokens: u32,
+    timeout_secs: u64,
+    failure_log_mode: MlxFailureLogMode,
+    protected: Option<&ProtectedDialogueInputV1>,
+    feedback: &[RuntimeActionFeedbackV1],
+) -> Option<MlxChatResultV1> {
     let profile = configured_mlx_profile();
     let policy = apply_mlx_request_policy(label, profile, messages, max_tokens, timeout_secs);
     if let Some(ref diagnostic) = policy.diagnostic {
@@ -84,21 +107,20 @@ async fn mlx_chat_with_protected_delivery(
         }
     }
 
-    let admission = if let Some(input) = protected {
-        Some(admit_protected_dialogue_content(
-            &mut messages,
-            input,
-            if profile.is_gemma4_canary() {
-                gemma4_canary_prompt_limit(label).unwrap_or(48_000)
-            } else {
-                48_000
-            },
-        )?)
+    let final_limit = if profile.is_gemma4_canary() {
+        gemma4_canary_prompt_limit(label).unwrap_or(48_000)
     } else {
-        None
+        48_000
     };
+    let (admission, runtime_feedback_admission) = admit_runtime_feedback_and_protected_content(
+        &mut messages,
+        protected,
+        feedback,
+        final_limit,
+    )?;
 
-    let (max_tokens, timeout_secs) = if protected.is_some() && label == "dialogue_live" {
+    let exact_request = protected.is_some() || runtime_feedback_admission.is_some();
+    let (max_tokens, timeout_secs) = if exact_request && label == "dialogue_live" {
         let final_bytes = message_prompt_chars(&messages);
         let tokens = clamp_dialogue_tokens_for_profile(max_tokens, final_bytes, profile);
         (
@@ -112,7 +134,7 @@ async fn mlx_chat_with_protected_delivery(
     } else {
         (max_tokens, timeout_secs)
     };
-    let client = delivery_http_client(timeout_secs, protected.is_some())?;
+    let client = delivery_http_client(timeout_secs, exact_request)?;
 
     let temperature = temperature_for_mlx_profile(label, profile, temperature);
     let model_qos = model_qos_v1(label, &messages, temperature, max_tokens, timeout_secs);
@@ -236,6 +258,13 @@ async fn mlx_chat_with_protected_delivery(
         &body,
         admission,
     );
+    let runtime_feedback_attempt = capture_runtime_feedback_attempt(
+        &accepted_route,
+        &provider_model,
+        &request_bytes,
+        &body,
+        runtime_feedback_admission,
+    );
     if profile.is_gemma4_canary() {
         match sanitize_gemma4_canary_output_for_label(label, &text) {
             Some(sanitized) if sanitized != text => {
@@ -246,6 +275,7 @@ async fn mlx_chat_with_protected_delivery(
                 return Some(MlxChatResultV1 {
                     text: sanitized.trim().to_string(),
                     delivery_attempt,
+                    runtime_feedback_attempt,
                     qos_request_identity_sha256,
                     request_content_anchor_sha256,
                     queue_wait_ms: provider_timing.map(|timing| timing.0),
@@ -266,6 +296,7 @@ async fn mlx_chat_with_protected_delivery(
     Some(MlxChatResultV1 {
         text,
         delivery_attempt,
+        runtime_feedback_attempt,
         qos_request_identity_sha256,
         request_content_anchor_sha256,
         queue_wait_ms: provider_timing.map(|timing| timing.0),
@@ -282,7 +313,30 @@ async fn ollama_chat_with_protected_delivery(
     fallback_budget: Option<&FallbackContinuityBudget>,
     protected: Option<&ProtectedDialogueInputV1>,
 ) -> Option<OllamaFallbackResponse> {
-    let client = delivery_http_client(timeout_secs, protected.is_some())?;
+    ollama_chat_with_runtime_feedback(
+        label,
+        messages,
+        temperature,
+        max_tokens,
+        timeout_secs,
+        fallback_budget,
+        protected,
+        &[],
+    )
+    .await
+}
+
+async fn ollama_chat_with_runtime_feedback(
+    label: &str,
+    messages: Vec<Message>,
+    temperature: f32,
+    max_tokens: u32,
+    timeout_secs: u64,
+    fallback_budget: Option<&FallbackContinuityBudget>,
+    protected: Option<&ProtectedDialogueInputV1>,
+    feedback: &[RuntimeActionFeedbackV1],
+) -> Option<OllamaFallbackResponse> {
+    let client = delivery_http_client(timeout_secs, protected.is_some() || !feedback.is_empty())?;
     let ollama_url = configured_ollama_url();
     let fallback_models = configured_ollama_fallback_model_chain_for_budget(fallback_budget);
     for fallback_model in fallback_models {
@@ -295,15 +349,15 @@ async fn ollama_chat_with_protected_delivery(
             protected.is_some(),
         );
 
-        let admission = if let Some(input) = protected {
-            let Some(admission) =
-                admit_protected_dialogue_content(&mut request.messages, input, 16_000)
-            else {
-                continue;
-            };
-            Some(admission)
-        } else {
-            None
+        let Some((admission, runtime_feedback_admission)) =
+            admit_runtime_feedback_and_protected_content(
+                &mut request.messages,
+                protected,
+                feedback,
+                16_000,
+            )
+        else {
+            continue;
         };
         let request_bytes = serde_json::to_vec(&request).ok()?;
         let response = match client
@@ -344,7 +398,8 @@ async fn ollama_chat_with_protected_delivery(
                 continue;
             },
         };
-        if protected.is_some() && chat.done == Some(false) {
+        if (protected.is_some() || runtime_feedback_admission.is_some()) && chat.done == Some(false)
+        {
             continue;
         }
         let raw_text = chat
@@ -367,6 +422,16 @@ async fn ollama_chat_with_protected_delivery(
                     &request_bytes,
                     &body,
                     admission,
+                ),
+                runtime_feedback_attempt: capture_runtime_feedback_attempt(
+                    &accepted_route,
+                    chat.model
+                        .as_deref()
+                        .filter(|model| !model.trim().is_empty())
+                        .unwrap_or(&fallback_model),
+                    &request_bytes,
+                    &body,
+                    runtime_feedback_admission,
                 ),
                 model: fallback_model,
             });

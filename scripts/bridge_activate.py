@@ -24,7 +24,11 @@ import uuid
 import bridge_drain as drain
 import bridge_stage as stage_tools
 from bridge_release_launch import digest, runtime_arguments
-from bridge_stopped_recovery import StoppedTransitionMixin, resume_stopped_transition
+from bridge_stopped_recovery import (
+    StoppedTransitionMixin, resume_stopped_transition, RUNTIME_FEEDBACK_FILE,
+    RUNTIME_FEEDBACK_SNAPSHOT, read_runtime_feedback, runtime_feedback_descriptor,
+    runtime_feedback_binding, verify_runtime_feedback_snapshot,
+)
 
 ROOT = Path("/Users/v/other/astrid")
 LABEL = "com.astrid.spectral-bridge"
@@ -347,7 +351,11 @@ class LaunchdBridge(StoppedTransitionMixin):
         return True
 
     def snapshot_and_handoff(self, actor: str, ack: str) -> None:
-        # No private keys are copied; only the persisted conversation and control state.
+        feedback_path = self.workspace / RUNTIME_FEEDBACK_FILE
+        check = self.native("--verify-deployment-inputs")
+        feedback, feedback_bytes = read_runtime_feedback(feedback_path)
+        runtime_feedback_binding(check["checkpoint"], feedback)
+        # No private keys are copied; these are the persisted continuity inputs.
         for name, path in (("conversation.before.json", self.workspace / "state.json"),
                            ("self-control.before.json", self.workspace / "self_control_v2/astrid/state.json"),
                            ("manifest.before.json", self.canonical_manifest)):
@@ -355,14 +363,26 @@ class LaunchdBridge(StoppedTransitionMixin):
             atomic_bytes(self.transaction / name, path.read_bytes())
             if stage_tools.sha(path) != before or stage_tools.sha(self.transaction / name) != before:
                 raise RuntimeError("persisted input changed while taking transition snapshot")
-        check = self.native("--verify-deployment-inputs")
+        if feedback_bytes is not None:
+            atomic_bytes(self.transaction / RUNTIME_FEEDBACK_SNAPSHOT, feedback_bytes)
+        runtime_feedback_binding(check["checkpoint"], runtime_feedback_descriptor(feedback_path))
+        after = self.native("--verify-deployment-inputs")
+        runtime_feedback_binding(after["checkpoint"], feedback)
+        if (check["checkpoint"]["sha256"] != stage_tools.sha(self.transaction / "conversation.before.json")
+                or after["checkpoint"]["sha256"] != check["checkpoint"]["sha256"]):
+            raise RuntimeError("conversation checkpoint changed while taking transition snapshot")
+        # New receipts make absence explicit even for an older no-sidecar input.
+        check["checkpoint"]["runtime_action_feedback"] = feedback
+        verify_runtime_feedback_snapshot(check["checkpoint"], self.transaction, feedback_path)
         stage_tools.atomic_json(self.transaction / "inputs.before.json", check)
+        self._stopped_feedback_binding = check["checkpoint"]
         if not check["self_control"]["state_targets_this_binary"]:
             result = self.native("--prepare-self-control-deployment-handoff", "--operator-actor", actor,
                                  "--operator-ack", ack)
             stage_tools.atomic_json(self.transaction / "handoff.json", result)
 
     def select_release(self) -> None:
+        self.assert_stopped_feedback()
         self.verify_bundle()
         path = self.control / "active.json"
         previous = self.old.get("selection_sha256")
@@ -376,11 +396,21 @@ class LaunchdBridge(StoppedTransitionMixin):
             "manifest_sha256":self.ready["manifest_sha256"], "transaction":str(self.transaction)})
 
     def release_hold(self) -> None:
+        self.assert_stopped_feedback()
         path = self.control / "hold.json"
         if stage_tools.json_file(path) != self.guard:
             raise RuntimeError("launch hold ownership changed")
         path.unlink()
         sync_directory(path.parent)
+        self.__dict__.pop("_stopped_feedback_binding", None)
+
+    def assert_stopped_feedback(self) -> None:
+        binding = getattr(self, "_stopped_feedback_binding", None)
+        if binding is not None:
+            runtime_feedback_binding(binding,
+                runtime_feedback_descriptor(self.workspace / RUNTIME_FEEDBACK_FILE))
+            verify_runtime_feedback_snapshot(binding, self.transaction,
+                self.workspace / RUNTIME_FEEDBACK_FILE)
 
     def lifecycle_startup(self, pid: int, identity: tuple[str, str], expected: str) -> tuple[dict, dict, dict]:
         directory = self.root / ".runtime/bridge-lifecycle"
@@ -399,6 +429,12 @@ class LaunchdBridge(StoppedTransitionMixin):
         before = stage_tools.json_file(self.transaction / "inputs.before.json")
         if startup.get("checkpoint", {}).get("sha256") != before["checkpoint"]["sha256"]:
             raise RuntimeError("startup checkpoint was not the exact stopped-state snapshot")
+        feedback = verify_runtime_feedback_snapshot(before["checkpoint"], self.transaction,
+                                                     self.workspace / RUNTIME_FEEDBACK_FILE)
+        runtime_feedback_binding(startup.get("checkpoint", {}), feedback)
+        if "runtime_action_feedback" not in startup.get("checkpoint", {}):
+            runtime_feedback_binding(startup.get("checkpoint", {}),
+                runtime_feedback_descriptor(self.workspace / RUNTIME_FEEDBACK_FILE))
         return status, startup, before
 
     def verify_new(self, old_pid: int, timeout: float, *, expected_pid: int | None = None,

@@ -2,19 +2,18 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-fn temp_dir(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(name);
-    let _ = fs::remove_dir_all(&dir);
-    fs::create_dir_all(&dir).unwrap();
-    dir
+fn temp_dir(name: &str) -> tempfile::TempDir {
+    tempfile::Builder::new().prefix(name).tempdir().unwrap()
 }
 
 #[test]
 fn resolver_helper_updates_request_and_writes_inbox_note() {
-    let requests_dir = temp_dir("bridge_resolver_requests");
+    let requests_fixture = temp_dir("bridge_resolver_requests");
+    let requests_dir = requests_fixture.path();
     let reviewed_dir = requests_dir.join("reviewed");
     fs::create_dir_all(&reviewed_dir).unwrap();
-    let inbox_dir = temp_dir("bridge_resolver_inbox");
+    let inbox_fixture = temp_dir("bridge_resolver_inbox");
+    let inbox_dir = inbox_fixture.path();
     let request_path = requests_dir.join("agency_code_change_1.json");
     fs::write(
         &request_path,
@@ -38,7 +37,7 @@ fn resolver_helper_updates_request_and_writes_inbox_note() {
     )
     .unwrap();
 
-    let script = "/Users/v/other/astrid/capsules/spectral-bridge/resolve_agency_request.py";
+    let script = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resolve_agency_request.py");
     let output = Command::new("python3")
         .arg(script)
         .arg("--request")
@@ -50,7 +49,7 @@ fn resolver_helper_updates_request_and_writes_inbox_note() {
         .arg("--file")
         .arg("/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs")
         .arg("--inbox-dir")
-        .arg(&inbox_dir)
+        .arg(inbox_dir)
         .output()
         .unwrap();
 
@@ -67,7 +66,4 @@ fn resolver_helper_updates_request_and_writes_inbox_note() {
 
     let note = fs::read_to_string(note_path).unwrap();
     assert!(note.contains("Added the EVOLVE queue and Claude handoff."));
-
-    let _ = fs::remove_dir_all(&requests_dir);
-    let _ = fs::remove_dir_all(&inbox_dir);
 }

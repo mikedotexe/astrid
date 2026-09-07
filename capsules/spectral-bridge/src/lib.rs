@@ -62,6 +62,7 @@ pub mod prompt_budget;
 pub mod reciprocal_experiential;
 pub mod reflective;
 pub mod rescue_policy;
+pub mod runtime_action_feedback;
 pub mod self_continuity;
 pub mod self_model;
 pub mod shared_investigation;

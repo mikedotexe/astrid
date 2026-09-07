@@ -298,7 +298,8 @@ class TransactionFilesTests(unittest.TestCase):
         def native(*args):
             calls.append(args)
             if args == ("--verify-deployment-inputs",):
-                return {"self_control":{"state_targets_this_binary":False}}
+                return {"checkpoint":{"sha256":activation.digest(self.backend.workspace / "state.json")},
+                        "self_control":{"state_targets_this_binary":False}}
             self.assertTrue((self.backend.transaction / "conversation.before.json").is_file())
             self.assertTrue((self.backend.transaction / "self-control.before.json").is_file())
             return {"synthetic":"handoff"}

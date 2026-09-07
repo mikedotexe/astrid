@@ -11,7 +11,7 @@ fn cap_dialogue_block(label: &str, content: &str, max_chars: usize) -> String {
         content.to_string()
     } else {
         format!(
-            "{}\n[{} excerpt trimmed for this turn. Use NEXT: READ_MORE if you need the full context.]",
+            "{}\n[{} excerpt trimmed for this turn.]",
             trim_chars(content, max_chars),
             label,
         )
