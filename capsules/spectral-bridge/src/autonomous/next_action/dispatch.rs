@@ -82,7 +82,20 @@ fn handle_next_action_with_author(
         Ok(Some(guard)) => {
             let message = guard.message();
             let metadata = guard.metadata();
-            conv.emphasis = Some(message.clone());
+            conv.enqueue_runtime_feedback(
+                crate::runtime_action_feedback::RuntimeActionFeedbackV1::from_guard_inputs(
+                    None,
+                    &original,
+                    metadata
+                        .get("reason")
+                        .and_then(serde_json::Value::as_str)
+                        .unwrap_or("research_budget_guard"),
+                    &message,
+                    metadata
+                        .get("suggested_next")
+                        .and_then(serde_json::Value::as_str),
+                ),
+            );
             info!(
                 "Astrid research-budget guard blocked NEXT `{}` ({})",
                 original,

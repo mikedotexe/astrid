@@ -51,6 +51,7 @@ struct MlxChatResultV1 {
     queue_wait_ms: Option<u64>,
     active_generation_and_reservoir_ms: Option<u64>,
     delivery_attempt: Option<SubmittedDeliveryAttemptV1>,
+    runtime_feedback_attempt: Option<SubmittedRuntimeFeedbackAttemptV1>,
 }
 
 fn model_qos_class_for_label(label: &str) -> ModelQosClassV1 {
@@ -556,6 +557,7 @@ struct OllamaFallbackResponse {
     text: String,
     model: String,
     delivery_attempt: Option<SubmittedDeliveryAttemptV1>,
+    runtime_feedback_attempt: Option<SubmittedRuntimeFeedbackAttemptV1>,
 }
 
 #[derive(Serialize)]
@@ -638,7 +640,8 @@ fn reinforce_ollama_fallback_contract(label: &str, mut messages: Vec<Message>) -
 
 fn count_next_lines(text: &str) -> usize {
     let (_, actions, _) = crate::autonomous::human_reply_quality_views(text);
-    actions.lines()
+    actions
+        .lines()
         .filter(|line| line.trim_start().starts_with("NEXT:"))
         .count()
 }
@@ -647,12 +650,17 @@ fn final_nonempty_line_is_next(text: &str) -> bool {
     let (_, actions, complete) = crate::autonomous::human_reply_quality_views(text);
     // Projection must not make an earlier action appear final or accept a NEXT
     // still inside an unfinished human reply.
-    if !complete || !text.lines().rev().find(|line| !line.trim().is_empty())
-        .is_some_and(|line| line.trim().starts_with("NEXT:"))
+    if !complete
+        || !text
+            .lines()
+            .rev()
+            .find(|line| !line.trim().is_empty())
+            .is_some_and(|line| line.trim().starts_with("NEXT:"))
     {
         return false;
     }
-    actions.lines()
+    actions
+        .lines()
         .rev()
         .find_map(|line| {
             let trimmed = line.trim();

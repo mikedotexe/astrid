@@ -68,6 +68,54 @@ pub async fn generate_dialogue_with_delivery(
     overflow_dir: &std::path::Path,
     protected: Option<&ProtectedDialogueInputV1>,
 ) -> DialogueCompletionV1 {
+    generate_dialogue_with_runtime_feedback(
+        journal_text,
+        spectral_summary,
+        fill_pct,
+        perception_context,
+        recent_history,
+        web_context,
+        modality_context,
+        temperature,
+        num_predict,
+        emphasis,
+        continuity_context,
+        agenda_context,
+        topline_hint,
+        feedback_hint,
+        diversity_hint,
+        attention,
+        overflow_dir,
+        protected,
+        &[],
+        &crate::prompt_budget::OverflowReadMoreAvailability::Unknown,
+    )
+    .await
+}
+
+/// Runtime facts travel separately from Astrid's chosen emphasis and source text.
+pub async fn generate_dialogue_with_runtime_feedback(
+    journal_text: &str,
+    spectral_summary: &str,
+    fill_pct: f32,
+    perception_context: Option<&str>,
+    recent_history: &[Exchange],
+    web_context: Option<&str>,
+    modality_context: Option<&str>,
+    temperature: f32,
+    num_predict: u32,
+    emphasis: Option<&str>,
+    continuity_context: Option<&str>,
+    agenda_context: Option<&str>,
+    topline_hint: Option<&str>,
+    feedback_hint: Option<&str>,
+    diversity_hint: Option<&str>,
+    attention: Option<&PromptAttentionV1>,
+    overflow_dir: &std::path::Path,
+    protected: Option<&ProtectedDialogueInputV1>,
+    runtime_feedback: &[crate::runtime_action_feedback::RuntimeActionFeedbackV1],
+    overflow_availability: &crate::prompt_budget::OverflowReadMoreAvailability,
+) -> DialogueCompletionV1 {
     let mlx_profile = configured_mlx_profile();
     let prompt_budget_chars = dialogue_prompt_budget_chars_for_profile(num_predict, mlx_profile);
     let assembly_prompt_budget_chars =
@@ -190,7 +238,7 @@ pub async fn generate_dialogue_with_delivery(
 
     let diversity_block = diversity_hint.map(|d| format!("[{d}]")).unwrap_or_default();
 
-    use crate::prompt_budget::assemble_within_budget_with_sources;
+    use crate::prompt_budget::assemble_within_budget_with_sources_and_guidance;
     let journal_text_for_dialogue = sanitize_minime_context_for_dialogue(journal_text);
     let journal_block = if protected.is_some() {
         "The selected activity source is supplied separately below.".to_string()
@@ -216,8 +264,13 @@ pub async fn generate_dialogue_with_delivery(
     );
     let (blocks, sources) = append_own_body_block(blocks, sources, own_body.line.as_deref());
     let context_packing_originals = context_packing_original_blocks(&blocks);
-    let (assembled, overflow, budget_report) =
-        assemble_within_budget_with_sources(blocks, user_content_budget, overflow_dir, sources.0);
+    let (assembled, overflow, budget_report) = assemble_within_budget_with_sources_and_guidance(
+        blocks,
+        user_content_budget,
+        overflow_dir,
+        sources.0,
+        overflow_availability,
+    );
     let context_packing_pressure = context_packing_pressure_diagnostic(
         unix_timestamp_string(),
         user_content_budget,
@@ -284,7 +337,7 @@ pub async fn generate_dialogue_with_delivery(
 
     debug!("querying MLX for Astrid dialogue response");
     let fallback_trace = fallback_continuity_budget.clone();
-    let ollama_fallback_messages = if protected.is_some() {
+    let mut ollama_fallback_messages = if protected.is_some() {
         // Keep fallback foreground semantics explicit. Source bytes are inserted
         // only after final request adaptation, never via the 700-byte ambient path.
         protected_ollama_fallback_context(spectral_summary, fill_pct, &fallback_trace)
@@ -298,6 +351,17 @@ pub async fn generate_dialogue_with_delivery(
             fallback_continuity_budget,
         )
     };
+    // Carry the same authored choice into the fallback lane. Runtime outcomes
+    // are inserted independently after that lane's final request adaptation.
+    if let Some(emphasis) = emphasis
+        && let Some(system) = ollama_fallback_messages
+            .iter_mut()
+            .find(|m| m.role == "system")
+    {
+        system.content.push_str(&format!(
+            "\n[For this exchange, you chose to emphasize: {emphasis}. This is your own direction.]\n"
+        ));
+    }
     let generation_record_ctx = DialogueGenerationRecordContext::capture(
         &messages,
         &ollama_fallback_messages,
@@ -316,7 +380,7 @@ pub async fn generate_dialogue_with_delivery(
             .map(|value| value.path.display().to_string()),
     );
     let primary_started = std::time::Instant::now();
-    let primary_response = mlx_chat_with_protected_delivery(
+    let primary_response = mlx_chat_with_runtime_feedback(
         "dialogue_live",
         messages,
         temperature,
@@ -324,14 +388,15 @@ pub async fn generate_dialogue_with_delivery(
         timeout_secs,
         MlxFailureLogMode::FallbackEligible,
         protected,
+        runtime_feedback,
     )
     .await;
     let primary_elapsed_s = primary_started.elapsed().as_secs_f64();
     let primary_raw = primary_response
         .as_ref()
         .map(|response| response.text.clone());
-    let result =
-        primary_response.and_then(|response| accept_primary_dialogue_attempt(response, mlx_profile));
+    let result = primary_response
+        .and_then(|response| accept_primary_dialogue_with_feedback(response, mlx_profile));
     record_dialogue_attempt(
         &generation_record_ctx,
         DialogueGenerationAttempt {
@@ -342,13 +407,13 @@ pub async fn generate_dialogue_with_delivery(
             elapsed_s: primary_elapsed_s,
             status: generation_attempt_status(
                 primary_raw.as_deref(),
-                result.as_ref().map(|(text, _)| text.as_str()),
+                result.as_ref().map(|attempt| attempt.text.as_str()),
             ),
             response_text: primary_raw,
         },
     );
-    let result = match result {
-        Some(text) => Some(text),
+    let fallback_result = match result.as_ref() {
+        Some(_) => None,
         None => {
             warn!("dialogue_live: MLX unavailable or invalid; falling back to Ollama");
             debug!(
@@ -365,7 +430,7 @@ pub async fn generate_dialogue_with_delivery(
                 "dialogue_live Ollama fallback transition spectral context"
             );
             let fallback_started = std::time::Instant::now();
-            let fallback_response = ollama_chat_with_protected_delivery(
+            let fallback_response = ollama_chat_with_runtime_feedback(
                 "dialogue_live",
                 ollama_fallback_messages,
                 temperature,
@@ -373,17 +438,18 @@ pub async fn generate_dialogue_with_delivery(
                 DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS,
                 Some(&fallback_trace),
                 protected,
+                runtime_feedback,
             )
             .await;
             let fallback_elapsed_s = fallback_started.elapsed().as_secs_f64();
             let fallback_model = fallback_response
                 .as_ref()
                 .map(|response| response.model.clone());
-            let fallback_raw = fallback_response.as_ref().map(|response| {
-                repair_ollama_dialogue_fallback_next(&response.text, mlx_profile)
-            });
+            let fallback_raw = fallback_response
+                .as_ref()
+                .map(|response| repair_ollama_dialogue_fallback_next(&response.text, mlx_profile));
             let fallback_result = fallback_response
-                .and_then(|response| accept_ollama_dialogue_attempt(response, mlx_profile));
+                .and_then(|response| accept_ollama_dialogue_with_feedback(response, mlx_profile));
             record_dialogue_attempt(
                 &generation_record_ctx,
                 DialogueGenerationAttempt {
@@ -394,7 +460,9 @@ pub async fn generate_dialogue_with_delivery(
                     elapsed_s: fallback_elapsed_s,
                     status: generation_attempt_status(
                         fallback_raw.as_deref(),
-                        fallback_result.as_ref().map(|(text, _)| text.as_str()),
+                        fallback_result
+                            .as_ref()
+                            .map(|attempt| attempt.text.as_str()),
                     ),
                     response_text: fallback_raw,
                 },
@@ -406,7 +474,7 @@ pub async fn generate_dialogue_with_delivery(
         .bridge_workspace()
         .join("diagnostics")
         .join("accepted_deliveries");
-    finish_dialogue_completion_at(result, overflow, &root)
+    finish_accepted_dialogue_attempts_at(result, fallback_result, overflow, &root)
 }
 
 fn protected_ollama_fallback_context(
@@ -460,6 +528,67 @@ fn accept_ollama_dialogue_attempt(
     }
 }
 
+/// Quality acceptance binds both receipt candidates to this attempt's text.
+/// A rejected response cannot leave feedback evidence beside a later attempt.
+struct AcceptedDialogueAttemptV1 {
+    text: String,
+    delivery_attempt: Option<SubmittedDeliveryAttemptV1>,
+    runtime_feedback_attempt: Option<SubmittedRuntimeFeedbackAttemptV1>,
+}
+
+fn accept_primary_dialogue_with_feedback(
+    mut response: MlxChatResultV1,
+    profile: MlxProfile,
+) -> Option<AcceptedDialogueAttemptV1> {
+    let runtime_feedback_attempt = response.runtime_feedback_attempt.take();
+    let (text, delivery_attempt) = accept_primary_dialogue_attempt(response, profile)?;
+    Some(AcceptedDialogueAttemptV1 {
+        text,
+        delivery_attempt,
+        runtime_feedback_attempt,
+    })
+}
+
+fn accept_ollama_dialogue_with_feedback(
+    mut response: OllamaFallbackResponse,
+    profile: MlxProfile,
+) -> Option<AcceptedDialogueAttemptV1> {
+    let runtime_feedback_attempt = response.runtime_feedback_attempt.take();
+    let (text, delivery_attempt) = accept_ollama_dialogue_attempt(response, profile)?;
+    Some(AcceptedDialogueAttemptV1 {
+        text,
+        delivery_attempt,
+        runtime_feedback_attempt,
+    })
+}
+
+/// Shared production/offline seam: choose only a quality-accepted attempt and
+/// retain only its evidence. Storage failure leaves text usable and feedback
+/// unacknowledged; it cannot promote a rejected or unused attempt's receipt.
+fn finish_accepted_dialogue_attempts_at(
+    primary: Option<AcceptedDialogueAttemptV1>,
+    fallback: Option<AcceptedDialogueAttemptV1>,
+    overflow: Option<crate::prompt_budget::PromptOverflow>,
+    artifact_root: &std::path::Path,
+) -> DialogueCompletionV1 {
+    let (result, feedback_attempt) = match primary.or(fallback) {
+        Some(attempt) => (
+            Some((attempt.text, attempt.delivery_attempt)),
+            attempt.runtime_feedback_attempt,
+        ),
+        None => (None, None),
+    };
+    let mut completion = finish_dialogue_completion_at(result, overflow, artifact_root);
+    if let (Some(text), Some(attempt)) = (completion.text.as_deref(), feedback_attempt) {
+        match retain_runtime_feedback_at(&artifact_root.join("runtime_feedback"), attempt, text) {
+            Ok(receipt) => completion.accepted_runtime_feedback = Some(receipt),
+            Err(error) => warn!(error_kind = ?error.kind(),
+                "runtime feedback delivery could not be retained; feedback remains pending"),
+        }
+    }
+    completion
+}
+
 fn finish_dialogue_completion_at(
     result: Option<(String, Option<SubmittedDeliveryAttemptV1>)>,
     overflow: Option<crate::prompt_budget::PromptOverflow>,
@@ -484,5 +613,6 @@ fn finish_dialogue_completion_at(
         text,
         overflow,
         accepted_delivery,
+        accepted_runtime_feedback: None,
     }
 }

@@ -165,6 +165,7 @@ pub fn spawn_autonomous_loop(
 
         let mut conv = ConversationState::new(remote_journal_entries, workspace_path);
         restore_state(&mut conv);
+        conv.restore_pending_runtime_feedback();
         if let Err(error) = self_control_v2::reconcile_if_present(&mut conv) {
             warn!("Astrid self-control V2 restart reconciliation blocked: {error}");
         }
@@ -410,7 +411,9 @@ pub fn spawn_autonomous_loop(
                         Ok(enqueue_probe) => {
                             if sensory_tx.send(msg).await.is_err() {
                                 enqueue_probe.record_channel_closed();
-                                return Err(anyhow::anyhow!("sensory channel closed during autonomous rest"));
+                                return Err(anyhow::anyhow!(
+                                    "sensory channel closed during autonomous rest"
+                                ));
                             }
                             enqueue_probe.record_enqueued();
                         },
@@ -1921,16 +1924,14 @@ pub fn spawn_autonomous_loop(
                                     &overflow_dir,
                                     std::time::Duration::from_secs(3600),
                                 );
-                                let effective_emphasis = if let Some(ref form) = conv.form_constraint {
-                                            Some(format!(
-                                                "Express your response as a {}. Not prose — \
-                                                 the form itself is the expression.",
-                                                form
-                                            ))
-                                        } else {
-                                            conv.emphasis.clone()
-                                        };
-                                let generation = crate::llm::generate_dialogue_with_delivery(
+                                let effective_emphasis = dialogue_authored_emphasis(
+                                    conv.emphasis.as_deref(), conv.form_constraint.as_deref(),
+                                );
+                                let overflow_availability = prompt_overflow_availability(&conv);
+                                let runtime_feedback = conv.pending_runtime_feedback.iter()
+                                    .take(crate::runtime_action_feedback::MAX_RUNTIME_FEEDBACK_PER_REQUEST)
+                                    .cloned().collect::<Vec<_>>();
+                                let generation = crate::llm::generate_dialogue_with_runtime_feedback(
                                         journal,
                                         &spectral_summary,
                                         fill_pct,
@@ -1949,6 +1950,8 @@ pub fn spawn_autonomous_loop(
                                         attention_carrier.as_ref(),
                                         &overflow_dir,
                                         protected_input.as_ref(),
+                                        &runtime_feedback,
+                                        &overflow_availability,
                                     );
                                 // Each provider request has its own deadline. A selected
                                 // source gets the complete bounded primary/fallback chain;
@@ -1977,7 +1980,7 @@ pub fn spawn_autonomous_loop(
                                             );
                                         match tokio::time::timeout(
                                             Duration::from_secs(timeout_secs),
-                                            crate::llm::generate_dialogue_with_delivery(
+                                            crate::llm::generate_dialogue_with_runtime_feedback(
                                                 journal,
                                                 &spectral_summary,
                                                 fill_pct,
@@ -1987,14 +1990,7 @@ pub fn spawn_autonomous_loop(
                                                 modality_context.as_deref(),
                                                 effective_temperature,
                                                 retry_tokens,
-                                                if let Some(ref form) = conv.form_constraint {
-                                                    Some(format!(
-                                                        "Express your response as a {}.",
-                                                        form
-                                                    ))
-                                                } else {
-                                                    conv.emphasis.clone()
-                                                }.as_deref(),
+                                                effective_emphasis.as_deref(),
                                                 continuity_block.as_deref(),
                                                 agenda_context.as_deref(),
                                                 topline_hint.as_deref(),
@@ -2003,6 +1999,8 @@ pub fn spawn_autonomous_loop(
                                                 attention_carrier.as_ref(),
                                                 &overflow_dir,
                                                 protected_input.as_ref(),
+                                                &runtime_feedback,
+                                                &overflow_availability,
                                             )
                                         ).await {
                                             Ok(completion) => unpack_activity_completion(

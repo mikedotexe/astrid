@@ -42,6 +42,7 @@ pub struct DialogueCompletionV1 {
     pub text: Option<String>,
     pub overflow: Option<crate::prompt_budget::PromptOverflow>,
     pub accepted_delivery: Option<PromptDeliveryReceiptV1>,
+    pub accepted_runtime_feedback: Option<crate::runtime_action_feedback::RuntimeFeedbackReceiptV1>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -398,7 +399,17 @@ fn validate_retained_completion(
     attempt: &SubmittedDeliveryAttemptV1,
     completion: &str,
 ) -> std::io::Result<()> {
-    let response: serde_json::Value = serde_json::from_str(&attempt.response_json)?;
+    validate_retained_completion_json(&attempt.response_json, completion)
+}
+
+fn validate_retained_completion_json(response_json: &str, completion: &str) -> std::io::Result<()> {
+    if completion.trim().is_empty() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "empty completion",
+        ));
+    }
+    let response: serde_json::Value = serde_json::from_str(response_json)?;
     let raw = response
         .pointer("/choices/0/message/content")
         .or_else(|| response.pointer("/message/content"))

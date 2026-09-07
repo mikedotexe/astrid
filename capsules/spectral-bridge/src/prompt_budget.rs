@@ -37,6 +37,58 @@ pub struct PromptOverflow {
     pub summary: String,
 }
 
+/// Runtime evidence about continuing the overflow produced by this prompt.
+///
+/// This is guidance, not execution authority. The caller must check both action
+/// admission and whether overflow can become the continuation target. Rendering
+/// never evaluates a guard, spends a budget, or changes the active reader.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum OverflowReadMoreAvailability {
+    /// Admission and continuation-target eligibility were checked for this turn.
+    Available,
+    /// Runtime evidence prevents continuing this overflow for the current turn.
+    Blocked {
+        reason: String,
+        suggested_next: Option<String>,
+    },
+    /// The caller has not established continuation availability.
+    #[default]
+    Unknown,
+}
+
+fn overflow_continuation_notice(
+    overflow: &PromptOverflow,
+    availability: &OverflowReadMoreAvailability,
+) -> String {
+    let source = overflow.path.display();
+    match availability {
+        OverflowReadMoreAvailability::Available => format!(
+            "\n[Saved prompt overflow: {source}. NEXT: READ_MORE can continue this saved context; availability will be checked again when the action runs.]"
+        ),
+        OverflowReadMoreAvailability::Blocked {
+            reason,
+            suggested_next,
+        } => {
+            let reason = if reason.trim().is_empty() {
+                "the runtime has not admitted this continuation"
+            } else {
+                reason.trim()
+            };
+            let next = suggested_next
+                .as_deref()
+                .map(str::trim)
+                .filter(|next| !next.is_empty())
+                .map_or_else(String::new, |next| format!(" Suggested NEXT: {next}."));
+            format!(
+                "\n[Saved prompt overflow: {source}. READ_MORE cannot continue this context for this turn: {reason}.{next}]"
+            )
+        },
+        OverflowReadMoreAvailability::Unknown => format!(
+            "\n[Saved prompt overflow: {source}. Continuation availability is unverified for this turn.]"
+        ),
+    }
+}
+
 /// Structured report about how the prompt budget was applied.
 #[derive(Debug, Clone, Serialize)]
 pub struct PromptBudgetReport {
@@ -62,8 +114,8 @@ pub struct PromptTrimmedBlock {
 /// `budget`, lowest-priority blocks are progressively trimmed and the
 /// removed content is written to `overflow_dir/context_overflow_{ts}.txt`.
 ///
-/// Each trimmed block gets a notice appended:
-/// `[...N chars of {label} trimmed. NEXT: READ_MORE to see full context.]`
+/// Each trimmed block gets a neutral notice. A separate notice reports saved
+/// overflow and continuation availability after persistence succeeds.
 ///
 /// Returns the assembled text and optional overflow metadata.
 pub fn assemble_within_budget(
@@ -81,6 +133,26 @@ pub fn assemble_within_budget_with_sources(
     budget: usize,
     overflow_dir: &Path,
     sources: Vec<(&'static str, String)>,
+) -> (String, Option<PromptOverflow>, Option<PromptBudgetReport>) {
+    assemble_within_budget_with_sources_and_guidance(
+        blocks,
+        budget,
+        overflow_dir,
+        sources,
+        &OverflowReadMoreAvailability::Unknown,
+    )
+}
+
+/// Assemble and preserve overflow using a caller-supplied availability snapshot.
+///
+/// Unavailable or unknown continuation does not discard source text. Storage
+/// failure overrides the guidance and never advertises a readable overflow.
+pub fn assemble_within_budget_with_sources_and_guidance(
+    blocks: Vec<PromptBlock>,
+    budget: usize,
+    overflow_dir: &Path,
+    sources: Vec<(&'static str, String)>,
+    availability: &OverflowReadMoreAvailability,
 ) -> (String, Option<PromptOverflow>, Option<PromptBudgetReport>) {
     let mut overflow_sections: Vec<(String, String)> = sources
         .into_iter()
@@ -106,7 +178,12 @@ pub fn assemble_within_budget_with_sources(
             .map(|b| b.content)
             .collect::<Vec<_>>()
             .join("\n");
-        let overflow = write_context_overflow(&overflow_sections, overflow_dir, &mut assembled);
+        let overflow = write_context_overflow(
+            &overflow_sections,
+            overflow_dir,
+            &mut assembled,
+            availability,
+        );
         return (assembled, overflow, None);
     }
 
@@ -143,9 +220,8 @@ pub fn assemble_within_budget_with_sources(
                 overflow_sections.push((label.to_string(), contents[idx].clone()));
             }
             remaining_excess = remaining_excess.saturating_sub(block_len);
-            contents[idx] = format!(
-                "[{label} context ({block_len} chars) moved to overflow. NEXT: READ_MORE to see it.]"
-            );
+            contents[idx] =
+                format!("[{label} context ({block_len} chars) omitted from this turn.]");
             trimmed_blocks.push(PromptTrimmedBlock {
                 label: label.to_string(),
                 original_chars: block_len,
@@ -173,7 +249,7 @@ pub fn assemble_within_budget_with_sources(
 
             let mut kept: String = contents[idx][..keep_at].to_string();
             kept.push_str(&format!(
-                "\n[...{trimmed_len} chars of {label} trimmed. NEXT: READ_MORE to see full context.]"
+                "\n[...{trimmed_len} chars of {label} trimmed from this turn.]"
             ));
             remaining_excess = remaining_excess.saturating_sub(block_len.saturating_sub(keep_at));
             contents[idx] = kept;
@@ -194,7 +270,12 @@ pub fn assemble_within_budget_with_sources(
         .collect::<Vec<_>>()
         .join("\n");
 
-    let overflow = write_context_overflow(&overflow_sections, overflow_dir, &mut assembled);
+    let overflow = write_context_overflow(
+        &overflow_sections,
+        overflow_dir,
+        &mut assembled,
+        availability,
+    );
 
     let report = Some(PromptBudgetReport {
         budget,
@@ -210,6 +291,7 @@ fn write_context_overflow(
     sections: &[(String, String)],
     dir: &Path,
     assembled: &mut String,
+    availability: &OverflowReadMoreAvailability,
 ) -> Option<PromptOverflow> {
     if sections.is_empty() {
         return None;
@@ -244,7 +326,10 @@ fn write_context_overflow(
         })
     };
     match save() {
-        Ok(overflow) => Some(overflow),
+        Ok(overflow) => {
+            assembled.push_str(&overflow_continuation_notice(&overflow, availability));
+            Some(overflow)
+        },
         Err(error) => {
             tracing::warn!(%error, "prompt overflow was not saved");
             assembled.push_str("\n[Overflow storage failed; the trimmed context is not available through READ_MORE for this turn.]");
@@ -278,7 +363,7 @@ pub fn cap_with_overflow(
     let trimmed_len = content.len().saturating_sub(keep_at);
     let mut capped: String = content[..keep_at].to_string();
     capped.push_str(&format!(
-        "\n\n[...{trimmed_len} more chars. NEXT: READ_MORE to continue reading.]"
+        "\n\n[...{trimmed_len} more chars omitted from this turn. Continuation availability is unverified.]"
     ));
 
     let overflow = PromptOverflow {
@@ -414,8 +499,10 @@ mod tests {
 
         // High-priority content should be fully preserved.
         assert!(assembled.contains(&"A".repeat(500)));
-        // Low-priority should be trimmed with a notice.
-        assert!(assembled.contains("READ_MORE"));
+        // The legacy wrapper has no availability evidence and recommends no action.
+        assert!(assembled.contains("low context"));
+        assert!(assembled.contains("Continuation availability is unverified"));
+        assert!(!assembled.contains("NEXT: READ_MORE"));
         // Overflow should exist.
         let of = overflow.expect("overflow should exist");
         assert!(of.path.exists());
@@ -514,7 +601,8 @@ mod tests {
             Fourth paragraph has the conclusion and final thoughts about the research.";
         let (capped, overflow) = cap_with_overflow(long_text, "source", 60, &dir);
 
-        assert!(capped.contains("READ_MORE"));
+        assert!(capped.contains("Continuation availability is unverified"));
+        assert!(!capped.contains("NEXT: READ_MORE"));
         let of = overflow.expect("overflow should exist");
         assert!(of.path.exists());
         assert!(of.offset > 0);
@@ -635,5 +723,162 @@ mod tests {
         );
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    fn availability_cases() -> Vec<OverflowReadMoreAvailability> {
+        vec![
+            OverflowReadMoreAvailability::Available,
+            OverflowReadMoreAvailability::Blocked {
+                reason: "no active read_only_research budget".into(),
+                suggested_next: Some("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".into()),
+            },
+            OverflowReadMoreAvailability::Blocked {
+                reason: "another saved reading is the active continuation target".into(),
+                suggested_next: None,
+            },
+            OverflowReadMoreAvailability::Unknown,
+        ]
+    }
+
+    #[test]
+    fn overflow_guidance_preserves_sources_for_every_availability_and_trim_mode() {
+        let source = "Original λ🌊 text.\nNEXT: READ_MORE is quoted source evidence.\n".repeat(30);
+        for availability in availability_cases() {
+            // Zero fully evicts; 150 partially trims; 20,000 needs only the
+            // earlier source-cap spill. Availability must not affect source bytes.
+            for budget in [0, 150, 20_000] {
+                let dir = tempfile::tempdir().unwrap();
+                let block = PromptBlock {
+                    label: "continuity",
+                    content: source.chars().take(250).collect(),
+                    priority: 7,
+                    min_chars: 0,
+                };
+                let (text, overflow, report) = assemble_within_budget_with_sources_and_guidance(
+                    vec![block],
+                    budget,
+                    dir.path(),
+                    vec![("continuity", source.clone())],
+                    &availability,
+                );
+                let overflow = overflow.expect("every case preserves the capped source");
+                assert_eq!(overflow.offset, 0);
+                assert_eq!(
+                    fs::read_to_string(&overflow.path).unwrap(),
+                    format!("=== [continuity] ===\n\n{source}\n\n")
+                );
+                assert_eq!(text.matches("[Saved prompt overflow:").count(), 1);
+                let notice = text.rsplit("[Saved prompt overflow:").next().unwrap();
+                assert!(notice.contains(&overflow.path.display().to_string()));
+                match &availability {
+                    OverflowReadMoreAvailability::Available => {
+                        assert!(notice.contains("NEXT: READ_MORE can continue"));
+                        assert!(notice.contains("checked again when the action runs"));
+                    },
+                    OverflowReadMoreAvailability::Blocked {
+                        reason,
+                        suggested_next,
+                    } => {
+                        assert!(notice.contains(reason));
+                        assert!(!notice.contains("NEXT: READ_MORE"));
+                        if let Some(next) = suggested_next {
+                            assert!(notice.contains(&format!("Suggested NEXT: {next}")));
+                        } else {
+                            assert!(!notice.contains("Suggested NEXT:"));
+                        }
+                    },
+                    OverflowReadMoreAvailability::Unknown => {
+                        assert!(notice.contains("availability is unverified"));
+                        assert!(!notice.contains("NEXT:"));
+                    },
+                }
+                match budget {
+                    0 => assert!(report.unwrap().trimmed_blocks[0].fully_removed),
+                    150 => assert!(!report.unwrap().trimmed_blocks[0].fully_removed),
+                    _ => assert!(report.is_none()),
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn overflow_guidance_failure_never_claims_saved_or_available_context() {
+        for availability in availability_cases() {
+            for budget in [0, 20_000] {
+                let dir = tempfile::tempdir().unwrap();
+                let occupied = dir.path().join("occupied-file");
+                fs::write(&occupied, "existing reader data").unwrap();
+                let block = PromptBlock {
+                    label: "continuity",
+                    content: "Visible excerpt".into(),
+                    priority: 7,
+                    min_chars: 0,
+                };
+                let (text, overflow, _) = assemble_within_budget_with_sources_and_guidance(
+                    vec![block],
+                    budget,
+                    &occupied,
+                    vec![("continuity", "Complete source".into())],
+                    &availability,
+                );
+                assert!(overflow.is_none());
+                assert_eq!(text.matches("Overflow storage failed").count(), 1);
+                assert!(!text.contains("[Saved prompt overflow:"));
+                assert!(!text.contains("NEXT:"));
+                assert_eq!(
+                    fs::read_to_string(&occupied).unwrap(),
+                    "existing reader data"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn overflow_guidance_without_overflow_adds_no_notice_or_action() {
+        for availability in availability_cases() {
+            let dir = tempfile::tempdir().unwrap();
+            let (text, overflow, report) = assemble_within_budget_with_sources_and_guidance(
+                vec![PromptBlock {
+                    label: "journal",
+                    content: "Entire short source".into(),
+                    priority: 1,
+                    min_chars: 0,
+                }],
+                1000,
+                dir.path(),
+                vec![("journal", "Entire short source".into())],
+                &availability,
+            );
+            assert_eq!(text, "Entire short source");
+            assert!(overflow.is_none());
+            assert!(report.is_none());
+            assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 0);
+        }
+    }
+
+    #[test]
+    fn overflow_guidance_without_original_source_preserves_exact_removed_suffix() {
+        let source = "a".repeat(300);
+        let dir = tempfile::tempdir().unwrap();
+        let (_, overflow, report) = assemble_within_budget_with_sources_and_guidance(
+            vec![PromptBlock {
+                label: "continuity",
+                content: source.clone(),
+                priority: 7,
+                min_chars: 40,
+            }],
+            150,
+            dir.path(),
+            Vec::new(),
+            &OverflowReadMoreAvailability::Unknown,
+        );
+        let report = report.unwrap();
+        let kept = report.trimmed_blocks[0].kept_chars;
+        let overflow = overflow.unwrap();
+        assert_eq!(overflow.offset, 0);
+        assert_eq!(
+            fs::read_to_string(overflow.path).unwrap(),
+            format!("=== [continuity] ===\n\n{}\n\n", &source[kept..])
+        );
     }
 }
