@@ -1,0 +1,41 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round_status": "incomplete_budget_standdown",
+  "actor": "claude-heartbeat",
+  "reads": [
+    {
+      "kind": "canonical_report",
+      "introspection_id": "introspection_astrid_llm_1788775553",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788775553.txt",
+      "sha256": "3e67b834d41cc8541573dd9ac15c4a74375f900f2715bb4b143884d64b106c9c",
+      "bytes": 3994,
+      "lines": 45,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "witness_id": "lsw_73bd39b4fba3d7dc2f1d1879fd56aff044f00eb29fc0c7860680a0281d81a580",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_73bd39b4fba3d7dc2f1d1879fd56aff044f00eb29fc0c7860680a0281d81a580.json",
+      "sha256": "477c241d4066ce6fd46c1047c2eb4ebe816202a8f800054d137c2696eff817bf",
+      "bytes": 23755,
+      "lines": 533,
+      "read": "complete"
+    },
+    {
+      "kind": "operating_law",
+      "path": "AGENTS.md",
+      "bytes": 9182,
+      "read": "complete"
+    },
+    {
+      "kind": "operating_law",
+      "path": "docs/steward-notes/ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md",
+      "present_on_main": false,
+      "read_from": "git blob c59db6aff9 (newest copy; on codex/graceful-coupling-rollout, codex/hebbian-clock-boundary, codex/sovereign-daughter-runtime; last modified 2026-09-03T16:02:05-07:00)",
+      "bytes": 55155,
+      "read": "complete"
+    }
+  ],
+  "not_read": [],
+  "addressing_store_mutations": "none"
+}

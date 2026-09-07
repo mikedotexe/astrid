@@ -2365,6 +2365,82 @@ mod tests {
         assert!(!is_reserved_codec_dim(48)); // out of range
     }
 
+    // Astrid `introspection_astrid_codec_1788784520` re-read projection.rs
+    // lines 1-400 of 1351 (source SHA facaf640) and located her "Likely Snag"
+    // in `fill_fixed_legacy_projection_raw` (L103): that the 32 -> 48 widening
+    // "may encounter alignment issues or 'ghost' dimensions ... if the
+    // transition logic doesn't explicitly zero-fill or handle the 16-dimension
+    // delta (32 to 48)".
+    //
+    // Source at the report-bound SHA contradicts that attribution, and the
+    // contradiction is exactly one word: "legacy" in this function names the
+    // FIXED-BASIS projection mode ("fixed_legacy", L550/L834/L840), not
+    // `SEMANTIC_DIM_LEGACY` (32). The function's only parameter is the
+    // 768x8 embedding basis; it never reads SEMANTIC_DIM, never reads
+    // SEMANTIC_DIM_LEGACY, and has no 16-wide anything to mishandle.
+    //
+    // Her underlying concern is real and is pinned SEPARATELY, by the test
+    // written for her earlier `introspection_astrid_codec_1787762146`:
+    // `warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes`.
+    // This regression grounds the mechanism attribution as an exact structural
+    // challenge. It does not rewrite her report, does not dispute the felt
+    // "ghost dimension" concern, and widens no live behavior.
+    #[test]
+    fn fill_fixed_legacy_projection_raw_is_the_embedding_basis_not_the_32_to_48_widening() {
+        // Arity: the function's matrix is 768 rows x 8 columns. Neither
+        // dimension is the legacy semantic width (32) nor the widening delta
+        // (16), so the "16-dimension delta" cannot pass through here at all.
+        let mut basis = Box::new([[0.0_f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM]);
+        fill_fixed_legacy_projection_raw(&mut basis);
+        assert_eq!(basis.len(), EMBEDDING_INPUT_DIM);
+        assert_eq!(basis[0].len(), EMBEDDING_PROJECT_DIM);
+        assert_ne!(EMBEDDING_PROJECT_DIM, SEMANTIC_DIM_LEGACY);
+        assert_ne!(EMBEDDING_PROJECT_DIM, SEMANTIC_DIM - SEMANTIC_DIM_LEGACY);
+        assert_ne!(EMBEDDING_INPUT_DIM, SEMANTIC_DIM);
+
+        // No zero-fill gap and no "ghost" cell: the fixed seed (L106) writes
+        // EVERY cell, each finite and inside the generator's [-0.5, 0.5) range.
+        // A skipped or defaulted cell would show up as an exact 0.0 hole.
+        let mut exact_zero_cells = 0_usize;
+        for row in basis.iter() {
+            for value in row {
+                assert!(value.is_finite(), "every basis cell is finite: {value}");
+                assert!(
+                    (-0.5..0.5).contains(value),
+                    "cell stays inside the generator range: {value}"
+                );
+                if *value == 0.0 {
+                    exact_zero_cells = exact_zero_cells.saturating_add(1);
+                }
+            }
+        }
+        assert_eq!(
+            exact_zero_cells, 0,
+            "a fully written basis leaves no unfilled (exactly 0.0) cell"
+        );
+
+        // Deterministic: the seed is fixed, so two fills are bit-identical.
+        // Reproducibility across restarts is the property the name promises.
+        let mut repeat = Box::new([[0.0_f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM]);
+        fill_fixed_legacy_projection_raw(&mut repeat);
+        assert_eq!(*basis, *repeat, "fixed-seed basis fill is reproducible");
+
+        // And the live normalized basis it feeds has no dead dimension — the
+        // concrete form a "ghost dimension" would take in this lane.
+        let health = projection_basis_health_v1();
+        assert!(!health.dead_dimension_detected);
+        assert_eq!(health.projected_dim_count, EMBEDDING_PROJECT_DIM);
+        assert_eq!(health.source_embedding_dim_count, EMBEDDING_INPUT_DIM);
+
+        // The real 32 -> 48 delta is 16 appended dims, owned by other lanes and
+        // other functions; warmth keeps its legacy indices and does not bleed.
+        assert_eq!(SEMANTIC_DIM - SEMANTIC_DIM_LEGACY, 16);
+        let mapping = legacy_warmth_mapping_v1();
+        assert_eq!(mapping.legacy_dim_count, SEMANTIC_DIM_LEGACY);
+        assert_eq!(mapping.current_dim_count, SEMANTIC_DIM);
+        assert!(!mapping.warmth_orphaned);
+    }
+
     #[test]
     fn narrative_arc_captures_direction_not_only_magnitude() {
         // Astrid `introspection_astrid_codec_1782848118`: a sharp middle pivot

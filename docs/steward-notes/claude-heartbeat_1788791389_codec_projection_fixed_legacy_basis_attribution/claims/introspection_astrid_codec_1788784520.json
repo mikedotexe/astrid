@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_codec_1788784520",
+  "reader": "claude-heartbeat",
+  "report_sha256": "235f2d098a5efbdfd5d15533f11c566d00757ddcabe2a5f7ab4cb9952b61e224",
+  "source_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Observed: projection.rs establishes a 48D semantic mapping with SEMANTIC_DIM=48, FEATURE_ABS_MAX=5.0, TAIL_VIBRANCY_ENTROPY_GATE at L48, embedding_projection_matrix at L172, project_embedding_dynamic_epoch at L759, and CodecLaneSeparationAuditV1 (L401) / CodecRollingWindowShiftAuditV1 (L432) as traceable-transition evidence.",
+      "disposition": "Verified against the complete 1351-line source at the report-bound SHA facaf640 (working copy byte-identical). SEMANTIC_DIM=48 (L26), FEATURE_ABS_MAX=5.0 (L32), and all six named symbols sit exactly at the cited lines. Both audit structs are read-only witnesses (observational_only=true, live_projection_write=false), so 'focus on stable, traceable state transitions' is an accurate reading of their role, not an overclaim.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Likely Snag: fill_fixed_legacy_projection_raw (L103) may hit alignment issues or 'ghost' dimensions mapping older warmth vectors into 48D, if the transition logic does not zero-fill or handle the 16-dim delta (32 to 48) consistently.",
+      "disposition": "Mechanism contradicted, concern preserved. At the bound SHA, L103-115 takes only a [[f32;8];768] embedding basis: it never reads SEMANTIC_DIM or SEMANTIC_DIM_LEGACY and has no 16-wide quantity. 'legacy' here names the fixed-basis mode ('fixed_legacy', L550/L834/L840), not the 32D width. Grounded as an exact structural challenge by a new regression; her ghost/zero-fill concern is separately pinned by the warmth test written for her _1787762146.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Test 1 (Dimensionality Integrity): verify project_embedding (L854) produces a vector of exactly 48 dimensions from a standard 768D input, with no leakage into the reserved space (L80-81).",
+      "disposition": "Premise contradicted, invariant already covered. L854 returns Option<[f32; EMBEDDING_PROJECT_DIM]> = the 8-dim lane landing in codec dims 32-39; 48 is the full vector width, not this function's output. Exactly this correction already ships as project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate, written for her earlier _1787006424 (same file, same 1-400 window). Reserved dims 44-47 are skipped in the live noise path (encoding.rs L938, L1088).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Test 2 (Entropy Gating): assert the vibrancy lift triggered by TAIL_VIBRANCY_ENTROPY_GATE (L48) stays bounded by TAIL_VIBRANCY_MAX (L53) when spectral entropy is precisely 0.85.",
+      "disposition": "Already covered, and the exact-gate answer is stronger than bounded: at entropy == 0.85 the ramp is (0.85-0.85)/0.15 = 0, and smoothstep(0) = 0, so vibrancy_from_entropy returns exactly 0.0 (cascade.rs L266-271) and the ceiling collapses to FEATURE_ABS_MAX (feedback.rs L307-316). Pinned by tail_vibrancy_exact_gate_keeps_default_ceiling_and_reserved_dims and tail_vibrancy_gate_has_no_discontinuous_pop; both re-run green at this SHA.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Suggested Next: examine project_embedding_dynamic_epoch (L759) to determine how the dynamic aspect handles PROJECTION_EPOCH_WRITE_COUNTER (L571) to ensure thread-safe, idempotent updates to the projection state.",
+      "disposition": "Answered from complete source: the two are not connected. L759 is a pure function of (embedding, text, epoch_id, chunk_index) with no shared mutable state, so it never reads the counter. PROJECTION_EPOCH_WRITE_COUNTER is consumed only at L593-594 as a per-write temp-filename nonce. Idempotence comes from create_new + hard_link no-clobber (L670-684) with a stale-rename fallback, covered green by codec_projection_tmp_install_does_not_clobber_valid_concurrent_epoch.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Coverage boundary: the report declares source coverage partial (included 1-400, uncovered 401-1351) yet cites L401, L432, L571, L759 and L854 from beyond the read window.",
+      "disposition": "Observed without adjudication. All eleven line citations (L48, L53, L80, L81, L103, L172, L401, L432, L571, L759, L854) resolve exactly against the complete 1351-line source, including the five outside her read window, which came from the tree_sitter_rust structural map (map SHA 1164a04f). Out-of-window structural-map citation was reliable in this report; that is one observation, not a general guarantee, and the partial_window_unseen_source_not_assessed scope stands.",
+      "classification": "observed"
+    }
+  ]
+}

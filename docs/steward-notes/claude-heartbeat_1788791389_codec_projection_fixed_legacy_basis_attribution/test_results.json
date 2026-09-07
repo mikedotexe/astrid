@@ -1,0 +1,170 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "toolchain_note": "cargo run with PATH including ~/.cargo/bin; launchd child PATH omits it.",
+  "baseline": [
+    {
+      "command": "cargo fmt --all -- --check",
+      "result": "pass",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "exit_code": 0
+    }
+  ],
+  "focused": [
+    {
+      "test": "codec::core::tests::fill_fixed_legacy_projection_raw_is_the_embedding_basis_not_the_32_to_48_widening",
+      "status": "pass",
+      "new": true
+    },
+    {
+      "test": "codec::core::tests::project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate",
+      "status": "pass",
+      "new": false
+    },
+    {
+      "test": "codec::core::tests::warmth_vector_stays_in_legacy_layer_without_bleeding_into_appended_lanes",
+      "status": "pass",
+      "new": false
+    },
+    {
+      "test": "codec::core::tests::tail_vibrancy_exact_gate_keeps_default_ceiling_and_reserved_dims",
+      "status": "pass",
+      "new": false
+    },
+    {
+      "test": "codec::core::tests::tail_vibrancy_gate_has_no_discontinuous_pop",
+      "status": "pass",
+      "new": false
+    },
+    {
+      "test": "codec::core::tests::vibrancy_from_entropy_matches_inline_smoothstep",
+      "status": "pass",
+      "new": false
+    },
+    {
+      "test": "codec::core::tests::codec_projection_tmp_install_does_not_clobber_valid_concurrent_epoch",
+      "status": "pass",
+      "new": false
+    },
+    {
+      "test": "codec::core::tests::codec_projection_existing_epoch_file_takes_precedence_after_restart",
+      "status": "pass",
+      "new": false
+    },
+    {
+      "test": "autonomous::runtime::introspect::tests::within_file_xrefs_links_definition_to_distant_use",
+      "status": "pass",
+      "new": false,
+      "note": "re-run to prove the anti-drop alarm was a stale registry path, not a rotted guard"
+    },
+    {
+      "test": "autonomous::runtime::introspect::tests::cross_file_xref_sections_links_symbol_to_sibling_file",
+      "status": "pass",
+      "new": false,
+      "note": "same"
+    }
+  ],
+  "focused_pass_count": 10,
+  "focused_fail_count": 0,
+  "filter_correction_note": "The first run used filter path codec::tests::tests::* and matched 0 tests; per the handoff a zero-test filter is not a pass. Corrected to codec::core::tests::* (codec.rs is a facade over codec/core.rs) and re-run.",
+  "integrity": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "result": "OK",
+      "detail": "44 tests"
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "result": "OK",
+      "detail": "5 tests"
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "result": "green_after_repair",
+      "detail": "before: 90 rows / 0 gaps / 2 alarms (introspect_within_file_xref, introspect_cross_file_xref = stale test.file path). after: 90 rows / 0 gaps / 0 alarms"
+    },
+    {
+      "command": "domain_boundary_audit.py verify",
+      "result": "pass",
+      "detail": "valid=true, violation_count=0, no red ratchet; unlisted_legacy_review_debt_count=44 (pre-existing, unchanged)"
+    },
+    {
+      "command": "test_steward_control.py",
+      "result": "OK"
+    },
+    {
+      "command": "test_steward_projection.py",
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "result": "OK"
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "result": "OK"
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "result": "OK"
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "result": "pass",
+      "detail": "integrity_ok=true, configuration_valid=true, 0 errors, 4615 canonical, 0 duplicate hash groups"
+    },
+    {
+      "command": "introspection_addressing_audit.py audit-counters --json",
+      "result": "consistent",
+      "detail": "mismatches=[]"
+    },
+    {
+      "command": "evidence_event_store.py --json verify",
+      "result": "valid",
+      "detail": "seq 1025900, head ad7d0c09c19fab409fbebcd2e1f7735bc1877999f5be9c72b65fec60247ccb5b, 0 corrupt"
+    },
+    {
+      "command": "experiential_epistemics.py verify --json",
+      "result": "valid",
+      "detail": "11828 checked, 0 issues, history_rewritten=false"
+    },
+    {
+      "command": "division_ceremony_followup.py verify",
+      "result": "pass"
+    },
+    {
+      "command": "division_ceremony_chronicle.py verify",
+      "result": "expected_stale",
+      "detail": "'chronicle durable source inputs changed; project before verify' \u2014 the round-6-tracker append precedes the verify; the controller postprojection resolves it. Not a durable-integrity failure."
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "result": "OK",
+      "detail": "21 tests"
+    },
+    {
+      "command": "experiential_epistemics.py verify --json (final, after all durable writes incl. packet)",
+      "result": "valid",
+      "detail": "11828 checked, 0 issues, history_rewritten=false"
+    },
+    {
+      "command": "evidence_event_store.py --json status",
+      "result": "valid",
+      "detail": "event_count 1025913, head 828514c4c6d9d38346d7943468ce6c17b4e3d7dc3b5ce8ce255e78604b68e047, 0 corrupt, 16 streams enumerated; only steward_control advanced (19039 -> 19052) from the controller's own heartbeats"
+    }
+  ],
+  "deferred_to_budget": [
+    "Chronicle reproject (left to the controller postprojection; verify is expected-stale by design after a round-record append)"
+  ]
+}
