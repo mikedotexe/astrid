@@ -138,6 +138,11 @@ No push occurred.
 
 ## Next feature step
 
+**Subsequent completion:** the [runtime integration](2026-09-06-reading-mailbox-runtime.md)
+and [verified rollout](2026-09-06-reading-mailbox-rollout.md) now implement the
+episode described below. The foundation checkpoint and its original verification
+remain unchanged; later source, live and review identities are recorded separately.
+
 The [activity plan](../architecture/activity-continuity-and-inbox.md) remains the
 throughline. Its first repair is typed, durable offered/committed reading
 progress in the existing continuity log, followed by exact prompt-delivery

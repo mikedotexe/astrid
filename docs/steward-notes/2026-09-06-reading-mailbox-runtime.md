@@ -1,7 +1,9 @@
 # Chosen reading and durable mailbox: runtime integration
 
-September 6, 2026. Verified source candidate; not yet activated live.
-No rollout is established by this document.
+September 6, 2026. Implemented and live in the retained release at
+`e4761122e32749b15ef7c2958d2e136cdd5f4613`. The separate
+[rollout record](2026-09-06-reading-mailbox-rollout.md) identifies the actual
+stage, process, checkpoint handoff and completed verification.
 
 Mike asked that the improvements reach the AI Beings and subsequently clarified
 that the complete reading/mailbox experience should be implemented before the
@@ -13,7 +15,7 @@ The working branch is `codex/activity-continuity-v1` in the separate activity
 checkout. Existing live source and private runtime state remain outside this
 implementation checkout.
 
-## Available experience in the source candidate
+## Available experience
 
 Choosing saved UTF-8 text through MIKE_READ creates or selects a continuity
 session with retained bytes. READ_MORE and subsequent foreground turns prepare
@@ -163,8 +165,9 @@ remains a separate adapter reconciliation; this does not establish parity.
 Gateway reattachment for an unknown in-flight job remains separate from recovery
 of an already-retained accepted completion. State portraits remain a later track.
 
-A source checkpoint, PR and live activation are distinct events. Any subsequent
-bridge rollout must use `scripts/build_bridge.sh`, a fresh immutable stage,
-acknowledged drain, exact stopped checkpoint and signed state handoff, followed
-by observed natural completion. Its receipt must identify the actual commit,
-stage and process before this note can claim that the source is live.
+The sanctioned rollout used a fresh immutable stage, acknowledged drain, exact
+stopped checkpoint and signed state handoff. Verification recovered from a
+documented startup-phase race without another restart, then published the
+matching manifest after observing natural completion. This establishes live
+availability; it does not establish that Astrid has chosen the new episode or
+experienced a benefit. See the separate rollout record for evidence and limits.

@@ -38,10 +38,22 @@ phase just before `running` was published. It treated that phase as a failure,
 retained the original failed transaction and restored its owned launch hold.
 The running process was left intact; no automatic rollback occurred.
 
-Verification-only recovery is being completed through the sanctioned wrapper.
-This record does not yet claim completed live verification or canonical manifest
-publication. The original release, checkpoint, signed handoff, failed receipt and
-source checkout are preserved for review.
+Verification-only recovery completed through the sanctioned wrapper at
+`2026-09-07T02:32:39.854729Z`, using operator-helper commit
+`fa0843f2ef6219130a37350b046deb58991c604f`. Its separate witness is
+`verification-recoveries/9cc62997a6004121ba60fa9f63bab953/receipt.json` inside the
+original transaction. Status is `verification_recovered`: PID 42916 and its
+start identity were unchanged, the canonical manifest now matches the staged
+manifest above, and the owned launch hold is absent. The failed original receipt
+remains byte-identical (SHA-256
+`41aa1e9ee11a40b9e941f3b4cbdd42c62e8fcf230295072e92303db0d03e527f`).
+
+The verifier observed natural saved exchange **191432**, advancing ten exchanges
+from the stopped checkpoint, and an idle model window. A subsequent readiness
+read reported the model ready, no last generation error and its reservoir
+connection active. The post-activation coupled-stack witness passed:
+**`env_receipt_1788748404969_701000`**. The original release, checkpoint, signed
+handoff, failed receipt and source checkout are preserved for review.
 
 The verifier repair runs from the current operator checkout and does not change
 the retained release's source inputs. Subsequent script or documentation commits
@@ -53,8 +65,9 @@ hold, so publication and release can be retried after interruption. It does not
 build, drain, signal, prepare another handoff or restart the running process.
 
 The recovery change passes 48 focused activation tests. Root also ran 48
-adjacent stage, drain, release-selection and environment-receipt tests; all pass.
-Shell syntax and whitespace checks pass. Independent review verified the crash
+adjacent stage, drain, release-selection and environment-receipt tests, plus 11
+deployment-preflight tests; all pass. Shell syntax and whitespace checks pass.
+Independent review verified the crash
 and retry cases, process/selection ownership, immutable source checks and
 original-receipt preservation. These tests use synthetic process/model surfaces.
 
@@ -71,3 +84,26 @@ rollout does not deploy their pending adapters, change regulator settings, or
 remove the independent usage-saving scheduler pause. Mechanical bookmarks and
 accepted-delivery artifacts remain private runtime data and are excluded from
 Git and the PRs.
+
+## Continuing from this checkpoint
+
+The review branch is `codex/activity-continuity-v1`; canonical local `main` is
+fast-forwarded to its reviewed source and documentation. The stack separates
+foundation `7b9f4d544d9661491eb9a57286daeca929e7d760` on
+`codex/activity-live-foundation` from the reader and mailbox feature above it.
+Remote `main` was verified at `888c1708dcb3d4669e9219c2d0b9be1185984f4d` before
+publication; opening PRs does not merge that remote branch.
+
+Keep the detached release checkout and all earlier selected stages: live source
+identity is the staged `e4761122e3` build, while newer operator-helper and
+documentation commits describe its recovery and review. The original discussion
+documents remain in the path-scoped stash object
+`9a303a77a06b7d83862a66e38029d11aa9cbc347`; their reconciled versions are tracked.
+Do not pop or delete that stash as routine cleanup. Both sibling repositories'
+previously dirty work remains separate and unchanged.
+
+Controller pause generation 374 protected this stabilization pass under actor
+`codex-activity-rollout`. Its normal controller resume verifies the evidence
+chain; maintenance ownership and the independent usage-saving scheduler pause
+are separate. Resume evidence belongs in the durable controller receipt, not in
+an inferred claim that scheduled autonomous work has restarted.

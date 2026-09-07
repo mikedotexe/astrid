@@ -3,13 +3,16 @@
 September 6, 2026. Implementation preparation following Mike's
 [spectral-bridge discussion](../research/2026-09-05-spectral-bridge-feature-map.md).
 
-**Status:** the [runtime integration candidate](../steward-notes/2026-09-06-reading-mailbox-runtime.md)
+**Status:** the [runtime integration](../steward-notes/2026-09-06-reading-mailbox-runtime.md)
 now connects the [first bookmark tranche](../steward-notes/2026-09-06-recoverable-reader-bookmarks.md)
 to foreground reading, explicit mailbox windows, final-provider delivery receipts
 and recovery of accepted completions. All 2,100 distinct bridge library tests and
-the final lint, formatting and domain-boundary checks pass. This is verified
-source, not a live activation. This document preserves the design contract; the runtime record names actual
-limits, evidence and remaining exceptions. Deployment remains a separate operation.
+the final lint, formatting and domain-boundary checks pass. The
+[completed rollout](../steward-notes/2026-09-06-reading-mailbox-rollout.md) records
+live availability, exact checkpoint continuity and subsequent natural exchanges.
+This document preserves the design contract; the runtime record names actual
+limits, evidence and remaining exceptions. Live availability does not establish
+adoption or felt benefit.
 
 The accompanying [preimplementation findings](../steward-notes/2026-09-06-activity-continuity-preflight-findings.md)
 record concrete source paths, failure conditions, and proposed characterization

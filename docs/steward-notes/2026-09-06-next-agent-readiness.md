@@ -1,5 +1,11 @@
 # Next-Agent Readiness: Main Is Not the Live Baseline Yet
 
+> **Later reconciliation and rollout:** the blocker described below was resolved
+> for Astrid by the [foundation reconciliation](2026-09-06-activity-foundation-reconciliation.md)
+> and [reading/mailbox rollout](2026-09-06-reading-mailbox-rollout.md). Use those
+> records for the current source and live identities. This imported audit remains
+> historical; its Minime/model changes and unresolved observations were preserved.
+
 > **Prior-task evidence, imported 2026-09-06.** Copied from [the retained candidate note](/Users/v/other/worktrees/astrid-hebbian-clock-boundary/docs/steward-notes/2026-09-06-next-agent-readiness.md). Runtime identities, test results, approvals and commands below describe that earlier task; they are not verification or authority from this integration pass. Relative evidence paths retain their original checkout scope.
 
 Audit: 2026-09-07 around 00:18 UTC (September 6, America/Los_Angeles).
