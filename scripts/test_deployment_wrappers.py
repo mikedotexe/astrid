@@ -3,7 +3,11 @@
 
 from __future__ import annotations
 
+import json
+import shutil
 import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -20,6 +24,85 @@ SCRIPTS = (
 
 
 class DeploymentWrapperTests(unittest.TestCase):
+    def activation_run(self, arguments: list[str], *, fail_preflight_repo: str = ""):
+        """Exercise the system Bash without invoking deployment Python or services."""
+        with tempfile.TemporaryDirectory(prefix="bridge-wrapper-") as temporary:
+            fixture = Path(temporary)
+            source = fixture / "source with spaces"
+            scripts = source / "scripts"
+            scripts.mkdir(parents=True)
+            wrapper = scripts / "build_bridge.sh"
+            shutil.copyfile(ROOT / "scripts/build_bridge.sh", wrapper)
+            commands = fixture / "commands"
+            commands.mkdir()
+            calls_path = fixture / "calls.jsonl"
+            mock = commands / "python3"
+            mock.write_text(
+                f"#!{sys.executable}\n"
+                "import json, os, pathlib, sys\n"
+                "args = sys.argv[1:]\n"
+                "with open(os.environ['MOCK_CALLS'], 'a') as output:\n"
+                "    output.write(json.dumps({'argv': args, 'sanctioned': os.environ.get('ASTRID_SANCTIONED_BRIDGE_ACTIVATION')}) + '\\n')\n"
+                "if len(args) < 2 or args[0] != '-B': sys.exit(97)\n"
+                "name = pathlib.Path(args[1]).name\n"
+                "if name not in {'deploy_preflight.py', 'bridge_activate.py'}: sys.exit(98)\n"
+                "if name == 'deploy_preflight.py' and args[args.index('--repo') + 1] == os.environ.get('MOCK_FAIL_PREFLIGHT_REPO'): sys.exit(23)\n"
+            )
+            mock.chmod(0o755)
+            env = {
+                "PATH": f"{commands}:/usr/bin:/bin",
+                "MOCK_CALLS": str(calls_path),
+                "MOCK_FAIL_PREFLIGHT_REPO": fail_preflight_repo,
+            }
+            result = subprocess.run(
+                ["/bin/bash", str(wrapper), *arguments], env=env,
+                capture_output=True, text=True, check=False,
+            )
+            calls = [json.loads(line) for line in calls_path.read_text().splitlines()] if calls_path.exists() else []
+            return result, calls, str(source)
+
+    def test_system_bash_dispatches_activation_with_and_without_recovery(self) -> None:
+        for recovery in ([], ["--resume-verification", "/fixture/transaction with spaces"]):
+            with self.subTest(recovery=recovery):
+                result, calls, source = self.activation_run([
+                    "--activate-stage", "/fixture/stage with spaces", "--expected-pid", "12345",
+                    "--actor", "wrapper-test", "--ack", "synthetic rollout", *recovery,
+                ])
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(len(calls), 3, calls)
+                for call, repository in zip(calls[:2], (source, "/Users/v/other/astrid")):
+                    self.assertEqual(call, {
+                        "argv": ["-B", f"{source}/scripts/deploy_preflight.py", "--repo", repository, "--ack", "synthetic rollout"],
+                        "sanctioned": None,
+                    })
+                self.assertEqual(calls[2], {
+                    "argv": ["-B", f"{source}/scripts/bridge_activate.py", "--stage-dir", "/fixture/stage with spaces",
+                             "--expected-pid", "12345", "--actor", "wrapper-test", "--ack", "synthetic rollout",
+                             "--legacy-stop-ack", "", "--timeout-secs", "600", *recovery],
+                    "sanctioned": "1",
+                })
+
+    def test_system_bash_rejects_malformed_recovery_before_preflight(self) -> None:
+        base = ["--activate-stage", "/fixture/stage", "--expected-pid", "12345", "--ack", "synthetic rollout"]
+        for arguments in (
+            [*base, "--resume-verification"],
+            [*base, "--resume-verification", "--timeout-secs", "10"],
+            ["--resume-verification", "/fixture/transaction"],
+            [*base, "--resume-verification", "/fixture/transaction", "--legacy-stop-ack", "legacy"],
+        ):
+            with self.subTest(arguments=arguments):
+                result, calls, _ = self.activation_run(arguments)
+                self.assertEqual(result.returncode, 64, result.stderr)
+                self.assertEqual(calls, [])
+
+    def test_system_bash_stops_when_canonical_preflight_fails(self) -> None:
+        result, calls, _ = self.activation_run([
+            "--activate-stage", "/fixture/stage", "--expected-pid", "12345", "--ack", "synthetic rollout",
+        ], fail_preflight_repo="/Users/v/other/astrid")
+        self.assertEqual(result.returncode, 23, result.stderr)
+        self.assertEqual(len(calls), 2, calls)
+        self.assertTrue(all(Path(call["argv"][1]).name == "deploy_preflight.py" for call in calls))
+
     def test_activation_is_separate_and_requires_both_preflights(self) -> None:
         wrapper = ROOT / "scripts/build_bridge.sh"
         text = wrapper.read_text()

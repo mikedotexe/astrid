@@ -103,15 +103,19 @@ if [ -n "$ACTIVATE_STAGE" ]; then
     echo "build_bridge: verification-only recovery cannot accompany legacy stop acknowledgement" >&2
     exit 64
   fi
-  RESUME_ARGS=()
-  [ -z "$RESUME_VERIFICATION" ] || RESUME_ARGS+=(--resume-verification "$RESUME_VERIFICATION")
+  # Bash 3 treats an empty array as unset under nounset; keep required arguments
+  # in the array so ordinary activation does not require a recovery option.
+  ACTIVATION_ARGS=(
+    --stage-dir "$ACTIVATE_STAGE" --expected-pid "$EXPECTED_PID" --actor "$ACTOR" --ack "$ACK"
+    --legacy-stop-ack "$LEGACY_STOP_ACK" --timeout-secs "$ACTIVATION_TIMEOUT"
+  )
+  [ -z "$RESUME_VERIFICATION" ] || ACTIVATION_ARGS+=(--resume-verification "$RESUME_VERIFICATION")
   python3 -B "$SCRIPT_ROOT/scripts/deploy_preflight.py" --repo "$SCRIPT_ROOT" --ack "$ACK"
   if [ "$SCRIPT_ROOT" != "$ASTRID" ]; then
     python3 -B "$SCRIPT_ROOT/scripts/deploy_preflight.py" --repo "$ASTRID" --ack "$ACK"
   fi
   exec env ASTRID_SANCTIONED_BRIDGE_ACTIVATION=1 python3 -B "$SCRIPT_ROOT/scripts/bridge_activate.py" \
-    --stage-dir "$ACTIVATE_STAGE" --expected-pid "$EXPECTED_PID" --actor "$ACTOR" --ack "$ACK" \
-    --legacy-stop-ack "$LEGACY_STOP_ACK" --timeout-secs "$ACTIVATION_TIMEOUT" "${RESUME_ARGS[@]}"
+    "${ACTIVATION_ARGS[@]}"
 fi
 if [ -n "$EXPECTED_PID" ] || [ -n "$LEGACY_STOP_ACK" ] || [ -n "$RESUME_VERIFICATION" ] || [ "$ACTIVATION_TIMEOUT" != 600 ]; then
   echo "build_bridge: activation options require --activate-stage" >&2
