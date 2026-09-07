@@ -146,6 +146,15 @@ impl Default for QueueState {
 }
 
 impl DurableInbox {
+    /// The return surface follows this configured inbox, including isolated tests.
+    pub(crate) fn outbox_dir(&self) -> Result<PathBuf> {
+        Ok(self
+            .inbox_dir
+            .parent()
+            .ok_or_else(|| anyhow!("inbox has no containing workspace"))?
+            .join("outbox"))
+    }
+
     pub(crate) fn new(inbox_dir: &Path, queue_root: &Path) -> Self {
         Self {
             inbox_dir: inbox_dir.to_path_buf(),
@@ -351,6 +360,27 @@ impl DurableInbox {
         reservation: &InboxReservation,
         evidence: &InboxDeliveryEvidence,
     ) -> Result<InboxDeliveryReceipt> {
+        self.acknowledge_inner(reservation, evidence, None::<fn() -> Result<()>>)
+    }
+
+    /// Run recoverable local publication after reservation validation and before
+    /// acknowledgement, under the same lock. The callback must be idempotent and
+    /// must not call back into the queue or run model/actions/peer forwarding.
+    pub(crate) fn acknowledge_with_precommit(
+        &self,
+        reservation: &InboxReservation,
+        evidence: &InboxDeliveryEvidence,
+        before_acknowledge: impl FnOnce() -> Result<()>,
+    ) -> Result<InboxDeliveryReceipt> {
+        self.acknowledge_inner(reservation, evidence, Some(before_acknowledge))
+    }
+
+    fn acknowledge_inner(
+        &self,
+        reservation: &InboxReservation,
+        evidence: &InboxDeliveryEvidence,
+        before_acknowledge: Option<impl FnOnce() -> Result<()>>,
+    ) -> Result<InboxDeliveryReceipt> {
         validate_id(&evidence.accepted_attempt_id)?;
         if !storage::valid_hash(&evidence.retained_completion_sha256)
             || evidence.submitted_content_sha256 != reservation.content_sha256
@@ -364,6 +394,15 @@ impl DurableInbox {
             .letters
             .get(&reservation.letter.version_id)
             .ok_or_else(|| anyhow!("unknown inbox version"))?;
+        if let Some(before_acknowledge) = before_acknowledge {
+            if let Some(receipt) = &letter.receipt
+                && (receipt.accepted_attempt_id != evidence.accepted_attempt_id
+                    || receipt.retained_completion_sha256 != evidence.retained_completion_sha256)
+            {
+                bail!("a different completion already acknowledged this source version");
+            }
+            before_acknowledge()?;
+        }
         if let Some(receipt) = &letter.receipt {
             return Ok(receipt.clone());
         }

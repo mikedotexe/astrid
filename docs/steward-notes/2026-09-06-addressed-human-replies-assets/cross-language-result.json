@@ -1,0 +1,39 @@
+{
+  "schema": "human_reply_cross_language_fixture_v1",
+  "result": "passed",
+  "fixtures": [
+    {
+      "newline": "LF",
+      "source": "/Users/v/.codex/artifacts/astrid-addressed-human-replies-20260906/cross-language-check/lf/inbox/mike_query_synthetic_compatibility_thought_1788748877.txt",
+      "artifact": "/Users/v/.codex/artifacts/astrid-addressed-human-replies-20260906/cross-language-check/lf/outbox/human/mike/human_reply_94cb3260676df478b2239292d3c83ff75d20e01ef5052bbf64594db593289390.txt",
+      "source_sha256": "e300e98432c99686cdb6a9dd4523b8bd535b1183cf97c0f22cea6ab8ba97bdf5",
+      "source_version": "354339bd8c489f1ed20a983323acf7bb997346fb2dc5df79260416761c7858d6",
+      "confirmed": true,
+      "negative_headers_rejected": [
+        "wrong_to",
+        "duplicate_sender",
+        "empty_thread",
+        "bad_completion_hash",
+        "wrong_version"
+      ],
+      "filename_replacement_isolated": true
+    },
+    {
+      "newline": "CRLF",
+      "source": "/Users/v/.codex/artifacts/astrid-addressed-human-replies-20260906/cross-language-check/crlf/inbox/mike_query_synthetic_compatibility_thought_1788748877.txt",
+      "artifact": "/Users/v/.codex/artifacts/astrid-addressed-human-replies-20260906/cross-language-check/crlf/outbox/human/mike/human_reply_a3182887b6ede83cf949e7807cb155ccd985732a8a8295206df33c28cdfc166e.txt",
+      "source_sha256": "20c9f061066635897284a1283370557a447f25fc25fa7efc74d612b9f4f316b2",
+      "source_version": "cca40523c94268adf5c4b09f7344cf41c3b32bfc76a6c9d1dc398e8f0fcce0ee",
+      "confirmed": true,
+      "negative_headers_rejected": [
+        "wrong_to",
+        "duplicate_sender",
+        "empty_thread",
+        "bad_completion_hash",
+        "wrong_version"
+      ],
+      "filename_replacement_isolated": true
+    }
+  ],
+  "scope": "Production Rust parser/publisher and Python composer/loader/matcher; synthetic receipt fields; provider authenticity covered by separate runtime tests."
+}

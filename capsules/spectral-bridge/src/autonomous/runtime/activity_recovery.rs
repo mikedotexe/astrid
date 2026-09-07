@@ -1,5 +1,6 @@
-/// Receipt reconciliation only. Retained completion prose is never passed to the
-/// NEXT parser, output router, reflection hooks, or a fresh model generation.
+/// Receipt reconciliation and idempotent local human-reply publication only.
+/// Retained completion prose never enters NEXT, peer routing, reflection hooks,
+/// or a fresh model generation. Publication must succeed before acknowledgement.
 #[derive(Debug, Default, PartialEq, Eq)]
 struct ActivityRecoverySummary {
     letters_reconciled: usize,

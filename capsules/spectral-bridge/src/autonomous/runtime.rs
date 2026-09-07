@@ -44,6 +44,9 @@ mod division_ceremony;
 pub(crate) mod envelope_registry;
 #[path = "hebbian.rs"]
 mod hebbian;
+#[path = "human_correspondence.rs"]
+mod human_correspondence;
+pub(crate) use human_correspondence::human_reply_quality_views;
 #[path = "inquiry.rs"]
 mod inquiry;
 #[path = "introspect.rs"]

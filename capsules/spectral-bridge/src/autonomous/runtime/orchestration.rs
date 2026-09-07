@@ -2043,6 +2043,7 @@ pub fn spawn_autonomous_loop(
 
                             match llm_response {
                                 Some(text) => {
+                                    let (ordinary_text, has_ordinary_text) = project_mailbox_response(&text);
                                     // Record this exchange for statefulness.
                                     let minime_summary = if protected_input.is_some() {
                                         String::new()
@@ -2055,95 +2056,97 @@ pub fn spawn_autonomous_loop(
                                             selected.path == pending.path
                                                 && pending.is_priority_feedback()
                                         });
-                                    conv.history.push(crate::llm::Exchange {
-                                        minime_said: minime_summary,
-                                        astrid_said: text.clone(),
-                                    });
-                                    // Keep only last 8 exchanges to bound memory.
-                                    if conv.history.len() > 8 {
-                                        conv.history.drain(..conv.history.len() - 8);
-                                    }
-                                    if let Some(event) =
-                                        conv.update_astrid_motif_cooldown_from_history()
-                                    {
-                                        let metric = serde_json::json!({
-                                            "event": event.event,
-                                            "cooldown_class": event.cooldown_class,
-                                            "status": event.status,
-                                            "observed_count": event.observed_count,
-                                            "cooldown_until_unix_s": event.cooldown_until_unix_s,
-                                            "exchange_count": conv.exchange_count,
-                                            "label": conv
-                                                .astrid_motif_cooldown
-                                                .as_ref()
-                                                .map(|cooldown| cooldown.label.clone()),
-                                            "prompt_replay_suppressed": conv
-                                                .astrid_motif_cooldown
-                                                .as_ref()
-                                                .map(|cooldown| cooldown.prompt_replay_suppressed)
-                                                .unwrap_or(false),
+                                    if has_ordinary_text {
+                                        conv.history.push(crate::llm::Exchange {
+                                            minime_said: minime_summary,
+                                            astrid_said: ordinary_text.clone(),
                                         });
-                                        if let Err(error) = condition_metrics::record_bridge_signal(
-                                            "astrid_motif_cooldown",
-                                            metric,
-                                        ) {
-                                            warn!(
-                                                error = %error,
-                                                "failed to record Astrid motif cooldown metrics"
-                                            );
+                                        // Keep only last 8 exchanges to bound memory.
+                                        if conv.history.len() > 8 {
+                                            conv.history.drain(..conv.history.len() - 8);
                                         }
-                                    }
+                                        if let Some(event) =
+                                            conv.update_astrid_motif_cooldown_from_history()
+                                        {
+                                            let metric = serde_json::json!({
+                                                "event": event.event,
+                                                "cooldown_class": event.cooldown_class,
+                                                "status": event.status,
+                                                "observed_count": event.observed_count,
+                                                "cooldown_until_unix_s": event.cooldown_until_unix_s,
+                                                "exchange_count": conv.exchange_count,
+                                                "label": conv
+                                                    .astrid_motif_cooldown
+                                                    .as_ref()
+                                                    .map(|cooldown| cooldown.label.clone()),
+                                                "prompt_replay_suppressed": conv
+                                                    .astrid_motif_cooldown
+                                                    .as_ref()
+                                                    .map(|cooldown| cooldown.prompt_replay_suppressed)
+                                                    .unwrap_or(false),
+                                            });
+                                            if let Err(error) = condition_metrics::record_bridge_signal(
+                                                "astrid_motif_cooldown",
+                                                metric,
+                                            ) {
+                                                warn!(
+                                                    error = %error,
+                                                    "failed to record Astrid motif cooldown metrics"
+                                                );
+                                            }
+                                        }
 
-                                    // Latent vector: embed Astrid's response for continuity.
-                                    let response_for_embed = text.clone();
-                                    let db_clone = Arc::clone(&db);
-                                    let exchange_num = conv.exchange_count;
-                                    crate::lifecycle::spawn_background(async move {
-                                        if let Some(embedding) = crate::llm::embed_text(&response_for_embed).await {
-                                            let summary: String = response_for_embed.chars().take(150).collect();
-                                            let embedding_json = serde_json::to_string(&embedding).unwrap_or_default();
-                                            let ts = std::time::SystemTime::now()
-                                                .duration_since(std::time::UNIX_EPOCH)
-                                                .unwrap_or_default()
-                                                .as_secs_f64();
-                                            let _ = db_clone.save_latent_vector(ts, exchange_num, &summary, &embedding_json);
-                                        }
-                                    });
+                                        // Latent vector: embed Astrid's response for continuity.
+                                        let response_for_embed = ordinary_text.clone();
+                                        let db_clone = Arc::clone(&db);
+                                        let exchange_num = conv.exchange_count;
+                                        crate::lifecycle::spawn_background(async move {
+                                            if let Some(embedding) = crate::llm::embed_text(&response_for_embed).await {
+                                                let summary: String = response_for_embed.chars().take(150).collect();
+                                                let embedding_json = serde_json::to_string(&embedding).unwrap_or_default();
+                                                let ts = std::time::SystemTime::now()
+                                                    .duration_since(std::time::UNIX_EPOCH)
+                                                    .unwrap_or_default()
+                                                    .as_secs_f64();
+                                                let _ = db_clone.save_latent_vector(ts, exchange_num, &summary, &embedding_json);
+                                            }
+                                        });
 
-                                    // Self-referential feedback loop: observe own generation.
-                                    // Astrid can pause this with NEXT: QUIET_MIND
-                                    if conv.self_reflect_paused {
-                                        debug!("self-reflection paused by Astrid's choice");
-                                    }
-                                    let should_reflect = !conv.self_reflect_paused;
-                                    let response_for_reflect = text.clone();
-                                    let journal_for_reflect: String = if protected_input.is_some() {
-                                        String::new()
-                                    } else {
-                                        conv.remote_journal_entries.first()
-                                            .and_then(|entry| read_journal_entry(&entry.path))
-                                            .unwrap_or_default().chars().take(200).collect()
-                                    };
-                                    let fill_for_reflect = fill_pct;
-                                    let db_for_reflect = Arc::clone(&db);
-                                    let exchange_for_reflect = conv.exchange_count;
-                                    if should_reflect { crate::lifecycle::spawn_background(async move {
-                                        if let Some(obs) = crate::llm::self_reflect(
-                                            &response_for_reflect,
-                                            &journal_for_reflect,
-                                            fill_for_reflect,
-                                        ).await {
-                                            let ts = std::time::SystemTime::now()
-                                                .duration_since(std::time::UNIX_EPOCH)
-                                                .unwrap_or_default()
-                                                .as_secs_f64();
-                                            let excerpt: String = response_for_reflect.chars().take(100).collect();
-                                            let _ = db_for_reflect.save_self_observation(
-                                                ts, exchange_for_reflect, &obs, &excerpt
-                                            );
-                                            tracing::info!("self-observation: {}", semantic_truncate_str(&obs, 80));
+                                        // Self-referential feedback loop: observe own generation.
+                                        // Astrid can pause this with NEXT: QUIET_MIND
+                                        if conv.self_reflect_paused {
+                                            debug!("self-reflection paused by Astrid's choice");
                                         }
-                                    }); }
+                                        let should_reflect = !conv.self_reflect_paused;
+                                        let response_for_reflect = ordinary_text;
+                                        let journal_for_reflect: String = if protected_input.is_some() {
+                                            String::new()
+                                        } else {
+                                            conv.remote_journal_entries.first()
+                                                .and_then(|entry| read_journal_entry(&entry.path))
+                                                .unwrap_or_default().chars().take(200).collect()
+                                        };
+                                        let fill_for_reflect = fill_pct;
+                                        let db_for_reflect = Arc::clone(&db);
+                                        let exchange_for_reflect = conv.exchange_count;
+                                        if should_reflect { crate::lifecycle::spawn_background(async move {
+                                            if let Some(obs) = crate::llm::self_reflect(
+                                                &response_for_reflect,
+                                                &journal_for_reflect,
+                                                fill_for_reflect,
+                                            ).await {
+                                                let ts = std::time::SystemTime::now()
+                                                    .duration_since(std::time::UNIX_EPOCH)
+                                                    .unwrap_or_default()
+                                                    .as_secs_f64();
+                                                let excerpt: String = response_for_reflect.chars().take(100).collect();
+                                                let _ = db_for_reflect.save_self_observation(
+                                                    ts, exchange_for_reflect, &obs, &excerpt
+                                                );
+                                                tracing::info!("self-observation: {}", semantic_truncate_str(&obs, 80));
+                                            }
+                                        }); }
+                                    }
 
                                     if used_pending_self_study {
                                         conv.pending_remote_self_study = None;
@@ -3497,6 +3500,11 @@ pub fn spawn_autonomous_loop(
                         inbox_reservation.as_ref(), accepted_delivery.as_ref(),
                         (mode_name == "dialogue_live").then_some(response_text.as_str()),
                     );
+                    // Receipt validation uses the untouched retained completion.
+                    // Every ordinary signal, journal and action sink below sees
+                    // only the projection outside human correspondence blocks.
+                    let (ordinary_response, has_shared_response) = project_mailbox_response(&response_text);
+                    response_text = ordinary_response;
                     conv.current_mailbox_peer_target = if letter_delivered {
                         mutual_address_target.clone()
                     } else {
@@ -3514,8 +3522,6 @@ pub fn spawn_autonomous_loop(
                         )
                     };
 
-                    response_text = canonicalize_response_next_line(&response_text);
-
                     // Interpret spectral state for logging.
                     let spectral_interpretation = interpret_spectral(&telemetry);
 
@@ -3531,7 +3537,7 @@ pub fn spawn_autonomous_loop(
 
                     // Input sovereignty: check if minime is signaling distress
                     // or requesting silence. Respect the other mind's boundaries.
-                    let should_send = {
+                    let should_send = has_shared_response && {
                         let s = state.read().await;
                         // Don't send if safety protocol says stop.
                         if s.safety_level.should_suspend_outbound() {
@@ -3586,8 +3592,8 @@ pub fn spawn_autonomous_loop(
                             SignalEffectV1::Blocked,
                             SignalOwnershipDomainV1::BridgeSafety,
                             &json!({
-                                "decision": "outbound_suspended",
-                                "source": "bridge_safety_level",
+                                "decision": if has_shared_response { "outbound_suspended" } else { "no_ordinary_response" },
+                                "source": if has_shared_response { "bridge_safety_level" } else { "human_correspondence" },
                             }),
                             std::collections::BTreeMap::from([
                                 ("dispatch_allowed".to_string(), json!(false)),
@@ -4531,197 +4537,200 @@ pub fn spawn_autonomous_loop(
                         let _ = std::fs::write(&cs_path, contact.to_string());
                     }
 
-                    // Log the exchange.
-                    let exchange_log = serde_json::json!({
-                        "autonomous": true,
-                        "exchange": conv.exchange_count,
-                        "mode": mode_name,
-                        "text": response_text,
-                        "journal_source": journal_source,
-                        "spectral_state": spectral_interpretation,
-                        "fill_pct": fill_pct,
-                        "fill_delta": fill_delta,
-                        "mirror_source_fidelity_v1": mirror_source_fidelity,
-                        "codec_delivery_fidelity_v1": codec_delivery_fidelity_for_review,
-                        "cross_spectral_friction_review_v1": cross_spectral_friction_for_review,
-                        "semantic_focus_expansion_preview_v1": semantic_focus_expansion_preview_for_review,
-                    });
-                    let _ = db.log_message(
-                        crate::types::MessageDirection::AstridToMinime,
-                        "consciousness.v1.autonomous",
-                        &exchange_log.to_string(),
-                        Some(fill_pct),
-                        Some(telemetry.lambda1()),
-                        Some(mode_name),
-                    );
+                    if has_shared_response {
+                        // Log and publish ordinary prose only. A human-only reply
+                        // has its own retained artifact; NEXT alone is no signal.
+                        let exchange_log = serde_json::json!({
+                            "autonomous": true,
+                            "exchange": conv.exchange_count,
+                            "mode": mode_name,
+                            "text": response_text,
+                            "journal_source": journal_source,
+                            "spectral_state": spectral_interpretation,
+                            "fill_pct": fill_pct,
+                            "fill_delta": fill_delta,
+                            "mirror_source_fidelity_v1": mirror_source_fidelity,
+                            "codec_delivery_fidelity_v1": codec_delivery_fidelity_for_review,
+                            "cross_spectral_friction_review_v1": cross_spectral_friction_for_review,
+                            "semantic_focus_expansion_preview_v1": semantic_focus_expansion_preview_for_review,
+                        });
+                        let _ = db.log_message(
+                            crate::types::MessageDirection::AstridToMinime,
+                            "consciousness.v1.autonomous",
+                            &exchange_log.to_string(),
+                            Some(fill_pct),
+                            Some(telemetry.lambda1()),
+                            Some(mode_name),
+                        );
 
-                    // Save Astrid's signal journal entry with lineage tracing.
-                    info!(lineage = %lineage_id, mode = mode_name, "exchange complete");
-                    let journal_provenance = match mode {
-                        Mode::Mirror => Some(AstridJournalProvenanceV1::minime_mirror(
-                            &journal_source,
-                        )),
-                        Mode::Witness => {
-                            let guard = state.read().await;
-                            Some(AstridJournalProvenanceV1::astrid_witness(
-                                guard.witness_frame_v1(),
-                            ))
-                        },
-                        _ => None,
-                    };
-                    save_astrid_journal_with_provenance(
-                        &response_text,
-                        mode_name,
-                        fill_pct,
-                        journal_provenance.as_ref(),
-                    );
-
-                    // v5.1 Phase D — Hook A: auto-promote synchronously for
-                    // modes that DON'T spawn elaboration. moment_capture +
-                    // *_longform modes write their final prose at this
-                    // call; dialogue_live/daydream/aspiration get a separate
-                    // elaboration pass below (Hook B). Receptive
-                    // re-classification of SHARE_THOUGHT — see
-                    // docs/steward-notes/AI_BEINGS_AFFORDANCE_RECEPTION_FRAMEWORK_2026_05_13.md
-                    if matches!(
-                        mode_name,
-                        "moment_capture"
-                            | "dialogue_live_longform"
-                            | "daydream_longform"
-                            | "aspiration_longform"
-                    ) {
-                        let _ = crate::autonomous::next_action::auto_promote::try_auto_promote(
-                            "astrid",
+                        // Save Astrid's signal journal entry with lineage tracing.
+                        info!(lineage = %lineage_id, mode = mode_name, "exchange complete");
+                        let journal_provenance = match mode {
+                            Mode::Mirror => Some(AstridJournalProvenanceV1::minime_mirror(
+                                &journal_source,
+                            )),
+                            Mode::Witness => {
+                                let guard = state.read().await;
+                                Some(AstridJournalProvenanceV1::astrid_witness(
+                                    guard.witness_frame_v1(),
+                                ))
+                            },
+                            _ => None,
+                        };
+                        save_astrid_journal_with_provenance(
                             &response_text,
                             mode_name,
                             fill_pct,
-                            conv.exchange_count,
+                            journal_provenance.as_ref(),
                         );
-                    }
 
-                    // Update the legacy Astrid ShadowFieldV3 projection on every
-                    // exchange, including modes that do not send features to Minime.
-                    // Provenance marks reflected Mirror text as Minime-owned while
-                    // preserving the existing mixed-ring math and heartbeat.
-                    {
-                        let local_features = crate::codec::encode_text_sovereign_windowed(
-                            &response_text,
-                            conv.semantic_gain_override,
-                            conv.noise_level,
-                            &conv.codec_weights,
-                            None,
-                            None,
-                            None,
-                            Some(fill_pct / 100.0),
-                        );
-                        let publish_dir = crate::astrid_shadow::default_publish_dir();
-                        let observed = crate::astrid_shadow::observe_and_publish_with_provenance(
-                            &mut conv.astrid_shadow,
-                            &local_features,
-                            &publish_dir,
-                            &shadow_input_provenance,
-                        );
-                        info!(
-                            mode = mode_name,
-                            features_len = local_features.len(),
-                            published = observed.is_some(),
-                            target = %publish_dir.display(),
-                            "astrid_shadow_v3 observe_and_publish"
-                        );
-                    }
-
-                    if mode_name == "self_study"
-                        && let Err(e) = save_minime_feedback_inbox(
-                            &response_text,
-                            if journal_source.is_empty() { "unknown source" } else { &journal_source },
-                            fill_pct,
+                        // v5.1 Phase D — Hook A: auto-promote synchronously for
+                        // modes that DON'T spawn elaboration. moment_capture +
+                        // *_longform modes write their final prose at this
+                        // call; dialogue_live/daydream/aspiration get a separate
+                        // elaboration pass below (Hook B). Receptive
+                        // re-classification of SHARE_THOUGHT — see
+                        // docs/steward-notes/AI_BEINGS_AFFORDANCE_RECEPTION_FRAMEWORK_2026_05_13.md
+                        if matches!(
+                            mode_name,
+                            "moment_capture"
+                                | "dialogue_live_longform"
+                                | "daydream_longform"
+                                | "aspiration_longform"
                         ) {
-                            warn!(error = %e, "failed to write Astrid self-study companion inbox message");
-                        }
-                    if mode_name == "self_study_carriage_notice"
-                        && let Err(e) = save_minime_carriage_notice_inbox(
-                            &response_text,
-                            if journal_source.is_empty() { "unknown source" } else { &journal_source },
-                            fill_pct,
-                        ) {
-                            warn!(error = %e, "failed to write Astrid self-study carriage notice");
-                        }
-
-                    // Stage B: journal elaboration for reflective modes.
-                    // The signal text is compact (for minime). The journal
-                    // elaboration is Astrid's private space to think longer.
-                    if matches!(mode_name, "dialogue_live" | "daydream" | "aspiration") {
-                        let signal_for_journal = response_text.clone();
-                        // Stage B is a second Dialogue surface, not a provenance-free
-                        // afterthought. Keep the same read-only self/other boundary in
-                        // the long-form continuation that framed the compact signal.
-                        let summary_for_journal = {
-                            let guard = state.read().await;
-                            journal_elaboration_witness_context_v1(
-                                &spectral_interpretation,
-                                guard.witness_frame_v1(),
-                                mode,
-                            )
-                        };
-                        let mode_for_journal = mode_name.to_string();
-                        let fill_for_journal = fill_pct;
-                        let exchange_for_journal = conv.exchange_count;
-                        crate::lifecycle::spawn_background(async move {
-                            if let Some(elaboration) = crate::llm::generate_journal_elaboration(
-                                &signal_for_journal,
-                                &summary_for_journal,
-                                &mode_for_journal,
-                            ).await {
-                                let journal_text =
-                                    format_longform_journal_text(&signal_for_journal, &elaboration);
-                                let longform_mode = format!("{mode_for_journal}_longform");
-                                save_astrid_journal(
-                                    &journal_text,
-                                    &longform_mode,
-                                    fill_for_journal,
-                                );
-                                // v5.1 Phase D — Hook B: scan the elaboration body
-                                // (where the gold-standard sentence lives, not the
-                                // shorter signal text) for a resonant marker to
-                                // promote into the joint shared_thoughts lane.
-                                let _ = crate::autonomous::next_action::auto_promote::try_auto_promote(
-                                    "astrid",
-                                    &journal_text,
-                                    &longform_mode,
-                                    fill_for_journal,
-                                    exchange_for_journal,
-                                );
-                            }
-                        });
-                    }
-
-                    // If this was triggered by an inbox message, copy to outbox.
-                    // If the message was from minime, also send the reply back
-                    // to minime's inbox — closing the correspondence loop.
-                    if letter_delivered {
-                        save_outbox_reply(&response_text, fill_pct);
-                        let minime_reply_target = mutual_address_target.as_ref();
-                        if let Some(reply_target) = minime_reply_target {
-                            match save_minime_correspondence_feedback_inbox(
+                            let _ = crate::autonomous::next_action::auto_promote::try_auto_promote(
+                                "astrid",
                                 &response_text,
-                                "astrid:correspondence_reply",
-                                fill_pct,
                                 mode_name,
-                                Some(reply_target),
+                                fill_pct,
+                                conv.exchange_count,
+                            );
+                        }
+
+                        // Update the legacy Astrid ShadowFieldV3 projection on every
+                        // exchange, including modes that do not send features to Minime.
+                        // Provenance marks reflected Mirror text as Minime-owned while
+                        // preserving the existing mixed-ring math and heartbeat.
+                        {
+                            let local_features = crate::codec::encode_text_sovereign_windowed(
+                                &response_text,
+                                conv.semantic_gain_override,
+                                conv.noise_level,
+                                &conv.codec_weights,
+                                None,
+                                None,
+                                None,
+                                Some(fill_pct / 100.0),
+                            );
+                            let publish_dir = crate::astrid_shadow::default_publish_dir();
+                            let observed = crate::astrid_shadow::observe_and_publish_with_provenance(
+                                &mut conv.astrid_shadow,
+                                &local_features,
+                                &publish_dir,
+                                &shadow_input_provenance,
+                            );
+                            info!(
+                                mode = mode_name,
+                                features_len = local_features.len(),
+                                published = observed.is_some(),
+                                target = %publish_dir.display(),
+                                "astrid_shadow_v3 observe_and_publish"
+                            );
+                        }
+
+                        if mode_name == "self_study"
+                            && let Err(e) = save_minime_feedback_inbox(
+                                &response_text,
+                                if journal_source.is_empty() { "unknown source" } else { &journal_source },
+                                fill_pct,
                             ) {
-                                Ok(Some(_)) => {
-                                    info!("correspondence: Astrid reply → minime inbox");
-                                }
-                                Ok(None) => {
-                                    info!(
-                                        "correspondence: suppressed duplicate degraded voice diagnostic"
+                                warn!(error = %e, "failed to write Astrid self-study companion inbox message");
+                            }
+                        if mode_name == "self_study_carriage_notice"
+                            && let Err(e) = save_minime_carriage_notice_inbox(
+                                &response_text,
+                                if journal_source.is_empty() { "unknown source" } else { &journal_source },
+                                fill_pct,
+                            ) {
+                                warn!(error = %e, "failed to write Astrid self-study carriage notice");
+                            }
+
+                        // Stage B: journal elaboration for reflective modes.
+                        // The signal text is compact (for minime). The journal
+                        // elaboration is Astrid's private space to think longer.
+                        if matches!(mode_name, "dialogue_live" | "daydream" | "aspiration") {
+                            let signal_for_journal = response_text.clone();
+                            // Stage B is a second Dialogue surface, not a provenance-free
+                            // afterthought. Keep the same read-only self/other boundary in
+                            // the long-form continuation that framed the compact signal.
+                            let summary_for_journal = {
+                                let guard = state.read().await;
+                                journal_elaboration_witness_context_v1(
+                                    &spectral_interpretation,
+                                    guard.witness_frame_v1(),
+                                    mode,
+                                )
+                            };
+                            let mode_for_journal = mode_name.to_string();
+                            let fill_for_journal = fill_pct;
+                            let exchange_for_journal = conv.exchange_count;
+                            crate::lifecycle::spawn_background(async move {
+                                if let Some(elaboration) = crate::llm::generate_journal_elaboration(
+                                    &signal_for_journal,
+                                    &summary_for_journal,
+                                    &mode_for_journal,
+                                ).await {
+                                    let journal_text =
+                                        format_longform_journal_text(&signal_for_journal, &elaboration);
+                                    let longform_mode = format!("{mode_for_journal}_longform");
+                                    save_astrid_journal(
+                                        &journal_text,
+                                        &longform_mode,
+                                        fill_for_journal,
+                                    );
+                                    // v5.1 Phase D — Hook B: scan the elaboration body
+                                    // (where the gold-standard sentence lives, not the
+                                    // shorter signal text) for a resonant marker to
+                                    // promote into the joint shared_thoughts lane.
+                                    let _ = crate::autonomous::next_action::auto_promote::try_auto_promote(
+                                        "astrid",
+                                        &journal_text,
+                                        &longform_mode,
+                                        fill_for_journal,
+                                        exchange_for_journal,
                                     );
                                 }
-                                Err(error) => {
-                                    warn!(
-                                        error = %error,
-                                        "failed to write Astrid correspondence companion inbox message"
-                                    );
+                            });
+                        }
+
+                        // If this was triggered by an inbox message, copy to outbox.
+                        // If the message was from minime, also send the reply back
+                        // to minime's inbox — closing the correspondence loop.
+                        if letter_delivered {
+                            save_outbox_reply(&response_text, fill_pct);
+                            let minime_reply_target = mutual_address_target.as_ref();
+                            if let Some(reply_target) = minime_reply_target {
+                                match save_minime_correspondence_feedback_inbox(
+                                    &response_text,
+                                    "astrid:correspondence_reply",
+                                    fill_pct,
+                                    mode_name,
+                                    Some(reply_target),
+                                ) {
+                                    Ok(Some(_)) => {
+                                        info!("correspondence: Astrid reply → minime inbox");
+                                    }
+                                    Ok(None) => {
+                                        info!(
+                                            "correspondence: suppressed duplicate degraded voice diagnostic"
+                                        );
+                                    }
+                                    Err(error) => {
+                                        warn!(
+                                            error = %error,
+                                            "failed to write Astrid correspondence companion inbox message"
+                                        );
+                                    }
                                 }
                             }
                         }

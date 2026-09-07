@@ -8,6 +8,21 @@ fn activity_now_ms() -> u64 {
     .unwrap_or(u64::MAX)
 }
 
+/// Keep ordinary behavior for generations without reply declarations. Once a
+/// reply block is present, a residual action by itself is not peer prose.
+fn project_mailbox_response(text: &str) -> (String, bool) {
+    let projection = human_correspondence::split_completion(text, None);
+    let residual = canonicalize_response_next_line(&projection.residual);
+    let has_prose = residual.lines().any(|line| {
+        let line = line.trim();
+        !line.is_empty()
+            && !line.starts_with("NEXT:")
+            && !line.chars().all(|c| matches!(c, '*' | '-' | '_' | ' '))
+    });
+    let share = !projection.had_reply_blocks || has_prose;
+    (residual, share)
+}
+
 fn begin_activity_mailbox_window(
     conv: &mut ConversationState,
     inbox: &durable_inbox::DurableInbox,
@@ -246,3 +261,5 @@ fn prepare_activity_reading(
         Ok(offer)
     }
 }
+
+include!("human_mailbox_tests.rs");

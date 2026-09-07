@@ -14,6 +14,7 @@ fn protected_reading_input(
         kind: crate::llm::ProtectedDialogueKindV1::Reading,
         source_text: reading.text.clone(),
         source_start_byte: usize::try_from(reading.passage.start_byte)?,
+        reply_message_id: None,
     })
 }
 
@@ -25,6 +26,11 @@ fn protected_letter_input(
         kind: crate::llm::ProtectedDialogueKindV1::Letter,
         source_text: letter.text.clone(),
         source_start_byte: 0,
+        reply_message_id: human_correspondence::classify_source(
+            &letter.letter.source_path,
+            &letter.text,
+        )
+        .map(|_| letter.letter.message_id.clone()),
     }
 }
 
@@ -110,14 +116,24 @@ fn commit_activity_delivery(
                 "delivery receipt does not identify the intact reserved letter"
             ));
         }
-        let receipt = inbox.acknowledge(
-            letter,
-            &durable_inbox::InboxDeliveryEvidence {
-                accepted_attempt_id: receipt.request_sha256.clone(),
-                submitted_content_sha256: receipt.admitted_text_sha256.clone(),
-                retained_completion_sha256: receipt.retained_completion_sha256.clone(),
-            },
-        )?;
+        let human = human_correspondence::classify_source(&letter.letter.source_path, &letter.text);
+        let parts = human_correspondence::split_completion(
+            text,
+            human.map(|_| letter.letter.message_id.as_str()),
+        );
+        let evidence = durable_inbox::InboxDeliveryEvidence {
+            accepted_attempt_id: receipt.request_sha256.clone(),
+            submitted_content_sha256: receipt.admitted_text_sha256.clone(),
+            retained_completion_sha256: receipt.retained_completion_sha256.clone(),
+        };
+        let receipt = if let Some(body) = parts.human_reply.as_deref() {
+            inbox.acknowledge_with_precommit(letter, &evidence, || {
+                human_correspondence::publish_reply(&inbox.outbox_dir()?, letter, receipt, body)?;
+                Ok(())
+            })?
+        } else {
+            inbox.acknowledge(letter, &evidence)?
+        };
         return Ok(ActivityDeliveryOutcome::Letter(Box::new(receipt)));
     }
     Err(anyhow::anyhow!(
@@ -126,3 +142,4 @@ fn commit_activity_delivery(
 }
 
 include!("activity_delivery_tests.rs");
+include!("activity_human_delivery_tests.rs");

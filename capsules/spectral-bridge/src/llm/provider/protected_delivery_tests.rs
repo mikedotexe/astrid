@@ -6,6 +6,7 @@ mod protected_delivery_tests {
 
     fn input(kind: ProtectedDialogueKindV1, text: &str) -> ProtectedDialogueInputV1 {
         ProtectedDialogueInputV1 {
+            reply_message_id: None,
             content_id: "offer-or-letter-reservation-17".into(),
             kind,
             source_text: text.into(),
@@ -100,6 +101,24 @@ mod protected_delivery_tests {
             Some(admission),
         )
         .unwrap()
+    }
+
+    #[test]
+    fn addressed_reply_example_survives_primary_and_fallback_without_changing_source_digest() {
+        let mut source = input(ProtectedDialogueKindV1::Letter, "Exact original human letter: café λ.\n");
+        source.source_start_byte = 0;
+        source.reply_message_id = Some("mike_query_shared_path_1788748877.txt".into());
+        for attempt in [primary_attempt(&source, 4_000), fallback_attempt(&source)] {
+            validate_submitted_admission(&attempt).unwrap();
+            let request: serde_json::Value = serde_json::from_str(&attempt.request_json).unwrap();
+            let content = request["messages"].as_array().unwrap().last().unwrap()["content"].as_str().unwrap();
+            assert!(content.contains("INBOX_REPLY mike_query_shared_path_1788748877.txt\n"));
+            assert!(content.contains("END_INBOX_REPLY\nNEXT: LISTEN"));
+            assert!(content.contains("A reply to Mike is optional"));
+            assert!(content.contains(&source.source_text));
+            assert_eq!(attempt.admission.admitted_text_sha256, protected_digest(&source.source_text));
+            assert_eq!(attempt.admission.admitted_end_byte, source.source_text.len());
+        }
     }
 
     #[test]

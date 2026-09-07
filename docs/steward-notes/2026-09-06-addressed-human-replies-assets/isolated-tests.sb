@@ -1,0 +1,6 @@
+(version 1)
+(allow default)
+(deny file-write* (subpath "/Users/v/other/astrid") (subpath "/Users/v/other/minime") (subpath "/Users/v/other/neural-triple-reservoir") (subpath "/Users/v/other/shared") (subpath "/Users/v/other/research") (subpath "/Users/v/other/autoresearch"))
+(deny file-read* (subpath "/Users/v/other/astrid/capsules/spectral-bridge/workspace") (subpath "/Users/v/other/minime/workspace") (subpath "/Users/v/other/shared"))
+(deny network-outbound (require-not (remote ip "localhost:*")))
+(deny network-outbound (remote ip "*:3040") (remote ip "*:7878") (remote ip "*:7879") (remote ip "*:7880") (remote ip "*:7881") (remote ip "*:8090") (remote ip "*:11434"))

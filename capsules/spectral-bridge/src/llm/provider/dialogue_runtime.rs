@@ -615,11 +615,10 @@ fn is_valid_dialogue_output(text: &str) -> bool {
     // Remove exact leaked control sequences before measuring output shape.
     let stripped = sanitize_model_control_markers(text);
 
-    let body = stripped
-        .lines()
-        .filter(|line| !line.trim_start().starts_with("NEXT:"))
-        .collect::<Vec<_>>()
-        .join("\n");
+    let (body, _, complete) = crate::autonomous::human_reply_quality_views(&stripped);
+    if !complete {
+        return false;
+    }
     let body = body.trim();
     if body.is_empty() {
         return false;
@@ -741,3 +740,5 @@ fn is_valid_dialogue_output_for_profile(text: &str, profile: MlxProfile) -> bool
 fn is_valid_primary_dialogue_output_for_profile(text: &str, profile: MlxProfile) -> bool {
     is_valid_dialogue_output_for_profile(text, profile) && has_one_nonempty_final_next_action(text)
 }
+
+include!("human_reply_quality_tests.rs");

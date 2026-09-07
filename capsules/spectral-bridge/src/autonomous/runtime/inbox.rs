@@ -135,7 +135,16 @@ fn check_inbox_at_cutoff_with_trace(
 /// reads without moving, so it can re-see the letter until retire).
 fn record_open_steward_query(fname: &str, content: &str) {
     let path = bridge_paths().open_steward_query_path();
-    if let Ok(existing) = std::fs::read_to_string(&path)
+    record_open_steward_query_at(&path, fname, content);
+}
+
+fn record_open_steward_query_at(path: &Path, fname: &str, content: &str) {
+    if human_correspondence::classify_source(Path::new(fname), content)
+        != Some(human_correspondence::HumanLetterKind::Query)
+    {
+        return;
+    }
+    if let Ok(existing) = std::fs::read_to_string(path)
         && let Ok(v) = serde_json::from_str::<Value>(&existing)
         && v.get("file").and_then(Value::as_str) == Some(fname)
     {
@@ -150,7 +159,7 @@ fn record_open_steward_query(fname: &str, content: &str) {
         .and_then(Value::as_str)
         .unwrap_or("your steward's question");
     if let Ok(s) = serde_json::to_string_pretty(&slot) {
-        let _ = std::fs::write(&path, s);
+        let _ = std::fs::write(path, s);
         info!("⟢ Open steward question recorded: {subject}");
     }
 }

@@ -1,0 +1,11 @@
+{
+  "valid": true,
+  "paths": [
+    "mike_channel/channel.py",
+    "mike_channel/compose.py",
+    "mike_channel/letters.py",
+    "mike_channel/replies.py",
+    "tests/test_astrid_addressed_replies.py"
+  ],
+  "patch_sha256": "d6b4765bd465019efe23ad1207d1115f2a2ad8ccc4ccaa9243704679e1ac36a2"
+}

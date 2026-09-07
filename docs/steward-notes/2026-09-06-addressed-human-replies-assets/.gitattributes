@@ -1,0 +1,2 @@
+# Unified diff context includes a single space for empty source lines.
+mike-channel-addressed-replies.patch -whitespace

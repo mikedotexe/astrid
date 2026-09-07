@@ -637,13 +637,22 @@ fn reinforce_ollama_fallback_contract(label: &str, mut messages: Vec<Message>) -
 }
 
 fn count_next_lines(text: &str) -> usize {
-    text.lines()
+    let (_, actions, _) = crate::autonomous::human_reply_quality_views(text);
+    actions.lines()
         .filter(|line| line.trim_start().starts_with("NEXT:"))
         .count()
 }
 
 fn final_nonempty_line_is_next(text: &str) -> bool {
-    text.lines()
+    let (_, actions, complete) = crate::autonomous::human_reply_quality_views(text);
+    // Projection must not make an earlier action appear final or accept a NEXT
+    // still inside an unfinished human reply.
+    if !complete || !text.lines().rev().find(|line| !line.trim().is_empty())
+        .is_some_and(|line| line.trim().starts_with("NEXT:"))
+    {
+        return false;
+    }
+    actions.lines()
         .rev()
         .find_map(|line| {
             let trimmed = line.trim();
@@ -675,6 +684,11 @@ fn fallback_prose_sentence_count(text: &str) -> usize {
 
 fn repair_ollama_dialogue_fallback_next(text: &str, profile: MlxProfile) -> String {
     if !profile.is_gemma4_canary() || count_next_lines(text) != 0 {
+        return text.to_string();
+    }
+    if crate::autonomous::human_reply_quality_views(text).1 != text {
+        // Never truncate or append into an addressed body to manufacture NEXT.
+        // An unterminated reply or missing independent action remains unaccepted.
         return text.to_string();
     }
     if let Some((body, _)) = text.rsplit_once("NEXT:") {

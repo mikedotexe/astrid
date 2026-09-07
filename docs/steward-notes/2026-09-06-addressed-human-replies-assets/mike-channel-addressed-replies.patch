@@ -1,0 +1,505 @@
+--- a/mike_channel/channel.py
++++ b/mike_channel/channel.py
+@@ -22,6 +22,7 @@
+     ledger_summary,
+     load_ledger,
+     replies_for,
++    scan_astrid_addressed_replies,
+     scan_exchange_replies,
+     scan_minime_replies,
+     scan_outreach,
+@@ -60,7 +61,7 @@
+ 
+ 
+ def mailbox_state(being: Being) -> tuple[dict[str, dict], int]:
+-    """Astrid's durable mailbox (live since the 2026-09-06 19:15 bridge): filename -> queue entry, and how many wait.
++    """Astrid's durable mailbox: exact content version -> queue entry, and how many wait.
+ 
+     Letters no longer force a dialogue exchange. They queue here until she chooses
+     CHECK_MAILBOX, which admits exactly one intact letter (6,000 bytes ordinary,
+@@ -78,12 +79,15 @@
+         identity = entry.get("identity") or {}
+         name = identity.get("message_id")
+         if name:
+-            entries[name] = {
++            # Modern entries are versioned: a receipt for old bytes must not
++            # label a replacement under the same filename as delivered.
++            entries[identity.get("version_id") or name] = {
+                 "sequence": entry.get("arrival_sequence"),
+                 "attempts": entry.get("attempts", 0),
+                 "receipt": entry.get("receipt"),
+                 "thread": identity.get("thread_id"),
+                 "bytes": identity.get("byte_len"),
++                "version": identity.get("version_id"),
+             }
+     waiting = sum(1 for e in entries.values() if not e["receipt"])
+     return entries, waiting
+@@ -125,7 +129,7 @@
+         privacy = _privacy_filter()
+         for match in item.matches:
+             being = self.beings.get(match.reply.being)
+-            if being is not None and match.reply.kind != "outreach":
++            if being is not None and match.reply.kind not in ("outreach", "addressed"):
+                 match.trace = trace_action(self.beings, being, match.reply.ts, match.reply.body, privacy)
+         return item
+ 
+@@ -171,16 +175,23 @@
+             candidates += scan_minime_replies(being)
+             ledger = load_ledger(being)
+         else:
++            candidates += scan_astrid_addressed_replies(being)
+             candidates += scan_exchange_replies(being, lambda ts: any(lo <= ts <= hi for lo, hi in windows))
+         mailbox, waiting = mailbox_state(being)
+         for letter in letters:
+             matches = replies_for(letter, candidates, window_hours, ledger.batches)
+             steps = ledger_summary(ledger.stages.get(letter.message_id, [])) if letter.message_id else []
+             status = letter_status(letter, matches, steps)
+-            entry = mailbox.get(letter.filename) if letter.status == "pending" else None
++            entry = None
++            if letter.status == "pending":
++                entry = mailbox.get(letter.source_version) or mailbox.get(letter.filename)
+             if entry:
+                 entry = {**entry, "waiting": waiting}
+-                status = f"queued · mailbox #{entry['sequence']} of {waiting} · {entry['attempts']} attempts"
++                if status != "replied":
++                    if entry["receipt"]:
++                        status = "reached model"
++                    else:
++                        status = f"queued · mailbox #{entry['sequence']} of {waiting} · {entry['attempts']} attempts"
+             items.append(
+                 Item(
+                     key=f"sent:{being.name}:{letter.filename}",
+@@ -258,15 +269,23 @@
+         out.append(letter.subject, style="bold")
+         out.append(f"\n{letter.filename}\n", style="dim")
+         out.append(f"delivered {fmt_ts(letter.delivered_ts)}", style="cyan")
+-        out.append("  ·  in inbox, unread" if letter.status == "pending" else "  ·  moved to read/", style="cyan")
++        if item.mailbox and item.mailbox["receipt"]:
++            out.append("  ·  reached model; source retained in inbox", style="cyan")
++        elif letter.being == "astrid" and letter.status == "pending" and any(m.confidence == "confirmed" for m in item.matches):
++            out.append("  ·  addressed reply recorded; source retained in inbox", style="cyan")
++        else:
++            out.append("  ·  in inbox, unread" if letter.status == "pending" else "  ·  moved to read/", style="cyan")
+         if item.mailbox:
+             box = item.mailbox
+-            out.append(
+-                f"\nqueued in her durable mailbox: arrival #{box['sequence']}, {box['waiting']} waiting, "
+-                f"{box['attempts']} attempts, thread {box['thread']}. She opens one letter per CHECK_MAILBOX; "
+-                "waiting does not make it urgent by design.",
+-                style="magenta",
+-            )
++            if box["receipt"]:
++                out.append(f"\ndurable mailbox delivery recorded · thread {box['thread']}", style="cyan")
++            else:
++                out.append(
++                    f"\nqueued in her durable mailbox: arrival #{box['sequence']}, {box['waiting']} waiting, "
++                    f"{box['attempts']} attempts, thread {box['thread']}. She opens one letter per CHECK_MAILBOX; "
++                    "waiting does not make it urgent by design.",
++                    style="magenta",
++                )
+         for ts, label in item.ledger:
+             out.append(f"  ·  {label} {datetime.fromtimestamp(ts).strftime('%H:%M:%S')}", style="cyan")
+         if letter.message_id:
+--- a/mike_channel/compose.py
++++ b/mike_channel/compose.py
+@@ -90,7 +90,7 @@
+         f"{body.strip(chr(10))}\n"
+     )
+     filename = f"mike_{kind}_{slugify(subject)}_{int(now)}.txt"
+-    return Draft("astrid", filename, text)
++    return Draft("astrid", filename, text, message_id=filename)
+ 
+ 
+ def _upstream_parser():
+--- a/mike_channel/letters.py
++++ b/mike_channel/letters.py
+@@ -2,6 +2,7 @@
+ 
+ from __future__ import annotations
+ 
++import hashlib
+ import os
+ import re
+ from dataclasses import dataclass, field
+@@ -21,6 +22,7 @@
+     title: str
+     headers: dict[str, str]
+     body: str
++    duplicate_headers: frozenset[str] = frozenset()
+ 
+ 
+ def parse_letter_text(text: str) -> Parsed:
+@@ -37,14 +39,18 @@
+         title = lines[0].strip().strip("=").strip()
+         i = 1
+     headers: dict[str, str] = {}
++    duplicates: set[str] = set()
+     while i < len(lines):
+         match = _HEADER_RE.match(lines[i])
+         if not match:
+             break
+-        headers[match.group(1).lower()] = match.group(2).strip()
++        key = match.group(1).lower()
++        if key in headers:
++            duplicates.add(key)
++        headers[key] = match.group(2).strip()
+         i += 1
+     body = "\n".join(lines[i:]).strip("\n")
+-    return Parsed(title, headers, body)
++    return Parsed(title, headers, body, frozenset(duplicates))
+ 
+ 
+ def letter_kind(filename: str) -> str:
+@@ -102,6 +108,7 @@
+     title: str
+     headers: dict[str, str] = field(default_factory=dict)
+     body: str = ""
++    source_sha256: str = ""  # Exact source bytes, before decoding or newline normalization.
+ 
+     @property
+     def filename(self) -> str:
+@@ -109,7 +116,16 @@
+ 
+     @property
+     def message_id(self) -> str | None:
++        if self.being == "astrid":
++            return self.filename  # Astrid's durable mailbox identity is the original filename.
+         return self.headers.get("message-id")
++
++    @property
++    def source_version(self) -> str | None:
++        """Astrid durable_inbox version: SHA256(message identity + NUL + content hash)."""
++        if self.being == "astrid" and self.source_sha256:
++            return hashlib.sha256(f"{self.filename}\0{self.source_sha256}".encode("utf-8")).hexdigest()
++        return None
+ 
+     @property
+     def thread_id(self) -> str | None:
+@@ -131,8 +147,8 @@
+ 
+ 
+ def load_letter(being: Being, path: Path, status: str) -> Letter:
+-    text = path.read_text(encoding="utf-8", errors="replace")
+-    parsed = parse_letter_text(text)
++    source = path.read_bytes()
++    parsed = parse_letter_text(source.decode("utf-8", errors="replace"))
+     mtime = path.stat().st_mtime
+     # A pending letter's mtime is its delivery time. A consumed one keeps its
+     # mtime through the rename into read/, so it is still the delivery time.
+@@ -145,6 +161,7 @@
+         title=parsed.title,
+         headers=parsed.headers,
+         body=parsed.body,
++        source_sha256=hashlib.sha256(source).hexdigest(),
+     )
+ 
+ 
+--- a/mike_channel/replies.py
++++ b/mike_channel/replies.py
+@@ -1,7 +1,7 @@
+ """What came back: addressed replies, likely replies, exchange output, and steward outreach.
+ 
+ Confidence vocabulary used everywhere in the UI:
+-  confirmed  the being explicitly addressed this message id (minime's outbox/human/mike)
++  confirmed  an addressed artifact names this letter (Astrid also binds its exact source version)
+   likely     an unaddressed generation that names this message id in an INBOX_REPLY block
+   window     something the being wrote in the hours after delivery; may be unrelated
+ """
+@@ -52,6 +52,7 @@
+     mentioned_ids: tuple[str, ...] = ()
+     blocks: dict[str, str] = field(default_factory=dict)
+     answered: bool | None = None  # outreach only: archived to steward_delivered
++    duplicate_headers: frozenset[str] = frozenset()
+ 
+     @property
+     def filename(self) -> str:
+@@ -71,11 +72,9 @@
+ def reply_blocks(text: str) -> dict[str, str]:
+     """`INBOX_REPLY <id>` passages.
+ 
+-    Wider than minime's inbox_delivery.reply_blocks on purpose: her runtime only
+-    honors a first-line `INBOX_REPLY <id>` or a `NEXT: INBOX_REPLY <id>` block,
+-    and on 2026-09-06 she wrote a bare `INBOX_REPLY <id>` line mid-text, which
+-    her runtime dropped as unaddressed. We still show Mike the passage; the
+-    note on the match says her runtime did not route it.
++    Recognizes historical mixed generations, including bare declarations that
++    older Minime runtimes dropped. A readable passage is only likely evidence;
++    confirmation requires a matching addressed artifact from the runtime.
+     """
+     lines = text.splitlines()
+     blocks: dict[str, str] = {}
+@@ -122,6 +121,7 @@
+         thread_id=parsed.headers.get("thread-id") or parsed.headers.get("correspondence-thread-id"),
+         mentioned_ids=tuple(blocks),
+         blocks=blocks,
++        duplicate_headers=parsed.duplicate_headers,
+         **extra,
+     )
+ 
+@@ -194,6 +194,35 @@
+     return out
+ 
+ 
++def scan_astrid_addressed_replies(being: Being) -> list[Reply]:
++    """Only the runtime's human/Mike route supplies Astrid addressed candidates."""
++    directory = being.outbox / "human" / "mike"
++    if directory.is_symlink() or directory.parent.is_symlink():
++        return []
++    return [load_reply(being, path, "addressed") for path in _txt_files(directory)]
++
++
++def addressed_to_letter(reply: Reply, letter: Letter) -> bool:
++    if not letter.message_id or reply.reply_to != letter.message_id:
++        return False
++    if letter.being != "astrid":
++        return True  # Preserve Minime's existing envelope and operator-recovery contract.
++    return (
++        not reply.duplicate_headers
++        and reply.headers.get("to") == "mike"
++        and reply.headers.get("reply-to") == letter.filename
++        and bool(reply.body.strip())
++        and bool(letter.source_sha256)
++        and reply.headers.get("source-sha256") == letter.source_sha256
++        and reply.headers.get("source-version") == letter.source_version
++        and bool(reply.headers.get("thread-id"))
++        and all(
++            re.fullmatch(r"[0-9a-f]{64}", reply.headers.get(key, ""))
++            for key in ("completion-sha256", "delivery-request-sha256", "retained-artifact-sha256")
++        )
++    )
++
++
+ def scan_outreach(being: Being) -> list[Reply]:
+     """ASK_STEWARD / TELL_STEWARD files. Root = still unanswered; steward_delivered = answered."""
+     out: list[Reply] = []
+@@ -283,13 +312,14 @@
+         if reply.being != letter.being:
+             continue
+         if reply.kind == "addressed":
+-            if letter.message_id and reply.reply_to == letter.message_id:
+-                matched.append(Matched(reply, "confirmed"))
++            if addressed_to_letter(reply, letter):
++                note = "exact source filename and content version" if letter.being == "astrid" else ""
++                matched.append(Matched(reply, "confirmed", note))
+         elif reply.kind == "likely":
+             if letter.message_id and letter.message_id in reply.mentioned_ids:
+                 note = ""
+                 if reply.filename in batches:  # the ledger only records unaddressed/ files as unaddressed_generation
+-                    note = "her runtime did not route this block (bare INBOX_REPLY line, not first-line or NEXT-prefixed); nothing reached outbox/human/mike"
++                    note = "her runtime did not route this block into a confirmed addressed reply"
+                 matched.append(Matched(reply, "likely", note))
+             elif reply.filename in batches:
+                 if letter.message_id and letter.message_id in batches[reply.filename]:
+--- a/tests/test_astrid_addressed_replies.py
++++ b/tests/test_astrid_addressed_replies.py
+@@ -0,0 +1,210 @@
++"""Composer-to-display episodes for Astrid's exact-version human reply route."""
++
++from __future__ import annotations
++
++import asyncio
++import hashlib
++import json
++import os
++from pathlib import Path
++
++import pytest
++
++from mike_channel.beings import Being
++from mike_channel.channel import load_channel, render_item
++from mike_channel.compose import build_astrid_letter, deliver
++from mike_channel.letters import load_letter
++
++
++NOW = 1_788_584_933.0
++
++
++@pytest.fixture
++def astrid(tmp_path: Path) -> Being:
++    being = Being("astrid", tmp_path / "astrid")
++    being.inbox.mkdir(parents=True)
++    being.outbox.mkdir()
++    return being
++
++
++def _source(astrid: Being):
++    draft = build_astrid_letter("the next thought", "Could we stay with this thought?\n— Mike", kind="query", now=NOW)
++    path = deliver(astrid, draft)
++    os.utime(path, (NOW, NOW))
++    return draft, path
++
++
++def _artifact(astrid: Being, source: Path, body: str = "Mike, I can stay with this thought.\n", *, overrides=None) -> Path:
++    letter = load_letter(astrid, source, "pending")
++    headers = {
++        "To": "mike",
++        "Reply-To": letter.filename,
++        "Thread-Id": "legacy_principal:mike",
++        "Source-SHA256": letter.source_sha256,
++        "Source-Version": letter.source_version,
++        "Completion-SHA256": hashlib.sha256(f"INBOX_REPLY {letter.filename}\n{body}END_INBOX_REPLY".encode()).hexdigest(),
++        "Delivery-Request-SHA256": "1" * 64,
++        "Retained-Artifact-SHA256": "2" * 64,
++        "Address-Evidence": "explicit INBOX_REPLY declaration; language only",
++    }
++    headers.update(overrides or {})
++    text = "=== ASTRID ADDRESSED REPLY V1 ===\n"
++    text += "".join(f"{key}: {value}\n" for key, value in headers.items() if value is not None)
++    text += "\n" + body
++    name = hashlib.sha256(letter.source_version.encode()).hexdigest()
++    path = astrid.outbox / "human" / "mike" / f"human_reply_{name}.txt"
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(text, encoding="utf-8")
++    os.utime(path, (NOW + 5 * 86400, NOW + 5 * 86400))  # Addressed replies have no time-window limit.
++    return path
++
++
++def _mailbox(astrid: Being, source: Path, *, receipt=True, extra_entries=None) -> None:
++    letter = load_letter(astrid, source, "pending")
++    entries = {
++        letter.source_version: {
++            "identity": {
++                "message_id": letter.filename,
++                "thread_id": "legacy_principal:mike",
++                "version_id": letter.source_version,
++                "content_sha256": letter.source_sha256,
++                "byte_len": source.stat().st_size,
++            },
++            "arrival_sequence": 1,
++            "attempts": 1,
++            "receipt": {"content_sha256": letter.source_sha256} if receipt else None,
++        }
++    }
++    entries.update(extra_entries or {})
++    path = astrid.workspace / "durable_inbox_v1" / "state.json"
++    path.parent.mkdir(exist_ok=True)
++    path.write_text(json.dumps({"schema": "durable_inbox_v1", "letters": entries}))
++
++
++def _item(astrid: Being, filename: str):
++    channel = load_channel({"astrid": astrid})
++    return channel, channel.by_key[f"sent:astrid:{filename}"]
++
++
++def test_composer_to_exact_reply_and_display_with_retained_source(astrid):
++    draft, source = _source(astrid)
++    path = _artifact(astrid, source)
++    _mailbox(astrid, source)
++    channel, item = _item(astrid, draft.filename)
++    assert draft.message_id == item.letter.message_id == draft.filename
++    assert "Message-Id:" not in draft.text  # Keep the existing wire format and durable identity.
++    assert item.letter.source_sha256 == hashlib.sha256(draft.text.encode()).hexdigest()
++    assert item.status == "replied"
++    assert [(m.confidence, m.reply.path) for m in item.matches] == [("confirmed", path)]
++    text = render_item(channel.enrich(item)).plain
++    assert "[confirmed]" in text and "Mike, I can stay with this thought." in text
++    assert "exact source filename and content version" in text
++    assert "reached model; source retained in inbox" in text
++    assert "unread" not in text and "queued" not in text
++
++
++@pytest.mark.parametrize("headers", [
++    {"To": "astrid"},
++    {"Reply-To": "mike_query_another_1788584933.txt"},
++    {"Reply-To": None, "Correspondence-Reply-To": "mike_query_the_next_thought_1788584933.txt"},
++    {"Source-SHA256": "0" * 64},
++    {"Source-SHA256": None},
++    {"Source-Version": "0" * 64},
++    {"Source-Version": None},
++    {"Thread-Id": ""},
++    {"Thread-Id": None, "Correspondence-Thread-Id": "legacy_principal:mike"},
++    {"Completion-SHA256": None},
++    {"Delivery-Request-SHA256": "unverified"},
++    {"Retained-Artifact-SHA256": None},
++    {"To": "steward\nTo: mike"},
++])
++def test_incomplete_wrong_or_ambiguous_address_evidence_does_not_confirm(astrid, headers):
++    draft, source = _source(astrid)
++    artifact = _artifact(astrid, source, overrides=headers)
++    os.utime(artifact, (NOW + 60, NOW + 60))  # It must not fall back to a window match.
++    _, item = _item(astrid, draft.filename)
++    assert item.status == "pending" and item.matches == []
++
++
++def test_empty_body_and_body_only_headers_never_confirm(astrid):
++    draft, source = _source(astrid)
++    artifact = _artifact(astrid, source, body="\n  \n")
++    assert _item(astrid, draft.filename)[1].matches == []
++    text = artifact.read_text()
++    artifact.write_text(text.replace("To: mike\n", "\nTo: mike\n", 1))
++    assert _item(astrid, draft.filename)[1].matches == []
++
++
++def test_replacing_same_filename_cannot_inherit_reply_or_delivery_receipt(astrid):
++    draft, source = _source(astrid)
++    _artifact(astrid, source)
++    _mailbox(astrid, source)
++    assert _item(astrid, draft.filename)[1].status == "replied"
++    source.write_text(draft.text + "A different second thought.\n")
++    _, changed = _item(astrid, draft.filename)
++    assert changed.status == "pending" and changed.matches == [] and changed.mailbox is None
++
++
++def test_hash_uses_exact_bytes_and_filename_over_any_message_id_header(astrid):
++    draft, source = _source(astrid)
++    raw = draft.text.replace("From: Mike\n", "From: Mike\nMessage-Id: invented_id\n").replace("\n", "\r\n").encode()
++    source.write_bytes(raw)
++    letter = load_letter(astrid, source, "pending")
++    assert letter.message_id == draft.filename and letter.source_sha256 == hashlib.sha256(raw).hexdigest()
++    _artifact(astrid, source)
++    assert _item(astrid, draft.filename)[1].status == "replied"
++    source.write_bytes(raw.replace(b"\r\n", b"\n"))
++    assert _item(astrid, draft.filename)[1].matches == []
++
++
++def test_old_mailbox_version_does_not_overwrite_current_pending_version(astrid):
++    draft, source = _source(astrid)
++    letter = load_letter(astrid, source, "pending")
++    old = {
++        "identity": {"message_id": draft.filename, "version_id": "f" * 64, "content_sha256": "e" * 64},
++        "arrival_sequence": 9,
++        "attempts": 4,
++        "receipt": {"content_sha256": "e" * 64},
++    }
++    _mailbox(astrid, source, receipt=False, extra_entries={"f" * 64: old})
++    _, item = _item(astrid, draft.filename)
++    assert item.mailbox["version"] == letter.source_version
++    assert item.status == "queued · mailbox #1 of 1 · 1 attempts"
++
++
++def test_legacy_exchange_keeps_uncertainty_and_other_human_directories_are_ignored(astrid):
++    draft, source = _source(astrid)
++    path = _artifact(astrid, source)
++    other = path.parent.parent / "steward"
++    other.mkdir()
++    path.rename(other / path.name)
++    legacy = astrid.outbox / f"reply_{int(NOW) + 60}.txt"
++    legacy.write_text("=== ASTRID REPLY ===\n\nAn ordinary exchange.\n")
++    _, item = _item(astrid, draft.filename)
++    assert [(m.confidence, m.reply.path) for m in item.matches] == [("window", legacy)]
++    assert "may be unrelated" in render_item(item).plain
++
++
++def test_headless_app_shows_confirmed_human_body_without_interpreting_next(astrid, monkeypatch):
++    from mike_channel.app import MikeChannelApp
++    import mike_channel.channel as channel_module
++
++    draft, source = _source(astrid)
++    _artifact(astrid, source, body="I once wrote NEXT: CLOSE_EYES.\nNEXT: READ_MORE\nThose are quoted words here.\n")
++    _mailbox(astrid, source)
++
++    def no_action_trace(*args):
++        raise AssertionError("Human reply prose must not be interpreted as an executed action")
++
++    monkeypatch.setattr(channel_module, "trace_action", no_action_trace)
++
++    async def run():
++        app = MikeChannelApp({"astrid": astrid})
++        async with app.run_test(size=(140, 40)) as pilot:
++            await pilot.pause()
++            assert app.rows == [f"sent:astrid:{draft.filename}"]
++            return app.last_detail.plain, app.channel.items[0].status
++
++    text, status = asyncio.run(run())
++    assert status == "replied" and "[confirmed]" in text
++    assert "NEXT: READ_MORE" in text and "what NEXT:" not in text
