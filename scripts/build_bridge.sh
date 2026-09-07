@@ -26,6 +26,7 @@ DO_RESTART=0
 DO_DRAIN_ONLY=0
 STAGE_DIR=""
 ACTIVATE_STAGE=""
+RESUME_VERIFICATION=""
 EXPECTED_PID=""
 LEGACY_STOP_ACK=""
 ACTIVATION_TIMEOUT=600
@@ -50,7 +51,7 @@ PROMOTION_BACKUP=""
 CANDIDATE_INSTALLED=false
 
 usage() {
-  echo 'usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--stage-dir DIR | --activate-stage DIR --expected-pid PID [--legacy-stop-ack "explicit approval"] [--timeout-secs N] | --drain-only | --restart] [--no-build] [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]'
+  echo 'usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--stage-dir DIR | --activate-stage DIR --expected-pid PID [--legacy-stop-ack "explicit approval" | --resume-verification TRANSACTION] [--timeout-secs N] | --drain-only | --restart] [--no-build] [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]'
 }
 
 while [ $# -gt 0 ]; do
@@ -64,6 +65,10 @@ while [ $# -gt 0 ]; do
     --stage-dir) STAGE_DIR="${2:-}"; shift 2 ;;
     --activate-stage) ACTIVATE_STAGE="${2:-}"; shift 2 ;;
     --expected-pid) EXPECTED_PID="${2:-}"; shift 2 ;;
+    --resume-verification)
+      [ -n "${2:-}" ] && [[ "${2:-}" != --* ]] \
+        || { echo "build_bridge: --resume-verification requires a transaction directory" >&2; exit 64; }
+      RESUME_VERIFICATION="$2"; shift 2 ;;
     --legacy-stop-ack) LEGACY_STOP_ACK="${2:-}"; shift 2 ;;
     --timeout-secs) ACTIVATION_TIMEOUT="${2:-}"; shift 2 ;;
     --no-build)  DO_BUILD=0; shift ;;
@@ -94,15 +99,21 @@ label_pid() {
 if [ -n "$ACTIVATE_STAGE" ]; then
   [ "$DO_RESTART" -eq 0 ] && [ "$DO_DRAIN_ONLY" -eq 0 ] && [ "$DO_BUILD" -eq 1 ] && [ -z "$STAGE_DIR" ] && [ -z "$PROMOTE_CANDIDATE" ] && [ -z "$CANDIDATE_ROOT" ] && [ -z "$CANDIDATE_IDENTITY" ] && [ -n "$ACK" ] && [ -n "$EXPECTED_PID" ] \
     || { echo "build_bridge: activation requires --ack/--expected-pid and cannot accompany other build/restart modes" >&2; exit 64; }
+  if [ -n "$RESUME_VERIFICATION" ] && [ -n "$LEGACY_STOP_ACK" ]; then
+    echo "build_bridge: verification-only recovery cannot accompany legacy stop acknowledgement" >&2
+    exit 64
+  fi
+  RESUME_ARGS=()
+  [ -z "$RESUME_VERIFICATION" ] || RESUME_ARGS+=(--resume-verification "$RESUME_VERIFICATION")
   python3 -B "$SCRIPT_ROOT/scripts/deploy_preflight.py" --repo "$SCRIPT_ROOT" --ack "$ACK"
   if [ "$SCRIPT_ROOT" != "$ASTRID" ]; then
     python3 -B "$SCRIPT_ROOT/scripts/deploy_preflight.py" --repo "$ASTRID" --ack "$ACK"
   fi
   exec env ASTRID_SANCTIONED_BRIDGE_ACTIVATION=1 python3 -B "$SCRIPT_ROOT/scripts/bridge_activate.py" \
     --stage-dir "$ACTIVATE_STAGE" --expected-pid "$EXPECTED_PID" --actor "$ACTOR" --ack "$ACK" \
-    --legacy-stop-ack "$LEGACY_STOP_ACK" --timeout-secs "$ACTIVATION_TIMEOUT"
+    --legacy-stop-ack "$LEGACY_STOP_ACK" --timeout-secs "$ACTIVATION_TIMEOUT" "${RESUME_ARGS[@]}"
 fi
-if [ -n "$EXPECTED_PID" ] || [ -n "$LEGACY_STOP_ACK" ] || [ "$ACTIVATION_TIMEOUT" != 600 ]; then
+if [ -n "$EXPECTED_PID" ] || [ -n "$LEGACY_STOP_ACK" ] || [ -n "$RESUME_VERIFICATION" ] || [ "$ACTIVATION_TIMEOUT" != 600 ]; then
   echo "build_bridge: activation options require --activate-stage" >&2
   exit 64
 fi
