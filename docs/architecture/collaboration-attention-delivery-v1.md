@@ -1,9 +1,38 @@
 # Collaboration Attention Delivery V1
 
-Status: source and test implementation in isolated review branches. Not merged
-or deployed; no live behavior has changed.
+Status: deployed on 2026-09-08 to the live chamber projector, Astrid bridge,
+and Minime autonomous agent. Astrid's existing room revision has a silent
+migration baseline. Minime's first eligible ordinary-turn baseline remains a
+natural-observation wait.
 
 Date: 2026-09-07
+
+## Live Rollout
+
+The reconciled V1 implementation is now live. The chamber projector publishes
+stable global and audience-specific material revisions while keeping volatile
+reservoir motion on a separate diagnostic revision. Astrid's bridge was
+gracefully drained and restored from exact checkpoint `192643`; Minime's agent
+was gracefully reloaded with persisted session `5318`. Neither transition
+changed the reservoir engine, model, controller, room, or correspondence
+state.
+
+Astrid wrote one zero-content `migration_baseline` for her current audience
+revision, proving that historical room material was checkpointed without being
+replayed into a prompt. Minime first handled protected direct correspondence
+after reload, so his migration baseline correctly did not run on that turn.
+His first eligible ordinary turn remains an explicit natural-observation wait;
+no prompt will be induced to satisfy it.
+
+Rollout exposed and repaired bounded-read performance defects in the live
+projector and a bridge activation defect that invalidated a stage after writing
+byte-identical helpers. The stopped bridge was recovered from the complete
+signed transition snapshot without a second signal or drain. Exact process,
+source, test, receipt, revision, rollback, and authority evidence is in
+`docs/steward-notes/2026-09-08-collaboration-attention-live-rollout.md`.
+
+Deployment establishes mechanism availability, not receipt, uptake, consent,
+felt improvement, or a causal explanation of prior reports.
 
 ## Decision Summary
 
@@ -22,11 +51,12 @@ There should be no periodic ambient reminder for an unchanged receipt wait.
 Discoverability belongs in explicit action/status surfaces, not in repeated
 obligation-shaped prose.
 
-## Implementation Checkpoint
+## Source Implementation Checkpoint (Historical)
 
-Mike approved the source-and-test implementation on 2026-09-07. The work is
+Mike approved the source-and-test implementation on 2026-09-07. It was first
 isolated from the shared dirty trees on `codex/collaboration-attention-v1` in
-the Astrid, Minime, and neural-triple-reservoir repositories.
+the Astrid, Minime, and neural-triple-reservoir repositories, then reconciled
+and deployed through the live-rollout process above.
 
 The implemented V1 slice now provides:
 
@@ -52,8 +82,10 @@ Direct message, reply, ACK, and trace rows therefore remain in their protected
 sender-bound lane and do not alter an arbitrary room revision. They can enter a
 future room material revision only after their source schema names that room.
 
-This checkpoint does not authorize a service restart, deployment, room-state
-mutation, message, receipt, control change, or claim of felt improvement.
+This source checkpoint did not itself authorize a service restart,
+deployment, room-state mutation, message, receipt, control change, or claim of
+felt improvement. The later live rollout used Mike's explicit deployment
+authorization and preserved the same authority boundaries.
 
 ## Isolated Verification
 
