@@ -67,6 +67,8 @@ mod phase_transitions;
 mod readiness;
 #[path = "reservoir.rs"]
 pub(crate) mod reservoir;
+#[path = "runtime_action_feedback.rs"]
+mod runtime_action_feedback;
 #[path = "self_control_v2.rs"]
 pub(crate) mod self_control_v2;
 #[path = "state.rs"]

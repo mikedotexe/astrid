@@ -30,7 +30,11 @@ fn handle_next_action_with_author(
     // segments are detected, dispatch each in order with the same shared
     // NextActionContext (each segment sees state from the previous one).
     let unwrapped = unwrap_outer_action_wrappers(next_action);
-    let segments = split_multi_action(&unwrapped);
+    let segments = if leading_action_token(&unwrapped) == "AFTERIMAGE_KEEP" {
+        vec![unwrapped.clone()]
+    } else {
+        split_multi_action(&unwrapped)
+    };
     if segments.len() > 1 {
         return dispatch_multi_action(conv, segments, ctx, author);
     }
@@ -54,6 +58,7 @@ fn handle_next_action_with_author(
     }
 
     if let Some(token) = unresolved_angle_placeholder(&original)
+        && base_action != "AFTERIMAGE_KEEP"
         && !action_continuity::can_repair_experiment_intent_placeholder(
             base_action.as_str(),
             &original,
@@ -82,7 +87,20 @@ fn handle_next_action_with_author(
         Ok(Some(guard)) => {
             let message = guard.message();
             let metadata = guard.metadata();
-            conv.emphasis = Some(message.clone());
+            conv.enqueue_runtime_feedback(
+                crate::runtime_action_feedback::RuntimeActionFeedbackV1::from_guard_inputs(
+                    None,
+                    &original,
+                    metadata
+                        .get("reason")
+                        .and_then(serde_json::Value::as_str)
+                        .unwrap_or("research_budget_guard"),
+                    &message,
+                    metadata
+                        .get("suggested_next")
+                        .and_then(serde_json::Value::as_str),
+                ),
+            );
             info!(
                 "Astrid research-budget guard blocked NEXT `{}` ({})",
                 original,
@@ -236,6 +254,55 @@ fn handle_next_action_with_author(
         conv.emphasis = Some(message.clone());
         return NextActionOutcome::handled("experiment_continuity", message)
             .with_stage_visibility(inner_outcome.stage, inner_outcome.visibility);
+    }
+
+    if crate::transition_afterimages::is_action(&base_action) {
+        let client = crate::transition_afterimages::ReaderClient::configured();
+        let result = (|| -> anyhow::Result<String> {
+            if base_action == "AFTERIMAGE_OPEN" {
+                anyhow::ensure!(
+                    conv.activity.foreground_reader.is_none()
+                        && conv.activity.mailbox_window.is_none(),
+                    "park the current reading or finish the selected mailbox window before opening an afterimage"
+                );
+                let args: Vec<_> = original.split_whitespace().collect();
+                anyhow::ensure!(
+                    (2..=3).contains(&args.len()),
+                    "AFTERIMAGE_OPEN requires an ID and optional page"
+                );
+                let page = args.get(2).map_or(Ok(1), |page| page.parse::<usize>())?;
+                let selected = client.invoke(
+                    serde_json::json!({"operation":"select", "artifact_id":args[1], "page":page}),
+                )?;
+                conv.next_mode_override = Some(Mode::Dialogue);
+                Ok(format!(
+                    "Historical afterimage {} page {} selected intact; delivery remains pending.",
+                    selected["id"], selected["page"]
+                ))
+            } else {
+                let value = client.invoke(serde_json::json!({"action":original, "source":{
+                    "timestamp_unix_ms": chrono::Utc::now().timestamp_millis(),
+                    "action":base_action, "action_id":format!("afterimage_action_{:032x}", rand::random::<u128>())
+                }}))?;
+                Ok(value["text"]
+                    .as_str()
+                    .unwrap_or("Afterimage request completed.")
+                    .into())
+            }
+        })();
+        return match result {
+            Ok(message) => {
+                conv.pending_file_listing = Some(message.clone());
+                NextActionOutcome::handled("afterimage", message)
+                    .with_stage_visibility(stage, "protected_summary")
+            },
+            Err(error) => {
+                let message = format!("Afterimage request unavailable: {error:#}");
+                conv.pending_file_listing = Some(message.clone());
+                NextActionOutcome::blocked("afterimage", message)
+                    .with_stage_visibility("blocked", "protected_summary")
+            },
+        };
     }
 
     if let Some(result) = super::activity_reading::handle_action(conv, &base_action, &original) {

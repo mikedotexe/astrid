@@ -87,9 +87,8 @@ fn write_collision_safe_journal_document(
 ) -> std::io::Result<PathBuf> {
     let base = journal_dir.join(format!("{prefix}_{ts}.txt"));
     let candidates = std::iter::once(base).chain(
-        (1_u16..=1024).map(|collision| {
-            journal_dir.join(format!("{prefix}_collision_{collision}_{ts}.txt"))
-        }),
+        (1_u16..=1024)
+            .map(|collision| journal_dir.join(format!("{prefix}_collision_{collision}_{ts}.txt"))),
     );
 
     for path in candidates {
@@ -171,6 +170,21 @@ fn save_astrid_journal_with_provenance(
             None
         },
     };
+    if let Some(path) = path.as_ref()
+        && crate::transition_afterimages::has_records()
+    {
+        let source = serde_json::json!({
+            "source_ref":path, "timestamp_unix_ms":chrono::Utc::now().timestamp_millis(),
+            "journal_type":mode, "source_id":provenance.map(|p| p.source_id.as_str()),
+            "parent_ids":provenance.map(|p| p.parent_ids.as_str()),
+            "authorship":provenance.map(|p| p.authorship),
+        });
+        if let Err(error) = crate::transition_afterimages::ReaderClient::configured()
+            .invoke(serde_json::json!({"operation":"associate", "source":source, "raw_text":text}))
+        {
+            warn!(%error, "afterimage source association unavailable; journal retained");
+        }
+    }
     if let Err(error) = managed_dir::compact_text_directory(&journal_dir) {
         warn!(
             error = %error,

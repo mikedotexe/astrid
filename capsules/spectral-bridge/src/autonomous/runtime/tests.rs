@@ -103,6 +103,81 @@ mod tests {
     }
 
     #[test]
+    fn dialogue_form_preserves_authored_emphasis() {
+        let emphasis =
+            dialogue_authored_emphasis(Some("Attend to the unanswered question"), Some("poem"))
+                .unwrap();
+        assert!(emphasis.contains("Attend to the unanswered question"));
+        assert!(emphasis.contains("Express your response as a poem"));
+        assert_eq!(
+            dialogue_authored_emphasis(Some("Keep this choice"), None).as_deref(),
+            Some("Keep this choice")
+        );
+        assert_eq!(dialogue_authored_emphasis(None, None), None);
+    }
+
+    #[test]
+    fn prompt_overflow_cannot_take_an_open_mailbox_window() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        assert!(can_arm_prompt_overflow(&conv));
+        conv.activity.mailbox_window = Some(activity_reading::MailboxWindowV1 {
+            id: "test-window".into(),
+            large: false,
+        });
+        assert!(!can_arm_prompt_overflow(&conv));
+        assert_eq!(
+            prompt_overflow_availability(&conv, false),
+            crate::prompt_budget::OverflowReadMoreAvailability::Unknown
+        );
+        let mut accepted = None;
+        unpack_activity_completion(
+            &mut conv,
+            crate::llm::DialogueCompletionV1 {
+                text: Some("An ordinary response. NEXT: LISTEN".into()),
+                overflow: Some(crate::prompt_budget::PromptOverflow {
+                    path: PathBuf::from("/not-read/context-overflow.txt"),
+                    offset: 0,
+                    summary: "saved context".into(),
+                }),
+                accepted_delivery: None,
+                accepted_runtime_feedback: None,
+            },
+            &mut accepted,
+            false,
+        );
+        assert!(conv.last_read_path.is_none());
+        assert!(conv.activity.mailbox_window.is_some());
+    }
+
+    #[test]
+    fn combined_afterimage_selection_blocks_overflow_even_without_delivery_receipt() {
+        for text in [None, Some("A newly authored response. NEXT: LISTEN".into())] {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            assert_eq!(
+                prompt_overflow_availability(&conv, true),
+                crate::prompt_budget::OverflowReadMoreAvailability::Unknown
+            );
+            let mut accepted = None;
+            unpack_activity_completion(
+                &mut conv,
+                crate::llm::DialogueCompletionV1 {
+                    text,
+                    overflow: Some(crate::prompt_budget::PromptOverflow {
+                        path: PathBuf::from("/not-read/another-source.txt"),
+                        offset: 0,
+                        summary: "ambient overflow".into(),
+                    }),
+                    accepted_delivery: None,
+                    accepted_runtime_feedback: None,
+                },
+                &mut accepted,
+                true,
+            );
+            assert!(conv.last_read_path.is_none());
+        }
+    }
+
+    #[test]
     fn dialogue_distinction_line_is_first_and_read_only_when_frame_is_unknown() {
         let summary = "legacy spectral summary".to_string();
         let rendered = prepend_dialogue_witness_distinction_v1(summary, None, Mode::Dialogue);
@@ -298,13 +373,8 @@ mod tests {
             r#"{"kind":"semantic","features":[0.125,-0.25,0.5],"ts_ms":42}"#
         );
 
-        let mut shadow = begin_signal_shadow_v1(
-            7,
-            42,
-            "other",
-            "authored but never persisted",
-            None,
-        );
+        let mut shadow =
+            begin_signal_shadow_v1(7, 42, "other", "authored but never persisted", None);
         let root = signal_root_v1(&shadow);
         let stage = record_signal_json_v1(
             &mut shadow,
@@ -327,13 +397,7 @@ mod tests {
         let vector_before = features.clone();
         let delivery = codec_delivery_fidelity_v1(None, &features);
         let delivery_before = serde_json::to_vec(&delivery).unwrap();
-        let mut shadow = begin_signal_shadow_v1(
-            8,
-            43,
-            "other",
-            "bounded delivery evidence",
-            None,
-        );
+        let mut shadow = begin_signal_shadow_v1(8, 43, "other", "bounded delivery evidence", None);
         let root = signal_root_v1(&shadow);
         let encoded = record_signal_vector_v1(
             &mut shadow,

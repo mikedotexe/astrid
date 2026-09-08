@@ -6,12 +6,97 @@ the separate verification-only path after durable release intent was recorded.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
+import stat
 
 import bridge_stage as stage_tools
 from bridge_release_launch import digest
+
+RUNTIME_FEEDBACK_FILE = "runtime_action_feedback_v1.json"
+RUNTIME_FEEDBACK_SNAPSHOT = "runtime-action-feedback.before.json"
+RUNTIME_FEEDBACK_SCHEMA = "pending_runtime_action_feedback_v1"
+
+
+def read_runtime_feedback(path: Path) -> tuple[dict, bytes | None]:
+    """Read a private versioned sidecar without following a final symlink."""
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError:
+        # A dangling symlink is unknown state, not an absent queue.
+        if os.path.lexists(path):
+            raise RuntimeError("runtime feedback sidecar is not a regular file")
+        return {"present":False}, None
+    with os.fdopen(descriptor, "rb") as handle:
+        before = os.fstat(handle.fileno())
+        if not stat.S_ISREG(before.st_mode) or before.st_mode & 0o077:
+            raise RuntimeError("runtime feedback sidecar is not a private regular file")
+        data = handle.read(64 * 1024 * 1024 + 1)
+        after = os.fstat(handle.fileno())
+    current = path.lstat()
+    identity = lambda item: (item.st_dev, item.st_ino, item.st_size,
+                             item.st_mtime_ns, item.st_ctime_ns, item.st_mode)
+    if identity(before) != identity(after) or identity(after) != identity(current):
+        raise RuntimeError("runtime feedback sidecar changed while being read")
+    if len(data) > 64 * 1024 * 1024:
+        raise RuntimeError("runtime feedback checkpoint exceeds 64 MiB")
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate runtime feedback JSON field")
+            result[key] = value
+        return result
+    def invalid_constant(value):
+        raise ValueError(f"invalid runtime feedback JSON constant: {value}")
+    value = json.loads(data.decode("utf-8"), object_pairs_hook=unique_object,
+                       parse_constant=invalid_constant)
+    if (not isinstance(value, dict) or set(value) != {"schema", "pending_runtime_feedback"}
+            or value["schema"] != RUNTIME_FEEDBACK_SCHEMA
+            or not isinstance(value["pending_runtime_feedback"], list)):
+        raise RuntimeError("unsupported runtime feedback sidecar schema")
+    ids = set()
+    for item in value["pending_runtime_feedback"]:
+        if (not isinstance(item, dict)
+                or any(not isinstance(item.get(key), str) or not item[key].strip()
+                       for key in ("id", "requested_action", "status", "message"))
+                or any(item.get(key) is not None and not isinstance(item[key], str)
+                       for key in ("reason", "suggested_next"))
+                or item["id"] in ids):
+            raise RuntimeError("invalid runtime feedback record or duplicate identity")
+        ids.add(item["id"])
+    return {"present":True, "schema":RUNTIME_FEEDBACK_SCHEMA,
+            "sha256":hashlib.sha256(data).hexdigest(), "pending_count":len(ids)}, data
+
+
+def runtime_feedback_descriptor(path: Path) -> dict:
+    return read_runtime_feedback(path)[0]
+
+
+def runtime_feedback_binding(checkpoint: dict, actual: dict) -> dict:
+    """Older checkpoint evidence is compatible only with an absent sidecar."""
+    declared = checkpoint.get("runtime_action_feedback", {"present":False})
+    valid = isinstance(declared, dict) and (
+        declared == {"present":False} and declared.get("present") is False
+        or set(declared) == {"present", "schema", "sha256", "pending_count"}
+        and declared.get("present") is True and declared.get("schema") == RUNTIME_FEEDBACK_SCHEMA
+        and isinstance(declared.get("sha256"), str)
+        and re.fullmatch(r"[0-9a-f]{64}", declared["sha256"])
+        and type(declared.get("pending_count")) is int and declared["pending_count"] >= 0)
+    if not valid or declared != actual:
+        raise RuntimeError("runtime feedback checkpoint presence or contents changed")
+    return declared
+
+
+def verify_runtime_feedback_snapshot(checkpoint: dict, transaction: Path,
+                                     live_path: Path) -> dict:
+    saved = runtime_feedback_descriptor(transaction / RUNTIME_FEEDBACK_SNAPSHOT)
+    expected = runtime_feedback_binding(checkpoint, saved)
+    if "runtime_action_feedback" not in checkpoint:
+        runtime_feedback_binding(checkpoint, runtime_feedback_descriptor(live_path))
+    return expected
 
 
 def resume_stopped_transition(backend, *, transaction: Path, expected_pid: int,
@@ -105,11 +190,13 @@ class StoppedTransitionMixin:
         initial = {"original_failure_sha256":digest(transaction / "receipt.json"),
             "old_pid":expected_pid, "old_identity":self.old, "owned_hold":self.guard,
             "checkpoint_sha256":checkpoint,
-            "self_control_sha256":digest(self.workspace / "self_control_v2/astrid/state.json")}
+            "self_control_sha256":digest(self.workspace / "self_control_v2/astrid/state.json"),
+            "runtime_action_feedback":runtime_feedback_descriptor(self.workspace / RUNTIME_FEEDBACK_FILE)}
         self.assert_stopped_ownership(initial)
         check = self.native("--verify-deployment-inputs")
         if check.get("checkpoint", {}).get("sha256") != checkpoint:
             raise RuntimeError("native checkpoint does not match the acknowledged drain")
+        runtime_feedback_binding(check["checkpoint"], initial["runtime_action_feedback"])
         return initial
 
     def assert_stopped_ownership(self, initial: dict, *, selected: bool = False) -> None:
@@ -149,6 +236,7 @@ class StoppedTransitionMixin:
             raise RuntimeError("conversation checkpoint changed after acknowledged drain")
         if digest(self.workspace / "self_control_v2/astrid/state.json") != initial["self_control_sha256"]:
             raise RuntimeError("stopped self-control state changed")
+        runtime_feedback_binding(initial, runtime_feedback_descriptor(self.workspace / RUNTIME_FEEDBACK_FILE))
 
     def validate_stopped_snapshot(self, initial: dict) -> None:
         before = stage_tools.json_file(self.transaction / "inputs.before.json")
@@ -157,6 +245,9 @@ class StoppedTransitionMixin:
                 or digest(self.transaction / "self-control.before.json") != initial["self_control_sha256"]
                 or digest(self.transaction / "manifest.before.json") != self.old["manifest_sha256"]):
             raise RuntimeError("stopped snapshot does not match admitted continuity evidence")
+        saved = verify_runtime_feedback_snapshot(before["checkpoint"], self.transaction,
+                                                  self.workspace / RUNTIME_FEEDBACK_FILE)
+        runtime_feedback_binding(initial, saved)
         if before["self_control"]["state_targets_this_binary"] is not True:
             handoff = stage_tools.json_file(self.transaction / "handoff.json")
             pending = stage_tools.json_file(self.workspace / "self_control_v2/astrid/deployment_handoff.pending.json")

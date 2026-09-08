@@ -15,6 +15,8 @@ fn dialogue_requested_token_band(num_predict: u32) -> &'static str {
     }
 }
 
+include!("control_marker_annotation_tests.rs");
+
 #[derive(Debug, Clone, Copy)]
 struct KnownModelControlMarkerMatch {
     occurrence: ExactKnownModelControlMarkerOccurrence,
@@ -36,6 +38,13 @@ struct ExactKnownModelControlMarkerOccurrence {
 struct ExactKnownMarkerReferenceSyntax {
     context: ExactKnownMarkerReferenceContext,
     delimiter_depth: usize,
+    relation_scan: Option<ExactKnownMarkerRelationScan>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ExactKnownMarkerRelationScan {
+    source: &'static str,
+    skipped_annotation_chunks: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,10 +59,11 @@ impl ExactKnownModelControlMarkerOccurrence {
         if let Some(syntax) = exact_reference_delimiter_syntax(text, self.start, self.end) {
             return Some(syntax);
         }
-        if self.followed_by_explicit_exact_token_relation(text) {
+        if let Some(relation_scan) = self.explicit_exact_token_relation_scan(text) {
             return Some(ExactKnownMarkerReferenceSyntax {
                 context: ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation,
                 delimiter_depth: 0,
+                relation_scan: Some(relation_scan),
             });
         }
         None
@@ -71,11 +81,27 @@ impl ExactKnownModelControlMarkerOccurrence {
     /// removed. Plain intervening words (e.g. adverbs) are deliberately NOT
     /// skipped — that boundary stays pinned by
     /// `control_marker_cleanup_does_not_skip_adverb_before_relation_word`.
+    fn explicit_exact_token_relation_scan(
+        self,
+        text: &str,
+    ) -> Option<ExactKnownMarkerRelationScan> {
+        if is_exact_token_relation_word(&first_word_after(text, self.end)) {
+            return Some(ExactKnownMarkerRelationScan {
+                source: "plain_first_word",
+                skipped_annotation_chunks: 0,
+            });
+        }
+        let (word, skipped_annotation_chunks) =
+            first_word_after_skipping_bracketed_annotations(text, self.end);
+        is_exact_token_relation_word(&word).then_some(ExactKnownMarkerRelationScan {
+            source: "annotation_scan",
+            skipped_annotation_chunks,
+        })
+    }
+
+    #[cfg(test)]
     fn followed_by_explicit_exact_token_relation(self, text: &str) -> bool {
-        is_exact_token_relation_word(&first_word_after(text, self.end))
-            || is_exact_token_relation_word(&first_word_after_skipping_bracketed_annotations(
-                text, self.end,
-            ))
+        self.explicit_exact_token_relation_scan(text).is_some()
     }
 }
 
@@ -109,7 +135,9 @@ fn is_exact_token_relation_word(word: &str) -> bool {
 /// self-contained (it opens a multi-word parenthetical), so the existing
 /// "(as a test)" reference path is untouched.
 fn is_self_contained_bracketed_annotation(chunk: &str) -> bool {
-    let trimmed = chunk.trim_end_matches(['.', ',', ';', ':', '!', '?']);
+    let trimmed = chunk.trim_end_matches([
+        '.', ',', ';', ':', '!', '?', '\u{2013}', '\u{2014}', '\u{2026}',
+    ]);
     let mut chars = trimmed.chars();
     let Some(open) = chars.next() else {
         return false;
@@ -143,15 +171,24 @@ fn is_self_contained_bracketed_annotation(chunk: &str) -> bool {
 }
 
 /// The additive second scan: like `first_word_after`, but self-contained
-/// bracketed annotations are skipped before the first word is taken.
-fn first_word_after_skipping_bracketed_annotations(text: &str, end: usize) -> String {
-    text[end..]
-        .split_whitespace()
-        .filter(|chunk| !is_self_contained_bracketed_annotation(chunk))
-        .map(|chunk| chunk.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
-        .find(|word| !word.is_empty())
-        .unwrap_or_default()
-        .to_ascii_lowercase()
+/// bracketed annotations are skipped unless the chunk itself names an allowed relation.
+fn first_word_after_skipping_bracketed_annotations(text: &str, end: usize) -> (String, usize) {
+    let mut skipped_annotation_chunks = 0usize;
+    for chunk in text[end..].split_whitespace() {
+        let word = chunk
+            .trim_matches(|c: char| !c.is_alphanumeric() && c != '_')
+            .to_ascii_lowercase();
+        // A relation inside brackets is still a relation, not an aside to discard.
+        if is_exact_token_relation_word(&word) {
+            return (word, skipped_annotation_chunks);
+        }
+        if is_self_contained_bracketed_annotation(chunk) {
+            skipped_annotation_chunks = skipped_annotation_chunks.saturating_add(1);
+        } else if !word.is_empty() {
+            return (word, skipped_annotation_chunks);
+        }
+    }
+    (String::new(), skipped_annotation_chunks)
 }
 
 fn first_word_after(text: &str, end: usize) -> String {
@@ -291,6 +328,7 @@ fn exact_reference_delimiter_syntax(
     Some(ExactKnownMarkerReferenceSyntax {
         context,
         delimiter_depth,
+        relation_scan: None,
     })
 }
 
@@ -321,6 +359,29 @@ fn control_marker_placement_counts(
 
 const CONTROL_MARKER_CONTEXT_WINDOW_CHARS: usize = 64;
 const MAX_CONTROL_MARKER_CONTEXT_RECEIPTS: usize = 32;
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct ControlMarkerContextReceiptV1 {
+    pub receipt_id: String,
+    pub marker: String,
+    pub start_byte: usize,
+    pub end_byte: usize,
+    pub preserved: bool,
+    pub reference_syntax: &'static str,
+    pub delimiter_depth: usize,
+    /// Winning relation route only; null for delimiter references and cleanup candidates.
+    pub relation_scan: Option<&'static str>,
+    pub skipped_annotation_chunks: Option<usize>,
+    pub before_window_chars: usize,
+    pub after_window_chars: usize,
+    pub before_alphanumeric_chars: usize,
+    pub after_alphanumeric_chars: usize,
+    pub bounded_context_sha256: String,
+    pub surrounding_bytes_contract: &'static str,
+    pub contextual_weight: &'static str,
+    pub spectral_relation: &'static str,
+    pub authority: &'static str,
+}
 
 fn sha256_parts(parts: &[&[u8]]) -> String {
     let mut hasher = Sha256::new();
@@ -362,10 +423,12 @@ fn control_marker_context_receipt_v1(
         Some(ExactKnownMarkerReferenceSyntax {
             context: ExactKnownMarkerReferenceContext::QuotedExactKnownToken,
             delimiter_depth,
+            ..
         }) => ("quoted_exact_marker", delimiter_depth),
         Some(ExactKnownMarkerReferenceSyntax {
             context: ExactKnownMarkerReferenceContext::GroupedExactKnownToken,
             delimiter_depth,
+            ..
         }) => ("grouped_exact_marker", delimiter_depth),
         Some(ExactKnownMarkerReferenceSyntax {
             context: ExactKnownMarkerReferenceContext::ExplicitExactKnownTokenRelation,
@@ -373,6 +436,9 @@ fn control_marker_context_receipt_v1(
         }) => ("following_exact_relation", 0),
         None => ("none_cleanup_candidate", 0),
     };
+    let relation_scan = marker_match
+        .reference_syntax
+        .and_then(|syntax| syntax.relation_scan);
     let start = occurrence.start.to_string();
     let end = occurrence.end.to_string();
     let receipt_id = sha256_parts(&[
@@ -391,6 +457,8 @@ fn control_marker_context_receipt_v1(
         preserved: marker_match.reference_syntax.is_some(),
         reference_syntax,
         delimiter_depth,
+        relation_scan: relation_scan.map(|scan| scan.source),
+        skipped_annotation_chunks: relation_scan.map(|scan| scan.skipped_annotation_chunks),
         before_window_chars: before.chars().count(),
         after_window_chars: after.chars().count(),
         before_alphanumeric_chars: before

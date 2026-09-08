@@ -1,3 +1,7 @@
+fn afterimage_continuity_status() -> Option<String> {
+    crate::transition_afterimages::discovery_line()
+}
+
 fn compact_continuity_item(text: &str) -> String {
     let normalized = text.split_whitespace().collect::<Vec<_>>().join(" ");
     let max_bytes = continuity_recap_item_max_bytes_for_text(&normalized);

@@ -165,6 +165,7 @@ pub fn spawn_autonomous_loop(
 
         let mut conv = ConversationState::new(remote_journal_entries, workspace_path);
         restore_state(&mut conv);
+        conv.restore_pending_runtime_feedback();
         if let Err(error) = self_control_v2::reconcile_if_present(&mut conv) {
             warn!("Astrid self-control V2 restart reconciliation blocked: {error}");
         }
@@ -410,7 +411,9 @@ pub fn spawn_autonomous_loop(
                         Ok(enqueue_probe) => {
                             if sensory_tx.send(msg).await.is_err() {
                                 enqueue_probe.record_channel_closed();
-                                return Err(anyhow::anyhow!("sensory channel closed during autonomous rest"));
+                                return Err(anyhow::anyhow!(
+                                    "sensory channel closed during autonomous rest"
+                                ));
                             }
                             enqueue_probe.record_enqueued();
                         },
@@ -1283,6 +1286,9 @@ pub fn spawn_autonomous_loop(
                             let latent_summaries =
                                 db.get_recent_latent_summaries(CONTINUITY_TRAJECTORY_FETCH_LIMIT);
                             let mut continuity_parts = Vec::new();
+                            if let Some(status) = afterimage_continuity_status() {
+                                continuity_parts.push(status);
+                            }
                             let self_observations =
                                 db.get_recent_self_observations(CONTINUITY_SELF_OBSERVATION_LIMIT);
                             let starred = db.get_starred_memories(CONTINUITY_STARRED_LIMIT);
@@ -1852,7 +1858,7 @@ pub fn spawn_autonomous_loop(
                                         None
                                     });
                             }
-                            let protected_input = if let Some(letter) = inbox_reservation.as_ref() {
+                            let mut protected_input = if let Some(letter) = inbox_reservation.as_ref() {
                                 Some(protected_letter_input(letter))
                             } else {
                                 reading_offer.as_ref().and_then(|offer| {
@@ -1861,6 +1867,18 @@ pub fn spawn_autonomous_loop(
                                     }).ok()
                                 })
                             };
+                            if protected_input.is_none() && activity_recovery_ready
+                                && conv.activity.foreground_reader.is_none()
+                                && conv.activity.return_reader.is_none()
+                                && conv.activity.mailbox_window.is_none() {
+                                match crate::transition_afterimages::ReaderClient::configured().pending_input() {
+                                    Ok(input) => protected_input = input,
+                                    Err(error) => {
+                                        activity_recovery_ready = false;
+                                        warn!(%error, "selected afterimage remains pending");
+                                    },
+                                }
+                            }
                             let dialogue_source = protected_input.as_ref().map_or(dialogue_source, |input| {
                                 format!("activity:{:?}:{}:byte_{}", input.kind, input.content_id, input.source_start_byte)
                             });
@@ -1921,16 +1939,16 @@ pub fn spawn_autonomous_loop(
                                     &overflow_dir,
                                     std::time::Duration::from_secs(3600),
                                 );
-                                let effective_emphasis = if let Some(ref form) = conv.form_constraint {
-                                            Some(format!(
-                                                "Express your response as a {}. Not prose — \
-                                                 the form itself is the expression.",
-                                                form
-                                            ))
-                                        } else {
-                                            conv.emphasis.clone()
-                                        };
-                                let generation = crate::llm::generate_dialogue_with_delivery(
+                                let effective_emphasis = dialogue_authored_emphasis(
+                                    conv.emphasis.as_deref(), conv.form_constraint.as_deref(),
+                                );
+                                let afterimage_selected = protected_input.as_ref().is_some_and(|input|
+                                    input.kind == crate::llm::ProtectedDialogueKindV1::Afterimage);
+                                let overflow_availability = prompt_overflow_availability(&conv, afterimage_selected);
+                                let runtime_feedback = conv.pending_runtime_feedback.iter()
+                                    .take(crate::runtime_action_feedback::MAX_RUNTIME_FEEDBACK_PER_REQUEST)
+                                    .cloned().collect::<Vec<_>>();
+                                let generation = crate::llm::generate_dialogue_with_runtime_feedback(
                                         journal,
                                         &spectral_summary,
                                         fill_pct,
@@ -1949,6 +1967,8 @@ pub fn spawn_autonomous_loop(
                                         attention_carrier.as_ref(),
                                         &overflow_dir,
                                         protected_input.as_ref(),
+                                        &runtime_feedback,
+                                        &overflow_availability,
                                     );
                                 // Each provider request has its own deadline. A selected
                                 // source gets the complete bounded primary/fallback chain;
@@ -1960,7 +1980,7 @@ pub fn spawn_autonomous_loop(
                                 };
                                 match completion {
                                     Ok(completion) => unpack_activity_completion(
-                                        &mut conv, completion, &mut accepted_delivery,
+                                        &mut conv, completion, &mut accepted_delivery, afterimage_selected,
                                     ),
                                     Err(_) => {
                                         warn!(
@@ -1977,7 +1997,7 @@ pub fn spawn_autonomous_loop(
                                             );
                                         match tokio::time::timeout(
                                             Duration::from_secs(timeout_secs),
-                                            crate::llm::generate_dialogue_with_delivery(
+                                            crate::llm::generate_dialogue_with_runtime_feedback(
                                                 journal,
                                                 &spectral_summary,
                                                 fill_pct,
@@ -1987,14 +2007,7 @@ pub fn spawn_autonomous_loop(
                                                 modality_context.as_deref(),
                                                 effective_temperature,
                                                 retry_tokens,
-                                                if let Some(ref form) = conv.form_constraint {
-                                                    Some(format!(
-                                                        "Express your response as a {}.",
-                                                        form
-                                                    ))
-                                                } else {
-                                                    conv.emphasis.clone()
-                                                }.as_deref(),
+                                                effective_emphasis.as_deref(),
                                                 continuity_block.as_deref(),
                                                 agenda_context.as_deref(),
                                                 topline_hint.as_deref(),
@@ -2003,10 +2016,12 @@ pub fn spawn_autonomous_loop(
                                                 attention_carrier.as_ref(),
                                                 &overflow_dir,
                                                 protected_input.as_ref(),
+                                                &runtime_feedback,
+                                                &overflow_availability,
                                             )
                                         ).await {
                                             Ok(completion) => unpack_activity_completion(
-                                                &mut conv, completion, &mut accepted_delivery,
+                                                &mut conv, completion, &mut accepted_delivery, afterimage_selected,
                                             ),
                                             Err(_) => {
                                                 warn!("dialogue_live: retry also timed out");

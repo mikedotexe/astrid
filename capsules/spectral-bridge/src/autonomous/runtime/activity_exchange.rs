@@ -154,14 +154,16 @@ fn unpack_activity_completion(
     conv: &mut ConversationState,
     completion: crate::llm::DialogueCompletionV1,
     accepted: &mut Option<crate::llm::PromptDeliveryReceiptV1>,
+    afterimage_selected: bool,
 ) -> Option<String> {
+    if completion.text.is_some()
+        && let Some(receipt) = completion.accepted_runtime_feedback.as_ref()
+    {
+        conv.acknowledge_runtime_feedback(receipt);
+    }
     if let Some(overflow) = completion.overflow
-        && conv.activity.foreground_reader.is_none()
-        && conv.activity.return_reader.is_none()
-        && should_arm_prompt_overflow_read_more(
-            conv.last_read_path.as_deref(),
-            conv.recent_next_choices.back().map(String::as_str),
-        )
+        && !afterimage_selected
+        && can_arm_prompt_overflow(conv)
     {
         conv.last_read_path = Some(overflow.path.to_string_lossy().into_owned());
         conv.last_read_offset = overflow.offset;
@@ -169,6 +171,60 @@ fn unpack_activity_completion(
     }
     *accepted = completion.accepted_delivery;
     completion.text
+}
+
+fn can_arm_prompt_overflow(conv: &ConversationState) -> bool {
+    conv.activity.foreground_reader.is_none()
+        && conv.activity.return_reader.is_none()
+        && conv.activity.mailbox_window.is_none()
+        && should_arm_prompt_overflow_read_more(
+            conv.last_read_path.as_deref(),
+            conv.recent_next_choices.back().map(String::as_str),
+        )
+}
+
+/// An overflow hint describes a source we can arm, not whichever reader
+/// already owns attention. The budget preview performs no continuity writes.
+fn prompt_overflow_availability(
+    conv: &ConversationState,
+    afterimage_selected: bool,
+) -> crate::prompt_budget::OverflowReadMoreAvailability {
+    use crate::action_continuity::ResearchBudgetReadMoreAvailability;
+    use crate::prompt_budget::OverflowReadMoreAvailability;
+    if afterimage_selected || !can_arm_prompt_overflow(conv) {
+        return OverflowReadMoreAvailability::Unknown;
+    }
+    match crate::action_continuity::ActionContinuityStore::for_astrid_workspace()
+        .research_budget_read_more_availability()
+    {
+        ResearchBudgetReadMoreAvailability::Allowed => OverflowReadMoreAvailability::Available,
+        ResearchBudgetReadMoreAvailability::Blocked {
+            reason,
+            suggested_next,
+        } => OverflowReadMoreAvailability::Blocked {
+            reason,
+            suggested_next: Some(suggested_next),
+        },
+        ResearchBudgetReadMoreAvailability::Unknown => OverflowReadMoreAvailability::Unknown,
+    }
+}
+
+fn dialogue_authored_emphasis(emphasis: Option<&str>, form: Option<&str>) -> Option<String> {
+    let mut choices = emphasis
+        .filter(|text| !text.trim().is_empty())
+        .map(str::to_owned);
+    if let Some(form) = form {
+        let instruction =
+            format!("Express your response as a {form}. The form itself is the expression.");
+        match choices.as_mut() {
+            Some(choices) => {
+                choices.push('\n');
+                choices.push_str(&instruction);
+            },
+            None => choices = Some(instruction),
+        }
+    }
+    choices
 }
 
 fn finish_activity_turn(
@@ -179,6 +235,17 @@ fn finish_activity_turn(
     receipt: Option<&crate::llm::PromptDeliveryReceiptV1>,
     completion: Option<&str>,
 ) -> bool {
+    if let Some(receipt) =
+        receipt.filter(|receipt| receipt.kind == crate::llm::ProtectedDialogueKindV1::Afterimage)
+    {
+        if let Some(completion) = completion
+            && let Err(error) = crate::transition_afterimages::ReaderClient::configured()
+                .acknowledge(receipt, completion)
+        {
+            warn!(%error, "afterimage delivery remains pending");
+        }
+        return false;
+    }
     let outcome = commit_activity_delivery(
         &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
         inbox,
@@ -190,11 +257,13 @@ fn finish_activity_turn(
     match outcome {
         Ok(ActivityDeliveryOutcome::Reading { admitted_bytes }) => {
             if let Some(offer) = reading {
-                let admitted_chars = usize::try_from(admitted_bytes).ok()
+                let admitted_chars = usize::try_from(admitted_bytes)
+                    .ok()
                     .and_then(|end| offer.text.get(..end))
                     .map_or(0, |text| text.chars().count());
                 conv.note_read_depth_advance(
-                    "READ_MORE", offer.reader.session_id.clone(),
+                    "READ_MORE",
+                    offer.reader.session_id.clone(),
                     u32::try_from(admitted_chars).unwrap_or(u32::MAX),
                 );
             }

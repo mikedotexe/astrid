@@ -141,6 +141,11 @@ pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
             continue;
         }
         if let Some(action) = trimmed.strip_prefix("NEXT:") {
+            if let Some(raw) = line.trim_start().strip_prefix("NEXT:")
+                && raw.trim_start().starts_with("AFTERIMAGE_KEEP ")
+            {
+                return Some(raw.trim_start());
+            }
             let mut clean = action.trim();
             for token in &[
                 "<end_of_turn>",
@@ -1134,6 +1139,9 @@ fn normalize_feedback_shadow_model_alias(
 }
 
 fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
+    if leading_action_token(next_action.trim_start()) == "AFTERIMAGE_KEEP" {
+        return ("AFTERIMAGE_KEEP".into(), next_action.trim_start().into());
+    }
     let original =
         unwrap_outer_action_wrappers(strip_choice_metadata_from_next_action(next_action));
     let base_action = leading_action_token(&original);
@@ -1324,6 +1332,9 @@ fn normalize_steward_typo_alias(base_action: &str, original: &str) -> Option<(St
 }
 
 fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
+    if crate::transition_afterimages::is_action(base_action) {
+        return "protected_summary";
+    }
     if matches!(
         base_action,
         "ACTIVITY_STATUS"
@@ -1426,6 +1437,13 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
 }
 
 fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
+    if crate::transition_afterimages::is_action(base_action) {
+        return if base_action == "AFTERIMAGE_LIST" {
+            "read_only"
+        } else {
+            "local_state"
+        };
+    }
     match base_action {
         "ACTIVITY_STATUS" | "MAILBOX_STATUS" => return "read_only",
         "PARK_ACTIVITY" | "RETURN_ACTIVITY" | "CHECK_MAILBOX" => return "local_state",
@@ -1622,6 +1640,9 @@ fn is_action_preflight_base(base_action: &str) -> bool {
 }
 
 fn route_for_preflight_base(base_action: &str) -> String {
+    if crate::transition_afterimages::is_action(base_action) {
+        return "afterimage".into();
+    }
     if matches!(
         base_action,
         "ACTIVITY_STATUS"
@@ -1944,7 +1965,9 @@ pub(crate) fn action_preflight_report(action_text: &str) -> ActionPreflightRepor
         "Would record an action event and observation window if executed.".to_string();
     let mut likely_gate = "normal dispatcher gates would apply".to_string();
 
-    if let Some(token) = unresolved_angle_placeholder(&canonical_action) {
+    if let Some(token) = unresolved_angle_placeholder(&canonical_action)
+        && base_action != "AFTERIMAGE_KEEP"
+    {
         stage = "blocked".to_string();
         route = "placeholder".to_string();
         likely_gate = format!("blocked: unresolved placeholder syntax `{token}`");
@@ -2199,6 +2222,20 @@ mod tests {
     use tokio::sync::mpsc;
 
     static PERCEPTION_FLAG_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    #[test]
+    fn transition_afterimage_keep_preserves_authored_syntax_and_quoted_next_is_inert() {
+        let action = "AFTERIMAGE_KEEP ::  <unfinished> AND REST RESIDUE: remain  ";
+        assert_eq!(parse_next_action(&format!("NEXT: {action}")), Some(action));
+        assert_eq!(canonicalize_next_action_components(action).1, action);
+        let report = action_preflight_report(action);
+        assert_eq!(report.base_action, "AFTERIMAGE_KEEP");
+        assert_ne!(report.stage, "blocked");
+        assert_eq!(
+            parse_next_action("> NEXT: TURN_OFF\n> ```\n> NEXT: REST"),
+            None
+        );
+    }
 
     struct PerceptionFlagGuard {
         paths: Vec<(PathBuf, Option<Vec<u8>>)>,

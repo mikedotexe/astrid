@@ -1,3 +1,5 @@
+include!("read_more_availability.rs");
+
 fn base_action(action: &str) -> String {
     action
         .split_whitespace()
@@ -688,6 +690,29 @@ fn research_budget_duplicate_count(
                 && row.get("normalized_target").and_then(Value::as_str) == Some(normalized_target)
         })
         .count()
+}
+
+fn research_budget_missing_guidance(rows: &[Value]) -> (String, Option<String>) {
+    research_budget_status_from_rows(rows)
+        .get("latest_budget_request_id")
+        .and_then(Value::as_str)
+        .filter(|id| !id.is_empty())
+        .map_or_else(
+            || {
+                let next = "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string();
+                (next.clone(), Some(next))
+            },
+            |id| (format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {id}"), None),
+        )
+}
+
+fn research_budget_duplicate_review_next(
+    rows: &[Value],
+    budget_id: &str,
+    normalized_target: &str,
+) -> Option<String> {
+    (research_budget_duplicate_count(rows, budget_id, normalized_target) >= 2)
+        .then(|| research_budget_review_command_for_duplicate(budget_id, normalized_target))
 }
 
 fn research_budget_review_command_for_duplicate(

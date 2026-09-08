@@ -95,7 +95,8 @@ class StoppedRecoveryTests(unittest.TestCase):
         if args == ("--verify-deployment-manifest",):
             return {"deployment_identity":"new-deployment"}
         if args == ("--verify-deployment-inputs",):
-            return {"checkpoint":{"sha256":activation.digest(self.state), "exchange_count":11 if self.started else 10},
+            return {"checkpoint":{"sha256":activation.digest(self.state), "exchange_count":11 if self.started else 10,
+                    "runtime_action_feedback":activation.runtime_feedback_descriptor(self.backend.workspace / activation.RUNTIME_FEEDBACK_FILE)},
                 "self_control":{"state_targets_this_binary":self.started,
                                 "state_deployment_identity":"new-deployment" if self.started else "old"}}
         self.assertEqual(args[0], "--prepare-self-control-deployment-handoff")
@@ -117,7 +118,8 @@ class StoppedRecoveryTests(unittest.TestCase):
             "executable":str(self.binary), "executable_sha256":activation.digest(self.binary),
             "started_at_unix_ms":int(time.time() * 1000)})
         activation.stage_tools.atomic_json(directory / "12346.startup.json", {
-            "pid":12346, "checkpoint":{"sha256":self.checkpoint},
+            "pid":12346, "checkpoint":{"sha256":self.checkpoint,
+                "runtime_action_feedback":activation.runtime_feedback_descriptor(self.backend.workspace / activation.RUNTIME_FEEDBACK_FILE)},
             "self_control":{"state_targets_this_binary":True,"state_deployment_identity":"new-deployment"}})
         self.state.write_text('{"exchange_count":11,"history":"synthetic"}')
         self.control_state.write_text('{"deployment":"new-deployment","synthetic":true}')
@@ -149,6 +151,29 @@ class StoppedRecoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "PID still exists"):
             self.resume()
         self.assertEqual(self.records(), [])
+
+    def test_pending_feedback_survives_stopped_recovery_with_exact_private_snapshot(self):
+        sidecar = self.backend.workspace / activation.RUNTIME_FEEDBACK_FILE
+        activation.atomic_bytes(sidecar, b'{"schema":"pending_runtime_action_feedback_v1","pending_runtime_feedback":[{"id":"one","requested_action":"READ_MORE","status":"blocked","message":"Runtime result"}]}')
+        original = sidecar.read_bytes()
+        result = self.resume()
+        saved = self.backend.transaction / activation.RUNTIME_FEEDBACK_SNAPSHOT
+        self.assertEqual(saved.read_bytes(), original)
+        self.assertEqual(saved.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(result["runtime_action_feedback"]["sha256"], activation.digest(saved))
+        self.assertEqual(result["new_process"]["startup"]["checkpoint"]["runtime_action_feedback"]["pending_count"], 1)
+
+    def test_feedback_creation_after_stopped_inspection_keeps_hold(self):
+        original = self.backend.snapshot_and_handoff
+        def changed(*args):
+            sidecar = self.backend.workspace / activation.RUNTIME_FEEDBACK_FILE
+            activation.atomic_bytes(sidecar, b'{"schema":"pending_runtime_action_feedback_v1","pending_runtime_feedback":[]}')
+            original(*args)
+        with patch.object(self.backend, "snapshot_and_handoff", side_effect=changed):
+            with self.assertRaisesRegex(RuntimeError, "runtime feedback"):
+                self.resume()
+        self.assertFalse(self.started)
+        self.assertEqual(self.hold.read_bytes(), self.hold_bytes)
 
     def test_tampered_preconditions_never_release_hold(self):
         for path in (self.state, self.selection, self.backend.canonical_manifest, self.backend.launcher,

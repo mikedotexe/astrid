@@ -1121,6 +1121,8 @@ impl ConversationState {
             semantic_strand_retention_turns: 0,
             response_length: 768,
             emphasis: None,
+            pending_runtime_feedback: Vec::new(),
+            runtime_feedback_persistence: Default::default(),
             last_temperature_change_exchange: None,
             last_shape_learn_change_exchange: None,
             last_coupling_artifact_exchange: None,

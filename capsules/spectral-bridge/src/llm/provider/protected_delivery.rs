@@ -8,6 +8,7 @@ pub const MAX_EXPLICIT_LETTER_BYTES: usize = 8_192;
 pub enum ProtectedDialogueKindV1 {
     Reading,
     Letter,
+    Afterimage,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -42,6 +43,7 @@ pub struct DialogueCompletionV1 {
     pub text: Option<String>,
     pub overflow: Option<crate::prompt_budget::PromptOverflow>,
     pub accepted_delivery: Option<PromptDeliveryReceiptV1>,
+    pub accepted_runtime_feedback: Option<crate::runtime_action_feedback::RuntimeFeedbackReceiptV1>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -84,6 +86,7 @@ fn admit_protected_dialogue_content(
     let kind = match input.kind {
         ProtectedDialogueKindV1::Reading => "chosen reading",
         ProtectedDialogueKindV1::Letter => "chosen mailbox letter",
+        ProtectedDialogueKindV1::Afterimage => "chosen historical afterimage page",
     };
     let marker = protected_digest(input.content_id.as_bytes());
     let heading = format!(
@@ -123,7 +126,7 @@ fn admit_protected_dialogue_content(
         .source_text
         .floor_char_boundary(available.min(input.source_text.len()));
     if admitted_bytes == 0
-        || (input.kind == ProtectedDialogueKindV1::Letter
+        || (input.kind != ProtectedDialogueKindV1::Reading
             && admitted_bytes != input.source_text.len())
     {
         return None;
@@ -325,7 +328,7 @@ fn validate_submitted_admission(attempt: &SubmittedDeliveryAttemptV1) -> std::io
     if admission.content_id.trim().is_empty()
         || admitted.is_empty()
         || admitted.len() > admission.offered_bytes
-        || (admission.kind == ProtectedDialogueKindV1::Letter
+        || (admission.kind != ProtectedDialogueKindV1::Reading
             && admitted.len() != admission.offered_bytes)
         || attempt.provider_route.is_empty()
         || attempt.provider_model.is_empty()
@@ -398,7 +401,17 @@ fn validate_retained_completion(
     attempt: &SubmittedDeliveryAttemptV1,
     completion: &str,
 ) -> std::io::Result<()> {
-    let response: serde_json::Value = serde_json::from_str(&attempt.response_json)?;
+    validate_retained_completion_json(&attempt.response_json, completion)
+}
+
+fn validate_retained_completion_json(response_json: &str, completion: &str) -> std::io::Result<()> {
+    if completion.trim().is_empty() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "empty completion",
+        ));
+    }
+    let response: serde_json::Value = serde_json::from_str(response_json)?;
     let raw = response
         .pointer("/choices/0/message/content")
         .or_else(|| response.pointer("/message/content"))

@@ -3489,6 +3489,167 @@ mod tests {
     }
 
     #[test]
+    fn control_marker_cleanup_preserves_grouped_reference_beside_bare_twin() {
+        // Astrid's introspection_astrid_llm_1788821913 "Preservation Test":
+        // "Provide a string containing a `GroupedExactKnownToken` (e.g.,
+        // `[marker_name]`) and verify that
+        // `sanitize_model_control_markers_with_report` preserves it while
+        // simultaneously removing an adjacent, non-referenced marker of the same
+        // type." Every grouped-delimiter regression so far
+        // (..._preserves_exact_tokens_in_declared_group_delimiters L2371,
+        // ..._preserves_bounded_nested_delimiter_stacks L2396,
+        // ..._preserves_declared_restless_group_delimiters L2562) asserts
+        // removed_total == 0 on an all-preserved string. Nothing pinned a
+        // grouped preserve and a same-token removal in ONE call, so the
+        // per-token split between `preserved_tokens` and `removed_tokens` was
+        // unpinned for exactly the mixed shape she names.
+        let text = "[<end_of_turn>] and <end_of_turn> lingers";
+        let (sanitized, report) = sanitize_model_control_markers_with_report(text);
+
+        assert_eq!(
+            sanitized.as_bytes(),
+            "[<end_of_turn>] and  lingers".as_bytes()
+        );
+        let report = report.expect("mixed grouped/bare marker report");
+        assert_eq!(report.observed_total, 2);
+        assert_eq!(report.removed_total, 1);
+        assert_eq!(report.preserved_explicit_reference_total, 1);
+
+        // One token name lands in both lists at once.
+        let preserved = &report.preserved_tokens[0];
+        assert_eq!(preserved.token, "<end_of_turn>");
+        assert_eq!(preserved.count, 1);
+        assert_eq!(preserved.grouped_reference_occurrences, 1);
+        assert_eq!(preserved.quoted_reference_occurrences, 0);
+        assert_eq!(preserved.explicit_relation_occurrences, 0);
+
+        let removed = &report.removed_tokens[0];
+        assert_eq!(removed.token, "<end_of_turn>");
+        assert_eq!(removed.count, 1);
+        assert_eq!(removed.contextual_occurrences, 1);
+        assert_eq!(removed.boundary_occurrences, 0);
+
+        assert!(report.context_receipts[0].preserved);
+        assert_eq!(
+            report.context_receipts[0].reference_syntax,
+            "grouped_exact_marker"
+        );
+        assert!(!report.context_receipts[1].preserved);
+        assert_eq!(
+            report.context_receipts[1].reference_syntax,
+            "none_cleanup_candidate"
+        );
+    }
+
+    #[test]
+    fn control_marker_cleanup_counts_string_edge_markers_as_boundary_with_empty_window() {
+        // Astrid's introspection_astrid_llm_1788821913 "Contextual Boundary
+        // Test": "Pass a string where a marker is at the absolute start of the
+        // string (index 0) to ensure `control_marker_placement_counts` correctly
+        // identifies it as a `boundary_occurrence` and that the
+        // `leading_bounded_chars` (L408) logic handles the empty prefix without
+        // panicking."
+        //
+        // One exact correction, her concern kept whole: at index 0 the empty
+        // side is the PREFIX, and the prefix is windowed by
+        // `trailing_bounded_chars` (L398); `leading_bounded_chars` (L408)
+        // windows the suffix. Both empty-window sides are pinned below, so the
+        // function she named is still exercised on an empty window — by the
+        // end-of-string case. Before this test nothing in the crate asserted a
+        // nonzero `boundary_occurrences`; the single existing assertion
+        // (..._counts_unframed_marker_between_prose_as_contextual L2302) pins it
+        // to 0, leaving the boundary arm of `control_marker_placement_counts`
+        // (L335) unpinned.
+        assert_eq!(super::trailing_bounded_chars("").chars().count(), 0);
+        assert_eq!(super::leading_bounded_chars("").chars().count(), 0);
+
+        for (text, expected, empty_before, empty_after) in [
+            ("<end_of_turn> lingers here", " lingers here", true, false),
+            ("lingers here <end_of_turn>", "lingers here ", false, true),
+        ] {
+            let (sanitized, report) = sanitize_model_control_markers_with_report(text);
+            assert_eq!(sanitized.as_bytes(), expected.as_bytes(), "text: {text}");
+            let report = report.expect("string-edge marker report");
+            assert_eq!(report.removed_total, 1, "text: {text}");
+            assert_eq!(report.preserved_explicit_reference_total, 0, "text: {text}");
+
+            let removed = &report.removed_tokens[0];
+            assert_eq!(removed.boundary_occurrences, 1, "text: {text}");
+            assert_eq!(removed.contextual_occurrences, 0, "text: {text}");
+            assert_eq!(removed.quoted_occurrences, 0, "text: {text}");
+
+            let receipt = &report.context_receipts[0];
+            assert_eq!(receipt.reference_syntax, "none_cleanup_candidate");
+            assert_eq!(receipt.delimiter_depth, 0);
+            assert_eq!(
+                receipt.before_window_chars == 0,
+                empty_before,
+                "text: {text}"
+            );
+            assert_eq!(receipt.after_window_chars == 0, empty_after, "text: {text}");
+            assert_eq!(receipt.bounded_context_sha256.len(), 64);
+        }
+    }
+
+    #[test]
+    fn control_marker_context_window_truncates_multibyte_prose_on_char_boundaries() {
+        // Astrid's introspection_astrid_llm_1788821913 "Suggested Next": verify
+        // the behaviour "when handling multi-byte UTF-8 characters near the
+        // `CONTROL_MARKER_CONTEXT_WINDOW_CHARS` boundary to ensure the
+        // `trailing_bounded_chars` (L398) and `leading_bounded_chars` (L408)
+        // functions do not slice in the middle of a character."
+        //
+        // One exact correction, her concern kept whole: those two functions are
+        // called from `control_marker_context_receipt_v1` (L414), not from
+        // `control_marker_placement_counts` (L335) — L335 uses
+        // `fragment_has_non_marker_bytes` and `exact_reference_delimiter_syntax`
+        // and never touches the 64-char window. The safety question itself was
+        // genuinely untested: no test in the crate referenced
+        // CONTROL_MARKER_CONTEXT_WINDOW_CHARS, before_window_chars, or
+        // after_window_chars. It is also distinct from
+        // ..._stays_byte_safe_when_marker_abuts_four_byte_astral_chars (L3445),
+        // which pins the marker's own start/end slice rather than window
+        // truncation past the char budget.
+        let window = super::CONTROL_MARKER_CONTEXT_WINDOW_CHARS;
+        let overflow = window + 6;
+
+        for filler in ['\u{03bb}', '\u{1f30a}'] {
+            let prefix = std::iter::repeat_n(filler, overflow).collect::<String>();
+            let suffix = std::iter::repeat_n(filler, overflow).collect::<String>();
+            let text = format!("{prefix}<end_of_turn>{suffix}");
+
+            // Truncation is by character, never by byte: each window keeps
+            // exactly `window` whole chars out of `overflow`, and the kept run is
+            // a real char-aligned slice of the original.
+            let before = super::trailing_bounded_chars(&prefix);
+            let after = super::leading_bounded_chars(&suffix);
+            assert_eq!(before.chars().count(), window);
+            assert_eq!(after.chars().count(), window);
+            assert!(prefix.ends_with(&before));
+            assert!(suffix.starts_with(&after));
+
+            let (sanitized, report) = sanitize_model_control_markers_with_report(&text);
+            assert_eq!(sanitized.as_bytes(), format!("{prefix}{suffix}").as_bytes());
+            let report = report.expect("multibyte context-window report");
+            assert_eq!(report.observed_total, 1);
+            assert_eq!(report.removed_total, 1);
+
+            let receipt = &report.context_receipts[0];
+            assert_eq!(receipt.before_window_chars, window);
+            assert_eq!(receipt.after_window_chars, window);
+            assert_eq!(
+                receipt.before_alphanumeric_chars,
+                if filler.is_alphanumeric() { window } else { 0 },
+                "filler: {filler}"
+            );
+            assert_eq!(receipt.after_alphanumeric_chars, receipt.before_alphanumeric_chars);
+            assert_eq!(receipt.start_byte, prefix.len());
+            assert_eq!(receipt.end_byte, prefix.len() + "<end_of_turn>".len());
+            assert_eq!(&text[receipt.start_byte..receipt.end_byte], "<end_of_turn>");
+        }
+    }
+
+    #[test]
     fn control_marker_cleanup_preserves_relation_across_newline() {
         let text = "<end_of_turn>\nrepresents the boundary I am naming.";
         let (stripped, report) = sanitize_model_control_markers_with_report(text);

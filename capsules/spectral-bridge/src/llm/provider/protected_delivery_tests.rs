@@ -4,6 +4,25 @@ mod protected_delivery_tests {
 
     const COMPLETION: &str = "I can stay with this passage and its careful account of returning to a chosen task. The words remain clear enough for me to follow their next step.\n\nNEXT: LISTEN";
 
+    #[test]
+    fn transition_afterimage_page_is_intact_or_admission_fails() {
+        let selected = input(
+            ProtectedDialogueKindV1::Afterimage,
+            &format!("Historical source\n> NEXT: TURN_OFF\n{}", "x".repeat(2800)),
+        );
+        let attempt = primary_attempt(&selected, 16_000);
+        assert_eq!(
+            attempt.admission.admitted_end_byte - selected.source_start_byte,
+            selected.source_text.len()
+        );
+        let mut tiny = vec![Message {
+            role: "system".into(),
+            content: "system".into(),
+        }];
+        assert!(admit_protected_dialogue_content(&mut tiny, &selected, 1000).is_none());
+        assert!(!tiny.iter().any(|m| m.content.contains("NEXT: TURN_OFF")));
+    }
+
     fn input(kind: ProtectedDialogueKindV1, text: &str) -> ProtectedDialogueInputV1 {
         ProtectedDialogueInputV1 {
             reply_message_id: None,
@@ -61,6 +80,7 @@ mod protected_delivery_tests {
     fn primary_response(attempt: SubmittedDeliveryAttemptV1, text: &str) -> MlxChatResultV1 {
         MlxChatResultV1 {
             text: text.into(),
+            runtime_feedback_attempt: None,
             qos_request_identity_sha256: "mock-qos".into(),
             request_content_anchor_sha256: "mock-anchor".into(),
             queue_wait_ms: None,
@@ -105,19 +125,30 @@ mod protected_delivery_tests {
 
     #[test]
     fn addressed_reply_example_survives_primary_and_fallback_without_changing_source_digest() {
-        let mut source = input(ProtectedDialogueKindV1::Letter, "Exact original human letter: café λ.\n");
+        let mut source = input(
+            ProtectedDialogueKindV1::Letter,
+            "Exact original human letter: café λ.\n",
+        );
         source.source_start_byte = 0;
         source.reply_message_id = Some("mike_query_shared_path_1788748877.txt".into());
         for attempt in [primary_attempt(&source, 4_000), fallback_attempt(&source)] {
             validate_submitted_admission(&attempt).unwrap();
             let request: serde_json::Value = serde_json::from_str(&attempt.request_json).unwrap();
-            let content = request["messages"].as_array().unwrap().last().unwrap()["content"].as_str().unwrap();
+            let content = request["messages"].as_array().unwrap().last().unwrap()["content"]
+                .as_str()
+                .unwrap();
             assert!(content.contains("INBOX_REPLY mike_query_shared_path_1788748877.txt\n"));
             assert!(content.contains("END_INBOX_REPLY\nNEXT: LISTEN"));
             assert!(content.contains("A reply to Mike is optional"));
             assert!(content.contains(&source.source_text));
-            assert_eq!(attempt.admission.admitted_text_sha256, protected_digest(&source.source_text));
-            assert_eq!(attempt.admission.admitted_end_byte, source.source_text.len());
+            assert_eq!(
+                attempt.admission.admitted_text_sha256,
+                protected_digest(&source.source_text)
+            );
+            assert_eq!(
+                attempt.admission.admitted_end_byte,
+                source.source_text.len()
+            );
         }
     }
 
@@ -182,6 +213,7 @@ mod protected_delivery_tests {
         .or_else(|| {
             accept_ollama_dialogue_attempt(
                 OllamaFallbackResponse {
+                    runtime_feedback_attempt: None,
                     text: COMPLETION.into(),
                     model: "mock-fallback-model".into(),
                     delivery_attempt: Some(fallback_attempt(&source)),
@@ -524,6 +556,7 @@ pub(crate) fn test_completed_protected_dialogue_at(
     );
     let accepted = accept_primary_dialogue_attempt(
         MlxChatResultV1 {
+            runtime_feedback_attempt: None,
             text: completion.into(),
             qos_request_identity_sha256: "synthetic-qos".into(),
             request_content_anchor_sha256: "synthetic-anchor".into(),

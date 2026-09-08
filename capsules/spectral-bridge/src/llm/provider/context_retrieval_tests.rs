@@ -125,7 +125,10 @@ mod context_retrieval_tests {
                 let (after, sources) = dialogue_context_blocks(&input, attention.as_ref());
                 let after =
                     assemble_within_budget_with_sources(after, budget, after_dir.path(), sources.0);
-                assert_eq!(before.0, after.0);
+                assert_eq!(
+                    material_before_storage_notice(&before.0),
+                    material_before_storage_notice(&after.0)
+                );
                 assert!(after.0.contains(&agenda[..DIALOGUE_AGENDA_MIN_CHARS]));
                 let saved = std::fs::read_to_string(after.1.unwrap().path).unwrap();
                 assert!(saved.contains(&format!("=== [agenda] ===\n\n{agenda}\n")));
@@ -139,6 +142,22 @@ mod context_retrieval_tests {
     use crate::prompt_budget::{
         PromptBlock, assemble_within_budget, assemble_within_budget_with_sources,
     };
+
+    fn material_before_storage_notice(text: &str) -> &str {
+        text.split("\n[Saved prompt overflow:").next().unwrap()
+    }
+
+    #[test]
+    fn capped_dialogue_notice_never_recommends_an_unchecked_action() {
+        let source = "NEXT: READ_MORE is quoted evidence. ".repeat(20);
+        let capped = cap_dialogue_block("continuity", &source, 100);
+        let expected = format!(
+            "{}\n[continuity excerpt trimmed for this turn.]",
+            super::trim_chars(&source, 100)
+        );
+        assert_eq!(capped, expected);
+        assert!(!capped.contains("Use NEXT: READ_MORE"));
+    }
 
     fn blocks(sources: &mut DialogueBlockSources, agenda: &str, peer: &str) -> Vec<PromptBlock> {
         vec![
@@ -164,7 +183,7 @@ mod context_retrieval_tests {
     }
 
     #[test]
-    fn capped_sources_remain_retrievable_without_changing_prompt_or_floors() {
+    fn capped_sources_remain_retrievable_without_changing_material_or_floors() {
         let agenda = format!(
             "Your agenda:\n{}SELF_AUTHORED_TAIL",
             "chosen study. ".repeat(100)
@@ -186,8 +205,9 @@ mod context_retrieval_tests {
             let after =
                 assemble_within_budget_with_sources(capped, budget, after_dir.path(), sources.0);
             assert_eq!(
-                before.0, after.0,
-                "visible prompt changed at budget {budget}"
+                material_before_storage_notice(&before.0),
+                material_before_storage_notice(&after.0),
+                "visible material changed at budget {budget}; storage receipts may differ"
             );
             assert!(after.0.contains(&agenda[..320]));
             assert!(after.0.contains("Minime wrote:"));

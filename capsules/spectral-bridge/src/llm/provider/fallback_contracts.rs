@@ -259,26 +259,6 @@ pub(crate) struct PreservedControlMarkerCount {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct ControlMarkerContextReceiptV1 {
-    pub receipt_id: String,
-    pub marker: String,
-    pub start_byte: usize,
-    pub end_byte: usize,
-    pub preserved: bool,
-    pub reference_syntax: &'static str,
-    pub delimiter_depth: usize,
-    pub before_window_chars: usize,
-    pub after_window_chars: usize,
-    pub before_alphanumeric_chars: usize,
-    pub after_alphanumeric_chars: usize,
-    pub bounded_context_sha256: String,
-    pub surrounding_bytes_contract: &'static str,
-    pub contextual_weight: &'static str,
-    pub spectral_relation: &'static str,
-    pub authority: &'static str,
-}
-
-#[derive(Debug, Clone, Serialize)]
 pub(crate) struct SanitizedOutputSurfaceV3 {
     pub policy: &'static str,
     pub state: &'static str,

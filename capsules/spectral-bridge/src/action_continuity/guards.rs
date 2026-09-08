@@ -584,28 +584,10 @@ impl ActionContinuityStore {
         }
 
         let Some(budget) = active_budget else {
-            let status = research_budget_status_from_rows(&rows);
-            let (suggested_next, accept_next, request_scaffold) = status
-                .get("latest_budget_request_id")
-                .and_then(Value::as_str)
-                .filter(|id| !id.is_empty())
-                .map_or_else(
-                    || {
-                        let scaffold = research_budget_request_scaffold("current", &experiment);
-                        (
-                            "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string(),
-                            Some("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string()),
-                            Some(scaffold),
-                        )
-                    },
-                    |budget_id| {
-                        (
-                            format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"),
-                            None,
-                            None,
-                        )
-                    },
-                );
+            let (suggested_next, accept_next) = research_budget_missing_guidance(&rows);
+            let request_scaffold = accept_next
+                .as_ref()
+                .map(|_| research_budget_request_scaffold("current", &experiment));
             let assessment = ResearchBudgetGuardAssessment {
                 experiment_id: experiment.experiment_id.clone(),
                 raw_action: raw_next.trim().to_string(),
@@ -652,9 +634,9 @@ impl ActionContinuityStore {
             .to_string();
         let duplicate_count =
             research_budget_duplicate_count(&rows, &budget_id, &normalized_target);
-        if duplicate_count >= 2 {
-            let suggested_next =
-                research_budget_review_command_for_duplicate(&budget_id, &normalized_target);
+        if let Some(suggested_next) =
+            research_budget_duplicate_review_next(&rows, &budget_id, &normalized_target)
+        {
             let assessment = ResearchBudgetGuardAssessment {
                 experiment_id: experiment.experiment_id.clone(),
                 raw_action: raw_next.trim().to_string(),
