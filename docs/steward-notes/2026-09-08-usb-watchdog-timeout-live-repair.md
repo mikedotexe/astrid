@@ -89,7 +89,7 @@ commits are tests, documentation, and this interpreted watchdog source. The
 watchdog source is now loaded by PID `98932`. The reservoir changes after its
 deployed collaboration source are changelog-only.
 
-## Remaining physical boundary
+## Physical fallback interval and natural recovery
 
 Stopping the false restart loop did not make the attached LifeCam deliver
 frames or audio chunks. At the close of observation, both clients were alive
@@ -97,10 +97,24 @@ and connected but had zero successful samples. `sensory_source.json` therefore
 reported physical camera and microphone unhealthy and selected the existing
 host fallback. Fresh engine and bridge telemetry continued.
 
-The first safe recovery step is a physical unplug/replug of the LifeCam. The
-repaired watcher should observe a real successful removal followed by a real
-successful addition and restart the clients once per transition. Verify the
-result with:
+The observation was extended while the controller completed its integrity
+verification. By 09:36:56 PDT, the same unchanged client PIDs had recovered
+without operator action:
+
+- camera PID `98903`: `streaming`, healthy, 81 frames, no last error
+- microphone PID `98910`: `streaming`, healthy, 1,004 chunks, no last error
+- `sensory_source.json`: both lanes `source=physical` and
+  `physical_healthy=true`
+
+No unplug, daemon reset, client kickstart, fallback-policy change, or reservoir
+change occurred. The evidence is consistent with the restart storm having
+denied the clients enough uninterrupted time to recover, but it does not prove
+that as the only cause.
+
+If the same hardware condition recurs, the first safe manual recovery step
+remains a physical unplug/replug of the LifeCam. The repaired watcher should
+observe a real successful removal followed by a real successful addition and
+restart the clients once per transition. Verify the result with:
 
 ```bash
 cd /Users/v/other/minime
