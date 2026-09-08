@@ -84,6 +84,9 @@ struct SavedState {
     #[serde(default)]
     activity: activity_reading::ActivityRuntimeV1,
     #[serde(default)]
+    collaboration_prompt_checkpoint:
+        next_action::collaboration_attention::CollaborationPromptCheckpointV1,
+    #[serde(default)]
     wants_introspect: bool,
     #[serde(default)]
     wants_deep_think: bool,
@@ -269,6 +272,7 @@ fn save_state_checked(conv: &mut ConversationState) -> anyhow::Result<()> {
         last_research_anchor: conv.last_research_anchor.clone(),
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
         activity: conv.activity.clone(),
+        collaboration_prompt_checkpoint: conv.collaboration_prompt_checkpoint.clone(),
         wants_introspect: conv.wants_introspect,
         wants_deep_think: conv.wants_deep_think,
         introspect_target: conv.introspect_target.clone(),
@@ -384,6 +388,7 @@ fn restore_state_from_paths(
     conv.repair_research_progress_receipts();
     conv.last_research_anchor = state.last_research_anchor;
     conv.last_read_meaning_summary = state.last_read_meaning_summary;
+    conv.collaboration_prompt_checkpoint = state.collaboration_prompt_checkpoint;
     conv.wants_introspect = state.wants_introspect;
     conv.wants_deep_think = state.wants_deep_think;
     conv.introspect_target = state.introspect_target;

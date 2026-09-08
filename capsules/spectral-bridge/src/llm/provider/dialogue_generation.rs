@@ -43,6 +43,8 @@ pub async fn generate_dialogue(
         attention,
         overflow_dir,
         None,
+        None,
+        None,
     )
     .await;
     (completion.text, completion.overflow)
@@ -67,6 +69,8 @@ pub async fn generate_dialogue_with_delivery(
     attention: Option<&PromptAttentionV1>,
     overflow_dir: &std::path::Path,
     protected: Option<&ProtectedDialogueInputV1>,
+    collaboration_context: Option<&str>,
+    context_submission: Option<&ContextSubmissionTrackerV1>,
 ) -> DialogueCompletionV1 {
     let mlx_profile = configured_mlx_profile();
     let prompt_budget_chars = dialogue_prompt_budget_chars_for_profile(num_predict, mlx_profile);
@@ -211,6 +215,7 @@ pub async fn generate_dialogue_with_delivery(
             agenda: &agenda_block,
             feedback: &feedback_block,
             diversity: &diversity_block,
+            collaboration: collaboration_context.unwrap_or_default(),
         },
         attention,
     );
@@ -284,7 +289,7 @@ pub async fn generate_dialogue_with_delivery(
 
     debug!("querying MLX for Astrid dialogue response");
     let fallback_trace = fallback_continuity_budget.clone();
-    let ollama_fallback_messages = if protected.is_some() {
+    let mut ollama_fallback_messages = if protected.is_some() {
         // Keep fallback foreground semantics explicit. Source bytes are inserted
         // only after final request adaptation, never via the 700-byte ambient path.
         protected_ollama_fallback_context(spectral_summary, fill_pct, &fallback_trace)
@@ -298,7 +303,7 @@ pub async fn generate_dialogue_with_delivery(
             fallback_continuity_budget,
         )
     };
-    let generation_record_ctx = DialogueGenerationRecordContext::capture(
+    let mut generation_record_ctx = DialogueGenerationRecordContext::capture(
         &messages,
         &ollama_fallback_messages,
         &own_body,
@@ -324,6 +329,7 @@ pub async fn generate_dialogue_with_delivery(
         timeout_secs,
         MlxFailureLogMode::FallbackEligible,
         protected,
+        context_submission,
     )
     .await;
     let primary_elapsed_s = primary_started.elapsed().as_secs_f64();
@@ -364,6 +370,15 @@ pub async fn generate_dialogue_with_delivery(
                 texture_family = fallback_trace.fallback_shadow_texture_selector.texture_family,
                 "dialogue_live Ollama fallback transition spectral context"
             );
+            if collaboration_context.is_some()
+                && !context_submission.is_some_and(ContextSubmissionTrackerV1::submitted)
+            {
+                ollama_fallback_messages.push(Message {
+                    role: "user".into(),
+                    content: collaboration_context.unwrap_or_default().to_string(),
+                });
+            }
+            generation_record_ctx.replace_fallback_messages(&ollama_fallback_messages);
             let fallback_started = std::time::Instant::now();
             let fallback_response = ollama_chat_with_protected_delivery(
                 "dialogue_live",
@@ -373,6 +388,7 @@ pub async fn generate_dialogue_with_delivery(
                 DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS,
                 Some(&fallback_trace),
                 protected,
+                context_submission,
             )
             .await;
             let fallback_elapsed_s = fallback_started.elapsed().as_secs_f64();

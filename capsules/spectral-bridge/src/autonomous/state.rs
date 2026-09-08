@@ -1095,6 +1095,8 @@ impl ConversationState {
             last_read_meaning_summary: None,
             activity: super::activity_reading::ActivityRuntimeV1::default(),
             current_mailbox_peer_target: None,
+            collaboration_prompt_checkpoint:
+                super::next_action::collaboration_attention::CollaborationPromptCheckpointV1::default(),
             wants_introspect: false,
             introspect_target: None,
             introspection_cadence:

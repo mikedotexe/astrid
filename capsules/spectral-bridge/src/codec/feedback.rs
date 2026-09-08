@@ -705,18 +705,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         })
         .unwrap_or_default();
 
-    // v5 Coordination Protocol V1: surface active joined collaborations as
-    // a compact line in the prompt suffix so Astrid sees her open channels.
-    // Cheap directory scan; safe to call per-exchange.
-    let collab_note =
-        crate::autonomous::next_action::collaboration::active_collaboration_suffix_line()
-            .map(|line| {
-                tracing::info!(target: "v5_collab", line = %line, "collab_note emitted");
-                format!(" {line}")
-            })
-            .unwrap_or_default();
-
     format!(
-        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{unattributed_tension_note}{fluctuation_clause}{regulator_participation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{collab_note}{coupling_note}"
+        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{unattributed_tension_note}{fluctuation_clause}{regulator_participation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{coupling_note}"
     )
 }

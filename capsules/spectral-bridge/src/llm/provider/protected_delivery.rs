@@ -44,6 +44,41 @@ pub struct DialogueCompletionV1 {
     pub accepted_delivery: Option<PromptDeliveryReceiptV1>,
 }
 
+/// Shared across an outer timeout so the runtime can tell whether an exact
+/// optional context block reached the final adapted request before a future
+/// was cancelled. This records request dispatch only, never reading or uptake.
+#[derive(Clone, Debug)]
+pub struct ContextSubmissionTrackerV1 {
+    exact_content: std::sync::Arc<str>,
+    submitted: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl ContextSubmissionTrackerV1 {
+    #[must_use]
+    pub fn new(exact_content: String) -> Self {
+        Self {
+            exact_content: exact_content.into(),
+            submitted: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        }
+    }
+
+    #[must_use]
+    pub fn submitted(&self) -> bool {
+        self.submitted.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    fn mark_final_messages(&self, messages: &[Message]) {
+        if !self.exact_content.is_empty()
+            && messages
+                .iter()
+                .any(|message| message.content.contains(self.exact_content.as_ref()))
+        {
+            self.submitted
+                .store(true, std::sync::atomic::Ordering::Release);
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct ProtectedAdmissionV1 {
     content_id: String,

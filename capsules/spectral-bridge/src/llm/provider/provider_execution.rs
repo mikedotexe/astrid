@@ -15,6 +15,7 @@ async fn mlx_chat_with_failure_log_mode_detailed(
         timeout_secs,
         failure_log_mode,
         None,
+        None,
     )
     .await
 }
@@ -35,6 +36,7 @@ async fn ollama_chat(
         timeout_secs,
         fallback_budget,
         None,
+        None,
     )
     .await
 }
@@ -48,6 +50,7 @@ async fn mlx_chat_with_protected_delivery(
     timeout_secs: u64,
     failure_log_mode: MlxFailureLogMode,
     protected: Option<&ProtectedDialogueInputV1>,
+    context_submission: Option<&ContextSubmissionTrackerV1>,
 ) -> Option<MlxChatResultV1> {
     let profile = configured_mlx_profile();
     let policy = apply_mlx_request_policy(label, profile, messages, max_tokens, timeout_secs);
@@ -112,7 +115,10 @@ async fn mlx_chat_with_protected_delivery(
     } else {
         (max_tokens, timeout_secs)
     };
-    let client = delivery_http_client(timeout_secs, protected.is_some())?;
+    let client = delivery_http_client(
+        timeout_secs,
+        protected.is_some() || context_submission.is_some(),
+    )?;
 
     let temperature = temperature_for_mlx_profile(label, profile, temperature);
     let model_qos = model_qos_v1(label, &messages, temperature, max_tokens, timeout_secs);
@@ -130,6 +136,9 @@ async fn mlx_chat_with_protected_delivery(
     };
 
     let request_bytes = serde_json::to_vec(&request).ok()?;
+    if let Some(tracker) = context_submission {
+        tracker.mark_final_messages(&request.messages);
+    }
     let response = match client
         .post(&mlx_url)
         .header("Content-Type", "application/json")
@@ -281,14 +290,31 @@ async fn ollama_chat_with_protected_delivery(
     timeout_secs: u64,
     fallback_budget: Option<&FallbackContinuityBudget>,
     protected: Option<&ProtectedDialogueInputV1>,
+    context_submission: Option<&ContextSubmissionTrackerV1>,
 ) -> Option<OllamaFallbackResponse> {
-    let client = delivery_http_client(timeout_secs, protected.is_some())?;
+    let client = delivery_http_client(
+        timeout_secs,
+        protected.is_some() || context_submission.is_some(),
+    )?;
     let ollama_url = configured_ollama_url();
     let fallback_models = configured_ollama_fallback_model_chain_for_budget(fallback_budget);
     for fallback_model in fallback_models {
+        let messages = if context_submission.is_some_and(ContextSubmissionTrackerV1::submitted) {
+            messages
+                .iter()
+                .filter(|message| {
+                    !context_submission.is_some_and(|tracker| {
+                        message.content.contains(tracker.exact_content.as_ref())
+                    })
+                })
+                .cloned()
+                .collect()
+        } else {
+            messages.clone()
+        };
         let mut request = build_ollama_protected_chat_request(
             label,
-            messages.clone(),
+            messages,
             temperature,
             max_tokens,
             fallback_model.clone(),
@@ -306,6 +332,9 @@ async fn ollama_chat_with_protected_delivery(
             None
         };
         let request_bytes = serde_json::to_vec(&request).ok()?;
+        if let Some(tracker) = context_submission {
+            tracker.mark_final_messages(&request.messages);
+        }
         let response = match client
             .post(&ollama_url)
             .header("Content-Type", "application/json")

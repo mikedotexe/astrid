@@ -89,14 +89,15 @@ mod context_retrieval_tests {
                 perception: w,
             });
             let (blocks, sources) = dialogue_context_blocks(&input, attention.as_ref());
-            assert_eq!(blocks.len(), 11);
-            assert_eq!(sources.0.len(), 11);
+            assert_eq!(blocks.len(), 12);
+            assert_eq!(sources.0.len(), 12);
             assert_eq!(
                 blocks.iter().map(|b| b.label).collect::<Vec<_>>(),
                 [
                     "spectral",
                     "journal",
                     "direct_perception",
+                    "collaboration",
                     "topline",
                     "ambient_perception",
                     "modality",
@@ -107,16 +108,16 @@ mod context_retrieval_tests {
                     "diversity"
                 ]
             );
-            assert_eq!(blocks[8].min_chars, DIALOGUE_AGENDA_MIN_CHARS);
+            assert_eq!(blocks[9].min_chars, DIALOGUE_AGENDA_MIN_CHARS);
             assert_eq!(
-                blocks[8].content,
+                blocks[9].content,
                 cap_dialogue_block("agenda", &agenda, attended_agenda_cap(attention.as_ref()))
             );
             assert_eq!(
                 blocks[1].min_chars,
                 attended_journal_caps(attention.as_ref()).1
             );
-            assert_eq!(blocks[7].priority, 7);
+            assert_eq!(blocks[8].priority, 7);
             for budget in [0, 20_000] {
                 let before_dir = tempfile::tempdir().unwrap();
                 let after_dir = tempfile::tempdir().unwrap();
@@ -310,5 +311,25 @@ mod context_retrieval_tests {
                 .unwrap()
                 .contains(&source)
         );
+    }
+
+    #[test]
+    fn collaboration_notice_is_bounded_optional_and_high_priority() {
+        use super::*;
+        let notice = "c".repeat(DIALOGUE_COLLABORATION_CAP);
+        let input = DialogueContextInput {
+            collaboration: &notice,
+            ..DialogueContextInput::default()
+        };
+
+        let (blocks, _) = dialogue_context_blocks(&input, None);
+        let block = blocks
+            .iter()
+            .find(|block| block.label == "collaboration")
+            .unwrap();
+        assert_eq!(block.priority, 3);
+        assert_eq!(block.min_chars, 0);
+        assert_eq!(block.content.chars().count(), DIALOGUE_COLLABORATION_CAP);
+        assert_eq!(block.content, notice);
     }
 }

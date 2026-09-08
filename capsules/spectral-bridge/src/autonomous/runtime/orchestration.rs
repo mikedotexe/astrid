@@ -2,31 +2,6 @@ const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
 const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
 const MAX_REST_SECS: u64 = 360;
 
-fn should_arm_prompt_overflow_read_more(
-    active_read_path: Option<&str>,
-    recent_next_choice: Option<&str>,
-) -> bool {
-    active_read_path.is_none()
-        && !recent_next_choice.is_some_and(|choice| {
-            choice
-                .split_whitespace()
-                .next()
-                .is_some_and(|action| action.eq_ignore_ascii_case("READ_MORE"))
-        })
-}
-
-fn fill_responsive_rest_secs(base_rest: u64, current_fill: f32) -> u64 {
-    if current_fill < 30.0 {
-        ((base_rest as f64 * 0.6) as u64).max(30)
-    } else if current_fill < 40.0 {
-        base_rest
-    } else if current_fill < 50.0 {
-        ((base_rest as f64 * 1.2) as u64).min(MAX_REST_SECS)
-    } else {
-        base_rest
-    }
-}
-
 pub(crate) const fn semantic_heartbeat_constants_v1() -> (u64, f32) {
     (
         SEMANTIC_HEARTBEAT_INTERVAL.as_secs(),
@@ -1869,6 +1844,10 @@ pub fn spawn_autonomous_loop(
                             });
                             let llm_response = if activity_recovery_ready
                                 && let Some(journal) = activity_journal.or(journal_context.as_deref()) {
+                                let collaboration_delivery = DialogueCollaborationDeliveryV1::prepare(
+                                    &mut conv.collaboration_prompt_checkpoint,
+                                    protected_input.is_none(),
+                                );
                                 // Fill-responsive temperature modulation (Astrid's suggestion):
                                 // High fill = high emotional intensity from minime → lower
                                 // temperature for grounded, empathetic response. Low fill =
@@ -1908,6 +1887,7 @@ pub fn spawn_autonomous_loop(
                                         topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
+                                        collaboration_delivery.context(),
                                         attention_carrier.as_ref(),
                                     );
                                 timeout_secs =
@@ -1949,6 +1929,8 @@ pub fn spawn_autonomous_loop(
                                         attention_carrier.as_ref(),
                                         &overflow_dir,
                                         protected_input.as_ref(),
+                                        collaboration_delivery.context(),
+                                        collaboration_delivery.submission(),
                                     );
                                 // Each provider request has its own deadline. A selected
                                 // source gets the complete bounded primary/fallback chain;
@@ -1958,7 +1940,7 @@ pub fn spawn_autonomous_loop(
                                 } else {
                                     tokio::time::timeout(Duration::from_secs(timeout_secs), generation).await
                                 };
-                                match completion {
+                                let dialogue_result = match completion {
                                     Ok(completion) => unpack_activity_completion(
                                         &mut conv, completion, &mut accepted_delivery,
                                     ),
@@ -2003,6 +1985,8 @@ pub fn spawn_autonomous_loop(
                                                 attention_carrier.as_ref(),
                                                 &overflow_dir,
                                                 protected_input.as_ref(),
+                                                collaboration_delivery.retry_context(),
+                                                collaboration_delivery.submission(),
                                             )
                                         ).await {
                                             Ok(completion) => unpack_activity_completion(
@@ -2014,7 +1998,9 @@ pub fn spawn_autonomous_loop(
                                             }
                                         }
                                     }
-                                }
+                                };
+                                collaboration_delivery.finish(&mut conv);
+                                dialogue_result
                             } else if !activity_recovery_ready {
                                 warn!("dialogue paused for unresolved activity recovery");
                                 None

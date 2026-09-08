@@ -538,6 +538,15 @@ mod tests {
     }
 
     #[test]
+    fn interpret_spectral_does_not_promote_collaboration_ambiently() {
+        let output = interpret_spectral(&telemetry(vec![7.0, 3.0, 2.0], 0.68));
+
+        assert!(!output.contains("Active collaboration"));
+        assert!(!output.contains("Triadic chamber"));
+        assert!(!output.contains("Recent:"));
+    }
+
+    #[test]
     fn encode_different_texts_differ() {
         let a = encode_text("I am happy and confident about this plan.");
         let b = encode_text("I'm worried and uncertain, maybe we should reconsider...");

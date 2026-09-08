@@ -178,6 +178,16 @@ impl DialogueGenerationRecordContext {
                 .collect(),
         }
     }
+
+    fn replace_fallback_messages(&mut self, fallback: &[Message]) {
+        let (messages, prompts) = snapshot_generation_messages(fallback);
+        self.fallback_messages = messages;
+        for (sha, text) in prompts {
+            if !self.system_prompts.iter().any(|(known, _)| known == &sha) {
+                self.system_prompts.push((sha, text));
+            }
+        }
+    }
 }
 
 fn generation_record_id() -> String {
