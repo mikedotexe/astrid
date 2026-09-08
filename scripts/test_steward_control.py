@@ -191,6 +191,25 @@ class StewardControlTests(unittest.TestCase):
         with self.assertRaises(PausedError):
             self.controller.begin(actor="test")
 
+    def test_status_uses_indexed_tail_instead_of_full_chain_verification(self) -> None:
+        with (
+            patch.object(
+                self.controller.store,
+                "verify",
+                side_effect=AssertionError("status must not rescan canonical history"),
+            ),
+            patch.object(
+                self.controller.store,
+                "verify_indexed_tail",
+                wraps=self.controller.store.verify_indexed_tail,
+            ) as indexed_verify,
+        ):
+            status = self.controller.status()
+
+        self.assertTrue(status["evidence"]["valid"])
+        self.assertEqual(status["evidence"]["verification_mode"], "indexed_tail")
+        indexed_verify.assert_called_once_with()
+
     def test_pause_is_owner_only_and_token_is_not_exposed_by_status(self) -> None:
         self.resume()
         begin = self.controller.begin(actor="test")

@@ -119,6 +119,7 @@ class StewardController:
                 self.config,
                 require_active=False,
                 store=self.store,
+                full_chain=False,
             )
         except Exception as error:
             evidence = {"valid": False}
