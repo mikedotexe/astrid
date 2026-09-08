@@ -1,0 +1,56 @@
+{
+  "scope": "Preparation only with temporary operator state; no model call or Being bookmark",
+  "results": [
+    {
+      "action": "SELF_STUDY MAP kernel",
+      "page": null,
+      "rendered_bytes": 347
+    },
+    {
+      "action": "SELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs 1",
+      "page": {
+        "end": {
+          "byte": 4579,
+          "line": 98
+        },
+        "eof": false,
+        "id": "d4166e29a9ff8334766ef17703cd691f5bcb2f0df406334956dc9723a0b99d39",
+        "revision": {
+          "bytes": 65312,
+          "lines": 1659,
+          "sha256": "d19f321c54b299e1204d6e0db5a81792e056f9140b4a82bfbac76468c603d92b"
+        },
+        "source": "astrid/crates/astrid-kernel/src/lib.rs",
+        "start": {
+          "byte": 0,
+          "line": 1
+        },
+        "text": "SOURCE astrid/crates/astrid-kernel/src/lib.rs\nRevision sha256:d19f321c54b299e1204d6e0db5a81792e056f9140b4a82bfbac76468c603d92b; 65312 bytes; 1659 lines. Local checkout source; deployment and understanding are not established.\nPage d4166e29a9ff8334766ef17703cd691f5bcb2f0df406334956dc9723a0b99d39\nExact source bytes 0..4579; line fragments retain their line number.\n\n     1 | #![deny(unsafe_code)]\n     2 | #![deny(missing_docs)]\n     3 | #![deny(clippy::all)]\n     4 | #![deny(unreachable_pub)]\n     5 | #![allow(clippy::module_name_repetitions)]\n     6 | \n     7 | //! Astrid Kernel - The core execution engine and IPC router.\n     8 | //!\n     9 | //! The Kernel is a pure, decentralized WASM runner. It contains no business\n    10 | //! logic, no cognitive loops, and no network servers. Its sole responsibility\n    11 | //! is to instantiate `astrid_events::EventBus`, load `.capsule` files into\n    12 | //! the Component Model WASM sandbox, expose native socket management, and route\n    13 | //! IPC bytes between them.\n    14 | \n    15 | mod capsule_runtime_health;\n    16 | /// The Management API router listening to the `EventBus`.\n    17 | pub mod kernel_router;\n    18 | mod maintenance;\n    19 | /// The Unix Domain Socket manager.\n    20 | pub mod socket;\n    21 | mod socket_bridge;\n    22 | \n    23 | use astrid_audit::AuditLog;\n    24 | use astrid_capabilities::{CapabilityStore, DirHandle};\n    25 | use astrid_capsule::registry::CapsuleRegistry;\n    26 | use astrid_core::SessionId;\n    27 | use astrid_crypto::KeyPair;\n    28 | use astrid_events::EventBus;\n    29 | use astrid_mcp::{McpClient, SecureMcpClient, ServerManager, ServersConfig};\n    30 | use astrid_vfs::{HostVfs, OverlayVfs, Vfs};\n    31 | use std::path::{Path, PathBuf};\n    32 | use std::sync::Arc;\n    33 | use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};\n    34 | use tokio::sync::RwLock;\n    35 | \n    36 | /// The core Operating System Kernel.\n    37 | pub struct Kernel {\n    38 |     /// The unique identifier for this kernel session.\n    39 |     pub session_id: SessionId,\n    40 |     /// The global IPC message bus.\n    41 |     pub event_bus: Arc<EventBus>,\n    42 |     /// The process manager (loaded WASM capsules).\n    43 |     pub capsules: Arc<RwLock<CapsuleRegistry>>,\n    44 |     /// The secure MCP client with capability-based authorization and audit logging.\n    45 |     pub mcp: SecureMcpClient,\n    46 |     /// The capability store for this session.\n    47 |     pub capabilities: Arc<CapabilityStore>,\n    48 |     /// The global Virtual File System mount.\n    49 |     pub vfs: Arc<dyn Vfs>,\n    50 |     /// Concrete reference to the [`OverlayVfs`] for commit/rollback operations.\n    51 |     pub overlay_vfs: Arc<OverlayVfs>,\n    52 |     /// Ephemeral upper directory for the overlay VFS. Kept alive for the\n    53 |     /// kernel session lifetime; dropped on shutdown to discard uncommitted writes.\n    54 |     _upper_dir: Arc<tempfile::TempDir>,\n    55 |     /// The global physical root handle (cap-std) for the VFS.\n    56 |     pub vfs_root_handle: DirHandle,\n    57 |     /// The physical path the VFS is mounted to.\n    58 |     pub workspace_root: PathBuf,\n    59 |     /// The principal home resources directory (`~/.astrid/home/{principal}/`).\n    60 |     /// Capsules declaring `fs_read = [\"home://\"]` can read files under this\n    61 |     /// root. Scoped to the principal's home so that keys, databases, and\n    62 |     /// system config in `~/.astrid/` are NOT accessible.\n    63 |     ///\n    64 |     /// Always `Some` in production (boot requires `AstridHome`). Remains\n    65 |     /// `Option` for compatibility with `CapsuleContext` and test fixtures.\n    66 |     pub home_root: Option<PathBuf>,\n    67 |     /// The natively bound Unix socket for CLI/native management.\n    68 |     pub cli_socket_listener: Option<Arc<tokio::sync::Mutex<tokio::net::UnixListener>>>,\n    69 |     /// Shared KV store backing all capsule-scoped stores and kernel state.\n    70 |     pub kv: Arc<astrid_storage::SurrealKvStore>,\n    71 |     /// Chain-linked cryptographic audit log with persistent storage.\n    72 |     pub audit_log: Arc<AuditLog>,\n    73 |     /// Number of active client connections (CLI sessions).\n    74 |     pub active_connections: AtomicUsize,\n    75 |     /// Ephemeral mode: shut down immediately when the last client disconnects.\n    76 |     pub ephemeral: AtomicBool,\n    77 |     /// Instant when the kernel was booted (for uptime calculation).\n    78 |     pub boot_time: std::time::Instant,\n    79 |     /// Sender for the API-initiated shutdown signal. The daemon's main loop\n    80 |     /// selects on the receiver to exit gracefully without `process::exit`.\n    81 |     pub shutdown_tx: tokio::sync::watch::Sender<bool>,\n    82 |     /// Session token for socket authentication. Generated at boot, written to\n    83 |     /// `~/.astrid/run/system.token`. CLI sends this as its first message.\n    84 |     pub session_token: Arc<astrid_core::session_token::SessionToken>,\n    85 |     /// Path where the session token was written at boot. Stored so shutdown\n    86 |     /// uses the exact same path (avoids fallback mismatch if env changes).\n    87 |     token_path: PathBuf,\n    88 |     /// Shared allowance store for capsule-level approval decisions.\n    89 |     ///\n    90 |     /// Capsules can check existing allowances and create new ones when\n    91 |     /// users approve actions with session/always scope.\n    92 |     pub allowance_store: Arc<astrid_approval::AllowanceStore>,\n    93 |     /// System-wide identity store for platform user resolution.\n    94 |     identity_store: Arc<dyn astrid_storage::IdentityStore>,\n    95 | }\n    96 | \n    97 | impl Kernel {\n    98 |     /// Boot a new Kernel instance mounted at the specified dire\n\nMore source follows; CONTINUE resumes at the exact next byte after verified delivery.\nNavigation: SELF_STUDY CONTINUE | SELF_STUDY MAP | SELF_STUDY FIND <literal text> | SELF_STUDY OPEN repository/path <line>\n"
+      },
+      "rendered_bytes": 6038
+    },
+    {
+      "action": "SELF_STUDY OPEN minime/minime_autonomy/runtime.py 56004",
+      "page": {
+        "end": {
+          "byte": 2571247,
+          "line": 56007
+        },
+        "eof": true,
+        "id": "e9b9400e5ed4e5e08707cf310bb11ecc875fb07049aa589dc30ef9f38fd3ce8b",
+        "revision": {
+          "bytes": 2571247,
+          "lines": 56006,
+          "sha256": "ee2d40b932d564bca3ec191988966f09f334098674b3f93ba339c5f7bf61ddf2"
+        },
+        "source": "minime/minime_autonomy/runtime.py",
+        "start": {
+          "byte": 2571190,
+          "line": 56004
+        },
+        "text": "SOURCE minime/minime_autonomy/runtime.py\nRevision sha256:ee2d40b932d564bca3ec191988966f09f334098674b3f93ba339c5f7bf61ddf2; 2571247 bytes; 56006 lines. Local checkout source; deployment and understanding are not established.\nPage e9b9400e5ed4e5e08707cf310bb11ecc875fb07049aa589dc30ef9f38fd3ce8b\nExact source bytes 2571190..2571247; line fragments retain their line number.\n\n 56004 | \n 56005 | if __name__ == \"__main__\":\n 56006 |     raise SystemExit(main())\n\nEnd of file.\nNavigation: SELF_STUDY CONTINUE | SELF_STUDY MAP | SELF_STUDY FIND <literal text> | SELF_STUDY OPEN repository/path <line>\n"
+      },
+      "rendered_bytes": 594
+    }
+  ]
+}

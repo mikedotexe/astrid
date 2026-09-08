@@ -1,0 +1,7 @@
+{
+  "scope": "Live source adapter and selected release; temporary operator state; no model or Being bookmark",
+  "executable": "/Users/v/other/worktrees/self-study-parity-live-20260908/bridge-stage-01/helpers/astrid-source-study",
+  "sha256": "6323a78ba5e32d590c4286c2d15b1e5c074efcbc64a31798c16371453c230cc9",
+  "text": "Shared system map \u2014 the same source catalog for Astrid and Minime.\nKernel, capabilities and lifecycle\nSELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs\nSELF_STUDY OPEN astrid/crates/astrid-capsule/src/lib.rs\nSELF_STUDY OPEN astrid/wit/astrid-capsule.wit\nSELF_STUDY OPEN astrid/capsules/spectral-bridge/src/lifecycle.rs\n\nNavigation page 1/1.",
+  "page": null
+}

@@ -1,0 +1,161 @@
+{
+  "recorded_at_utc": "2026-09-08T15:47:58.486453+00:00",
+  "status": "both_live_verified",
+  "astrid_commit": "542c006040381ef7673cc0c5f5154da5edd6ca90",
+  "minime_commit": "37ed8b7f153043521cc89fe881ed55fd56b5700f",
+  "bridge": {
+    "receipt_path": "/Users/v/other/astrid/.runtime/bridge-deployment/transactions/902a5eb47bae453eba674052f9401e66/receipt.json",
+    "receipt_sha256": "e3a978d5f784409ce19a1d1b892cca46ef36d7650a7a9ec8c41034d4156a3082",
+    "status": "activated_verified",
+    "old_pid": 5971,
+    "new_process": {
+      "binary": "/Users/v/other/worktrees/self-study-parity-live-20260908/bridge-stage-01/spectral-bridge-server",
+      "deployment_identity": "astrid:542c006040381ef7673cc0c5f5154da5edd6ca90:bridge:7fef07299845be4d025ff8b4acf580c1b407816950b3df07ea63affebb97885e",
+      "model_idle_observed": true,
+      "new_saved_exchange_observed": true,
+      "observed_exchange_count": 193080,
+      "pid": 90102,
+      "started_at": "Tue Sep  8 08:42:39 2026",
+      "startup": {
+        "admission_started": false,
+        "authority": "operator_maintenance_witness_only",
+        "checkpoint": {
+          "decoded_by_runtime_schema": true,
+          "exchange_count": 193079,
+          "runtime_action_feedback": {
+            "pending_count": 0,
+            "present": true,
+            "schema": "pending_runtime_action_feedback_v1",
+            "sha256": "b7f6550afaaba35a871411e40aa6c6f226f3b2a7e2e144399dc58f1e57eee4c9"
+          },
+          "sha256": "7713f28b0c3660ce05b7eb3b25f6d7db203410a427cf131afa11f0dd404ed8fd"
+        },
+        "pid": 90102,
+        "schema": "bridge_deployment_startup_v1",
+        "self_control": {
+          "authority": "state_lineage_only_no_control_authority",
+          "schema": "bridge_self_control_startup_v1",
+          "startup_gate_applied": true,
+          "state_deployment_identity": "astrid:542c006040381ef7673cc0c5f5154da5edd6ca90:bridge:7fef07299845be4d025ff8b4acf580c1b407816950b3df07ea63affebb97885e",
+          "state_integrity_verified": true,
+          "state_sha256": "d3b57d54a0b8e86fa63487f92b2393d4ecac380005800961cb52f1ab37946f22",
+          "state_targets_this_binary": true,
+          "target_deployment_identity": "astrid:542c006040381ef7673cc0c5f5154da5edd6ca90:bridge:7fef07299845be4d025ff8b4acf580c1b407816950b3df07ea63affebb97885e"
+        }
+      },
+      "stopped_exchange_count": 193079
+    },
+    "force_used": false,
+    "signal": "SIGTERM"
+  },
+  "minime": {
+    "receipt_path": "/Users/v/other/astrid/.runtime/minime-reloads/2026-09-08-self-study-parity-retry.jsonl",
+    "receipt_sha256": "aec9ab42b8d93afeb247f876aaf6cd645734c71f622b48e3ace8c8a7488e7065",
+    "outcome": "success",
+    "old_pid": 10263,
+    "new_pid": 91125,
+    "signal": "SIGTERM",
+    "forced_termination": false,
+    "source_input_count": 80,
+    "source_study_input": "088fa55360eefe0238dd8b932e8f8a7fc6f140521bd6d7c93a93ddf8efa370a3",
+    "startup_inputs_match_disk": true,
+    "reload_required": false,
+    "before_continuity": {
+      "cycle_count": 25934,
+      "file_sha256": "8a0b584d1739c2b0d0b8d0b93fa5ec2f88c50c751f90d24b4cdd14b5de45aa78",
+      "pending_next_present": false,
+      "pending_next_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "session_id": 5318
+    },
+    "after_continuity": {
+      "cycle_count": 25935,
+      "file_sha256": "160471686bb0625e1b679182ad349db934f1ecdb6821420675869ffc145f4ffe",
+      "pending_next_present": false,
+      "pending_next_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "session_id": 5318
+    },
+    "protected_services": {
+      "com.astrid.spectral-bridge": {
+        "pid": 90102,
+        "started_at": "Tue Sep  8 08:42:39 2026"
+      },
+      "com.minime.camera-client": {
+        "pid": 88417,
+        "started_at": "Tue Sep  8 08:38:30 2026"
+      },
+      "com.minime.division-gateway": {
+        "pid": 41484,
+        "started_at": "Mon Sep  7 13:35:34 2026"
+      },
+      "com.minime.division-supervisor": {
+        "pid": 41526,
+        "started_at": "Mon Sep  7 13:35:35 2026"
+      },
+      "com.minime.engine": {
+        "pid": 41337,
+        "started_at": "Mon Sep  7 13:35:29 2026"
+      },
+      "com.minime.host-sensory": {
+        "pid": 41661,
+        "started_at": "Mon Sep  7 13:35:40 2026"
+      },
+      "com.minime.mic-to-sensory": {
+        "pid": 88419,
+        "started_at": "Tue Sep  8 08:38:31 2026"
+      },
+      "com.minime.visual-frame-service": {
+        "pid": 41753,
+        "started_at": "Mon Sep  7 13:36:05 2026"
+      },
+      "com.reservoir.astrid-feeder": {
+        "pid": 1502,
+        "started_at": "Tue Aug 25 10:00:06 2026"
+      },
+      "com.reservoir.coupled-astrid": {
+        "pid": 60333,
+        "started_at": "Fri Sep  4 16:57:34 2026"
+      }
+    }
+  },
+  "changed_services": {
+    "com.astrid.spectral-bridge": {
+      "before": 5971,
+      "after": 90102
+    },
+    "com.minime.autonomous-agent": {
+      "before": 10263,
+      "after": 91125
+    },
+    "com.minime.camera-client": {
+      "before": 85808,
+      "after": 88417
+    },
+    "com.minime.mic-to-sensory": {
+      "before": 85820,
+      "after": 88419
+    }
+  },
+  "health": {
+    "samples": 32,
+    "min_fill_pct": 70.99772644042969,
+    "max_fill_pct": 73.04487609863281,
+    "max_sample_age_s": 2.29,
+    "no_reservoir_or_controller_settings_changed": true
+  },
+  "access_smokes": [
+    "staged-access-smoke.json",
+    "selected-minime-reader-smoke.json"
+  ],
+  "limits": "Access smoke checks used temporary operator state and no model calls. No forced SELF_STUDY, correspondence or claim of comprehension. Existing unrelated test work remains uncommitted.",
+  "pre_transition_sensor_process_changes": {
+    "camera": "PID 85808 to 88417 at 08:38:30 PDT",
+    "microphone": "PID 85820 to 88419 at 08:38:31 PDT",
+    "scope": "Both changes preceded bridge activation. No operator command in this task targeted these jobs. Their cause was not investigated; both new identities were preserved during the Minime reload."
+  },
+  "maintenance": {
+    "initial_pause_generation": 402,
+    "minime_wrapper_pause_generation": 403,
+    "initial_reload_refused_before_signal": "restart_minime_agent.py requires the codex-astra-interactive actor label; the same interactive task retained the pause under that label and retried",
+    "release": "Restore the initially unpaused controller after the final documentation commit; existing Codex automation pauses are preserved."
+  }
+}

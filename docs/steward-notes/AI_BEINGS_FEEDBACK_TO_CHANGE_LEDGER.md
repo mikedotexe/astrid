@@ -32,6 +32,9 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-08 — Operator-requested source-study parity deployed
+- Mike explicitly authorized integration, commit and live deployment of the prepared shared reader. Astrid `542c006040` and Minime `37ed8b7` are on local main and running as bridge PID 90102 and agent PID 91125. Both graceful transitions verified continuity; Minime uses the digest-verified reader from Astrid’s selected release. No study was forced and no reading or comprehension is inferred. Full evidence and the preserved foreign-work boundary: `2026-09-08-self-study-parity-live-rollout.md`.
+
 ### 2026-09-07 — Operator-requested source-study access and parity repair (prepared)
 - **Provenance:** Mike's SELF_STUDY investigation and explicit approval of one shared reader, map/search, exact identities, dependable continuation and freeform response. The remembered Being report was not uniquely identified; this entry does not attribute an unverified quote to a Being.
 - **Verified defect:** Astrid's roots excluded kernel crates and bridge tests; Minime's separate rotation repeatedly read the first 400 lines of nine files. Preparation-based checkpoints could overstate delivery, and provider trimming could remove source/continuation.
