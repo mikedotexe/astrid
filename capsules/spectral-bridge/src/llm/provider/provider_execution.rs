@@ -62,6 +62,7 @@ async fn mlx_chat_with_protected_delivery(
         protected,
         &[],
         context_submission,
+        None,
     )
     .await
 }
@@ -76,6 +77,7 @@ async fn mlx_chat_with_runtime_feedback(
     protected: Option<&ProtectedDialogueInputV1>,
     feedback: &[RuntimeActionFeedbackV1],
     context_submission: Option<&ContextSubmissionTrackerV1>,
+    observation_context: Option<&ProviderObservationContext>,
 ) -> Option<MlxChatResultV1> {
     let profile = configured_mlx_profile();
     let policy = apply_mlx_request_policy(label, profile, messages, max_tokens, timeout_secs);
@@ -141,10 +143,7 @@ async fn mlx_chat_with_runtime_feedback(
     } else {
         (max_tokens, timeout_secs)
     };
-    let client = delivery_http_client(
-        timeout_secs,
-        exact_request || context_submission.is_some(),
-    )?;
+    let client = delivery_http_client(timeout_secs, exact_request || context_submission.is_some())?;
 
     let temperature = temperature_for_mlx_profile(label, profile, temperature);
     let model_qos = model_qos_v1(label, &messages, temperature, max_tokens, timeout_secs);
@@ -172,6 +171,13 @@ async fn mlx_chat_with_runtime_feedback(
     if let Some(tracker) = context_submission {
         tracker.mark_final_messages(&request.messages);
     }
+    let mut observation = ProviderAttemptObserver::begin(
+        label,
+        "mlx",
+        profile.as_str(),
+        &request_bytes,
+        observation_context,
+    );
     let response = match client
         .post(&mlx_url)
         .header("Content-Type", "application/json")
@@ -181,6 +187,14 @@ async fn mlx_chat_with_runtime_feedback(
     {
         Ok(r) => r,
         Err(e) => {
+            ProviderAttemptObserver::outcome(
+                &mut observation,
+                if e.is_timeout() {
+                    "timeout"
+                } else {
+                    "transport_error"
+                },
+            );
             match failure_log_mode {
                 MlxFailureLogMode::FallbackEligible => {
                     warn!(
@@ -216,6 +230,7 @@ async fn mlx_chat_with_runtime_feedback(
         },
     };
     if !response.status().is_success() {
+        ProviderAttemptObserver::outcome(&mut observation, "http_error");
         warn!("MLX returned status {} from {mlx_url}", response.status());
         return None;
     }
@@ -223,20 +238,30 @@ async fn mlx_chat_with_runtime_feedback(
     let body = match response.text().await {
         Ok(b) => b,
         Err(e) => {
+            ProviderAttemptObserver::outcome(
+                &mut observation,
+                if e.is_timeout() {
+                    "timeout"
+                } else {
+                    "body_read_error"
+                },
+            );
             warn!("MLX response body read failed: {e}");
             return None;
         },
     };
+    ProviderAttemptObserver::body(&mut observation, &body, None);
     let chat: MlxResponse = match serde_json::from_str(&body) {
         Ok(c) => c,
         Err(e) => {
+            ProviderAttemptObserver::outcome(&mut observation, "parse_error");
             warn!(
-                "MLX response parse failed from {mlx_url}: {e} — body: {}",
-                &body[..body.floor_char_boundary(200)]
+                category = ?e.classify(), "MLX response parse failed from {mlx_url}"
             );
             return None;
         },
     };
+    ProviderAttemptObserver::model(&mut observation, chat.model.as_deref());
     let provider_model = chat
         .model
         .clone()
@@ -247,14 +272,17 @@ async fn mlx_chat_with_runtime_feedback(
     let raw_text = match chat.choices.first().and_then(|c| c.message.as_ref()) {
         Some(msg) => msg.content.clone(),
         None => {
+            ProviderAttemptObserver::outcome(&mut observation, "missing_message");
             warn!("MLX response had no message in choices");
             return None;
         },
     };
     let normalization = normalize_provider_output_v1(&raw_text);
+    ProviderAttemptObserver::normalized(&mut observation, &raw_text, &normalization);
     record_provider_output_normalization_v1(&normalization, label, "mlx", profile.as_str());
     let text = normalization.text;
     if text.is_empty() {
+        ProviderAttemptObserver::outcome(&mut observation, "rejected_empty");
         return None;
     }
 
@@ -263,10 +291,10 @@ async fn mlx_chat_with_runtime_feedback(
     let alpha_count = text.chars().filter(|c| c.is_alphabetic()).count();
     let total_count = text.chars().count();
     if total_count > 3 && (alpha_count as f64 / total_count as f64) < 0.4 {
+        ProviderAttemptObserver::outcome(&mut observation, "rejected_degenerate");
         warn!(
-            "MLX response rejected as degenerate (alpha ratio {:.2}): {}",
-            alpha_count as f64 / total_count as f64,
-            &text[..text.floor_char_boundary(120)]
+            "MLX response rejected as degenerate (alpha ratio {:.2})",
+            alpha_count as f64 / total_count as f64
         );
         return None;
     }
@@ -289,9 +317,9 @@ async fn mlx_chat_with_runtime_feedback(
         match sanitize_gemma4_canary_output_for_label(label, &text) {
             Some(sanitized) if sanitized != text => {
                 warn!(
-                    "{label}: Gemma 4 profile sanitized legacy selfhood wording before persistence: {}",
-                    &text[..text.floor_char_boundary(120)]
+                    "{label}: Gemma 4 profile sanitized legacy selfhood wording before persistence"
                 );
+                ProviderAttemptObserver::returned(&mut observation, sanitized.trim());
                 return Some(MlxChatResultV1 {
                     text: sanitized.trim().to_string(),
                     delivery_attempt,
@@ -304,15 +332,14 @@ async fn mlx_chat_with_runtime_feedback(
             },
             Some(_) => {},
             None => {
-                warn!(
-                    "{label}: Gemma 4 profile response rejected for deprecated runtime language: {}",
-                    &text[..text.floor_char_boundary(120)]
-                );
+                ProviderAttemptObserver::outcome(&mut observation, "rejected_profile_language");
+                warn!("{label}: Gemma 4 profile response rejected for deprecated runtime language");
                 return None;
             },
         }
     }
 
+    ProviderAttemptObserver::returned(&mut observation, &text);
     Some(MlxChatResultV1 {
         text,
         delivery_attempt,
@@ -344,6 +371,7 @@ async fn ollama_chat_with_protected_delivery(
         protected,
         &[],
         context_submission,
+        None,
     )
     .await
 }
@@ -358,6 +386,7 @@ async fn ollama_chat_with_runtime_feedback(
     protected: Option<&ProtectedDialogueInputV1>,
     feedback: &[RuntimeActionFeedbackV1],
     context_submission: Option<&ContextSubmissionTrackerV1>,
+    observation_context: Option<&ProviderObservationContext>,
 ) -> Option<OllamaFallbackResponse> {
     let client = delivery_http_client(
         timeout_secs,
@@ -409,6 +438,13 @@ async fn ollama_chat_with_runtime_feedback(
         if let Some(tracker) = context_submission {
             tracker.mark_final_messages(&request.messages);
         }
+        let mut observation = ProviderAttemptObserver::begin(
+            label,
+            "ollama",
+            &fallback_model,
+            &request_bytes,
+            observation_context,
+        );
         let response = match client
             .post(&ollama_url)
             .header("Content-Type", "application/json")
@@ -418,11 +454,20 @@ async fn ollama_chat_with_runtime_feedback(
         {
             Ok(r) => r,
             Err(e) => {
+                ProviderAttemptObserver::outcome(
+                    &mut observation,
+                    if e.is_timeout() {
+                        "timeout"
+                    } else {
+                        "transport_error"
+                    },
+                );
                 warn!("Ollama fallback request failed at {ollama_url} with {fallback_model}: {e}");
                 continue;
             },
         };
         if !response.status().is_success() {
+            ProviderAttemptObserver::outcome(&mut observation, "http_error");
             warn!(
                 "Ollama fallback returned status {} from {ollama_url} with {fallback_model}",
                 response.status()
@@ -433,22 +478,45 @@ async fn ollama_chat_with_runtime_feedback(
         let body = match response.text().await {
             Ok(b) => b,
             Err(e) => {
+                ProviderAttemptObserver::outcome(
+                    &mut observation,
+                    if e.is_timeout() {
+                        "timeout"
+                    } else {
+                        "body_read_error"
+                    },
+                );
                 warn!("Ollama fallback response body read failed with {fallback_model}: {e}");
                 continue;
             },
         };
+        ProviderAttemptObserver::body(&mut observation, &body, None);
         let chat: ChatResponse = match serde_json::from_str(&body) {
             Ok(c) => c,
             Err(e) => {
+                ProviderAttemptObserver::outcome(&mut observation, "parse_error");
                 warn!(
-                    "Ollama fallback response parse failed from {ollama_url} with {fallback_model}: {e} — body: {}",
-                    &body[..body.floor_char_boundary(200)]
+                    category = ?e.classify(), "Ollama fallback response parse failed from {ollama_url} with {fallback_model}"
                 );
                 continue;
             },
         };
+        ProviderAttemptObserver::model(&mut observation, chat.model.as_deref());
         if (protected.is_some() || runtime_feedback_admission.is_some()) && chat.done == Some(false)
         {
+            // This path previously returned before cleanup. Observe only when
+            // enabled, preserving its original rejection and fallback behavior.
+            if observation.is_some()
+                && let Some(message) = &chat.message
+            {
+                let normalization = normalize_provider_output_v1(&message.content);
+                ProviderAttemptObserver::normalized(
+                    &mut observation,
+                    &message.content,
+                    &normalization,
+                );
+            }
+            ProviderAttemptObserver::outcome(&mut observation, "rejected_incomplete");
             continue;
         }
         let raw_text = chat
@@ -457,9 +525,13 @@ async fn ollama_chat_with_runtime_feedback(
             .map(|m| m.content.clone())
             .unwrap_or_default();
         let normalization = normalize_provider_output_v1(&raw_text);
+        if chat.message.is_some() {
+            ProviderAttemptObserver::normalized(&mut observation, &raw_text, &normalization);
+        }
         record_provider_output_normalization_v1(&normalization, label, "ollama", &fallback_model);
         let text = normalization.text;
         if !text.is_empty() {
+            ProviderAttemptObserver::returned(&mut observation, &text);
             return Some(OllamaFallbackResponse {
                 text,
                 delivery_attempt: capture_submitted_delivery(
@@ -485,6 +557,14 @@ async fn ollama_chat_with_runtime_feedback(
                 model: fallback_model,
             });
         }
+        ProviderAttemptObserver::outcome(
+            &mut observation,
+            if chat.message.is_some() {
+                "rejected_empty"
+            } else {
+                "missing_message"
+            },
+        );
     }
     None
 }

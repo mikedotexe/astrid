@@ -388,6 +388,8 @@ pub async fn generate_dialogue_with_runtime_feedback(
             .as_ref()
             .map(|value| value.path.display().to_string()),
     );
+    let primary_observation =
+        ProviderObservationContext::configured(Some(&generation_record_ctx.generation_id), Some(0));
     let primary_started = std::time::Instant::now();
     let primary_response = mlx_chat_with_runtime_feedback(
         "dialogue_live",
@@ -399,6 +401,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
         protected,
         runtime_feedback,
         context_submission,
+        Some(&primary_observation),
     )
     .await;
     let primary_elapsed_s = primary_started.elapsed().as_secs_f64();
@@ -410,6 +413,10 @@ pub async fn generate_dialogue_with_runtime_feedback(
     record_dialogue_attempt(
         &generation_record_ctx,
         DialogueGenerationAttempt {
+            provider_observation: Some(
+                primary_observation
+                    .finish_dialogue(result.as_ref().map(|attempt| attempt.text.as_str())),
+            ),
             backend: GENERATION_BACKEND_PRIMARY,
             model: format!("mlx_profile:{}", mlx_profile.as_str()),
             attempt_index: 0,
@@ -448,6 +455,10 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 });
             }
             generation_record_ctx.replace_fallback_messages(&ollama_fallback_messages);
+            let fallback_observation = ProviderObservationContext::configured(
+                Some(&generation_record_ctx.generation_id),
+                Some(1),
+            );
             let fallback_started = std::time::Instant::now();
             let fallback_response = ollama_chat_with_runtime_feedback(
                 "dialogue_live",
@@ -459,6 +470,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 protected,
                 runtime_feedback,
                 context_submission,
+                Some(&fallback_observation),
             )
             .await;
             let fallback_elapsed_s = fallback_started.elapsed().as_secs_f64();
@@ -473,6 +485,13 @@ pub async fn generate_dialogue_with_runtime_feedback(
             record_dialogue_attempt(
                 &generation_record_ctx,
                 DialogueGenerationAttempt {
+                    provider_observation: Some(
+                        fallback_observation.finish_dialogue(
+                            fallback_result
+                                .as_ref()
+                                .map(|attempt| attempt.text.as_str()),
+                        ),
+                    ),
                     backend: GENERATION_BACKEND_FALLBACK,
                     model: fallback_model.unwrap_or_else(|| "ollama:unavailable".to_string()),
                     attempt_index: 1,

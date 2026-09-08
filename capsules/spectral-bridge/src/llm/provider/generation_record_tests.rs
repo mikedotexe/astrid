@@ -72,6 +72,7 @@ mod generation_record_tests {
 
     fn primary_attempt(response: Option<&str>, accepted: Option<&str>) -> DialogueGenerationAttempt {
         DialogueGenerationAttempt {
+            provider_observation: None,
             backend: GENERATION_BACKEND_PRIMARY,
             model: "mlx_profile:production".to_string(),
             attempt_index: 0,
@@ -158,6 +159,7 @@ mod generation_record_tests {
         let fallback = build_dialogue_generation_record(
             &ctx,
             DialogueGenerationAttempt {
+                provider_observation: None,
                 backend: GENERATION_BACKEND_FALLBACK,
                 model: "gemma3:4b".to_string(),
                 attempt_index: 1,
@@ -181,6 +183,7 @@ mod generation_record_tests {
         assert_eq!(fallback.status, GENERATION_STATUS_OK);
         assert!(fallback.fallback_used);
         assert_eq!(fallback.model, "gemma3:4b");
+        assert_eq!(fallback.response_text_stage, "after_provider_cleanup_and_fallback_next_repair_before_dialogue_gate");
         assert_eq!(fallback.messages.len(), 2);
         assert_eq!(fallback.attempts_total, 2);
         assert_eq!(fallback.prompt.fill_pct, 63.2);

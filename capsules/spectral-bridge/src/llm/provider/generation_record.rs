@@ -81,6 +81,8 @@ struct GenerationRecordV1 {
     #[serde(skip_serializing_if = "Option::is_none")]
     response_sha256: Option<String>,
     response_chars: usize,
+    response_text_stage: &'static str,
+    provider_observation: Option<ProviderGenerationObservation>,
     own_body: GenerationRecordOwnBodyV1,
     prompt: GenerationRecordPromptV1,
     linked_artifacts: Vec<serde_json::Value>,
@@ -111,6 +113,7 @@ struct DialogueGenerationPromptFacts {
 }
 
 struct DialogueGenerationAttempt {
+    provider_observation: Option<ProviderGenerationObservation>,
     backend: &'static str,
     model: String,
     attempt_index: u32,
@@ -138,9 +141,10 @@ impl DialogueGenerationRecordContext {
         }
         let own_body_trimmed = budget_report
             .map(|report| {
-                report.trimmed_blocks.iter().any(|block| {
-                    block.label == OWN_BODY_BLOCK_LABEL && block.removed_chars > 0
-                })
+                report
+                    .trimmed_blocks
+                    .iter()
+                    .any(|block| block.label == OWN_BODY_BLOCK_LABEL && block.removed_chars > 0)
             })
             .unwrap_or(false);
         let own_body_chars = own_body
@@ -191,8 +195,7 @@ impl DialogueGenerationRecordContext {
 }
 
 fn generation_record_id() -> String {
-    let sequence =
-        GENERATION_RECORD_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let sequence = GENERATION_RECORD_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     format!("{}-{}-{sequence}", generation_unix_ms(), std::process::id())
 }
 
@@ -281,6 +284,12 @@ fn build_dialogue_generation_record(
         response_text: attempt.response_text,
         response_sha256,
         response_chars,
+        response_text_stage: if attempt.attempt_index == 0 {
+            "after_provider_cleanup_and_quality_filters_before_dialogue_gate"
+        } else {
+            "after_provider_cleanup_and_fallback_next_repair_before_dialogue_gate"
+        },
+        provider_observation: attempt.provider_observation,
         own_body: ctx.own_body.clone(),
         prompt: ctx.prompt.clone(),
         linked_artifacts: ctx.linked_artifacts.clone(),
