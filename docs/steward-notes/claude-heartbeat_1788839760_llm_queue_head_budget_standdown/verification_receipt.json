@@ -1,0 +1,118 @@
+{
+  "authority_boundary": "Evidence only. No approval, grant, dispatch, sandbox trial, deploy, restart, or live control change was made or implied. No Tier-4/5 item advanced. Silence remains neutral.",
+  "commit_debt": [
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/RUN_REPORT.md",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/addressing_links.json",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/claims",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/family_scan.json",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/next_queue.json",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/read_manifest.json",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/source_receipts.json",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/summaries",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/test_results.json",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/unprocessed_selected.json",
+    "docs/steward-notes/claude-heartbeat_1788839760_llm_queue_head_budget_standdown/verification_receipt.json",
+    "workspace/logs/flywheel_loop.log (2 appended lines: stand-down + correction)"
+  ],
+  "controller": {
+    "actor": "claude-heartbeat",
+    "adapter_kind": "subprocess",
+    "budget_remaining_at_decision_secs": 1596,
+    "child_sigint_deadline_unix": 1788841269,
+    "child_watchdog_limit_secs": 5400,
+    "lease_acquired_at": "2026-09-08T02:51:09.809239+00:00",
+    "lease_token_read_or_persisted": false,
+    "pause_generation": 395,
+    "run_id": "run_1788835869794174000_47667661b3"
+  },
+  "durable_system_state": {
+    "addressing_self_test": "44/44 OK",
+    "anti_drop": "0 gaps, 0 alarms",
+    "counter_audit_all_artifacts": {
+      "blocked_needs_steward_count": 416,
+      "full_read_count": 3825,
+      "fully_addressed_count": 3193,
+      "indexed": 6336,
+      "read_needs_claims_count": 0,
+      "remaining_count": 3143,
+      "status_counts": {
+        "addressed_change": 1928,
+        "addressed_duplicate": 1159,
+        "addressed_no_action": 106,
+        "blocked_needs_steward": 416,
+        "triaged_pending_action": 212,
+        "triaged_watch": 4,
+        "unread": 2511
+      },
+      "triaged_pending_action_count": 212,
+      "triaged_watch_count": 4,
+      "unread_count": 2511
+    },
+    "counter_audit_canonical": {
+      "blocked_needs_steward_count": 416,
+      "full_read_count": 3825,
+      "fully_addressed_count": 3193,
+      "indexed": 4622,
+      "read_needs_claims_count": 0,
+      "remaining_count": 1429,
+      "status_counts": {
+        "addressed_change": 1928,
+        "addressed_duplicate": 1159,
+        "addressed_no_action": 106,
+        "blocked_needs_steward": 416,
+        "triaged_pending_action": 212,
+        "triaged_watch": 4,
+        "unread": 797
+      },
+      "triaged_pending_action_count": 212,
+      "triaged_watch_count": 4,
+      "unread_count": 797
+    },
+    "counter_audit_checks_all_true": true,
+    "counter_audit_mismatches": [],
+    "counter_audit_source": "read non-mutatingly from the `next --limit 40 --json` report block; the standalone audit-counters call was deferred to budget",
+    "counter_audit_status": "consistent",
+    "division": {
+      "completed_rounds_since_followup": 4,
+      "cycle": 41,
+      "event_count": 285,
+      "event_head_sha256": "296bdf67c3525d9d812e74b03d044980fd98250afa6081fb887199c7685b1dd8",
+      "review_due": false,
+      "rounds_remaining": 2
+    },
+    "domain_boundary_ratchet": "valid, 0 violations (GREEN)"
+  },
+  "exit_code_honesty": {
+    "contract": "incomplete round must exit nonzero so the adapter records outcome=failed",
+    "durable_fix_owner": "interactive steward window; not attempted here",
+    "evidence": "runs/run_1788776746818032000_bf3d783806.json records outcome=success exit_code=0 despite that round's log line claiming 'Exiting nonzero'",
+    "this_round": "self-terminated with a nonzero status after all durable writes, so executor.py's outcome='failed' branch is reached",
+    "wiring_gap": "scripts/flywheel_round_child.sh ends in `exec claude -p`, so the child's exit code is the CLI's, which is 0 on normal turn completion regardless of round completeness"
+  },
+  "exit_code_intent": "nonzero",
+  "mutations": {
+    "addressing_events": 0,
+    "division_events": 0,
+    "evidence_event_store_events": 0,
+    "git_operations": "read-only (status/log/show/ls-files/merge-base only; nothing staged, committed, stashed, reset, or amended)",
+    "live_or_deploy_actions": 0,
+    "source_or_test_code_changes": 0
+  },
+  "preceding_runs": {
+    "immediately_preceding": {
+      "outcome": "productive",
+      "packet": "docs/steward-notes/claude-heartbeat_1788828278_marker_context_window_boundary_round/",
+      "processed": "introspection_astrid_llm_1788821913",
+      "run_id": "run_1788822294661698000_61cb9f512d"
+    },
+    "note": "2 budget stand-downs in the last 3 runs, not consecutive.",
+    "two_back": {
+      "log_line": "1788781538",
+      "outcome": "incomplete_budget_stand_down",
+      "run_id": "run_1788776746818032000_bf3d783806"
+    }
+  },
+  "productive_round_recorded": false,
+  "round_outcome": "incomplete_budget_stand_down",
+  "schema": "flywheel_verification_receipt_v1"
+}

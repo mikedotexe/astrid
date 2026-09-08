@@ -1,0 +1,5 @@
+{
+  "note": "No report-bound source was read: no report was processed. The next session must note that the head report binds source in an external worktree (/Users/v/other/worktrees/marker-rollout-20260907/astrid/...), not in the primary tree.",
+  "receipts": [],
+  "schema": "flywheel_source_receipts_v1"
+}

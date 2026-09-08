@@ -1,0 +1,39 @@
+{
+  "checks": [
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "detail": "44 tests in 0.796s",
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "detail": "0 gaps, 0 alarms",
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "detail": "valid=true, violation_count=0, violation_kind_counts={}, resolved_large_file_debt_count=3, unlisted_legacy_review_debt_count=44, stable_facade_count=6, manifest_sha256=578a39cf... \u2014 ratchet GREEN, no red to surface",
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_followup.py verify",
+      "detail": "event_count=285, head=296bdf67c3525d9d812e74b03d044980fd98250afa6081fb887199c7685b1dd8",
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_followup.py status",
+      "detail": "cycle 41, completed_rounds_since_followup=4, rounds_remaining_before_followup=2, review_due=false",
+      "result": "OK"
+    }
+  ],
+  "code_changed": false,
+  "deferred_to_budget": [
+    "scripts/evidence_event_store.py verify/status (EES verify measured at ~11 min in a recent round)",
+    "scripts/experiential_epistemics.py verify (final epistemic verify \u2014 only owed after durable writes; none occurred)",
+    "scripts/introspection_addressing_audit.py audit-counters (counters were still read non-mutatingly from the `next` report block)",
+    "scripts/test_evidence_event_store.py, test_steward_control.py, test_steward_projection.py, test_division_ceremony_*.py, test_projection_cursors.py, test_introspection_cadence_audit.py",
+    "scripts/division_ceremony_chronicle.py project/verify"
+  ],
+  "note": "No source or test code was touched, so no focused tests were owed. Only read-only durable-system verification was run, bounded by the remaining budget.",
+  "schema": "flywheel_test_results_v1"
+}

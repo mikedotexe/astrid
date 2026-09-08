@@ -1,0 +1,28 @@
+{
+  "canonical_reports_read": [],
+  "lived_state_witnesses_read": [],
+  "note": "No canonical introspection report or lived-state witness was opened this round. Nothing was marked read.",
+  "operating_law_read": [
+    {
+      "bytes": 9182,
+      "label": "AGENTS.md",
+      "lines": 137,
+      "note": "Read completely from the working tree at main 3d4e83e4bc.",
+      "path": "AGENTS.md",
+      "read": "complete",
+      "sha256": "0f6dbd1ff48ab13b479c93812911ef243bdacbce54e2e8211ded171b225eb8a3"
+    },
+    {
+      "bytes": 55155,
+      "label": "ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md",
+      "lines": 1504,
+      "note": "Read completely. NOT PRESENT on main; recovered read-only via `git show ccb53b1622:docs/steward-notes/ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md` (newest of 3 committed versions, 2026-09-03, 55155 bytes). The /tmp path is the extraction target, not a repository artifact.",
+      "path": "/tmp/flywheel_handoff.md",
+      "read": "complete",
+      "recovered_from_commit": "ccb53b16222b5b1481895b733515a113482c79da",
+      "repository_relative_path_on_source_branches": "docs/steward-notes/ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md",
+      "sha256": "5d464a94e76b422520b10c4b3ea65be4ce5789607e4c249551ca59e4080e180a"
+    }
+  ],
+  "schema": "flywheel_read_manifest_v1"
+}
