@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **[codex / live observer] Deploys and enables private provider observation with Mike's authorization.** The sanctioned transition preserves the stopped checkpoint and signed self-control lineage, verifies a natural saved exchange, and leaves eleven surrounding service identities unchanged. A predeclared five-minute window yields six complete provider attempts and the expected dialogue join, with no marker opportunity or benefit inferred. Rollout identities, evidence, retention and rollback: `docs/steward-notes/2026-09-08-provider-observer-live-rollout.md`.
+
 - **[codex / observer rollout] Connects provider observation settings to the launch wrapper.** A private operator-owned runtime configuration survives reboot, with explicit launchd overrides taking precedence. Absence remains default-off. This supplies the startup wiring needed for Mike's authorized observer rollout; live verification is recorded separately.
 
 - **[codex / research observation] Adds opt-in, private provider-attempt evidence for S-006 natural-outcome research.** MLX and each Ollama dispatch retain linked outcomes, pre-cleanup hashes and bounded marker-bearing artifacts, including upstream failures and rejected output. Dialogue records keep their existing response semantics with explicit stage labels and attempt joins. Startup-verified release identity stays separate from unknown activation; storage failures never change generation decisions. Source preparation only; no live activation. See `docs/provider-attempt-observation.md`.
