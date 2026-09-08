@@ -160,6 +160,9 @@ The sanctioned stopped-transition recovery receipt is:
 
 `/Users/v/other/astrid/.runtime/bridge-deployment/transactions/45dbc1298950442d845f4b78b5b0c753/stopped-transition-recoveries/e2e5bca202834f17ab76e147ecda0274/receipt.json`
 
+Its SHA-256 is
+`f67b4518e200ff49a34f13695847c624a2f90d5ee7691d9e7ba6c71ded1474c0`.
+
 Recovery sent no second signal and replayed no drain. It launched bridge PID
 `5971` at `Tue Sep 8 00:47:26 2026`, restored exchange `192643`, observed fresh
 saved exchange `192644`, and released the owned launch hold. The old PID is
@@ -209,6 +212,9 @@ a correct safety refusal and led to moving the successful receipt to the
 excluded runtime directory:
 
 `/Users/v/other/astrid/.runtime/minime-reloads/2026-09-08-collaboration-attention-reload.jsonl`
+
+Its SHA-256 is
+`ab6ae4b47a82719e6e149562cd73b23a5660f578938f2038d03b44a37307abdd`.
 
 That four-record, 33,088-byte receipt records:
 
