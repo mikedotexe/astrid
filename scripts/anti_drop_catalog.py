@@ -755,6 +755,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "python3 scripts/test_steward_control.py"},
     },
     {
+        "id": "flywheel_completion_receipt_routing",
+        "shipped": "2026-09-07",
+        "surface": "Headless source-first flywheel child outcome reported to the controller",
+        "failure_mode": "the model CLI can exit zero after narrating an unfinished round, which previously made the subprocess adapter record success and run the success projection without closed reports or complete evidence. The child launcher now requires a nonce-scoped receipt bound to the current non-secret run identity and revalidates the hashed packet after the model exits. Missing, stale, malformed, or mutated evidence fails the child even when the model exits zero.",
+        "guard": {"repo": "astrid", "file": "scripts/flywheel_round_child.sh", "symbol": "verify_completion_receipt"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/test_flywheel_round_completion.py",
+                 "name": "test_child_converts_unmarked_zero_exit_to_failure",
+                 "run": "python3 scripts/test_flywheel_round_completion.py"},
+    },
+    {
         "id": "being_privacy_private_qualia_exclusion",
         "shipped": "2026-06-18",
         "surface": "steward tools reading a being's journals (letter_response_scan reception scan; self_study_review steward-review packet)",

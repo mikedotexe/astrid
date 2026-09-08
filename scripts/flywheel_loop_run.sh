@@ -9,7 +9,9 @@
 # The adapter owns the controller lease (the single cross-steward serializer
 # since the advisory mutex was retired), the pre/post projections, heartbeats,
 # stop propagation (SIGINT), and the finish outcome (child exit code). The
-# child is headless Claude following scripts/flywheel_loop_prompt.txt.
+# child is headless Claude following scripts/flywheel_loop_prompt.txt. A
+# nonce-scoped completion receipt prevents a narrative-only zero exit from
+# being recorded as a successful round.
 #
 # Safety: single-flight lock (skip if a prior cycle is running); foreign-
 # activity stand-down (tree edited within the last ~3 minutes = a live editor,

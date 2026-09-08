@@ -27,7 +27,12 @@ def run_subprocess(
     interrupted = False
     timed_out = False
     try:
-        process = subprocess.Popen(list(argv), shell=False)
+        child_env = os.environ.copy()
+        child_env.pop("STEWARD_LEASE_TOKEN", None)
+        child_env["STEWARD_RUN_ID"] = run_id
+        child_env["STEWARD_ACTOR"] = actor
+        child_env["STEWARD_ADAPTER_KIND"] = "subprocess"
+        process = subprocess.Popen(list(argv), shell=False, env=child_env)
         started = time.monotonic()
         next_heartbeat = started
         limit = max_secs or controller.config.max_run_secs

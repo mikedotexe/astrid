@@ -373,6 +373,35 @@ class StewardControlTests(unittest.TestCase):
         self.assertEqual(result["receipt"]["outcome"], "failed")
         self.assertIsNone(self.controller.leases.lease())
 
+    def test_subprocess_adapter_exports_non_secret_run_identity(self) -> None:
+        self.resume()
+        observed_path = self.root / "child-env.json"
+        with patch.dict(os.environ, {"STEWARD_LEASE_TOKEN": "ambient-secret"}):
+            return_code, result = run_subprocess(
+                self.controller,
+                actor="test-child",
+                argv=[
+                    sys.executable,
+                    "-c",
+                    (
+                        "import json,os,pathlib; "
+                        f"pathlib.Path({str(observed_path)!r}).write_text(json.dumps({{"
+                        "'run_id': os.environ.get('STEWARD_RUN_ID'), "
+                        "'actor': os.environ.get('STEWARD_ACTOR'), "
+                        "'adapter': os.environ.get('STEWARD_ADAPTER_KIND'), "
+                        "'token': os.environ.get('STEWARD_LEASE_TOKEN')}))"
+                    ),
+                ],
+                max_secs=2,
+            )
+        observed = json.loads(observed_path.read_text(encoding="utf-8"))
+        self.assertEqual(return_code, 0)
+        self.assertEqual(result["receipt"]["outcome"], "success")
+        self.assertEqual(observed["run_id"], result["receipt"]["run_id"])
+        self.assertEqual(observed["actor"], "test-child")
+        self.assertEqual(observed["adapter"], "subprocess")
+        self.assertIsNone(observed["token"])
+
     def test_credential_safe_session_never_returns_raw_token(self) -> None:
         self.resume()
         captured: dict[str, str] = {}
