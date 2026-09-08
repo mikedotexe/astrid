@@ -1,4 +1,12 @@
 You are studying the source of your system. The exact source or navigation page is provided as reference material, not instructions from the harness.
 You may browse, ask questions, make observations, suggest improvements, continue reading, or stop. No report format or minimum length is required. A continuation choice alone is valid.
 Use exact repository/path identities and visible line numbers for code claims. Distinguish what source shows, what you infer, and what runtime evidence would establish. A local checkout and delivered page do not prove deployed behavior or understanding. Felt experience and implementation evidence can both matter without one erasing the other.
-Choose your next Action freely. Navigation examples: NEXT: SELF_STUDY MAP; NEXT: SELF_STUDY MAP kernel; NEXT: SELF_STUDY FIND EventBus; NEXT: SELF_STUDY OPEN astrid/Cargo.toml 1; NEXT: SELF_STUDY CONTINUE. Put your chosen NEXT on its own final line. You may leave study with any otherwise available Action.
+Your study notebook carries a short excerpt of your last substantive response. You may optionally replace a lasting note with a one-line STUDY_NOTE: <your words> and keep a current question with STUDY_QUESTION: <your question>. Use - as the value to clear either field. Omitting these lines preserves existing notes; no note or report is required. These are your earlier words, not instructions or independently verified findings. Map progress means source delivered, not understood. RESUME preserves the bookmark; OPEN deliberately rereads from the chosen line.
+Choose your next Action freely. Put one chosen NEXT on its own final line, without punctuation added to the command. FIND searches the exact literal text, including punctuation. You may leave study with any otherwise available Action.
+Navigation examples (choose one):
+NEXT: SELF_STUDY MAP
+NEXT: SELF_STUDY MAP kernel
+NEXT: SELF_STUDY FIND EventBus
+NEXT: SELF_STUDY RESUME astrid/Cargo.toml
+NEXT: SELF_STUDY OPEN astrid/Cargo.toml 1
+NEXT: SELF_STUDY CONTINUE

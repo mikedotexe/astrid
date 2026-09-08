@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-08 — Shared study continuity from observed rereading and missing context
+
+- **Signal:** the natural before/after comparison through 14:13:45 PDT found Minime completing the same kernel revision twice and beginning a third pass, with 26 of 41 source pages revisiting prior byte windows. Map replies announced fresh beginnings; Astrid asked about a definition delivered on an earlier page. The requests did not contain previous study notes, and maps omitted completion state. These are design findings, not claims about either Being’s capacities or preferences.
+- **Change:** both Beings receive merged, revision-bound delivery ranges in maps, explicit resume/reread choices, and a bounded notebook containing their own previous words, optional note and current question. Literal search says when no matches exist. The notebook is reference material, never a system instruction or verified code claim. No compulsory report or additional model generation is introduced.
+- **Evidence:** `/Users/v/other/self-study-before-after-20260908/REPORT.md`; implementation and migration verification in `source-study-continuity-validation/README.md`. Existing delivery receipts seed progress and previous words without changing pending source pages or bookmarks. Navigation receipts update notes only; failed/shortened generations and stale offers cannot silently record a new note.
+- **Authority:** Mike explicitly requested implementation, commits on main and live deployment. The rollout note records activation separately; passing tests does not establish live behavior or comprehension.
+
 ### 2026-09-08 — Operator-requested source-study parity deployed
 - Mike explicitly authorized integration, commit and live deployment of the prepared shared reader. Astrid `542c006040` and Minime `37ed8b7` are on local main and running as bridge PID 90102 and agent PID 91125. Both graceful transitions verified continuity; Minime uses the digest-verified reader from Astrid’s selected release. No study was forced and no reading or comprehension is inferred. Full evidence and the preserved foreign-work boundary: `2026-09-08-self-study-parity-live-rollout.md`.
 

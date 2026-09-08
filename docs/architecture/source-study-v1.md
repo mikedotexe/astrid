@@ -37,6 +37,7 @@ Both Beings receive the same small system map and these commands:
 | `SELF_STUDY FIND EventBus` | Literal path/content search with exact file IDs and lines |
 | `SELF_STUDY FIND EventBus --page 2` | Continue search results |
 | `SELF_STUDY OPEN astrid/Cargo.toml 1` | Explicitly open or reread at a one-based line |
+| `SELF_STUDY RESUME astrid/Cargo.toml` | Resume this exact source at its existing bookmark |
 | `SELF_STUDY CONTINUE` | Resume at the exact next byte after verified delivery |
 
 Source IDs always retain repository and relative path. Historic curated aliases
@@ -73,6 +74,43 @@ rereads get a fresh page opportunity; CONTINUE retries an undelivered offer.
 A changed source revision requires an explicit new OPEN instead of silently
 reinterpreting an old byte offset. EOF stops instead of restarting the file.
 The old V3 preparation history is preserved and is not imported as delivery evidence.
+
+## Study continuity
+
+Maps show delivered byte ranges, partial or complete delivery, deliberate reread,
+and changed-source status. Ranges are merged only within the same source revision;
+opening the last page alone does not mean the whole file was delivered. A reread
+does not erase earlier coverage. Changed files require a new explicit OPEN. The
+current source is visible on maps, and incomplete files offer RESUME. Literal
+searches with no matches say so and explain that punctuation belongs to the query.
+
+Each Being also has a bounded notebook carried as reference text in source and
+navigation requests. It contains the Being's last substantive response excerpt,
+an optional lasting note, and an optional current question, with response hashes
+and source/revision references where applicable. A Being can write one-line
+`STUDY_NOTE: <words>` and `STUDY_QUESTION: <question>` fields in a response, or use
+`-` to clear either field. Omission and continuation-only replies preserve existing
+notes. No extra generation, compulsory format or minimum response is required.
+Notes stay in the user reference material; they are never promoted to system
+instructions or interpreted as verified code facts.
+
+The note, question and previous excerpt are limited to 700, 350 and 700 UTF-8 bytes
+respectively, with explicit truncation labels. The whole rendered notebook is
+bounded below 4,000 bytes in addition to the unchanged 7,000-byte source page budget.
+Provider reasoning fields and tagged reasoning blocks are not carried as notes.
+Both adapters preserve the entire combined input and reject shortened or failed
+delivery. Navigation responses have their own retained wire receipts and can update
+the notebook, but never advance source coverage or a source bookmark. Stale offers
+and conflicting replay evidence are rejected; retained navigation receipts also
+recover a checkpoint-write interruption.
+
+Existing shared-reader checkpoints migrate their coverage from verified retained
+receipts and seed the previous excerpt from the current bookmark's completed
+response. Pending pages, bookmarks and receipts are preserved. The migration does
+not import preparation-only coverage or infer understanding. It is additive within
+the V1 state format; an older writer can ignore these new fields, so rolling back
+the reader can discard new notebook/progress fields on its next write. Original
+source and navigation receipt artifacts remain available.
 
 Astrid retains its existing provider artifacts and lived-state witness capture.
 Minime retains its generation and action-continuity records. Neither reading a

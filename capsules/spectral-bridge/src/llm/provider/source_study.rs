@@ -69,11 +69,10 @@ fn source_study_attempt_complete(
     output: &astrid_source_study::StudyOutput,
     attempt: Option<&SubmittedDeliveryAttemptV1>,
 ) -> bool {
-    output.page.as_ref().is_none_or(|page| {
-        attempt.is_some_and(|attempt| {
-            page.verify_delivery(&attempt.request_json, &attempt.response_json)
-                .is_ok()
-        })
+    attempt.is_some_and(|attempt| {
+        output
+            .verify_delivery(&attempt.request_json, &attempt.response_json)
+            .is_ok()
     })
 }
 

@@ -126,6 +126,11 @@ async fn run_shared_source_study(
                     &page.id,
                     std::path::Path::new(&receipt.retained_artifact_path),
                 )?;
+            } else if let Some(navigation_id) = &output.navigation_id {
+                reader.navigation_delivered_artifact(
+                    navigation_id,
+                    std::path::Path::new(&receipt.retained_artifact_path),
+                )?;
             }
             Ok(())
         });

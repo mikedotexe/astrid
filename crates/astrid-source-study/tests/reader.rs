@@ -303,3 +303,278 @@ fn changed_revision_at_eof_is_not_silently_treated_as_finished() {
             .is_err()
     );
 }
+
+fn map_source(reader: &Reader) -> String {
+    reader
+        .prepare(Command::Map {
+            topic: SOURCE.into(),
+            page: 1,
+        })
+        .unwrap()
+        .text
+}
+
+#[test]
+fn maps_distinguish_pending_partial_complete_reread_and_changed_revision() {
+    let (_temp, catalog, reader) = setup(&"row\n".repeat(3000));
+    let mut page = reader.prepare(open()).unwrap().page.unwrap();
+    assert!(map_source(&reader).contains("Not delivered"));
+    reader
+        .delivered(&page.id, &wire(&page.text), &response())
+        .unwrap();
+    let map = map_source(&reader);
+    assert!(map.contains("Partial delivery"));
+    assert!(map.contains(&format!("SELF_STUDY RESUME {SOURCE}")));
+    while !page.eof {
+        page = reader.prepare(Command::Continue).unwrap().page.unwrap();
+        reader
+            .delivered(&page.id, &wire(&page.text), &response())
+            .unwrap();
+    }
+    assert!(map_source(&reader).contains("Deliberate reread — Complete delivery"));
+    let reread = reader.prepare(open()).unwrap().page.unwrap();
+    reader
+        .delivered(&reread.id, &wire(&reread.text), &response())
+        .unwrap();
+    assert!(map_source(&reader).contains("Complete delivery"));
+    fs::write(catalog.resolve(SOURCE).unwrap().path, "changed\n").unwrap();
+    assert!(map_source(&reader).contains("Source changed or unreadable; previous revision"));
+}
+
+#[test]
+fn opening_only_the_final_lines_is_not_complete_coverage() {
+    let (_temp, _, reader) = setup(&"row\n".repeat(3000));
+    let page = reader
+        .prepare(Command::Open {
+            source: SOURCE.into(),
+            line: 2999,
+        })
+        .unwrap()
+        .page
+        .unwrap();
+    assert!(page.eof);
+    reader
+        .delivered(&page.id, &wire(&page.text), &response())
+        .unwrap();
+    let map = map_source(&reader);
+    assert!(map.contains("Read missing earlier bytes — Partial delivery"));
+    assert!(!map.contains("Complete delivery"));
+}
+
+#[test]
+fn verified_notes_survive_restart_navigation_and_continuation_only() {
+    let (temp, catalog, reader) = setup(&"row\n".repeat(3000));
+    let page = reader.prepare(open()).unwrap().page.unwrap();
+    let reply = json!({"message":{"content":"The first page defines the bus.\nSTUDY_NOTE: Follow the bus across modules.\nSTUDY_QUESTION: Who subscribes?\nNEXT: SELF_STUDY CONTINUE"},"done":true}).to_string();
+    assert!(
+        reader
+            .delivered(&page.id, &wire("shortened"), &reply)
+            .is_err()
+    );
+    assert!(!map_source(&reader).contains("Who subscribes?"));
+    reader
+        .delivered(&page.id, &wire(&page.text), &reply)
+        .unwrap();
+    let restarted = Reader::new(catalog, temp.path().join("reader"));
+    let next = restarted.prepare(Command::Continue).unwrap();
+    assert!(next.text.contains("Who subscribes?"));
+    assert!(next.text.contains(&page.revision.sha256));
+    assert!(!next.system_prompt.contains("Who subscribes?"));
+    let map = restarted
+        .prepare(Command::Map {
+            topic: SOURCE.into(),
+            page: 1,
+        })
+        .unwrap();
+    let map_reply = json!({"choices":[{"message":{"content":"STUDY_QUESTION: Where is the receiver?\nNEXT: SELF_STUDY CONTINUE"},"finish_reason":"stop"}]}).to_string();
+    let id = map.navigation_id.as_ref().unwrap();
+    assert!(
+        restarted
+            .navigation_delivered(id, &wire("trimmed"), &map_reply)
+            .is_err()
+    );
+    let receipt = restarted
+        .navigation_delivered(id, &wire(&map.text), &map_reply)
+        .unwrap();
+    assert!(receipt.artifact_path.is_file());
+    let resumed = restarted.prepare(Command::Continue).unwrap();
+    assert_eq!(resumed.page, next.page);
+    assert!(resumed.text.contains("Where is the receiver?"));
+    assert!(resumed.text.contains("Follow the bus across modules."));
+    let page = resumed.page.unwrap();
+    restarted
+        .delivered(&page.id, &wire(&resumed.text), &response())
+        .unwrap();
+    let after = map_source(&restarted);
+    assert!(after.contains("Where is the receiver?"));
+    assert!(after.contains("The first page defines the bus."));
+}
+
+#[test]
+fn notes_are_bounded_visible_optional_and_clearable() {
+    let (_temp, _, reader) = setup("short\n");
+    let page = reader.prepare(open()).unwrap().page.unwrap();
+    let reply = json!({"message":{"content":format!("<think>hidden deliberation</think>\nSTUDY_NOTE: {}\nSTUDY_QUESTION: why?\nNEXT: SELF_STUDY MAP", "🦀".repeat(3000))},"done":true}).to_string();
+    reader
+        .delivered(&page.id, &wire(&page.text), &reply)
+        .unwrap();
+    let map = reader
+        .prepare(Command::Map {
+            topic: SOURCE.into(),
+            page: 1,
+        })
+        .unwrap();
+    assert!(!map.text.contains("hidden deliberation"));
+    assert!(map.text.contains("excerpt truncated"));
+    assert!(map.text.len() + map.system_prompt.len() < 16000);
+    let clear = json!({"message":{"content":"STUDY_NOTE: -\nSTUDY_QUESTION: -\nNEXT: SELF_STUDY CONTINUE"},"done":true}).to_string();
+    reader
+        .navigation_delivered(
+            map.navigation_id.as_ref().unwrap(),
+            &wire(&map.text),
+            &clear,
+        )
+        .unwrap();
+    let next = map_source(&reader);
+    assert!(!next.contains("🦀"));
+    assert!(!next.contains("why?"));
+}
+
+#[test]
+fn legacy_shared_receipts_migrate_coverage_and_last_words_without_resetting_pending() {
+    let (temp, catalog, reader) = setup(&"row\n".repeat(3000));
+    let first = reader.prepare(open()).unwrap().page.unwrap();
+    let reply =
+        json!({"message":{"content":"I want to trace the event bus."},"done":true}).to_string();
+    reader
+        .delivered(&first.id, &wire(&first.text), &reply)
+        .unwrap();
+    let pending = reader.prepare(Command::Continue).unwrap().page.unwrap();
+    let checkpoint = temp.path().join("reader/reader-v1.json");
+    let mut old: serde_json::Value =
+        serde_json::from_slice(&fs::read(&checkpoint).unwrap()).unwrap();
+    for field in [
+        "progress",
+        "notebook",
+        "pending_navigation",
+        "last_navigation",
+    ] {
+        old.as_object_mut().unwrap().remove(field);
+    }
+    fs::write(&checkpoint, serde_json::to_vec(&old).unwrap()).unwrap();
+    let restarted = Reader::new(catalog, temp.path().join("reader"));
+    let next = restarted.prepare(Command::Continue).unwrap();
+    assert_eq!(next.page.unwrap(), pending);
+    assert!(next.text.contains("I want to trace the event bus."));
+    assert!(map_source(&restarted).contains("Partial delivery"));
+}
+
+#[test]
+fn no_match_search_names_literal_punctuation_and_navigation_does_not_advance() {
+    let (_temp, _, reader) = setup("fn connection_closed() {}\n");
+    let miss = reader
+        .prepare(Command::Find {
+            query: "connection_closed;".into(),
+            page: 1,
+        })
+        .unwrap();
+    assert!(
+        miss.text
+            .contains("No matches for the exact literal query \"connection_closed;\"")
+    );
+    assert!(miss.text.contains("Punctuation is part of the query"));
+    let hit = reader
+        .prepare(Command::Find {
+            query: "connection_closed".into(),
+            page: 1,
+        })
+        .unwrap();
+    assert!(!hit.text.contains("No matches"));
+    assert!(hit.text.contains(&format!("OPEN {SOURCE} 1")));
+    assert!(
+        reader
+            .navigation_delivered(
+                miss.navigation_id.as_ref().unwrap(),
+                &wire(&miss.text),
+                &response()
+            )
+            .is_err()
+    );
+    reader
+        .navigation_delivered(
+            hit.navigation_id.as_ref().unwrap(),
+            &wire(&hit.text),
+            &response(),
+        )
+        .unwrap();
+    assert!(map_source(&reader).contains("Not delivered"));
+}
+
+#[test]
+fn navigation_receipt_recovers_after_checkpoint_crash_and_rejects_changed_replay() {
+    let (temp, catalog, reader) = setup("short\n");
+    let offered = reader
+        .prepare(Command::Map {
+            topic: SOURCE.into(),
+            page: 1,
+        })
+        .unwrap();
+    let checkpoint = temp.path().join("reader/reader-v1.json");
+    let before = fs::read(&checkpoint).unwrap();
+    let reply = json!({"message":{"content":"STUDY_NOTE: Follow this module.\nNEXT: SELF_STUDY CONTINUE"},"done":true}).to_string();
+    reader
+        .navigation_delivered(
+            offered.navigation_id.as_ref().unwrap(),
+            &wire(&offered.text),
+            &reply,
+        )
+        .unwrap();
+    assert!(
+        reader
+            .navigation_delivered(
+                offered.navigation_id.as_ref().unwrap(),
+                &wire(&offered.text),
+                &response()
+            )
+            .is_err()
+    );
+    fs::write(&checkpoint, before).unwrap();
+    let restarted = Reader::new(catalog, temp.path().join("reader"));
+    assert!(map_source(&restarted).contains("Follow this module."));
+    assert!(map_source(&restarted).contains("Not delivered"));
+}
+
+#[test]
+fn complete_offer_verification_includes_notebook_and_protects_navigation() {
+    let (_temp, _, reader) = setup("short\n");
+    let first = reader.prepare(open()).unwrap();
+    let reply =
+        json!({"message":{"content":"STUDY_QUESTION: Who calls this?"},"done":true}).to_string();
+    reader
+        .delivered(&first.page.unwrap().id, &wire(&first.text), &reply)
+        .unwrap();
+    let next = reader.prepare(open()).unwrap();
+    assert!(next.verify_delivery(&wire(&next.text), &response()).is_ok());
+    assert!(
+        next.verify_delivery(&wire(&next.page.as_ref().unwrap().text), &response())
+            .is_err()
+    );
+    let map = reader
+        .prepare(Command::Map {
+            topic: SOURCE.into(),
+            page: 1,
+        })
+        .unwrap();
+    assert!(map.verify_delivery(&wire(&map.text), &response()).is_ok());
+    assert!(
+        map.verify_delivery(&wire("map without notebook"), &response())
+            .is_err()
+    );
+    assert!(
+        map.verify_delivery(
+            &wire(&map.text),
+            r#"{"message":{"content":"partial"},"done":false}"#
+        )
+        .is_err()
+    );
+}

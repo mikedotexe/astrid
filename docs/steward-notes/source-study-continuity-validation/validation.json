@@ -1,0 +1,69 @@
+{
+  "recorded_at_utc": "2026-09-08T22:05:44.205551+00:00",
+  "authorization": "Mike requested shared study continuity, commit/merge to main and live deployment",
+  "pause_generation": 411,
+  "results": {
+    "shared_reader": 17,
+    "reader_clippy": "pass",
+    "workspace_format": "pass",
+    "bridge_library": {
+      "passed": 2235,
+      "failed": 1,
+      "failure": "pre-existing signal_spine one-millisecond p95 test; 1.014432 ms under parallel load",
+      "isolated_recheck": "passed; source unchanged"
+    },
+    "minime_full": {
+      "passed": 1262,
+      "skipped": 1,
+      "subtests_passed": 130,
+      "environment": "isolated worktree; live-write guard retained"
+    },
+    "minime_focused": 7,
+    "deployment_wrappers": 109,
+    "domain_boundary": "valid; zero violations",
+    "migration": "copies of both current live states preserve pending pages, bookmarks and receipts; complete reading and last words visible"
+  },
+  "evidence": [
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/reader-tests.log",
+      "sha256": "911c5669eb169f43d7b1f1d5d9db65cacd6055667541be8658739a69dcb5cacd"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/reader-clippy.log",
+      "sha256": "27bc1e249d151c6baccaa2abd7e88822db40db9a107b92b59021e8cf218230ff"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/workspace-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/bridge-full-tests.log",
+      "sha256": "9e0bd36a4eb9c02b0481d05247b014c430cf02da03509a031d5beb363db7cda7"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/bridge-timing-recheck.log",
+      "sha256": "156ed42a036b2133b1e70de786061f970662ec033a042e0815476165b393a2f1"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/minime-source-tests.log",
+      "sha256": "09731ddd0e6f3dfc5ad4c6841749e4db021687e7aa6a4ccf7f880d367475389d"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/minime-isolated-full-tests.log",
+      "sha256": "4eb4c2bef128076b7d9e7f32c4f1d33c684d6c63cb28d9904a25f6164787161f"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/deploy-wrapper-tests.log",
+      "sha256": "89b10503fc203cf5c06b9b0b5e50523830ba6a5ce88e2809e2067016566ec66d"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/domain-boundary.log",
+      "sha256": "25699169980d8b58052cd3cb80de31c4fd4d2aeb5d57a159880614ac71e79abb"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/evidence/copied-bookmark-smoke.json",
+      "sha256": "d6e13f057faad10aade773a13ec854fe1296e11195281c1b105ea01a543bde53"
+    }
+  ],
+  "scope": "Qualification only; rollout must be verified separately. No study or message induced."
+}

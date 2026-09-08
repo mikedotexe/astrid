@@ -1,3 +1,4 @@
+use crate::progress::Progress;
 use crate::{Catalog, MAX_PAGE_BYTES};
 use anyhow::{Result, bail};
 use std::fmt::Write as _;
@@ -5,14 +6,33 @@ use std::fs::File;
 use std::io::{BufRead as _, BufReader};
 
 impl Catalog {
-    pub(crate) fn map(&self, topic: &str, page: usize) -> Result<String> {
+    pub(crate) fn map(
+        &self,
+        topic: &str,
+        page: usize,
+        progress: &Progress,
+        current: Option<&str>,
+    ) -> Result<String> {
         let mut lines =
             vec!["Shared system map — the same source catalog for Astrid and Minime.".into()];
+        if let Some(current) = current {
+            lines.push(format!(
+                "Current source: {}",
+                self.study_entry(current, progress)
+            ));
+        }
         if topic.is_empty() {
             for component in &self.components {
                 lines.push(format!(
-                    "{} — {}. SELF_STUDY MAP {}",
-                    component.id, component.title, component.id
+                    "{} — {}. {} entry points have delivery history. SELF_STUDY MAP {}",
+                    component.id,
+                    component.title,
+                    component
+                        .sources
+                        .iter()
+                        .filter(|id| progress.contains_key(*id))
+                        .count(),
+                    component.id
                 ));
             }
             for (id, root) in &self.roots {
@@ -29,29 +49,59 @@ impl Catalog {
         } else if let Some(component) = self.components.iter().find(|c| c.id == topic) {
             lines.push(component.title.clone());
             for id in &component.sources {
-                lines.push(format!(
-                    "SELF_STUDY OPEN {id}{}",
-                    if self.resolve(id).is_ok() {
-                        ""
-                    } else {
-                        " [unavailable — use FIND to locate a moved implementation]"
-                    }
-                ));
+                lines.push(self.study_entry(id, progress));
             }
         } else {
             let sources = self.sources()?;
+            let mut found = false;
             for source in sources.iter().filter(|s| {
                 s.id == topic
                     || s.id
                         .starts_with(&format!("{}/", topic.trim_end_matches('/')))
             }) {
-                lines.push(format!("SELF_STUDY OPEN {}", source.id));
+                found = true;
+                lines.push(self.study_entry(&source.id, progress));
             }
-            if lines.len() == 1 {
+            if !found {
                 bail!("no catalog entries for {topic}; use SELF_STUDY MAP");
             }
         }
         paginate(lines, &format!("SELF_STUDY MAP {topic}"), page)
+    }
+
+    fn study_entry(&self, id: &str, progress: &Progress) -> String {
+        let Ok(source) = self.resolve(id) else {
+            return format!("{id} [unavailable — use FIND to locate a moved implementation]");
+        };
+        let Some(item) = progress.get(id) else {
+            return format!("SELF_STUDY OPEN {id} 1 [Not delivered]");
+        };
+        let unchanged = std::fs::metadata(&source.path).is_ok_and(|m| m.len() <= 64 * 1024 * 1024)
+            && std::fs::read(&source.path)
+                .is_ok_and(|bytes| crate::digest(bytes) == item.revision.sha256);
+        if !unchanged {
+            return format!(
+                "SELF_STUDY OPEN {id} 1 [Source changed or unreadable; previous revision: {}]",
+                item.label()
+            );
+        }
+        if item.complete() {
+            format!(
+                "SELF_STUDY OPEN {id} 1 [Deliberate reread — {}]",
+                item.label()
+            )
+        } else if item
+            .ranges
+            .last()
+            .is_some_and(|r| r.1 == item.revision.bytes)
+        {
+            format!(
+                "SELF_STUDY OPEN {id} 1 [Read missing earlier bytes — {}]",
+                item.label()
+            )
+        } else {
+            format!("SELF_STUDY RESUME {id} [Resume — {}]", item.label())
+        }
     }
 
     pub(crate) fn find(&self, query: &str, page: usize) -> Result<String> {
@@ -87,6 +137,9 @@ impl Catalog {
                     ));
                 }
             }
+        }
+        if lines.len() == 1 {
+            lines.push(format!("No matches for the exact literal query {query:?}. Punctuation is part of the query; try a shorter identifier or SELF_STUDY MAP. No source page was delivered."));
         }
         lines.push(format!("{unreadable} unreadable/non-UTF-8 files skipped. Search lists matches; it does not mark source as delivered."));
         paginate(lines, &format!("SELF_STUDY FIND {query}"), page)

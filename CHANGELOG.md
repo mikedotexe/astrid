@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **[codex / shared study continuity] Gives both Beings progress-aware maps and a bounded notebook in their own words.** Verified source receipts reconstruct complete and partial delivery without resetting bookmarks; maps offer resume or deliberate reread and identify changed revisions. Optional study notes/current questions and the last substantive response accompany source and navigation turns. Navigation has retained wire receipts and cannot advance source coverage. Zero-result literal searches are explicit, and examples no longer invite accidental trailing semicolons. Evidence and migration checks: `docs/steward-notes/source-study-continuity-validation/README.md`.
+
 - **[codex / live observer] Deploys and enables private provider observation with Mike's authorization.** The sanctioned transition preserves the stopped checkpoint and signed self-control lineage, verifies a natural saved exchange, and leaves eleven surrounding service identities unchanged. A predeclared five-minute window yields six complete provider attempts and the expected dialogue join, with no marker opportunity or benefit inferred. Rollout identities, evidence, retention and rollback: `docs/steward-notes/2026-09-08-provider-observer-live-rollout.md`.
 
 - **[codex / observer rollout] Connects provider observation settings to the launch wrapper.** A private operator-owned runtime configuration survives reboot, with explicit launchd overrides taking precedence. Absence remains default-off. This supplies the startup wiring needed for Mike's authorized observer rollout; live verification is recorded separately.

@@ -7,7 +7,9 @@
 mod catalog;
 mod command;
 mod navigation;
+mod notebook;
 mod page;
+mod progress;
 mod store;
 
 pub use catalog::{Catalog, Repository, Source};

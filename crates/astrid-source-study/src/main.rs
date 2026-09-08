@@ -26,6 +26,11 @@ enum Operation {
         request_json: String,
         response_json: String,
     },
+    NavigationDelivered {
+        navigation_id: String,
+        request_json: String,
+        response_json: String,
+    },
 }
 fn run() -> Result<serde_json::Value> {
     let mut input = String::new();
@@ -49,6 +54,15 @@ fn run() -> Result<serde_json::Value> {
             response_json,
         } => Ok(serde_json::to_value(reader.delivered(
             &page_id,
+            &request_json,
+            &response_json,
+        )?)?),
+        Operation::NavigationDelivered {
+            navigation_id,
+            request_json,
+            response_json,
+        } => Ok(serde_json::to_value(reader.navigation_delivered(
+            &navigation_id,
             &request_json,
             &response_json,
         )?)?),
