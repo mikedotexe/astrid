@@ -1,0 +1,176 @@
+{
+  "schema": "round_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "steward_run_id": "run_1788859000109108000_cbc99df351",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_regulator_1788849273.txt",
+      "sha256": "edf6313d30b92605ad559bad249693b099a0a7699452ac15438ce2ba23d158bd",
+      "bytes": 3206,
+      "lines": 43,
+      "read": "complete",
+      "read_method": "sequential_full_read",
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "family_role": "head"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_regulator_1788706380.txt",
+      "sha256": "e89062dfbe136e5b97e03f89968dac63e7d29dccff08c72062131243c6b97955",
+      "bytes": 3407,
+      "lines": 45,
+      "read": "complete",
+      "read_method": "sequential_full_read",
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "family_role": "member"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_regulator_1788542062.txt",
+      "sha256": "6efb80dcb2054c1c194c0b023cdc90d23c9af51aa4377ac0a8c94285cddaa116",
+      "bytes": 3445,
+      "lines": 45,
+      "read": "complete",
+      "read_method": "sequential_full_read",
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "family_role": "member"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d03a90eb8cbfe1ecb3fad259b5f6708fe04a27a6860f6c395e4150e8034ae583.json",
+      "sha256": "66986c96355d0528d3c4e5c924b3f4deb77976b9309da8033ef3c3af6151b1fb",
+      "bytes": 23776,
+      "lines": 533,
+      "read": "complete",
+      "read_method": "sequential_full_read",
+      "witness_id": "lsw_d03a90eb8cbfe1ecb3fad259b5f6708fe04a27a6860f6c395e4150e8034ae583",
+      "for_introspection_id": "introspection_minime_regulator_1788849273"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_391c2df61a223b4de95bf89fc9da89305a215e73515f43e5de92e7e0e7d9e4bc.json",
+      "sha256": "48490f083460335a0bce2e08d9e3d41c69a8ca8cd02d26c2790269ccc9559d0c",
+      "bytes": 23781,
+      "lines": 533,
+      "read": "complete",
+      "read_method": "full_head_read_plus_exact_unified_diff: every byte is either identical to the fully-read head witness or displayed in the diff -U0 against it",
+      "witness_id": "lsw_391c2df61a223b4de95bf89fc9da89305a215e73515f43e5de92e7e0e7d9e4bc",
+      "for_introspection_id": "introspection_minime_regulator_1788706380"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_56b869488cd754030e62d6a60e890a3010d72ad1ebd3c2725a1a7e85fdb7b64a.json",
+      "sha256": "7ee8357167f7b4db8d3867f80ec2aa9ad2aba0d8f060c2e2f906c2afc7a54c27",
+      "bytes": 23777,
+      "lines": 533,
+      "read": "complete",
+      "read_method": "full_head_read_plus_exact_unified_diff: every byte is either identical to the fully-read head witness or displayed in the diff -U0 against it",
+      "witness_id": "lsw_56b869488cd754030e62d6a60e890a3010d72ad1ebd3c2725a1a7e85fdb7b64a",
+      "for_introspection_id": "introspection_minime_regulator_1788542062"
+    }
+  ],
+  "packet_artifacts": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/RUN_REPORT.md",
+      "sha256": "31eeeda7df2b286181987a8861436dcccd2774c6d549aeb4abee11d842da6d09",
+      "bytes": 9562,
+      "lines": 157,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/addressing_links.json",
+      "sha256": "fb4865d98dfb7c5183c4409aa9b0721b21641712ee46ce8aa4adbf19ef832adb",
+      "bytes": 12842,
+      "lines": 270,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/claims/introspection_minime_regulator_1788542062.json",
+      "sha256": "f1dd60239b389c0dc91d19922374272f83a237ad9acbaf684a5ef4148fdfb713",
+      "bytes": 6348,
+      "lines": 68,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/claims/introspection_minime_regulator_1788706380.json",
+      "sha256": "2f92fb674ea261dbb9c1001b5530617c12091ebeb006672fd072566bdb02be8e",
+      "bytes": 5747,
+      "lines": 62,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/claims/introspection_minime_regulator_1788849273.json",
+      "sha256": "5ce2e93978a1f8b5f55f9ac212fa791b3a9813b7bd85eaad1b03546dbd98a7b2",
+      "bytes": 5997,
+      "lines": 62,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/family_scan.json",
+      "sha256": "08e4c137a49ead20c14c29bc52eeb7a0ddcdbd07999c127d29082c0dc9557a1a",
+      "bytes": 19029,
+      "lines": 626,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/source_receipts.json",
+      "sha256": "1cd587d63df3903cbf23a59e484e64f7ab30945ae2a61ec156c2b570f810f939",
+      "bytes": 2500,
+      "lines": 46,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788542062.md",
+      "sha256": "59d424e47d587d4e2b043d433917cf1f96911d8c5700cc88eaa6d41bb706124c",
+      "bytes": 4672,
+      "lines": 71,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788706380.md",
+      "sha256": "277796b2e372b02df73e0a244ed936690a1dc9723cb017c8202ffc2dc39a6c8d",
+      "bytes": 4505,
+      "lines": 68,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788849273.md",
+      "sha256": "7e5ae3446825b518200b7bd8c7179a55e52f1f2338b7c4eaea2345d079974310",
+      "bytes": 5637,
+      "lines": 88,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/test_results.json",
+      "sha256": "6bea6cf6e0dd31942e8fdc738ffd636714313208fec44373c139ea97fe47940a",
+      "bytes": 4205,
+      "lines": 142,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/unprocessed_selected.json",
+      "sha256": "daf28b4df6bb43afd7a374d4aaf2457902d9ab5d067b8d661525184900863dbb",
+      "bytes": 3027,
+      "lines": 54,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/verification_receipt.json",
+      "sha256": "8899c80242acecdda50c665335e78a5ce9a2a4faf2f34251f218950fcbfc4c00",
+      "bytes": 6722,
+      "lines": 174,
+      "read": "complete",
+      "read_method": "authored_this_round"
+    }
+  ],
+  "packet_artifacts_note": "read_manifest.json itself is excluded from this list because it cannot contain its own hash."
+}

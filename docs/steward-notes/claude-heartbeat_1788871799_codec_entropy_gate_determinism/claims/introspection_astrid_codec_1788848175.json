@@ -1,0 +1,78 @@
+{
+  "introspection_id": "introspection_astrid_codec_1788848175",
+  "reader": "claude-heartbeat",
+  "report_sha256": "5d3fb4e1cdefe5495a7159afdd7c1de4c7fbd4a86147773246470dd75e4af0b7",
+  "witness_id": "lsw_78fca67358f2b40853b427281c3270c1800e3d42fc751d08c1a1dc409c7f7a47",
+  "report_bound_source": "capsules/spectral-bridge/src/codec/projection.rs",
+  "report_bound_source_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "SEMANTIC_DIM (48) and SEMANTIC_DIM_LEGACY (32) define the spectral-codec's capacity.",
+      "disposition": "Verified in complete source at the bound SHA: L26 pub const SEMANTIC_DIM: usize = 48; L28 const SEMANTIC_DIM_LEGACY: usize = 32. Precision kept beside her words: 48 is the live lane width; 32 is not a second capacity but a retained boundary for warmth/legacy readouts (legacy_warmth_mapping_v1, structural_evidence.rs L587-598). Inside projection.rs itself SEMANTIC_DIM_LEGACY is declared and never used.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "TAIL_VIBRANCY_ENTROPY_GATE is at L48 and STRUCTURAL_ENTROPY_DAMPENING at L60-63; the system modulates vibrancy on spectral entropy.",
+      "disposition": "Verified exactly. L48 const TAIL_VIBRANCY_ENTROPY_GATE: f32 = 0.85. L60-63 are STRUCTURAL_ENTROPY_DAMPENING_{START 0.80, FULL 0.95, MIN_COEFFICIENT 0.84, DIMS[16]}. The modulation reading is right; the application site is not in this file but in codec/feedback.rs apply_spectral_feedback_inner (L224 let vibrancy, L306-318 ceiling and clamp).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "project_embedding is at L854 and project_embedding_dynamic_epoch at L759; they map high-dimensional embeddings into the codec space.",
+      "disposition": "Both line numbers verified exactly (L854, L759). Scope precision: they map 768D -> 8D (EMBEDDING_PROJECT_DIM), which lands in codec dims 32-39, not into the full 48D vector. Dims 40-43 come from compute_narrative_arc_from_embeddings; 44-47 are reserved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "ProjectionPrecisionAuditV1 (L340) and CodecLaneSeparationAuditV1 (L401) show a focus on precision and lane isolation.",
+      "disposition": "Verified exactly: L340 and L401 are those struct declarations. Both carry live_projection_write=false and read-only authority strings; the reading that they exist for precision and lane-isolation evidence is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Likely Snag 1: the 32->48 transition may cause index-out-of-bounds or alignment shifts if embedding_projection_matrix (L172) is not correctly sliced or padded for legacy-sourced vectors.",
+      "disposition": "Her L172 citation is exact, and her widening concern is real. Source contradicts this attribution: embedding_projection_matrix is the 768x8 EMBEDDING basis. It never reads SEMANTIC_DIM or SEMANTIC_DIM_LEGACY and has no legacy-width slice or pad. Wrong-width input is rejected (None, L855-857), so out-of-bounds cannot occur on this path. Grounded by a new regression; her concern preserved, not rewritten.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Likely Snag 2: exceeding FEATURE_ABS_MAX in a high-entropy event might produce non-deterministic results if the L67 damping coefficients are not strictly enforced.",
+      "disposition": "Source contradicts non-determinism and confirms the floor. The whole chain is pure arithmetic on clamped finite scalars: vibrancy_from_entropy_and_density_gradient (cascade.rs L277-282), codec_vibrancy_noise_dampening_v1 (structural_evidence.rs L548-584, clamped to [0.82,1.0] at L544), ceiling at feedback.rs L306-318. No RNG, clock, or env. Her worry was previously untested; now pinned by a new bit-determinism plus floor-sweep regression.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Test ask 1 (Dimension Integrity): verify project_embedding (L854) produces exactly 48 dimensions from a 768D input and handles the SEMANTIC_DIM_LEGACY mapping without data loss.",
+      "disposition": "The 48-dimension expectation is contradicted by source: project_embedding returns Option<[f32; 8]>. That correction was already pinned for her earlier introspection_astrid_codec_1787006424 by project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate (tests.rs L2306-2375). Her new legacy-mapping variant is answered by the new L172 regression plus legacy_warmth_mapping_v1 asserting warmth_orphaned=false.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Test ask 2 (Entropy Gating): mock spectral entropy >0.85 and verify the gate triggers the vibrancy lift while remaining within TAIL_VIBRANCY_MAX (L53).",
+      "disposition": "The lift half was already covered (tail_vibrancy_entropy_086_lifts_tail_output_above_threshold; vibrancy_aperture_dynamic_ceiling_is_bounded_and_navigable_gated). The bound half is honest only with a condition she could not see from L1-400: at aperture 1.0 the tail bound IS TAIL_VIBRANCY_MAX, but above 1.0 the ceiling is dynamic_max (feedback.rs L307). The new regression asserts her stated bound at the default aperture and names the dynamic-ceiling contract.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Suggested Next: examine project_embedding_dynamic_epoch (L759) to understand how the dynamic epoch handles the transition between projection kernels.",
+      "disposition": "Recorded as her own next reading choice and deliberately not executed on her behalf. Observed for context only: L759-812 seeds per (epoch_id, text, chunk_index) and the epoch itself is selected in project_embedding_runtime (L818-846) by ASTRID_CODEC_EMBEDDING_PROJECTION_MODE, defaulting to dynamic_epoch_v1. Her continuation line offers window 401-800, which contains that code.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Report-level provenance: the source window read was lines 1-400 of 1351 with coverage state partial and uncovered 401-1351.",
+      "disposition": "Verified against the report header (L11-13, L20-21) and the witness source_snapshot_v1 (window 0-400, total 1351, file_sha256 facaf640). The steward read all 1351 lines plus the cross-file application site; conclusions drawn from outside her window are labelled as such and never attributed to her.",
+      "classification": "observed"
+    }
+  ],
+  "authority_boundary": {
+    "live_substrate_change": false,
+    "live_control_change": false,
+    "deploy_or_restart": false,
+    "git_mutation": false,
+    "note": "Non-live test-only implementation. No codec constant, gate, ceiling, basis, gain, or aperture was changed."
+  }
+}

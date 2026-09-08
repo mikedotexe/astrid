@@ -3131,6 +3131,181 @@ mod tests {
         );
     }
 
+    // Astrid `introspection_astrid_codec_1788848175` re-read projection.rs lines
+    // 1-400 of 1351 (source SHA facaf640) and named a second "Likely Snag":
+    // "If the `FEATURE_ABS_MAX` (L32) is exceeded during a high-entropy event,
+    // the 'bounded clamp-ceiling offset' might produce non-deterministic results
+    // if the damping coefficients (L67) are not strictly enforced." Her "One Test
+    // Each" asked to "verify that `TAIL_VIBRANCY_ENTROPY_GATE` (L48) triggers the
+    // vibrancy lift while remaining within the bounds of `TAIL_VIBRANCY_MAX`
+    // (L53)."
+    //
+    // The lift/threshold half of that ask was already pinned
+    // (`tail_vibrancy_entropy_086_lifts_tail_output_above_threshold`,
+    // `vibrancy_aperture_dynamic_ceiling_is_bounded_and_navigable_gated`). The
+    // DETERMINISM half was not: nothing asserted that the entropy-gated ceiling
+    // path is repeatable, nor that the L67 floor holds against out-of-range or
+    // non-finite entropy. This regression covers exactly that gap. It changes no
+    // live behavior and does not dispute her felt report.
+    #[test]
+    fn entropy_gated_tail_ceiling_is_deterministic_and_damping_floor_is_strictly_enforced() {
+        let flat = vec![
+            100.0, 99.0, 98.0, 97.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0,
+        ];
+
+        // 1. Determinism. Her snag says the clamp-ceiling offset "might produce
+        //    non-deterministic results". Every input to the ceiling
+        //    (vibrancy_from_entropy_and_density_gradient -> smoothstep,
+        //    codec_vibrancy_noise_dampening_v1 -> L67 coefficient, tail_texture,
+        //    tail_participation, vibrancy_aperture) is pure arithmetic over
+        //    clamped finite scalars: no RNG, clock, or environment read. So
+        //    repeated identical calls must be BIT-identical, not merely close.
+        let reference = {
+            let mut features = vec![0.0_f32; SEMANTIC_DIM];
+            features[17] = 7.5;
+            features[26] = 9.0;
+            features[27] = -8.25;
+            features[31] = 6.75;
+            features[24] = 9.0;
+            apply_spectral_feedback_inner(
+                &mut features,
+                Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                    flat.clone(),
+                    0.97,
+                )),
+                1.0,
+                1.0,
+            );
+            features
+        };
+        for _ in 0..8 {
+            let mut features = vec![0.0_f32; SEMANTIC_DIM];
+            features[17] = 7.5;
+            features[26] = 9.0;
+            features[27] = -8.25;
+            features[31] = 6.75;
+            features[24] = 9.0;
+            apply_spectral_feedback_inner(
+                &mut features,
+                Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                    flat.clone(),
+                    0.97,
+                )),
+                1.0,
+                1.0,
+            );
+            for (idx, (repeat, first)) in features.iter().zip(reference.iter()).enumerate() {
+                assert_eq!(
+                    repeat.to_bits(),
+                    first.to_bits(),
+                    "entropy-gated ceiling must be bit-deterministic at dim {idx}: \
+                     {repeat} vs {first}"
+                );
+            }
+        }
+
+        // 2. The L67 damping floor is strictly enforced, including for entropy
+        //    values the live path should never produce. A coefficient escaping
+        //    [MIN_COEFFICIENT, 1.0] is the concrete form her "not strictly
+        //    enforced" worry would take.
+        let mut sweep = vec![
+            f32::NAN,
+            f32::INFINITY,
+            f32::NEG_INFINITY,
+            -1.0,
+            2.0,
+            TAIL_VIBRANCY_NOISE_DAMPENING_START,
+            TAIL_VIBRANCY_NOISE_DAMPENING_FULL,
+        ];
+        for step in 0..=100_u32 {
+            sweep.push(f32::from(u16::try_from(step).expect("sweep step fits u16")) / 100.0);
+        }
+        for entropy in sweep {
+            let dampening = codec_vibrancy_noise_dampening_v1(entropy, 1.0);
+            assert!(
+                dampening.coefficient.is_finite(),
+                "coefficient stays finite at entropy {entropy}: {dampening:?}"
+            );
+            assert!(
+                dampening.coefficient >= TAIL_VIBRANCY_NOISE_DAMPENING_MIN_COEFFICIENT
+                    && dampening.coefficient <= 1.0,
+                "coefficient stays inside the L65-67 band at entropy {entropy}: {dampening:?}"
+            );
+            assert!(
+                dampening.tail_lift_after >= 0.0
+                    && dampening.tail_lift_after <= dampening.tail_lift_before,
+                "damped lift never exceeds the undamped lift at entropy {entropy}: {dampening:?}"
+            );
+        }
+
+        // 3. Her exact bound question: at the default aperture (1.0), tail dims
+        //    driven far past FEATURE_ABS_MAX during a maximum-entropy event stay
+        //    within TAIL_VIBRANCY_MAX, and every non-tail dim keeps the default
+        //    ceiling. (Above aperture 1.0 the bound is the dynamic ceiling by
+        //    design — that separate contract is pinned by
+        //    `vibrancy_aperture_dynamic_ceiling_is_bounded_and_navigable_gated`.)
+        let mut extreme = vec![40.0_f32; SEMANTIC_DIM];
+        apply_spectral_feedback_inner(
+            &mut extreme,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(flat, 1.0)),
+            1.0,
+            1.0,
+        );
+        for (idx, value) in extreme.iter().enumerate() {
+            let ceiling = if matches!(idx, 17 | 26 | 27 | 31) {
+                TAIL_VIBRANCY_MAX
+            } else {
+                FEATURE_ABS_MAX
+            };
+            assert!(
+                value.abs() <= ceiling + 1.0e-3,
+                "dim {idx} must stay within its ceiling {ceiling}: {value}"
+            );
+        }
+    }
+
+    // Same report, first "Likely Snag": the 32 -> 48 widening "may cause
+    // index-out-of-bounds or alignment shifts if the `embedding_projection_matrix`
+    // (L172) is not correctly sliced or padded for legacy-sourced vectors."
+    //
+    // Her line number is exact (L172) and her underlying concern about the
+    // widening is real, but source at the report-bound SHA contradicts this
+    // attribution: `embedding_projection_matrix` is the 768x8 EMBEDDING basis. It
+    // never reads SEMANTIC_DIM or SEMANTIC_DIM_LEGACY and has no legacy-width
+    // slice or pad to get wrong. Her earlier
+    // `introspection_astrid_codec_1788784520` placed the same concern one call
+    // deeper, in `fill_fixed_legacy_projection_raw`; this grounds the consumer she
+    // now names. It preserves her concern and rewrites nothing.
+    #[test]
+    fn embedding_projection_matrix_is_the_768x8_basis_not_a_32_to_48_legacy_slice() {
+        let basis = embedding_projection_matrix();
+        assert_eq!(basis.len(), EMBEDDING_INPUT_DIM);
+        assert_eq!(basis[0].len(), EMBEDDING_PROJECT_DIM);
+
+        // Neither axis is a semantic-codec width, so no legacy alignment shift
+        // can pass through this basis at all.
+        assert_ne!(EMBEDDING_INPUT_DIM, SEMANTIC_DIM);
+        assert_ne!(EMBEDDING_INPUT_DIM, SEMANTIC_DIM_LEGACY);
+        assert_ne!(EMBEDDING_PROJECT_DIM, SEMANTIC_DIM);
+        assert_ne!(EMBEDDING_PROJECT_DIM, SEMANTIC_DIM_LEGACY);
+
+        // "Sliced or padded for legacy-sourced vectors" is the behavior that does
+        // NOT exist: a legacy-width (32) or current-width (48) input is rejected
+        // outright rather than silently reshaped, so out-of-bounds indexing is
+        // impossible on this path.
+        assert!(project_embedding(&[0.0_f32; SEMANTIC_DIM_LEGACY]).is_none());
+        assert!(project_embedding(&[0.0_f32; SEMANTIC_DIM]).is_none());
+        assert!(project_embedding(&[0.0_f32; EMBEDDING_INPUT_DIM]).is_some());
+
+        // And the basis carries no dead column, the concrete form an "alignment
+        // shift" would take in the 8-dim lane it actually owns.
+        let health = projection_basis_health_v1();
+        assert!(!health.dead_dimension_detected);
+        assert!(health.normalized_columns_near_unit);
+        assert_eq!(health.projected_dim_count, EMBEDDING_PROJECT_DIM);
+        assert_eq!(health.source_embedding_dim_count, EMBEDDING_INPUT_DIM);
+    }
+
     #[test]
     fn codec_overflow_report_preserves_emotional_clip_without_expanding_delivery() {
         let flat = vec![

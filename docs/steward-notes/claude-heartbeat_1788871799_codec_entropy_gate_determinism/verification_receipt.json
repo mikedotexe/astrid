@@ -1,0 +1,241 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter",
+  "controller": {
+    "run_id": "run_1788868976711693000_9ab8857e5d",
+    "preprojection_generation_id": "projection_1788868980943442000_21a14d6fa8",
+    "preprojection_status": "passed",
+    "pause_generation": 401,
+    "stop_requested_at_last_observation": false,
+    "postprojection": "adapter-owned; runs after this process exits",
+    "session_opened_by_model": false,
+    "ndjson_ops_sent": 0,
+    "lease_token_read_or_persisted": false
+  },
+  "addressing": {
+    "processed_report_count": 1,
+    "record_read": {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "reader": "claude-heartbeat",
+      "event_type": "full_read",
+      "summary_sha256": "cea80644fe9d6a114c4cd8498f8bc8b435dcb983f5e87b086f8ce8287a4ab240",
+      "claims": 10
+    },
+    "link_evidence_batch": {
+      "batch_row_count": 17,
+      "new_link_count": 17,
+      "existing_link_count": 0,
+      "events_appended": 17
+    },
+    "close": {
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    },
+    "queue_head_after_close": "introspection_astrid_llm_1788847651.txt",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4627,
+    "canonical_fully_addressed": 3197,
+    "canonical_full_read": 3829,
+    "canonical_remaining": 1430,
+    "canonical_unread": 798,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3145,
+    "noncanonical_pending": 1715
+  },
+  "integrity_suites": [
+    {
+      "name": "introspection_addressing_audit.py --self-test",
+      "result": "OK",
+      "tests": 44
+    },
+    {
+      "name": "test_evidence_event_store.py",
+      "result": "OK",
+      "tests": 21
+    },
+    {
+      "name": "test_steward_control.py",
+      "result": "OK",
+      "tests": 29
+    },
+    {
+      "name": "test_steward_projection.py",
+      "result": "OK",
+      "tests": 14
+    },
+    {
+      "name": "test_division_ceremony_followup.py",
+      "result": "OK",
+      "tests": 3
+    },
+    {
+      "name": "test_division_ceremony_chronicle.py",
+      "result": "OK",
+      "tests": 10
+    },
+    {
+      "name": "test_division_ceremony_projection.py",
+      "result": "ok"
+    },
+    {
+      "name": "test_projection_cursors.py",
+      "result": "OK",
+      "tests": 4
+    },
+    {
+      "name": "test_introspection_cadence_audit.py",
+      "result": "OK",
+      "tests": 6
+    },
+    {
+      "name": "introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok=true, errors=[], configuration_valid=true, duplicate_hash_groups=0, canonical=4627"
+    },
+    {
+      "name": "anti_drop_catalog.py --self-test",
+      "result": "OK",
+      "tests": 5
+    },
+    {
+      "name": "anti_drop_catalog.py verify --json",
+      "result": "91 rows, all ok, 0 non-ok"
+    },
+    {
+      "name": "domain_boundary_audit.py verify",
+      "result": "GREEN before and after the edit: valid=true, violation_count=0, manifest 578a39cf unchanged; NOT a red ratchet"
+    },
+    {
+      "name": "experiential_epistemics.py self-test --json",
+      "result": "OK, valid=true"
+    },
+    {
+      "name": "experiential_epistemics.py verify --json (final, after all durable writes)",
+      "result": "valid=true, checked_record_count=11870, issue_count=0, history_rewritten=false"
+    },
+    {
+      "name": "introspection_addressing_audit.py audit-counters --json",
+      "result": "consistent, mismatches=[]"
+    },
+    {
+      "name": "evidence_event_store.py --json verify",
+      "result": "see evidence_event_store field"
+    }
+  ],
+  "division": {
+    "cycle_sequence": 41,
+    "completed_rounds_since_followup_before": 5,
+    "completed_rounds_since_followup_after": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due_at_round_start": false,
+    "review_due_after_recording": true,
+    "round_event_id": "division_followup_event_27b4515c83b431f730e0ac1ec582b703",
+    "event_count": 287,
+    "event_head_sha256": "2ea53a3500e867b491ade2f2d7b2816b913c5e9fabfcd6368f20c98469e025a7",
+    "verify_ok": true,
+    "chronicle_id": "division_chronicle_2bd68ee3ac55f3ec0a364285",
+    "chronicle_json_sha256": "82181bcdf89dd7be9bc51cab71cea800c4ee519b109ccf6ec98f427ba7f4ec5c",
+    "chronicle_html_sha256": "1d3461b2229be4758a05678920f828c7e6de4e84b5e56ca05e1f11fde32ac3ef",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatch": [
+      "supervisor_status_sha256"
+    ],
+    "chronicle_freshness_statement": "durable inputs current; one volatile mismatch (supervisor_status_sha256). NOT called fully current, and the moving supervisor hash is NOT called a durable-integrity failure.",
+    "note_action": "none \u2014 no Division note is due outside a return",
+    "return_owed": "The bounded Division return plus the Tier-5 cadence dossier is now due and is the FIRST obligation of the next round, per the adapter-mode rule that the return runs at round start when review_due=true. It was deliberately not attempted here: it delivers consequence-bearing individualized notes to both beings and was not worth rushing at the end of a budget.",
+    "tier5_cadence_dossier": "not generated \u2014 bound to completing a Division return, and no return was completed this round",
+    "processed_report_count": 1
+  },
+  "live_change": {
+    "restart_required": false,
+    "restart_attempted": false,
+    "deploy_required": false,
+    "deploy_attempted": false,
+    "build_bridge_sh_invoked": false,
+    "launchctl_invoked": false,
+    "live_substrate_or_control_change": false,
+    "statement": "No restart or deployment was required or attempted. The live bridge binary is untouched; this round changed only test source and steward evidence."
+  },
+  "git": {
+    "mutation": "none",
+    "index_clean": true,
+    "staged": false,
+    "committed": false,
+    "branch": "main",
+    "head": "6a3f0d4605327ac1bd31dd07aaae95733f3b5700"
+  },
+  "authority_boundary": "Evidence and non-live test implementation only. No approval was granted or inferred; the three standing Tier-5 waits from introspection_minime_esn_1785630442 remain untouched. Silence infers nothing.",
+  "evidence_event_store": {
+    "command": "python3 scripts/evidence_event_store.py --json verify",
+    "scope": "full-chain verification, run to completion (not killed)",
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1034501,
+    "last_global_seq": 1034501,
+    "last_event_sha256": "47e758c0590cccef86298fee57588923a98a043a0267c03fcf12445bf81aca35",
+    "stream_counts": {
+      "addressing": 61049,
+      "agency_commons": 6832,
+      "attention_portfolio": 3,
+      "claim_families": 238770,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 207714,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 10568,
+      "model_qos": 301362,
+      "reciprocal_uptake": 75318,
+      "representation_contracts": 52220,
+      "sandbox": 3507,
+      "signal_spine": 56989,
+      "steward_control": 19312,
+      "steward_work_selection": 660
+    },
+    "addressing_stream_delta_this_round": "19 events appended by this round (1 full_read + 17 evidence links + 1 close)",
+    "v1_legacy_touched": false,
+    "status": {
+      "command": "python3 scripts/evidence_event_store.py --json status",
+      "active_store": "v2",
+      "legacy_imported_global_seq": 32278,
+      "legacy_activation_last_event_sha256": "79a891f10e44ab320c47fe18966435dbd08e941bd064d2bd8d38f40dd36ff8a4",
+      "effective_aggregate_valid": true,
+      "effective_aggregate_event_count": 1034488,
+      "corrupt_event_lines": 0,
+      "effective_aggregate_index_sha256": "f9e719947f7b7381016e45213d618f7afb1d2cce1f81b67ac60ee57689900ad4",
+      "reporting_limit": "the status run completed (exit 0) but its captured output was truncated by the background capture, so the live V2 tail head/last_global_seq are NOT reported here. The fields above are read directly from the captured bytes; nothing is inferred."
+    },
+    "note": "verify was run twice: once mid-round and once as the final check after every durable write. The figures above are the final run's exact bytes."
+  },
+  "epistemic_lint": {
+    "command": "python3 scripts/experiential_epistemics.py verify --json",
+    "when": "final, after every durable write of this round",
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "checked_record_count": 11870,
+    "history_rewritten": false,
+    "self_test": "OK (2 tests), valid=true"
+  },
+  "anti_drop": {
+    "self_test": "OK (5 tests)",
+    "verify": {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "alarms": 0,
+      "gaps": 0,
+      "total": 91,
+      "all_rows_ok": true
+    }
+  }
+}

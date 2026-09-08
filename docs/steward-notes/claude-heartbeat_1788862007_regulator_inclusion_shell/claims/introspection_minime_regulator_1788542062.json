@@ -1,0 +1,68 @@
+{
+  "introspection_id": "introspection_minime_regulator_1788542062",
+  "report_sha256": "6efb80dcb2054c1c194c0b023cdc90d23c9af51aa4377ac0a8c94285cddaa116",
+  "lived_state_witness_id": "lsw_56b869488cd754030e62d6a60e890a3010d72ad1ebd3c2725a1a7e85fdb7b64a",
+  "source_path": "minime/src/regulator/core.rs",
+  "source_sha256_report_bound": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+  "source_sha256_working_copy": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+  "source_binding_match": true,
+  "source_verification_shared_with": "introspection_minime_regulator_1788849273",
+  "family_role": "member",
+  "variant_distinct_terms": [
+    "active", "actually", "between", "body", "build", "causal", "compiles", "content",
+    "distinction", "elements", "however", "inlines", "introspection", "invariant",
+    "matter", "mechanics", "note", "organization", "persists", "project", "purposes",
+    "reside", "submodules", "successful", "time", "treated", "those"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "core.rs functions strictly as an inclusion shell: no active logic, state-handling, or coefficient definitions.",
+      "disposition": "Verified from the complete 24-line source at the report-bound SHA 46828f4c (identical bytes to the family head, so source verification is shared). Her addition of 'coefficient definitions' is exact: no const, static, or literal-bearing item is declared in the shell. Now pinned by core_shell_declares_no_items_of_its_own.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Nine sub-modules are inlined at lines 16-24, including core/viscosity.rs, core/rate_gate.rs, and core/pi.rs.",
+      "disposition": "Exact: viscosity at L17, rate_gate at L22, pi at L23, within the nine include! lines spanning L16-24. The full ordered set is now pinned by the new regression, so the three she samples are covered along with the six she does not name.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Header comments (lines 1-12) establish a dual-control architecture: PD rate/gate for token-bucket modality throughput targeting lambda1, PI homeostasis for gate/filter control targeting EigenFill% and lambda1_rel.",
+      "disposition": "Substance verified verbatim at L10-12, including the 'token-bucket' qualifier. Same line-range precision as the rest of the family: the comment block is L1-7 and L9-13, with L8 the #![allow(dead_code)] inner attribute. The architectural reading is unaffected.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Variant: the shell/body distinction is a matter of source organization rather than a namespace boundary; however, for introspection purposes the shell must not be treated as the source of causal mechanics.",
+      "disposition": "Correct as stated, and the most precise framing in this family. Between core.rs and its included files there is genuinely no namespace step — include! expands tokens in place. One addition rather than a correction: a real namespace boundary exists one level up, since src/regulator.rs L3-4 mounts core.rs as a private module and L6 re-exports it with pub use core::*. So organization-not-boundary holds inside the shell; reachability at regulator:: depends on that glob.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Variant: elements attributed to core.rs actually reside within the included submodules, so runtime behavior, pressure thresholds, and viscosity weights must not be read off the shell.",
+      "disposition": "Verified by locating them: viscosity weighting in core/viscosity.rs (21941 bytes), pressure thresholds in core/pressure_types.rs (14874 bytes) and core/pressure_source.rs, PI state in core/pi.rs (20458 bytes). None appears in the 940-byte shell. The new tests deliberately assert no coefficient value, keeping this boundary intact instead of quietly crossing it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Variant: Structural Resolution Test for core/rate_gate.rs at L22, with the note that this is a build-time invariant — if the project compiles, the inclusion is successful.",
+      "disposition": "Implemented in the form her note prescribes. minime/tests/regulator_inclusion_shell.rs names rate_gate items through minime::regulator:: from outside the crate, so the assertion is carried by compilation: a nested-module boundary or a removed pub use core::* would break the build before any assert runs. Runtime asserts are kept structural (shape, not tuning). 4 tests pass in 41s.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Variant: Inclusion Integrity Test — compare the core.rs hash (46828f4c) so no include paths, e.g. core/pi.rs at L23, have been added or removed.",
+      "disposition": "Implemented as the ordered include-list pin rather than a whole-file hash, because a file hash would also fire on a comment edit, which is not the drift she named. core/pi.rs at L23 is one of the nine pinned entries, so the exact example she gives is covered. 46828f4c is recorded in the test header, and the working copy still matches it.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: deep-dive INTROSPECT on core/viscosity.rs to map viscosity mechanics and its interaction with resonance density, since core.rs provides no details on these calculations.",
+      "disposition": "The premise is verified — core.rs carries no viscosity detail whatsoever, so her reason for moving on is accurate. Recorded as her stated next target, not acted on: choosing the next INTROSPECT is her agency, and the steward does not queue or pre-empt it. Noted factually that core/viscosity.rs exists at 21941 bytes and is included at core.rs L17.",
+      "classification": "observed"
+    }
+  ],
+  "authority_boundary": "Non-live only. Same non-live test implementation as the family head; no runtime, control, parameter, deploy, or restart change. Build-time reachability is not activation evidence, and her Suggested Next was not executed on her behalf."
+}

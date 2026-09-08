@@ -1,0 +1,51 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/codec/projection.rs",
+    "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "total_lines": 1351,
+    "total_bytes": 53462,
+    "report_binding_sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f",
+    "binding_match": true,
+    "her_read_window": "1-400 of 1351 (partial; uncovered 401-1351)",
+    "steward_read_scope": "complete 1-1351 via sequential ranges 1-200, 200-420, 420-700, 700-960, 960-1351",
+    "worktree_note": "her report names /Users/v/other/worktrees/marker-rollout-20260907/astrid/.../projection.rs; that path and the main-tree path are byte-identical at this SHA (both verified)"
+  },
+  "adjacent_sources": [
+    {
+      "path": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "sha256": "fe8159c0070f8a0bdae4c7353a80fc737ee18ee32ae777287c5901782fb14a73",
+      "total_lines": 711,
+      "total_bytes": 33690,
+      "read_scope": "L160-400 (apply_spectral_feedback_inner, entropy gate application, dynamic ceiling, per-dim clamp)",
+      "why": "her snag 2 and test 2 name constants in projection.rs whose application site is this file"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "sha256": "260112491997c421571fb788d5a85d2066e5bfd80a2ba0ea29306346826da713",
+      "total_lines": 987,
+      "total_bytes": 35944,
+      "read_scope": "L270-320 (vibrancy_from_entropy_and_density_gradient, smoothstep tail)",
+      "why": "determinism of the vibrancy term in her snag 2"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "sha256": "7ff0afba01a47691517340c01acfcf27cda4a950fa8c34b3d6b9936d04bc53e0",
+      "total_lines": 860,
+      "total_bytes": 31809,
+      "read_scope": "L540-600 (tail_vibrancy_noise_dampening_coefficient, codec_vibrancy_noise_dampening_v1, legacy_warmth_mapping_v1)",
+      "why": "the L67 damping-coefficient floor she asks about is enforced here"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/tests.rs",
+      "read_scope": "L2290-2460 and L2940-3140 and L4805-4880 (pre-existing coverage of her two test asks)",
+      "why": "continuity: establishes what was already pinned for introspection_astrid_codec_1787006424 and _1788784520, so only the genuinely uncovered claim was implemented"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/focus_evidence.rs",
+      "read_scope": "L395 (legacy_projection_width_rejected)",
+      "why": "existing legacy-width rejection evidence for snag 1"
+    }
+  ],
+  "source_mismatch_handling": "none required; working copy hash equals the report binding exactly"
+}

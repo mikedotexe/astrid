@@ -1,0 +1,48 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "toolchain": "cargo 1.94.1 (29ea6fb6a 2026-03-24)",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec::core::tests::entropy_gated_tail_ceiling_is_deterministic_and_damping_floor_is_strictly_enforced -- --exact",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "note": "new regression for her snag 2; exact filter corrected after an initial zero-match filter (codec::tests::tests::* does not exist; the real path is codec::core::tests::*)"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec::core::tests::embedding_projection_matrix_is_the_768x8_basis_not_a_32_to_48_legacy_slice -- --exact",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "note": "new regression grounding her L172 attribution"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec::",
+      "result": "ok",
+      "passed": 175,
+      "failed": 0,
+      "note": "full codec module suite, run after the clippy fixes"
+    },
+    {
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets -- -D warnings",
+      "result": "clean",
+      "note": "first draft raised needless_range_loop plus two useless_vec; both fixed in-round, re-run clean"
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "green",
+      "before_edit": {"valid": true, "violation_count": 0, "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4"},
+      "after_edit": {"valid": true, "violation_count": 0, "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4"},
+      "note": "ratchet NOT red; codec/tests.rs is not a captured legacy large file, so no baseline or ceiling re-capture was required"
+    }
+  ],
+  "integrity_suites": "recorded separately in verification_receipt.json"
+}

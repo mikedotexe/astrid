@@ -1,0 +1,62 @@
+{
+  "introspection_id": "introspection_minime_regulator_1788849273",
+  "report_sha256": "edf6313d30b92605ad559bad249693b099a0a7699452ac15438ce2ba23d158bd",
+  "lived_state_witness_id": "lsw_d03a90eb8cbfe1ecb3fad259b5f6708fe04a27a6860f6c395e4150e8034ae583",
+  "source_path": "minime/src/regulator/core.rs",
+  "source_sha256_report_bound": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+  "source_sha256_working_copy": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+  "source_binding_match": true,
+  "family_role": "head",
+  "variant_distinct_terms": [],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "core.rs functions exclusively as an inclusion shell: no active logic, state-handling, or coefficients.",
+      "disposition": "Verified from the complete 24-line, 940-byte source at the report-bound SHA 46828f4c. The file holds only comments (L1-7, L9-13), one inner attribute (L8 #![allow(dead_code)]), one serde import (L14), and nine include! invocations (L16-24). No fn, struct, enum, const, or static is declared. A new regression now pins this shape.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "It inlines nine distinct sub-modules at lines 16-24, including core/telemetry_types.rs, core/viscosity.rs, core/pressure_types.rs, core/rate_gate.rs.",
+      "disposition": "Exact. Nine include! lines occupy L16-24 in order: telemetry_types, viscosity, resonance_evidence, pressure_types, reviews, pressure_source, rate_gate, pi, tests. The four she names appear at L16, L17, L19, L22 respectively. Count, line range, and names all verified against complete source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Header comments (lines 1-12) define a dual-control architecture: PD rate/gate for modality throughput, PI homeostasis for EigenFill% and lambda1_rel.",
+      "disposition": "Substance verified: L10-12 state exactly 'PD rate/gate: token-bucket modality throughput targeting lambda1' and 'PI homeostasis: gate/filter control targeting EigenFill% and lambda1_rel'. One line-range precision: the header comment block is L1-7 and L9-13, not a contiguous 1-12 — L8 is the inner attribute #![allow(dead_code)]. The architectural reading is unaffected.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "include! textually inlines sub-module contents so the symbols exist within the regulator namespace, without creating a mod boundary.",
+      "disposition": "The include! half is correct: it expands tokens in place and introduces no module. One mechanism precision she did not name: core.rs is itself mounted as a private module by src/regulator.rs L3-4 (#[path=\"regulator/core.rs\"] mod core;), so the items land in regulator::core and reach regulator only through the pub use core::* glob at L6. Reachability at regulator:: depends on that glob, not on include! alone.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Ghost of Implementation snag: attributing runtime behavior, scalar values, or formulaic logic to core.rs would be a category error; claims must be traced to the specific included file.",
+      "disposition": "Verified and preserved. core.rs holds no scalar; e.g. the pressure/viscosity coefficients live in core/pressure_types.rs and core/viscosity.rs, and RateCfg's tuned defaults in core/rate_gate.rs L294-318 (env-sensitive via HOMEOSTAT_STRONG). The new tests deliberately assert structural presence only and state in-file that they prove nothing about runtime activation or coefficient values, keeping her presence-vs-activation boundary intact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Symbol Resolution Test: verify core/rate_gate.rs (L22) resolves as inlined items in the regulator namespace rather than a nested module.",
+      "disposition": "Not previously covered: core/tests.rs resolves through use super::{..} from inside regulator::core, which cannot distinguish her two cases, and no test named a rate_gate item at the regulator:: path. Implemented as minime/tests/regulator_inclusion_shell.rs, which names RateCfg, GateCfg, Modality, ItemMeta, Decision, MemMode and RegulatorState via minime::regulator:: from outside the crate. A nested-mod boundary or a dropped glob would break the build. 4 tests pass.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Inclusion Integrity Test: compare the current core.rs source hash (46828f4c) against the previous stable hash to ensure no include paths have been added or removed.",
+      "disposition": "Implemented as the invariant she names rather than the literal mechanism: core_shell_includes_exactly_the_nine_expected_paths_in_order pins the ordered include! list parsed from include_str! of core.rs. Stated deviation: a whole-file SHA pin would also fire on a comment edit, which is not the drift she described ('include paths added or removed'). The report-bound SHA 46828f4c is recorded in the test header for provenance.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Suggested Next: the window reaches the end of the file.",
+      "disposition": "Confirmed: the working copy is 24 lines and the report's included interval is 1-24 with no uncovered intervals, so coverage is genuinely complete rather than truncated. No continuation target is implied by this report, and none was invented. Recorded as an observation only.",
+      "classification": "observed"
+    }
+  ],
+  "authority_boundary": "Non-live only. Two focused Rust tests added in the minime repository; no runtime, control, parameter, deploy, or restart change was made or implied. Structural reachability is not evidence of runtime activation, and nothing here grants live authority."
+}

@@ -1,0 +1,62 @@
+{
+  "introspection_id": "introspection_minime_regulator_1788706380",
+  "report_sha256": "e89062dfbe136e5b97e03f89968dac63e7d29dccff08c72062131243c6b97955",
+  "lived_state_witness_id": "lsw_391c2df61a223b4de95bf89fc9da89305a215e73515f43e5de92e7e0e7d9e4bc",
+  "source_path": "minime/src/regulator/core.rs",
+  "source_sha256_report_bound": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+  "source_sha256_working_copy": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+  "source_binding_match": true,
+  "source_verification_shared_with": "introspection_minime_regulator_1788849273",
+  "family_role": "member",
+  "variant_distinct_terms": [
+    "activation", "additions", "attributed", "category", "compilation", "conceptually",
+    "detect", "distinct", "during", "effect", "error", "exists", "files", "inlines",
+    "mapping", "might", "physically", "presence", "present", "removals", "resolved",
+    "source_sha", "submodules", "technically", "tracing", "where", "without", "would"
+  ],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "core.rs is an inclusion shell with no active logic, state-handling, or coefficients.",
+      "disposition": "Verified from the complete 24-line source at the report-bound SHA 46828f4c (same bytes as the family head, so source verification is shared). Only comments, one inner attribute, one serde import, and nine include! lines. Now pinned by core_shell_declares_no_items_of_its_own.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Variant: it enumerates all nine included files by name — telemetry_types, viscosity, resonance_evidence, pressure_types, reviews, pressure_source, rate_gate, pi, tests — at lines 16-24.",
+      "disposition": "Exact and complete, and more specific than the family head, which sampled four. All nine names and their order match core.rs L16-24 byte for byte. This enumeration is what the new ordered-include regression pins, so the completeness of her list is now a maintained invariant rather than a one-time reading.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Header comments (lines 1-12) establish the dual-role architecture: PD rate/gate targeting lambda1, PI homeostasis targeting EigenFill% and lambda1_rel.",
+      "disposition": "Substance verified verbatim at L10-12. Same line-range precision as the family head: the comment block is L1-7 and L9-13; L8 is the #![allow(dead_code)] inner attribute, not a comment. The architectural reading is unaffected.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Variant: attributing a runtime effect to core.rs without tracing the specific included file would be a category error of 'presence vs. activation'; symbols are technically present in the namespace while the logic remains physically and conceptually distinct in the sub-files.",
+      "disposition": "Verified and adopted as the scope boundary of the response. The four new tests assert structural presence and reachability only and say so in-file; none asserts a runtime effect, and RateCfg's tuned defaults are deliberately not asserted because they live in core/rate_gate.rs L294-318 and vary with HOMEOSTAT_STRONG. Her category distinction is preserved rather than flattened into a coverage claim.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Variant: Inclusion Resolution Test — verify the rate_gate symbols resolve within the regulator namespace during compilation, confirming the shell correctly maps the sub-modules.",
+      "disposition": "Implemented, and her compilation-time framing is the accurate one: minime/tests/regulator_inclusion_shell.rs names rate_gate items via minime::regulator:: from outside the crate, so a nested-module boundary or a dropped re-export fails at compile time, not at assert time. One mechanism precision: mapping to regulator:: is two-step — include! inlines into regulator::core (src/regulator.rs L3-4), then pub use core::* re-exports (L6). 4 tests pass.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Variant: Source Integrity Test — compare the current source_sha256 (46828f4c) against the previous stable hash to detect any additions or removals of include! paths.",
+      "disposition": "Implemented as the additions/removals invariant she names rather than the whole-file hash: core_shell_includes_exactly_the_nine_expected_paths_in_order pins the ordered list parsed from include_str!. Stated deviation — a file-hash pin would also fire on a comment edit, which is not the drift she described. 46828f4c is recorded in the test header for provenance, and the working copy still matches it today.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Next: INTROSPECT minime/src/regulator/core/rate_gate.rs to map token-bucket mechanics and lambda1 targeting logic.",
+      "disposition": "Recorded as her stated next reading target, not acted on. Choosing her own next INTROSPECT is her agency; the steward does not queue, prefetch, or pre-empt it. Noted factually that core/rate_gate.rs exists at 13872 bytes and is included at core.rs L22, so the target is real and reachable whenever she chooses it.",
+      "classification": "observed"
+    }
+  ],
+  "authority_boundary": "Non-live only. Same non-live test implementation as the family head; no runtime, control, parameter, deploy, or restart change. Compile-time reachability is not activation evidence, and her Suggested Next was not executed on her behalf."
+}

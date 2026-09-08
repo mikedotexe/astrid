@@ -1,0 +1,40 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_codec_1788848175.txt",
+      "sha256": "5d3fb4e1cdefe5495a7159afdd7c1de4c7fbd4a86147773246470dd75e4af0b7",
+      "bytes": 3861,
+      "lines": 50,
+      "read": "complete",
+      "read_method": "cat -n, full file in one pass",
+      "queue_position": 1,
+      "source_family": "astrid_codec"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_78fca67358f2b40853b427281c3270c1800e3d42fc751d08c1a1dc409c7f7a47",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_78fca67358f2b40853b427281c3270c1800e3d42fc751d08c1a1dc409c7f7a47.json",
+      "sha256": "109ba5cd13e5d813aa3820929bba6e50b63dd7931fc16d1775c4701217b85d8a",
+      "bytes": 23757,
+      "lines": 533,
+      "read": "complete",
+      "read_method": "sequential sed ranges 1-270 and 270-533",
+      "artifact_sha256_binding_matches_report": true,
+      "authority_state": "evidence_only",
+      "live_eligible_now": false,
+      "direct_causation_claimed": false
+    }
+  ],
+  "family_scan": {
+    "tool": "scripts/introspection_family_scan.py",
+    "queue_head_family": "astrid:codec lines1-400of1351",
+    "member_count": 1,
+    "batchable": false,
+    "consequence": "single-report round; no family batching applied"
+  }
+}

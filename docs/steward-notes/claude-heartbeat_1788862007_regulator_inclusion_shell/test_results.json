@@ -1,0 +1,142 @@
+{
+  "schema": "round_test_results_v1",
+  "actor": "claude-heartbeat",
+  "focused": [
+    {
+      "command": "cargo test --test regulator_inclusion_shell",
+      "cwd": "/Users/v/other/minime/minime",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0,
+      "duration_s": 41,
+      "tests": [
+        "rate_gate_items_resolve_unqualified_in_the_regulator_namespace",
+        "regulator_state_resolves_in_the_regulator_namespace",
+        "core_shell_includes_exactly_the_nine_expected_paths_in_order",
+        "core_shell_declares_no_items_of_its_own"
+      ],
+      "result": "ok"
+    },
+    {
+      "command": "cargo fmt -- --check",
+      "cwd": "/Users/v/other/minime/minime",
+      "result": "clean",
+      "rc": 0
+    }
+  ],
+  "integrity": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "ran": 44,
+      "result": "OK"
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "ran": 21,
+      "result": "OK"
+    },
+    {
+      "command": "test_steward_control.py",
+      "ran": 29,
+      "result": "OK"
+    },
+    {
+      "command": "test_steward_projection.py",
+      "ran": 14,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "ran": 3,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "ran": 10,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "ran": 1,
+      "result": "ok"
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "ran": 4,
+      "result": "OK"
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "ran": 6,
+      "result": "OK"
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "ran": 5,
+      "result": "OK"
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "total": 91,
+      "alarms": 0,
+      "gaps": 0,
+      "result": "ok"
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "integrity_ok": true,
+      "canonical_count": 4627,
+      "duplicate_hash_group_count": 0,
+      "errors": [],
+      "result": "ok"
+    },
+    {
+      "command": "domain_boundary_audit.py verify",
+      "valid": true,
+      "violation_count": 0,
+      "unlisted_legacy_review_debt_count": 44,
+      "result": "green",
+      "note": "Ratchet is GREEN this round: zero violations recorded. Surfaced here because projection stage 10 records violations that no round summary has historically consumed."
+    },
+    {
+      "command": "experiential_epistemics.py self-test --json",
+      "ran": 2,
+      "valid": true,
+      "result": "OK"
+    },
+    {
+      "command": "experiential_epistemics.py verify --json",
+      "checked_record_count": 11844,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "valid": true,
+      "result": "ok",
+      "note": "Final epistemic verify, run after every evidence-store durable write of this round."
+    },
+    {
+      "command": "introspection_addressing_audit.py audit-counters --json",
+      "status": "consistent",
+      "mismatches": [],
+      "result": "consistent"
+    },
+    {
+      "command": "evidence_event_store.py --json verify",
+      "valid": true,
+      "event_count": 1032955,
+      "last_global_seq": 1032955,
+      "corrupt_lines": 0,
+      "errors": [],
+      "last_event_sha256": "91acdcc2913adfadf772ee7999b1c54e30bde1970d0b873e666aa56542823de1",
+      "result": "ok",
+      "note": "Full-chain verify. It ran long (>10 min) and was allowed to finish rather than killed; it completed after the packet's first draft, which is why it appears as a correction here."
+    }
+  ],
+  "not_completed": [
+    {
+      "command": "evidence_event_store.py --json status",
+      "reason": "Per-stream counts were still computing when the round's time budget ended; the command is read-only and was left to finish rather than killed.",
+      "compensating_evidence": "The full-chain verify above completed and passed: valid=true, 1032955 events, last_global_seq 1032955, corrupt_lines 0, head 91acdcc2."
+    }
+  ],
+  "rust_workspace_note": "No Astrid Rust source was touched this round, so no astrid cargo suite was required or run."
+}

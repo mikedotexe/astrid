@@ -1,0 +1,174 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "run_id": "run_1788859000109108000_cbc99df351",
+    "preprojection_generation_id": "projection_1788859005136199000_5f0b3f9609",
+    "preprojection_status": "passed",
+    "pause_generation": 401,
+    "stop_requested_at_last_observation": false,
+    "postprojection": "runs after this process exits; adapter-owned, not observed here"
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 3,
+    "closed_count": 3,
+    "claim_count": 23,
+    "evidence_links": {
+      "batch_row_count": 38,
+      "new_link_count": 38,
+      "existing_link_count": 0,
+      "events_appended": 38
+    },
+    "per_report": [
+      {
+        "introspection_id": "introspection_minime_regulator_1788849273",
+        "status": "addressed_change",
+        "fully_addressed": true,
+        "proof_missing_claims": [],
+        "claims": 8
+      },
+      {
+        "introspection_id": "introspection_minime_regulator_1788706380",
+        "status": "addressed_change",
+        "fully_addressed": true,
+        "proof_missing_claims": [],
+        "claims": 7
+      },
+      {
+        "introspection_id": "introspection_minime_regulator_1788542062",
+        "status": "addressed_change",
+        "fully_addressed": true,
+        "proof_missing_claims": [],
+        "claims": 8
+      }
+    ],
+    "status_rationale": "All three earned addressed_change rather than one change plus two duplicates. Each member's variant terms were recomputed locally (32 and 31 terms), addressed individually, and each carries a distinct implemented claim: 1788706380's complete nine-file enumeration and compilation-time framing, 1788542062's organization-not-boundary framing, its build-time-invariant note, and its core/pi.rs L23 example. Under the family-batch rule an unaddressed variant term would have disqualified duplication; here the variants were answered, not absorbed."
+  },
+  "division": {
+    "processed_report_count": 3,
+    "round_event_id": "division_followup_event_c3a70525190759173e726d8a53ce14d2",
+    "cycle_sequence": 41,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "review_due_at_round_start": false,
+    "event_count": 286,
+    "event_head_sha256": "b072d42fa81fc43fa2133b312c3b2482b39f56dc0210070c223bc1e89d6ccc44",
+    "verify_ok": true,
+    "tier5_cadence_dossier": "not generated: the dossier is bound to completing a Division return, and no return was due this round (review_due=false at start and after recording)."
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 11844,
+    "note": "Final epistemic verify, run after every evidence-store durable write of this round."
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4627,
+    "canonical_fully_addressed": 3196,
+    "canonical_full_read": 3828,
+    "canonical_remaining": 1431,
+    "canonical_unread": 799,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_indexed": 6342,
+    "all_artifact_remaining": 3146,
+    "noncanonical_unread_delta": 1715
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1032955,
+    "last_global_seq": 1032955,
+    "last_event_sha256": "91acdcc2913adfadf772ee7999b1c54e30bde1970d0b873e666aa56542823de1",
+    "active_store": "v2",
+    "v1_touched": false,
+    "status_command": "NOT COMPLETED \u2014 per-stream counts were still computing at budget end; read-only, left to finish. The full-chain verify above passed."
+  },
+  "anti_drop": {
+    "verify": {
+      "total": 91,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "self_test": "5 OK"
+  },
+  "chronicle": {
+    "verify_result": "not_current",
+    "exact_message": "division ceremony chronicle error: chronicle durable source inputs changed; project before verify",
+    "distinction": "This is a durable-input change, not merely the volatile supervisor_status_sha256 mismatch the handoff permits reporting as current. The Chronicle is therefore NOT current.",
+    "action_taken": "none",
+    "reason": "Chronicle projection belongs to the bounded Division return, which is not due (1 round remaining). Projecting it here would be an unrequired durable write at the edge of the child-time budget. Recorded as debt for the next round's return."
+  },
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "evidence_store_tests": "21 OK",
+    "steward_control_tests": "29 OK",
+    "steward_projection_tests": "14 OK",
+    "division_followup_tests": "3 OK",
+    "division_chronicle_tests": "10 OK",
+    "division_projection_selftest": "ok",
+    "projection_cursor_tests": "4 OK",
+    "cadence_audit_tests": "6 OK",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": {
+      "total": 91,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "cadence_audit_strict": {
+      "integrity_ok": true,
+      "canonical_count": 4627,
+      "duplicate_hash_groups": 0,
+      "errors": []
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "unlisted_legacy_review_debt_count": 44,
+      "ratchet": "green"
+    },
+    "epistemics_self_test": "2 OK",
+    "epistemics_verify_final": {
+      "checked_record_count": 11844,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "valid": true
+    },
+    "evidence_event_store_full_chain_verify": {
+      "valid": true,
+      "event_count": 1032955,
+      "last_global_seq": 1032955,
+      "corrupt_lines": 0,
+      "last_event_sha256": "91acdcc2913adfadf772ee7999b1c54e30bde1970d0b873e666aa56542823de1",
+      "result": "ok"
+    },
+    "evidence_event_store_status": "NOT COMPLETED \u2014 per-stream counts were still computing at budget end; read-only, left to finish. The full-chain verify above passed."
+  },
+  "live_surface": {
+    "restart_required": false,
+    "deploy_required": false,
+    "restart_attempted": false,
+    "deploy_attempted": false,
+    "launchctl_invoked": false,
+    "build_bridge_invoked": false,
+    "note": "No live substrate or control change was made, implied, or needed. The only implementation is a new non-live test file in the minime repository."
+  },
+  "git": {
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "astrid_index_clean": true,
+    "foreign_work_touched": "none \u2014 both trees were clean at round start; the only dirty paths at round end are this round's own writes"
+  }
+}

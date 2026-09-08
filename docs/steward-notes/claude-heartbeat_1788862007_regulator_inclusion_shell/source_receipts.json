@@ -1,0 +1,46 @@
+{
+  "schema": "round_source_receipts_v1",
+  "shared_source_verification": "All three reports bind the identical source SHA-256, so per the family-batch rule source verification was performed once and reused across the family.",
+  "receipts": [
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "total_lines": 24,
+      "total_bytes": 940,
+      "read_scope": "complete_file_lines_1_to_24",
+      "report_bound_sha256": "46828f4c813eb88aae30212793f698285c696c108dd405604ffb6b5129827d97",
+      "binding_match": true,
+      "note": "Report-bound source for all three family members. Working copy matches the binding, so there is no report-time/now split."
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator.rs",
+      "sha256": "b57e0016e361a1368e309ff0f7a19e4b17933f2160cf561ebd8f4f4c1a373043",
+      "total_lines": 6,
+      "total_bytes": 134,
+      "read_scope": "complete_file_lines_1_to_6",
+      "report_bound_sha256": null,
+      "binding_match": null,
+      "note": "Adjacent evidence, not report-bound. Establishes the second reachability step Astrid did not name: L3-4 mount core.rs as a private module via #[path]; L6 re-exports with pub use core::*."
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/rate_gate.rs",
+      "sha256": "2ccc9d72f20c7b173df1e94858de204825db5ac9ffc8939ae2dabc8cde3def4e",
+      "total_lines": 329,
+      "total_bytes": 13872,
+      "read_scope": "scoped_intervals_1_to_80_and_294_to_340_plus_full_item_index",
+      "report_bound_sha256": null,
+      "binding_match": null,
+      "note": "Adjacent evidence. Item names for the resolution test and the RateCfg/GateCfg Default impls (L294-338) that hold the coefficients Astrid warns against attributing to the shell."
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/regulator/core/tests.rs",
+      "sha256": "32bc94ebcd29020b0a00fcb34c2ecd6752b0246bd07a9b735bb52411d8cc9446",
+      "total_lines": 2629,
+      "total_bytes": 101291,
+      "read_scope": "scoped_interval_1_to_40_import_header_plus_targeted_search_for_include_and_regulator_path_assertions",
+      "report_bound_sha256": null,
+      "binding_match": null,
+      "note": "Adjacent evidence establishing why her tests were uncovered: this suite imports via use super::{..} from inside regulator::core, which cannot distinguish an inlined item from a nested module."
+    }
+  ]
+}

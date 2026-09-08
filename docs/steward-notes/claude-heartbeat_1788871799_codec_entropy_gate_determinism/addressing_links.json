@@ -1,0 +1,123 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L26 SEMANTIC_DIM=48 and L28 SEMANTIC_DIM_LEGACY=32 at the report-bound SHA facaf640; complete file read."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "note": "L587-598 legacy_warmth_mapping_v1 shows 32 is a retained warmth boundary, not a second live capacity."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L48 TAIL_VIBRANCY_ENTROPY_GATE=0.85; L60-63 STRUCTURAL_ENTROPY_DAMPENING_{START,FULL,MIN_COEFFICIENT,DIMS}; L38 documents the non-hard gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "L224 let vibrancy and L306-318 dynamic ceiling plus per-dim clamp: the application site for the constants she cites."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L759 project_embedding_dynamic_epoch and L854 project_embedding, both returning the 8-dim lane, not 48."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L340 ProjectionPrecisionAuditV1 and L401 CodecLaneSeparationAuditV1, both with live_projection_write=false read-only authority."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection.rs",
+      "note": "L172 embedding_projection_matrix is 768x8 and reads no semantic width; L855-857 rejects wrong-width input with None."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "New regression embedding_projection_matrix_is_the_768x8_basis_not_a_32_to_48_legacy_slice grounds her L172 attribution exactly."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structural_evidence.rs",
+      "note": "L540-545 clamps the L67 damping coefficient into [0.82,1.0]; L548-584 clamps entropy and tail lift; no RNG, clock, or env read."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "New regression entropy_gated_tail_ceiling_is_deterministic_and_damping_floor_is_strictly_enforced: 8 bit-identical repeats plus a 107-point floor sweep including NaN and infinities."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "Pre-existing project_embedding_is_the_eight_dim_lane_not_the_full_48_and_narrative_arc_is_separate (L2306-2375) already answers the 48-dimension expectation."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/codec/tests.rs",
+      "note": "New regression asserts her stated TAIL_VIBRANCY_MAX bound at default aperture 1.0 and defers the aperture>1 dynamic ceiling to vibrancy_aperture_dynamic_ceiling_is_bounded_and_navigable_gated."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/feedback.rs",
+      "note": "L307 dynamic_max = TAIL_VIBRANCY_MAX * (1 + (vibrancy_aperture - 1) * navigable): the condition on her bound question."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788871799_codec_entropy_gate_determinism/summaries/introspection_astrid_codec_1788848175.md",
+      "note": "Her Suggested Next is recorded as her own reading choice and deliberately not executed on her behalf."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788871799_codec_entropy_gate_determinism/source_receipts.json",
+      "note": "Window 1-400 of 1351 confirmed against report header and witness snapshot; steward read all 1351 lines and labelled out-of-window conclusions as steward-side."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the determinism and floor regression driven by her snag 2."
+    },
+    {
+      "introspection_id": "introspection_astrid_codec_1788848175",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for the L172 attribution correction and the two shipped regressions."
+    }
+  ]
+}

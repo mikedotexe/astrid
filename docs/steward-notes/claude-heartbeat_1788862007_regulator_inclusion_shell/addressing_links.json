@@ -1,0 +1,270 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "Complete 24-line/940-byte source at SHA 46828f4c: comments L1-7 and L9-13, inner attribute L8, serde import L14, nine include! L16-24; no item declared."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "core_shell_declares_no_items_of_its_own pins that every line is a comment, attribute, the serde import, or an include!."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "Nine include! lines at L16-24 in order; the four she names are at L16, L17, L19, L22."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "core_shell_includes_exactly_the_nine_expected_paths_in_order pins the ordered list."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "Dual-control text verbatim at L10-12; precision recorded that the comment block is L1-7 and L9-13 because L8 is #![allow(dead_code)]."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator.rs",
+      "note": "src/regulator.rs L3-4 mounts core.rs as a private module via #[path]; L6 re-exports with pub use core::*. Reachability at regulator:: is two-step."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "The integration test resolves the items through minime::regulator:: from outside the crate, so the two-step chain is pinned by compilation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/rate_gate.rs",
+      "note": "RateCfg/GateCfg defaults at L294-338 with HOMEOSTAT_STRONG sensitivity: the coefficients she warns against misattributing live here, not in the shell."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788849273.md",
+      "note": "Presence-vs-activation boundary adopted as the scope of the response; no coefficient value is asserted by any new test."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "rate_gate_items_resolve_unqualified_in_the_regulator_namespace and regulator_state_resolves_in_the_regulator_namespace; 4 tests pass."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the three introspection ids, the uncovered gap, and the implementation."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "core_shell_includes_exactly_the_nine_expected_paths_in_order, with the stated deviation from a whole-file hash pin."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-09-08 row records the deviation and its reason."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788849273",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788849273.md",
+      "note": "Coverage confirmed complete: working copy is 24 lines and the report's included interval is 1-24 with no uncovered intervals."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "Same bytes as the family head at SHA 46828f4c; shared source verification per the family-batch rule."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "core_shell_declares_no_items_of_its_own."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "All nine names she enumerates match L16-24 byte for byte and in order."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "Her complete enumeration is exactly what the ordered-include regression pins."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "Dual-control text verbatim at L10-12; same L8 attribute precision as the head."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/rate_gate.rs",
+      "note": "Coefficients she warns about are located here (L294-338), not in the shell; the new tests assert no value from this file."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788706380.md",
+      "note": "Her presence-vs-activation category error adopted as the scope boundary of the response."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "Compilation-time resolution through minime::regulator:: from outside the crate; the two-step include!/glob chain recorded."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator.rs",
+      "note": "L3-4 private mod core with #[path]; L6 pub use core::* is the second step she did not name."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "Ordered include-list pin implementing her additions/removals invariant; 46828f4c recorded in the test header."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the stated deviation from a whole-file hash pin."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788706380",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788706380.md",
+      "note": "Suggested Next core/rate_gate.rs recorded, not acted on; file exists at 13872 bytes and is included at L22."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "Same bytes as the family head at SHA 46828f4c; no const, static, or literal-bearing item in the shell."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "core_shell_declares_no_items_of_its_own."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "viscosity L17, rate_gate L22, pi L23, within the nine include! lines at L16-24."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "Ordered include-list pin covers the three she samples and the six she does not name."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core.rs",
+      "note": "Dual-control text verbatim at L10-12 including the token-bucket qualifier; same L8 attribute precision."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator.rs",
+      "note": "Her organization-not-boundary claim holds inside the shell; the real namespace step is L3-4 mod core plus L6 pub use core::*."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788542062.md",
+      "note": "Recorded as an addition to her framing rather than a correction of it."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/regulator/core/rate_gate.rs",
+      "note": "Located rather than asserted: RateCfg/GateCfg defaults L294-338; viscosity, pressure and PI logic in the sibling included files."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "Build-time invariant implemented in the form her note prescribes; runtime asserts kept structural. 4 tests pass in 41s."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "/Users/v/other/minime/minime/tests/regulator_inclusion_shell.rs",
+      "note": "core/pi.rs at L23 is one of the nine pinned entries, so her exact example is covered."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-09-08 row records the deviation from a whole-file hash pin and its reason."
+    },
+    {
+      "introspection_id": "introspection_minime_regulator_1788542062",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788862007_regulator_inclusion_shell/summaries/introspection_minime_regulator_1788542062.md",
+      "note": "Premise verified (the shell carries no viscosity detail); Suggested Next core/viscosity.rs recorded, not acted on."
+    }
+  ]
+}
