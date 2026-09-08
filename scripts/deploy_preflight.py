@@ -58,6 +58,9 @@ BRIDGE_BUILD_PATHS = (
     "capsules/spectral-bridge/Cargo.toml",
     "capsules/spectral-bridge/Cargo.lock",
     "crates/astrid-minime-protocol",
+    "crates/astrid-source-study",
+    "Cargo.toml",
+    "Cargo.lock",
 )
 BRIDGE_LOCAL_PATH_DEPS = (
     Path("/Users/v/other/RASCII"),

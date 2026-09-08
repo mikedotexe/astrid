@@ -2837,6 +2837,9 @@ pub fn spawn_autonomous_loop(
                                 }
                             }
                         }
+                        Mode::Introspect if uses_shared_source_study(&conv) => {
+                            run_shared_source_study(&mut conv, &state, fill_pct).await
+                        }
                         Mode::Introspect => {
                             let _cadence_attempt =
                                 next_action::introspection_cadence::begin_attempt(&mut conv);

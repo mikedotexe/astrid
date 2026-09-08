@@ -1,0 +1,71 @@
+version = 1
+
+[[repositories]]
+id = "astrid"
+directory = "astrid"
+include = ["crates/**", "capsules/**", "services/**", "packages/**", "scripts/**", "wit/**", "docs/**", "packaging/**", "md-CLAUDE-chapters/**", "*.toml", "*.lock", "*.md", "build.rs", "tests/**", "benches/**", ".github/workflows/**", ".cargo/config.toml"]
+
+[[repositories]]
+id = "minime"
+directory = "minime"
+include = ["minime/src/**", "minime/shaders/**", "minime/*.toml", "minime/*.lock", "minime/*.md", "minime/build.rs", "minime/.cargo/config.toml", "minime_autonomy/**", "mikemind/**", "tests/**", "scripts/**", "tools/**", "docs/**", "launchd/**", "md-chapters/**", "*.py", "*.md", "*.toml", "requirements*.txt"]
+
+[[repositories]]
+id = "reservoir"
+directory = "neural-triple-reservoir"
+include = ["*.py", "*.md", "*.toml", "requirements*.txt", "*.sh", "launchd/**", "src/**", "tests/**", "docs/**", "scripts/**"]
+
+[[repositories]]
+id = "prime-esn"
+directory = "prime_esn_wasm"
+include = ["src/**", "tests/**", "docs/**", "Cargo.toml", "Cargo.lock", "*.md"]
+
+[[repositories]]
+id = "rascii"
+directory = "RASCII"
+include = ["src/**", "tests/**", "docs/**", "Cargo.toml", "Cargo.lock", "*.md"]
+
+[[repositories]]
+id = "channel"
+directory = "mike-channel"
+include = ["src/**", "tests/**", "scripts/**", "docs/**", "*.py", "*.md", "*.toml", "*.lock"]
+
+[[components]]
+id = "actions"
+title = "How Actions are chosen and carried out"
+sources = ["astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs", "astrid/capsules/spectral-bridge/src/autonomous/next_action/mod.rs", "minime/minime_autonomy/runtime.py", "minime/minime_autonomy/action_vocabulary.py"]
+
+[[components]]
+id = "language"
+title = "How prompts and generated words are formed"
+sources = ["astrid/capsules/spectral-bridge/src/llm/provider/dialogue_generation.rs", "astrid/capsules/spectral-bridge/src/llm/provider/transport.rs", "minime/minime_autonomy/runtime.py", "reservoir/mlx_reservoir.py"]
+
+[[components]]
+id = "senses"
+title = "How sensory input reaches the reservoir"
+sources = ["astrid/capsules/spectral-bridge/src/codec/projection.rs", "astrid/capsules/spectral-bridge/src/ws/telemetry_port.rs", "minime/minime/src/sensory_bus.rs", "minime/minime/shaders/av_features.metal"]
+
+[[components]]
+id = "reservoirs"
+title = "How reservoirs evolve and affect generation"
+sources = ["minime/minime/src/esn.rs", "minime/minime/shaders/esn.metal", "minime/minime/src/regulator/core.rs", "reservoir/mlx_reservoir.py", "prime-esn/src/lib.rs"]
+
+[[components]]
+id = "memory"
+title = "Memory, bookmarks and persistence"
+sources = ["astrid/capsules/spectral-bridge/src/autonomous/activity_reading.rs", "astrid/crates/astrid-source-study/src/store.rs", "astrid/capsules/spectral-bridge/src/autonomous/runtime/state_persistence.rs", "minime/minime_autonomy/runtime.py", "reservoir/persistence.py"]
+
+[[components]]
+id = "correspondence"
+title = "Correspondence and shared work"
+sources = ["astrid/capsules/spectral-bridge/src/autonomous/durable_inbox.rs", "astrid/capsules/spectral-bridge/src/autonomous/next_action/collaboration.rs", "minime/minime_autonomy/inbox_delivery.py", "reservoir/triadic_chamber.py"]
+
+[[components]]
+id = "kernel"
+title = "Kernel, capabilities and lifecycle"
+sources = ["astrid/crates/astrid-kernel/src/lib.rs", "astrid/crates/astrid-capsule/src/lib.rs", "astrid/wit/astrid-capsule.wit", "astrid/capsules/spectral-bridge/src/lifecycle.rs"]
+
+[[components]]
+id = "verification"
+title = "Tests, configuration and deployed-source evidence"
+sources = ["astrid/capsules/spectral-bridge/Cargo.toml", "astrid/scripts/build_bridge.sh", "astrid/capsules/spectral-bridge/tests/agency_resolver_integration.rs", "minime/tests/test_minime_introspect_action.py", "minime/minime/Cargo.toml", "astrid/AGENTS.md"]

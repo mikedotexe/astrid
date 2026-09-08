@@ -1,0 +1,159 @@
+{
+  "scope": "Prepared source access only; no provider call, runtime action, or delivered checkpoint claim",
+  "results": [
+    {
+      "source": "astrid/crates/astrid-kernel/src/lib.rs",
+      "revision": {
+        "bytes": 65312,
+        "lines": 1659,
+        "sha256": "d19f321c54b299e1204d6e0db5a81792e056f9140b4a82bfbac76468c603d92b"
+      },
+      "start": {
+        "byte": 65087,
+        "line": 1649
+      },
+      "end": {
+        "byte": 65312,
+        "line": 1660
+      },
+      "eof": true
+    },
+    {
+      "source": "astrid/capsules/spectral-bridge/tests/agency_resolver_integration.rs",
+      "revision": {
+        "bytes": 2329,
+        "lines": 69,
+        "sha256": "2048d80897df9156b7a20d32df5cc0f290d86fac7fd486ee62890e57f45d5fe7"
+      },
+      "start": {
+        "byte": 1923,
+        "line": 59
+      },
+      "end": {
+        "byte": 2329,
+        "line": 70
+      },
+      "eof": true
+    },
+    {
+      "source": "astrid/Cargo.toml",
+      "revision": {
+        "bytes": 5206,
+        "lines": 136,
+        "sha256": "4a827e6715721e9fb67c6424839441c5f59ad16090da898c80d066fab3e7e786"
+      },
+      "start": {
+        "byte": 4939,
+        "line": 126
+      },
+      "end": {
+        "byte": 5206,
+        "line": 137
+      },
+      "eof": true
+    },
+    {
+      "source": "astrid/wit/astrid-capsule.wit",
+      "revision": {
+        "bytes": 34842,
+        "lines": 899,
+        "sha256": "49d69adab4f43105233be8a1a033fb7d7e119ae2ed9aa1326538d93dd04c7af0"
+      },
+      "start": {
+        "byte": 34405,
+        "line": 889
+      },
+      "end": {
+        "byte": 34842,
+        "line": 900
+      },
+      "eof": true
+    },
+    {
+      "source": "minime/minime/shaders/esn.metal",
+      "revision": {
+        "bytes": 3411,
+        "lines": 95,
+        "sha256": "28b83c256e36fdb9a5077e1da4cb73c050e1d3496f830404fae61e7bbc812735"
+      },
+      "start": {
+        "byte": 3207,
+        "line": 85
+      },
+      "end": {
+        "byte": 3411,
+        "line": 96
+      },
+      "eof": true
+    },
+    {
+      "source": "minime/minime_autonomy/runtime.py",
+      "revision": {
+        "bytes": 2571247,
+        "lines": 56006,
+        "sha256": "ee2d40b932d564bca3ec191988966f09f334098674b3f93ba339c5f7bf61ddf2"
+      },
+      "start": {
+        "byte": 2570997,
+        "line": 55996
+      },
+      "end": {
+        "byte": 2571247,
+        "line": 56007
+      },
+      "eof": true
+    },
+    {
+      "source": "reservoir/mlx_reservoir.py",
+      "revision": {
+        "bytes": 20462,
+        "lines": 516,
+        "sha256": "7bf189ff5d618e9002a623ae5d38a206758a80738ee79477eaf8059a1d383f1e"
+      },
+      "start": {
+        "byte": 20067,
+        "line": 506
+      },
+      "end": {
+        "byte": 20462,
+        "line": 517
+      },
+      "eof": true
+    },
+    {
+      "source": "prime-esn/src/lib.rs",
+      "revision": {
+        "bytes": 25202,
+        "lines": 903,
+        "sha256": "8ad614d3cc3277a172e7c649a7657edf0224dbd12894ddfc1c1483ab2c4484d8"
+      },
+      "start": {
+        "byte": 24966,
+        "line": 893
+      },
+      "end": {
+        "byte": 25202,
+        "line": 904
+      },
+      "eof": true
+    },
+    {
+      "source": "rascii/src/lib.rs",
+      "revision": {
+        "bytes": 2148,
+        "lines": 82,
+        "sha256": "62fb39a3fb3ca2ab4401d70e1b91a8e2832331c2f46027a2626975ac20aea135"
+      },
+      "start": {
+        "byte": 1833,
+        "line": 72
+      },
+      "end": {
+        "byte": 2148,
+        "line": 83
+      },
+      "eof": true
+    }
+  ],
+  "executable_profile": "release"
+}

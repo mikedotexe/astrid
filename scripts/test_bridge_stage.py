@@ -36,8 +36,9 @@ class StageTests(unittest.TestCase):
         self.assertIn("--offline", args)
         target = Path(args[args.index("--target-dir") + 1])
         target = target / args[args.index("--target") + 1]
-        (target / "release").mkdir(parents=True)
-        (target / "release/spectral-bridge-server").write_bytes(b"synthetic binary")
+        (target / "release").mkdir(parents=True, exist_ok=True)
+        binary = args[args.index("--bin") + 1]
+        (target / "release" / binary).write_bytes(b"synthetic binary")
         return subprocess.CompletedProcess(args, 0)
 
     def command(self, args, **kwargs):
@@ -76,6 +77,15 @@ class StageTests(unittest.TestCase):
         self.assertEqual((self.live / "manifest.json").read_bytes(), b"live manifest")
         self.assertEqual(stage.verify_stage(self.directory, run_binary=False), ready)
         self.assertEqual((self.directory / "helpers/substrate_probe_v2.py").read_text(), "# fixture\n")
+        self.assertEqual((self.directory / "helpers/astrid-source-study").read_bytes(), b"synthetic binary")
+
+    def test_shared_reader_tampering_is_rejected(self):
+        self.build()
+        reader = self.directory / "helpers/astrid-source-study"
+        reader.chmod(0o700)
+        reader.write_bytes(b"changed reader")
+        with self.assertRaisesRegex(ValueError, "artifact changed: source-study-reader"):
+            stage.verify_stage(self.directory, run_binary=False)
 
     def test_compiler_failure_retains_evidence_without_ready_record(self):
         def fail(args, **kwargs):

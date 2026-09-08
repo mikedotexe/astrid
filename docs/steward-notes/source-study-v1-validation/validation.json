@@ -1,0 +1,36 @@
+{
+  "recorded_at_utc": "2026-09-08T06:56:35.406944+00:00",
+  "scope": "Isolated source implementation; no merge, deployment or live Being/model canary claimed",
+  "astrid_base": "4c7a91787ae882656fbc2fb771390fd1ef2dd096",
+  "minime_base": "f3c53d631428e1f5a2a5dc835827f623f6d6a7f7",
+  "results": {
+    "shared_reader": {
+      "passed": 9,
+      "command": "cargo test -p astrid-source-study"
+    },
+    "bridge_full": {
+      "passed": 2242,
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml -- --test-threads=4"
+    },
+    "minime_full": {
+      "passed": 1259,
+      "skipped": 1,
+      "subtests_passed": 130,
+      "command": "python3 -m pytest -q tests"
+    },
+    "minime_wire_final": {
+      "passed": 5,
+      "command": "python3 -m pytest -q tests/test_source_study_shared.py"
+    },
+    "core_clippy": "passed; all targets, warnings denied",
+    "bridge_clippy": "passed; all targets/features, warnings denied",
+    "format": "passed for workspace and bridge",
+    "domain_boundary": {
+      "valid": true,
+      "violations": 0
+    },
+    "release_helper": "built; nine real source tails opened successfully"
+  },
+  "timing_note": "The first concurrent bridge full run had one existing p95 timing-threshold failure (1.54ms vs 1ms); the complete rerun with four test threads passed, including that check. Its threshold was unchanged.",
+  "delivery_tests": "HTTP is mocked. Tests inspect actual serialized request bodies and verify retry, incomplete/hidden output, and continuation-only behavior."
+}

@@ -234,7 +234,17 @@ pub(super) fn handle_action(
             info!("Astrid chose NOTICE — quiet observation (witness mode)");
             true
         },
-        "INTROSPECT" | "SELF_STUDY" | "INVESTIGATE" => {
+        "SELF_STUDY" | "INVESTIGATE" => {
+            conv.wants_introspect = true;
+            conv.defer_inbox = true;
+            conv.introspect_target = Some(IntrospectTargetV2::auto(
+                format!("SELF_STUDY {}", strip_action(original, base_action))
+                    .trim()
+                    .to_string(),
+            ));
+            true
+        },
+        "INTROSPECT" => {
             conv.wants_introspect = true;
             conv.defer_inbox = true;
             let argument = strip_action(original, base_action);

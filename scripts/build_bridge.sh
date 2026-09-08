@@ -13,6 +13,7 @@ ASTRID="/Users/v/other/astrid"
 BRIDGE_DIR="$ASTRID/capsules/spectral-bridge"
 WORKSPACE="$BRIDGE_DIR/workspace"
 BINARY="$BRIDGE_DIR/target/release/spectral-bridge-server"
+SOURCE_READER="$ASTRID/target/release/astrid-source-study"
 LAUNCHER="$ASTRID/scripts/launchd_spectral_bridge.sh"
 MANIFEST="$WORKSPACE/deployment_manifests/spectral-bridge.json"
 TELEMETRY="$WORKSPACE/telemetry_heartbeat_delta_v1.json"
@@ -289,6 +290,10 @@ if [ -n "$PROMOTE_CANDIDATE" ]; then
     fail_deploy "candidate promotion manifest could not be written"
   fi
 elif [ "$DO_BUILD" -eq 1 ]; then
+  # Both Being adapters use the same catalog and reader version.
+  if ! cargo build --release --manifest-path "$ASTRID/Cargo.toml" -p astrid-source-study; then
+    fail_deploy "shared source reader build failed; live process was not restarted"
+  fi
   echo "build_bridge: cargo build --release @ $HEAD ..."
   if ! (cd "$BRIDGE_DIR" && cargo build --release); then
     fail_deploy "cargo build --release failed; live process was not restarted"
@@ -300,6 +305,7 @@ elif [ "$DO_BUILD" -eq 1 ]; then
     --repository "$ASTRID" \
     --artifact "spectral-bridge=$BINARY" \
     --artifact "launch-wrapper=$LAUNCHER" \
+    --artifact "source-study-reader=$SOURCE_READER" \
     --actor "$ACTOR" \
     --command "cargo build --release --manifest-path $BRIDGE_DIR/Cargo.toml" \
     >/dev/null; then

@@ -18,7 +18,7 @@ import subprocess
 
 from environment_receipts import write_build_manifest
 
-SCHEMA = "bridge_staged_release_v2"
+SCHEMA = "bridge_staged_release_v3"
 AUTHORITY = "build_manifest_witness_not_deploy_authority"
 EXCLUDED = {".git", ".runtime", "target", "workspace", "node_modules", ".venv", "__pycache__", ".DS_Store"}
 HELPERS = {"substrate-probe-v2": "substrate_probe_v2.py", "release-launcher": "launchd_spectral_bridge.sh", "release-selection": "bridge_release_launch.py"}
@@ -26,7 +26,8 @@ TOOLS = ("scripts/build_bridge.sh", "scripts/bridge_stage.py", "scripts/bridge_a
          "scripts/environment_receipts.py", "scripts/deploy_preflight.py", "scripts/steward_mutex.py",
          "scripts/capture_stack_receipt.sh", "scripts/minime_runtime_binding.py",
          *(f"scripts/{name}" for name in HELPERS.values()))
-ARTIFACTS = {"spectral-bridge": "spectral-bridge-server", **{name:f"helpers/{path}" for name,path in HELPERS.items()}}
+ARTIFACTS = {"spectral-bridge": "spectral-bridge-server", "source-study-reader": "helpers/astrid-source-study",
+             **{name:f"helpers/{path}" for name,path in HELPERS.items()}}
 
 
 def sha(path: Path) -> str:
@@ -84,6 +85,8 @@ def host_target(source: Path) -> str:
 
 def input_snapshot(source: Path, packages: list[Path]) -> dict:
     files = {source / name for name in TOOLS}
+    # The shared reader executable inherits the root workspace configuration.
+    files.update(source / name for name in ("Cargo.toml", "Cargo.lock") if (source / name).exists())
     # Retained releases predating this operator helper have no such input.
     stopped_recovery = source / "scripts/bridge_stopped_recovery.py"
     if stopped_recovery.exists():
@@ -166,7 +169,7 @@ def verify_stage(stage: Path, *, run_binary: bool = True) -> dict:
     if (stage / "failure.json").exists():
         raise ValueError("stage has a retained failure record; rebuild in a new directory")
     ready = json_file(stage / "ready.json")
-    if ready.get("schema") not in {SCHEMA, "bridge_staged_release_v1"} or ready.get("status") != "staged_verified_not_activated":
+    if ready.get("schema") not in {SCHEMA, "bridge_staged_release_v2", "bridge_staged_release_v1"} or ready.get("status") != "staged_verified_not_activated":
         raise ValueError("stage has no completed build witness")
     manifest_path = stage / "manifest.json"
     if sha(manifest_path) != ready.get("manifest_sha256"):
@@ -184,7 +187,11 @@ def verify_stage(stage: Path, *, run_binary: bool = True) -> dict:
     source_ref = manifest.get("source_inputs", {})
     if source_ref.get("path") != str(source_path) or source_ref.get("sha256") != ready.get("source_inputs_sha256"):
         raise ValueError("manifest source reference mismatch")
-    expected_artifacts = ARTIFACTS if ready["schema"] == SCHEMA else {name:ARTIFACTS[name] for name in ("spectral-bridge", "substrate-probe-v2")}
+    expected_artifacts = dict(ARTIFACTS)
+    if ready["schema"] != SCHEMA:
+        expected_artifacts.pop("source-study-reader")
+    if ready["schema"] == "bridge_staged_release_v1":
+        expected_artifacts = {name: ARTIFACTS[name] for name in ("spectral-bridge", "substrate-probe-v2")}
     if set(manifest.get("artifacts", {})) != set(expected_artifacts):
         raise ValueError("unexpected staged artifact set")
     for name, relative in expected_artifacts.items():
@@ -231,12 +238,19 @@ def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
                  "--target", target, "--target-dir", str(stage / "build")]
         with (stage / "build.log").open("xb") as log:
             subprocess.run(build, cwd=source, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=3600)
+            reader_build = ["cargo", "build", "--release", "--locked", "--offline", "--manifest-path",
+                            str(source / "Cargo.toml"), "-p", "astrid-source-study", "--bin", "astrid-source-study",
+                            "--target", target, "--target-dir", str(stage / "build")]
+            subprocess.run(reader_build, cwd=source, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=600)
         if packages != local_packages(source) or before != input_snapshot(source, packages):
             raise ValueError("source or build environment changed during compilation; stage refused")
         binary = stage / ARTIFACTS["spectral-bridge"]
         shutil.copyfile(stage / "build" / target / "release/spectral-bridge-server", binary)
         binary.chmod(0o555)
         (stage / "helpers").mkdir(mode=0o700)
+        reader_binary = stage / ARTIFACTS["source-study-reader"]
+        shutil.copyfile(stage / "build" / target / "release/astrid-source-study", reader_binary)
+        reader_binary.chmod(0o555)
         for name, filename in HELPERS.items():
             helper = stage / ARTIFACTS[name]
             original = source / "scripts" / filename
@@ -251,7 +265,7 @@ def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
         manifest_path = stage / "manifest.json"
         manifest = write_build_manifest(manifest_path, component="spectral-bridge", repository=source,
                                         artifacts={name: stage / relative for name, relative in ARTIFACTS.items()},
-                                        actor=actor, command=" ".join(build))
+                                        actor=actor, command=" ".join(build) + " && " + " ".join(reader_build))
         source_hash = sha(stage / "source-inputs.json")
         if manifest["repository"]["head"] != before["head"]:
             raise ValueError("repository HEAD changed during staging")

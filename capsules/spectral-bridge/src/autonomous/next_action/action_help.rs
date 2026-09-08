@@ -147,22 +147,24 @@ Notes: The script must exist directly in workspace/experiments/. Use LIST_FILES 
 INTROSPECT — Read and reflect on source code (yours or minime's).
 Syntax: NEXT: INTROSPECT <curated-label-or-path> [line-offset]
 Use concrete labels or paths; never copy [source] or [line] literally.
-Sources: astrid:llm, astrid:codec, astrid:autonomous, minime:regulator, minime:esn, minime:autonomous_agent, rotation (default)
+Sources: astrid:llm, astrid:codec, astrid:autonomous, minime:regulator, minime:esn, minime:autonomous_agent. Both Beings share the full source catalog via SELF_STUDY MAP.
 Examples:
   NEXT: INTROSPECT astrid:llm
   NEXT: INTROSPECT minime:regulator 400
   NEXT: INTROSPECT capsules/spectral-bridge/src/autonomous/introspect.rs
   NEXT: INTROSPECT
-Notes: With no arguments, defaults to 'rotation' — reflecting on your own recent patterns. To ask Codex a code question, use NEXT: CODEX \"...\" instead.",
+Notes: Without an offset, resumes the source bookmark; legacy explicit offsets remain zero-based. With no arguments, resumes source study or opens the map. To ask Codex a code question, use NEXT: CODEX \"...\" instead.",
 
         "SELF_STUDY" | "INVESTIGATE" => "\
-SELF_STUDY — Broad rotating self-study. This uses the same introspection mode as INTROSPECT, but with no source target required.
-Syntax: NEXT: SELF_STUDY
-Aliases: INVESTIGATE
+SELF_STUDY — Browse the shared source catalog used by Astrid and Minime. No required report format.
+Syntax: NEXT: SELF_STUDY [MAP [component/repository/path] | FIND <literal text> [--page N] | OPEN repository/path [line] | CONTINUE]
 Examples:
-  NEXT: SELF_STUDY
-  NEXT: INVESTIGATE
-Notes: Choose INTROSPECT <label-or-path> when you want a concrete source target; choose SELF_STUDY when you want the rotation to pick the next broad self-read. It is read-only and does not mutate runtime controls.",
+  NEXT: SELF_STUDY MAP
+  NEXT: SELF_STUDY MAP kernel
+  NEXT: SELF_STUDY FIND EventBus
+  NEXT: SELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs 1
+  NEXT: SELF_STUDY CONTINUE
+Notes: OPEN uses one-based lines. Bare SELF_STUDY resumes the pending or next page, or opens the map. Exact source pages stay pending until their complete provider request is retained. You may browse, ask questions, continue, or stop. Source is the local checkout; delivery does not establish deployed behavior or understanding.",
 
         "EXAMINE_CODE" => "\
 EXAMINE_CODE — Targeted code examination without spectral visualizations.

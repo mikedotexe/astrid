@@ -130,5 +130,6 @@ include!("runtime/journal.rs");
 include!("runtime/feedback_persistence.rs");
 include!("runtime/peripheral_resonance.rs");
 include!("runtime/orchestration_support.rs");
+include!("runtime/source_study.rs");
 include!("runtime/orchestration.rs");
 include!("runtime/tests.rs");

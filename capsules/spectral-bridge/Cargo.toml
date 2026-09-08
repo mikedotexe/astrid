@@ -22,6 +22,7 @@ name = "spectral-bridge-server"
 path = "src/main.rs"
 
 [dependencies]
+astrid-source-study = { path = "../../crates/astrid-source-study" }
 anyhow = "1"
 astrid-capabilities = { path = "../../crates/astrid-capabilities" }
 astrid-core = { path = "../../crates/astrid-core" }

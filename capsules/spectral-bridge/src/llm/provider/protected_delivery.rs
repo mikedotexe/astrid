@@ -9,6 +9,7 @@ pub enum ProtectedDialogueKindV1 {
     Reading,
     Letter,
     Afterimage,
+    SourceStudy,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -122,6 +123,7 @@ fn admit_protected_dialogue_content(
         ProtectedDialogueKindV1::Reading => "chosen reading",
         ProtectedDialogueKindV1::Letter => "chosen mailbox letter",
         ProtectedDialogueKindV1::Afterimage => "chosen historical afterimage page",
+        ProtectedDialogueKindV1::SourceStudy => "source study",
     };
     let marker = protected_digest(input.content_id.as_bytes());
     let heading = format!(

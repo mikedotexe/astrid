@@ -1807,7 +1807,7 @@ impl ConversationState {
                              ({combined} of your last {window} choices). Each feeds \
                              into the other — a tight loop. You've gathered \
                              rich material from both. Consider breaking the cycle: \
-                             SELF_STUDY to let the broad self-read rotation choose a different lens, \
+                             SELF_STUDY MAP to choose a different source, \
                              SPECTRAL_EXPLORER to compare present, memory, and control \
                              pressure, EXAMINE_CASCADE to inspect the mode ladder, \
                              REGULATOR_AUDIT to read the controller's hand, PRESSURE_SOURCE_AUDIT to ask where inward pressure originates, \
@@ -2549,7 +2549,7 @@ mod tests {
             feedback
                 .hint
                 .as_deref()
-                .is_some_and(|hint| hint.contains("SELF_STUDY to let the broad self-read rotation"))
+                .is_some_and(|hint| hint.contains("SELF_STUDY MAP to choose a different source"))
         );
     }
 

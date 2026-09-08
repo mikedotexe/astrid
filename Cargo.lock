@@ -579,6 +579,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "astrid-source-study"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "fs2",
+ "globset",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "toml 0.8.23",
+]
+
+[[package]]
 name = "astrid-spectral-core"
 version = "0.1.0"
 dependencies = [

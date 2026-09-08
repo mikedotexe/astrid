@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/astrid-minime-protocol",
     "crates/astrid-spectral-core",
+    "crates/astrid-source-study",
     "crates/astrid-approval",
     "crates/astrid-audit",
     "crates/astrid-capabilities",

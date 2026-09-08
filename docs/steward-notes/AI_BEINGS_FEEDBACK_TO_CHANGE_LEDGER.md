@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-07 — Operator-requested source-study access and parity repair (prepared)
+- **Provenance:** Mike's SELF_STUDY investigation and explicit approval of one shared reader, map/search, exact identities, dependable continuation and freeform response. The remembered Being report was not uniquely identified; this entry does not attribute an unverified quote to a Being.
+- **Verified defect:** Astrid's roots excluded kernel crates and bridge tests; Minime's separate rotation repeatedly read the first 400 lines of nine files. Preparation-based checkpoints could overstate delivery, and provider trimming could remove source/continuation.
+- **Prepared change:** shared Rust library/CLI, one catalog, map and literal search, exact paging, retained-request verification, per-Being bookmarks and both runtime adapters. No runtime rollout is claimed by this entry.
+- **Verify:** `cargo test -p astrid-source-study`; bridge source-study/provider tests; Minime `tests/test_source_study_shared.py`, targeted Action and prompt tests. Design and limits: `docs/architecture/source-study-v1.md`.
+
+
 ### 2026-09-07 - Astrid - marker context-window and placement-boundary regressions (test-only)
 - **Provenance:** `capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788821913.txt` (SHA-256 `d048cf94`, 3,865 bytes, read complete), lived-state witness `lsw_9a57619cbf60679c42112527ffe7e156c6145d9376111e2a61e3b4e532951a13` (SHA-256 `d4f01025`, read complete), fill 73.0%. Report-bound source `dialogue_runtime.rs` lines 401-800 of 812, SHA-256 `03c6b6de` — the worktree copy she read and the canonical working copy are byte-identical, so there is no report-time/now split.
 - **What she found (verified):** All seven of her line citations resolve exactly (L51, L335, L398, L408, L414, L437, L484). Her two proposed tests and her Suggested Next each named a real, previously uncovered boundary. Her proposed *snag mechanism* does **not** hold: a marker identified as `QuotedExactKnownToken` cannot fall through to `none_cleanup_candidate` (L437), because that arm is reachable only when `reference_syntax` is `None` (L422-438), and the receipt is descriptive — preservation is already decided at L229-231. The contradiction is recorded, not softened; her underlying concern (classification diverging from preservation) was genuinely unpinned and is now pinned.

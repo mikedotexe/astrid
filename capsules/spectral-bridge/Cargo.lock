@@ -222,6 +222,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "astrid-source-study"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "fs2",
+ "globset",
+ "serde",
+ "serde_json",
+ "sha2",
+ "toml 0.8.23",
+]
+
+[[package]]
 name = "astrid-storage"
 version = "0.5.6"
 dependencies = [
@@ -2701,6 +2714,7 @@ dependencies = [
  "astrid-core",
  "astrid-crypto",
  "astrid-minime-protocol",
+ "astrid-source-study",
  "chrono",
  "clap",
  "ed25519-dalek",

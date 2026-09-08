@@ -1,0 +1,22 @@
+{
+  "recorded_at_utc": "2026-09-08T15:34:53.646292+00:00",
+  "authorization": "Mike explicitly requested takeover, commit and live deployment on 2026-09-08",
+  "pause_generation": 402,
+  "astrid_base": "6a3f0d4605327ac1bd31dd07aaae95733f3b5700",
+  "minime_base": "29ad8ed",
+  "results": {
+    "shared_reader": 9,
+    "minime_full": {
+      "passed": 1261,
+      "skipped": 1,
+      "subtests_passed": 130
+    },
+    "deployment_wrappers": {
+      "passed": 109,
+      "command": "PYTHONPATH=scripts python3 -m unittest test_bridge_stage test_bridge_activate test_bridge_stopped_recovery test_deployment_wrappers test_restart_minime_agent -q"
+    },
+    "domain_boundary": "valid; zero violations"
+  },
+  "deployment_design": "Staged V3 release includes the shared executable. Minime verifies the selected Astrid manifest digest and executable digest before use. Legacy V1/V2 release verification retained.",
+  "scope": "Source integration validation only. Live deployment receipts are separate."
+}
