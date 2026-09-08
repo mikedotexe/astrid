@@ -114,12 +114,13 @@ def resume_stopped_transition(backend, *, transaction: Path, expected_pid: int,
     backend.begin_recovery(witness, history="stopped-transition-recoveries")
     try:
         backend.assert_stopped_ownership(initial)
-        backend.snapshot_and_handoff(actor, ack)
+        if not initial["snapshot_prepared"]:
+            backend.snapshot_and_handoff(actor, ack)
         backend.assert_stopped_ownership(initial)
         backend.validate_stopped_snapshot(initial)
         witness["status"] = "snapshot_and_handoff_verified"
         backend.record_recovery(witness)
-        backend.select_release()
+        backend.select_release(allow_recovery_tool_changes=True)
         backend.assert_stopped_ownership(initial, selected=True)
         backend.validate_stopped_snapshot(initial)
         # This intent admits verification-only recovery if the operator dies
@@ -163,9 +164,35 @@ class StoppedTransitionMixin:
                 or failed["drain"].get("pid") != expected_pid
                 or failed["drain"].get("phase") != "drained"):
             raise ValueError("transaction is not an acknowledged stopped transition")
-        allowed = {"receipt.json", "launchd_spectral_bridge.sh.before", "bridge_release_launch.py.before"}
-        if any(path.name not in allowed for path in transaction.iterdir()):
-            raise RuntimeError("transition already has progress; do not replay, use verification recovery if running")
+        baseline = {"receipt.json", "launchd_spectral_bridge.sh.before", "bridge_release_launch.py.before"}
+        names = {path.name for path in transaction.iterdir()}
+        snapshot_required = {"conversation.before.json", "self-control.before.json",
+                             "manifest.before.json", "inputs.before.json"}
+        snapshot_allowed = snapshot_required | {RUNTIME_FEEDBACK_SNAPSHOT, "handoff.json"}
+        extras = names - baseline
+        snapshot_prepared = False
+        targets_binary = False
+        if extras:
+            if not snapshot_required <= extras or not extras <= snapshot_allowed:
+                raise RuntimeError("transition already has progress; do not replay, use verification recovery if running")
+            before = stage_tools.json_file(transaction / "inputs.before.json")
+            checkpoint = before.get("checkpoint", {})
+            self_control = before.get("self_control", {})
+            if not isinstance(checkpoint, dict) or not isinstance(self_control, dict):
+                raise RuntimeError("stopped transition snapshot is partial or internally inconsistent")
+            feedback = checkpoint.get("runtime_action_feedback", {"present":False})
+            targets_binary = self_control.get("state_targets_this_binary")
+            if not isinstance(feedback, dict) or type(targets_binary) is not bool:
+                raise RuntimeError("stopped transition snapshot is partial or internally inconsistent")
+            feedback_present = feedback.get("present") is True
+            required = set(snapshot_required)
+            if feedback_present:
+                required.add(RUNTIME_FEEDBACK_SNAPSHOT)
+            if not targets_binary:
+                required.add("handoff.json")
+            if extras != required:
+                raise RuntimeError("stopped transition snapshot is partial or internally inconsistent")
+            snapshot_prepared = True
         self.ready = stage_tools.verify_stage(self.stage)
         if (self.ready["schema"] != "bridge_staged_release_v2"
                 or failed.get("stage") != str(self.stage)
@@ -185,13 +212,15 @@ class StoppedTransitionMixin:
             if key in self.old and digest(transaction / name) != self.old[key]:
                 raise RuntimeError("original launch helper backup changed")
         pending = self.workspace / "self_control_v2/astrid/deployment_handoff.pending.json"
-        if os.path.lexists(pending):
-            raise RuntimeError("an existing signed handoff requires separate review")
+        pending_expected = snapshot_prepared and not targets_binary
+        if os.path.lexists(pending) != pending_expected:
+            raise RuntimeError("signed handoff presence does not match the stopped snapshot")
         initial = {"original_failure_sha256":digest(transaction / "receipt.json"),
             "old_pid":expected_pid, "old_identity":self.old, "owned_hold":self.guard,
             "checkpoint_sha256":checkpoint,
             "self_control_sha256":digest(self.workspace / "self_control_v2/astrid/state.json"),
-            "runtime_action_feedback":runtime_feedback_descriptor(self.workspace / RUNTIME_FEEDBACK_FILE)}
+            "runtime_action_feedback":runtime_feedback_descriptor(self.workspace / RUNTIME_FEEDBACK_FILE),
+            "snapshot_prepared":snapshot_prepared}
         self.assert_stopped_ownership(initial)
         check = self.native("--verify-deployment-inputs")
         if check.get("checkpoint", {}).get("sha256") != checkpoint:
@@ -200,7 +229,7 @@ class StoppedTransitionMixin:
         return initial
 
     def assert_stopped_ownership(self, initial: dict, *, selected: bool = False) -> None:
-        self.verify_bundle()
+        self.verify_bundle(allow_recovery_tool_changes=True)
         if digest(self.transaction / "receipt.json") != initial["original_failure_sha256"]:
             raise RuntimeError("original failed receipt changed during stopped recovery")
         try:

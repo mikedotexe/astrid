@@ -32,6 +32,11 @@ from bridge_stopped_recovery import (
 
 ROOT = Path("/Users/v/other/astrid")
 LABEL = "com.astrid.spectral-bridge"
+RECOVERY_TOOL_PATHS = frozenset({
+    "scripts/bridge_activate.py",
+    "scripts/bridge_stage.py",
+    "scripts/bridge_stopped_recovery.py",
+})
 
 
 def sync_directory(path: Path) -> None:
@@ -193,14 +198,16 @@ class LaunchdBridge(StoppedTransitionMixin):
                                 capture_output=True, text=True, check=True, timeout=60)
         return json.loads(result.stdout)
 
-    def verify_bundle(self) -> None:
+    def verify_bundle(self, *, allow_recovery_tool_changes: bool = False) -> None:
         if stage_tools.verify_stage(self.stage) != self.ready:
             raise RuntimeError("release witness changed during activation")
         # Source-facing runtime tools must still describe the tree that was built.
         source = Path(self.ready["source_root"])
         expected = stage_tools.json_file(self.stage / "source-inputs.json")
         current = stage_tools.input_snapshot(source, stage_tools.local_packages(source))
-        if current != expected:
+        allowed = (frozenset(str(source / path) for path in RECOVERY_TOOL_PATHS)
+                   if allow_recovery_tool_changes else frozenset())
+        if not stage_tools.same_input_contents(expected, current, allowed):
             raise RuntimeError("staged source inputs changed; rebuild before activation")
 
     def inspect(self, expected_pid: int) -> dict:
@@ -274,6 +281,7 @@ class LaunchdBridge(StoppedTransitionMixin):
         if digest(self.launcher) != initial["launcher_sha256"]:
             raise RuntimeError("launcher changed before installation")
         self.retain_hold()
+        manifest = stage_tools.json_file(self.stage / "manifest.json")
         for name, destination in (("release-launcher", self.launcher), ("release-selection", self.selection_helper)):
             original = self.stage / stage_tools.ARTIFACTS[name]
             expected_old = initial.get("launcher_sha256" if name == "release-launcher" else "selection_helper_sha256")
@@ -282,9 +290,10 @@ class LaunchdBridge(StoppedTransitionMixin):
                     raise RuntimeError("live launch helper changed concurrently")
                 atomic_bytes(self.transaction / (destination.name + ".before"), destination.read_bytes())
             data = original.read_bytes()
-            manifest = stage_tools.json_file(self.stage / "manifest.json")
             if hashlib.sha256(data).hexdigest() != manifest["artifacts"][name]["sha256"]:
                 raise RuntimeError("staged launch helper changed before installation")
+            if os.path.lexists(destination) and digest(destination) == manifest["artifacts"][name]["sha256"]:
+                continue
             atomic_bytes(destination, data, 0o755)
 
     def assert_old(self, pid: int, initial: dict) -> None:
@@ -381,9 +390,9 @@ class LaunchdBridge(StoppedTransitionMixin):
                                  "--operator-ack", ack)
             stage_tools.atomic_json(self.transaction / "handoff.json", result)
 
-    def select_release(self) -> None:
+    def select_release(self, *, allow_recovery_tool_changes: bool = False) -> None:
         self.assert_stopped_feedback()
-        self.verify_bundle()
+        self.verify_bundle(allow_recovery_tool_changes=allow_recovery_tool_changes)
         path = self.control / "active.json"
         previous = self.old.get("selection_sha256")
         if os.path.lexists(path) and (previous is None or digest(path) != previous):

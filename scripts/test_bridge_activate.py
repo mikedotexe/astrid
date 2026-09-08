@@ -277,6 +277,19 @@ class TransactionFilesTests(unittest.TestCase):
         self.assertEqual(self.backend.selection_helper.read_bytes(), b"new release-selection")
         self.assertEqual(activation.stage_tools.json_file(self.backend.control / "hold.json"), self.backend.guard)
 
+    def test_identical_launch_helpers_are_backed_up_without_metadata_churn(self):
+        initial = self.launcher_fixture()
+        self.backend.launcher.write_bytes((self.stage / "helpers/launchd_spectral_bridge.sh").read_bytes())
+        self.backend.selection_helper.write_bytes((self.stage / "helpers/bridge_release_launch.py").read_bytes())
+        initial["launcher_sha256"] = activation.digest(self.backend.launcher)
+        initial["selection_helper_sha256"] = activation.digest(self.backend.selection_helper)
+        before = {path:path.stat().st_mtime_ns for path in (self.backend.launcher, self.backend.selection_helper)}
+        with patch.object(self.backend, "verify_bundle"):
+            self.backend.install_hold_and_launcher(initial)
+        self.assertEqual(before, {path:path.stat().st_mtime_ns for path in before})
+        for path in before:
+            self.assertEqual((self.backend.transaction / (path.name + ".before")).read_bytes(), path.read_bytes())
+
     def test_unexpected_helper_is_not_overwritten(self):
         initial = self.launcher_fixture()
         self.backend.selection_helper.write_text("foreign helper")

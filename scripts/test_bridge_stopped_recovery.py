@@ -146,6 +146,14 @@ class StoppedRecoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "already has progress"):
             self.resume()
 
+    def test_complete_original_activation_snapshot_is_validated_without_replay(self):
+        self.backend.snapshot_and_handoff("fixture", "original activation snapshot")
+        with patch.object(self.backend, "snapshot_and_handoff", side_effect=AssertionError("snapshot replayed")):
+            result = self.resume()
+        self.assertTrue(result["snapshot_prepared"])
+        self.assertEqual(result["status"], "transition_recovered")
+        self.assertFalse(self.hold.exists())
+
     def test_live_pid_is_refused_without_progress(self):
         self.mocks["kill"].side_effect = None
         with self.assertRaisesRegex(RuntimeError, "PID still exists"):
@@ -193,7 +201,7 @@ class StoppedRecoveryTests(unittest.TestCase):
             self.resume()
         self.hold.write_bytes(self.hold_bytes)
         self.pending.write_text('{"foreign":true}')
-        with self.assertRaisesRegex(RuntimeError, "existing signed handoff"):
+        with self.assertRaisesRegex(RuntimeError, "signed handoff presence"):
             self.resume()
         self.assertEqual(self.records(), [])
 

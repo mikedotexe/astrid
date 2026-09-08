@@ -174,6 +174,21 @@ class StageTests(unittest.TestCase):
             (self.package / "src/main.rs").write_text("same status, different bytes")
             self.assertNotEqual(first, stage.input_snapshot(self.source, [self.package]))
 
+    def test_content_comparison_ignores_mtime_but_not_bytes(self):
+        with patch.object(stage, "command", side_effect=self.command):
+            first = stage.input_snapshot(self.source, [self.package])
+            source = self.package / "src/main.rs"
+            source.touch()
+            touched = stage.input_snapshot(self.source, [self.package])
+            self.assertNotEqual(first, touched)
+            self.assertTrue(stage.same_input_contents(first, touched))
+            source.write_text("different bytes")
+            changed = stage.input_snapshot(self.source, [self.package])
+            self.assertFalse(stage.same_input_contents(first, changed))
+            self.assertTrue(stage.same_input_contents(first, changed, frozenset({str(source)})))
+            changed["files"][0]["mode"] ^= 0o100
+            self.assertFalse(stage.same_input_contents(first, changed, frozenset({str(source)})))
+
     def test_input_symlink_is_refused(self):
         (self.package / "src/external.rs").symlink_to(self.live / "binary")
         with patch.object(stage, "command", side_effect=self.command):

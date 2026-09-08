@@ -124,6 +124,35 @@ def input_snapshot(source: Path, packages: list[Path]) -> dict:
             "scope": "local_package_trees_and_named_helpers_excluding_runtime_and_build_outputs"}
 
 
+def same_input_contents(expected: dict, current: dict,
+                        allowed_changed_paths: frozenset[str] = frozenset()) -> bool:
+    """Compare build-affecting identity while retaining mtimes as stage evidence."""
+    if {key:value for key, value in expected.items() if key != "files"} != {
+            key:value for key, value in current.items() if key != "files"}:
+        return False
+
+    def material_rows(snapshot: dict) -> dict[str, dict]:
+        files = snapshot.get("files")
+        if not isinstance(files, list):
+            return {}
+        rows = [{key:value for key, value in row.items() if key != "mtime_ns"}
+                for row in files if isinstance(row, dict) and isinstance(row.get("path"), str)]
+        return {row["path"]:row for row in rows}
+
+    expected_rows = material_rows(expected)
+    current_rows = material_rows(current)
+    if (len(expected_rows) != len(expected.get("files", []))
+            or len(current_rows) != len(current.get("files", []))
+            or expected_rows.keys() != current_rows.keys()):
+        return False
+    return all(
+        expected_rows[path] == current_rows[path]
+        or (path in allowed_changed_paths
+            and expected_rows[path].get("mode") == current_rows[path].get("mode"))
+        for path in expected_rows
+    )
+
+
 def check_environment() -> None:
     blocked = [key for key in os.environ if key in {
         "RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "RUSTC_WRAPPER", "RUSTC_WORKSPACE_WRAPPER", "RUSTC", "RUSTDOCFLAGS"
