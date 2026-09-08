@@ -1,0 +1,110 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter (lease owned by scripts/steward_control.py; no session opened, no NDJSON ops, no pause/resume, no lease token read or persisted)",
+  "controller": {
+    "run_id": "run_1788822294661698000_61cb9f512d",
+    "preprojection_generation_id": "projection_1788822299395335000_f43942ce5c",
+    "preprojection_status": "passed",
+    "preprojection_completed_step_count": 27,
+    "pause_generation": 395,
+    "stop_requested_observed": false,
+    "postprojection": "runs after this process exits; not observable from inside the adapter"
+  },
+  "addressing": {
+    "introspection_id": "introspection_astrid_llm_1788821913",
+    "status": "addressed_change",
+    "full_read": true,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 8,
+    "claims_without_evidence": [],
+    "evidence_links_new": 11,
+    "evidence_links_existing": 0
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4622,
+    "canonical_fully_addressed": 3193,
+    "canonical_full_read": 3825,
+    "canonical_remaining": 1429,
+    "canonical_unread": 797,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_indexed": 6336,
+    "all_artifact_remaining": 3143,
+    "all_artifact_unread": 2511
+  },
+  "division": {
+    "cycle_sequence": 41,
+    "completed_rounds_since_followup_before": 3,
+    "completed_rounds_since_followup_after": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "round_event_id": "division_followup_event_5fd9735fe291295f66622591686edc59",
+    "event_count": 285,
+    "event_head_sha256": "296bdf67c3525d9d812e74b03d044980fd98250afa6081fb887199c7685b1dd8",
+    "processed_report_count": 1,
+    "tier5_cadence_dossier": "not generated \u2014 review_due was false at round start, so no Division return and therefore no dossier was due"
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 11835,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "domain_boundary_ratchet": {
+    "before": {
+      "valid": true,
+      "violation_count": 0,
+      "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4"
+    },
+    "after": {
+      "valid": true,
+      "violation_count": 0,
+      "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4"
+    },
+    "verdict": "GREEN \u2014 no baseline or manifest re-capture needed; the edit lands in an exempt test file."
+  },
+  "anti_drop": {
+    "self_test": "ok",
+    "verify": {
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "live_surface": {
+    "build": "not run",
+    "deploy": "not run",
+    "restart": "not run",
+    "launchctl": "not touched",
+    "statement": "No live substrate or control change was made or attempted. The running bridge binary is unchanged; this round has no runtime effect and claims no felt improvement or uptake."
+  },
+  "git": {
+    "authority": "READ-ONLY for this run",
+    "staged": false,
+    "committed": false,
+    "branch": "main",
+    "head": "3d4e83e4bc022cb82c7e0e3ecefea4326796c280"
+  },
+  "chronicle": {
+    "command": "scripts/division_ceremony_chronicle.py verify",
+    "result": "expected_stale",
+    "detail": "chronicle durable source inputs changed; project before verify \u2014 this round's record-round append IS the changed durable input, and the append necessarily precedes the verify. Left for the controller postprojection to resolve. Not a durable-integrity failure and NOT claimed as current. Matches the precedent recorded in claude-heartbeat_1788791389_codec_projection_fixed_legacy_basis_attribution.",
+    "projected_by_this_round": false,
+    "reason_not_projected": "Chronicle projection is Division-return work; review_due was false, so projecting it here would blur the ceremony boundary."
+  },
+  "evidence_event_store": {
+    "command": "scripts/evidence_event_store.py --json verify",
+    "valid": true,
+    "event_count": 1029481,
+    "last_global_seq": 1029481,
+    "last_event_sha256": "7111d0c9f83303a6bb09b9cc92538d70fa4b320472a3d8b52cf3670549b841cb",
+    "corrupt_lines": 0,
+    "errors": [],
+    "note": "Full-chain verify over 1,029,481 events; ~6.5 minutes of CPU. Run to completion in the foreground, not abandoned. Controller preprojection recorded evidence_before seq 1028744 / head ba7011d1 and evidence_after seq 1029397 / head 5a0c449d for the same run."
+  }
+}

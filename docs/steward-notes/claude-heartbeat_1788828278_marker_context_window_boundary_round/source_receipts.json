@@ -1,0 +1,62 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "reader": "claude-heartbeat",
+  "report_bound_source": {
+    "declared_path": "/Users/v/other/worktrees/marker-rollout-20260907/astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "declared_sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+    "observed_sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+    "bytes": 29562,
+    "lines": 812,
+    "binding_match": true,
+    "declared_window": "lines 401-800 of 812",
+    "declared_included_intervals": "1-800",
+    "declared_uncovered_intervals": "801-812",
+    "steward_read_scope": "COMPLETE file 1-812, read as 1-200, 200-420, 420-620, 620-812",
+    "note": "No report-time/now split: the report-bound worktree copy and the canonical working copy are byte-identical."
+  },
+  "canonical_working_copy": {
+    "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+    "sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+    "bytes": 29562,
+    "lines": 812,
+    "identical_to_report_binding": true,
+    "modified_by_this_round": false,
+    "note": "Foreign-dirty (M) from the marker rollout; left untouched by this round."
+  },
+  "implementation_target": {
+    "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+    "sha256_before": "11457dd292e518c588a48cd7bf51cba129d18979cb9cbb56caf5804fcfefcf4b",
+    "lines_before": 5101,
+    "sha256_after": "beeb548a970735d16d28cf161bdc9981cd0f5b4ddfa56b1cec44ebbdbf225e4d",
+    "bytes_after": 238007,
+    "lines_after": 5262,
+    "modified_by_this_round": true,
+    "note": "Was CLEAN in git before this round; the only edit in it is this round's 161 inserted lines (3 tests) after L3489. No foreign edits mixed in."
+  },
+  "adjacent_evidence_read": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs",
+      "sha256": "0931317779e8b09156385e4d6deecd4351c704afee7a82b17b561491825e1d8a",
+      "bytes": 9820,
+      "lines": 219,
+      "read": "complete",
+      "scope": "all 219 lines; the marker-annotation include, checked for prior coverage of her three asks"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read": "scoped",
+      "scope": "L2290-2330 and L3430-3500 read verbatim; whole-file structural scan of all 172 #[test] blocks for grouped+removed, nonzero boundary_occurrences, and window-char coverage"
+    },
+    {
+      "path": "capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json",
+      "read": "scoped",
+      "scope": "files map inspected for provider test/runtime entries"
+    }
+  ],
+  "coverage_gap_evidence": {
+    "method": "regex scan of every #[test] block in provider/tests.rs plus grep across capsules/spectral-bridge/{src,tests}",
+    "grouped_preserve_with_same_call_removal": "0 tests before this round",
+    "nonzero_boundary_occurrences": "0 tests before this round (only assertion pins 0 at L2314)",
+    "context_window_char_fields": "0 tests before this round referenced CONTROL_MARKER_CONTEXT_WINDOW_CHARS / before_window_chars / after_window_chars"
+  }
+}

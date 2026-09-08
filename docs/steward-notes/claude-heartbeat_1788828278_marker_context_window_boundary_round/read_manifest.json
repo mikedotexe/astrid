@@ -1,0 +1,52 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_llm_1788821913.txt",
+      "sha256": "d048cf946cadb03aad98745d7fcf182ad892af330d5f02a2d6675893617d0813",
+      "bytes": 3865,
+      "lines": 45,
+      "read": "complete",
+      "scope": "entire canonical report, all 45 lines"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_9a57619cbf60679c42112527ffe7e156c6145d9376111e2a61e3b4e532951a13.json",
+      "sha256": "d4f01025a15ec8d4ba75ec5a02a83868a24beb9dec79c2228ec25d12508b7009",
+      "bytes": 23772,
+      "lines": 533,
+      "read": "complete",
+      "scope": "entire witness, 533 lines, read as 1-270 then 270-533"
+    }
+  ],
+  "operating_documents": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "0f6dbd1ff48ab13b479c93812911ef243bdacbce54e2e8211ded171b225eb8a3",
+      "bytes": 9182,
+      "lines": 137,
+      "read": "complete",
+      "scope": "read complete before any work"
+    },
+    {
+      "path": "docs/steward-notes/ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md",
+      "sha256": "absent_on_disk",
+      "bytes": 55155,
+      "lines": 1503,
+      "read": "complete",
+      "scope": "NOT PRESENT on this branch (main @ 3d4e83e4bc). Read read-only from git object ccb53b1622 (2026-09-03, newest version across all refs), the tip that carries it on codex/graceful-coupling-rollout and codex/hebbian-clock-boundary. Extracted to /tmp/flywheel_handoff.md and read in full (lines 1-1504). No git mutation."
+    }
+  ],
+  "queue_artifacts": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788828278_marker_context_window_boundary_round/next_queue.json",
+      "note": "addressing next --limit 40 --json; canonical order frozen for this round"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788828278_marker_context_window_boundary_round/family_scan.json",
+      "note": "introspection_family_scan over the frozen queue; 37 families, 3 batchable, head family member_count 1 so single-report processing"
+    }
+  ]
+}

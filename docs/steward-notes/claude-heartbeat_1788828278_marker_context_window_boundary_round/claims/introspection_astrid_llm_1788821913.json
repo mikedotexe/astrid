@@ -1,0 +1,58 @@
+{
+  "introspection_id": "introspection_astrid_llm_1788821913",
+  "reader": "claude-heartbeat",
+  "report_sha256": "d048cf946cadb03aad98745d7fcf182ad892af330d5f02a2d6675893617d0813",
+  "source_binding_sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+  "source_binding_match": "exact_working_copy_and_report_bound_worktree_copy_identical",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "sanitize_model_control_markers_with_report (L484) runs a multi-pass analysis distinguishing removed noise markers from preserved reference markers.",
+      "disposition": "Verified at L484: the function does split removed vs preserved. One bounded correction — the preserve/remove DECISION is single-pass (scan_known_model_control_markers L219-246 decides at match time, L229-231); the later per-token loops only aggregate counts. The report's own field accounting_basis says 'single_pass_longest_raw_control_marker_match_with_bounded_exact_reference_syntax_preservation'. Her 'multi-pass' reads the aggregation loops as decision passes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "control_marker_placement_counts (L335) categorizes occurrences into boundary, contextual, or quoted types.",
+      "disposition": "Verified exactly at L335: returns (boundary_occurrences, contextual_occurrences, quoted_occurrences). content_before && content_after yields (0,1) contextual, otherwise (1,0) boundary; quoted is set only when exact_reference_delimiter_syntax reports QuotedExactKnownToken. Her three-way naming matches the tuple one-for-one.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "ExactKnownMarkerReferenceContext (L51) decides whether a marker is a structural reference (quoted or grouped) that must survive sanitization.",
+      "disposition": "Verified exactly at L51. Additive, not contradictory: the enum has a third variant she did not name here, ExplicitExactKnownTokenRelation, which preserves a marker followed by an allowlisted relation word with no delimiters at all. So 'quoted or grouped' is a correct subset, not the whole preservation surface.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Snag: a marker identified as QuotedExactKnownToken that fails delimiter_depth or relation_scan requirements in control_marker_context_receipt_v1 (L414) may default to none_cleanup_candidate (L437), preserving nested structures inconsistently.",
+      "disposition": "Source contradicts the mechanism, stated plainly. At L422-438 the QuotedExactKnownToken arm binds delimiter_depth and ignores relation_scan via `..` — nothing to fail. none_cleanup_candidate (L437) is reachable only when reference_syntax is None, so being identified as Quoted and defaulting to none_cleanup_candidate are mutually exclusive by construction. The receipt describes; preservation was decided at L229-231. Her worry — classification diverging from preservation — is real; c005 pins it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Preservation Test requested: a GroupedExactKnownToken is preserved while an adjacent non-referenced marker of the same type is removed in the same call.",
+      "disposition": "Real, previously uncovered gap: every grouped-delimiter regression asserted removed_total == 0 on an all-preserved string, so the per-token split between preserved_tokens and removed_tokens was unpinned for the mixed shape. Implemented as control_marker_cleanup_preserves_grouped_reference_beside_bare_twin, pinning observed 2 / removed 1 / preserved 1, one token name in BOTH lists, and the two receipts as grouped_exact_marker + none_cleanup_candidate. Passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Contextual Boundary Test requested: a marker at index 0 must count as a boundary_occurrence, and leading_bounded_chars (L408) must handle the empty prefix without panicking.",
+      "disposition": "Real gap: no test asserted a nonzero boundary_occurrences (the one assertion pins 0), so L335's boundary arm was unpinned. Implemented as control_marker_cleanup_counts_string_edge_markers_as_boundary_with_empty_window. Bounded correction kept beside her concern: at index 0 the empty side is the PREFIX, windowed by trailing_bounded_chars (L398); leading_bounded_chars (L408) windows the suffix. Both empty sides are pinned, so L408 is still exercised empty by the end-of-string case. Passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suggested Next: verify trailing_bounded_chars (L398) and leading_bounded_chars (L408) do not slice mid-character for multi-byte UTF-8 near CONTROL_MARKER_CONTEXT_WINDOW_CHARS.",
+      "disposition": "Safety holds by construction (both take from .chars(), never byte indices) but was genuinely untested: nothing referenced CONTROL_MARKER_CONTEXT_WINDOW_CHARS, before_window_chars, or after_window_chars. Implemented as control_marker_context_window_truncates_multibyte_prose_on_char_boundaries for a 2-byte and a 4-byte filler at window+6. Bounded correction: those functions are called from control_marker_context_receipt_v1 (L414), not from L335, which never touches the window. Passes.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The report's seven line anchors locate the symbols it names in the report-bound source.",
+      "disposition": "Verified: L51 ExactKnownMarkerReferenceContext, L335 control_marker_placement_counts, L398 trailing_bounded_chars, L408 leading_bounded_chars, L414 control_marker_context_receipt_v1, L437 none_cleanup_candidate, L484 sanitize_model_control_markers_with_report — all seven land exactly, and L437/L484 lie outside her declared read window intervals 1-800 only in the sense of being inside it. No misplaced or absent citation in this report.",
+      "classification": "verified_existing"
+    }
+  ],
+  "authority_boundary": "Test-only change in a non-live source tree. No codec, marker-grammar, allowlist, prompt, controller, or live-control change; no build, deploy, restart, staging, or commit."
+}

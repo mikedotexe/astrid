@@ -1,0 +1,63 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "touched_surface": "capsules/spectral-bridge/src/llm/provider/tests.rs (test-only)",
+  "focused": [
+    {
+      "command": "cargo test --lib -- --exact llm::provider::tests::control_marker_cleanup_preserves_grouped_reference_beside_bare_twin llm::provider::tests::control_marker_cleanup_counts_string_edge_markers_as_boundary_with_empty_window llm::provider::tests::control_marker_context_window_truncates_multibyte_prose_on_char_boundaries",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "note": "The three new regressions, run by exact name so a zero-test filter cannot be mistaken for a pass."
+    },
+    {
+      "command": "cargo test --lib control_marker_",
+      "result": "ok",
+      "passed": 73,
+      "failed": 0,
+      "note": "Whole marker-cleanup family including the three new tests; no existing marker regression disturbed."
+    }
+  ],
+  "crate_wide": [
+    {
+      "command": "cargo fmt -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "cargo clippy --all-targets --all-features -- -D warnings",
+      "result": "clean",
+      "note": "Pedantic + arithmetic_side_effects deny; finished in 3m55s with no warnings."
+    },
+    {
+      "command": "cargo test --lib",
+      "result": "failed",
+      "passed": 2206,
+      "failed": 3,
+      "failures": [
+        "signal_spine::tests::no_capture_shadow_instrumentation_stays_below_one_millisecond_p95",
+        "lifecycle::process_tests::os_signal_drain_waits_for_work_then_holds_until_exit",
+        "autonomous::runtime::next_action::tests::eye_and_ear_actions_gate_modalities_independently"
+      ],
+      "attribution": "PRE-EXISTING, not caused by this round. Proven by restoring the unmodified tests.rs (SHA 11457dd2, 5101 lines, 2204 filtered) and re-running: signal_spine p95 and lifecycle os_signal_drain fail identically on the baseline file. eye_and_ear_actions_gate_modalities_independently passed on isolated re-run and is a parallel-execution flake. The p95 test measures instrumentation overhead (4.9-19.3ms observed against a 1ms budget) on a machine concurrently running the live bridge, minime engine, MLX gemma4-12B, camera and mic — load-sensitive by construction."
+    }
+  ],
+  "integrity": [
+    {"command": "scripts/introspection_addressing_audit.py --self-test", "result": "ok", "tests": 44},
+    {"command": "scripts/test_evidence_event_store.py", "result": "ok", "tests": 21},
+    {"command": "scripts/test_steward_control.py", "result": "ok", "tests": 27, "note": "First run reported 1 error, immediate re-run clean at 27/27; suspected contention with this round's own live controller lease."},
+    {"command": "scripts/test_steward_projection.py", "result": "ok", "tests": 14},
+    {"command": "scripts/test_division_ceremony_followup.py", "result": "ok", "tests": 3},
+    {"command": "scripts/test_division_ceremony_chronicle.py", "result": "ok", "tests": 10},
+    {"command": "scripts/test_division_ceremony_projection.py", "result": "ok", "note": "self-test: ok"},
+    {"command": "scripts/test_projection_cursors.py", "result": "ok", "tests": 4},
+    {"command": "scripts/test_introspection_cadence_audit.py", "result": "ok", "tests": 6},
+    {"command": "scripts/anti_drop_catalog.py --self-test", "result": "ok", "tests": 5},
+    {"command": "scripts/anti_drop_catalog.py verify --json", "result": "ok", "alarms": 0, "gaps": 0},
+    {"command": "scripts/introspection_cadence_audit.py --strict --compact", "result": "ok", "note": "integrity_ok true, errors [], duplicate_hash_group_count 0, 4622 canonical reports."},
+    {"command": "scripts/domain_boundary_audit.py verify", "result": "ok", "note": "Run before and after the edit. Both: valid true, violation_count 0, empty violation_kind_counts, manifest 578a39cf unchanged. RATCHET GREEN."},
+    {"command": "scripts/experiential_epistemics.py self-test --json", "result": "ok"},
+    {"command": "scripts/experiential_epistemics.py verify --json", "result": "ok", "checked_record_count": 11835, "issue_count": 0, "history_rewritten": false, "note": "Run after all durable evidence writes."},
+    {"command": "scripts/introspection_addressing_audit.py audit-counters --json", "result": "consistent", "mismatches": []},
+    {"command": "scripts/division_ceremony_followup.py verify", "result": "ok", "note": "Run at round start; review_due false."}
+  ]
+}

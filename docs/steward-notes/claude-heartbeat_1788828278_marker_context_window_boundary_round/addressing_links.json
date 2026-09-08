@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L484 sanitize_model_control_markers_with_report; the preserve/remove decision is single-pass at L219-246 (L229-231), later loops only aggregate."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L335 control_marker_placement_counts returns (boundary, contextual, quoted) exactly as the report describes."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L51 ExactKnownMarkerReferenceContext; third variant ExplicitExactKnownTokenRelation is additive to her quoted/grouped pair."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L422-438: the Quoted arm binds delimiter_depth and discards relation_scan; none_cleanup_candidate (L437) is the None arm only. Mutually exclusive."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_grouped_reference_beside_bare_twin pins the concern under the contradicted mechanism: classification and preservation agree in a mixed call."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_preserves_grouped_reference_beside_bare_twin — her Preservation Test verbatim; grouped preserved beside a same-token bare removal."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_cleanup_counts_string_edge_markers_as_boundary_with_empty_window — first nonzero boundary_occurrences assertion in the crate; both empty-window sides pinned."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "control_marker_context_window_truncates_multibyte_prose_on_char_boundaries — first coverage of CONTROL_MARKER_CONTEXT_WINDOW_CHARS truncation, 2-byte and 4-byte fillers."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788828278_marker_context_window_boundary_round/summaries/introspection_astrid_llm_1788821913.md",
+      "note": "All seven cited line anchors resolved exactly against the report-bound source; grep receipts recorded in source_receipts.json."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming what she surfaced, what complete source reading established, the three regressions, and the authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_llm_1788821913",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report: three uncovered gaps closed, one mechanism contradicted, two attribution corrections."
+    }
+  ]
+}
