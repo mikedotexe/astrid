@@ -11,6 +11,7 @@ struct DialogueContextInput<'a> {
     agenda: &'a str,
     feedback: &'a str,
     diversity: &'a str,
+    collaboration: &'a str,
 }
 
 fn dialogue_context_blocks(
@@ -29,6 +30,13 @@ fn dialogue_context_blocks(
             direct_cap,
             2,
             direct_min,
+        ),
+        (
+            "collaboration",
+            input.collaboration,
+            DIALOGUE_COLLABORATION_CAP,
+            3,
+            0,
         ),
         (
             "topline",

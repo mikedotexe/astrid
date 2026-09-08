@@ -43,6 +43,8 @@ pub async fn generate_dialogue(
         attention,
         overflow_dir,
         None,
+        None,
+        None,
     )
     .await;
     (completion.text, completion.overflow)
@@ -67,6 +69,8 @@ pub async fn generate_dialogue_with_delivery(
     attention: Option<&PromptAttentionV1>,
     overflow_dir: &std::path::Path,
     protected: Option<&ProtectedDialogueInputV1>,
+    collaboration_context: Option<&str>,
+    context_submission: Option<&ContextSubmissionTrackerV1>,
 ) -> DialogueCompletionV1 {
     generate_dialogue_with_runtime_feedback(
         journal_text,
@@ -89,6 +93,8 @@ pub async fn generate_dialogue_with_delivery(
         protected,
         &[],
         &crate::prompt_budget::OverflowReadMoreAvailability::Unknown,
+        collaboration_context,
+        context_submission,
     )
     .await
 }
@@ -115,6 +121,8 @@ pub async fn generate_dialogue_with_runtime_feedback(
     protected: Option<&ProtectedDialogueInputV1>,
     runtime_feedback: &[crate::runtime_action_feedback::RuntimeActionFeedbackV1],
     overflow_availability: &crate::prompt_budget::OverflowReadMoreAvailability,
+    collaboration_context: Option<&str>,
+    context_submission: Option<&ContextSubmissionTrackerV1>,
 ) -> DialogueCompletionV1 {
     let mlx_profile = configured_mlx_profile();
     let prompt_budget_chars = dialogue_prompt_budget_chars_for_profile(num_predict, mlx_profile);
@@ -259,6 +267,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
             agenda: &agenda_block,
             feedback: &feedback_block,
             diversity: &diversity_block,
+            collaboration: collaboration_context.unwrap_or_default(),
         },
         attention,
     );
@@ -362,7 +371,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
             "\n[For this exchange, you chose to emphasize: {emphasis}. This is your own direction.]\n"
         ));
     }
-    let generation_record_ctx = DialogueGenerationRecordContext::capture(
+    let mut generation_record_ctx = DialogueGenerationRecordContext::capture(
         &messages,
         &ollama_fallback_messages,
         &own_body,
@@ -389,6 +398,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
         MlxFailureLogMode::FallbackEligible,
         protected,
         runtime_feedback,
+        context_submission,
     )
     .await;
     let primary_elapsed_s = primary_started.elapsed().as_secs_f64();
@@ -429,6 +439,15 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 texture_family = fallback_trace.fallback_shadow_texture_selector.texture_family,
                 "dialogue_live Ollama fallback transition spectral context"
             );
+            if collaboration_context.is_some()
+                && !context_submission.is_some_and(ContextSubmissionTrackerV1::submitted)
+            {
+                ollama_fallback_messages.push(Message {
+                    role: "user".into(),
+                    content: collaboration_context.unwrap_or_default().to_string(),
+                });
+            }
+            generation_record_ctx.replace_fallback_messages(&ollama_fallback_messages);
             let fallback_started = std::time::Instant::now();
             let fallback_response = ollama_chat_with_runtime_feedback(
                 "dialogue_live",
@@ -439,6 +458,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 Some(&fallback_trace),
                 protected,
                 runtime_feedback,
+                context_submission,
             )
             .await;
             let fallback_elapsed_s = fallback_started.elapsed().as_secs_f64();

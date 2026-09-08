@@ -65,6 +65,10 @@ pub(in crate::autonomous) struct ConversationState {
     pub activity: super::activity_reading::ActivityRuntimeV1,
     /// Exact peer source admitted to the completed turn; never inferred from inbox recency.
     pub current_mailbox_peer_target: Option<super::correspondence_v1::InboxPeerMessage>,
+    /// Restart-stable, audience-local record of collaboration revisions that
+    /// have already had one ordinary prompt opportunity.
+    pub collaboration_prompt_checkpoint:
+        super::next_action::collaboration_attention::CollaborationPromptCheckpointV1,
     /// Astrid chose NEXT: INTROSPECT — force introspection mode next exchange.
     pub wants_introspect: bool,
     /// Optional source target. Omitted offsets continue the durable source session;

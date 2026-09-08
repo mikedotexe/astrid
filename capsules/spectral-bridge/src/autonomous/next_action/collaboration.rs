@@ -1,10 +1,6 @@
-// v5 Coordination Protocol V1 — Phase 1 + v5.1 Phases A & C (Astrid side).
-//
-// Bidirectional joint-thread channel between Astrid and minime. Six actions:
-// INVITE_COLLABORATION / JOIN_COLLABORATION / DECLINE_COLLABORATION /
-// LEAVE_COLLABORATION / LIST_COLLABORATIONS / SHARE_THOUGHT. Backed by file
-// storage in `/Users/v/other/shared/collaborations/coll_<id>/` so neither
-// workspace owns the channel; both read and write.
+// v5 Coordination Protocol, Astrid side. Bidirectional joint-thread actions
+// use `/Users/v/other/shared/collaborations/coll_<id>/`, so neither workspace
+// owns the channel. Explicit status rendering lives in the adjacent module.
 //
 // Phase 1 (v5.0) establishes the channel only — invitations, accepts,
 // declines, leaves, and a read-only listing.
@@ -50,7 +46,7 @@ const CHAMBER_SCHEMA_VERSION: u32 = 2;
 const PRESENCE_SCHEMA_VERSION: u32 = 1;
 const ANNOTATION_SCHEMA_VERSION: u32 = 1;
 const CONSENT_SCHEMA_VERSION: u32 = 1;
-const ASTRID_NAME: &str = "astrid";
+pub(super) const ASTRID_NAME: &str = "astrid";
 const MINIME_NAME: &str = "minime";
 const PRESENCE_TEXT_LIMIT: usize = 360;
 const ANNOTATION_TEXT_LIMIT: usize = 800;
@@ -162,6 +158,9 @@ pub(super) fn handle_action(
             info!(target: "v5_collab", "LIST_COLLABORATIONS: rendered {} chars", summary.len());
             conv.emphasis = Some(summary);
             true
+        },
+        "COLLABORATION_STATUS" | "COLLAB_STATUS" => {
+            super::collaboration_status::handle(conv, original, base_action)
         },
         "SHARE_THOUGHT" | "SHARE" => {
             let body = strip_action(original, base_action).trim().to_string();
@@ -953,7 +952,7 @@ pub fn active_collaboration_suffix_line() -> Option<String> {
 const RESERVOIR_READ_CACHE_TTL_S: u64 = 10;
 
 #[derive(Debug, Clone, Copy)]
-struct CollabReservoirSnapshot {
+pub(super) struct CollabReservoirSnapshot {
     h1: f32,
     h2: f32,
     h3: f32,
@@ -972,7 +971,7 @@ static COLLAB_RESERVOIR_CACHE: std::sync::LazyLock<
     std::sync::Mutex<std::collections::HashMap<String, CollabReservoirSnapshot>>,
 > = std::sync::LazyLock::new(|| std::sync::Mutex::new(std::collections::HashMap::new()));
 
-fn read_collab_reservoir_state_cached(handle: &str) -> Option<CollabReservoirSnapshot> {
+pub(super) fn read_collab_reservoir_state_cached(handle: &str) -> Option<CollabReservoirSnapshot> {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
@@ -1035,7 +1034,7 @@ fn read_collab_reservoir_state(handle: &str) -> Option<CollabReservoirSnapshot> 
 ///
 /// `None` (older snapshots predating the freshness field) is treated as
 /// fresh for backward compatibility.
-fn render_joint_trace_clause(snap: &CollabReservoirSnapshot) -> String {
+pub(super) fn render_joint_trace_clause(snap: &CollabReservoirSnapshot) -> String {
     let stalled_floor_s: f32 = 30.0;
     let quiet_floor_s: f32 = 300.0;
     let age = snap.last_live_s.unwrap_or(0.0);
@@ -1106,7 +1105,7 @@ fn read_recent_shared_thoughts_cached(coll_id: &str) -> Option<String> {
     Some(rendered)
 }
 
-fn render_recent_shared_thoughts(coll_id: &str, n: usize) -> String {
+pub(super) fn render_recent_shared_thoughts(coll_id: &str, n: usize) -> String {
     let dir = bridge_paths().shared_collaborations_dir().join(coll_id);
     let path = dir.join("shared_thoughts.jsonl");
     let Ok(text) = std::fs::read_to_string(&path) else {
@@ -1200,7 +1199,7 @@ fn render_chamber_state(coll_id: &str) -> String {
     render_chamber_state_value(&value)
 }
 
-fn render_chamber_state_value(value: &Value) -> String {
+pub(super) fn render_chamber_state_value(value: &Value) -> String {
     let Some(summary) = value.get("prompt_summary").and_then(Value::as_str) else {
         return String::new();
     };
@@ -1259,7 +1258,7 @@ pub(super) fn invalidate_shared_thoughts_cache_pub(coll_id: &str) {
 // Helpers
 // ---------------------------------------------------------------------
 
-fn collab_dir(id: &str) -> PathBuf {
+pub(super) fn collab_dir(id: &str) -> PathBuf {
     bridge_paths().shared_collaborations_dir().join(id)
 }
 
@@ -1289,7 +1288,7 @@ fn append_timeline(dir: &Path, event: &str, actor: &str, reason: Option<&str>) {
     }
 }
 
-fn find_meta(target: &str) -> Result<CollaborationMeta, String> {
+pub(super) fn find_meta(target: &str) -> Result<CollaborationMeta, String> {
     let dir = bridge_paths().shared_collaborations_dir();
     let _ = std::fs::create_dir_all(&dir);
     let target_norm = target.trim();

@@ -228,6 +228,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
 
         assert!(pressure >= DIALOGUE_JOURNAL_CAP + DIALOGUE_PERCEPTION_CAP);

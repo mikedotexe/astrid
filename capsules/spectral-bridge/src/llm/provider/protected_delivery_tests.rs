@@ -33,6 +33,23 @@ mod protected_delivery_tests {
         }
     }
 
+    #[test]
+    fn context_submission_requires_the_exact_complete_candidate() {
+        let exact = "[collab-attention-v1:abc123] complete optional notice";
+        let tracker = ContextSubmissionTrackerV1::new(exact.to_string());
+        tracker.mark_final_messages(&[Message {
+            role: "user".into(),
+            content: "[collab-attention-v1:abc123]".into(),
+        }]);
+        assert!(!tracker.submitted());
+
+        tracker.mark_final_messages(&[Message {
+            role: "user".into(),
+            content: format!("prefix\n{exact}\nsuffix"),
+        }]);
+        assert!(tracker.submitted());
+    }
+
     fn primary_attempt(
         input: &ProtectedDialogueInputV1,
         limit: usize,

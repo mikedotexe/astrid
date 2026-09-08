@@ -146,6 +146,7 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
     topline_hint: Option<&str>,
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
+    collaboration_context: Option<&str>,
     attention: Option<&PromptAttentionV1>,
 ) -> usize {
     // The estimate must model what the assembly actually builds. It was
@@ -223,6 +224,12 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
                 .unwrap_or_default()
                 .len()
                 .min(DIALOGUE_DIVERSITY_CAP),
+        )
+        .saturating_add(
+            collaboration_context
+                .unwrap_or_default()
+                .len()
+                .min(DIALOGUE_COLLABORATION_CAP),
         )
         .saturating_add(512)
 }

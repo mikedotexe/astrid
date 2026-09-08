@@ -12,8 +12,8 @@ pub use provider::{
 };
 
 pub(crate) use provider::{
-    DialogueCompletionV1, MAX_EXPLICIT_LETTER_BYTES, PromptAttentionV1, PromptDeliveryReceiptV1,
-    ProtectedDialogueInputV1, ProtectedDialogueKindV1, astrid_aperture,
+    ContextSubmissionTrackerV1, DialogueCompletionV1, MAX_EXPLICIT_LETTER_BYTES, PromptAttentionV1,
+    PromptDeliveryReceiptV1, ProtectedDialogueInputV1, ProtectedDialogueKindV1, astrid_aperture,
     astrid_pressure_attenuation_depth, astrid_tail_participation, astrid_vibrancy_aperture,
     derive_browse_anchor, dialogue_outer_timeout_secs, dialogue_retry_tokens,
     estimate_dialogue_prompt_pressure_chars, fetch_url, format_browse_failure_context,

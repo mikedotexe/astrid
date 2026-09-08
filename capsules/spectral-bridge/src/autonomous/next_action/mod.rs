@@ -9,6 +9,8 @@ pub(crate) mod auto_promote;
 mod autoresearch;
 mod codex;
 pub(crate) mod collaboration;
+pub(crate) mod collaboration_attention;
+mod collaboration_status;
 mod division;
 mod identify_pattern;
 pub(crate) mod introspection_cadence;
@@ -1342,6 +1344,11 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
             | "RETURN_ACTIVITY"
             | "CHECK_MAILBOX"
             | "MAILBOX_STATUS"
+            | "LIST_COLLABORATIONS"
+            | "LIST_COLLABS"
+            | "COLLABORATIONS"
+            | "COLLABORATION_STATUS"
+            | "COLLAB_STATUS"
     ) {
         return "protected_summary";
     }
@@ -1445,7 +1452,13 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         };
     }
     match base_action {
-        "ACTIVITY_STATUS" | "MAILBOX_STATUS" => return "read_only",
+        "ACTIVITY_STATUS"
+        | "MAILBOX_STATUS"
+        | "LIST_COLLABORATIONS"
+        | "LIST_COLLABS"
+        | "COLLABORATIONS"
+        | "COLLABORATION_STATUS"
+        | "COLLAB_STATUS" => return "read_only",
         "PARK_ACTIVITY" | "RETURN_ACTIVITY" | "CHECK_MAILBOX" => return "local_state",
         _ => {},
     }
@@ -1652,6 +1665,16 @@ fn route_for_preflight_base(base_action: &str) -> String {
             | "MAILBOX_STATUS"
     ) {
         return "activity".to_string();
+    }
+    if matches!(
+        base_action,
+        "LIST_COLLABORATIONS"
+            | "LIST_COLLABS"
+            | "COLLABORATIONS"
+            | "COLLABORATION_STATUS"
+            | "COLLAB_STATUS"
+    ) {
+        return "collaboration".to_string();
     }
     if protected_diagnostics::canonical_action_for(base_action).is_some() {
         return "protected_diagnostics".to_string();

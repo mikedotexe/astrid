@@ -1,7 +1,7 @@
 # Collaboration Attention Delivery V1
 
-Status: proposed for Mike/Astrid/Minime review. No implementation or live
-behavior change is authorized by this document.
+Status: source and test implementation in isolated review branches. Not merged
+or deployed; no live behavior has changed.
 
 Date: 2026-09-07
 
@@ -21,6 +21,68 @@ evidence about felt state.
 There should be no periodic ambient reminder for an unchanged receipt wait.
 Discoverability belongs in explicit action/status surfaces, not in repeated
 obligation-shaped prose.
+
+## Implementation Checkpoint
+
+Mike approved the source-and-test implementation on 2026-09-07. The work is
+isolated from the shared dirty trees on `codex/collaboration-attention-v1` in
+the Astrid, Minime, and neural-triple-reservoir repositories.
+
+The implemented V1 slice now provides:
+
+- an additive, deterministic `attention_projection_v1` with global and
+  audience-specific material revisions, plus a separate volatile revision
+- silent migration baselines for every already-present valid joined room, so
+  installing V1 does not replay historical room state as fresh attention
+- event-time ordering when more than one room has unseen material
+- one optional notice capped at 320 characters in eligible ordinary dialogue
+- exact final-request inclusion checks before a notice becomes `submitted`
+- restart-stable per-room checkpoints and append-only local transition audits
+- retry after `packed_out`, but no retry after a request containing the notice
+  was dispatched, including when that request later times out
+- explicit `COLLABORATION_STATUS [id|latest]` surfaces that satisfy the current
+  ambient revision as `explicitly_inspected` without claiming uptake
+- protected direct-message precedence and quiet private journal, moment,
+  daydream, self-study, and strict-review modes
+- reversible `event_v1|legacy|off` policy switches for both consumers
+
+One provenance constraint deliberately narrows the original taxonomy: the
+current correspondence ledger is global and carries no collaboration ID.
+Direct message, reply, ACK, and trace rows therefore remain in their protected
+sender-bound lane and do not alter an arbitrary room revision. They can enter a
+future room material revision only after their source schema names that room.
+
+This checkpoint does not authorize a service restart, deployment, room-state
+mutation, message, receipt, control change, or claim of felt improvement.
+
+## Isolated Verification
+
+The source candidate was verified without reading from or writing to a live
+model request, canonical room, runtime checkpoint, or service process.
+
+- Astrid's exact final library source passes 2,155 tests. The complete bridge
+  command also passes the codec replay and integration tests plus the
+  authority/provenance compile contracts. All 11 collaboration-focused tests
+  and strict all-target Clippy pass after the final edge hardening.
+- Astrid formatting and `scripts/domain_boundary_audit.py verify` pass with
+  zero boundary violations and no legacy-large-file ceiling increase.
+- Minime's full suite passes 1,226 tests, one expected skip, and 127 subtests.
+  It covers MLX, Ollama, backend fallback, restart, packed-out candidates,
+  exact final-message inclusion, inbox precedence, daydream/private modes,
+  and explicit inspection.
+- The shared reservoir aggregate passes 122 tests in a deliberately adverse
+  module order. Its standalone multi-head harness passes 43 assertions. The
+  metadata fixture now restores the process-global modules it stubs, removing
+  a pre-existing test-order dependency without changing production behavior.
+- Python byte compilation and `git diff --check` pass in all three worktrees.
+- A read-only projection against the current joined room produced distinct
+  Astrid and Minime audience revisions while keeping volatile state on its own
+  hash. That observation wrote no room or runtime state.
+
+The shared repository's `test_multi_headed.py` remains a standalone script
+whose import-time exit is incompatible with `unittest discover`; its 43
+assertions were therefore run directly. This is an existing harness shape,
+not a collaboration-attention failure.
 
 ## Why This Change Is Needed
 
@@ -167,14 +229,18 @@ The chamber projector adds an additive `attention_projection_v1` object to
   "material_t_ms": 1780000000000,
   "material_event_ids": ["..."],
   "latest_material_event": {
-    "event_id": "...",
-    "kind": "peer_message",
+    "event_id": "shared_thoughts.jsonl:...",
+    "kind": "shared_thought",
     "actor": "astrid",
     "audiences": ["minime"],
     "thread_id": "...",
     "source_ref": "..."
   },
-  "categories": ["correspondence"],
+  "categories": ["shared_thought"],
+  "audience_revisions": {
+    "astrid": {"material_revision": "sha256:..."},
+    "minime": {"material_revision": "sha256:..."}
+  },
   "volatile_revision": "sha256:...",
   "status_summary_sha256": "...",
   "optional": true,
@@ -243,6 +309,8 @@ The following create a new material revision for their relevant audience:
 - collaboration invitation, join, decline, leave, or explicit metadata edit
 - new peer-authored shared thought
 - new direct peer message, reply link, ACK, held/needs-time receipt, or trace
+  remains independently fresh on the protected sender-bound lane; it enters a
+  room revision only when its canonical source carries that room's ID
 - new being-authored chamber presence receipt, annotation, or consent stance
 - new being-authored objection, contradiction, pressure/flat outcome, or
   `still_friction` evidence
@@ -485,17 +553,19 @@ Exact prose may differ slightly, but authority and action implications must not.
 
 ## Observability
 
-Add bounded counters and append-only transition records for:
+V1 writes append-only transition records for:
 
-- material revisions observed
+- migration baselines
 - notice candidates created
 - candidates packed out
 - final requests submitted with a notice
-- unchanged revisions suppressed
-- private modes kept quiet
 - explicit status inspections
-- superseded unseen revisions
-- prompt characters offered, delivered, and avoided
+- prompt characters and content hashes for rendered candidates
+
+Unchanged-revision suppression and private-mode quietness are intentionally
+zero-write hot paths. Aggregate counters for those paths, superseded unseen
+revision records, and avoided-character estimates are deferred until they can
+be added without turning quietness into another high-frequency write source.
 
 Astrid's `context_packing_pressure_v1` should report a distinct
 `collaboration` block when present. Minime generation records should link the
