@@ -17,6 +17,16 @@ otherwise it is `workspace/provider_observations`. No prompt reads this spool.
 Disable the setting through the owning release workflow to roll back; retain
 all evidence. There is no observer-driven restart, schedule or live control.
 
+The launch wrapper reads the operator-owned
+`workspace/runtime/provider_observation.env` before importing launchd overrides.
+For durable enablement, write `export ASTRID_PROVIDER_OBSERVATION=on` and an
+exported `ASTRID_PROVIDER_OBSERVATION_DIR` pointing at a dedicated private spool.
+Keep this configuration private (0600). An absent file retains the default-off
+behavior. A launchd override takes precedence, including `off`; clear stale
+overrides when changing the durable decision. Settings take effect only at a
+sanctioned process transition. Rollback sets the durable value to `off`, clears
+both launchd overrides, and uses the same reviewed release workflow.
+
 Use a release launched with the existing verified `--deployment-manifest`
 binding. The observer reuses that immutable startup verification of manifest
 and executable. It records the same binding before and after each attempt.

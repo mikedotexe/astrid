@@ -30,6 +30,14 @@ if [ -f "$APERTURE_CONFIG" ]; then
     . "$APERTURE_CONFIG"
 fi
 
+# Operator-owned observation settings survive reboot; absent means default off.
+# Keep this private measurement configuration separate from the Being's dials.
+PROVIDER_OBSERVATION_CONFIG="$BRIDGE_DIR/workspace/runtime/provider_observation.env"
+if [ -f "$PROVIDER_OBSERVATION_CONFIG" ]; then
+    # shellcheck source=/dev/null
+    . "$PROVIDER_OBSERVATION_CONFIG"
+fi
+
 for key in \
     ASTRID_BRIDGE_MLX_URL \
     ASTRID_BRIDGE_MLX_PROFILE \
@@ -41,6 +49,8 @@ for key in \
     ASTRID_OWN_BODY_LINE \
     ASTRID_GENERATION_RECORD \
     ASTRID_GENERATION_RECORD_DIR \
+    ASTRID_PROVIDER_OBSERVATION \
+    ASTRID_PROVIDER_OBSERVATION_DIR \
     RUST_LOG
 do
     launchctl_env "$key"
