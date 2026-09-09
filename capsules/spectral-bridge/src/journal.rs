@@ -73,7 +73,16 @@ pub fn scan_remote_journal_dir(workspace: &Path) -> Vec<RemoteJournalEntry> {
 /// Read a remote journal body from minime's workspace.
 pub fn read_remote_journal_body(path: &Path) -> Option<String> {
     let content = std::fs::read_to_string(path).ok()?;
-    extract_journal_body(&content, false)
+    let body = extract_journal_body(&content, false)?;
+    if classify_remote_journal(path.file_name()?.to_str()?, Some(&content))
+        == RemoteJournalKind::SelfStudy
+    {
+        Some(format!(
+            "[Minime study account: peer-authored claims, not source you read this turn. Delivery status describes his input, not the accuracy of his response. Reopen the referenced source before treating recalled symbols or line numbers as code facts.]\n{body}"
+        ))
+    } else {
+        Some(body)
+    }
 }
 
 /// Read an Astrid journal body for self-continuity, preferring the longform
@@ -247,6 +256,18 @@ fn is_header_line(trimmed: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn remote_study_retains_input_scope_and_labels_peer_claims() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("self_study_example.txt");
+        std::fs::write(&path, "=== SELF-STUDY: source catalog ===\nInput evidence: Map: no new source page.\nDelivery: verified input delivery; claims not verified\n\nI recall identity-context at line 348; that is my earlier account.").unwrap();
+        let body = read_remote_journal_body(&path).unwrap();
+        assert!(body.starts_with("[Minime study account:"));
+        assert!(body.contains("not the accuracy of his response"));
+        assert!(body.contains("Input evidence: Map:"));
+        assert!(body.contains("I recall identity-context"));
+    }
 
     #[test]
     fn scan_remote_journal_dir_marks_self_study() {

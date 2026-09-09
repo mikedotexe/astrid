@@ -362,6 +362,11 @@ pub(super) fn handle_action(
             true
         },
         "READ_MORE" => {
+            if strip_action(original, "READ_MORE").eq_ignore_ascii_case("RAW") {
+                conv.pending_file_listing = Some(super::super::activity_reading::choose_raw_reading(conv)
+                    .unwrap_or_else(|error| format!("[Raw reading could not be selected: {error}. The current bookmark remains available.]")));
+                return true;
+            }
             if conv.activity.foreground_reader.is_some() {
                 conv.pending_file_listing = Some(match super::super::activity_reading::offer_requested_reading(conv) {
                     Ok(Some(offer)) => format!("[Continuing saved reading {}. Offered bytes {}..{} remain uncommitted until a completed model turn.]", offer.reader.session_id, offer.passage.start_byte, offer.passage.end_byte),

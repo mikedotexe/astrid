@@ -123,6 +123,7 @@ impl ReaderClient {
         Ok(self
             .pending()?
             .map(|value| crate::llm::ProtectedDialogueInputV1 {
+                reading_source: None,
                 content_id: value["content_id"].as_str().unwrap_or_default().into(),
                 kind: crate::llm::ProtectedDialogueKindV1::Afterimage,
                 source_text: value["text"].as_str().unwrap_or_default().into(),

@@ -381,3 +381,62 @@ fn explicit_reader_return_restores_authored_thread_without_executing_saved_next(
     assert!(fixture.conv.search_topic.is_none());
     assert!(fixture.conv.pending_file_listing.is_none());
 }
+
+#[test]
+fn readable_view_and_raw_detour_keep_distinct_pending_bookmarks_after_cleanup() {
+    let mut fixture = Fixture::new("unused");
+    let terminal = "\u{1b}[38;2;1;2;3mλ ░\u{1b}[0m\n".repeat(2000);
+    let overflow_dir = fixture.directory.path().join("overflow");
+    let (_, overflow, _) = crate::prompt_budget::assemble_within_budget_with_sources(
+        vec![crate::prompt_budget::PromptBlock {
+            label: "spectral",
+            content: "prefix".into(),
+            priority: 1,
+            min_chars: 0,
+        }],
+        1000,
+        &overflow_dir,
+        vec![("spectral", terminal)],
+    );
+    let view_path = overflow.unwrap().path;
+    choose_saved_text_in(
+        &fixture.store,
+        &mut fixture.conv,
+        &view_path,
+        "ignored topic hint",
+    )
+    .unwrap();
+    let readable = fixture.offer();
+    assert_eq!(
+        readable.source.original_path,
+        view_path.canonicalize().unwrap()
+    );
+    assert!(readable.source.raw_source.is_some());
+    assert!(!readable.text.contains('\u{1b}'));
+    let original = readable.source.raw_source.as_ref().unwrap();
+    let raw_text =
+        fs::read_to_string(fixture.store.root().join(&original.retained_artifact)).unwrap();
+    fs::remove_dir_all(&overflow_dir).unwrap(); // Ordinary temporary overflow cleanup.
+    fixture.conv.activity = load_activity(&fixture.store).unwrap();
+    assert_eq!(fixture.offer().passage, readable.passage);
+    choose_raw_reading_in(&fixture.store, &mut fixture.conv).unwrap();
+    let raw = fixture.offer();
+    assert_eq!(raw.passage.start_byte, 0);
+    assert_eq!(raw.source.sha256, original.sha256);
+    assert_ne!(raw.source.sha256, readable.source.sha256);
+    assert!(raw.text.contains('\u{1b}'));
+    assert!(raw_text.starts_with(&raw.text));
+    assert_eq!(
+        fixture.conv.activity.return_reader.as_ref(),
+        Some(&readable.reader)
+    );
+    fixture.conv.activity = load_activity(&fixture.store).unwrap();
+    let record = preview_reader(&fixture.store, &readable.reader)
+        .unwrap()
+        .session_record_id;
+    fixture.action("RETURN_ACTIVITY", &record).unwrap();
+    let resumed = fixture.offer();
+    assert_eq!(resumed.passage, readable.passage);
+    assert_eq!(resumed.text, readable.text);
+    assert_eq!(resumed.source, readable.source);
+}

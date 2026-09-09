@@ -84,6 +84,16 @@ mod activity_delivery_tests {
     }
 
     #[test]
+    fn reading_identity_comes_from_the_bound_snapshot_and_rejects_substitution() {
+        let mut fixture = Fixture::new();
+        let input = protected_reading_input(&fixture.reading).unwrap();
+        assert_eq!(input.reading_source.as_ref(), Some(&fixture.reading.source));
+        fixture.reading.source.sha256 = "0".repeat(64);
+        assert!(protected_reading_input(&fixture.reading).is_err());
+        assert_eq!(fixture.cursor(), 0);
+    }
+
+    #[test]
     fn accepted_reading_delivery_commits_exact_prefix_and_retries_idempotently_after_restart() {
         let fixture = Fixture::new();
         let result = fixture.reading_completion(1_200);

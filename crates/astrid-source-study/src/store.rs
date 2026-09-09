@@ -1,6 +1,6 @@
 use crate::notebook::Notebook;
 use crate::progress::{self, Progress};
-use crate::{Catalog, Command, Page, SCHEMA_VERSION, digest};
+use crate::{Catalog, Command, InputKind, Page, SCHEMA_VERSION, digest};
 use anyhow::{Context as _, Result, bail};
 use fs2::FileExt as _;
 use serde::{Deserialize, Serialize};
@@ -12,6 +12,10 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StudyOutput {
+    #[serde(default)]
+    pub input_kind: InputKind,
+    #[serde(default)]
+    pub evidence_scope: String,
     pub system_prompt: String,
     pub text: String,
     pub page: Option<Page>,
@@ -76,9 +80,19 @@ impl Reader {
         state: &mut State,
         mut text: String,
         page: Option<Page>,
+        input_kind: InputKind,
     ) -> Result<StudyOutput> {
+        let input_kind = if page.as_ref().is_some_and(|p| p.start.byte == p.end.byte) {
+            InputKind::EndOfFile
+        } else {
+            input_kind
+        };
+        let evidence_scope = input_kind.scope().to_string();
+        text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         text.push_str(&state.notebook.render());
         let mut output = StudyOutput {
+            input_kind,
+            evidence_scope,
             system_prompt: crate::STUDY_PROMPT.into(),
             text,
             page,
@@ -262,7 +276,7 @@ impl Reader {
             serde_json::to_string(&reason)?,
             self.map(state, "", 1)?
         );
-        self.output(state, text, None)
+        self.output(state, text, None, InputKind::Recovery)
     }
 
     fn requested_source(&self, source: &str) -> Result<crate::Source> {
@@ -286,10 +300,15 @@ impl Reader {
                     Ok(text) => text,
                     Err(error) => return self.recovery_map(&mut state, &error),
                 };
-                return self.output(&mut state, text, None);
+                return self.output(&mut state, text, None, InputKind::Map);
             },
             Command::Find { query, page } => {
-                return self.output(&mut state, self.catalog.find(&query, page)?, None);
+                return self.output(
+                    &mut state,
+                    self.catalog.find(&query, page)?,
+                    None,
+                    InputKind::Search,
+                );
             },
             Command::Open { source, line } => {
                 let source = match self.requested_source(&source) {
@@ -309,62 +328,70 @@ impl Reader {
                     .filter(|page| page.source == source.id)
                 {
                     let page = page.clone();
-                    return self.output(&mut state, page.text.clone(), Some(page));
+                    return self.output(
+                        &mut state,
+                        page.text.clone(),
+                        Some(page),
+                        InputKind::SourcePage,
+                    );
                 }
                 if let Some(last) = state.bookmarks.get(&source.id) {
                     if last.eof {
                         Page::read(&source, Some(&last.end), 1, Some(&last.revision.sha256))?;
                         return self.output(&mut state, format!(
-                            "End of {}. Use SELF_STUDY OPEN {} 1 to reread or SELF_STUDY MAP to choose another source.", source.id, source.id), None);
+                            "End of {}. Use SELF_STUDY OPEN {} 1 to reread or SELF_STUDY MAP to choose another source.", source.id, source.id), None, InputKind::EndOfFile);
                     }
                     Page::read(&source, Some(&last.end), 1, Some(&last.revision.sha256))?
                 } else {
                     Page::read(&source, None, 1, None)?
                 }
             },
-            Command::Continue => {
-                if let Some(page) = state.pending.clone() {
-                    return self.output(&mut state, page.text.clone(), Some(page));
-                }
-                let Some(last) = state
-                    .current
-                    .as_ref()
-                    .and_then(|id| state.bookmarks.get(id))
-                else {
-                    let text = self.map(&state, "", 1)?;
-                    return self.output(&mut state, text, None);
-                };
-                if last.eof {
-                    Page::read(
-                        &self.catalog.resolve(&last.source)?,
-                        Some(&last.end),
-                        1,
-                        Some(&last.revision.sha256),
-                    )?;
-                    let text = format!(
-                        "End of {} at revision {}. {} Choose SELF_STUDY MAP, FIND, or OPEN to deliberately reread.",
-                        last.source,
-                        last.revision.sha256,
-                        state
-                            .progress
-                            .as_ref()
-                            .and_then(|p| p.get(&last.source))
-                            .map_or_else(
-                                || "Delivery status unavailable.".into(),
-                                progress::SourceProgress::label
-                            )
-                    );
-                    return self.output(&mut state, text, None);
-                }
-                Page::read(
-                    &self.catalog.resolve(&last.source)?,
-                    Some(&last.end),
-                    1,
-                    Some(&last.revision.sha256),
-                )?
-            },
+            Command::Continue => return self.prepare_continue(&mut state),
         };
         self.offer_page(&mut state, page)
+    }
+
+    fn prepare_continue(&self, state: &mut State) -> Result<StudyOutput> {
+        if let Some(page) = state.pending.clone() {
+            return self.output(state, page.text.clone(), Some(page), InputKind::SourcePage);
+        }
+        let Some(last) = state
+            .current
+            .as_ref()
+            .and_then(|id| state.bookmarks.get(id))
+        else {
+            let text = self.map(state, "", 1)?;
+            return self.output(state, text, None, InputKind::Map);
+        };
+        if last.eof {
+            Page::read(
+                &self.catalog.resolve(&last.source)?,
+                Some(&last.end),
+                1,
+                Some(&last.revision.sha256),
+            )?;
+            let text = format!(
+                "End of {} at revision {}. {} Choose SELF_STUDY MAP, FIND, or OPEN to deliberately reread.",
+                last.source,
+                last.revision.sha256,
+                state
+                    .progress
+                    .as_ref()
+                    .and_then(|p| p.get(&last.source))
+                    .map_or_else(
+                        || "Delivery status unavailable.".into(),
+                        progress::SourceProgress::label
+                    )
+            );
+            return self.output(state, text, None, InputKind::EndOfFile);
+        }
+        let page = Page::read(
+            &self.catalog.resolve(&last.source)?,
+            Some(&last.end),
+            1,
+            Some(&last.revision.sha256),
+        )?;
+        self.offer_page(state, page)
     }
 
     fn offer_page(&self, state: &mut State, mut page: Page) -> Result<StudyOutput> {
@@ -377,7 +404,7 @@ impl Reader {
         page.id = identity;
         state.pending = Some(page.clone());
         self.save(state)?;
-        self.output(state, page.text.clone(), Some(page))
+        self.output(state, page.text.clone(), Some(page), InputKind::SourcePage)
     }
 
     /// Retain the actual provider wire bodies and advance only after verifying

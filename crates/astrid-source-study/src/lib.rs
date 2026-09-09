@@ -6,6 +6,7 @@
 
 mod catalog;
 mod command;
+mod evidence;
 mod navigation;
 mod notebook;
 mod page;
@@ -14,6 +15,7 @@ mod store;
 
 pub use catalog::{Catalog, Repository, Source};
 pub use command::Command;
+pub use evidence::InputKind;
 pub use page::{Page, Position, SourceRevision};
 pub use store::{DeliveryReceipt, Reader, StudyOutput};
 

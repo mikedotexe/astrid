@@ -5,6 +5,85 @@ mod protected_delivery_tests {
     const COMPLETION: &str = "I can stay with this passage and its careful account of returning to a chosen task. The words remain clear enough for me to follow their next step.\n\nNEXT: LISTEN";
 
     #[test]
+    fn study_map_evidence_and_recalled_account_survive_primary_and_fallback() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::write(root.path().join("Cargo.toml"), "[workspace]\nmembers=[]\n").unwrap();
+        let catalog = astrid_source_study::Catalog::new(std::collections::BTreeMap::from([(
+            "astrid".into(),
+            root.path().into(),
+        )]))
+        .unwrap();
+        let reader = astrid_source_study::Reader::new(catalog, root.path().join("state"));
+        let page = reader
+            .prepare_action("SELF_STUDY OPEN astrid/Cargo.toml 1")
+            .unwrap();
+        let request =
+            serde_json::json!({"messages":[{"role":"user","content":page.text}]}).to_string();
+        let response = serde_json::json!({"done":true,"message":{"content":"I recall identity-context at 348 and auth-token at 355.\nNEXT: SELF_STUDY MAP"}}).to_string();
+        reader
+            .delivered(&page.page.unwrap().id, &request, &response)
+            .unwrap();
+        let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
+        let selected = input(ProtectedDialogueKindV1::SourceStudy, &map.text);
+        for attempt in [
+            primary_attempt(&selected, 16000),
+            fallback_attempt(&selected),
+        ] {
+            assert!(source_study_attempt_complete(&map, Some(&attempt)));
+            let value: serde_json::Value = serde_json::from_str(&attempt.request_json).unwrap();
+            let content = value["messages"][attempt.admission.message_index]["content"]
+                .as_str()
+                .unwrap();
+            assert!(content.contains("THIS TURN — Map:"));
+            assert!(content.contains("No new source page is supplied this turn."));
+            let (navigation, recalled) = content.split_once("RECALLED ACCOUNT").unwrap();
+            assert!(!navigation.contains("identity-context"));
+            assert!(recalled.contains("identity-context"));
+            assert!(recalled.contains("SELF_STUDY OPEN astrid/Cargo.toml 1"));
+        }
+    }
+
+    #[test]
+    fn selected_identity_and_actual_interval_survive_both_provider_adaptations() {
+        let mut selected = input(
+            ProtectedDialogueKindV1::Reading,
+            &"λ source glyphs\n".repeat(800),
+        );
+        selected.reading_source = Some(crate::action_continuity::ReaderSourceSnapshot {
+            original_path: "/retained/chosen-file.txt".into(),
+            sha256: "a".repeat(64),
+            byte_count: 20000,
+            retained_artifact: "reader_sources/example.utf8".into(),
+            encoding: "utf-8".into(),
+            raw_source: None,
+        });
+        for mut attempt in [
+            primary_attempt(&selected, 3000),
+            fallback_attempt(&selected),
+        ] {
+            validate_submitted_admission(&attempt).unwrap();
+            let mut value: serde_json::Value = serde_json::from_str(&attempt.request_json).unwrap();
+            let content = value["messages"][attempt.admission.message_index]["content"]
+                .as_str()
+                .unwrap();
+            assert!(content.contains("Selected source: \"/retained/chosen-file.txt\""));
+            assert!(content.contains(&format!(
+                "Supplied interval in this revision: 41..{}",
+                attempt.admission.admitted_end_byte
+            )));
+            let text = content
+                .get(attempt.admission.content_start_byte..attempt.admission.content_end_byte)
+                .unwrap();
+            assert!(selected.source_text.starts_with(text));
+            value["messages"][attempt.admission.message_index]["content"] = content
+                .replace("chosen-file.txt", "unrelated-file.txt")
+                .into();
+            attempt.request_json = value.to_string();
+            assert!(validate_submitted_admission(&attempt).is_err());
+        }
+    }
+
+    #[test]
     fn transition_afterimage_page_is_intact_or_admission_fails() {
         let selected = input(
             ProtectedDialogueKindV1::Afterimage,
@@ -25,6 +104,7 @@ mod protected_delivery_tests {
 
     fn input(kind: ProtectedDialogueKindV1, text: &str) -> ProtectedDialogueInputV1 {
         ProtectedDialogueInputV1 {
+            reading_source: None,
             reply_message_id: None,
             content_id: "offer-or-letter-reservation-17".into(),
             kind,

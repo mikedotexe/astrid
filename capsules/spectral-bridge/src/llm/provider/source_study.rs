@@ -3,6 +3,7 @@ pub(crate) async fn generate_source_study(
     output: &astrid_source_study::StudyOutput,
 ) -> DialogueCompletionV1 {
     let input = ProtectedDialogueInputV1 {
+        reading_source: None,
         content_id: output.page.as_ref().map_or_else(
             || format!("source-navigation:{}", protected_digest(&output.text)),
             |page| format!("source-study:{}", page.id),
@@ -100,6 +101,7 @@ mod source_study_delivery_tests {
             })
             .unwrap();
         let input = ProtectedDialogueInputV1 {
+            reading_source: None,
             content_id: output.page.as_ref().unwrap().id.clone(),
             kind: ProtectedDialogueKindV1::SourceStudy,
             source_text: output.text.clone(),

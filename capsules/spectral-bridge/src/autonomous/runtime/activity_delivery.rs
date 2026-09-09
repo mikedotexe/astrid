@@ -9,7 +9,21 @@ enum ActivityDeliveryOutcome {
 fn protected_reading_input(
     reading: &activity_reading::ActivityReadingOfferV1,
 ) -> anyhow::Result<crate::llm::ProtectedDialogueInputV1> {
+    use sha2::{Digest as _, Sha256};
+    if reading.passage.source_sha256 != reading.source.sha256
+        || reading.passage.sha256 != format!("{:x}", Sha256::digest(reading.text.as_bytes()))
+        || reading
+            .passage
+            .end_byte
+            .checked_sub(reading.passage.start_byte)
+            != u64::try_from(reading.text.len()).ok()
+    {
+        return Err(anyhow::anyhow!(
+            "reading offer does not match its persisted source binding"
+        ));
+    }
     Ok(crate::llm::ProtectedDialogueInputV1 {
+        reading_source: Some(reading.source.clone()),
         content_id: reading.passage.offer_id.clone(),
         kind: crate::llm::ProtectedDialogueKindV1::Reading,
         source_text: reading.text.clone(),
@@ -22,6 +36,7 @@ fn protected_letter_input(
     letter: &durable_inbox::InboxReservation,
 ) -> crate::llm::ProtectedDialogueInputV1 {
     crate::llm::ProtectedDialogueInputV1 {
+        reading_source: None,
         content_id: letter.reservation_id.clone(),
         kind: crate::llm::ProtectedDialogueKindV1::Letter,
         source_text: letter.text.clone(),

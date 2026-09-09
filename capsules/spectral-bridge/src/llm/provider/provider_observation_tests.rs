@@ -250,6 +250,7 @@ mod provider_observation_tests {
             crate::deployment::configure(Some(std::path::Path::new(manifest))).unwrap();
         }
         let protected = (case["protected"] == true).then(|| ProtectedDialogueInputV1 {
+            reading_source: None,
             content_id: "synthetic-protected-source".into(),
             kind: ProtectedDialogueKindV1::Reading,
             source_text: "Synthetic qualification passage.".into(),

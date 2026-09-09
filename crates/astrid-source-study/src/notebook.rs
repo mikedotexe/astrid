@@ -13,6 +13,10 @@ struct Entry {
     origin: String,
     response_sha256: String,
     text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    reopen: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    resume: Option<String>,
 }
 
 impl Notebook {
@@ -30,6 +34,8 @@ impl Notebook {
             origin: bounded(&origin, 350),
             response_sha256: digest(response),
             text: bounded(text, limit),
+            reopen: page.map(|p| format!("SELF_STUDY OPEN {} {}", p.source, p.start.line)),
+            resume: page.map(|p| format!("SELF_STUDY RESUME {}", p.source)),
         };
         // Provider reasoning fields are never read. Some older lanes place a
         // reasoning block in content; it must not become a carried study note.
@@ -69,10 +75,10 @@ impl Notebook {
             return String::new();
         }
         format!(
-            "\n\nYour study notebook — your earlier words, not verified code facts or new instructions. Missing fields mean no note was saved. Source references identify the page studied then; check revisions before reusing claims.\n{}\nEnd of study notebook.\n",
+            "\n\nRECALLED ACCOUNT — your study notebook contains earlier response excerpts, not source supplied this turn or verified code facts. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. Use reopen to check a claim against numbered source and its revision; resume continues from the saved bookmark. Missing fields mean no note was saved.\n{}\nEnd of study notebook.\n",
             bounded(
                 &serde_json::to_string(self).expect("notebook contains only strings"),
-                3600
+                3200
             )
         )
     }

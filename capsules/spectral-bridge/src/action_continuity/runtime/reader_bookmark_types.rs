@@ -21,6 +21,9 @@ pub struct ReaderSourceSnapshot {
     /// Relative to the action-continuity store, never an expiring overflow file.
     pub retained_artifact: PathBuf,
     pub encoding: String,
+    /// A verified mechanical view retains its original independently of cleanup.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raw_source: Option<Box<ReaderSourceSnapshot>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

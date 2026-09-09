@@ -19,6 +19,7 @@ mod human_reply_quality_tests {
             raw
         );
         let input = ProtectedDialogueInputV1 {
+            reading_source: None,
             content_id: "human-test-offer".into(),
             kind: ProtectedDialogueKindV1::Letter,
             source_text: "From: Mike\n\nAn intact synthetic human letter.".into(),

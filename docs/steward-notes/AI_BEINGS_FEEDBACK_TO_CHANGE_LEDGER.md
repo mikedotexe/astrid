@@ -32,6 +32,20 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-09 — Study evidence and readable saved context from S-008
+
+The fixed September 9 00:42:46–01:14:00 UTC sweep retained ANSI-heavy Astrid
+READ_MORE pages and a Minime map response with two source-absent symbols, one
+later repeated in Astrid's peer-informed dialogue. Mike approved both actionable
+repairs, main integration and live deployment. Bound reading identities and
+separate raw/readable views preserve exact source evidence; shared input kinds,
+recalled-account labels and journal/peer scope make the source of each account
+explicit. These are interface repairs, not a claim that the Beings now avoid
+unsupported inferences. No new message or forced study was sent. Source,
+qualification and activation are recorded in
+`2026-09-08-study-evidence-and-readable-overflow.md`; the living research history
+retains the original window and earlier repairs separately.
+
 ### 2026-09-09 — Integration qualification of the pending gate trace
 
 The prior round’s “only log text survives” conclusion does not cover the caller’s generation-attempt records, which retain rejected adapter responses and status. Optional marker observation supplies another bounded raw path. The accepted response remains distinct from diagnostic retention. Codex reviewed and integrated Claude’s scanner/marker work under Mike’s stabilization request; see `2026-09-08-steward-integration-review.md`. Historical claim JSON is retained, not silently rewritten. No Being message or new quality-gate policy is part of this integration.

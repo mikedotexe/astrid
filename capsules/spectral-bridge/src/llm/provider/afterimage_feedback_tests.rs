@@ -53,6 +53,7 @@ mod afterimage_feedback_tests {
         with_test_cue(cue(client(root.path())), async {
             for fallback in [false, true] {
                 let selected = ProtectedDialogueInputV1 {
+                    reading_source: None,
                     content_id: "ai_2026-09-07_selected:page1".into(),
                     kind: ProtectedDialogueKindV1::Afterimage,
                     source_text: format!(
@@ -147,6 +148,7 @@ mod afterimage_feedback_tests {
     #[test]
     fn combined_feedback_cannot_shorten_a_selected_afterimage() {
         let selected = ProtectedDialogueInputV1 {
+            reading_source: None,
             content_id: "ai_2026-09-07_selected:page1".into(),
             kind: ProtectedDialogueKindV1::Afterimage,
             source_text: "p".repeat(2800),

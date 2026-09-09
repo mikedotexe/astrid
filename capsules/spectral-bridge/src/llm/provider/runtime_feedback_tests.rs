@@ -18,6 +18,7 @@ mod runtime_feedback_tests {
 
     fn source(kind: ProtectedDialogueKindV1, text: &str) -> ProtectedDialogueInputV1 {
         ProtectedDialogueInputV1 {
+            reading_source: None,
             content_id: "independent-foreground".into(),
             kind,
             source_text: text.into(),

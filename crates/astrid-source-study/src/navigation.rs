@@ -17,7 +17,7 @@ impl Catalog {
             vec!["Shared system map — the same source catalog for Astrid and Minime.".into()];
         if let Some(current) = current {
             lines.push(format!(
-                "Current source: {}",
+                "Saved source bookmark (not source shown this turn): {}",
                 self.study_entry(current, progress)
             ));
         }

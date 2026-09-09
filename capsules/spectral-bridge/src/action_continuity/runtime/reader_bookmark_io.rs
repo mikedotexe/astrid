@@ -58,6 +58,12 @@ pub(super) fn retained_text(
     {
         return Err(anyhow!("invalid retained source identity"));
     }
+    if let Some(raw) = &source.raw_source {
+        if raw.raw_source.is_some() {
+            return Err(anyhow!("nested reading view is invalid"));
+        }
+        retained_text(store, raw)?;
+    }
     let path = store.root.join(&source.retained_artifact);
     if fs::symlink_metadata(&path)?.file_type().is_symlink()
         || fs::symlink_metadata(store.root.join("reader_sources"))?
@@ -87,7 +93,18 @@ pub(super) fn retain_source(
         return Err(anyhow!("retained source directory must not be a symlink"));
     }
     fs::set_permissions(&directory, fs::Permissions::from_mode(0o700))?;
+    let raw_source =
+        crate::prompt_budget::reading_view::verified_raw_source(&original_path, &text)?
+            .map(|(raw, expected)| {
+                let retained = retain_source(store, &raw)?;
+                if retained.sha256 != expected {
+                    return Err(anyhow!("reading view origin changed during retention"));
+                }
+                Ok(Box::new(retained))
+            })
+            .transpose()?;
     let snapshot = ReaderSourceSnapshot {
+        raw_source,
         original_path,
         sha256,
         byte_count: u64::try_from(text.len())?,

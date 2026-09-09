@@ -622,3 +622,91 @@ fn unusable_targets_offer_verified_navigation_without_moving_source_progress() {
     fs::write(state_path, "corrupt checkpoint").unwrap();
     assert!(reader.prepare_action("SELF_STUDY unknown target").is_err());
 }
+
+#[test]
+fn map_marks_recalled_claims_and_preserves_exact_reopen_commands() {
+    use astrid_source_study::InputKind;
+    let (_temp, _, reader) = setup(&"record identity-create-user-request {}\n".repeat(400));
+    let source = reader.prepare(open()).unwrap();
+    assert_eq!(source.input_kind, InputKind::SourcePage);
+    let claimed = json!({"message":{"content":"I recall identity-context at line 348 and auth-token at line 355.\nNEXT: SELF_STUDY MAP"},"done":true}).to_string();
+    reader
+        .delivered(
+            &source.page.as_ref().unwrap().id,
+            &wire(&source.text),
+            &claimed,
+        )
+        .unwrap();
+    let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert_eq!(map.input_kind, InputKind::Map);
+    assert!(map.text.starts_with("THIS TURN — Map:"));
+    assert!(
+        map.text
+            .contains("No new source page is supplied this turn.")
+    );
+    assert!(
+        map.text
+            .contains("Saved source bookmark (not source shown this turn)")
+    );
+    let (navigation, account) = map.text.split_once("RECALLED ACCOUNT").unwrap();
+    assert!(!navigation.contains("identity-context"));
+    assert!(account.contains("identity-context")); // Preserve the Being's words, including mistakes.
+    assert!(account.contains(&format!("SELF_STUDY OPEN {SOURCE} 1")));
+    assert!(account.contains(&format!("SELF_STUDY RESUME {SOURCE}")));
+    assert!(account.contains(&source.page.as_ref().unwrap().revision.sha256));
+    assert!(map.verify_delivery(&wire(navigation), &response()).is_err());
+    map.verify_delivery(&wire(&map.text), &response()).unwrap();
+    reader
+        .navigation_delivered(
+            map.navigation_id.as_ref().unwrap(),
+            &wire(&map.text),
+            &response(),
+        )
+        .unwrap();
+    let next = reader
+        .prepare_action("SELF_STUDY CONTINUE")
+        .unwrap()
+        .page
+        .unwrap();
+    assert_eq!(next.start, source.page.unwrap().end);
+}
+
+#[test]
+fn input_kinds_separate_search_recovery_eof_and_legacy_without_coverage() {
+    use astrid_source_study::{InputKind, StudyOutput};
+    let (_temp, _, reader) = setup("record identity-create-user-request {}\n");
+    let source = reader.prepare(open()).unwrap();
+    let page = source.page.as_ref().unwrap();
+    let search = reader
+        .prepare_action("SELF_STUDY FIND identity-create")
+        .unwrap();
+    assert_eq!(search.input_kind, InputKind::Search);
+    assert!(search.text.contains("not a complete source page"));
+    assert!(search.page.is_none());
+    let recovery = reader.prepare_action("SELF_STUDY MAN").unwrap();
+    assert_eq!(recovery.input_kind, InputKind::Recovery);
+    assert!(recovery.page.is_none());
+    assert_eq!(
+        reader
+            .prepare_action("SELF_STUDY CONTINUE")
+            .unwrap()
+            .page
+            .as_ref(),
+        Some(page)
+    );
+    reader
+        .delivered(&page.id, &wire(&source.text), &response())
+        .unwrap();
+    let eof = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert_eq!(eof.input_kind, InputKind::EndOfFile);
+    assert!(eof.text.contains("no new source bytes"));
+    let old: StudyOutput = serde_json::from_value(json!({"system_prompt":"old prompt","text":"original pending input", "page":null,"navigation_id":"legacy-id"})).unwrap();
+    assert_eq!(old.input_kind, InputKind::Legacy);
+    assert_eq!(old.text, "original pending input");
+    old.verify_delivery(&wire(&old.text), &response()).unwrap();
+    let (_temp, _, empty_reader) = setup("");
+    assert_eq!(
+        empty_reader.prepare(open()).unwrap().input_kind,
+        InputKind::EndOfFile
+    );
+}

@@ -290,6 +290,7 @@ mod activity_recovery_tests {
             .unwrap()
             .unwrap();
         let reading = activity_reading::ActivityReadingOfferV1 {
+            source: offered.bookmark.as_ref().unwrap().source.clone(),
             reader: activity_reading::ReaderActivityRefV1 {
                 thread_id: thread.thread_id.clone(),
                 session_id: session_id.clone(),

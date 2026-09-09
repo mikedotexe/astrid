@@ -1,0 +1,216 @@
+{
+  "schema": "study_evidence_qualification_v1",
+  "checks": [
+    {
+      "name": "bridge-suite",
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "capsules/spectral-bridge/Cargo.toml",
+        "--quiet"
+      ],
+      "cwd": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+      "started": "2026-09-09T04:59:25.561237+00:00",
+      "ended": "2026-09-09T05:05:45.147892+00:00",
+      "exit_code": 0,
+      "log": "/Users/v/other/worktrees/study-evidence-20260908/evidence/bridge-suite.log",
+      "sha256": "54e2531beb44e97a0f70695068a6f1ddc5576872515bd2d2d3515935a91e1273"
+    },
+    {
+      "name": "bridge-clippy-final",
+      "command": [
+        "cargo",
+        "clippy",
+        "--manifest-path",
+        "capsules/spectral-bridge/Cargo.toml",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+      "started": "2026-09-09T05:05:45.148625+00:00",
+      "ended": "2026-09-09T05:06:09.833520+00:00",
+      "exit_code": 0,
+      "log": "/Users/v/other/worktrees/study-evidence-20260908/evidence/bridge-clippy-final.log",
+      "sha256": "d916c65942eecaafa1567d6cfc3f02beb5e0075b2338e5f28a5c508d5e9be9d6"
+    },
+    {
+      "name": "reader-tests-final",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "astrid-source-study",
+        "--quiet"
+      ],
+      "cwd": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+      "started": "2026-09-09T05:06:09.834086+00:00",
+      "ended": "2026-09-09T05:06:15.651732+00:00",
+      "exit_code": 0,
+      "log": "/Users/v/other/worktrees/study-evidence-20260908/evidence/reader-tests-final.log",
+      "sha256": "3c57d0175fccf5b214f91b5e71a915790217cdec61600846b6608033155a649a"
+    },
+    {
+      "name": "reader-clippy-final",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "astrid-source-study",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+      "started": "2026-09-09T05:06:15.652193+00:00",
+      "ended": "2026-09-09T05:06:15.839843+00:00",
+      "exit_code": 0,
+      "log": "/Users/v/other/worktrees/study-evidence-20260908/evidence/reader-clippy-final.log",
+      "sha256": "a41051563a4cb5fc1b1bcdd9aa0ba28ca80f7736d629d90cc138218756e8e3a9"
+    },
+    {
+      "name": "retained-overflow-final",
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "capsules/spectral-bridge/Cargo.toml",
+        "--lib",
+        "retained_s008_overflow_documents",
+        "--",
+        "--ignored",
+        "--nocapture"
+      ],
+      "cwd": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+      "started": "2026-09-09T05:06:15.840306+00:00",
+      "ended": "2026-09-09T05:06:19.408573+00:00",
+      "exit_code": 0,
+      "log": "/Users/v/other/worktrees/study-evidence-20260908/evidence/retained-overflow-final.log",
+      "sha256": "4e83370fc12e97d3153a289a1cac93c8de1fbab83976f444498af6308b5182f7"
+    },
+    {
+      "name": "format-workspace-final",
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+      "started": "2026-09-09T05:06:19.409075+00:00",
+      "ended": "2026-09-09T05:06:19.984855+00:00",
+      "exit_code": 0,
+      "log": "/Users/v/other/worktrees/study-evidence-20260908/evidence/format-workspace-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "format-bridge-final",
+      "command": [
+        "cargo",
+        "fmt",
+        "--manifest-path",
+        "capsules/spectral-bridge/Cargo.toml",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+      "started": "2026-09-09T05:06:19.985359+00:00",
+      "ended": "2026-09-09T05:06:21.491419+00:00",
+      "exit_code": 0,
+      "log": "/Users/v/other/worktrees/study-evidence-20260908/evidence/format-bridge-final.log",
+      "sha256": "de117f6b476b933902c68c25c59ced820fe99d7d9ff60ec52af1aa9637bf6b48"
+    },
+    {
+      "name": "domain-boundary-final",
+      "command": [
+        "python3",
+        "scripts/domain_boundary_audit.py",
+        "verify"
+      ],
+      "cwd": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+      "started": "2026-09-09T05:06:21.491940+00:00",
+      "ended": "2026-09-09T05:06:21.664825+00:00",
+      "exit_code": 0,
+      "log": "/Users/v/other/worktrees/study-evidence-20260908/evidence/domain-boundary-final.log",
+      "sha256": "25699169980d8b58052cd3cb80de31c4fd4d2aeb5d57a159880614ac71e79abb"
+    }
+  ],
+  "bridge_suite": {
+    "passed": 2267,
+    "failed": 0,
+    "ignored": 1,
+    "private_ignored_fixture_test_explicitly_passed": true
+  },
+  "supplemental_logs": {
+    "minime-full-tests.log": {
+      "path": "/Users/v/other/worktrees/study-evidence-20260908/evidence/minime-full-tests.log",
+      "sha256": "09355ec45a7111125b03ff8d342031d866ec6a58c25237edb2b165177c1a14e5"
+    },
+    "family-scan-tests.log": {
+      "path": "/Users/v/other/worktrees/study-evidence-20260908/evidence/family-scan-tests.log",
+      "sha256": "151ba2498ee9d89aa83507d3f0cc5c6f9b154ea4acaccf273eac172a736e12e9"
+    },
+    "research-tests.log": {
+      "path": "/Users/v/other/worktrees/study-evidence-20260908/evidence/research-tests.log",
+      "sha256": "866905943601261860840fd774241eec51107429886da8737fd6183c24a52b91"
+    },
+    "bridge-final-lib-tests.log": {
+      "path": "/Users/v/other/worktrees/study-evidence-20260908/evidence/bridge-final-lib-tests.log",
+      "sha256": "eea639420cb89e4573bb0d4637a9754fb32776f6d833f961774f276fb339a8b2"
+    }
+  },
+  "minime_suite": {
+    "passed": 1271,
+    "skipped": 1,
+    "subtests_passed": 130
+  },
+  "reader_tests_passed": 20,
+  "research_tests_passed": 212,
+  "source_file_sha256": {
+    "CHANGELOG.md": "156958a5959e4b702108b2535adb4af846e0d23c8fc5a1928b7daa089bfe53e5",
+    "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmark_io.rs": "10de52098e79b455f4d906614ae20baaac4b49ac1472aae5c29182772d45a964",
+    "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmark_types.rs": "8837f6f0d75f85397e207f263513dfc552131056ab869ae8b9963fc07b412955",
+    "capsules/spectral-bridge/src/autonomous/activity_reading.rs": "3c7fca523107c8283159aa44b03c935e6ff2d5dfb87320b93a0c7c5f7ae4baf7",
+    "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs": "e9fde8824cda267d4af670b70119070a16aa01b764492d092afffe7ac4276823",
+    "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs": "856e5532cc5d3c623fd3e5b83d5214d8dae9c8bf6da571c4fb73028e97209466",
+    "capsules/spectral-bridge/src/autonomous/runtime/activity_delivery.rs": "d5095476232377cc1e8e68f3f12cd05d3407e5d547e06c26b5d5d8d8846908f9",
+    "capsules/spectral-bridge/src/autonomous/runtime/activity_delivery_tests.rs": "8f361309fa833bbcac2f153987411428a2da0cfa1c643ad3eb786dd3601f832a",
+    "capsules/spectral-bridge/src/autonomous/runtime/activity_recovery.rs": "59a8769ce6abdde433708b8b85ca97d51528181d70dc8feade47cf60acd3b5ac",
+    "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs": "4de9584a7336894074d7c7daa60f43387daaeacab8ab4a4cf369413989d2571b",
+    "capsules/spectral-bridge/src/journal.rs": "e2958d9c7bc5f95c709d37bfd4e60da34c38225f1e586cf1d4328bcbfb78c16b",
+    "capsules/spectral-bridge/src/llm/provider/afterimage_feedback_tests.rs": "7f791fd97a74712afa0475a39b4040a5bbd68f62e4cda1dd41552903fdbb91dd",
+    "capsules/spectral-bridge/src/llm/provider/dialogue_feedback_tests.rs": "f9c31f2121ae9aeb7efe520f70a39827e61a42411d2b3c7028b641d5935c96d3",
+    "capsules/spectral-bridge/src/llm/provider/human_reply_quality_tests.rs": "7c69c32210e955b4f3d3657e3a80e9e94f4ae81a193d6e6213ba5be1f461e7b4",
+    "capsules/spectral-bridge/src/llm/provider/protected_delivery.rs": "00851cbf70f2e9776783a0665e211847fca136dbe74fbe1d83e9f87c06c89174",
+    "capsules/spectral-bridge/src/llm/provider/protected_delivery_tests.rs": "39029d5adf6badd7ef19531cba5b0e4f13c52f531f1285b9975fd6eb7c90430a",
+    "capsules/spectral-bridge/src/llm/provider/provider_observation_tests.rs": "7a61ee8fe8e9763581b5f557b37b20a3ee2f88955b9a766236d4b3e6244e4171",
+    "capsules/spectral-bridge/src/llm/provider/runtime_feedback_tests.rs": "398f862e310c3feff20d34ee75de7ed64d37a2508250fa128a84ce0be9d7df12",
+    "capsules/spectral-bridge/src/llm/provider/source_study.rs": "2398e991d679d3150f8f74e3a66b9ffe52e889c0e56572159f9a644b178736a6",
+    "capsules/spectral-bridge/src/prompt_budget.rs": "9ef8aa26e0c9a626725e6d6e3a02e7a562af706fec45ff320102977bf3ebb037",
+    "capsules/spectral-bridge/src/transition_afterimages.rs": "7fbba31788de7fb7f2a5de78a44163d9137a245c461b1ca563d2ec0e167d02d5",
+    "crates/astrid-source-study/prompt.txt": "2abd13c17ca6632c3aa506faa5e9b4d6e5ff2bdcaf6cafe75ab7a9670e42c6e9",
+    "crates/astrid-source-study/src/lib.rs": "fd9ef9c33a62bdf021ff61d0a8236cf55571e10f4725824aee8117c065a0ffe4",
+    "crates/astrid-source-study/src/navigation.rs": "e9e102d9ff41fba339f0d25445b609aa7bbf1548332627daf3009503c5766948",
+    "crates/astrid-source-study/src/notebook.rs": "3ef1f7411ed10164a3a8d3db77e03dd4051547c26e3eb94381d73a5cfd75bd09",
+    "crates/astrid-source-study/src/store.rs": "aca0af5fc9c0f60014fa09d439f5e556335d177078b7f84a8bfcb65620f79503",
+    "crates/astrid-source-study/tests/reader.rs": "581e75af6e462e072a6cdcf5f3a2fc089fcab6fafc5c3e74daf85e21e6523102",
+    "docs/architecture/source-study-v1.md": "cf87df45b48f5d5ec28164895ccf8c1ae603e91e410b3a1ef252dc1f4724a977",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md": "bfa6562c5879673f0dbb578a6e2e27396f15cb90cb47f5ae6f5dc37031f43623",
+    "capsules/spectral-bridge/src/llm/provider/reading_identity.rs": "05ac4b4ab634c9e76e7e82542bc67274eb2502d8c932b10eaa8409f6fca14337",
+    "capsules/spectral-bridge/src/prompt_budget/reading_view.rs": "ebc5dab4c45a653cfc2f5602610afa34d50b70680420531000fc867e9befb425",
+    "crates/astrid-source-study/src/evidence.rs": "e7cce3962db6935df075e4744cc9a6dac1fca77dd394c5d9c70a6672d242ae31",
+    "docs/steward-notes/2026-09-08-study-evidence-and-readable-overflow.md": "2fc76c8d5016cadfdbeb8c790a68738eb6c817c87b4ce226d52a97046d844eba"
+  },
+  "integration_parent": "d1baeba20442ba855a26642bb9d540f4d12acd63",
+  "minime_commit": "378957a9d71fb094ab3b3e66d367900b8c88c09e",
+  "qualifications": [
+    "An earlier overlapping full-suite attempt failed the existing one-millisecond signal-spine timing check at 3.99027 ms. Overlapping commands wrote one shared old log, which is not used as authoritative evidence. The final serial suite above passed on this frozen source.",
+    "These tests establish delivery, attribution, readable conversion and continuity; they do not establish natural use or improved claim accuracy.",
+    "Private S-008 overflow documents remain outside Git. Their ignored regression was explicitly run against independently recorded body hashes."
+  ]
+}

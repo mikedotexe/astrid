@@ -155,7 +155,7 @@ async fn run_shared_source_study(
     ));
     let delivery_status = delivery.as_ref().map_or_else(
         |error| format!("unverified: {error:#}"),
-        |()| "verified input delivery; understanding not asserted".into(),
+        |()| "verified input delivery; response claims and understanding not verified".into(),
     );
     let routes = completion
         .accepted_delivery
@@ -197,8 +197,8 @@ async fn run_shared_source_study(
         "protected"
     };
     let artifact = format!(
-        "=== ASTRID INTROSPECTION ===\nSource: {source}\nSource revision: {revision}\nSource scope: local checkout; deployed behavior not established\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
-        authorship.witness_id()
+        "=== ASTRID INTROSPECTION ===\nSource: {source}\nSource revision: {revision}\nSource scope: local checkout; deployed behavior not established\nInput evidence: {}\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
+        output.evidence_scope, authorship.witness_id()
     );
     let written = std::fs::create_dir_all(&directory)
         .and_then(|()| std::fs::write(&artifact_path, artifact.as_bytes()));

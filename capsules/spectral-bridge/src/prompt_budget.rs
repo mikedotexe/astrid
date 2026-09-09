@@ -5,7 +5,7 @@
 //! that the existing READ_MORE infrastructure can serve back on demand.
 
 use std::fs;
-use std::io::Write;
+pub(crate) mod reading_view;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
@@ -303,18 +303,11 @@ fn write_context_overflow(
             .unwrap_or_default()
             .as_nanos();
         let path = dir.join(format!("context_overflow_{}_{ts}.txt", std::process::id()));
-        let mut options = fs::OpenOptions::new();
-        options.write(true).create_new(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        let mut file = options.open(&path)?;
-        for (label, content) in sections {
-            writeln!(file, "=== [{label}] ===\n\n{content}\n")?;
-        }
-        file.sync_all()?;
+        let raw = sections
+            .iter()
+            .map(|(label, content)| format!("=== [{label}] ===\n\n{content}\n\n"))
+            .collect::<String>();
+        let path = reading_view::save(&path, &raw).map_err(std::io::Error::other)?;
         Ok(PromptOverflow {
             path,
             offset: 0,

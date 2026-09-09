@@ -46,6 +46,7 @@ pub(crate) struct ActivityReadingOfferV1 {
     pub version: ReaderBookmarkVersion,
     pub passage: ReaderPassage,
     pub text: String,
+    pub source: crate::action_continuity::ReaderSourceSnapshot,
 }
 
 fn operation_id(kind: &str) -> String {
@@ -222,6 +223,43 @@ pub(super) fn offer_requested_reading(
     offer_requested_reading_in(&ActionContinuityStore::for_astrid_workspace(), conv)
 }
 
+/// An explicit view switch starts a distinct byte stream and parks the readable
+/// bookmark. It never translates offsets or silently replaces a pending offer.
+pub(super) fn choose_raw_reading(conv: &mut ConversationState) -> Result<String> {
+    choose_raw_reading_in(&ActionContinuityStore::for_astrid_workspace(), conv)
+}
+
+fn choose_raw_reading_in(
+    store: &ActionContinuityStore,
+    conv: &mut ConversationState,
+) -> Result<String> {
+    let reader = conv
+        .activity
+        .foreground_reader
+        .as_ref()
+        .context("no foreground reading; use ACTIVITY_STATUS")?;
+    let preview = preview_reader(store, reader)?;
+    let raw = preview
+        .bookmark
+        .as_ref()
+        .and_then(|b| b.source.raw_source.as_ref())
+        .context("this reading is already exact text; no separate raw view is bound")?;
+    if !preview
+        .source_comparison
+        .as_ref()
+        .is_some_and(|s| s.retained_source_available)
+    {
+        return Err(anyhow!("retained reading origin is unavailable"));
+    }
+    let raw_path = store.root().join(&raw.retained_artifact);
+    choose_saved_text_in(
+        store,
+        conv,
+        &raw_path,
+        "Original terminal text of saved prompt overflow",
+    )
+}
+
 pub(super) fn offer_requested_reading_in(
     store: &ActionContinuityStore,
     conv: &mut ConversationState,
@@ -276,10 +314,17 @@ pub(super) fn offer_requested_reading_in(
         .as_ref()
         .and_then(|bookmark| bookmark.offered_passage.clone())
         .ok_or_else(|| anyhow!("reader did not retain its offered passage"))?;
+    let source = preview
+        .bookmark
+        .as_ref()
+        .context("source binding missing")?
+        .source
+        .clone();
     let text = preview
         .offered_text
         .context("retained passage bytes are unavailable")?;
     Ok(Some(ActivityReadingOfferV1 {
+        source,
         reader,
         version,
         passage,

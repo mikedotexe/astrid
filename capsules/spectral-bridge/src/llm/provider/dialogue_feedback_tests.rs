@@ -22,6 +22,7 @@ mod dialogue_feedback_tests {
             Some("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest"),
         );
         let source = ProtectedDialogueInputV1 {
+            reading_source: None,
             content_id: format!("source-{event}"),
             kind: ProtectedDialogueKindV1::Reading,
             source_text: "Exact chosen source: café λ🌊.\n".into(),

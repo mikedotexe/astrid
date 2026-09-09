@@ -51,6 +51,22 @@ repair response is attached to a source page. Questions, brief observations,
 continuation-only responses and leaving the activity are valid choices. Local
 source claims and runtime interpretation remain distinct.
 
+## Input kind and recalled accounts
+
+Every new offered input starts with `THIS TURN`, identifying source page, map,
+search, EOF or recovery. The shared output JSON includes `input_kind` and
+`evidence_scope`; older retained navigation outputs default to `legacy` without
+rewriting their bound text. A map's saved bookmark is not a code page shown now.
+Source pages retain exact repository identities, revisions and numbered spans;
+search results require OPEN for full context. Empty source pages are labeled EOF.
+
+Notebook entries are earlier response excerpts, not verified claims. New entries
+carry exact reopen and resume commands alongside their original source revision.
+Both adapters put input scope and delivery limitations in the journal. Both
+peer-study readers preserve attribution and distinguish a peer account from code
+the receiving Being read. Source delivery verifies input, not the response's
+symbols, line claims, inference, understanding or deployed behavior.
+
 ## Paging and evidence
 
 Pages are bounded by rendered UTF-8 bytes, include source SHA-256, exact byte
