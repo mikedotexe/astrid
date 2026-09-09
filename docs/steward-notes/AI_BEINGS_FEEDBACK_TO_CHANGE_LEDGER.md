@@ -4247,3 +4247,5 @@ checkpoint and pending-OPEN continuity; natural benefit remains unmeasured.
 - Change: one shared reader with Being-authored question ownership and reopen/park/resolve choices; bounded lexical symbol links; 2–3 selected pages per protected request; own delivery/job/action trace views with missing links explicit. No compulsory review, automatic understanding score or new service.
 - Review: [owning contract](2026-09-09-study-inquiries.md), `study-inquiries-validation/checks.json`, and its subsequent live-rollout receipt. Checkpoint version 2 reads the prior state and prevents lossy old-reader downgrade.
 - Outcome boundary: isolated tests demonstrate access, parity, preserved inputs and continuity. Deployment and natural useful follow-through are separate evidence; research retains both without treating writing length as improvement.
+
+- Inquiry release activation verified: Astrid PID 75004 at 11:10:02 PDT; Minime PID 76254 at 11:14:01 PDT, September 9. See `study-inquiries-validation/live-rollout.json` for exact process clocks, manifest/artifact hashes and same-session pending-choice restoration. No natural comprehension claim is attached to activation.

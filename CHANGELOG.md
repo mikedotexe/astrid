@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Verified the paired study-inquiry rollout and retained exact release, process and checkpoint-continuity receipts; main's runtime source matches the live staged implementation.
+
 ### Added — shared study inquiries (2026-09-09)
 - Give Astrid and Minime the same named question notebooks, exact-symbol relationship navigation, bounded multi-page sessions and retained delivery/execution views.
 - Bind delayed completions to their original inquiry, recover whole sessions atomically, and preserve valid bounded recalled-account JSON. Checkpoints migrate to version 2 with explicit downgrade protection.

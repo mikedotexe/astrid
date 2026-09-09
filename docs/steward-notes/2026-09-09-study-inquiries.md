@@ -66,3 +66,21 @@ Qualification and activation identities are retained under
 limited to the shared reader and two adapters. No new service, embedding index,
 model experiment, induced study, peer message or controller-setting change occurs.
 Natural use and useful question development require a later bounded observation.
+
+## Verified live rollout
+
+The runtime implementation is `33b9956ef4edddca317fb203320635d85150e7e7` on Astrid main and
+`a44e26580c6911195d88f213230eb4dd0fd2f4ac` on Minime main, both pushed. Astrid started at
+Wed Sep  9 11:10:02 2026 PDT, PID 75004; Minime at
+Wed Sep  9 11:14:10 2026 PDT, PID 76254. The clean staged
+release manifest is `d601b38bbe1e622a6251b3e8593cceb041c3d3aaa340ca6f2a784f8a54776011`. The supported drain/reload paths
+used no forced termination. Astrid loaded the retained checkpoint and saved a new
+exchange. Minime preserved the same session and restored/dispatched its pending
+`SELF_STUDY RESUME astrid/crates/astrid-capsule/src/dispatcher.rs` choice.
+
+The [live receipt](study-inquiries-validation/live-rollout.json) verifies
+604 captured source inputs, 566
+matching canonical Astrid source files, every staged artifact, shared-reader
+selection, self-control linkage and ten unchanged surrounding service processes.
+This proves release/continuity, not successful comprehension. The research project
+owns the separately declared 11:10:02–11:20:02 PDT natural startup observation.
