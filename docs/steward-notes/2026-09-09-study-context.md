@@ -44,3 +44,22 @@ continuity are appended after verification; this paragraph is not a live claim.
 
 Owning implementation: Codex Astra interactive. Research history: HSS-14 in
 `/Users/v/other/reservoir-llm-research/research/histories/self-study.md`.
+
+
+## Verified activation
+
+Both implementation commits are on main and pushed: Astrid `a376a11b5b`, Minime
+`3383aef`. Minime reloaded first at 13:26:49 PDT (76254 → 5331); session 5318
+survived and cycle count advanced 27107 → 27108. No pending NEXT existed at the
+signal boundary. Astrid drained at exchange 194367, started at 13:29:05 PDT
+(75004 → 7538), restored that checkpoint and saved exchange 194368. All five
+artifacts, 605 source inputs and 567 canonical source counterparts verified.
+Ten surrounding service identities and observer configuration stayed unchanged.
+`study-context-validation/live-rollout.json` binds the activation/reload receipts;
+manifest SHA is `56d066c6e0f818aa3d389c532541872af5924de7d5c7b2f0e1b0dd4d0d62491c`.
+
+The first five-minute natural-study window is 13:29:05–13:34:05 PDT. Its research
+account is separate from release verification. These checks establish loaded
+source and continuity, not a benefit or a change in thinking quality. The 45
+preserved foreign files are restored separately after this clean-main audit;
+their edits are not part of this release. Production thinking remains disabled.

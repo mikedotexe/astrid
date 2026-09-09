@@ -1,0 +1,14 @@
+{
+  "reader_tests": 39,
+  "bridge_tests": 2271,
+  "bridge_ignored": 1,
+  "minime_tests": 1286,
+  "minime_skipped": 1,
+  "research_tests": 219,
+  "rust_clippy": true,
+  "format": true,
+  "boundary_audit": true,
+  "copied_checkpoint_migration": true,
+  "saved_answer_replay": true,
+  "evidence_directory": "/Users/v/other/worktrees/study-context-20260909/evidence"
+}
