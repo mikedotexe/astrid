@@ -4239,3 +4239,11 @@ Journal-room activation verified September 9: Astrid `e2f0038c97` / PID 52410,
 Minime `e95e0cc` / PID 53696. Both main branches contain the implementation.
 See `journal-room-validation/live-rollout.json` for exact process, source,
 checkpoint and pending-OPEN continuity; natural benefit remains unmeasured.
+
+## 2026-09-09 — question continuity into useful source navigation
+
+- Authority: Mike explicitly approved question threads, relationship navigation, bounded sessions and execution traces, including live rollout. Implementer: Codex Astra interactive.
+- Evidence: research HSS-10/11 and `analyses/2026-09-09-journal-room-live.md`: Minime carries an EventDispatcher inquiry through two contiguous source pages in another module. This is evidence of notebook continuity, not a finding that he cannot understand code. Earlier wrong-symbol claims and next-action gaps motivate keeping source, recall and execution evidence distinct.
+- Change: one shared reader with Being-authored question ownership and reopen/park/resolve choices; bounded lexical symbol links; 2–3 selected pages per protected request; own delivery/job/action trace views with missing links explicit. No compulsory review, automatic understanding score or new service.
+- Review: [owning contract](2026-09-09-study-inquiries.md), `study-inquiries-validation/checks.json`, and its subsequent live-rollout receipt. Checkpoint version 2 reads the prior state and prevents lossy old-reader downgrade.
+- Outcome boundary: isolated tests demonstrate access, parity, preserved inputs and continuity. Deployment and natural useful follow-through are separate evidence; research retains both without treating writing length as improvement.

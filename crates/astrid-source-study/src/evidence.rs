@@ -5,6 +5,10 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "snake_case")]
 pub enum InputKind {
     SourcePage,
+    SourceSession,
+    Relationships,
+    Questions,
+    RuntimeTrace,
     Map,
     Search,
     EndOfFile,
@@ -19,6 +23,18 @@ impl InputKind {
     #[must_use]
     pub fn scope(self) -> &'static str {
         match self {
+            Self::SourceSession => {
+                "Study session: two or three numbered local source pages are supplied together. Each has its own revision and byte interval; one completed response is required before any bookmark advances."
+            },
+            Self::Relationships => {
+                "Symbol relationships: lexical navigation candidates only, not resolved calls or proof of execution. OPEN a result for source context."
+            },
+            Self::Questions => {
+                "Your study questions: authored context and status choices, not new source or verified conclusions."
+            },
+            Self::RuntimeTrace => {
+                "Runtime record view: selected fields from your retained local execution records, observed at read time. Missing links remain unknown; this view executes no action and supplies no new source."
+            },
             Self::SourcePage => {
                 "Source page: numbered local source is supplied below. Only its stated revision and interval are shown this turn."
             },

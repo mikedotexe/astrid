@@ -9,6 +9,10 @@ pub enum Command {
     Open { source: String, line: usize },
     Resume { source: String },
     Continue,
+    Relate { symbol: String, page: usize },
+    Question(crate::QuestionCommand),
+    Session { targets: Vec<(String, usize)> },
+    Trace { target: String },
 }
 
 impl Command {
@@ -21,6 +25,41 @@ impl Command {
         let (verb, rest) = input.split_once(' ').unwrap_or((input, ""));
         match verb.to_ascii_uppercase().as_str() {
             "" | "CONTINUE" => Ok(Self::Continue),
+            "QUESTION" => Ok(Self::Question(crate::QuestionCommand::parse(rest)?)),
+            "RELATE" => {
+                let (symbol, page) = page_suffix(rest)?;
+                Ok(Self::Relate {
+                    symbol: symbol.into(),
+                    page,
+                })
+            },
+            "TRACE" => Ok(Self::Trace {
+                target: if rest.trim().is_empty() {
+                    "LAST".into()
+                } else {
+                    rest.trim().into()
+                },
+            }),
+            "SESSION" => {
+                let targets = rest
+                    .split(" | ")
+                    .map(|target| {
+                        if !target.trim().starts_with("OPEN ") {
+                            bail!("session targets must be OPEN repository/path [line]");
+                        }
+                        match Self::parse(target)? {
+                            Self::Open { source, line } => Ok((source, line)),
+                            _ => bail!("session targets must be OPEN repository/path [line]"),
+                        }
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+                if !(2..=3).contains(&targets.len()) {
+                    bail!(
+                        "use SESSION OPEN repository/path line | OPEN repository/path line [| OPEN repository/path line]; two or three chosen pages, one response"
+                    );
+                }
+                Ok(Self::Session { targets })
+            },
             "MAP" => {
                 let (topic, page) = page_suffix(rest)?;
                 Ok(Self::Map {

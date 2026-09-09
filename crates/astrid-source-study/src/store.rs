@@ -1,4 +1,7 @@
 use crate::notebook::Notebook;
+use crate::questions::Questions;
+#[path = "store_sessions.rs"]
+mod sessions;
 use crate::progress::{self, Progress};
 use crate::{Catalog, Command, InputKind, Page, SCHEMA_VERSION, digest};
 use anyhow::{Context as _, Result, bail};
@@ -19,6 +22,10 @@ pub struct StudyOutput {
     pub system_prompt: String,
     pub text: String,
     pub page: Option<Page>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub session_pages: Vec<Page>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub question_id: Option<String>,
     #[serde(default)]
     pub navigation_id: Option<String>,
 }
@@ -52,6 +59,8 @@ struct State {
     #[serde(default)]
     sequence: u64,
     pending: Option<Page>,
+    #[serde(default)]
+    pending_page_output: Option<StudyOutput>,
     current: Option<String>,
     bookmarks: BTreeMap<String, Page>,
     receipts: BTreeMap<String, DeliveryReceipt>,
@@ -63,16 +72,37 @@ struct State {
     pending_navigation: Option<StudyOutput>,
     #[serde(default)]
     last_navigation: Option<DeliveryReceipt>,
+    #[serde(default)]
+    questions: Questions,
+    #[serde(default)]
+    pending_session: Option<StudyOutput>,
+    #[serde(default)]
+    last_input: Option<DeliveryReceipt>,
 }
 pub struct Reader {
     catalog: Catalog,
     directory: PathBuf,
+    runtime: Option<crate::trace::RuntimeRecords>,
 }
 
 impl Reader {
     #[must_use]
     pub fn new(catalog: Catalog, directory: PathBuf) -> Self {
-        Self { catalog, directory }
+        Self {
+            catalog,
+            directory,
+            runtime: None,
+        }
+    }
+
+    /// Configure the host-owned workspace for bounded execution-record views.
+    #[must_use]
+    pub fn with_runtime_workspace(mut self, workspace: PathBuf, being: &str) -> Self {
+        self.runtime = Some(crate::trace::RuntimeRecords {
+            workspace,
+            being: being.into(),
+        });
+        self
     }
 
     fn output(
@@ -89,13 +119,24 @@ impl Reader {
         };
         let evidence_scope = input_kind.scope().to_string();
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
-        text.push_str(&state.notebook.render());
+        let question_id = page
+            .as_ref()
+            .map_or_else(|| state.questions.active.clone(), |p| p.question_id.clone());
+        text.push_str(
+            &state
+                .questions
+                .notebook_for(question_id.as_deref(), &state.notebook)
+                .render(),
+        );
+        text.push_str(&state.questions.render_context(question_id.as_deref()));
         let mut output = StudyOutput {
             input_kind,
             evidence_scope,
             system_prompt: crate::STUDY_PROMPT.into(),
             text,
+            question_id,
             page,
+            session_pages: Vec::new(),
             navigation_id: None,
         };
         if output.page.is_none() {
@@ -108,6 +149,9 @@ impl Reader {
                 state.sequence, output.text
             )));
             state.pending_navigation = Some(output.clone());
+            self.save(state)?;
+        } else {
+            state.pending_page_output = Some(output.clone());
             self.save(state)?;
         }
         Ok(output)
@@ -196,13 +240,16 @@ impl Reader {
             return Ok(receipt.clone());
         }
         let offered = state
-            .pending_navigation
+            .pending_session
             .as_ref()
-            .filter(|p| p.navigation_id.as_deref() == Some(navigation_id))
+            .into_iter()
+            .chain(state.pending_navigation.as_ref())
+            .find(|p| p.navigation_id.as_deref() == Some(navigation_id))
+            .cloned()
             .context("navigation delivery does not match the pending offer")?;
         verify_text(&offered.text, request_json, response_json)?;
         let artifact = serde_json::to_vec_pretty(&serde_json::json!({
-            "schema":"source_study_navigation_delivery_v1", "output":offered,
+            "schema":"source_study_navigation_delivery_v1", "output":&offered,
             "request_json":request_json, "response_json":response_json,
         }))?;
         let artifact_sha256 = digest(&artifact);
@@ -224,11 +271,7 @@ impl Reader {
             artifact_path,
             artifact_sha256,
         };
-        state
-            .notebook
-            .record(response_json, &completion_text(response_json)?, None);
-        state.pending_navigation = None;
-        state.last_navigation = Some(receipt.clone());
+        self.record_output(&mut state, &offered, &receipt, request_json, response_json)?;
         self.save(&state)?;
         Ok(receipt)
     }
@@ -304,6 +347,32 @@ impl Reader {
             Err(error) => return self.recovery_map(&mut state, &error),
         };
         let page = match command {
+            Command::Question(command) => {
+                let text = match state.questions.apply(command, &mut state.notebook) {
+                    Ok(text) => text,
+                    Err(error) => return self.recovery_map(&mut state, &error),
+                };
+                // Context selection is an explicit Action. Pending source offers keep their original question identity.
+                self.save(&state)?;
+                return self.output(&mut state, text, None, InputKind::Questions);
+            },
+            Command::Relate { symbol, page } => {
+                let text = match self.catalog.relate(&symbol, page) {
+                    Ok(text) => text,
+                    Err(error) => return self.recovery_map(&mut state, &error),
+                };
+                return self.output(&mut state, text, None, InputKind::Relationships);
+            },
+            Command::Session { targets } => return self.prepare_session(&mut state, &targets),
+            Command::Trace { target } => {
+                let text = match self.trace_input(&state, &target) {
+                    Ok(text) => text,
+                    Err(error) => format!(
+                        "Runtime trace unavailable: {error:#}. No missing execution or source delivery is inferred."
+                    ),
+                };
+                return self.output(&mut state, text, None, InputKind::RuntimeTrace);
+            },
             Command::Map { topic, page } => {
                 let text = match self.map(&state, &topic, page) {
                     Ok(text) => text,
@@ -361,6 +430,9 @@ impl Reader {
     }
 
     fn prepare_continue(&self, state: &mut State) -> Result<StudyOutput> {
+        if let Some(output) = state.pending_session.clone() {
+            return Ok(output);
+        }
         if let Some(page) = state.pending.clone() {
             return self.output(state, page.text.clone(), Some(page), InputKind::SourcePage);
         }
@@ -411,6 +483,8 @@ impl Reader {
         let identity = digest(format!("{}:{}", page.id, state.sequence));
         page.text = page.text.replace(&page.id, &identity);
         page.id = identity;
+        page.question_id.clone_from(&state.questions.active);
+        state.pending_session = None;
         state.pending = Some(page.clone());
         self.save(state)?;
         self.output(state, page.text.clone(), Some(page), InputKind::SourcePage)
@@ -450,6 +524,13 @@ impl Reader {
             }
             return Ok(receipt);
         }
+        if let Some(output) = state
+            .pending_page_output
+            .as_ref()
+            .filter(|o| o.question_id.is_some() && o.page.as_ref().is_some_and(|p| p.id == page_id))
+        {
+            output.verify_delivery(request_json, response_json)?;
+        }
         let page = state
             .pending
             .as_ref()
@@ -459,7 +540,7 @@ impl Reader {
         let request_sha256 = digest(request_json);
         let response_sha256 = digest(response_json);
         let artifact = serde_json::to_vec_pretty(&serde_json::json!({
-            "schema": "source_study_delivery_v1", "page": page,
+            "schema": "source_study_delivery_v1", "page": page, "output":state.pending_page_output,
             "request_json": request_json, "response_json": response_json,
         }))?;
         let artifact_sha256 = digest(&artifact);
@@ -481,6 +562,7 @@ impl Reader {
         record_study(&mut state, &page, response_json)?;
         state.current = Some(page.source.clone());
         state.bookmarks.insert(page.source.clone(), page);
+        state.last_input = Some(receipt.clone());
         state.receipts.insert(page_id.into(), receipt.clone());
         self.save(&state)?;
         Ok(receipt)
@@ -534,6 +616,13 @@ impl Reader {
                 .as_str()
                 .context("retained response")?;
             verify_wire(page, request, response)?;
+            if let Some(output) = state
+                .pending_page_output
+                .as_ref()
+                .filter(|o| o.question_id.is_some())
+            {
+                output.verify_delivery(request, response)?;
+            }
             let receipt = DeliveryReceipt {
                 page_id: page.id.clone(),
                 request_sha256: digest(request),
@@ -545,6 +634,7 @@ impl Reader {
             record_study(state, &page, response)?;
             state.current = Some(page.source.clone());
             state.bookmarks.insert(page.source.clone(), page.clone());
+            state.last_input = Some(receipt.clone());
             state.receipts.insert(page.id.clone(), receipt);
             state.pending = None;
             self.save(state)?;
@@ -554,51 +644,53 @@ impl Reader {
     }
 
     fn recover_navigation(&self, state: &mut State) -> Result<()> {
-        let Some(output) = state.pending_navigation.as_ref() else {
-            return Ok(());
-        };
-        let id = output
-            .navigation_id
-            .as_ref()
-            .context("pending navigation identity missing")?;
-        let directory = self.directory.join("navigation").join(id);
-        if !directory.exists() {
-            return Ok(());
-        }
-        for entry in fs::read_dir(directory)? {
-            let path = entry?.path();
-            if path.extension().is_none_or(|extension| extension != "json") {
+        let offers = state
+            .pending_session
+            .iter()
+            .chain(state.pending_navigation.iter())
+            .cloned()
+            .collect::<Vec<_>>();
+        for output in offers {
+            let id = output
+                .navigation_id
+                .as_ref()
+                .context("pending navigation identity missing")?;
+            let directory = self.directory.join("navigation").join(id);
+            if !directory.exists() {
                 continue;
             }
-            let bytes = fs::read(&path)?;
-            let hash = digest(&bytes);
-            let value: Value = serde_json::from_slice(&bytes)?;
-            let recorded: StudyOutput = serde_json::from_value(value["output"].clone())?;
-            if path.file_stem().and_then(|name| name.to_str()) != Some(hash.as_str())
-                || &recorded != output
-            {
-                bail!("retained navigation artifact mismatch");
+            for entry in fs::read_dir(directory)? {
+                let path = entry?.path();
+                if path.extension().is_none_or(|e| e != "json") {
+                    continue;
+                }
+                let bytes = fs::read(&path)?;
+                let hash = digest(&bytes);
+                let value: Value = serde_json::from_slice(&bytes)?;
+                let recorded: StudyOutput = serde_json::from_value(value["output"].clone())?;
+                if path.file_stem().and_then(|n| n.to_str()) != Some(hash.as_str())
+                    || recorded != output
+                {
+                    bail!("retained navigation artifact mismatch");
+                }
+                let request = value["request_json"]
+                    .as_str()
+                    .context("retained navigation request")?;
+                let response = value["response_json"]
+                    .as_str()
+                    .context("retained navigation response")?;
+                verify_text(&output.text, request, response)?;
+                let receipt = DeliveryReceipt {
+                    page_id: id.clone(),
+                    request_sha256: digest(request),
+                    response_sha256: digest(response),
+                    artifact_path: path,
+                    artifact_sha256: hash,
+                };
+                self.record_output(state, &output, &receipt, request, response)?;
+                self.save(state)?;
+                break;
             }
-            let request = value["request_json"]
-                .as_str()
-                .context("retained navigation request")?;
-            let response = value["response_json"]
-                .as_str()
-                .context("retained navigation response")?;
-            verify_text(&output.text, request, response)?;
-            state.last_navigation = Some(DeliveryReceipt {
-                page_id: id.clone(),
-                request_sha256: digest(request),
-                response_sha256: digest(response),
-                artifact_path: path,
-                artifact_sha256: hash,
-            });
-            state
-                .notebook
-                .record(response, &completion_text(response)?, None);
-            state.pending_navigation = None;
-            self.save(state)?;
-            break;
         }
         Ok(())
     }
@@ -630,16 +722,17 @@ impl Reader {
         let state: State = serde_json::from_slice(&fs::read(path)?).context(
             "source-study state is unreadable; preserving it instead of resetting progress",
         )?;
-        if state.version != SCHEMA_VERSION {
+        if state.version != 1 && state.version != SCHEMA_VERSION {
             bail!("unsupported source-study checkpoint version");
         }
         Ok(state)
     }
     fn save(&self, state: &State) -> Result<()> {
-        atomic_write(
-            &self.directory.join("reader-v1.json"),
-            &serde_json::to_vec_pretty(state)?,
-        )
+        atomic_write(&self.directory.join("reader-v1.json"), &{
+            let mut value = serde_json::to_value(state)?;
+            value["version"] = SCHEMA_VERSION.into();
+            serde_json::to_vec_pretty(&value)?
+        })
     }
 }
 
@@ -710,10 +803,16 @@ fn completion_text(response: &str) -> Result<String> {
 }
 
 fn record_study(state: &mut State, page: &Page, response: &str) -> Result<()> {
-    state.pending_navigation = None;
+    state.pending_page_output = None;
+    // A later navigation offer can belong to a different inquiry. Completing
+    // this source page must not invalidate that independent offer.
     progress::record(state.progress.get_or_insert_with(Progress::new), page);
-    state
-        .notebook
-        .record(response, &completion_text(response)?, Some(page));
+    state.questions.record(
+        page.question_id.as_deref(),
+        &mut state.notebook,
+        response,
+        &completion_text(response)?,
+        std::slice::from_ref(page),
+    );
     Ok(())
 }

@@ -12,6 +12,8 @@ struct Request {
     astrid_root: Option<PathBuf>,
     minime_root: Option<PathBuf>,
     state_directory: PathBuf,
+    runtime_workspace: Option<PathBuf>,
+    being: Option<String>,
     #[serde(flatten)]
     operation: Operation,
 }
@@ -43,7 +45,10 @@ fn run() -> Result<serde_json::Value> {
         (None, None) => Catalog::new(request.roots)?,
         _ => anyhow::bail!("both installation roots are required"),
     };
-    let reader = Reader::new(catalog, request.state_directory);
+    let mut reader = Reader::new(catalog, request.state_directory);
+    if let (Some(workspace), Some(being)) = (request.runtime_workspace, request.being) {
+        reader = reader.with_runtime_workspace(workspace, &being);
+    }
     match request.operation {
         Operation::Prepare { action } => Ok(serde_json::to_value(reader.prepare_action(&action)?)?),
         Operation::Delivered {

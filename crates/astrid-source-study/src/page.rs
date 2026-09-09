@@ -17,6 +17,8 @@ pub struct Position {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Page {
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub question_id: Option<String>,
     pub source: String,
     pub revision: SourceRevision,
     pub start: Position,
@@ -31,6 +33,16 @@ impl Page {
         start: Option<&Position>,
         line: usize,
         expected: Option<&str>,
+    ) -> Result<Self> {
+        Self::read_with_budget(source, start, line, expected, MAX_PAGE_BYTES)
+    }
+
+    pub(crate) fn read_with_budget(
+        source: &Source,
+        start: Option<&Position>,
+        line: usize,
+        expected: Option<&str>,
+        budget: usize,
     ) -> Result<Self> {
         // A generous hard ceiling avoids accidental allocation of generated data.
         // Files below it remain fully navigable, including the large Python driver.
@@ -70,8 +82,8 @@ impl Page {
         }
         let mut end = start.clone();
         let mut body = String::new();
-        let allowance = MAX_PAGE_BYTES
-            .saturating_sub(1500)
+        let allowance = budget
+            .saturating_sub(if budget < MAX_PAGE_BYTES { 900 } else { 1500 })
             .saturating_sub(source.id.len());
         while end.byte < text.len() && body.len() < allowance {
             let rest = &text[end.byte..];
@@ -117,11 +129,12 @@ impl Page {
                 "More source follows; CONTINUE resumes at the exact next byte after verified delivery."
             }
         );
-        if rendered.len() > MAX_PAGE_BYTES {
+        if rendered.len() > budget {
             bail!("source page exceeds the protected delivery budget");
         }
         Ok(Self {
             id,
+            question_id: None,
             source: source.id.clone(),
             revision,
             start,

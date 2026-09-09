@@ -185,3 +185,15 @@ restart recovery, deliberate rereads, source-policy boundaries, Action argument
 preservation, freeform replies and continuation-only choices. See
 `crates/astrid-source-study/tests/reader.rs`, the bridge source-study tests and
 Minime's `tests/test_source_study_shared.py`.
+
+## Inquiry and session extension (checkpoint version 2)
+
+The [September 9 inquiry contract](../steward-notes/2026-09-09-study-inquiries.md)
+adds Being-owned questions, bounded exact-symbol relationships, explicit 2–3-page
+sessions and read-only delivery/execution views in the same shared reader. Session
+receipts represent several pages of **one generation**, not several independent
+studies. Inquiry IDs bind input to its notebook despite later focus changes.
+Existing source catalog and revision identities remain authoritative for access;
+lexical relationships and authored findings do not establish runtime behavior.
+The file remains reader-v1.json for migration; schema 2 intentionally prevents
+an older executable from silently discarding new inquiry/session state.

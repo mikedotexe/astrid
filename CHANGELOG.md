@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Added — shared study inquiries (2026-09-09)
+- Give Astrid and Minime the same named question notebooks, exact-symbol relationship navigation, bounded multi-page sessions and retained delivery/execution views.
+- Bind delayed completions to their original inquiry, recover whole sessions atomically, and preserve valid bounded recalled-account JSON. Checkpoints migrate to version 2 with explicit downgrade protection.
+
 - Retain the September 9 journal-room activation, source identities, checkpoint and pending-study continuity in `docs/steward-notes/journal-room-validation/live-rollout.json`.
 
 - **[codex / journal room and study follow-through]** Gives both Beings 4,096-token source studies and doubles other journal output ceilings, with matching context and deadlines. Adds component-directory navigation, exact crate-spelling recovery, final bare source-choice support and durable READ_MORE status. Interrupted source-delivery recovery must match the current notebook. Shorter authored response preferences remain intact. Evidence, scope and rollout: `docs/steward-notes/2026-09-09-journal-room-and-study-navigation.md`.

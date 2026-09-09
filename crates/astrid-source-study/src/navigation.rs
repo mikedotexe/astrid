@@ -155,7 +155,7 @@ impl Catalog {
     }
 }
 
-fn paginate(lines: Vec<String>, command: &str, page: usize) -> Result<String> {
+pub(crate) fn paginate(lines: Vec<String>, command: &str, page: usize) -> Result<String> {
     let mut pages = vec![String::new()];
     let budget = MAX_PAGE_BYTES
         .saturating_sub(command.len())

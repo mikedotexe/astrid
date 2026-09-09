@@ -33,6 +33,8 @@ pub(crate) mod shadow;
 pub(crate) mod sovereignty;
 mod space_hold;
 mod spectral_drift;
+#[cfg(test)]
+mod study_inquiries_tests;
 mod temporal_bearing;
 mod workspace;
 
@@ -195,7 +197,7 @@ pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
         && let Some(rest) = last.strip_prefix("SELF_STUDY ")
         && matches!(
             rest.split_whitespace().next(),
-            Some("MAP" | "FIND" | "OPEN" | "RESUME" | "CONTINUE")
+            Some("MAP" | "FIND" | "OPEN" | "RESUME" | "CONTINUE" | "RELATE" | "SESSION" | "TRACE")
         )
         && astrid_source_study::Command::parse(last).is_ok()
     {

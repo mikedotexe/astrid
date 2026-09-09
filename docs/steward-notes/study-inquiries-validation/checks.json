@@ -1,0 +1,93 @@
+{
+  "schema": "study_inquiries_qualification_v1",
+  "verified": true,
+  "recorded_at": "2026-09-09T18:05:27.536865+00:00",
+  "actor": "codex-astra-interactive",
+  "reader_tests": 34,
+  "minime_tests": 1283,
+  "minime_subtests": 130,
+  "minime_skipped": 1,
+  "final_adapter_tests": 22,
+  "bridge_test_summaries": [
+    "test result: ok. 2250 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 48.80s",
+    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s",
+    "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 43.69s",
+    "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s",
+    "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 204.17s",
+    "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.04s",
+    "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.25s",
+    "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.78s",
+    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+  ],
+  "records": [
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/reader-final.log",
+      "sha256": "674819e02d5386e153129f584a2f4400bca34eeb552245f7b752def3e0913e27",
+      "bytes": 3799
+    },
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/reader-clippy-final.log",
+      "sha256": "2b2cc86e1e40bbc2cfa5e274074533770f50f1a662646f77368e16ebd24ac8df",
+      "bytes": 198
+    },
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/bridge-tests.log",
+      "sha256": "6728aea72a722f94ffc9b4de7e83bd8d88c85df2d62a70f2b935f2ba1c31da43",
+      "bytes": 246696
+    },
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/bridge-clippy.log",
+      "sha256": "04cb60d964e050afaf4160618389a38acfaed9efb8b3feaa147e11190057538b",
+      "bytes": 1116
+    },
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/minime-tests.log",
+      "sha256": "74550e4f169fa98b2a58a2667208918520d379b5f8a26d88d6a9f23d51ab8907",
+      "bytes": 1516
+    },
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/minime-adapters-final.log",
+      "sha256": "d642d76919bd0871875c65aceece59bbd25b695a2b973cac18554389ebee0ea8",
+      "bytes": 99
+    },
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/boundary-final.json",
+      "sha256": "720ef0652b92f8109b293ea0c8d6797c15d9dc599a5089b996440f55cda472b6",
+      "bytes": 3231
+    },
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/reader-smoke.json",
+      "sha256": "abc1152b560806bbcae9dd6ac1c12e24a0d6622850ecd927c6477ea782710675",
+      "bytes": 18662
+    },
+    {
+      "path": "/Users/v/other/worktrees/study-inquiries-20260909/evidence/installation-smoke.json",
+      "sha256": "dffb665e31423807440b2d6bca7eb62a2f4095d5eaed797862c10bb01727a76d",
+      "bytes": 78757
+    }
+  ],
+  "source_hashes": {
+    "capsules/spectral-bridge/src/autonomous/next_action/study_inquiries_tests.rs": "db3f7ccd5e77ba1539778b866d51c4e3759bd6cec213d1f413c437879a8bcd54",
+    "crates/astrid-source-study/src/questions.rs": "8dea9340e5087e01813fc1f9eb7401b7012e8b2d4c8303e017f00e635a64a9b9",
+    "crates/astrid-source-study/src/relationships.rs": "064d6309a4f6773f38c9213fd4514a818d8b0cc670343c2bf3c7f6e766c600a5",
+    "crates/astrid-source-study/src/store_sessions.rs": "9cff877ff2065c05d4a3c04b136836d89e8cb62ba3101098dadfe1157476e6d1",
+    "crates/astrid-source-study/src/trace.rs": "7d0f89e000f955d1203c08ce4cc5c526b5ceacc9be015abc37af57d338eb0b11",
+    "crates/astrid-source-study/tests/inquiries.rs": "ac9d075b21473e303805aa3d2ffb7837c9ad8b8ce0cbc3cc5af0e60fbbea716a",
+    "capsules/spectral-bridge/src/autonomous/next_action/mod.rs": "ff024570e6a81f9188579b0eedae189a2ddd6430a590056b917df1951e3350ff",
+    "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs": "8ae1c600e8f7c3b84d3656c9b8725c93d83e86921a1e63e7e7a264d6abaadc48",
+    "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs": "3d3e64cf41a850feea6d1e6051deee0a336db26a67bf74ff9bd1f6b62a4cd746",
+    "crates/astrid-source-study/prompt.txt": "d986a27fe553f95ba1a1bc07b52a1cdb67a5a7a4988c556f1eee1853a4e52174",
+    "crates/astrid-source-study/src/command.rs": "2b655574f85c1bf1f3ba9f925ac95c24e856bec799c99ef76390691a1a9abadf",
+    "crates/astrid-source-study/src/evidence.rs": "26fabad020f0dda68db9a3f604310d84d2ab8e0aecc5c4570cf6960d750e57f9",
+    "crates/astrid-source-study/src/lib.rs": "f02e7d830ca43243a81e583aaee62cc855091eaf205fed980a8990ac7198854a",
+    "crates/astrid-source-study/src/main.rs": "d38927b1ea31599b8a1881d5b456078c146347f4108db61b526fb78ffe24539e",
+    "crates/astrid-source-study/src/navigation.rs": "6d13d344549f6d2ea65a87b79bea817b4135e51432b4fc126130617f0247416e",
+    "crates/astrid-source-study/src/notebook.rs": "90a97e687c6095e70a51b344e63ae9fdf50c7a2240965ee2409f9a036a0d7655",
+    "crates/astrid-source-study/src/page.rs": "a99605dd40391182ea3ecb85734549cb53c89a1bf1d64d1e8c243ce38e5c20f2",
+    "crates/astrid-source-study/src/store.rs": "362b198461a184ef8f65e683ff625414c27a86bce55f27d24449007e0ded2244"
+  },
+  "scope": "Fake providers and isolated state. Full bridge suite plus final shared-reader and adapter checks, clippy/fmt/boundary valid. Copied live checkpoints and real catalog read-only. No live benefit claim."
+}

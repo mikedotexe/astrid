@@ -50,7 +50,8 @@ async fn run_shared_source_study(
             paths
                 .bridge_workspace()
                 .join("diagnostics/source_first_v3/shared_reader"),
-        );
+        )
+        .with_runtime_workspace(paths.bridge_workspace().to_path_buf(), "astrid");
         let output = if let Some(target) = requested
             .as_ref()
             .filter(|target| target.label.starts_with("SELF_STUDY"))
@@ -110,10 +111,19 @@ async fn run_shared_source_study(
         .lived_state_scalar_observation_v1(started);
     let completion = crate::llm::generate_source_study(&output).await;
     let completed = crate::lived_state_witness::clock_sample_v1().unix_ms;
-    let source = output
-        .page
-        .as_ref()
-        .map_or_else(|| "source catalog".into(), |p| p.source.clone());
+    let source = output.page.as_ref().map_or_else(
+        || {
+            if output.session_pages.is_empty() {
+                "source catalog".into()
+            } else {
+                format!(
+                    "study session ({} source pages)",
+                    output.session_pages.len()
+                )
+            }
+        },
+        |p| p.source.clone(),
+    );
     let Some(text) = completion.text else {
         next_action::introspection_cadence::mark_failed(
             conv,
@@ -183,7 +193,23 @@ async fn run_shared_source_study(
         artifact_kind,
     );
     let revision = output.page.as_ref().map_or_else(
-        || "navigation only".into(),
+        || {
+            if output.session_pages.is_empty() {
+                "navigation only".into()
+            } else {
+                output
+                    .session_pages
+                    .iter()
+                    .map(|p| {
+                        format!(
+                            "{} sha256:{}; bytes {}..{}",
+                            p.source, p.revision.sha256, p.start.byte, p.end.byte
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("; ")
+            }
+        },
         |page| {
             format!(
                 "sha256:{}; bytes {}..{}",
@@ -198,7 +224,8 @@ async fn run_shared_source_study(
     };
     let artifact = format!(
         "=== ASTRID INTROSPECTION ===\nSource: {source}\nSource revision: {revision}\nSource scope: local checkout; deployed behavior not established\nInput evidence: {}\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
-        output.evidence_scope, authorship.witness_id()
+        output.evidence_scope,
+        authorship.witness_id()
     );
     let written = std::fs::create_dir_all(&directory)
         .and_then(|()| std::fs::write(&artifact_path, artifact.as_bytes()));

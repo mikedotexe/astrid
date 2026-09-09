@@ -20,6 +20,10 @@ struct Entry {
 }
 
 impl Notebook {
+    pub(crate) fn question_text(&self) -> Option<&str> {
+        self.question.as_ref().map(|e| e.text.as_str())
+    }
+
     pub(crate) fn record(&mut self, response: &str, text: &str, page: Option<&Page>) {
         let origin = page.map_or_else(
             || "source navigation".into(),
@@ -74,12 +78,41 @@ impl Notebook {
         if self.note.is_none() && self.question.is_none() && self.previous.is_none() {
             return String::new();
         }
+        let mut view = self.clone();
+        // Bound the serialized value without ever cutting JSON syntax or an exact path.
+        let serialized = loop {
+            let rendered = serde_json::to_string(&view).expect("notebook strings serialize");
+            if rendered.len() <= 3200 {
+                break rendered;
+            }
+            let mut changed = false;
+            for item in [&mut view.previous, &mut view.note, &mut view.question]
+                .into_iter()
+                .flatten()
+            {
+                if item.text.len() > 64 {
+                    item.text = bounded(&item.text, (item.text.len() / 2).max(64));
+                    changed = true;
+                    break;
+                }
+                if item.reopen.is_some() || item.resume.is_some() {
+                    item.reopen = None;
+                    item.resume = None;
+                    changed = true;
+                    break;
+                }
+                if item.origin.len() > 100 {
+                    item.origin = bounded(&item.origin, 100);
+                    changed = true;
+                    break;
+                }
+            }
+            if !changed {
+                break r#"{"note":null,"question":null,"previous":null}"#.into();
+            }
+        };
         format!(
-            "\n\nRECALLED ACCOUNT — your study notebook contains earlier response excerpts, not source supplied this turn or verified code facts. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. Use reopen to check a claim against numbered source and its revision; resume continues from the saved bookmark. Missing fields mean no note was saved.\n{}\nEnd of study notebook.\n",
-            bounded(
-                &serde_json::to_string(self).expect("notebook contains only strings"),
-                3200
-            )
+            "\n\nRECALLED ACCOUNT — your study notebook contains earlier response excerpts, not source supplied this turn or verified code facts. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. Use reopen to check a claim against numbered source and its revision; resume continues from the saved bookmark. Missing fields mean no note was saved.\n{serialized}\nEnd of study notebook.\n"
         )
     }
 }
