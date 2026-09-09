@@ -1,0 +1,14 @@
+families: 33 (batchable: 3), skipped: 0
+
+introspection_source_catalog_1788903851  [unknown unknown]
+  + introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788902177  sim=1.0  delta: (none)
+  + introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788900877  sim=1.0  delta: (none)
+  + introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788900227  sim=1.0  delta: (none)
+  + introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788898981  sim=1.0  delta: (none)
+  + introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788894572  sim=1.0  delta: (none)
+
+introspection_astrid_llm_1788795697  [astrid:llm lines401-744of744]
+  + introspection_astrid_llm_1788765814  sim=0.38  delta: any, assumes, because, calculated, calculation, capped
+
+introspection_astrid_llm_1788784120  [astrid:llm lines1-400of744]
+  + introspection_astrid_llm_1788763694  sim=0.367  delta: after, any, attempts, balanced, behave, block

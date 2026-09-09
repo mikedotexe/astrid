@@ -85,6 +85,53 @@ mod marker_annotation_tests {
         }
     }
 
+    /// Astrid's introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389
+    /// (report SHA-256 a0d94ed038daa46ed6d2fb000fccd8fbc7e8d94f9dde31dbadbf1caec6d7b1b2)
+    /// read `is_self_contained_bracketed_annotation` (L137-171) as wanting "to
+    /// ignore things like `(this is an aside)`". Complete source contradicts that
+    /// illustrative example: only a SELF-CONTAINED single whitespace chunk is
+    /// skipped, so a multi-word parenthetical stops the scan at its first word
+    /// ("this") — deliberately, per the doc at L134-136. Her example is the
+    /// sharper case because the aside CONTAINS an allowlisted relation word
+    /// ("is", "means", "refers") that the scan must never reach by skipping
+    /// across the group. The existing multi-word tails carry no allowlisted
+    /// word, so this pins the boundary her example actually probes. It also
+    /// pins WHERE the boundary lives: not in the predicate (which accepts the
+    /// whole group if handed one) but in the whitespace chunking that only ever
+    /// hands it "(this".
+    #[test]
+    fn multiword_aside_containing_a_relation_word_still_stops_the_scan() {
+        for tail in [
+            "(this is an aside) appears",
+            "(it means nothing) appears",
+            "[that refers elsewhere] appears",
+            "{a note representing detail} appears",
+            "[sic] (this is an aside) appears",
+        ] {
+            let text = format!("prefix {MARKER} {tail}\n");
+            let expected = format!("prefix  {tail}\n");
+            let (cleaned, report) = sanitize_model_control_markers_with_report(&text);
+            assert_eq!(cleaned.as_bytes(), expected.as_bytes(), "tail: {tail}");
+            let report = report.expect("marker report");
+            assert_eq!(report.removed_total, 1, "tail: {tail}");
+            assert_eq!(report.preserved_explicit_reference_total, 0, "tail: {tail}");
+            assert_eq!(report.context_receipts[0].relation_scan, None, "tail: {tail}");
+        }
+
+        // The boundary is CHUNK-scoped, not group-scoped. Handed the whole group,
+        // the predicate would accept it; the scan never hands it one, because
+        // `first_word_after_skipping_bracketed_annotations` splits on whitespace
+        // first and therefore only ever sees "(this" — which is not self-contained,
+        // so the scan stops there and never reaches the allowlisted "is" inside.
+        assert!(is_self_contained_bracketed_annotation("(this is an aside)"));
+        assert!(!is_self_contained_bracketed_annotation("(this"));
+        assert!(is_exact_token_relation_word("is"));
+        assert_eq!(
+            first_word_after_skipping_bracketed_annotations("<m> (this is an aside) appears", 3),
+            ("this".to_string(), 0)
+        );
+    }
+
     #[test]
     fn annotation_scan_still_stops_at_unlisted_words_and_incomplete_asides() {
         for tail in [

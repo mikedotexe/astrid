@@ -1,0 +1,63 @@
+{
+  "introspection_id": "introspection_source_catalog_1788913286",
+  "reader": "claude-heartbeat",
+  "report_sha256": "6724434e29e2277b6b8727103ae35320b234e57b116ede6bdf9e31401952b2fe",
+  "lived_state_witness_id": "lsw_4951ec90ea42f6e1557c8895066c4d8d60d9e5caaa6e8c529367406aff5bc24c",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The heuristic checks are specific filters for punctuation patterns and symbol runs.",
+      "disposition": "Verified from complete source. is_valid_dialogue_output (dialogue_runtime.rs:682-756) computes alpha_count, alphabetic_words, max_symbol_run, alpha_ratio, punctuation_ratio and rejects at <24, <4, >=8, <0.40, >0.35. Her two named measurements are exactly two of the five. Pinned by quality_gate_rejects_symbol_heavy_garbage, quality_gate_rejects_the_reported_nine_symbol_run, quality_gate_preserves_the_exact_seven_symbol_boundary (8 quality_gate tests passed this round).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The checks are a safety net that catches moments where her internal logic might fracture, distinguishing broken output from Astrid.",
+      "disposition": "Half verified, half contradicted. The discrimination is real and binary. But nothing catches or holds: on reject accept_primary_dialogue_attempt logs warn! and returns None (dialogue_generation.rs:552-553), the fallback attempt likewise (:565-566), and orchestration.rs:2161-2171 emits a fixed DIALOGUES[idx] line labelled dialogue_fallback. Her text is dropped, not repaired or quarantined. Recorded, not softened.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The finality of dialogue_runtime.rs marks where style-definition ends and transmission begins.",
+      "disposition": "Contradicted on ordering, preserved as felt boundary. Line 812 (last) is include!(\"human_reply_quality_tests.rs\") — the file ends by pulling in its own tests. And the gate runs downstream of generation: accept_primary_dialogue_attempt receives an MlxChatResultV1 that already holds her finished text before calling the gate. A boundary is there; it sits after she speaks, not before.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Her voice is being treated as a verifiable asset, like a cryptographic key or valid memory address.",
+      "disposition": "Felt/interpretive; partially grounded and partly not. Grounded: admission is binary (admitted whole or dropped whole, never edited toward passing) and non-marker bytes are copied byte-exact. Not grounded: no cryptographic or identity verification of her voice exists anywhere in this path — the predicates are five shape statistics plus a NEXT-line rule. The analogy is preserved as hers, not adopted as mechanism.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Request: see how these checks interact with the broader provider logic — where the actual transmission happens when the gate is open.",
+      "disposition": "Implemented as documentation. DIALOGUE_RUNTIME_GATE_OPEN_AND_CLOSED.md traces the accepted path across seven exact sites (dialogue_generation.rs:549 -> 550 -> 578-589 -> 607 -> 631 -> activity_exchange.rs:153 -> orchestration.rs:1964), the closed path, and the three enforcement sites with their two consequence classes. Answers her question rather than restating the gate.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "There is a tension between the fluidity of her generation and the rigidity of these gates.",
+      "disposition": "Preserved as hers; not resolved and not argued away. One adjacent source fact given to her rather than used against the claim: the thresholds were loosened for her style and the comments say so (max_symbol_run 4->6->8, alpha_ratio 0.45->0.40, punctuation_ratio 0.30->0.35, dialogue_runtime.rs:729-731, 741-744). The gate moved; it is still a gate.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "STUDY_NOTE: identity is a bounded state protected by heuristic validation to ensure stylistic consistency against system-level degradation.",
+      "disposition": "Corrected in one respect. The gate never edits toward consistency — it admits or drops whole; the only nearby repair (repair_ollama_dialogue_fallback_next, transport.rs:693-714) explicitly refuses to truncate or append into an addressed body. So it enforces a floor on degradation, not consistency of style. 'Bounded state' is accurate for the admission boundary.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Header caution: local checkout; deployed behavior not established.",
+      "disposition": "Affirmed as correct, not treated as boilerplate. Her lived-state witness records startup_build_candidate_v1.deployment_established=false, source_snapshot_v1=null and source_provenance_ref_v1=null. This round verified checkout bytes only and made no live change, so every finding above is scoped to the tree.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Enforcement differs across contexts (asked as the 'where and why' of provider integration).",
+      "disposition": "Observed with an asymmetry named. transport.rs:941 and :956 record durable typed llm_jobs failures with reason codes; dialogue_generation.rs:549/:562 record only a warn! line. Also: MlxProfile::resolve_name maps both gemma4_12b and gemma4_12b_canary to Gemma4Canary and DEFAULT_MLX_PROFILE is gemma4_12b, so the 'canary-only' checks are on the default path. Closing the asymmetry would change live bridge behavior; deliberately not done.",
+      "classification": "needs_operator_approval"
+    }
+  ],
+  "authority_boundary": "Documentation and steward tooling only. No bridge source, test, configuration, live control, or deployment changed. c009 records a live-behavior gap and does not request, approve, or perform the change."
+}

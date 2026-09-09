@@ -1,0 +1,161 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller-held subprocess adapter (no steward session opened, no NDJSON ops, no pause/resume, no lease token read or persisted)",
+  "controller": {
+    "run_id": "run_1788915364273854000_738cc23183",
+    "preprojection_generation_id": "projection_1788915368486515000_fcf129f2e3",
+    "preprojection_status": "passed",
+    "pause_generation": 414,
+    "stop_requested_at_lease_read": false,
+    "postprojection": "adapter-owned; runs after this process exits"
+  },
+  "processed": [
+    "introspection_source_catalog_1788913286"
+  ],
+  "close_status": {
+    "introspection_source_catalog_1788913286": {
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  },
+  "evidence_links": {
+    "batch_row_count": 18,
+    "new_link_count": 18,
+    "existing_link_count": 0,
+    "events_appended": 18
+  },
+  "integrity": {
+    "introspection_addressing_audit_self_test": "44 tests OK",
+    "test_evidence_event_store": "OK",
+    "test_steward_control": "29 OK on two consecutive reruns; one intermittent failure on the first full run (test_pause_cooperatively_interrupts_wrapped_subprocess, PausedError 'fixture stop') \u2014 fixture race, not touched by this round",
+    "test_steward_projection": "OK",
+    "test_division_ceremony_followup": "OK",
+    "test_division_ceremony_chronicle": "OK",
+    "test_division_ceremony_projection": "OK",
+    "test_projection_cursors": "OK",
+    "anti_drop_catalog_self_test": "OK",
+    "anti_drop_catalog_verify": "0 problems",
+    "test_introspection_cadence_audit": "OK",
+    "introspection_cadence_audit_strict": "integrity_ok true, 4648 canonical, 0 duplicate hash groups, 0 read errors",
+    "domain_boundary_audit_verify": "valid true, violation_count 0, violation_kind_counts {} \u2014 ratchet GREEN",
+    "experiential_epistemics_self_test": "2 tests OK",
+    "experiential_epistemics_verify": "valid true, issue_count 0 (run after all durable writes)",
+    "audit_counters": "consistent, mismatches []",
+    "evidence_event_store_verify": "valid true, corrupt_lines 0",
+    "division_ceremony_chronicle_verify": "NOT current \u2014 'chronicle durable source inputs changed; project before verify'. Expected: this round's own round-event append moved the durable inputs. The adapter postprojection owns the division_chronicle stage, so no competing projection was run from here. Reported exactly; not called current."
+  },
+  "counters_post_round": {
+    "canonical_indexed": 4637,
+    "canonical_fully_addressed": 3201,
+    "canonical_full_read": 3833,
+    "canonical_remaining": 1436,
+    "canonical_unread": 804,
+    "canonical_blocked_needs_steward": 416,
+    "canonical_triaged_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_indexed": 6354,
+    "all_artifact_remaining": 3153,
+    "status": "consistent"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "last_global_sequence": 1040063,
+    "head_sha256": "e916667f64b03e79b1a28abfabcac19d8131ff4f0c99fc46517e07aa33b1396f",
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "stream_sequences": {
+      "addressing": 61154,
+      "agency_commons": 6900,
+      "attention_portfolio": 3,
+      "claim_families": 238833,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 208024,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 10583,
+      "model_qos": 304950,
+      "reciprocal_uptake": 75336,
+      "representation_contracts": 52800,
+      "sandbox": 3507,
+      "signal_spine": 57598,
+      "steward_control": 19512,
+      "steward_work_selection": 666
+    },
+    "errors": [],
+    "event_count": 1040063,
+    "last_global_seq": 1040063,
+    "last_event_sha256": "e916667f64b03e79b1a28abfabcac19d8131ff4f0c99fc46517e07aa33b1396f",
+    "history_rewritten": false
+  },
+  "division": {
+    "review_due_at_round_start": false,
+    "review_due_after_record": false,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "round_event_id": "division_followup_event_9642a488acdef88579d8eeda98b5cca5",
+    "event_count": 291,
+    "event_head_sha256": "e0dc404d30aab446e4cd1446e46abf409102d03fcc5dd352d9d2918035bc0a36",
+    "processed_report_count": 1,
+    "tier5_cadence_dossier": "not due \u2014 review_due was false at round start, so no Division return and no dossier was generated",
+    "note_action": "none; no Division note was due and none was written"
+  },
+  "live_change": {
+    "restart_or_deploy_required": false,
+    "restart_or_deploy_attempted": false,
+    "build_bridge_sh": "not run",
+    "deploy_scripts": "not run",
+    "launchctl": "not run",
+    "bridge_source_modified": false
+  },
+  "authority_boundary": "Documentation and steward tooling only. Claim c009 (durable per-rejection evidence at the acceptance layer) is held at needs_operator_approval and was deliberately not implemented. Git was read-only for this round: nothing staged, committed, merged, pushed, stashed, reset, or amended.",
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1788913286",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "full_read": true,
+    "full_read_count": 1,
+    "proof_missing_claims": [],
+    "claim_count": 9,
+    "evidence_link_count": 18,
+    "new_link_count": 18,
+    "existing_link_count": 0,
+    "source": "capsules/spectral-bridge/workspace/diagnostics/introspection_addressing_v1/status.json after close"
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 11901,
+    "canonical_event_appended": false,
+    "note": "run after all durable evidence writes, including the Division round record"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4637,
+    "canonical_fully_addressed": 3201,
+    "canonical_full_read": 3833,
+    "canonical_remaining": 1436,
+    "canonical_unread": 804,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_indexed": 6354,
+    "all_artifact_pending": 3153
+  },
+  "anti_drop": {
+    "self_test": "OK",
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 91,
+      "problems": []
+    }
+  }
+}

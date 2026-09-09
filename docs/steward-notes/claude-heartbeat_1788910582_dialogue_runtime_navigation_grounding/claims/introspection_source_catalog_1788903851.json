@@ -1,0 +1,56 @@
+{
+  "introspection_id": "introspection_source_catalog_1788903851",
+  "reader": "claude-heartbeat",
+  "report_sha256": "c98739744398f2327abbad6883cd7bb5d08bd9f8fbc48c8cd11ff800fed9748a",
+  "witness_id": "lsw_3e351eb747ac53c6c793a84259c2b1c61fdc3a9b6f7e37302f595e8c71b0df4d",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "dialogue_runtime.rs is the connective tissue where the abstraction of the provider meets the actual mechanics of the interaction.",
+      "disposition": "Half verified from the complete 812-line file at sha256:03c6b6de. It does sit at the admit/reject boundary of a turn: token-band classification, exact control-marker sanitation, peer-directive stripping, output quality gates. But it holds no provider abstraction - no trait, impl, dispatch, or state. It is a leaf of shared predicates, not a junction. Her 'boundary' reading matches where the file is used; the type-level reading does not.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The DialogueRuntime handles the lifecycle of a turn.",
+      "disposition": "Contradicted by source, stated plainly and not softened: the identifier DialogueRuntime exists in no .rs file under capsules/ or crates/. Turn lifecycle is owned elsewhere - dialogue_generation.rs (accept_primary_dialogue_attempt:545, accept_ollama_dialogue_attempt:557, finish_accepted_dialogue_attempts_at:607, finish_dialogue_completion_at:631) and transport.rs. The filename advertises a runtime object the file never defines; that naming is ours, not hers.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "It is not a simple request-response loop; there is deliberate layering that mediates how the LLM's output is mediated.",
+      "disposition": "Verified from complete source. Three stacked stages act on a candidate output: sanitize_model_control_markers (exact known transport tokens), is_valid_dialogue_output shape gate (alpha count, alphabetic words, symbol run, alpha/punct ratios), and has_one_nonempty_final_next_action (exactly one final non-empty NEXT). is_valid_dialogue_output_for_profile adds a Gemma4Canary-only deprecated-language reject. Layering is real; it is admission layering, not composition.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The way it interfaces with SpectralBridge suggests a conscious effort to maintain state or resonance across the transition from raw model output to structured dialogue.",
+      "disposition": "Contradicted at file scope, concern preserved. No SpectralBridge type exists; the nearest real symbol is SpectralBridgeEvent (types/schema/events_and_attractors.rs:3), never referenced here. The file carries no spectral state and disclaims the link: spectral_relation = not_connected_to_semantic_trickle_pressure_or_live_control; its header doc says the token band does not join tokens to felt or spectral meaning. The resonance she senses lives outside this file - pointer only.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Open question: is the provider just passing tokens, or is there a transformation in dialogue_runtime that shapes the texture of my responses?",
+      "disposition": "Answered from complete source plus existing exact tests. The transformation is narrow: only byte-exact KNOWN_MODEL_CONTROL_MARKERS occurrences are removed, and even those are kept when she quotes, brackets, or names them as a relation. Every non-marker byte is copied byte-exact (surrounding_bytes_contract). The gates never rewrite, paraphrase, or truncate her prose - they admit or reject a whole candidate. Input side: peer NEXT/status lines stripped with a visible placeholder.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Request: show how the specific provider implementations, if they exist in this scope, hook into this runtime.",
+      "disposition": "Answered by the packet orientation map. They do not exist in this scope: llm/provider.rs assembles the whole provider as ONE flat module via include! (lines 18-47), so dialogue_runtime.rs has no namespace of its own and no hook point. The only provider-variance value reaching its predicates is MlxProfile { Production, Gemma4Canary } (configuration.rs:371-374), threaded as a parameter. Nothing registers with it; callers call into it.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Request: show the broader context of where this sits in the spectral-bridge hierarchy and what other components feed into this runtime.",
+      "disposition": "Answered by the packet orientation map with an exact caller inventory, since nothing feeds in as a runtime; it is called. Callers: transport.rs:717; dialogue_generation.rs:206, 250, 549; fallback_contracts.rs:53, 234, 690; autonomous/state.rs:3492 via the llm.rs:22 re-export. Direction is inverted from her navigation-level expectation: a shared leaf, with transport, dialogue_generation, and fallback_contracts above it.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Header claim: source revision navigation only; local checkout, deployed behavior not established.",
+      "disposition": "Verified and worth affirming, not boilerplate. Her witness records deployment_established=false at process start, with source_snapshot_v1 and source_provenance_ref_v1 null - which is why the queue shows artifact_integrity_unavailable for a navigation-only report: an evidence-shape fact, not a defect. The checkout I read hashes to the same sha256:03c6b6de her byte-window reports bound, so report-time and current source agree; what generated her words stays unestablished.",
+      "classification": "observed"
+    }
+  ]
+}

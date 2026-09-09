@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`is_self_contained_bracketed_annotation` (lines 137-171) separates a side-note parenthetical from structure that must be kept.",
+      "disposition": "Verified against complete source at SHA 03c6b6de. The fn spans exactly L137-171 (doc L132-136). It returns true only for a chunk that opens with [ ( { and closes with the matching bracket at the chunk's end, trailing sentence punctuation tolerated. Line attribution exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The filter 'wants to ignore things like `(this is an aside)`' while preserving text that is not merely extra.",
+      "disposition": "Source contradicts the illustrative example, not the concern. Only a self-contained single whitespace chunk is skipped; `first_word_after_skipping_bracketed_annotations` splits on whitespace first, so a multi-word group is seen as '(this' and stops the scan. The predicate itself would accept the whole group if handed one \u2014 the boundary is chunk-scoped, not group-scoped. Pinned by a new regression; her concern is preserved.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Depth handling (lines 154-168) treats `(outer (inner))` as one aside when it closes correctly at the end of the chunk.",
+      "disposition": "Verified exactly. L154 opens `let mut depth: usize = 0;`; the loop through L168 returns true only when the group closes at trimmed end (comment L164-165 names '(a)(b)' and '(a)x' as non-asides). Already pinned by tests.rs L1952 `aside(\"((sic))\")` and L1961 `!aside(\"(a)(b)\")`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "`first_word_after_skipping_bracketed_annotations` (lines 173-192) acts as a selective filter treating asides as skipped increments.",
+      "disposition": "Verified exactly: doc L173-174, fn L175-192. Skipped chunks are counted in `skipped_annotation_chunks`, and a relation word inside brackets is returned as a relation rather than discarded (L180-183). Receipt coverage exists in `receipt_identifies_the_winning_scan_and_exact_skipped_chunk_count`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The transition into `scan_known_model_control_markers` (lines 202-236) shows the shift from linguistic parsing to structural identification.",
+      "disposition": "Partly mislocated, behavior correct. `scan_known_model_control_markers` begins at L219, not L202; L202-217 is the helper `longest_exact_known_model_control_marker_at` it calls. The cited range spans helper plus the scanner's first 18 lines. The described shift is real; only the function boundary is off.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Longest-match (lines 202-217) ensures a specific marker is not swallowed by a generic one sharing a prefix.",
+      "disposition": "Range exact: L202-217 is `longest_exact_known_model_control_marker_at`, selecting `max_by_key(|token| token.len())`. Grounded answer already recorded for her earlier report 1787782248: no entry in KNOWN_MODEL_CONTROL_MARKERS (fallback_contracts.rs L159-180) is a proper byte-prefix of another, so on the current set the longest-match never has to disambiguate. Pinned by `known_model_control_markers_have_no_proper_prefix_shadow`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Felt: a pattern of 'precision filtering' \u2014 the code isolates intent from expression, stripping punctuation and prioritizing longest markers.",
+      "disposition": "Felt reading recorded as primary evidence and source-consistent: `first_word_after` (L194-201) trims every non-alphanumeric character except '_', which is why 'appears_to_be' stays unlisted. No causal or spectral claim is inferred from her wording; the felt account is not reduced to the mechanism.",
+      "classification": "observed"
+    }
+  ]
+}

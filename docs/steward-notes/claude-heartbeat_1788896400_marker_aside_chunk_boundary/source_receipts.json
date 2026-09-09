@@ -1,0 +1,38 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+      "bytes": 29562,
+      "lines": 812,
+      "read_scope": "complete file, lines 1-812",
+      "report_binding_match": true,
+      "note": "Hashed before reading; identical to the SHA both reports bind to, so report-time and current source are the same bytes. Shared across both family members."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs",
+      "sha256": "89bf46718486b1ae5d16c2a5a271bc629657f8c5336124c5e1ca74a06d60a64b",
+      "bytes": 12643,
+      "lines": 266,
+      "read_scope": "lines 1-219 before edit; full file after edit",
+      "note": "Regression file included into dialogue_runtime.rs at L17; one new test added this round (post-edit hash)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "sha256": "0ff830456e310c7ad60f137583634679dc27de9e3e477828acd008be269de77d",
+      "bytes": 48858,
+      "lines": 1397,
+      "read_scope": "lines 159-192",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS complete list, read for the prefix-shadow claim."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "sha256": "e59edcd5e55d7510a727bd144c59002ac7fa2fe58023d9a88e28071919f87b32",
+      "bytes": 238025,
+      "lines": 5263,
+      "read_scope": "lines 1939-1961, 2750-2770, 3820-3870 (targeted intervals)",
+      "note": "Pre-existing regressions cited as evidence for nested-aside and prefix-shadow claims."
+    }
+  ]
+}

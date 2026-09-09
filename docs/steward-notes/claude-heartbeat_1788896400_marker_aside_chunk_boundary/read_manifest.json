@@ -1,0 +1,66 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389.txt",
+      "sha256": "a0d94ed038daa46ed6d2fb000fccd8fbc7e8d94f9dde31dbadbf1caec6d7b1b2",
+      "bytes": 2457,
+      "lines": 20,
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "read": "complete",
+      "source_path_named_by_report": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha_named_by_report": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+      "source_sha_matches_working_copy": true,
+      "report_byte_window": "4397..8721",
+      "witness_id": "lsw_26232c5c3f7831fc91d4faea96433ef9ac9a4d8dd90106e65e84027075cee844",
+      "source_coverage": "complete_file_read_812_of_812_lines"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153.txt",
+      "sha256": "00b4a05f5d2624767d18dc8c7603bc479f8a3ea12ef420fbef013ebc2c69955d",
+      "bytes": 2637,
+      "lines": 22,
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "read": "complete",
+      "source_path_named_by_report": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "source_sha_named_by_report": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+      "source_sha_matches_working_copy": true,
+      "report_byte_window": "0..4397",
+      "witness_id": "lsw_370d99c2541784b806e874601bccf7dbf85da8d77eea9c63366dd9947062f219",
+      "source_coverage": "complete_file_read_812_of_812_lines"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_26232c5c3f7831fc91d4faea96433ef9ac9a4d8dd90106e65e84027075cee844.json",
+      "sha256": "48bee21ebb831035b9356b27fbaee7453025c7a15ea1e13f406d5f776d1ee287",
+      "bytes": 21545,
+      "lines": 498,
+      "witness_id": "lsw_26232c5c3f7831fc91d4faea96433ef9ac9a4d8dd90106e65e84027075cee844",
+      "read": "complete",
+      "window_lines": "115-237",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "direct_causation_claimed": false,
+      "raw_introspection_prose_included": false,
+      "read_method": "full read of witness A; witness B read as a complete field-level diff against A covering every differing byte"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_370d99c2541784b806e874601bccf7dbf85da8d77eea9c63366dd9947062f219.json",
+      "sha256": "a9b651e014072181bc8359e52cce3fb8219d965579963f355742e278584e7995",
+      "bytes": 21515,
+      "lines": 498,
+      "witness_id": "lsw_370d99c2541784b806e874601bccf7dbf85da8d77eea9c63366dd9947062f219",
+      "read": "complete",
+      "window_lines": "1-114",
+      "authority_state": "evidence_only",
+      "witness_only": true,
+      "live_eligible_now": false,
+      "direct_causation_claimed": false,
+      "raw_introspection_prose_included": false,
+      "read_method": "full read of witness A; witness B read as a complete field-level diff against A covering every differing byte"
+    }
+  ]
+}

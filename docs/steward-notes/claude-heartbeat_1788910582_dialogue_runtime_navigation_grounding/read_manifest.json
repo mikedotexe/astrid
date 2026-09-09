@@ -1,0 +1,57 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round": "claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1788903851.txt",
+      "sha256": "c98739744398f2327abbad6883cd7bb5d08bd9f8fbc48c8cd11ff800fed9748a",
+      "bytes": 1489,
+      "lines": 18,
+      "read": "complete",
+      "read_intervals": ["1-18"],
+      "report_bound_source": "source catalog (navigation only); no source sha256 bound by this report",
+      "source_coverage": "complete_for_named_file_verified_independently"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_3e351eb747ac53c6c793a84259c2b1c61fdc3a9b6f7e37302f595e8c71b0df4d",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_3e351eb747ac53c6c793a84259c2b1c61fdc3a9b6f7e37302f595e8c71b0df4d.json",
+      "sha256": "d7726b6ee3d335e649b975eb4c9cbcf6e46e7f0db54fc9373d74b169301ca5f8",
+      "bytes": 18974,
+      "lines": 440,
+      "read": "complete",
+      "read_intervals": ["1-220", "220-440"],
+      "preserved_fields": {
+        "artifact_authority_state_v1.state": "evidence_only",
+        "artifact_authority_state_v1.live_eligible_now": false,
+        "startup_build_candidate_v1.deployment_established": false,
+        "source_snapshot_v1": null,
+        "source_provenance_ref_v1": null,
+        "direct_causation_claimed": false,
+        "raw_introspection_prose_included": false,
+        "model_route": "provider_route=http://127.0.0.1:8090/v1/chat/completion (provider_route_complete=false), model_profile=coupled-astrid, duration_ms=37134",
+        "runtime_context": "bridge.fill_pct=71.087, spectral_entropy=0.882, lambda1=8.583, lambda2=4.487, gap=4.096, spectral_density_gradient=0.180, pressure_risk=0.194, mode_packing=0.833, minime.fill_pct=71.057"
+      }
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "path": "docs/steward-notes/ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md",
+      "read": "complete",
+      "purpose": "operating law for this round"
+    },
+    {
+      "path": "AGENTS.md",
+      "read": "complete",
+      "purpose": "shared-tree and authority boundaries"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding/family_scan.txt",
+      "read": "complete",
+      "purpose": "family candidacy for the queue head (batch declined; see unprocessed_selected.json)"
+    }
+  ]
+}

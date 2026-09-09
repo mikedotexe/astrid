@@ -1,0 +1,10 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "note": "cargo is absent from the flywheel child PATH; Rust runs used PATH=$HOME/.cargo/bin:$PATH. No Rust source was modified this round — these runs verify the behavior asserted in the trace document.",
+  "runs": [
+    {"command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib quality_gate", "passed": 8, "failed": 0, "filtered_out": 2230, "purpose": "pins the five shape-gate thresholds Astrid named"},
+    {"command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib -- dialogue_fallback voice_health mlx_profile", "passed": 14, "failed": 0, "filtered_out": 2224, "purpose": "fallback gate, NEXT repair, profile resolution, and the voice_health aggregate consumer"},
+    {"command": "python3 scripts/introspection_family_scan.py --self-test", "passed": 14, "failed": 0, "purpose": "extended from 9 to 14 checks; 5 new checks are regressions for the mis-grouping repaired this round"}
+  ],
+  "zero_match_filter_corrections": "none; every filter above matched a non-empty test set."
+}

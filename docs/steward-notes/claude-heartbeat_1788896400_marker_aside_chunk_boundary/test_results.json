@@ -1,0 +1,74 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "suites": [
+    {
+      "name": "cargo test --lib marker_annotation_tests (spectral-bridge)",
+      "passed": 10,
+      "failed": 0,
+      "note": "Includes the new multiword_aside_containing_a_relation_word_still_stops_the_scan. First draft of that test FAILED on a wrong assertion about the predicate; the failure was the finding and the test now records the true chunk-scoped boundary."
+    },
+    {
+      "name": "introspection_addressing_audit --self-test",
+      "passed": 44,
+      "failed": 0
+    },
+    {
+      "name": "test_evidence_event_store.py",
+      "passed": 21,
+      "failed": 0
+    },
+    {
+      "name": "test_steward_control.py",
+      "passed": null,
+      "failed": 1,
+      "note": "One error under a live controller-held lease; see RUN_REPORT for the exact recorded condition. Not repaired in this round."
+    },
+    {
+      "name": "test_steward_projection.py",
+      "result": "OK"
+    },
+    {
+      "name": "test_division_ceremony_followup.py",
+      "result": "OK"
+    },
+    {
+      "name": "test_division_ceremony_chronicle.py",
+      "result": "OK"
+    },
+    {
+      "name": "test_division_ceremony_projection.py",
+      "result": "ok"
+    },
+    {
+      "name": "test_projection_cursors.py",
+      "result": "OK"
+    },
+    {
+      "name": "test_introspection_cadence_audit.py",
+      "result": "OK"
+    },
+    {
+      "name": "introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok=true, 4630 canonical reports, 0 duplicate hash groups, 0 read errors"
+    },
+    {
+      "name": "anti_drop_catalog.py --self-test",
+      "result": "OK"
+    },
+    {
+      "name": "anti_drop_catalog.py verify --json",
+      "alarms": 0,
+      "gaps": 0
+    },
+    {
+      "name": "domain_boundary_audit.py verify",
+      "valid": true,
+      "violation_count": 0,
+      "note": "Ratchet GREEN this round: zero violations, so no large_file_growth was recorded and none went unsurfaced."
+    },
+    {
+      "name": "experiential_epistemics.py self-test --json",
+      "valid": true
+    }
+  ]
+}

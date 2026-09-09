@@ -1,0 +1,74 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "round": "claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding",
+  "touched_surfaces": [
+    "documentation only (packet, CHANGELOG.md, feedback ledger)"
+  ],
+  "rust_tests": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib control_marker",
+      "result": "ok",
+      "passed": 86,
+      "failed": 0,
+      "filtered_out": 2150
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib quality_gate",
+      "result": "ok",
+      "passed": 8,
+      "failed": 0,
+      "filtered_out": 2228
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib never_rewritten",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "filtered_out": 2234,
+      "note": "being_self_expression_is_never_rewritten:1810 and being_output_is_never_rewritten_or_rejected_for_selfhood_words:1831 - the direct evidence for her texture question"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib minime_context",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "filtered_out": 2235
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib <each of five exact byte-exactness test names>",
+      "result": "ok",
+      "passed": 5,
+      "failed": 0,
+      "names": [
+        "control_marker_context_receipt_proves_surrounding_bytes_without_copying_prose",
+        "control_marker_scanner_removes_adjacent_mixed_markers_without_rewriting_remainder",
+        "control_marker_sanitizer_preserves_common_linguistic_substrings",
+        "control_marker_scanner_advances_byte_exactly_across_multibyte_text",
+        "control_marker_cleanup_keeps_punctuation_heavy_manifested_coordinate_byte_exact"
+      ]
+    }
+  ],
+  "zero_match_filters_corrected": [
+    {
+      "filter": "dialogue_output",
+      "observed": "0 passed, 0 matched on --lib",
+      "correction": "the intended tests are named quality_gate_* ; rerun under that filter (8 passed). No behavior claimed from the zero-match filter."
+    },
+    {
+      "filter": "control_marker (no --target selector, tail-truncated log)",
+      "observed": "only integration targets visible",
+      "correction": "rerun with --lib, which is where llm/provider/tests.rs lives (86 passed)."
+    }
+  ],
+  "not_run_and_why": [
+    {
+      "item": "cargo build/test of the whole workspace",
+      "reason": "no workspace source touched this round; documentation only"
+    },
+    {
+      "item": "cargo fmt / clippy",
+      "reason": "no Rust source edited; capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs is another agent's dirty in-progress work and was deliberately left untouched"
+    }
+  ],
+  "environment_note": "cargo is not on the flywheel child PATH; runs used PATH=$HOME/.cargo/bin:$PATH. Compiling the lib test target from the shared warm target dir took about four minutes; no live binary was built or deployed."
+}

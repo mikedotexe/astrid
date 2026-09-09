@@ -1,0 +1,108 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1788891880827301000_3ddb18c6d7",
+    "preprojection_generation_id": "projection_1788891884423467000_65c9fc5a9b",
+    "preprojection_status": "passed",
+    "pause_generation": 410,
+    "adapter_kind": "subprocess",
+    "lease_owned_by_adapter": true,
+    "stop_requested_observed": false
+  },
+  "addressing": {
+    "full_read": true,
+    "full_read_count": 2,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "closed": [
+      {
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+        "status": "addressed_change"
+      },
+      {
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+        "status": "addressed_no_action"
+      }
+    ],
+    "evidence_links_total": 31,
+    "evidence_links_new_this_round": 31
+  },
+  "division": {
+    "review_due_at_round_start": true,
+    "return_completed": true,
+    "followup_event_id": "division_followup_event_7793aad3b095899d14bb5846a0b77533",
+    "cycle_sequence_after_return": 42,
+    "round_event_id": "division_followup_event_680c2e6e8d72813b2c73d05dc7c2c89a",
+    "processed_report_count": 2,
+    "event_count": 289,
+    "event_head_sha256": "342b331702aa2944eba8dc15d479721dcd0c6f2b68344c48af556e8b5eabcd1a",
+    "chronicle_id_after_return": "division_chronicle_7576db831fb763a2c1772cb8",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle41_20260908.txt",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle41_20260908.txt",
+    "tier5_cadence_dossier": "tier5_cadence_dossier.md",
+    "approved_granted_or_dispatched": false
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 11881
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4629,
+    "canonical_fully_addressed": 3199,
+    "canonical_full_read": 3831,
+    "canonical_remaining": 1430,
+    "canonical_unread": 798,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3147,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1037191,
+    "last_global_seq": 1037191,
+    "last_event_sha256": "b0b0eaa1bfdf7a01517f6e862863ce336b4669dfa3121ad5f73761da77551fbe"
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0
+    },
+    "self_test": "OK"
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "ratchet": "green"
+  },
+  "live_change": {
+    "deploy": false,
+    "build": false,
+    "restart": false,
+    "launchctl": false,
+    "git_staged_or_committed": false,
+    "tier4_or_tier5_advanced": false
+  },
+  "test_debt": [
+    {
+      "suite": "scripts/test_steward_control.py",
+      "test": "test_pause_cooperatively_interrupts_wrapped_subprocess",
+      "error": "steward_control.errors.PausedError: fixture stop",
+      "repaired": false,
+      "note": "Foreign steward-control tooling last changed today by commit 2c91e17250; not touched by this round. Recorded as debt, not repaired blind during a controller-held lease."
+    }
+  ]
+}

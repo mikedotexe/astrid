@@ -1,0 +1,75 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+      "total_lines": 812,
+      "total_bytes": 29562,
+      "read_scope": "complete",
+      "read_intervals": ["1-150", "150-400", "400-650", "650-812"],
+      "report_binding": "report bound no source sha256 (navigation only); this hash equals the revision bound by her adjacent byte-window reports introspection_astrid_...dialogue_runtime.rs_1788894572 .. _1788902177",
+      "working_copy_state": "clean (not modified in git status)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider.rs",
+      "read_scope": "scoped",
+      "read_intervals": ["18-47"],
+      "purpose": "provider assembly: flat include! module list, dialogue_runtime.rs included at line 41"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/configuration.rs",
+      "read_scope": "scoped",
+      "read_intervals": ["371-385"],
+      "purpose": "MlxProfile { Production, Gemma4Canary } — the only provider-variance value reaching the gates"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_generation.rs",
+      "read_scope": "scoped_symbol_inventory",
+      "read_intervals": ["519-631 function headers", "206", "250", "549"],
+      "purpose": "actual turn-lifecycle owner and call sites"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "read_scope": "scoped",
+      "read_intervals": ["717"],
+      "purpose": "transport-level shape gate call site"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "read_scope": "scoped",
+      "read_intervals": ["53", "234", "690"],
+      "purpose": "marker report, peer sanitation, requested-token band call sites"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/state.rs",
+      "read_scope": "scoped",
+      "read_intervals": ["3492"],
+      "purpose": "marker report consumed outside the provider module via llm.rs:22 re-export"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/events_and_attractors.rs",
+      "read_scope": "scoped",
+      "read_intervals": ["3"],
+      "purpose": "nearest real symbol to her SpectralBridge reference: SpectralBridgeEvent"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "read_scope": "scoped_test_inventory",
+      "read_intervals": ["1881-2620 test names", "2265-2285", "4392", "2017", "2033", "2321"],
+      "purpose": "existing exact tests pinning byte-exact non-marker preservation"
+    },
+    {
+      "kind": "symbol_absence_verification",
+      "query": "grep -rn 'DialogueRuntime' --include='*.rs' capsules/ crates/",
+      "result": "zero matches",
+      "note": "identifier named by the report does not exist in repository Rust sources"
+    },
+    {
+      "kind": "symbol_absence_verification",
+      "query": "grep -rn 'SpectralBridge' --include='*.rs' capsules/ crates/",
+      "result": "one match: capsules/spectral-bridge/src/types/schema/events_and_attractors.rs:3 (struct SpectralBridgeEvent)",
+      "note": "no SpectralBridge type; dialogue_runtime.rs references neither"
+    }
+  ]
+}

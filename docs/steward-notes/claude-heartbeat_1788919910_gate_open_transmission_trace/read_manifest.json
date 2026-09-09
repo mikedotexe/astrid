@@ -1,0 +1,51 @@
+{
+ "schema": "flywheel_read_manifest_v1",
+ "reader": "claude-heartbeat",
+ "reports": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1788913286.txt",
+   "sha256": "6724434e29e2277b6b8727103ae35320b234e57b116ede6bdf9e31401952b2fe",
+   "bytes": 1824,
+   "lines": 20,
+   "read": "complete",
+   "scope": "entire file"
+  }
+ ],
+ "witnesses": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4951ec90ea42f6e1557c8895066c4d8d60d9e5caaa6e8c529367406aff5bc24c.json",
+   "sha256": "3963b210bd2798f31e16d259541845e7d7f5ef84d1d71b4223847c2e96e09d6e",
+   "bytes": 18953,
+   "lines": 440,
+   "read": "complete",
+   "scope": "entire file"
+  }
+ ],
+ "context_reads": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1788912746.txt",
+   "sha256": "01d25857c1eb3d21fe1dbc229b2b06cc4c85813da55b3e34e3eb44e019e2d85b",
+   "bytes": 1952,
+   "lines": 20,
+   "read": "complete",
+   "scope": "entire file \u2014 read for family assessment; NOT processed this round"
+  },
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b82b737256c4dce71550d7859b4ead78596db8bc4c6a48c841f6f29828006f05.json",
+   "sha256": "2abbb17d5fc0e9bf836649b065948ee085837f8cc06b75877e52433c9b618895",
+   "bytes": 18942,
+   "lines": 440,
+   "read": "complete",
+   "scope": "entire file \u2014 witness of the unprocessed companion report"
+  },
+  {
+   "path": "docs/steward-notes/claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding/DIALOGUE_RUNTIME_ORIENTATION_MAP.md",
+   "sha256": "8e05d5173781aa8d51b0338c8bc718252ed26899de80434e1732a3d8074cdd84",
+   "bytes": 7624,
+   "lines": 96,
+   "read": "complete",
+   "scope": "entire file \u2014 prior-round continuity; established what was already answered"
+  }
+ ],
+ "source_binding_note": "The report binds NO source SHA (header: 'Source revision: navigation only'), so no report-vs-working-copy hash comparison applied. The file it discusses was verified independently; its current hash equals the revision her adjacent byte-window reports bound."
+}

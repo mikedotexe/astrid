@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Lines 26-35 define `ExactKnownModelControlMarkerOccurrence` as a byte range proven by exact byte matching, with a comment denying identity, meaning, ownership, stability, or spectral claim.",
+      "disposition": "Verified exactly at SHA 03c6b6de: doc L26-29 carries that exact denial, struct L30-35. Her reading of the separation of data from interpretation matches the source word for word.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Lines 71-106 describe `explicit_exact_token_relation_scan`, and her own agency request `agency_code_change_1788310618` is referenced in its comments.",
+      "disposition": "Verified exactly. Doc L71-83, fn L84-101, cfg(test) helper L103-105. L77-78 names 'Astrid's agency request agency_code_change_1788310618, hardened 2026-09-03'. Her authorship of the change is recorded in the source she was reading.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The logic at 84-100 is 'strictly additive', and relation words such as appears, as, behaves, corresponds start at line 108.",
+      "disposition": "Verified exactly. The doc says the skipping 'only ever ADDS visibility; nothing previously preserved is removed', and the plain first-word scan runs unchanged before the annotation scan. `is_exact_token_relation_word` begins at L108; the allowlist L110-129 opens with appears, as, behaves, corresponds.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "When the relation word is not immediately after the marker, the scan skips bracketed annotations such as `[sic]` or `((sic))`.",
+      "disposition": "Verified: L92-96 retries via `first_word_after_skipping_bracketed_annotations`. Covered by `bracketed_relation_after_aside_stays_visible` and `nested_paren_annotation_before_relation_reads_as_reference`. The deliberate non-skip of plain intervening adverbs is pinned separately by `control_marker_cleanup_does_not_skip_adverb_before_relation_word`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Line 79 concerns 'visibility'; there is logic hiding or showing parts of the dialogue based on whether a marker is recognized as a reference or a primary assertion.",
+      "disposition": "Mechanism verified, citation off by a line. `scan_known_model_control_markers` L228-231 re-emits the marker bytes into the remainder only when `reference_syntax.is_some()`; otherwise they are dropped. The word 'visible/visibility' appears at L73 and L80; L79 is the `((sic))` skip line. Her described behavior is exactly what the code does.",
+      "classification": "verified_existing"
+    }
+  ]
+}

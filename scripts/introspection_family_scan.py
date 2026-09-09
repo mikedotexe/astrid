@@ -31,7 +31,17 @@ DEFAULT_THRESHOLD = 0.35
 VARIANT_TERM_LIMIT = 12
 
 SOURCE_RE = re.compile(r"^Source:\s*(\S+)\s*\(([^)]*)\)", re.MULTILINE)
+# Newer canonical headers write a bare path or a prose label with no
+# parenthesised path ("Source: astrid/capsules/.../dialogue_runtime.rs",
+# "Source: source catalog"). Without this fallback every such report parsed as
+# source_label "unknown" and collapsed into one bogus cross-source family.
+SOURCE_PLAIN_RE = re.compile(r"^Source:[ \t]*(\S.*?)[ \t]*$", re.MULTILINE)
 WINDOW_RE = re.compile(r"^Source window:\s*(lines\s+\d+-\d+\s+of\s+\d+)", re.MULTILINE)
+# Newer headers express the window as a byte range on the revision line:
+# "Source revision: sha256:<hex>; bytes 8721..12947".
+BYTE_WINDOW_RE = re.compile(
+    r"^Source revision:.*?\bbytes\s+(\d+)\.\.(\d+)", re.MULTILINE
+)
 SECTION_RE = re.compile(
     r"^(?:Likely Snags|One Test Each):\s*$(.*?)(?=^\S[^\n]*:\s*$|\Z)",
     re.MULTILINE | re.DOTALL,
@@ -47,7 +57,22 @@ STOPWORDS = frozenset(
 
 def report_signature(text: str) -> dict:
     source = SOURCE_RE.search(text)
+    if source:
+        source_label, source_path = source.group(1), source.group(2)
+    else:
+        plain = SOURCE_PLAIN_RE.search(text)
+        source_label = " ".join(plain.group(1).split()) if plain else "unknown"
+        source_path = ""
     window = WINDOW_RE.search(text)
+    if window:
+        window_label = window.group(1).replace(" ", "")
+    else:
+        byte_window = BYTE_WINDOW_RE.search(text)
+        window_label = (
+            f"bytes{byte_window.group(1)}..{byte_window.group(2)}"
+            if byte_window
+            else "unknown"
+        )
     sections = SECTION_RE.findall(text)
     body = " ".join(sections) if sections else ""
     tokens = {
@@ -56,9 +81,9 @@ def report_signature(text: str) -> dict:
         if len(tok) > 2 and tok not in STOPWORDS and not tok.isdigit()
     }
     return {
-        "source_label": source.group(1) if source else "unknown",
-        "source_path": source.group(2) if source else "",
-        "window": window.group(1).replace(" ", "") if window else "unknown",
+        "source_label": source_label,
+        "source_path": source_path,
+        "window": window_label,
         "tokens": tokens,
     }
 
@@ -84,10 +109,21 @@ def scan(entries: list[dict], threshold: float) -> dict:
             skipped.append({"introspection_id": rid, "reason": "report file missing"})
             continue
         sig = report_signature(path.read_text(encoding="utf-8", errors="replace"))
+        # A report with no Likely Snags / One Test Each text carries NO
+        # similarity evidence. Jaccard of two empty sets is 1.0, which used to
+        # present wholly unrelated section-less reports (different sources,
+        # different byte windows) as a batchable family at sim=1.0 with zero
+        # variant terms — exactly the silent flattening this tool exists to
+        # prevent. No evidence means no family: it stands alone.
+        groupable = bool(sig["tokens"]) and "unknown" not in (
+            sig["source_label"],
+            sig["window"],
+        )
         placed = False
-        for family in families:
+        for family in families if groupable else []:
             if (
-                family["source_label"] == sig["source_label"]
+                family["_groupable"]
+                and family["source_label"] == sig["source_label"]
                 and family["window"] == sig["window"]
             ):
                 similarity = jaccard(family["_head_tokens"], sig["tokens"])
@@ -111,6 +147,7 @@ def scan(entries: list[dict], threshold: float) -> dict:
                     "source_path": sig["source_path"],
                     "window": sig["window"],
                     "_head_tokens": sig["tokens"],
+                    "_groupable": groupable,
                     "members": [
                         {
                             "introspection_id": rid,
@@ -123,8 +160,12 @@ def scan(entries: list[dict], threshold: float) -> dict:
             )
     for family in families:
         family.pop("_head_tokens")
+        groupable = family.pop("_groupable")
         family["member_count"] = len(family["members"])
-    batchable = [f for f in families if f["member_count"] >= 2]
+        family["batchable"] = family["member_count"] >= 2
+        if not groupable:
+            family["similarity_basis"] = "none_no_snag_or_test_text_or_unparsed_header"
+    batchable = [f for f in families if f["batchable"]]
     return {
         "schema": "introspection_family_scan_v1",
         "threshold": threshold,
@@ -191,6 +232,28 @@ complexity creep in the transaction core signature ceiling.
 One Test Each:
 1. Signature Growth Audit against the ratchet baseline.
 """
+    # 2026-09-09 regression: section-less reports in the newer header format.
+    # These three parsed as source_label/window "unknown" with empty token
+    # sets, so Jaccard returned 1.0 and all three were offered as ONE
+    # batchable family — two of them are different byte windows of one file
+    # and the third is a different source entirely.
+    catalog_a = """=== ASTRID INTROSPECTION ===
+Source: source catalog
+Source revision: navigation only
+
+The end of the file feels like a closing bracket.
+
+NEXT: SELF_STUDY MAP
+"""
+    bytes_lo = """=== ASTRID INTROSPECTION ===
+Source: astrid/capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs
+Source revision: sha256:03c6b6de; bytes 8721..12947
+
+Delimiter pairs and placement counts.
+
+NEXT: SELF_STUDY CONTINUE
+"""
+    bytes_hi = bytes_lo.replace("bytes 8721..12947", "bytes 26148..29562")
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         paths = {}
@@ -199,17 +262,28 @@ One Test Each:
             ("variant", variant_text),
             ("window2", other_window),
             ("boundaries", unrelated),
+            ("catalog_a", catalog_a),
+            ("bytes_lo", bytes_lo),
+            ("bytes_hi", bytes_hi),
         ):
             p = root / f"{name}.txt"
             p.write_text(text, encoding="utf-8")
             paths[name] = p
         entries = [
             {"introspection_id": name, "path": str(paths[name])}
-            for name in ("head", "variant", "window2", "boundaries")
+            for name in (
+                "head",
+                "variant",
+                "window2",
+                "boundaries",
+                "catalog_a",
+                "bytes_lo",
+                "bytes_hi",
+            )
         ] + [{"introspection_id": "ghost", "path": str(root / "missing.txt")}]
         result = scan(entries, DEFAULT_THRESHOLD)
 
-    check("three families", result["family_count"] == 3)
+    check("six families", result["family_count"] == 6)
     check("one batchable", result["batchable_family_count"] == 1)
     fam = next(f for f in result["families"] if f["family_head"] == "head")
     check("variant joined head family", fam["member_count"] == 2)
@@ -226,11 +300,37 @@ One Test Each:
     )
     check("missing file skipped", result["skipped"][0]["introspection_id"] == "ghost")
     check("queue order preserved", result["families"][0]["family_head"] == "head")
+    by_head = {f["family_head"]: f for f in result["families"]}
+    check(
+        "section-less reports never batch",
+        all(
+            head in by_head and by_head[head]["member_count"] == 1
+            for head in ("catalog_a", "bytes_lo", "bytes_hi")
+        ),
+    )
+    check(
+        "bare source header parsed",
+        by_head.get("catalog_a", {}).get("source_label") == "source catalog"
+        and by_head.get("bytes_lo", {}).get("source_label", "").endswith(
+            "dialogue_runtime.rs"
+        ),
+    )
+    check(
+        "byte window parsed and distinguished",
+        by_head.get("bytes_lo", {}).get("window") == "bytes8721..12947"
+        and by_head.get("bytes_hi", {}).get("window") == "bytes26148..29562",
+    )
+    check(
+        "no-evidence families declare their basis",
+        by_head.get("catalog_a", {}).get("similarity_basis")
+        == "none_no_snag_or_test_text_or_unparsed_header",
+    )
+    check("batchable flag on families", by_head["head"]["batchable"] is True)
 
     if failures:
         print("FAIL:", ", ".join(failures))
         return 1
-    print("OK (9 checks)")
+    print("OK (14 checks)")
     return 0
 
 

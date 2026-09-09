@@ -1,0 +1,220 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1788906410038403000_ccf4bd7c87",
+    "adapter_kind": "subprocess",
+    "preprojection_generation_id": "projection_1788906413447550000_f3c7408792",
+    "preprojection_status": "passed",
+    "pause_generation": 412,
+    "postprojection": "adapter-owned, runs after this process exits",
+    "lease_token_read_or_persisted": false,
+    "steward_session_opened": false,
+    "ndjson_ops_sent": false,
+    "pause_or_resume_invoked": false
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "report_sha256": "c98739744398f2327abbad6883cd7bb5d08bd9f8fbc48c8cd11ff800fed9748a",
+      "witness_id": "lsw_3e351eb747ac53c6c793a84259c2b1c61fdc3a9b6f7e37302f595e8c71b0df4d",
+      "witness_sha256": "d7726b6ee3d335e649b975eb4c9cbcf6e46e7f0db54fc9373d74b169301ca5f8",
+      "source_sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+      "read": "complete",
+      "claims": 8,
+      "evidence_links": 20,
+      "close_status": "addressed_change",
+      "proof_missing_claims": []
+    }
+  ],
+  "selected_count": 40,
+  "processed_count": 1,
+  "unprocessed_count": 39,
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "rc=0, no problems",
+    "domain_boundary_verify": {
+      "violation_count": 0,
+      "violation_kind_counts": {},
+      "ratchet": "green"
+    },
+    "cadence_tests": "6 tests OK",
+    "cadence_audit_strict": {
+      "integrity_ok": true,
+      "canonical_count": 4635,
+      "duplicate_hash_group_count": 0
+    },
+    "evidence_event_store_tests": "21 tests OK",
+    "steward_control_tests": "29 tests OK",
+    "steward_projection_tests": "14 tests OK",
+    "division_followup_tests": "3 tests OK",
+    "division_chronicle_tests": "10 tests OK",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4 tests OK",
+    "experiential_epistemics_self_test": "2 tests OK",
+    "experiential_epistemics_verify": {
+      "valid": true,
+      "issues": [],
+      "note": "run after all durable evidence writes"
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "evidence_event_store_verify": {
+      "valid": true,
+      "event_count": 1038938,
+      "last_global_seq": 1038938,
+      "last_event_sha256": "7fe4ef07f255fca4793f86297b2554ba1266e02b81537fcc37b9bdec54a1c16b",
+      "elapsed_secs": 743
+    },
+    "division_followup_verify": {
+      "cycle_sequence": 42,
+      "completed_rounds_since_followup": 2,
+      "rounds_remaining_before_followup": 4,
+      "review_due": false,
+      "last_round_event_id": "division_followup_event_8ac121fc9c39315a06a70f4ce7a7535b",
+      "event_count": 290,
+      "event_head_sha256": "15736b19712e5636c00b243a621aa24acaf02ba966ecd143d2894a6cb7c67b5d"
+    },
+    "division_chronicle_verify": {
+      "result": "not current",
+      "exact_message": "chronicle durable source inputs changed; project before verify",
+      "handling": "reported exactly, not called current. The change follows this round's own round-event append; the adapter postprojection owns the division_chronicle stage, so no competing projection was run from here."
+    }
+  },
+  "tests": {
+    "rust": "86 control_marker + 8 quality_gate + 2 never_rewritten + 1 minime_context + 5 exact byte-exactness names, 0 failed",
+    "zero_match_filters_corrected": [
+      "dialogue_output -> quality_gate_*",
+      "control_marker without --lib -> --lib"
+    ]
+  },
+  "live_surface": {
+    "build_bridge_invoked": false,
+    "deploy_invoked": false,
+    "launchctl_invoked": false,
+    "restart_required": false,
+    "restart_attempted": false,
+    "note": "No live substrate, control, codec, prompt, model, or configuration change. Rust test compilation wrote only to the shared cargo target dir; no release binary or deployed artifact was produced."
+  },
+  "git": {
+    "mode": "read_only",
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "foreign_paths_preserved": [
+      "capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs",
+      "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/"
+    ],
+    "minime_tree": "clean and untouched"
+  },
+  "correspondence": {
+    "cards_emitted": 0,
+    "notes_delivered": 0,
+    "queries_sent": 0,
+    "note": "answer delivered as durable documentation only; silence stays neutral"
+  },
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1788903851",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "full_read": true,
+    "full_read_count": 1,
+    "proof_missing_claims": [],
+    "claim_count": 8,
+    "evidence_link_count": 20,
+    "new_link_count": 20,
+    "existing_link_count": 0,
+    "source": "capsules/spectral-bridge/workspace/diagnostics/introspection_addressing_v1/status.json after close"
+  },
+  "division": {
+    "round_event_id": "division_followup_event_8ac121fc9c39315a06a70f4ce7a7535b",
+    "processed_report_count": 1,
+    "steward_run_id": "run_1788906410038403000_ccf4bd7c87",
+    "projection_generation_id": "projection_1788906413447550000_f3c7408792",
+    "cycle_sequence": 42,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "event_count": 290,
+    "event_head_sha256": "15736b19712e5636c00b243a621aa24acaf02ba966ecd143d2894a6cb7c67b5d",
+    "chronicle_verify": "not current - 'chronicle durable source inputs changed; project before verify'; the change follows this round's own round-event append and the adapter postprojection owns the division_chronicle stage. Reported exactly; not called current."
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 11893,
+    "canonical_event_appended": false,
+    "note": "run after all durable evidence writes, including the Division round record"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4635,
+    "canonical_fully_addressed": 3200,
+    "canonical_full_read": 3832,
+    "canonical_remaining": 1435,
+    "canonical_unread": 803,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "proof_gap_artifacts": 0,
+    "proof_gap_claims": 0,
+    "all_artifact_pending": 3152,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1038938,
+    "last_global_seq": 1038938,
+    "last_event_sha256": "7fe4ef07f255fca4793f86297b2554ba1266e02b81537fcc37b9bdec54a1c16b",
+    "verify_elapsed_secs": 743,
+    "status_after_verify": {
+      "valid": true,
+      "corrupt_lines": 0,
+      "errors": [],
+      "event_count": 1038948,
+      "last_global_seq": 1038948,
+      "last_event_sha256": "40edade53f05b3dd7a7ca3d992a2421b3ada504220b766c86858e4193ebd90aa",
+      "history_rewritten": false,
+      "payload_aggregate_count": 669927,
+      "partial_explicit_aggregate_count": 0,
+      "note": "ten events beyond the verify snapshot are the adapter's own steward_control heartbeats (stream 19439 -> 19449); no addressing, claim_families, or felt_contracts movement"
+    },
+    "stream_counts_at_verify": {
+      "addressing": 61128,
+      "agency_commons": 6885,
+      "attention_portfolio": 3,
+      "claim_families": 238816,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 207947,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 10580,
+      "model_qos": 304272,
+      "reciprocal_uptake": 75330,
+      "representation_contracts": 52690,
+      "sandbox": 3507,
+      "signal_spine": 57480,
+      "steward_control": 19439,
+      "steward_work_selection": 664
+    }
+  },
+  "anti_drop": {
+    "self_test": "5 tests OK",
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 91,
+      "problems": []
+    }
+  }
+}

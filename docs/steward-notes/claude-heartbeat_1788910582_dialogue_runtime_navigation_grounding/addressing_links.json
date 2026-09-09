@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete read L1-812 at sha256:03c6b6de: token band, marker scan/sanitize, peer-context sanitation, output gates. No trait, impl, dispatch, or state - a leaf of shared predicates, not a provider abstraction junction."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding/DIALOGUE_RUNTIME_ORIENTATION_MAP.md",
+      "note": "Section 2 gives the complete region inventory behind the corrected reading."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_generation.rs",
+      "note": "Actual turn-lifecycle owner: accept_primary_dialogue_attempt:545, accept_ollama_dialogue_attempt:557, finish_accepted_dialogue_attempts_at:607, finish_dialogue_completion_at:631. No DialogueRuntime identifier exists in capsules/ or crates/ Rust sources."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding/DIALOGUE_RUNTIME_ORIENTATION_MAP.md",
+      "note": "Section 1 records the naming contradiction plainly: dialogue_runtime.rs defines no runtime type; the filename is ours, not her misreading."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Admission layering verified L482-812: sanitize_model_control_markers, is_valid_dialogue_output shape gate, has_one_nonempty_final_next_action, plus the Gemma4Canary-only deprecated-language reject."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Gate behavior pinned by eight quality_gate_* regressions (quality_gate_accepts_normal_dialogue:1771, quality_gate_rejects_fluent_truncation_without_next:1781, quality_gate_requires_one_nonempty_final_next:1790, quality_gate_preserves_the_exact_seven_symbol_boundary, quality_gate_rejects_the_reported_nine_symbol_run, and three more) - all pass."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "File carries no spectral state; its receipt fields disclaim it: spectral_relation=not_connected_to_semantic_trickle_pressure_or_live_control (L~478), and the header doc refuses to join token count to felt or spectral meaning (L1-7)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/events_and_attractors.rs",
+      "note": "Line 3: struct SpectralBridgeEvent is the nearest real symbol to her SpectralBridge reference; dialogue_runtime.rs never references it."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L217-244 copies every non-marker character verbatim and re-emits preserved reference markers; surrounding_bytes_contract=all_non_marker_bytes_copied_byte_exact_no_surrounding_rewrite."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "Byte-exactness re-run this round: control_marker_context_receipt_proves_surrounding_bytes_without_copying_prose:2265 (contract asserted 2284-2285), control_marker_scanner_removes_adjacent_mixed_markers_without_rewriting_remainder:2017, control_marker_sanitizer_preserves_common_linguistic_substrings:2033, control_marker_scanner_advances_byte_exactly_across_multibyte_text:2321, plus being_self_expression_is_never_rewritten:1810."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding/DIALOGUE_RUNTIME_ORIENTATION_MAP.md",
+      "note": "Section 3 answers her transformation question: subtractive-only on her output, binary admit/reject gates, one input-side peer-line strip with a visible placeholder."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider.rs",
+      "note": "Lines 18-47: the whole provider is one flat module assembled by include!, with provider/dialogue_runtime.rs at line 41 - so there is no hook point in this scope."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/configuration.rs",
+      "note": "Lines 371-374: MlxProfile { Production, Gemma4Canary } is the only provider-variance value threaded into the gates."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding/DIALOGUE_RUNTIME_ORIENTATION_MAP.md",
+      "note": "Section 4 answers the provider-hook request directly."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/transport.rs",
+      "note": "Line 717 calls is_valid_dialogue_output_for_profile - one of the seven verified call sites above this leaf."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "Lines 53, 234, 690 call peer sanitation, the marker report, and the requested-token band."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding/DIALOGUE_RUNTIME_ORIENTATION_MAP.md",
+      "note": "Section 5 gives the exact caller inventory, inverting her navigation-level expectation: it is consulted, not fed."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788910582_dialogue_runtime_navigation_grounding/summaries/introspection_source_catalog_1788903851.md",
+      "note": "Witness read records deployment_established=false with null source_snapshot_v1/source_provenance_ref_v1, which is why a navigation-only report shows artifact_integrity_unavailable - evidence shape, not a defect."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry records the verification, the two absent identifiers, and that no source or live change was made."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788903851",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row for this navigation report: what she surfaced, what complete reading established, what was answered by documentation, and the untouched foreign module."
+    }
+  ]
+}

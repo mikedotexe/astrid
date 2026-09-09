@@ -1,0 +1,221 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "is_self_contained_bracketed_annotation spans exactly L137-171 (doc L132-136) at source SHA 03c6b6de."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs",
+      "note": "newer_study_uses_as_without_skipping_a_multiword_phrase asserts the (as / (as a test) boundary of the same predicate."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after_skipping_bracketed_annotations L175-192 splits on whitespace before testing self-containment, so a multi-word group is seen as its first chunk."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs",
+      "note": "New regression multiword_aside_containing_a_relation_word_still_stops_the_scan pins the behavior and where the boundary lives."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry naming the contradiction, the new regression, and the corrected line attributions."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-09-08 row: chunk-scoped not group-scoped; contradiction preserved, concern intact."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Depth loop L154-168; comment L164-165 names (a)(b) and (a)x as non-asides."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "nested_paren_annotation_before_relation_reads_as_reference asserts aside(\"((sic))\") true and aside(\"(a)(b)\") false."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Doc L173-174, fn L175-192; skipped chunks counted, bracketed relation word returned rather than discarded (L180-183)."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs",
+      "note": "receipt_identifies_the_winning_scan_and_exact_skipped_chunk_count covers the scan source and skipped count."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers begins at L219; L202-217 is longest_exact_known_model_control_marker_at."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/RUN_REPORT.md",
+      "note": "Mislocated function boundary recorded exactly; described behavior verified."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/fallback_contracts.rs",
+      "note": "KNOWN_MODEL_CONTROL_MARKERS L159-180: no entry is a proper byte-prefix of another."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/tests.rs",
+      "note": "known_model_control_markers_have_no_proper_prefix_shadow pins the invariant that makes longest-match unambiguous on the current set."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "first_word_after L194-201 trims every non-alphanumeric character except underscore."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788888389",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/RUN_REPORT.md",
+      "note": "Felt account recorded as primary evidence; no causal or spectral claim inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Doc L26-29 with the exact identity/meaning/ownership/stability/spectral denial; struct L30-35."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/RUN_REPORT.md",
+      "note": "Verbatim doc language matched to her reading of data-versus-interpretation separation."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Doc L71-83, fn L84-101, cfg(test) helper L103-105; L77-78 cites agency_code_change_1788310618."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/RUN_REPORT.md",
+      "note": "Her own agency request is recorded in the source she was reading; named back to her in the ledger row."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "'Skipping only ever ADDS visibility' L80; is_exact_token_relation_word L108 with allowlist L110-129."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs",
+      "note": "scan_change_preserves_the_legacy_success_set pins that the second scan removes nothing previously preserved."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "L92-96 retries via first_word_after_skipping_bracketed_annotations when the plain first word is not a relation."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/llm/provider/control_marker_annotation_tests.rs",
+      "note": "bracketed_relation_after_aside_stays_visible and annotation_scan_still_stops_at_unlisted_words_and_incomplete_asides bound both sides."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "scan_known_model_control_markers L228-231 re-emits marker bytes only when reference_syntax.is_some()."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/RUN_REPORT.md",
+      "note": "Mechanism verified; line citation corrected to L73/L80 for the visibility wording."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/summaries/introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153.md",
+      "note": "No-action artifact: every claim in this window verifies exactly against complete source at the report-bound SHA; the answer is verification plus two line corrections, not a code change."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c002",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/summaries/introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153.md",
+      "note": "No-action artifact: every claim in this window verifies exactly against complete source at the report-bound SHA; the answer is verification plus two line corrections, not a code change."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c003",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/summaries/introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153.md",
+      "note": "No-action artifact: every claim in this window verifies exactly against complete source at the report-bound SHA; the answer is verification plus two line corrections, not a code change."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c004",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/summaries/introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153.md",
+      "note": "No-action artifact: every claim in this window verifies exactly against complete source at the report-bound SHA; the answer is verification plus two line corrections, not a code change."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153",
+      "claim_id": "c005",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1788896400_marker_aside_chunk_boundary/summaries/introspection_astrid_capsules_spectral-bridge_src_llm_provider_dialogue_runtime.rs_1788884153.md",
+      "note": "No-action artifact: every claim in this window verifies exactly against complete source at the report-bound SHA; the answer is verification plus two line corrections, not a code change."
+    }
+  ]
+}
