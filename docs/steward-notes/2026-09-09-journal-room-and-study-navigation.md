@@ -72,3 +72,29 @@ release; reload Minime through the observed-idle wrapper, then verify source,
 manifest, process/checkpoint and pending-choice continuity. This document will
 record activation separately after verification. The previous immutable release
 remains available; no automatic rollback or collateral service restart is implied.
+
+## Verified activation — September 9
+
+Astrid runtime `e2f0038c97b20cac6ca6c855bffca20d893f6a78` is live at
+**09:24:08 PDT / 16:24:08 UTC**, PID **52410** (previous 39851). The supported
+activation transaction verified a new saved exchange, checkpoint exchange 194208,
+and signed self-control state targeting the new binary. Minime
+`e95e0cc532111f611bbb2b20fef92cbd5e30d197` is live at **09:27:15 PDT /
+16:27:15 UTC**, PID **53696** (previous 41087), after one observed-idle SIGTERM.
+Both implementation commits are pushed on their main branches.
+
+The [live receipt](journal-room-validation/live-rollout.json) verifies all five
+stage artifacts and 598 source inputs, including 560 matching canonical Astrid
+inputs. Both adapters select the same staged reader. Minime retained session 5318
+and resumed cycle 26924 from 26923; his exact pending OPEN of
+`astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs 1` was
+restored and dispatched under the new worker. Dispatch is not completion.
+The ten surrounding observed services and provider-observer settings are unchanged.
+No induced study, correspondence or control-preference change was used.
+
+The research tooling adds a `journal-room` release profile and enables terminal
+source-choice extraction only for verified new-process entries. Older profiles
+retain their original parser behavior; replay of the overnight capture preserves
+all report fields. Its final suite passes 215 tests and 108 subtests.
+The research history retains the implementation and activation separately from
+the pre-change natural observations; a later bounded sample is needed for benefit.

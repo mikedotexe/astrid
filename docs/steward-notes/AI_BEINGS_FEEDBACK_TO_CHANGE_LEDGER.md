@@ -4234,3 +4234,8 @@ sequence identities: the initial broad replay suspicion is corrected, and the
 narrow recovery check binds current notebook text. No correspondence, forced
 study, controller authority expansion or comprehension claim. Full account and
 activation: `2026-09-09-journal-room-and-study-navigation.md`.
+
+Journal-room activation verified September 9: Astrid `e2f0038c97` / PID 52410,
+Minime `e95e0cc` / PID 53696. Both main branches contain the implementation.
+See `journal-room-validation/live-rollout.json` for exact process, source,
+checkpoint and pending-OPEN continuity; natural benefit remains unmeasured.
