@@ -60,7 +60,7 @@ rewriting their bound text. A map's saved bookmark is not a code page shown now.
 Source pages retain exact repository identities, revisions and numbered spans;
 search results require OPEN for full context. Empty source pages are labeled EOF.
 
-Notebook entries are earlier response excerpts, not verified claims. New entries
+Notebook entries are earlier responses or explicitly marked excerpts, not verified claims. New entries
 carry exact reopen and resume commands alongside their original source revision.
 Both adapters put input scope and delivery limitations in the journal. Both
 peer-study readers preserve attribution and distinguish a peer account from code
@@ -101,7 +101,7 @@ current source is visible on maps, and incomplete files offer RESUME. Literal
 searches with no matches say so and explain that punctuation belongs to the query.
 
 Each Being also has a bounded notebook carried as reference text in source and
-navigation requests. It contains the Being's last substantive response excerpt,
+navigation requests. It contains up to four recent substantive visible responses,
 an optional lasting note, and an optional current question, with response hashes
 and source/revision references where applicable. A Being can write one-line
 `STUDY_NOTE: <words>` and `STUDY_QUESTION: <question>` fields in a response, or use
@@ -110,9 +110,15 @@ notes. No extra generation, compulsory format or minimum response is required.
 Notes stay in the user reference material; they are never promoted to system
 instructions or interpreted as verified code facts.
 
-The note, question and previous excerpt are limited to 700, 350 and 700 UTF-8 bytes
-respectively, with explicit truncation labels. The whole rendered notebook is
-bounded below 4,000 bytes in addition to the unchanged 7,000-byte source page budget.
+The note and question have 1,600- and 500-byte limits. Each retained response has
+a 16,000-byte storage limit; the rendered notebook JSON has a 9,000-byte budget.
+Rendering drops the oldest whole account first. An oversized latest response
+keeps its beginning and ending, with a middle-omission marker and `complete=false`.
+Legacy excerpts also default to `complete=false`; they are never relabeled full.
+Source pages retain their separate 7,000-byte limit. The complete system/reference
+input is protected within 24,000 bytes; SELF_STUDY Ollama requests reserve 32,768
+context tokens alongside the existing 4,096 output ceiling. MLX and fallback
+admission use the same complete input budget. Other journal modes keep their budgets.
 Provider reasoning fields and tagged reasoning blocks are not carried as notes.
 Both adapters preserve the entire combined input and reject shortened or failed
 delivery. Navigation responses have their own retained wire receipts and can update
@@ -123,10 +129,18 @@ recover a checkpoint-write interruption.
 Existing shared-reader checkpoints migrate their coverage from verified retained
 receipts and seed the previous excerpt from the current bookmark's completed
 response. Pending pages, bookmarks and receipts are preserved. The migration does
-not import preparation-only coverage or infer understanding. It is additive within
-the V1 state format; an older writer can ignore these new fields, so rolling back
-the reader can discard new notebook/progress fields on its next write. Original
-source and navigation receipt artifacts remain available.
+not import preparation-only coverage or infer understanding. Current checkpoint
+version 3 reads versions 1 and 2; older readers reject version 3 rather than erase
+recent context on their next write. Rollback requires deliberate state reconciliation,
+not restoring an old checkpoint over later deliveries. Original source and
+navigation receipt artifacts remain available.
+
+Beside a saved question, valid backticked symbols offer exact RELATE commands.
+Distinct recent source locations offer an optional two-page SESSION comparison.
+These reuse existing navigation; no automatic search, generation, selected Action,
+or compulsory synthesis is introduced. The Being can revise the finding/question,
+write freely, continue or stop. A question's source link identifies where it was
+asked, not where its answer is known to be.
 
 Astrid retains its existing provider artifacts and lived-state witness capture.
 Minime retains its generation and action-continuity records. Neither reading a

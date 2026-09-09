@@ -1,11 +1,14 @@
 use crate::{Page, digest};
 use serde::{Deserialize, Serialize};
+use std::fmt::Write as _;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub(crate) struct Notebook {
     note: Option<Entry>,
     question: Option<Entry>,
     previous: Option<Entry>,
+    #[serde(default)]
+    recent: Vec<Entry>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -13,6 +16,11 @@ struct Entry {
     origin: String,
     response_sha256: String,
     text: String,
+    /// True only when all visible prose survived recording and rendering.
+    #[serde(default)]
+    complete: bool,
+    #[serde(default)]
+    prose_bytes: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     reopen: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -20,6 +28,61 @@ struct Entry {
 }
 
 impl Notebook {
+    pub(crate) fn study_choices(&self, page: Option<&Page>) -> String {
+        let mut out = String::new();
+        if let Some(question) = self.question_text() {
+            let _ = writeln!(
+                out,
+                "YOUR CURRENT QUESTION — {question}\nIf this reading changes your answer, you can save the finding with STUDY_NOTE: and revise STUDY_QUESTION: (or use - to clear it). These are optional; your prose can develop the answer freely."
+            );
+            for symbol in question
+                .split('`')
+                .skip(1)
+                .step_by(2)
+                .filter(|s| {
+                    !s.is_empty()
+                        && s.len() <= 160
+                        && s.bytes().enumerate().all(|(i, b)| {
+                            b == b'_' || b.is_ascii_alphabetic() || (i > 0 && b.is_ascii_digit())
+                        })
+                })
+                .take(2)
+            {
+                let _ = writeln!(
+                    out,
+                    "Find this question's symbol: SELF_STUDY RELATE {symbol}"
+                );
+            }
+        }
+        let current = page.map(|p| format!("SELF_STUDY OPEN {} {}", p.source, p.start.line));
+        let mut targets = Vec::new();
+        for target in current.iter().chain(
+            self.previous
+                .iter()
+                .chain(self.recent.iter().rev())
+                .filter_map(|e| e.reopen.as_ref()),
+        ) {
+            if target.len() <= 300 && !targets.contains(target) {
+                targets.push(target.clone());
+            }
+            if targets.len() == 2 {
+                break;
+            }
+        }
+        if targets.len() == 2 {
+            let _ = writeln!(
+                out,
+                "Compare recent source locations in one turn (current checkout, smaller pages): SELF_STUDY SESSION {} | {}",
+                targets[0].trim_start_matches("SELF_STUDY "),
+                targets[1].trim_start_matches("SELF_STUDY ")
+            );
+        }
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        out
+    }
+
     pub(crate) fn question_text(&self) -> Option<&str> {
         self.question.as_ref().map(|e| e.text.as_str())
     }
@@ -38,6 +101,8 @@ impl Notebook {
             origin: bounded(&origin, 350),
             response_sha256: digest(response),
             text: bounded(text, limit),
+            complete: text.len() <= limit,
+            prose_bytes: text.len(),
             reopen: page.map(|p| format!("SELF_STUDY OPEN {} {}", p.source, p.start.line)),
             resume: page.map(|p| format!("SELF_STUDY RESUME {}", p.source)),
         };
@@ -55,22 +120,35 @@ impl Notebook {
         }
         let mut prose = Vec::new();
         let mut fenced = false;
-        for line in visible.lines() {
-            let line = line.trim();
+        for original in visible.lines() {
+            let line = original.trim();
             if line.starts_with("```") || line.starts_with("~~~") {
                 fenced = !fenced;
             }
             if !fenced && let Some(value) = line.strip_prefix("STUDY_NOTE:") {
-                self.note = update(value, &entry, 700);
+                self.note = update(value, &entry, 1600);
             } else if !fenced && let Some(value) = line.strip_prefix("STUDY_QUESTION:") {
-                self.question = update(value, &entry, 350);
+                self.question = update(value, &entry, 500);
             } else if !line.starts_with("NEXT:") {
-                prose.push(line);
+                prose.push(original);
             }
         }
         let prose = prose.join("\n");
         if !prose.trim().is_empty() {
-            self.previous = Some(entry(&prose, 700));
+            let latest = entry(prose.trim(), 16_000);
+            if self
+                .previous
+                .as_ref()
+                .is_none_or(|p| p.response_sha256 != latest.response_sha256)
+            {
+                if let Some(previous) = self.previous.take() {
+                    self.recent.push(previous);
+                    if self.recent.len() > 3 {
+                        self.recent.remove(0);
+                    }
+                }
+                self.previous = Some(latest);
+            }
         }
     }
 
@@ -82,8 +160,14 @@ impl Notebook {
         // Bound the serialized value without ever cutting JSON syntax or an exact path.
         let serialized = loop {
             let rendered = serde_json::to_string(&view).expect("notebook strings serialize");
-            if rendered.len() <= 3200 {
+            if rendered.len() <= 9000 {
                 break rendered;
+            }
+            // Prefer complete recent answers. Drop the oldest whole account
+            // before excerpting anything; always keep the current question/note.
+            if !view.recent.is_empty() {
+                view.recent.remove(0);
+                continue;
             }
             let mut changed = false;
             for item in [&mut view.previous, &mut view.note, &mut view.question]
@@ -92,6 +176,7 @@ impl Notebook {
             {
                 if item.text.len() > 64 {
                     item.text = bounded(&item.text, (item.text.len() / 2).max(64));
+                    item.complete = false;
                     changed = true;
                     break;
                 }
@@ -112,7 +197,7 @@ impl Notebook {
             }
         };
         format!(
-            "\n\nRECALLED ACCOUNT — your study notebook contains earlier response excerpts, not source supplied this turn or verified code facts. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. Use reopen to check a claim against numbered source and its revision; resume continues from the saved bookmark. Missing fields mean no note was saved.\n{serialized}\nEnd of study notebook.\n"
+            "\n\nRECALLED ACCOUNT — your study notebook contains recent visible responses and your saved findings, not source supplied this turn or verified code facts. Recent accounts are oldest first; previous is the latest. complete=false marks an excerpt, never a full answer. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. A reopen link marks the page behind that account; the question's link is where it was asked, not a known answer location. Reopen checks current source; resume continues the bookmark. Missing fields mean no note was saved.\n{serialized}\nEnd of study notebook.\n"
         )
     }
 }
@@ -127,9 +212,12 @@ fn update(value: &str, entry: &impl Fn(&str, usize) -> Entry, limit: usize) -> O
 }
 
 fn bounded(text: &str, limit: usize) -> String {
+    const MARKER: &str = "\n[excerpt truncated; middle omitted]\n";
     if text.len() <= limit {
         return text.into();
     }
-    let end = text.floor_char_boundary(limit.saturating_sub(24));
-    format!("{} [excerpt truncated]", &text[..end])
+    let room = limit.saturating_sub(MARKER.len());
+    let head = text.floor_char_boundary(room / 2);
+    let tail = text.ceil_char_boundary(text.len().saturating_sub(room.saturating_sub(head)));
+    format!("{}{}{}", &text[..head], MARKER, &text[tail..])
 }

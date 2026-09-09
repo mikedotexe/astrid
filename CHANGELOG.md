@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **[codex / study continuity] Preserves recent complete study answers for both Beings.** Shared bounded notebooks retain conclusions, exact provenance and optional question-directed RELATE/two-page SESSION choices. Provider admission carries the complete larger context; thinking remains off after a bounded trial produced navigation-only visible answers. See `docs/steward-notes/2026-09-09-study-context.md`.
+
 - Verified the paired study-inquiry rollout and retained exact release, process and checkpoint-continuity receipts; main's runtime source matches the live staged implementation.
 
 ### Added — shared study inquiries (2026-09-09)

@@ -4249,3 +4249,18 @@ checkpoint and pending-OPEN continuity; natural benefit remains unmeasured.
 - Outcome boundary: isolated tests demonstrate access, parity, preserved inputs and continuity. Deployment and natural useful follow-through are separate evidence; research retains both without treating writing length as improvement.
 
 - Inquiry release activation verified: Astrid PID 75004 at 11:10:02 PDT; Minime PID 76254 at 11:14:10 PDT, September 9. See `study-inquiries-validation/live-rollout.json` for exact process clocks, manifest/artifact hashes and same-session pending-choice restoration. No natural comprehension claim is attached to activation.
+
+
+### 2026-09-09 — Minime's useful dispatcher conclusion was cut from the next input
+
+The nine Mike-selected journals (12:08–12:26 PDT) show normal completion under
+4,096-token requests. Minime's 12:20 account correctly distinguishes persistent
+single-interceptor workers from per-chain tasks; the 700-byte opening excerpt
+ends before that conclusion. The same four source intervals appear twice while
+the older question persists. Mike approved the resulting shared context/synthesis
+repair and bounded thinking test. The saved-answer replay now preserves that exact
+conclusion and three older accounts in the next input. This establishes delivery,
+not better understanding or a live outcome. The independent thinking trial produced
+only a navigation command in both enabled final answers; production stays off.
+See `2026-09-09-study-context.md` and research HSS-13/HSS-14 for exact artifacts,
+qualification and the later activation boundary. No compulsory writing or study.

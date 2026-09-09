@@ -95,6 +95,29 @@ fn source_study_attempt_complete(
 mod source_study_delivery_tests {
     use super::*;
     #[test]
+    fn recent_study_context_fits_primary_and_fallback_without_trimming() {
+        let text = format!("Source and complete earlier conclusion: {} END_OF_ANSWER", "evidence ".repeat(2000));
+        let input = ProtectedDialogueInputV1 {
+            reading_source: None, content_id: "study-context-fixture".into(),
+            kind: ProtectedDialogueKindV1::SourceStudy, source_text: text.clone(),
+            source_start_byte: 0, reply_message_id: None,
+        };
+        let messages = vec![Message { role: "system".into(), content: astrid_source_study::STUDY_PROMPT.into() }];
+        let mut primary = messages.clone();
+        assert!(admit_protected_dialogue_content(&mut primary.clone(), &input, 16_000).is_none());
+        let accepted = admit_protected_dialogue_content(&mut primary, &input, astrid_source_study::MAX_INPUT_BYTES).unwrap();
+        assert_eq!(accepted.admitted_end_byte, text.len());
+        let mut fallback = build_ollama_protected_chat_request("self_study", messages, 0.7, 4096, "fixture".into(), true);
+        assert_eq!(fallback.options.num_ctx, astrid_source_study::CONTEXT_TOKENS);
+        let accepted = admit_protected_dialogue_content(&mut fallback.messages, &input, astrid_source_study::MAX_INPUT_BYTES).unwrap();
+        assert_eq!(accepted.admitted_end_byte, text.len());
+        assert_eq!(fallback.options.num_predict, 4096);
+        assert!(fallback.messages.iter().any(|m| m.content.contains("END_OF_ANSWER")));
+        let ordinary = build_ollama_protected_chat_request("dialogue_live", Vec::new(), 0.7, 4096, "fixture".into(), true);
+        assert_eq!(ordinary.options.num_ctx, 10240);
+    }
+
+    #[test]
     fn source_study_requires_intact_admission_and_accepts_continuation_only() {
         let temp = tempfile::tempdir().unwrap();
         std::fs::write(

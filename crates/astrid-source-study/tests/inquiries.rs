@@ -93,7 +93,7 @@ fn inquiries_restore_notes_park_resolve_and_retain_source_references() {
         state(&temp)["questions"]["entries"]["q2"]["finding"],
         "A test covers the write."
     );
-    assert_eq!(state(&temp)["version"], 2);
+    assert_eq!(state(&temp)["version"], 3);
 }
 #[test]
 fn delayed_source_completion_updates_its_original_question_only() {
@@ -312,7 +312,7 @@ fn runtime_trace_restricts_owner_paths_and_preserves_unknown_fields() {
     }
 }
 #[test]
-fn full_notebook_and_three_page_session_fit_the_existing_wire_budget() {
+fn full_notebook_and_three_page_session_fit_the_shared_wire_budget() {
     let (_temp, reader) = setup();
     let q = reader
         .prepare_action(&format!("SELF_STUDY QUESTION NEW {}", "Q".repeat(340)))
@@ -334,7 +334,7 @@ fn full_notebook_and_three_page_session_fit_the_existing_wire_budget() {
         .unwrap();
     assert_eq!(out.session_pages.len(), 3);
     assert!(
-        out.text.len() + out.system_prompt.len() + 32 <= 16000,
+        out.text.len() + out.system_prompt.len() + 32 <= astrid_source_study::MAX_INPUT_BYTES,
         "{}",
         out.text.len() + out.system_prompt.len()
     );

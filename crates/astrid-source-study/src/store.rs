@@ -20,6 +20,10 @@ pub struct StudyOutput {
     #[serde(default)]
     pub evidence_scope: String,
     pub system_prompt: String,
+    #[serde(default = "default_input_budget")]
+    pub input_budget_bytes: usize,
+    #[serde(default = "default_context_tokens")]
+    pub context_tokens: u32,
     pub text: String,
     pub page: Option<Page>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -28,6 +32,12 @@ pub struct StudyOutput {
     pub question_id: Option<String>,
     #[serde(default)]
     pub navigation_id: Option<String>,
+}
+fn default_input_budget() -> usize {
+    crate::MAX_INPUT_BYTES
+}
+fn default_context_tokens() -> u32 {
+    crate::CONTEXT_TOKENS
 }
 impl StudyOutput {
     /// Verify the entire offered input, including its study notebook.
@@ -118,10 +128,14 @@ impl Reader {
             input_kind
         };
         let evidence_scope = input_kind.scope().to_string();
-        text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         let question_id = page
             .as_ref()
             .map_or_else(|| state.questions.active.clone(), |p| p.question_id.clone());
+        let notebook = state
+            .questions
+            .notebook_for(question_id.as_deref(), &state.notebook);
+        text.insert_str(0, &notebook.study_choices(page.as_ref()));
+        text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         text.push_str(
             &state
                 .questions
@@ -129,10 +143,20 @@ impl Reader {
                 .render(),
         );
         text.push_str(&state.questions.render_context(question_id.as_deref()));
+        if text
+            .len()
+            .saturating_add(crate::STUDY_PROMPT.len())
+            .saturating_add(32)
+            > crate::MAX_INPUT_BYTES
+        {
+            bail!("complete study input exceeds the shared provider budget; bookmark unchanged");
+        }
         let mut output = StudyOutput {
             input_kind,
             evidence_scope,
             system_prompt: crate::STUDY_PROMPT.into(),
+            input_budget_bytes: crate::MAX_INPUT_BYTES,
+            context_tokens: crate::CONTEXT_TOKENS,
             text,
             question_id,
             page,
@@ -722,7 +746,7 @@ impl Reader {
         let state: State = serde_json::from_slice(&fs::read(path)?).context(
             "source-study state is unreadable; preserving it instead of resetting progress",
         )?;
-        if state.version != 1 && state.version != SCHEMA_VERSION {
+        if !(1..=SCHEMA_VERSION).contains(&state.version) {
             bail!("unsupported source-study checkpoint version");
         }
         Ok(state)

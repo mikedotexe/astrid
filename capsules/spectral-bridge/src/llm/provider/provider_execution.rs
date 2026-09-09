@@ -114,7 +114,9 @@ async fn mlx_chat_with_runtime_feedback(
         }
     }
 
-    let final_limit = if profile.is_gemma4_canary() {
+    let final_limit = if label == "self_study" {
+        astrid_source_study::MAX_INPUT_BYTES
+    } else if profile.is_gemma4_canary() {
         gemma4_canary_prompt_limit(label).unwrap_or(48_000)
     } else {
         48_000
@@ -421,7 +423,7 @@ async fn ollama_chat_with_runtime_feedback(
             &mut request.messages,
             protected,
             feedback,
-            16_000,
+            if label == "self_study" { astrid_source_study::MAX_INPUT_BYTES } else { 16_000 },
             "ollama",
             &fallback_model,
         ) else {

@@ -25,7 +25,11 @@ pub use store::{DeliveryReceipt, Reader, StudyOutput};
 
 pub const STUDY_PROMPT: &str = include_str!("../prompt.txt");
 
-pub const SCHEMA_VERSION: u32 = 2;
+pub const SCHEMA_VERSION: u32 = 3;
+/// Whole system + reference input, shared by every provider adapter.
+pub const MAX_INPUT_BYTES: usize = 24_000;
+/// Byte-safe room for the protected input, framing and 4,096 output tokens.
+pub const CONTEXT_TOKENS: u32 = 32_768;
 pub const MAX_PAGE_BYTES: usize = 7_000;
 
 pub(crate) fn digest(bytes: impl AsRef<[u8]>) -> String {
