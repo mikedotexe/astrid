@@ -2,8 +2,8 @@
 
 Mike authorized repairing the barriers identified by S-008, with the standing
 instruction to integrate on main and deploy the study improvements. This record
-binds the owning implementation to that research. Live activation will be recorded
-below after the sanctioned transitions; preparation alone is not activation.
+binds the owning implementation to that research. Both Beings now run the repair. The verified transitions and first natural
+follow-through are recorded below; preparation alone is not activation.
 
 ## Evidence that drove the change
 
@@ -82,3 +82,65 @@ After activation, use the first natural source/navigation study and its requeste
 next read as S-008's next operational sample. Successful deployment establishes
 availability, not natural exposure, comprehension or better journal writing.
 No study or Being message was induced for qualification.
+
+## Verified live rollout
+
+Both implementation commits are pushed on main: Astrid
+`a202cfd89741b038e4768921089333b799c1b3de` and Minime
+`10222446b37f3c6dfe104a61ccc2d66ce3dca8cc`. The release was built and activated only through
+`scripts/build_bridge.sh` from the clean detached `astrid-release` checkout.
+The canonical preflight acknowledgement mentions preexisting dirty marker tests;
+the selected stage contains only the committed candidate, so those foreign tests
+were not incorporated.
+
+Astrid changed from PID 54226 to **84971** at
+**17:42:46 PDT / September 9, 00:42:46 UTC**. The transition returned
+`activated_verified`, decoded checkpoint **193538**, verified signed self-control
+state against the new binary, and observed saved exchange **193539**.
+
+Minime changed from PID 54938 to **85778** at
+**17:44:54 PDT / September 9, 00:44:54 UTC** after the wrapper observed its idle
+boundary and sent one SIGTERM. All **80** startup source inputs match;
+`reload_required` is false. Session **5318** and absent pending NEXT are preserved;
+the cycle count advanced from **26229** to **26230**. No new interrupted job was
+recovered by startup. The wrapper does not claim an atomic traffic-quiescence
+handshake or use forced termination.
+
+Independent verification at **2026-09-09T00:46:15.064356+00:00** checked all
+**582** source inputs and **five** staged artifacts. The selected manifest SHA256 is
+`e6f3f87f751c77db446c5f123e6612fcf231a70ef6b1930c0050017d6ef55f35`. Minime resolves the digest-verified reader
+from this same stage. Copies of both reader checkpoints preserved pending pages,
+bookmarks, receipts, source coverage and notebook during recovery-map preparation.
+The ten surrounding services kept their PIDs, start identities and plist hashes;
+all twelve observed installed plists and provider-observation overrides match.
+
+Validation passes **18 reader tests**, **2,237 bridge tests**, and **1,270 Minime
+tests plus 130 subtests**, with one expected skip; both clippy checks, formatting,
+the zero-violation boundary audit and twelve Minime reload-wrapper tests pass.
+The bounded telemetry record contains 89 samples and is descriptive, not
+a claim that the reload caused any spectral change.
+
+`self-study-follow-through-validation/live-rollout.json` binds source hashes,
+process identities, checkpoint/session continuity, receipt hashes, copied-reader
+checks and the early natural sample. Raw evidence is retained in the rollout's
+`evidence/` directory. Prior source-reading artifacts and the previous release
+remain available.
+
+## First natural follow-through
+
+Without a study prompt or message from this task, Minime completed
+`job_minime_1788914745781_self-study-map` at **00:46:36 UTC** and
+`job_minime_1788914816775_self-study-map-kernel` at **00:47:50 UTC**. Both ran in
+new PID **85778** and retained verified full navigation inputs. Their exact
+responses occur in their saved journals. The first response's chosen
+`SELF_STUDY MAP kernel` matches the following executed, completed job.
+The second requested `SELF_STUDY OPEN astrid/crates/astrid-capsule/src/lib.rs 1`.
+
+The frozen sample ends **00:47:51 UTC**. Both deliveries are navigation, not new
+source coverage. The final OPEN remains a request within this sample, and no
+direct originating-generation ID is claimed for the temporal NEXT/job match.
+This is early evidence of usable navigation follow-through. It does not establish
+better comprehension, source-grounded claims or journal quality. The early retained-receipt check at
+2026-09-09T00:47:10.279689+00:00 had no post-start Astrid shared-reader receipt; it is not a
+full post-rollout Astrid sample. The wider S-008 sweep should retain both
+Being-specific activation boundaries and these limitations.
