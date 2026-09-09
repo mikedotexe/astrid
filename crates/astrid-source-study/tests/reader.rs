@@ -578,3 +578,47 @@ fn complete_offer_verification_includes_notebook_and_protects_navigation() {
         .is_err()
     );
 }
+
+#[test]
+fn unusable_targets_offer_verified_navigation_without_moving_source_progress() {
+    let (temp, _, reader) = setup(&"source\n".repeat(2000));
+    let pending = reader.prepare(open()).unwrap().page.unwrap();
+    let state_path = temp.path().join("reader/reader-v1.json");
+    let before: serde_json::Value =
+        serde_json::from_slice(&fs::read(&state_path).unwrap()).unwrap();
+    for action in [
+        "SELF_STUDY of the \"spectral_tuning\" mechanisms in the current system.",
+        "SELF_STUDY OPEN absent.rs",
+        "SELF_STUDY MAP [CAPABILITY_MAP]",
+        "SELF_STUDY FIND",
+        "SELF_STUDY OPEN astrid/Cargo.toml 0",
+        "SELF_STUDY OPEN /etc/passwd",
+        "SELF_STUDY OPEN astrid/../../secret.txt",
+    ] {
+        let map = reader.prepare_action(action).unwrap();
+        assert!(map.page.is_none());
+        assert!(
+            map.text
+                .contains("No requested source bytes were delivered")
+        );
+        assert!(map.text.contains("SELF_STUDY MAP astrid"));
+        reader
+            .navigation_delivered(
+                map.navigation_id.as_deref().unwrap(),
+                &wire(&map.text),
+                &response(),
+            )
+            .unwrap();
+        let after: serde_json::Value =
+            serde_json::from_slice(&fs::read(&state_path).unwrap()).unwrap();
+        for key in ["pending", "current", "bookmarks", "receipts", "progress"] {
+            assert_eq!(before[key], after[key], "{action}: {key}");
+        }
+        assert_eq!(
+            reader.prepare(Command::Continue).unwrap().page.unwrap(),
+            pending
+        );
+    }
+    fs::write(state_path, "corrupt checkpoint").unwrap();
+    assert!(reader.prepare_action("SELF_STUDY unknown target").is_err());
+}

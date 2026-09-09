@@ -1,5 +1,5 @@
 use anyhow::Result;
-use astrid_source_study::{Catalog, Command, Reader};
+use astrid_source_study::{Catalog, Reader};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::io::{self, Read as _};
@@ -45,9 +45,7 @@ fn run() -> Result<serde_json::Value> {
     };
     let reader = Reader::new(catalog, request.state_directory);
     match request.operation {
-        Operation::Prepare { action } => Ok(serde_json::to_value(
-            reader.prepare(Command::parse(&action)?)?,
-        )?),
+        Operation::Prepare { action } => Ok(serde_json::to_value(reader.prepare_action(&action)?)?),
         Operation::Delivered {
             page_id,
             request_json,

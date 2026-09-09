@@ -242,25 +242,67 @@ impl Reader {
 
     /// Prepare a page without claiming it was delivered.
     /// # Errors
-    /// Returns source, navigation, or checkpoint errors without resetting progress.
+    /// Returns source or checkpoint errors without resetting progress. An unusable
+    /// target produces an explicitly labelled recovery map, never source coverage.
     pub fn prepare(&self, command: Command) -> Result<StudyOutput> {
+        self.prepare_parsed(Ok(command))
+    }
+
+    /// Parse an Action and offer navigation when its syntax is unusable.
+    /// # Errors
+    /// Returns source or checkpoint errors; recovery cannot bypass reader integrity.
+    pub fn prepare_action(&self, action: &str) -> Result<StudyOutput> {
+        self.prepare_parsed(Command::parse(action))
+    }
+
+    fn recovery_map(&self, state: &mut State, reason: &anyhow::Error) -> Result<StudyOutput> {
+        let reason: String = format!("{reason:#}").chars().take(700).collect();
+        let text = format!(
+            "Source request unavailable. No requested source bytes were delivered.\nReason: {}\nThis is a recovery map. Choose an exact entry below, or SELF_STUDY FIND <literal text>. SELF_STUDY CONTINUE retains your previous reading position.\n\n{}",
+            serde_json::to_string(&reason)?,
+            self.map(state, "", 1)?
+        );
+        self.output(state, text, None)
+    }
+
+    fn requested_source(&self, source: &str) -> Result<crate::Source> {
+        self.catalog
+            .resolve(source)
+            .with_context(|| format!("Requested source {source:?}"))
+    }
+
+    fn prepare_parsed(&self, command: Result<Command>) -> Result<StudyOutput> {
         let _lock = self.lock()?;
         let mut state = self.load()?;
         self.hydrate(&mut state)?;
         self.recover(&mut state)?;
-        let mut page = match command {
+        let command = match command {
+            Ok(command) => command,
+            Err(error) => return self.recovery_map(&mut state, &error),
+        };
+        let page = match command {
             Command::Map { topic, page } => {
-                let text = self.map(&state, &topic, page)?;
+                let text = match self.map(&state, &topic, page) {
+                    Ok(text) => text,
+                    Err(error) => return self.recovery_map(&mut state, &error),
+                };
                 return self.output(&mut state, text, None);
             },
             Command::Find { query, page } => {
                 return self.output(&mut state, self.catalog.find(&query, page)?, None);
             },
             Command::Open { source, line } => {
-                Page::read(&self.catalog.resolve(&source)?, None, line, None)?
+                let source = match self.requested_source(&source) {
+                    Ok(source) => source,
+                    Err(error) => return self.recovery_map(&mut state, &error),
+                };
+                Page::read(&source, None, line, None)?
             },
             Command::Resume { source } => {
-                let source = self.catalog.resolve(&source)?;
+                let source = match self.requested_source(&source) {
+                    Ok(source) => source,
+                    Err(error) => return self.recovery_map(&mut state, &error),
+                };
                 if let Some(page) = state
                     .pending
                     .as_ref()
@@ -322,6 +364,10 @@ impl Reader {
                 )?
             },
         };
+        self.offer_page(&mut state, page)
+    }
+
+    fn offer_page(&self, state: &mut State, mut page: Page) -> Result<StudyOutput> {
         state.sequence = state
             .sequence
             .checked_add(1)
@@ -330,8 +376,8 @@ impl Reader {
         page.text = page.text.replace(&page.id, &identity);
         page.id = identity;
         state.pending = Some(page.clone());
-        self.save(&state)?;
-        self.output(&mut state, page.text.clone(), Some(page))
+        self.save(state)?;
+        self.output(state, page.text.clone(), Some(page))
     }
 
     /// Retain the actual provider wire bodies and advance only after verifying

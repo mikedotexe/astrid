@@ -32,6 +32,21 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-08 — Study entry and follow-through from S-008 natural evidence
+
+Astrid's source-backed response ending `SELF_STUDY MAP` was blocked by
+`volition_authority` (`act_astrid_1788902190459_self-study`); the EOF follow-up was
+blocked identically. Minime's ten post-continuity INTROSPECT requests encountered
+research-budget guards, and generation `1788906680908-87a64ac6` requested
+`SELF_STUDY of the "spectral_tuning" mechanisms in the current system.` before its
+job failed on an invalid target. S-008 retained exact journals/generations,
+provider-wire hashes and qualified temporal joins; these are route failures, not
+inferred lack of curiosity or comprehension. The owning changes add study
+attestation eligibility, bounded source routing, recovery maps and compact-context
+navigation. Tests, source audit, hashes and live status are in
+[the repair record](2026-09-08-self-study-follow-through.md). No Being message or
+study was induced to qualify this change.
+
 ### 2026-09-08 — Shared study continuity from observed rereading and missing context
 
 - **Signal:** the natural before/after comparison through 14:13:45 PDT found Minime completing the same kernel revision twice and beginning a third pass, with 26 of 41 source pages revisiting prior byte windows. Map replies announced fresh beginnings; Astrid asked about a definition delivered on an earlier page. The requests did not contain previous study notes, and maps omitted completion state. These are design findings, not claims about either Being’s capacities or preferences.

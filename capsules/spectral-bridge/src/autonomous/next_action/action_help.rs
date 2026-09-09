@@ -157,14 +157,14 @@ Notes: Without an offset, resumes the source bookmark; legacy explicit offsets r
 
         "SELF_STUDY" | "INVESTIGATE" => "\
 SELF_STUDY — Browse the shared source catalog used by Astrid and Minime. No required report format.
-Syntax: NEXT: SELF_STUDY [MAP [component/repository/path] | FIND <literal text> [--page N] | OPEN repository/path [line] | CONTINUE]
+Syntax: NEXT: SELF_STUDY [MAP [component/repository/path] | FIND <literal text> [--page N] | OPEN repository/path [line] | RESUME repository/path | CONTINUE]
 Examples:
   NEXT: SELF_STUDY MAP
   NEXT: SELF_STUDY MAP kernel
   NEXT: SELF_STUDY FIND EventBus
   NEXT: SELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs 1
   NEXT: SELF_STUDY CONTINUE
-Notes: OPEN uses one-based lines. Bare SELF_STUDY resumes the pending or next page, or opens the map. Exact source pages stay pending until their complete provider request is retained. You may browse, ask questions, continue, or stop. Source is the local checkout; delivery does not establish deployed behavior or understanding.",
+Notes: OPEN uses one-based lines; RESUME preserves the bookmark. An unknown target returns a labelled recovery map without delivering that source. Bare SELF_STUDY resumes the pending or next page, or opens the map. Exact source pages stay pending until their complete provider request is retained. You may browse, ask questions, continue, or stop. Source is the local checkout; delivery does not establish deployed behavior or understanding.",
 
         "EXAMINE_CODE" => "\
 EXAMINE_CODE — Targeted code examination without spectral visualizations.

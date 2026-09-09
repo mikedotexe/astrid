@@ -1,0 +1,57 @@
+{
+  "schema": "self_study_follow_through_validation_v1",
+  "recorded_at": "2026-09-09T00:36:55.601097+00:00",
+  "actor": "codex-astra-interactive",
+  "pause_generation": 413,
+  "results": {
+    "shared_reader": 18,
+    "bridge_library": 2237,
+    "minime_full": 1270,
+    "minime_subtests": 130,
+    "minime_skipped": 1,
+    "minime_reload_wrapper": 12,
+    "reader_clippy": "pass",
+    "bridge_clippy": "pass",
+    "format": "pass",
+    "boundary_audit": "valid; zero violations"
+  },
+  "evidence": [
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/reader-tests.log",
+      "sha256": "819f200099922b68e2beb7ade43519d929d3e3b4df25b3dc93348eb81c2228eb"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/reader-clippy.log",
+      "sha256": "948df6682aed97a61adfe4ce030e743c3b1617f2d05d1adbf63165dd55d9459c"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/bridge-full-tests.log",
+      "sha256": "bfe6476f66a59e03950f3134b4b714b0a892c17dfa3f0c12b636ec0f254d93bd"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/bridge-clippy.log",
+      "sha256": "8bbef50fa943bccc8379d9f38e931071c8a49ed95d5d3277ef86018e053c2700"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/minime-full-tests.log",
+      "sha256": "cf7da19fbfef10bcfd633a45cce7a76e3e6bd80ad1f7eea62483d52703a9f987"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/domain-boundary.log",
+      "sha256": "25699169980d8b58052cd3cb80de31c4fd4d2aeb5d57a159880614ac71e79abb"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/workspace-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/bridge-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/evidence/minime-reload-tests.log",
+      "sha256": "a4c3352ba626bfd7c056ab4b7d7f35b98bd9ac851dad48df2cebe4c81fcab442"
+    }
+  ],
+  "live_activation": "not yet performed"
+}

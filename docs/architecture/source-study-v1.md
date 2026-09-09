@@ -117,6 +117,34 @@ Minime retains its generation and action-continuity records. Neither reading a
 file nor recording a receipt changes controls, grants authority, or proves that
 the local source matches the running process.
 
+## Entry and follow-through
+
+A successful Astrid study response is eligible for the existing exact-response
+attestation and ordinary NEXT dispatch. The shared reader uses this mode only
+after verified provider delivery and a successful artifact write. The legacy
+workspace-review producer also returns model-authored text in this mode; its
+runtime-generated preparation, thin-output and carriage notices use separate,
+ineligible modes. Authorship does not grant delegated, mutual or operator authority.
+
+Minime classifies source INTROSPECT before research-budget admission and executes
+it as a shared-reader job. Original action wording stays in continuity records;
+the chosen source command travels with the job context. An explicit legacy offset
+is converted from zero-based to one-based. Workspace artifact requests retain the
+existing introspection and experiment-budget policy. SELF_STUDY and source
+INTROSPECT share the same read-only exception above the recovery release shelf.
+
+Unusable source targets, map topics and Action syntax return a labelled recovery
+map in both adapters. The bounded notice preserves the requested target and makes
+clear that no requested source bytes were delivered. This is a navigation offer:
+only verified delivery can record its response, and it cannot move source
+bookmarks or coverage. Source revision, checkpoint-integrity and storage failures
+remain failures. No fuzzy search is presented as an exact source match.
+
+Minime retains a short MAP/FIND/OPEN/RESUME/CONTINUE reference when ambient system
+context is compacted, reserving room within the existing prompt limit. Full source
+pages continue through the separate intact-delivery path. No extra generation,
+service, research budget grant or forced study is needed.
+
 ## Installation and verification
 
 Build the shared executable with:

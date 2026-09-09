@@ -51,7 +51,14 @@ async fn run_shared_source_study(
                 .bridge_workspace()
                 .join("diagnostics/source_first_v3/shared_reader"),
         );
-        let output = reader.prepare(shared_study_command(requested)?)?;
+        let output = if let Some(target) = requested
+            .as_ref()
+            .filter(|target| target.label.starts_with("SELF_STUDY"))
+        {
+            reader.prepare_action(&target.label)?
+        } else {
+            reader.prepare(shared_study_command(requested)?)?
+        };
         Ok((reader, output, catalog))
     })();
     let (reader, output, catalog) = match prepared {
@@ -217,12 +224,13 @@ async fn run_shared_source_study(
     } else {
         "not_attempted"
     };
-    if delivery.is_ok() && written.is_ok() {
+    let mode = source_study_completion_mode(delivery.is_ok(), written.is_ok());
+    if mode == "self_study" {
         next_action::introspection_cadence::mark_admitted(conv, &artifact_path, witness);
         if let Some(page) = &output.page {
             finish_source_study_invitation(&catalog, &page.source);
         }
-        ("self_study", text, source)
+        (mode, text, source)
     } else {
         next_action::introspection_cadence::mark_failed(
             conv,
@@ -230,10 +238,21 @@ async fn run_shared_source_study(
             written.is_ok().then_some(artifact_path.as_path()),
         );
         (
-            "self_study_carriage_notice",
+            mode,
             format!("{text}\n\n[Source-study delivery: {delivery_status}.]"),
             source,
         )
+    }
+}
+
+pub(super) fn source_study_completion_mode(
+    delivery_verified: bool,
+    artifact_written: bool,
+) -> &'static str {
+    if delivery_verified && artifact_written {
+        "self_study"
+    } else {
+        "self_study_carriage_notice"
     }
 }
 
