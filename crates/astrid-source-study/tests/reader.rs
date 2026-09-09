@@ -710,3 +710,47 @@ fn input_kinds_separate_search_recovery_eof_and_legacy_without_coverage() {
         InputKind::EndOfFile
     );
 }
+
+#[test]
+fn component_map_exposes_directories_beyond_curated_entry_points() {
+    let (temp, _, reader) = setup("source\n");
+    let directory = temp.path().join("astrid/crates/astrid-capsule/src");
+    fs::create_dir_all(&directory).unwrap();
+    fs::write(directory.join("lib.rs"), "mod dispatcher;\n").unwrap();
+    fs::write(directory.join("dispatcher.rs"), "struct Dispatcher;\n").unwrap();
+    let map = reader.prepare_action("SELF_STUDY MAP kernel").unwrap();
+    assert!(
+        map.text
+            .contains("SELF_STUDY MAP astrid/crates/astrid-capsule/src")
+    );
+    let directory = reader
+        .prepare_action("SELF_STUDY MAP astrid/crates/astrid-capsule/src")
+        .unwrap();
+    assert!(
+        directory
+            .text
+            .contains("SELF_STUDY OPEN astrid/crates/astrid-capsule/src/dispatcher.rs 1")
+    );
+}
+
+#[test]
+fn misspelled_crate_path_suggests_exact_identity_without_opening_or_advancing() {
+    let (temp, _, reader) = setup("source\n");
+    let directory = temp.path().join("astrid/crates/astrid-capsule/src");
+    fs::create_dir_all(&directory).unwrap();
+    fs::write(directory.join("security.rs"), "struct Gate;\n").unwrap();
+    let pending = reader.prepare(open()).unwrap().page.unwrap();
+    let recovery = reader
+        .prepare_action("SELF_STUDY OPEN astrid/crates/astrid_capsule/src/security.rs 262")
+        .unwrap();
+    assert!(recovery.page.is_none());
+    assert!(
+        recovery
+            .text
+            .contains("SELF_STUDY OPEN astrid/crates/astrid-capsule/src/security.rs 1")
+    );
+    assert_eq!(
+        reader.prepare(Command::Continue).unwrap().page.unwrap(),
+        pending
+    );
+}

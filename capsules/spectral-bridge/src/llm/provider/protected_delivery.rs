@@ -339,7 +339,7 @@ fn build_ollama_protected_chat_request(
         options: OllamaChatOptions {
             temperature,
             num_predict: max_tokens,
-            num_ctx: 8192,
+            num_ctx: if max_tokens > 2048 { 10240 } else { 8192 },
         },
     }
 }

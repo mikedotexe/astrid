@@ -16,8 +16,11 @@ pub(crate) async fn generate_source_study(
     let root = bridge_paths()
         .bridge_workspace()
         .join("diagnostics/accepted_deliveries");
+    // OPEN receives a fresh reader sequence. Recovery is only for an interrupted
+    // delivery, and must still match the complete current input, including notes.
     if output.page.is_some()
         && let Ok(Some((receipt, text))) = recover_retained_delivery(&input.content_id, 0)
+        && source_study_recovery_matches(output, &receipt)
     {
         return DialogueCompletionV1 {
             text: Some(text),
@@ -34,8 +37,8 @@ pub(crate) async fn generate_source_study(
         "self_study",
         messages.clone(),
         0.7,
-        2048,
-        120,
+        4096,
+        480,
         MlxFailureLogMode::FallbackEligible,
         Some(&input),
         None,
@@ -53,8 +56,8 @@ pub(crate) async fn generate_source_study(
             "self_study",
             messages,
             0.7,
-            2048,
-            120,
+            4096,
+            480,
             None,
             Some(&input),
             None,
@@ -64,6 +67,17 @@ pub(crate) async fn generate_source_study(
         .filter(|(_, attempt)| source_study_attempt_complete(output, attempt.as_ref()))
     };
     finish_dialogue_completion_at(result, None, &root)
+}
+
+fn source_study_recovery_matches(
+    output: &astrid_source_study::StudyOutput,
+    receipt: &PromptDeliveryReceiptV1,
+) -> bool {
+    let Ok(raw) = std::fs::read(&receipt.retained_artifact_path) else { return false; };
+    let Ok(artifact) = serde_json::from_slice::<serde_json::Value>(&raw) else { return false; };
+    let Some(request) = artifact["attempt"]["request_json"].as_str() else { return false; };
+    let Some(response) = artifact["attempt"]["response_json"].as_str() else { return false; };
+    verify_delivery_receipt(receipt).is_ok() && output.verify_delivery(request, response).is_ok()
 }
 
 fn source_study_attempt_complete(
@@ -119,7 +133,21 @@ mod source_study_delivery_tests {
             request_json: serde_json::json!({"messages":messages}).to_string(),
             response_json: serde_json::json!({"choices":[{"message":{"content":"NEXT: SELF_STUDY CONTINUE"},"finish_reason":"stop"}]}).to_string(), admission };
         assert!(source_study_attempt_complete(&output, Some(&attempt)));
-        attempt.response_json = serde_json::json!({"choices":[{"message":{"content":"partial"},"finish_reason":"length"}]}).to_string();
+        let complete_response = std::mem::replace(&mut attempt.response_json,
+            serde_json::json!({"choices":[{"message":{"content":"partial"},"finish_reason":"length"}]}).to_string());
         assert!(!source_study_attempt_complete(&output, Some(&attempt)));
+        attempt.response_json = complete_response;
+        let receipt = retain_accepted_delivery_at(
+            &temp.path().join("retained"), attempt, "NEXT: SELF_STUDY CONTINUE",
+        ).unwrap();
+        assert!(source_study_recovery_matches(&output, &receipt));
+        let mut changed = output.clone();
+        changed.text.push_str("\nSTUDY_QUESTION: What changed in this request?");
+        assert!(!source_study_recovery_matches(&changed, &receipt));
+        let reread = reader.prepare(astrid_source_study::Command::Open {
+            source: "astrid/Cargo.toml".into(), line: 1,
+        }).unwrap();
+        assert_ne!(reread.page.as_ref().unwrap().id, output.page.as_ref().unwrap().id);
+        assert!(!source_study_recovery_matches(&reread, &receipt));
     }
 }

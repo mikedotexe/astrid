@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **[codex / journal room and study follow-through]** Gives both Beings 4,096-token source studies and doubles other journal output ceilings, with matching context and deadlines. Adds component-directory navigation, exact crate-spelling recovery, final bare source-choice support and durable READ_MORE status. Interrupted source-delivery recovery must match the current notebook. Shorter authored response preferences remain intact. Evidence, scope and rollout: `docs/steward-notes/2026-09-09-journal-room-and-study-navigation.md`.
+
 - **[codex / study evidence] Identifies the reading actually delivered and distinguishes source from recalled accounts.** Shared SELF_STUDY inputs and both journal adapters label source/map/search/EOF/recovery scope; notebook entries offer exact source returns, and peer accounts retain attribution. Astrid saved reading carries bound filename, revision and supplied bytes through provider adaptation. New terminal-bearing overflow retains raw originals plus verified readable spectral views with independent bookmarks and explicit `READ_MORE RAW`. Evidence, tests and activation: `docs/steward-notes/2026-09-08-study-evidence-and-readable-overflow.md`.
 
 - **[codex / integration review] Qualifies the pending steward gate trace.** Surrounding generation records retain rejected adapter output and status; optional marker observation has a separate raw-retention policy. A rejected response is not necessarily lost. The acceptance predicates still lack individual structured failure reasons. Reviewed Claude’s scanner repair and marker regression for main; source and provenance: `docs/steward-notes/2026-09-08-steward-integration-review.md`.

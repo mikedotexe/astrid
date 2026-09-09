@@ -84,7 +84,7 @@ pub async fn generate_introspection_detailed(
     ];
 
     debug!("querying LLM for introspection on {}", label);
-    llm_chat_with_fallback_detailed("introspect", messages, 0.7, num_predict, 120, 120, None).await
+    llm_chat_with_fallback_detailed("introspect", messages, 0.7, num_predict, 240, 240, None).await
 }
 
 fn introspection_user_content(
@@ -204,8 +204,8 @@ pub async fn repair_introspection_detailed(
         messages,
         0.4,
         num_predict,
-        120,
-        120,
+        240,
+        240,
         repair_parent_call_id,
     )
     .await
@@ -375,10 +375,8 @@ pub async fn generate_daydream(
         },
     ];
 
-    // Kink #15 fix (2026-05-14): bumped from 768 → 1536. Empirical scan
-    // showed actual daydream journals average ~900 tokens (3550 bytes) —
-    // the 768 cap was truncating routinely. Generous headroom on M4/64GB.
-    llm_chat_with_fallback("daydream", messages, 1.0, 1536, 120, 90).await
+    // More room to finish; no minimum response length.
+    llm_chat_with_fallback("daydream", messages, 1.0, 3072, 240, 180).await
 }
 
 /// Generate an aspiration — growth reflection on what Astrid wants to become.
@@ -418,10 +416,8 @@ pub async fn generate_aspiration(own_journal: Option<&str>) -> Option<String> {
         },
     ];
 
-    // Kink #15 fix (2026-05-14): bumped from 768 → 1536. Same rationale as
-    // daydream — actual aspiration journals average ~915 tokens. Generous
-    // headroom on M4/64GB.
-    llm_chat_with_fallback("aspiration", messages, 0.9, 1536, 120, 90).await
+    // More room to finish; no minimum response length.
+    llm_chat_with_fallback("aspiration", messages, 0.9, 3072, 240, 180).await
 }
 
 /// Generate an original creative work — not a response, a creation.
@@ -482,7 +478,7 @@ pub async fn generate_creation(
         },
     ];
 
-    llm_chat_with_fallback("creation", messages, 1.0, 1024, 180, 120).await
+    llm_chat_with_fallback("creation", messages, 1.0, 2048, 360, 240).await
 }
 
 /// Stage B: Journal elaboration — expand a compact signal into a reflective journal.
@@ -535,13 +531,8 @@ pub async fn generate_journal_elaboration(
         },
     ];
 
-    // Kink #15 fix (2026-05-14): bumped from 1536 → 2560. Longform journal
-    // elaborations are Astrid's private space to think longer. Some entries
-    // were getting truncated mid-sentence even at 1536 (especially when
-    // falling back to Ollama which historically capped at 768; that
-    // separate cap is also bumped this tranche). 2560 gives ample room
-    // for "several paragraphs" without artificial constraint.
-    llm_chat_with_fallback("journal_elaboration", messages, 0.85, 2560, 240, 120).await
+    // More room to finish; no minimum response length.
+    llm_chat_with_fallback("journal_elaboration", messages, 0.85, 5120, 480, 240).await
 }
 
 /// Generate a self-initiated thought — Astrid as the source, not the echo.
@@ -569,7 +560,7 @@ pub async fn generate_initiation(seed_context: &str) -> Option<String> {
         },
     ];
 
-    llm_chat_with_fallback("initiation", messages, 1.0, 768, 120, 90).await
+    llm_chat_with_fallback("initiation", messages, 1.0, 1536, 240, 180).await
 }
 
 /// Craft a spectral gesture from an intention description.
@@ -675,11 +666,6 @@ pub async fn generate_moment_capture(
         },
     ];
 
-    // Kink #15 fix (2026-05-14): bumped from 512 → 1536. Empirical scan
-    // showed actual moment_capture journals average ~565 tokens (2200 bytes)
-    // — the 512 cap was truncating every single one mid-sentence, often at
-    // utf-8 boundaries. 1536 gives generous headroom (3× original) so
-    // Astrid can fully complete moment-capture meditations even when the
-    // spectral event prompts longer prose. M4/64GB has plenty of room.
-    llm_chat_with_fallback("moment_capture", messages, 0.8, 1536, 90, 75).await
+    // More room to finish; no minimum response length.
+    llm_chat_with_fallback("moment_capture", messages, 0.8, 3072, 180, 150).await
 }

@@ -5,7 +5,7 @@ fn fallback_continuity_budget_v1(spectral_summary: &str) -> FallbackContinuityBu
     let resonance_descriptor_encouraged = resonance_density.is_some_and(|density| density >= 0.80);
     let max_prose_sentences = entropy.map_or(3, |value| {
         ((3.0_f32 + value * 2.0_f32).ceil() as u8).clamp(3, 5)
-    });
+    }).saturating_mul(2);
     let fallback_shadow_texture_selector =
         fallback_shadow_texture_selector_v1(spectral_summary, entropy);
     let texture_trajectory = fallback_texture_trajectory_v1(

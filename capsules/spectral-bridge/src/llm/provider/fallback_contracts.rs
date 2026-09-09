@@ -95,7 +95,7 @@ fn clamp_dialogue_tokens_for_profile(
         // Only clamp near the safety ceiling. 48K chars = 12K tokens prefill,
         // still only 9% of 128K context. Clamp gen tokens only at extreme sizes.
         if prompt_chars > 40_000 {
-            requested_tokens.clamp(256, 512)
+            requested_tokens.min(1024)
         } else {
             requested_tokens
         }
@@ -110,15 +110,15 @@ fn dialogue_request_timeout_secs_for_profile(
     let token_budget = clamp_dialogue_tokens_for_profile(requested_tokens, prompt_chars, profile);
     if profile.is_gemma4_canary() {
         if prompt_chars > GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS {
-            180
-        } else if token_budget > 512 {
-            150
+            360
+        } else if token_budget > 1024 {
+            300
         } else {
-            120
+            240
         }
     } else {
         if token_budget > 1024 {
-            360 // THINK_DEEP: deep reasoning needs room
+            720 // THINK_DEEP: deep reasoning needs room
         } else if prompt_chars > 16_000 {
             240 // Large context: generous prefill time
         } else if prompt_chars > 10_000 {
@@ -138,6 +138,7 @@ pub(crate) fn dialogue_outer_timeout_secs(
         prompt_pressure_chars,
         configured_mlx_profile(),
     )
+    .saturating_add(DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS.saturating_mul(2))
     .saturating_add(30)
 }
 

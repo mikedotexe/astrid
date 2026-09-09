@@ -280,9 +280,18 @@ impl Reader {
     }
 
     fn requested_source(&self, source: &str) -> Result<crate::Source> {
-        self.catalog
-            .resolve(source)
-            .with_context(|| format!("Requested source {source:?}"))
+        self.catalog.resolve(source).with_context(|| {
+            let normalized = source.replace('_', "-");
+            let suggestions = self.catalog.sources().unwrap_or_default().into_iter()
+                .filter(|candidate| candidate.id.replace('_', "-") == normalized)
+                .take(3).map(|candidate| format!("SELF_STUDY OPEN {} 1", candidate.id))
+                .collect::<Vec<_>>();
+            if suggestions.is_empty() {
+                format!("Requested source {source:?}")
+            } else {
+                format!("Requested source {source:?} is unavailable. Exact catalog spelling (not opened): {}", suggestions.join("; "))
+            }
+        })
     }
 
     fn prepare_parsed(&self, command: Result<Command>) -> Result<StudyOutput> {

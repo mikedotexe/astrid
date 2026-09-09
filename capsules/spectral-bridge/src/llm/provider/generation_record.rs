@@ -28,7 +28,7 @@ const GENERATION_STATUS_UNAVAILABLE: &str = "unavailable_or_timeout";
 /// Primary (coupled MLX) plus the Ollama fallback.
 const GENERATION_ATTEMPTS_PLANNED: u32 = 2;
 /// The Ollama fallback's request timeout in `generate_dialogue` (was a bare literal).
-const DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS: u64 = 75;
+const DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS: u64 = 150;
 static GENERATION_RECORD_COUNTER: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 

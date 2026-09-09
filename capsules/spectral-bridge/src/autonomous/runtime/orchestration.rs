@@ -1889,7 +1889,7 @@ pub fn spawn_autonomous_loop(
                                 let (mut timeout_secs, num_predict) = if conv.wants_deep_think {
                                     conv.wants_deep_think = false;
                                     info!("THINK_DEEP: extended timeout for deep thinking");
-                                    (360u64, 4096u32)
+                                    (720u64, 8192u32)
                                 } else {
                                     (210, conv.response_length)
                                 };
@@ -2316,10 +2316,9 @@ pub fn spawn_autonomous_loop(
                             )
                             .into_iter()
                             .next();
-                            // Outer timeout 180s: Qwen3-14B prefill is slower
-                            // for long prompts (~3 tok/s effective with prefill).
+                            // Covers the primary, both fallback models, and the existing retry.
                             let witness = match tokio::time::timeout(
-                                Duration::from_secs(180),
+                                Duration::from_secs(1110),
                                 crate::llm::generate_witness(
                                     &spectral_summary,
                                     witness_seed.as_deref(),
@@ -2367,7 +2366,7 @@ pub fn spawn_autonomous_loop(
                             }
                             let enriched_context = if own_context_parts.is_empty() { None } else { Some(own_context_parts.join("\n\n")) };
                             let daydream = match tokio::time::timeout(
-                                Duration::from_secs(120),
+                                Duration::from_secs(750),
                                 crate::llm::generate_daydream(
                                     perception_text.as_deref(),
                                     enriched_context.as_deref(),
@@ -2405,7 +2404,7 @@ pub fn spawn_autonomous_loop(
                             conv.peripheral_resonance = None;
                             let own_journal = enriched_context;
                             let aspiration = match tokio::time::timeout(
-                                Duration::from_secs(120),
+                                Duration::from_secs(750),
                                 crate::llm::generate_aspiration(
                                     own_journal.as_deref(),
                                 )
@@ -2428,14 +2427,14 @@ pub fn spawn_autonomous_loop(
                                 .map(interpret_fingerprint)
                                 .unwrap_or_default();
                             let moment = match tokio::time::timeout(
-                                Duration::from_secs(90),
+                                Duration::from_secs(690),
                                 crate::llm::generate_moment_capture(
                                     &spectral_summary, &fp_desc,
                                     fill_pct, fill_pct - conv.prev_fill,
                                 )
                             ).await {
                                 Ok(r) => r,
-                                Err(_) => { warn!("moment_capture: 20s timeout"); None }
+                                Err(_) => { warn!("moment_capture: 690s timeout"); None }
                             };
                             match moment {
                                 Some(text) => ("moment_capture", text, String::new()),
@@ -2490,7 +2489,7 @@ pub fn spawn_autonomous_loop(
                             };
                             let is_revision = revise_kw.is_some();
                             let creation = match tokio::time::timeout(
-                                Duration::from_secs(180),
+                                Duration::from_secs(870),
                                 crate::llm::generate_creation(
                                     own_journal.as_deref(),
                                     prev_creation.as_deref(),
@@ -2565,7 +2564,7 @@ pub fn spawn_autonomous_loop(
                                 seed_parts.join("\n\n")
                             };
                             let initiation = match tokio::time::timeout(
-                                Duration::from_secs(120),
+                                Duration::from_secs(750),
                                 crate::llm::generate_initiation(&seed)
                             ).await {
                                 Ok(r) => r,
@@ -3055,13 +3054,10 @@ pub fn spawn_autonomous_loop(
                                 let (timeout_secs, num_predict) = if conv.wants_deep_think {
                                     conv.wants_deep_think = false;
                                     info!("THINK_DEEP: extended timeout for self-study");
-                                    // 420s outer stays above the 340s deep HTTP
-                                    // timeout (llm.rs INTROSPECT_DEEP_TIMEOUT) so a
-                                    // full 4096-token self-study completes instead
-                                    // of being clipped (agency_code_change_1781665370).
-                                    (420u64, 4096u32)
+                                    // Covers the enlarged primary and fallback deadlines.
+                                    (1190u64, 8192u32)
                                 } else {
-                                    (240u64, 1536u32)
+                                    (910u64, 3072u32)
                                 };
 
                                 match tokio::time::timeout(

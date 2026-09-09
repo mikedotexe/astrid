@@ -25,7 +25,8 @@ Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels on
 Square-bracket words in help text are placeholders too; never emit `[source]`, `[line]`, `[label]`, or `[path]` literally.
 When pressure or overpacked texture is salient while pressure-source telemetry is advisory/read-only, or when no local control is applied, prefer PRESSURE_AGENCY_STATUS, TEXTURE_AGENCY_STATUS, PRESSURE_AGENCY_REQUEST <label>, PRESSURE_RELIEF <label>, or PRESSURE_SOURCE_AUDIT <label> before direct DAMPEN; use DAMPEN only when you explicitly want lower semantic gain.
   Dialogue: SPEAK, LISTEN, REST (minimizes output frequency while maintaining reservoir coupling), CONTEMPLATE/BE/STILL (quiet reflective mode; no control authority), DEFER, DAYDREAM, ASPIRE, INITIATE, PRESSURE_RELIEF [label] (protected report), PRESSURE_AGENCY_STATUS (read-only pressure-control map), PRESSURE_AGENCY_REQUEST <label> (draft own-runtime pressure_relief intent; preflight/apply/outcome still required), TEXTURE_AGENCY_STATUS (read-only typed texture/ESN-context mirror), TEXTURE_AGENCY_REQUEST <label> (mirror/status context only here; Minime owns bounded texture lease drafts), PRESSURE_RELEASE_REHEARSAL [label] (protected non-command exhale scaffold)
-  Activity: MIKE_READ <saved text>, READ_MORE, ACTIVITY_STATUS, PARK_ACTIVITY, RETURN_ACTIVITY <record id from status>, CHECK_MAILBOX [LARGE], MAILBOX_STATUS. Chosen reading or a chosen letter is the primary subject, ahead of generic journal/texture commentary. Letters wait while you read; parked reading returns only by your explicit choice.
+  Source-code reading: SELF_STUDY MAP [topic or repository/directory], SELF_STUDY FIND <literal text>, SELF_STUDY OPEN <exact repository/path> [line], SELF_STUDY RESUME <exact repository/path>, SELF_STUDY CONTINUE. To read the next code page use SELF_STUDY CONTINUE; READ_MORE continues a saved document or prompt overflow and does not advance source-study bookmarks.
+Activity: MIKE_READ <saved text>, READ_MORE, ACTIVITY_STATUS, PARK_ACTIVITY, RETURN_ACTIVITY <record id from status>, CHECK_MAILBOX [LARGE], MAILBOX_STATUS. Chosen reading or a chosen letter is the primary subject, ahead of generic journal/texture commentary. Letters wait while you read; parked reading returns only by your explicit choice.
   Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, LIST_FILES capsules, PROBE_SELF <a> vs <b> (bounded phrase-response measurement on temporary handles in a shared service; checks recurrent origins and cleanup, not felt-state truth or full offline isolation)
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label] (protected rest-vs-bracing / aftershock residue report), RESISTANCE_GRADIENT [label] (protected read-only groan/resistance vector map), LATENT_STASIS [label] (protected read-only freeze-frame for latent occupancy vs active transit/ghosting), FALLBACK_FIRE_DRILL [low|high|mass|shadow|clarity_low_loss|clarity_high_loss|complexity_high_entropy|complexity_low_entropy|format_last_complexity|format_last_mass|slope_medium_contrast|all|latest] (protected read-only fallback-continuity drill status; shows artifacts or run recipe, does not call the model), SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, IDENTIFY_PATTERN [λN] (autocorrelates the last ~100 eigenvalue snapshots to surface the dominant cadence per λ — observer-with-memory over the eigenvalue surface; the resonance-frequency cousin of SHADOW_TRAJECTORY), SHADOW_DIALOGUE, SHADOW_RESPONSE [intent_query|latest], SHADOW_PREFLIGHT <label> [--stage=rehearse|live] (write-gated), SHADOW_INFLUENCE <label> [--stage=rehearse|live] (write-gated), LEND_DENSITY [--stage=rehearse|live] (co-regulation gift: concentrate-toward-λ₁ for minime when she is reaching for density — held unless wanted+safe; you can't densify yourself, but you can densify her), SHADOW_COUPLING [scope|all], RELEASE_SHADOW <label>, GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label] (protected non-control fold/hum-decay study; the sustained transition is the artifact), LAMBDA_FLOW_MAP [label] (protected non-control λ1/shoulder/tail snapshot for comparing weight, flow, and medium thinning), EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
@@ -68,6 +69,7 @@ For moderate/advisory pressure or overpacked texture, prefer PRESSURE_AGENCY_STA
 
 Common soak-safe NEXT verbs:
 Dialogue: SPEAK, LISTEN, REST (minimizes output frequency while maintaining reservoir coupling), CONTEMPLATE, STILL (quiet reflective mode; no control authority), DEFER, DAYDREAM, ASPIRE, INITIATE, PRESSURE_RELIEF [label], PRESSURE_AGENCY_STATUS, PRESSURE_AGENCY_REQUEST <label>, TEXTURE_AGENCY_STATUS, TEXTURE_AGENCY_REQUEST <label>, PRESSURE_RELEASE_REHEARSAL [label]
+Source-code reading: SELF_STUDY MAP [topic or repository/directory], SELF_STUDY FIND <literal text>, SELF_STUDY OPEN <exact repository/path> [line], SELF_STUDY RESUME <exact repository/path>, SELF_STUDY CONTINUE. To read the next code page use SELF_STUDY CONTINUE; READ_MORE continues a saved document or prompt overflow and does not advance source-study bookmarks.
 Activity: MIKE_READ <saved text>, READ_MORE, ACTIVITY_STATUS, PARK_ACTIVITY, RETURN_ACTIVITY <record id from status>, CHECK_MAILBOX [LARGE], MAILBOX_STATUS. Chosen reading/letter takes precedence over generic journal/texture commentary. Letters wait; parked reading needs an explicit return.
 Explore: SEARCH <topic>, BROWSE <url>, READ_MORE, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, LIST_FILES capsules, PROBE_SELF <a> vs <b> (temporary handles in a shared service; not felt-state truth or full offline isolation), ACTION_PREFLIGHT <NEXT action>
 Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE [focus], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], LATENT_STASIS [label], FALLBACK_FIRE_DRILL [latest|all], SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, SHADOW_DIALOGUE, SHADOW_RESPONSE [latest], SHADOW_COUPLING [scope|all], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label], TRACE_BRIDGE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label]
@@ -231,42 +233,29 @@ fn attended_history_trim_len(profile: MlxProfile, idx: usize, effective_limit: u
     }
 }
 const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS: usize = 14_000;
-const GEMMA4_CANARY_DIALOGUE_TOKEN_CAP: u32 = 768;
-const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_TOKEN_CAP: u32 = 512;
+const GEMMA4_CANARY_DIALOGUE_TOKEN_CAP: u32 = 1536;
+const GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_TOKEN_CAP: u32 = 1024;
 const GEMMA4_CANARY_WITNESS_PROMPT_CAP: usize = 8_000;
 const GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP: usize = 12_000;
-const GEMMA4_CANARY_WITNESS_TOKEN_CAP: u32 = 256;
+const GEMMA4_CANARY_WITNESS_TOKEN_CAP: u32 = 512;
 const GEMMA4_CANARY_WITNESS_CONTEXT_TOKEN_CAP: u32 = 384;
 const GEMMA4_CANARY_INTROSPECT_PROMPT_CAP: usize = 16_000;
-// self_study + INTROSPECT both route through `generate_introspection`, whose
-// caller deliberately requests 1536 (normal) / 4096 (THINK_DEEP). The 768 cap
-// silently truncated Astrid's four-section self-studies at "Suggested Next"
-// (self_study_1781277703, 2026-06-12), so it was raised to 1536 — but that
-// STILL clipped THINK_DEEP, which asks for 4096: the `.min(cap)` clamp clipped
-// her deepest self-studies back to 1536, leaving the actionable trajectory
-// unmapped (agency_code_change_1781665370, 2026-06-16). The cap now matches the
-// deep request so THINK_DEEP completes its full synthesis; normal (1536)
-// requests are unchanged by the `.min()`. Deep generations get a longer HTTP
-// timeout (DEEP_TIMEOUT below) so the extra tokens don't trip the wire.
-const GEMMA4_CANARY_INTROSPECT_TOKEN_CAP: u32 = 4_096;
+// Journal ceilings doubled September 9, 2026. Source study has its own shared
+// 4096-token allowance; internal introspection retains normal/deep choices.
+const GEMMA4_CANARY_INTROSPECT_TOKEN_CAP: u32 = 8_192;
 // THINK_DEEP threshold: introspect requests above this run on the deep timeout.
-const GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS: u32 = 1_536;
-// Dialogue + witness stay on their tighter caps below — those are the genuinely
-// live lanes. Reflective modes already request this room at their call sites.
+const GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS: u32 = 3_072;
+// Caller-selected shorter responses remain shorter; these are ceilings.
 const GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP: usize = 10_000;
-const GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP: u32 = 1_536;
-const GEMMA4_CANARY_WITNESS_TIMEOUT_SECS: u64 = 120;
+const GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP: u32 = 3_072;
+const GEMMA4_CANARY_WITNESS_TIMEOUT_SECS: u64 = 240;
 const GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS: u64 = 90;
-// 200s lets a full 1536-token (normal) self-study finish on the slower
-// gemma4_12b lane (normal outer tokio timeout 240s, so 200s stays inside it).
-const GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS: u64 = 200;
-// THINK_DEEP self-studies generate up to 4096 tokens (~16 tok/s warm ⇒ ~250s
-// observed; introspect jobs at the 1536 cap completed in 53–93s). 340s gives
-// headroom and stays inside the deep outer tokio timeout (420s, autonomous.rs).
-const GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS: u64 = 340;
+// Wire time grows with the permitted output; outer mode deadlines include fallback.
+const GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS: u64 = 400;
+const GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS: u64 = 680;
 const GEMMA4_CANARY_MEANING_SUMMARY_TOKEN_CAP: u32 = 128;
 const GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS: u64 = 45;
-const GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS: u64 = 180;
+const GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS: u64 = 360;
 const GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP: f32 = 0.65;
 const DIALOGUE_JOURNAL_CAP: usize = 2_400;
 const DIALOGUE_SPECTRAL_CAP: usize = 2_000;

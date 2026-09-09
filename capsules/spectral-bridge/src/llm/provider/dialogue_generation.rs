@@ -464,7 +464,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 "dialogue_live",
                 ollama_fallback_messages,
                 temperature,
-                effective_num_predict.min(512),
+                effective_num_predict.min(1024),
                 DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS,
                 Some(&fallback_trace),
                 protected,

@@ -429,9 +429,7 @@ fn apply_mlx_request_policy(
         },
         "introspect" => {
             effective_tokens = requested_tokens.min(GEMMA4_CANARY_INTROSPECT_TOKEN_CAP);
-            // Size-aware: a THINK_DEEP request (>1536 after clamp) needs the
-            // longer wire timeout so the extra tokens finish; normal self-studies
-            // keep the tighter 200s so a stalled normal call still fails fast.
+            // Size-aware: the deep request gets time to use its larger ceiling.
             effective_timeout_secs = if effective_tokens > GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS {
                 GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS
             } else {
@@ -582,7 +580,7 @@ fn build_ollama_chat_request(
         options: OllamaChatOptions {
             temperature,
             num_predict: max_tokens,
-            num_ctx: 8192,
+            num_ctx: if max_tokens > 2048 { 10240 } else { 8192 },
         },
     }
 }
@@ -828,13 +826,17 @@ async fn llm_chat_with_fallback_detailed_inner(
     } else {
         "finalizer_owned"
     };
+    // Record the actual primary policy and both possible fallback model attempts.
+    let primary_timeout = apply_mlx_request_policy(
+        label, configured_mlx_profile(), messages.clone(), max_tokens, mlx_timeout_secs,
+    ).timeout_secs;
     let job = if cfg!(test) {
         None
     } else {
         crate::llm_jobs::start_call(
             label,
             &prompt_preview,
-            mlx_timeout_secs.max(ollama_timeout_secs),
+            primary_timeout.saturating_add(ollama_timeout_secs.saturating_mul(2)),
             validation_contract,
             next_policy,
         )
@@ -931,7 +933,7 @@ async fn llm_chat_with_fallback_detailed_inner(
         label,
         ollama_messages,
         temperature,
-        max_tokens.min(1536),
+        max_tokens.min(if label == "witness" || is_gemma4_canary_reflective_label(label) { 3072 } else { 1536 }),
         ollama_timeout_secs,
         fallback_output_budget.as_ref(),
     )

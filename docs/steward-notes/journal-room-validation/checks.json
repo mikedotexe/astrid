@@ -1,0 +1,50 @@
+{
+  "scope": "Final qualification of committed implementation; activation is retained separately.",
+  "logs": {
+    "reader-tests.log": {
+      "path": "/Users/v/other/worktrees/journal-room-20260909/evidence/reader-tests.log",
+      "sha256": "ff767e5961064bcef49605f0cf17203e993e6fe02454272d666b9f5297099c2a"
+    },
+    "reader-clippy.log": {
+      "path": "/Users/v/other/worktrees/journal-room-20260909/evidence/reader-clippy.log",
+      "sha256": "715a3131b6a833e3f7ddb56a613b95c79dd5234265c126f5a90a5a80a7ea7db2"
+    },
+    "minime-full-02.log": {
+      "path": "/Users/v/other/worktrees/journal-room-20260909/evidence/minime-full-02.log",
+      "sha256": "1f281db8b0e89253ecd734f03c339e9df32d85094561841d5172bdedc8b6eedd"
+    },
+    "bridge-clippy.log": {
+      "path": "/Users/v/other/worktrees/journal-room-20260909/evidence/bridge-clippy.log",
+      "sha256": "90f280b28c4bab82a278967cf32d221afe49378b4165c43d31d2e9efbaac150e"
+    },
+    "fmt-check.log": {
+      "path": "/Users/v/other/worktrees/journal-room-20260909/evidence/fmt-check.log",
+      "sha256": "de117f6b476b933902c68c25c59ced820fe99d7d9ff60ec52af1aa9637bf6b48"
+    },
+    "boundary-final.json": {
+      "path": "/Users/v/other/worktrees/journal-room-20260909/evidence/boundary-final.json",
+      "sha256": "720ef0652b92f8109b293ea0c8d6797c15d9dc599a5089b996440f55cda472b6"
+    },
+    "bridge-final-full.log": {
+      "path": "/Users/v/other/worktrees/journal-room-20260909/evidence/bridge-final-full.log",
+      "sha256": "78adcfcc983cd5b273c81a29b37d3ec8d50ea89c7abe3268d14c20299f0aa24a"
+    },
+    "bridge-final-lib-02.log": {
+      "path": "/Users/v/other/worktrees/journal-room-20260909/evidence/bridge-final-lib-02.log",
+      "sha256": "0e7464ce3e9da1c1a68d65f6c8bd70bbc632316d205d93e3ca3c3742f23f6028"
+    }
+  },
+  "research_tests": "213 passed, 108 subtests; research-local log",
+  "foreign_work_stash": "2194941b6180199abfce382119b2a7a08f4e9850",
+  "controller_pause_generation": 418,
+  "passed": {
+    "bridge": 2269,
+    "bridge_ignored": 1,
+    "source_reader": 22,
+    "minime": 1276,
+    "minime_skipped": 1,
+    "minime_subtests": 130,
+    "research": 213,
+    "research_subtests": 108
+  }
+}

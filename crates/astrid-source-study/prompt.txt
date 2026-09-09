@@ -11,3 +11,5 @@ NEXT: SELF_STUDY FIND EventBus
 NEXT: SELF_STUDY RESUME astrid/Cargo.toml
 NEXT: SELF_STUDY OPEN astrid/Cargo.toml 1
 NEXT: SELF_STUDY CONTINUE
+
+To read the next source-code page, use SELF_STUDY CONTINUE. READ_MORE is a separate saved-document reader and does not advance this source-study bookmark.

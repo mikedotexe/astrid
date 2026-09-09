@@ -180,6 +180,27 @@ pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
             return Some(clean.trim());
         }
     }
+    // A final bare source-reader choice is already an explicit read-only request.
+    // Keep quoted/fenced examples and every other action behind the normal NEXT rule.
+    let last = text
+        .lines()
+        .rev()
+        .find(|line| !line.trim().is_empty())?
+        .trim();
+    if text
+        .lines()
+        .filter(|line| line.trim().starts_with("```"))
+        .count()
+        .is_multiple_of(2)
+        && let Some(rest) = last.strip_prefix("SELF_STUDY ")
+        && matches!(
+            rest.split_whitespace().next(),
+            Some("MAP" | "FIND" | "OPEN" | "RESUME" | "CONTINUE")
+        )
+        && astrid_source_study::Command::parse(last).is_ok()
+    {
+        return Some(last);
+    }
     None
 }
 
@@ -2245,6 +2266,58 @@ mod tests {
     use tokio::sync::mpsc;
 
     static PERCEPTION_FLAG_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    #[test]
+    fn read_more_unavailable_status_survives_perception_consumption() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").unwrap();
+        let (sensory_tx, _) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        // No source and no history: READ_MORE reports this without inventing a target.
+        let outcome = handle_next_action(
+            &mut conv,
+            "READ_MORE",
+            NextActionContext {
+                burst_count: &mut burst_count,
+                db: &db,
+                sensory_tx: &sensory_tx,
+                telemetry: &telemetry,
+                fill_pct: 68.0,
+                response_text: "NEXT: READ_MORE",
+                workspace: None,
+            },
+        );
+        assert_eq!(outcome.route, "workspace");
+        conv.pending_file_listing.take();
+        let feedback = conv.pending_runtime_feedback.last().unwrap();
+        assert_eq!(feedback.requested_action, "READ_MORE");
+        assert_eq!(feedback.status, "reported");
+        assert!(feedback.message.contains("SELF_STUDY CONTINUE"));
+        assert!(conv.activity.foreground_reader.is_none());
+    }
+
+    #[test]
+    fn final_bare_source_choice_is_read_only_and_not_a_quoted_example() {
+        let choice = "SELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs 1";
+        assert_eq!(
+            parse_next_action(&format!("I want to inspect this.\n{choice}")),
+            Some(choice)
+        );
+        for text in [
+            format!("```\n{choice}\n```"),
+            format!("```\n{choice}"),
+            format!("> {choice}"),
+            format!("{choice}\nThis is an example."),
+            "RUN rm example".into(),
+        ] {
+            assert_eq!(parse_next_action(&text), None, "{text}");
+        }
+        assert_eq!(
+            parse_next_action(&format!("NEXT: REST\n{choice}")),
+            Some("REST")
+        );
+    }
 
     #[test]
     fn transition_afterimage_keep_preserves_authored_syntax_and_quoted_next_is_inert() {

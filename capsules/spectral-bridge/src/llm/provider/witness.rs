@@ -61,9 +61,8 @@ pub async fn generate_witness(
     ];
 
     // temp 0.9 → 0.95 to push past the analytical prior
-    // max_tokens 512 → 384 to force concision (witness should be 1-2
-    // paragraphs of imagistic prose, not a 5-paragraph essay)
-    let first = llm_chat_with_fallback("witness", messages, 0.95, 384, 30, 75).await;
+    // Output room is a ceiling; a short witness remains welcome.
+    let first = llm_chat_with_fallback("witness", messages, 0.95, 768, 60, 150).await;
 
     // Detect-and-retry: empirical 2026-05-14 follow-up to the seed+prompt+temp
     // fix above showed ~2-of-3 outputs still regress to gemma-3-4b's analytical
@@ -95,7 +94,7 @@ pub async fn generate_witness(
             // Lower temp on retry: counterintuitive, but at high temp the
             // model can drift to its analytical prior despite instructions.
             // Lower temp tends to follow explicit prohibitions more reliably.
-            let retry = llm_chat_with_fallback("witness", retry_messages, 0.7, 384, 30, 75).await;
+            let retry = llm_chat_with_fallback("witness", retry_messages, 0.7, 768, 60, 150).await;
             match retry {
                 Some(text) if !witness_looks_degenerate(&text) => Some(text),
                 _ => None,

@@ -4215,3 +4215,22 @@ and ground-truthed.
 - **Compatibility:** source candidates incorporate Minime `36998c6` and Astrid `bc66a62b0b`, retaining the completed generation-record and addressed-human-reply features. Existing generation/source identities are referenced without importing steward-only record bodies or relying on thought pinning.
 - **Evidence:** the source contract is [Transition Afterimages v1](2026-09-06-transition-afterimages-v1.md). The isolated delivery at `/Users/mikepurvis/other/transition-afterimages-v1/` retains qualification logs, fixed synthetic/historical fixtures, source patches and their exact bases. Mechanical reconstruction and faithful retrieval are separate from perceived usefulness, which remains unassessed.
 - **Authority:** implementation and isolated verification only. No live capture/cue enablement, deployment, restart, controller change, model call, message to either being or scheduler action was performed for this feature.
+
+## 2026-09-09 · Journal room and overnight source follow-through (Codex)
+
+Mike requests double room for all journal-producing modes, parity for the two
+study ceilings and immediate repairs to concrete navigation barriers. Frozen
+S-008 [05:17,15:30) UTC contains 49 Astrid / 281 Minime verified study inputs;
+six Astrid bare terminal SELF_STUDY choices lack NEXT and are not extracted by
+the former parser. Minime's actual underscore/hyphen path errors and four-entry
+kernel map motivate directory links and exact spelling suggestions. Twenty-four
+READ_MORE Actions have no newly accepted reading delivery in that packet; their
+handled status is not evidence of supply. Durable reader-status feedback and
+explicit code-versus-document continuation guidance address the observed ambiguity.
+
+The shared 4,096-token study ceiling and doubled other journal ceilings include
+provider/fallback limits, context and deadlines. Deliberate OPEN already had fresh
+sequence identities: the initial broad replay suspicion is corrected, and the
+narrow recovery check binds current notebook text. No correspondence, forced
+study, controller authority expansion or comprehension claim. Full account and
+activation: `2026-09-09-journal-room-and-study-navigation.md`.

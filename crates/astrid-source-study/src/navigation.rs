@@ -51,6 +51,15 @@ impl Catalog {
             for id in &component.sources {
                 lines.push(self.study_entry(id, progress));
             }
+            lines.push("These are entry points. Browse their directories for the surrounding implementation:".into());
+            let directories = component
+                .sources
+                .iter()
+                .filter_map(|id| id.rsplit_once('/').map(|(directory, _)| directory))
+                .collect::<std::collections::BTreeSet<_>>();
+            for directory in directories {
+                lines.push(format!("SELF_STUDY MAP {directory}"));
+            }
         } else {
             let sources = self.sources()?;
             let mut found = false;

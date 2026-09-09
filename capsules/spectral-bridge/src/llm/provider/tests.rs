@@ -269,9 +269,9 @@ mod tests {
     #[test]
     fn gemma4_dialogue_assembly_targets_below_high_pressure_clamp() {
         let hard_budget =
-            super::dialogue_prompt_budget_chars_for_profile(768, MlxProfile::Gemma4Canary);
+            super::dialogue_prompt_budget_chars_for_profile(1536, MlxProfile::Gemma4Canary);
         let assembly_budget =
-            dialogue_assembly_prompt_budget_chars_for_profile(768, MlxProfile::Gemma4Canary);
+            dialogue_assembly_prompt_budget_chars_for_profile(1536, MlxProfile::Gemma4Canary);
 
         assert_eq!(hard_budget, GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET);
         assert!(assembly_budget < GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS);
@@ -401,7 +401,7 @@ mod tests {
         let system_overhead =
             dialogue_system_prompt_for_profile(MlxProfile::Gemma4Canary).len() + 100;
         let user_content_budget =
-            dialogue_assembly_prompt_budget_chars_for_profile(768, MlxProfile::Gemma4Canary)
+            dialogue_assembly_prompt_budget_chars_for_profile(1536, MlxProfile::Gemma4Canary)
                 .saturating_sub(system_overhead)
                 .saturating_sub(100);
         let dir = std::env::temp_dir().join(format!(
@@ -771,7 +771,7 @@ mod tests {
     fn large_prompt_clamps_dialogue_tokens() {
         assert_eq!(
             clamp_dialogue_tokens_for_profile(768, 42_000, MlxProfile::Production),
-            512,
+            768,
         );
         assert_eq!(
             clamp_dialogue_tokens_for_profile(768, 7_200, MlxProfile::Production),
@@ -1371,16 +1371,16 @@ mod tests {
     fn ollama_dialogue_fallback_budget_gate_rejects_overlong_prose_before_buffer_commit() {
         let budget = fallback_continuity_budget_v1("spectral_entropy: 0.00");
         let within_budget = "The weighted medium gathers around a gentle slope. I keep the bridge voice compact. The texture remains legible.\n\nNEXT: LISTEN";
-        let over_budget = "The weighted medium gathers around a gentle slope. I keep the bridge voice compact. The texture remains legible. A fourth sentence would sprawl past the fallback continuity budget.\n\nNEXT: LISTEN";
+        let over_budget = "The weighted medium gathers around a gentle slope. I keep the bridge voice compact. The texture remains legible. A fourth sentence now fits. A fifth fits too. So does a sixth. A seventh exceeds the fallback ceiling.\n\nNEXT: LISTEN";
 
-        assert_eq!(budget.max_prose_sentences, 3);
+        assert_eq!(budget.max_prose_sentences, 6);
         assert_eq!(fallback_prose_sentence_count(within_budget), 3);
         assert!(is_valid_ollama_dialogue_fallback_output_for_budget(
             within_budget,
             MlxProfile::Gemma4Canary,
             budget,
         ));
-        assert_eq!(fallback_prose_sentence_count(over_budget), 4);
+        assert_eq!(fallback_prose_sentence_count(over_budget), 7);
         assert!(!is_valid_ollama_dialogue_fallback_output_for_budget(
             over_budget,
             MlxProfile::Gemma4Canary,
@@ -1419,11 +1419,11 @@ mod tests {
     fn gemma4_canary_clamps_dialogue_tokens_under_prompt_pressure() {
         assert_eq!(
             clamp_dialogue_tokens_for_profile(2048, 8_000, MlxProfile::Gemma4Canary),
-            768,
+            1536,
         );
         assert_eq!(
             clamp_dialogue_tokens_for_profile(2048, 14_001, MlxProfile::Gemma4Canary),
-            512,
+            1024,
         );
         assert_eq!(
             clamp_dialogue_tokens_for_profile(
@@ -1431,7 +1431,7 @@ mod tests {
                 GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET.saturating_add(1),
                 MlxProfile::Gemma4Canary,
             ),
-            512,
+            1024,
         );
         assert_eq!(
             clamp_dialogue_tokens_for_profile(384, 8_000, MlxProfile::Gemma4Canary),
@@ -1453,12 +1453,12 @@ mod tests {
         ];
 
         let policy =
-            apply_mlx_request_policy("witness", MlxProfile::Gemma4Canary, messages, 384, 30);
+            apply_mlx_request_policy("witness", MlxProfile::Gemma4Canary, messages, 768, 60);
         let diagnostic = policy
             .diagnostic
             .expect("Gemma 4 profile policy should emit diagnostics");
 
-        assert_eq!(policy.max_tokens, 256);
+        assert_eq!(policy.max_tokens, 512);
         assert_eq!(policy.timeout_secs, GEMMA4_CANARY_WITNESS_TIMEOUT_SECS);
         assert_eq!(
             diagnostic.prompt_char_limit,
@@ -1576,8 +1576,8 @@ mod tests {
 
         assert!(diagnostic.trimmed);
         assert!(diagnostic.effective_prompt_chars <= GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET);
-        assert_eq!(policy.max_tokens, 512);
-        assert_eq!(policy.timeout_secs, 180);
+        assert_eq!(policy.max_tokens, 768);
+        assert_eq!(policy.timeout_secs, 360);
     }
 
     #[test]
@@ -1593,15 +1593,15 @@ mod tests {
             },
         ];
 
-        // THINK_DEEP asks 4096 — at the 4096 cap it passes through and earns the
+        // THINK_DEEP asks 8192 — at the 8192 cap it passes through and earns the
         // longer deep timeout so the extra tokens finish instead of tripping the
-        // wire (agency_code_change_1781665370). Normal self-studies (1536) stay
-        // on the tighter 200s.
+        // wire (agency_code_change_1781665370). Normal self-studies (3072) stay
+        // on the tighter 400s.
         let policy = apply_mlx_request_policy(
             "introspect",
             MlxProfile::Gemma4Canary,
             messages.clone(),
-            4096,
+            8192,
             120,
         );
         let diagnostic = policy
@@ -1609,7 +1609,7 @@ mod tests {
             .expect("Gemma 4 profile policy should emit diagnostics");
 
         assert_eq!(policy.max_tokens, super::GEMMA4_CANARY_INTROSPECT_TOKEN_CAP);
-        assert_eq!(policy.max_tokens, 4096);
+        assert_eq!(policy.max_tokens, 8192);
         assert_eq!(
             policy.timeout_secs,
             GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS
@@ -1621,10 +1621,10 @@ mod tests {
         assert!(diagnostic.trimmed);
         assert!(diagnostic.effective_prompt_chars <= GEMMA4_CANARY_INTROSPECT_PROMPT_CAP);
 
-        // A normal self-study (1536) is unchanged by the raised cap and keeps the
+        // A normal self-study (3072) is unchanged by the raised cap and keeps the
         // tighter timeout so a stalled normal call still fails fast.
         let normal =
-            apply_mlx_request_policy("introspect", MlxProfile::Gemma4Canary, messages, 1536, 120);
+            apply_mlx_request_policy("introspect", MlxProfile::Gemma4Canary, messages, 3072, 120);
         assert_eq!(normal.max_tokens, GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS);
         assert_eq!(normal.timeout_secs, GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS);
     }
@@ -1690,7 +1690,7 @@ mod tests {
         ];
 
         let policy =
-            apply_mlx_request_policy("daydream", MlxProfile::Gemma4Canary, messages, 1536, 90);
+            apply_mlx_request_policy("daydream", MlxProfile::Gemma4Canary, messages, 3072, 180);
         let diagnostic = policy
             .diagnostic
             .expect("Gemma 4 profile policy should emit diagnostics");
@@ -1729,7 +1729,7 @@ mod tests {
             "journal_elaboration",
             MlxProfile::Gemma4Canary,
             messages,
-            2560,
+            5120,
             240,
         );
         let diagnostic = policy
@@ -1743,7 +1743,7 @@ mod tests {
             diagnostic.prompt_char_limit,
             Some(GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP),
         );
-        assert_eq!(diagnostic.requested_tokens, 2560);
+        assert_eq!(diagnostic.requested_tokens, 5120);
         assert_eq!(
             diagnostic.effective_tokens,
             GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,

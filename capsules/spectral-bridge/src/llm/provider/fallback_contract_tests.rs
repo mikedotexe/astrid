@@ -262,7 +262,7 @@ mod fallback_contract_tests {
             high_entropy.resonance_descriptor_policy,
             "optional_resonance_descriptor"
         );
-        assert_eq!(high_entropy.max_prose_sentences, 5);
+        assert_eq!(high_entropy.max_prose_sentences, 10);
         assert_eq!(
             high_entropy.fallback_shadow_texture_anchor,
             FallbackShadowTextureAnchor {
@@ -343,11 +343,11 @@ mod fallback_contract_tests {
         );
         assert_eq!(
             fallback_continuity_budget_v1("entropy level = 0.00").max_prose_sentences,
-            3
+            6
         );
         assert_eq!(
             fallback_continuity_budget_v1("resonance density only").max_prose_sentences,
-            3
+            6
         );
         assert!(
             !fallback_continuity_budget_v1("spectral_entropy: 0.72")
@@ -537,7 +537,7 @@ mod fallback_contract_tests {
             "preserve_resonance_or_humming_inside_existing_cap"
         );
         assert_eq!(
-            budget.max_prose_sentences, 3,
+            budget.max_prose_sentences, 6,
             "high resonance density preserves texture but does not increase the cap"
         );
 
@@ -3115,7 +3115,7 @@ mod fallback_contract_tests {
             .unwrap_or_default();
         assert!(system.contains("Fallback continuity budget v1"));
         assert!(system.contains("spectral_entropy=0.90"));
-        assert!(system.contains("max_prose_sentences=5"));
+        assert!(system.contains("max_prose_sentences=10"));
         assert!(system.contains("maximum, not a target"));
         assert!(system.contains("fallback_shadow_texture_anchor_v1"));
         assert!(system.contains("accepted_texture_terms=shimmering, heavy, restless"));

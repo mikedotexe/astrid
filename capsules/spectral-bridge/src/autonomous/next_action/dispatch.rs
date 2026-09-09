@@ -453,6 +453,22 @@ fn handle_next_action_with_author(
     }
 
     if workspace::handle_action(conv, base_action.as_str(), &original, next_action, &mut ctx) {
+        // A reader status must survive an intervening non-dialogue mode. The old
+        // perception-only listing could be consumed before any provider saw it.
+        if base_action == "READ_MORE"
+            && let Some(message) = conv.pending_file_listing.clone()
+            && ["[Reading is parked.", "[There's no active source", "[The previous continuation",
+                "[You've already reached", "[The saved reading is complete.", "[Saved reading could not continue:"]
+                .iter().any(|prefix| message.starts_with(prefix))
+        {
+            let message = format!("{message} To continue source-code study, use SELF_STUDY CONTINUE; it has a separate bookmark.");
+            let mut feedback = crate::runtime_action_feedback::RuntimeActionFeedbackV1::from_guard_inputs(
+                None, &original, "saved_reading_status", &message, None,
+            );
+            feedback.status = "reported".into();
+            conv.enqueue_runtime_feedback(feedback);
+            return NextActionOutcome::handled("workspace", message);
+        }
         if let Some(outcome) = record_activity_choice(conv, &base_action) {
             return outcome;
         }
