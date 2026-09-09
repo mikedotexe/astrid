@@ -2,8 +2,8 @@
 
 Mike approved the next two changes from the S-008 sweep and explicitly authorized
 main integration and live deployment. This record separates implementation,
-activation and any later natural observation. Deployment is pending until the
-verified rollout section is appended.
+activation and any later natural observation. The verified paired rollout is
+recorded below and in `study-evidence-validation/live-rollout.json`.
 
 ## Evidence and decisions
 
@@ -80,3 +80,48 @@ remain. No automated rollback is authorized by diagnostic output.
 A successful rollout establishes availability. A later bounded sample must still
 check the exact final input, response and journal before judging natural use or
 claim quality. `READ_MORE` and source-study continuation remain separate outcomes.
+
+## Verified rollout — September 8 Pacific / September 9 UTC
+
+Both implementation commits are on local and origin main: Astrid
+`dde5d51136b0822d8172280b4430da8a462c988e`, Minime
+`378957a9d71fb094ab3b3e66d367900b8c88c09e`. The original 40 steward-work files were
+verified in retained stash `4949d0acbb45ebfb896c67f881b52da3a8e7a8b3` before the
+reviewed fast-forward; none were swept into an unrelated commit or discarded.
+
+The staged release manifest is
+`db0dc2b1bd86b735c2c993b2cc212955c7c06d5622424a33c5e4907398e4687a`.
+Its 598 source inputs and five artifacts verify; all 560 Astrid release-root inputs
+also match canonical main. The bridge binary is
+`d7ebf2c69a8a2b3fcec1d8c1b31346819a9bd844ad4b610b8fd2745651e44d54`.
+Astrid PID 84971 drained without force, retaining checkpoint exchange 193721.
+PID 39851 started at **22:11:16 PDT / 05:11:16 UTC**; its signed control state
+matches this binary and a new saved exchange advanced the count to 193722.
+Activation transaction `aea15d045e544ebea4e732a77d560ea3` is `activated_verified`.
+The drain receipt does not claim atomic traffic quiescence or remote delivery.
+
+Minime PID 85778 received one SIGTERM after an observed idle window. PID 41087
+started at **22:14:55 PDT / 05:14:55 UTC**, with all 80 Python source inputs current
+and the staged shared reader selected. Session 5318 and cycle 26429 were restored;
+the next cycle became 26430. Pending `SELF_STUDY CONTINUE` was restored, then
+naturally consumed before the readiness snapshot. The exact pre-signal command
+hash, startup log, parented action `act_minime_1788930904317_self-study` and its
+new-worker job establish that continuation; equal before/after pending hashes
+would have incorrectly rejected this successful dispatch. Evidence is retained in
+`minime-pending-next-continuity.json` under the rollout evidence directory.
+No accepted worker was interrupted and no force fallback was used.
+
+The first Minime wrapper attempt refused before signaling because the existing
+hold actor did not match its fixed interactive actor name. The same authorized
+maintenance pass was re-recorded as `codex-astra-interactive`, generation 416.
+A subsequent invocation also refused to overwrite the first receipt; that failed
+receipt is preserved separately before the successful invocation. No guard was
+weakened. Initial automation state was unpaused and will be restored after the
+integration record is committed.
+
+Ten surrounding service process identities, their launchd plists, and provider
+observer overrides stayed unchanged across the paired reload. The owning
+read-only verifier and raw build/activation/reload logs are retained under
+`/Users/v/other/worktrees/study-evidence-20260908/evidence/`. The research-side
+follow-up retains the first natural studies separately; rollout success alone
+establishes availability, not response accuracy or comprehension.
