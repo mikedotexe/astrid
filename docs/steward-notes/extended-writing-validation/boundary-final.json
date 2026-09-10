@@ -1,0 +1,104 @@
+{
+  "artifact_authority_state_v1": {
+    "schema": "artifact_authority_state_v1",
+    "schema_version": 1,
+    "state": "evidence_only",
+    "witness_only": true
+  },
+  "baseline_sha256": "94170c388c3961c815bb6381af7144d6f86d9be7d60c2178b065b08bf55c2ac6",
+  "counter_audit": {
+    "checks": {
+      "audit_grants_no_authority": true,
+      "documented_exception_ceilings_hold": true,
+      "documented_exception_signature_ceilings_hold": true,
+      "forbidden_dependency_edges_absent": true,
+      "legacy_large_files_cannot_grow": true,
+      "new_large_production_files_rejected": true,
+      "stable_facades_point_to_declared_targets": true
+    },
+    "status": "consistent"
+  },
+  "documentation_sha256": "ae69b34cf76ab6b84b08f833cf82f6d759c0c2ccba579022552a17f694ad917f",
+  "documented_cohesion_exception_count": 7,
+  "exception_signature_ceiling_count": 7,
+  "exception_signature_counts": {
+    "src/action_continuity/runtime/core.rs": {
+      "maximum_unique_fn_signatures": 232,
+      "unique_fn_signatures": 204
+    },
+    "src/autonomous/runtime/orchestration.rs": {
+      "maximum_unique_fn_signatures": 7,
+      "unique_fn_signatures": 4
+    },
+    "src/codec/encoding.rs": {
+      "maximum_unique_fn_signatures": 10,
+      "unique_fn_signatures": 9
+    },
+    "src/codec/structure.rs": {
+      "maximum_unique_fn_signatures": 13,
+      "unique_fn_signatures": 11
+    },
+    "src/llm/provider/fallback_weights.rs": {
+      "maximum_unique_fn_signatures": 2,
+      "unique_fn_signatures": 1
+    },
+    "src/llm/provider/transport.rs": {
+      "maximum_unique_fn_signatures": 41,
+      "unique_fn_signatures": 35
+    },
+    "src/ws/bridge_state.rs": {
+      "maximum_unique_fn_signatures": 27,
+      "unique_fn_signatures": 24
+    }
+  },
+  "exception_structural_metrics": {
+    "src/action_continuity/runtime/core.rs": {
+      "decision_points": 1223,
+      "max_fn_lines": 267,
+      "max_nesting_depth": 6
+    },
+    "src/autonomous/runtime/orchestration.rs": {
+      "decision_points": 579,
+      "max_fn_lines": 4860,
+      "max_nesting_depth": 14
+    },
+    "src/codec/encoding.rs": {
+      "decision_points": 108,
+      "max_fn_lines": 809,
+      "max_nesting_depth": 5
+    },
+    "src/codec/structure.rs": {
+      "decision_points": 67,
+      "max_fn_lines": 763,
+      "max_nesting_depth": 6
+    },
+    "src/llm/provider/fallback_weights.rs": {
+      "decision_points": 268,
+      "max_fn_lines": 1362,
+      "max_nesting_depth": 3
+    },
+    "src/llm/provider/transport.rs": {
+      "decision_points": 84,
+      "max_fn_lines": 218,
+      "max_nesting_depth": 5
+    },
+    "src/ws/bridge_state.rs": {
+      "decision_points": 194,
+      "max_fn_lines": 365,
+      "max_nesting_depth": 5
+    }
+  },
+  "forbidden_edge_match_count": 0,
+  "legacy_large_file_count": 51,
+  "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4",
+  "resolved_large_file_debt_count": 3,
+  "runtime_relation": "ci_and_steward_evidence_only_not_runtime_routing_or_control",
+  "schema": "domain_boundary_audit_status_v1",
+  "schema_version": 1,
+  "stable_facade_count": 6,
+  "unlisted_legacy_review_debt_count": 44,
+  "valid": true,
+  "violation_count": 0,
+  "violation_kind_counts": {},
+  "write": false
+}

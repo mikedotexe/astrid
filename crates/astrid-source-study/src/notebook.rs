@@ -135,7 +135,7 @@ impl Notebook {
         }
         let prose = prose.join("\n");
         if !prose.trim().is_empty() {
-            let latest = entry(prose.trim(), 16_000);
+            let latest = entry(prose.trim(), 64_000);
             if self
                 .previous
                 .as_ref()
@@ -160,7 +160,7 @@ impl Notebook {
         // Bound the serialized value without ever cutting JSON syntax or an exact path.
         let serialized = loop {
             let rendered = serde_json::to_string(&view).expect("notebook strings serialize");
-            if rendered.len() <= 9000 {
+            if rendered.len() <= 32_000 {
                 break rendered;
             }
             // Prefer complete recent answers. Drop the oldest whole account

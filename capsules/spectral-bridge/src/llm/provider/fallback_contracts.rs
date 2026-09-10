@@ -84,6 +84,10 @@ fn clamp_dialogue_tokens_for_profile(
     prompt_chars: usize,
     profile: MlxProfile,
 ) -> u32 {
+    if requested_tokens >= astrid_source_study::writing::EXTENDED_TOKENS {
+        // Explicit long/deep generation must survive each downstream clamp.
+        return requested_tokens.min(astrid_source_study::writing::EXTENDED_TOKENS);
+    }
     if profile.is_gemma4_canary() {
         let capped = requested_tokens.min(GEMMA4_CANARY_DIALOGUE_TOKEN_CAP);
         if prompt_chars > GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS {
@@ -107,6 +111,9 @@ fn dialogue_request_timeout_secs_for_profile(
     prompt_chars: usize,
     profile: MlxProfile,
 ) -> u64 {
+    if requested_tokens >= astrid_source_study::writing::EXTENDED_TOKENS {
+        return astrid_source_study::writing::EXTENDED_TIMEOUT_SECS;
+    }
     let token_budget = clamp_dialogue_tokens_for_profile(requested_tokens, prompt_chars, profile);
     if profile.is_gemma4_canary() {
         if prompt_chars > GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS {

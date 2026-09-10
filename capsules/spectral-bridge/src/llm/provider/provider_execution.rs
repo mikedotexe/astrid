@@ -114,7 +114,8 @@ async fn mlx_chat_with_runtime_feedback(
         }
     }
 
-    let final_limit = if label == "self_study" {
+    let final_limit = if matches!(label, "self_study" | "private_writing")
+        || journal_preference(label) == astrid_source_study::writing::Profile::Extended {
         astrid_source_study::MAX_INPUT_BYTES
     } else if profile.is_gemma4_canary() {
         gemma4_canary_prompt_limit(label).unwrap_or(48_000)
@@ -390,6 +391,10 @@ async fn ollama_chat_with_runtime_feedback(
     context_submission: Option<&ContextSubmissionTrackerV1>,
     observation_context: Option<&ProviderObservationContext>,
 ) -> Option<OllamaFallbackResponse> {
+    let max_tokens = writing_tokens(label, max_tokens);
+    let timeout_secs = if max_tokens >= astrid_source_study::writing::EXTENDED_TOKENS && journal_label(label) {
+        timeout_secs.max(astrid_source_study::writing::EXTENDED_TIMEOUT_SECS)
+    } else { writing_timeout(label, timeout_secs) };
     let client = delivery_http_client(
         timeout_secs,
         protected.is_some() || !feedback.is_empty() || context_submission.is_some(),
@@ -423,7 +428,7 @@ async fn ollama_chat_with_runtime_feedback(
             &mut request.messages,
             protected,
             feedback,
-            if label == "self_study" { astrid_source_study::MAX_INPUT_BYTES } else { 16_000 },
+            if matches!(label, "self_study" | "private_writing") { astrid_source_study::MAX_INPUT_BYTES } else { 16_000 },
             "ollama",
             &fallback_model,
         ) else {

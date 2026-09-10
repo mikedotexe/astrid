@@ -4282,3 +4282,18 @@ other services unchanged. Shared helper reproduces exact recovery candidates.
 The six-call invitation trial did not correct either erroneous account, so no
 production prompt change was promoted. See `study-choice-validation/live-rollout.json`
 and the HSS-16 research account. Codex interactive implementation/verification.
+
+
+## 2026-09-09 · Longform room after the journal-capacity audit
+
+Mike explicitly requested implementation of the shared extended-writing proposal after
+19 observed Minime study entries used only 263–992 of their 4,096-token allowance.
+This is user-directed affordance work informed by journal evidence, not a claim that a
+Being requested a specific architecture. [Owning account](2026-09-09-extended-writing.md)
+describes persistent optional 8,192/512/default profiles, verified complete draft passages,
+revision/branch/resume, private journal storage, and larger source notebook context.
+The actual dispatcher already preserved chosen NEXT; this change corrects forced wording
+and metadata in its repetition advice. Two isolated native requests stopped below 1,000
+tokens; the source control still made unsupported gateway claims. No understanding or
+longer-natural-writing gain is inferred. HSS-18 in the research hub retains the historical
+sequence; rollout identity is recorded separately after activation. No feedback letters sent.

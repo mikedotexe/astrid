@@ -464,7 +464,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 "dialogue_live",
                 ollama_fallback_messages,
                 temperature,
-                effective_num_predict.min(1024),
+                if effective_num_predict >= astrid_source_study::writing::EXTENDED_TOKENS { effective_num_predict } else { effective_num_predict.min(1024) },
                 DIALOGUE_OLLAMA_FALLBACK_TIMEOUT_SECS,
                 Some(&fallback_trace),
                 protected,

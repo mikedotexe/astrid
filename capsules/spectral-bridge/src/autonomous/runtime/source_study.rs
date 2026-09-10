@@ -3,7 +3,7 @@ fn uses_shared_source_study(conv: &ConversationState) -> bool {
     let Some(target) = conv.introspect_target.as_ref() else {
         return true;
     };
-    if target.label.starts_with("SELF_STUDY") {
+    if target.label.starts_with("SELF_STUDY") || target.label.split_whitespace().next() == Some("WRITE") {
         return true;
     }
     let sources = introspect::introspect_sources();
@@ -20,7 +20,7 @@ fn shared_study_command(
     use astrid_source_study::Command;
     match target {
         None => Ok(Command::Continue),
-        Some(target) if target.label.starts_with("SELF_STUDY") => Command::parse(&target.label),
+        Some(target) if (target.label.starts_with("SELF_STUDY") || target.label.split_whitespace().next() == Some("WRITE")) => Command::parse(&target.label),
         Some(target) if target.offset == state::IntrospectOffsetV2::Auto => Ok(Command::Resume {
             source: target.label,
         }),
@@ -41,6 +41,7 @@ async fn run_shared_source_study(
 ) -> (&'static str, String, String) {
     let _attempt = next_action::introspection_cadence::begin_attempt(conv);
     let requested = conv.introspect_target.take();
+    let private_request = requested.as_ref().is_some_and(|t| t.label.split_whitespace().next() == Some("WRITE"));
     let prepared = (|| -> anyhow::Result<_> {
         let paths = bridge_paths();
         let catalog =
@@ -54,7 +55,7 @@ async fn run_shared_source_study(
         .with_runtime_workspace(paths.bridge_workspace().to_path_buf(), "astrid");
         let output = if let Some(target) = requested
             .as_ref()
-            .filter(|target| target.label.starts_with("SELF_STUDY"))
+            .filter(|target| target.label.starts_with("SELF_STUDY") || target.label.split_whitespace().next() == Some("WRITE"))
         {
             reader.prepare_action(&target.label)?
         } else {
@@ -71,8 +72,8 @@ async fn run_shared_source_study(
                 None,
             );
             return (
-                "introspect_notice",
-                format!("Source study: {error:#}. Use SELF_STUDY MAP or SELF_STUDY FIND <text>."),
+                if private_request { "private_writing_notice" } else { "introspect_notice" },
+                if private_request { format!("Private writing: {error:#}. WRITE HELP lists your choices; WRITE CONTINUE retries a pending draft turn.") } else { format!("Source study: {error:#}. Use SELF_STUDY MAP or SELF_STUDY FIND <text>.") },
                 String::new(),
             );
         },
@@ -114,7 +115,7 @@ async fn run_shared_source_study(
     let source = output.page.as_ref().map_or_else(
         || {
             if output.session_pages.is_empty() {
-                "source catalog".into()
+                if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private draft".into() } else { "source catalog".into() }
             } else {
                 format!(
                     "study session ({} source pages)",
@@ -130,7 +131,7 @@ async fn run_shared_source_study(
             "source_study_generation_unavailable",
             None,
         );
-        return ("introspect_notice", "Source-study generation was unavailable. The page remains pending; SELF_STUDY CONTINUE retries it.".into(), source);
+        return (if private_request { "private_writing_notice" } else { "introspect_notice" }, if private_request { "Writing generation was unavailable; WRITE CONTINUE retries the pending draft turn.".into() } else { "Source-study generation was unavailable. The page remains pending; SELF_STUDY CONTINUE retries it.".into() }, source);
     };
     let delivery = completion
         .accepted_delivery
@@ -152,8 +153,10 @@ async fn run_shared_source_study(
             Ok(())
         });
     let timestamp = chrono_timestamp();
-    let directory = bridge_paths().introspections_dir();
-    let artifact_kind = if delivery.is_ok() {
+    let directory = if output.input_kind == astrid_source_study::InputKind::PrivateWriting {
+        bridge_paths().bridge_workspace().join("private_writing/artifacts")
+    } else { bridge_paths().introspections_dir() };
+    let artifact_kind = if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private_writing" } else if delivery.is_ok() {
         "introspection"
     } else {
         "source_study_notice"
@@ -217,7 +220,7 @@ async fn run_shared_source_study(
             )
         },
     );
-    let visibility = if delivery.is_ok() {
+    let visibility = if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "protected" } else if delivery.is_ok() {
         "summary"
     } else {
         "protected"
@@ -252,12 +255,13 @@ async fn run_shared_source_study(
         "not_attempted"
     };
     let mode = source_study_completion_mode(delivery.is_ok(), written.is_ok());
+    let private = output.input_kind == astrid_source_study::InputKind::PrivateWriting;
     if mode == "self_study" {
         next_action::introspection_cadence::mark_admitted(conv, &artifact_path, witness);
         if let Some(page) = &output.page {
             finish_source_study_invitation(&catalog, &page.source);
         }
-        (mode, text, source)
+        (if private { "private_writing" } else { mode }, text, source)
     } else {
         next_action::introspection_cadence::mark_failed(
             conv,
@@ -265,7 +269,7 @@ async fn run_shared_source_study(
             written.is_ok().then_some(artifact_path.as_path()),
         );
         (
-            mode,
+            if private { "private_writing_notice" } else { mode },
             format!("{text}\n\n[Source-study delivery: {delivery_status}.]"),
             source,
         )

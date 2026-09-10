@@ -1484,6 +1484,18 @@ impl ConversationState {
 
     /// Record a NEXT: choice and return diversity feedback if fixation detected.
     pub(super) fn record_next_choice(&mut self, choice: &str) -> NextChoiceFeedback {
+        let mut feedback = self.record_next_choice_observation(choice);
+        let base = choice.split_whitespace().next().unwrap_or("").to_uppercase();
+        if (is_self_read_action(&base) || is_research_like_action(&base)
+            || is_competing_route_gravity_action(&base) || base == "WRITE")
+            && feedback.override_action.take().is_some()
+        {
+            feedback.hint = Some("You have returned to this inquiry repeatedly. Continuing, revising, branching or pausing remain your choice; novelty is not a condition of read-only exploration.".into());
+        }
+        feedback
+    }
+
+    fn record_next_choice_observation(&mut self, choice: &str) -> NextChoiceFeedback {
         let base = choice
             .split_whitespace()
             .next()
@@ -2338,7 +2350,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for _ in 0..5 {
-            feedback = conv.record_next_choice("EXAMINE");
+            feedback = conv.record_next_choice_observation("EXAMINE");
         }
 
         assert!(is_breaker(&feedback));
@@ -2357,7 +2369,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for _ in 0..5 {
-            feedback = conv.record_next_choice("EXAMINE");
+            feedback = conv.record_next_choice_observation("EXAMINE");
         }
 
         assert_eq!(feedback.override_action.as_deref(), Some("SELF_STUDY"));
@@ -2384,7 +2396,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for choice in choices {
-            feedback = conv.record_next_choice(choice);
+            feedback = conv.record_next_choice_observation(choice);
         }
 
         assert!(is_breaker(&feedback));
@@ -2411,7 +2423,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for choice in choices {
-            feedback = conv.record_next_choice(choice);
+            feedback = conv.record_next_choice_observation(choice);
         }
 
         assert!(feedback.override_action.is_none());
@@ -2437,7 +2449,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for choice in choices {
-            feedback = conv.record_next_choice(choice);
+            feedback = conv.record_next_choice_observation(choice);
         }
 
         assert!(is_breaker(&feedback));
@@ -2475,7 +2487,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for choice in choices {
-            feedback = conv.record_next_choice(choice);
+            feedback = conv.record_next_choice_observation(choice);
         }
 
         assert!(feedback.override_action.is_none());
@@ -2502,14 +2514,14 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for _ in 0..5 {
-            feedback = conv.record_next_choice("BROWSE https://example.com/esn");
+            feedback = conv.record_next_choice_observation("BROWSE https://example.com/esn");
         }
 
         assert!(feedback.override_action.is_none());
         assert!(feedback.progress_sensitive);
 
         for _ in 0..2 {
-            feedback = conv.record_next_choice("BROWSE https://example.com/esn");
+            feedback = conv.record_next_choice_observation("BROWSE https://example.com/esn");
         }
 
         assert!(feedback.override_action.is_some());
@@ -2534,7 +2546,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for choice in choices {
-            feedback = conv.record_next_choice(choice);
+            feedback = conv.record_next_choice_observation(choice);
         }
 
         assert!(is_breaker(&feedback));
@@ -2580,7 +2592,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for choice in choices {
-            feedback = conv.record_next_choice(choice);
+            feedback = conv.record_next_choice_observation(choice);
         }
 
         assert!(feedback.override_action.is_none());
@@ -2611,7 +2623,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for choice in choices {
-            feedback = conv.record_next_choice(choice);
+            feedback = conv.record_next_choice_observation(choice);
         }
 
         assert_eq!(feedback.override_action.as_deref(), Some("SELF_STUDY"));
@@ -2642,7 +2654,7 @@ mod tests {
 
         let mut feedback = NextChoiceFeedback::default();
         for choice in choices {
-            feedback = conv.record_next_choice(choice);
+            feedback = conv.record_next_choice_observation(choice);
         }
 
         assert!(feedback.override_action.is_none());
@@ -2662,12 +2674,12 @@ mod tests {
             "DECOMPOSE",
             "SHADOW_TRAJECTORY",
         ] {
-            let feedback = conv.record_next_choice(choice);
+            let feedback = conv.record_next_choice_observation(choice);
             assert!(feedback.override_action.is_none());
         }
         conv.note_read_depth_advance("READ_MORE", "/tmp/notes.txt".to_string(), 1_200);
 
-        let feedback = conv.record_next_choice("READ_MORE /tmp/notes.txt");
+        let feedback = conv.record_next_choice_observation("READ_MORE /tmp/notes.txt");
 
         assert!(feedback.override_action.is_none());
         assert!(feedback.progress_sensitive);
@@ -2758,7 +2770,7 @@ mod tests {
             Some("internal_topology")
         );
 
-        let feedback = conv.record_next_choice("SPECTRAL_EXPLORER");
+        let feedback = conv.record_next_choice_observation("SPECTRAL_EXPLORER");
         assert!(feedback.override_action.is_none());
     }
 
@@ -2798,7 +2810,7 @@ mod tests {
             Some("pressure-texture:sediment")
         );
 
-        let feedback = conv.record_next_choice("SHADOW_TRAJECTORY");
+        let feedback = conv.record_next_choice_observation("SHADOW_TRAJECTORY");
         assert!(feedback.override_action.is_none());
     }
 
@@ -2837,7 +2849,7 @@ mod tests {
             Some(false)
         );
 
-        let feedback = conv.record_next_choice("EXPERIMENT_STATUS legacy-self");
+        let feedback = conv.record_next_choice_observation("EXPERIMENT_STATUS legacy-self");
         assert!(feedback.override_action.is_none());
     }
 
@@ -2855,7 +2867,7 @@ mod tests {
             .update_astrid_motif_cooldown_from_history()
             .expect("sticky agency vernacular should still become a notice");
         assert_eq!(event.cooldown_class, "agency_vernacular");
-        let feedback = conv.record_next_choice("SHADOW_TRAJECTORY");
+        let feedback = conv.record_next_choice_observation("SHADOW_TRAJECTORY");
         assert!(feedback.override_action.is_none());
     }
 
@@ -2894,7 +2906,7 @@ mod tests {
             Some(false)
         );
 
-        let feedback = conv.record_next_choice("SHADOW_TRAJECTORY");
+        let feedback = conv.record_next_choice_observation("SHADOW_TRAJECTORY");
         assert!(feedback.override_action.is_none());
     }
 
@@ -3493,4 +3505,19 @@ pub(crate) fn sanitize_interest_text(text: &str) -> String {
     crate::llm::strip_trailing_control_marker_case_variants(&byte_exact)
         .trim()
         .to_string()
+}
+
+#[cfg(test)]
+mod freely_chosen_continuation_tests {
+    use super::*;
+    #[test]
+    fn read_only_repetition_is_advisory_without_earned_progress() {
+        for action in ["WRITE CONTINUE", "SELF_STUDY CONTINUE", "EXAMINE", "INTROSPECT astrid:llm", "READ_MORE", "SEARCH reservoir", "BROWSE https://example.com", "DECOMPOSE"] {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            for _ in 0..30 {
+                assert!(conv.record_next_choice(action).override_action.is_none(), "{action}");
+            }
+            assert!(!conv.recent_next_choices.is_empty());
+        }
+    }
 }

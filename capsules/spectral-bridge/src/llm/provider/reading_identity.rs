@@ -43,6 +43,7 @@ fn protected_source_heading(input: &ProtectedDialogueInputV1, end: usize) -> Opt
         ProtectedDialogueKindV1::Letter => "chosen mailbox letter",
         ProtectedDialogueKindV1::Afterimage => "chosen historical afterimage page",
         ProtectedDialogueKindV1::SourceStudy => "source study",
+        ProtectedDialogueKindV1::PrivateWriting => "private writing",
     };
     let marker = protected_digest(input.content_id.as_bytes());
     let identity =

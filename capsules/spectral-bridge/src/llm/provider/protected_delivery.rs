@@ -10,6 +10,7 @@ pub enum ProtectedDialogueKindV1 {
     Letter,
     Afterimage,
     SourceStudy,
+    PrivateWriting,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -332,6 +333,8 @@ fn build_ollama_protected_chat_request(
             GEMMA4_LANGUAGE_CONTRACT,
         );
     }
+    apply_writing_voice(&mut messages, journal_preference(label));
+    let max_tokens = writing_tokens(label, max_tokens);
     OllamaChatRequest {
         model: fallback_model,
         messages,
@@ -339,7 +342,7 @@ fn build_ollama_protected_chat_request(
         options: OllamaChatOptions {
             temperature,
             num_predict: max_tokens,
-            num_ctx: if label == "self_study" { astrid_source_study::CONTEXT_TOKENS } else if max_tokens > 2048 { 10240 } else { 8192 },
+            num_ctx: if max_tokens >= astrid_source_study::writing::EXTENDED_TOKENS { astrid_source_study::CONTEXT_TOKENS } else { writing_context(label, if max_tokens > 2048 { 10240 } else { 8192 }) },
         },
     }
 }

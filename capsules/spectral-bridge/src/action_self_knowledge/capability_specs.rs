@@ -266,6 +266,11 @@ fn capability_specs() -> Vec<Value> {
             &["introspect::tests"],
         ),
         spec(
+            "WRITE", &[], "modes",
+            "private versioned draft, journal preference and freely chosen continuation; no sensory or peer delivery",
+            &["astrid_source_study::writing"],
+        ),
+        spec(
             "SELF_STUDY",
             &["INVESTIGATE"],
             "modes",

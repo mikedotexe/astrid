@@ -18,6 +18,7 @@ use crate::prompt_budget::PromptBudgetReport;
 include!("provider/configuration.rs");
 include!("provider/prompt_contracts.rs");
 include!("provider/transport.rs");
+include!("provider/writing_profile.rs");
 include!("provider/protected_delivery.rs");
 include!("provider/afterimages.rs");
 include!("provider/runtime_feedback.rs");

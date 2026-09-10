@@ -134,7 +134,9 @@ fn save_astrid_journal_with_provenance(
         return;
     }
 
-    let journal_dir = bridge_paths().astrid_journal_dir();
+    let journal_dir = if matches!(mode, "private_writing" | "private_writing_notice") {
+        bridge_paths().bridge_workspace().join("private_writing/journal")
+    } else { bridge_paths().astrid_journal_dir() };
     let _ = std::fs::create_dir_all(&journal_dir);
     let ts = chrono_timestamp();
     // Mode-prefixed filenames — instant filesystem searchability.

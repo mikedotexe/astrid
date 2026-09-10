@@ -1,0 +1,135 @@
+
+running 2255 tests
+....................................................................................... 87/2255
+....................................................................................... 174/2255
+....................................................................................... 261/2255
+....................................................................................... 348/2255
+....................................................................................... 435/2255
+....................................................................................... 522/2255
+....................................................................................... 609/2255
+....................................................................................... 696/2255
+....................................................................................... 783/2255
+....................................................................................... 870/2255
+....................................................................................... 957/2255
+....................................................................................... 1044/2255
+....................................................................................... 1131/2255
+....................................................................................... 1218/2255
+....................................................................................... 1305/2255
+....................................................................................... 1392/2255
+....................................................................................... 1479/2255
+....................................................................................... 1566/2255
+....................................................................................... 1653/2255
+....................................................................................... 1740/2255
+....................................................................................... 1827/2255
+..............................i........................................................ 1914/2255
+....................................................................................... 2001/2255
+....................................................................................... 2088/2255
+....................................................................................... 2175/2255
+................................................................................
+test result: ok. 2254 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 27.56s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+
+running 1 test
+    Checking spectral-bridge-server v0.1.0 (/Users/v/other/worktrees/longform-20260909/astrid/capsules/spectral-bridge)
+    Checking spectral-bridge-server-tests v0.0.0 (/Users/v/other/worktrees/study-choice-20260909/astrid/capsules/spectral-bridge/target/tests/trybuild/spectral-bridge-server)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.71s
+
+
+test tests/ui/evidence_cannot_dispatch.rs ... ok
+test tests/ui/pending_cannot_dispatch.rs ... ok
+test tests/ui/granted_cannot_deserialize.rs ... ok
+test tests/ui/verified_temporal_cannot_deserialize.rs ... ok
+
+
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.63s
+
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s
+
+
+running 1 test
+   Compiling prime_esn_wasm v0.1.0 (/Users/v/other/worktrees/longform-20260909/prime_esn_wasm)
+   Compiling spectral-bridge-server v0.1.0 (/Users/v/other/worktrees/longform-20260909/astrid/capsules/spectral-bridge)
+   Compiling spectral-bridge-server-tests v0.0.0 (/Users/v/other/worktrees/study-choice-20260909/astrid/capsules/spectral-bridge/target/tests/trybuild/spectral-bridge-server)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 36.47s
+
+
+test tests/ui/llm_facade_reexports_exchange.rs [should pass] ... test llm_facade_reexports_items_without_exposing_implementation_module has been running for over 60 seconds
+ok
+test tests/ui/llm_facade_reexports_generation.rs [should pass] ... ok
+test tests/ui/llm_provider_module_is_private.rs [should fail to compile] ... ok
+
+
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 195.39s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.03s
+
+
+running 1 test
+    Checking spectral-bridge-server-tests v0.0.0 (/Users/v/other/worktrees/study-choice-20260909/astrid/capsules/spectral-bridge/target/tests/trybuild/spectral-bridge-server)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.26s
+
+
+test tests/ui/raw_packet_cannot_construct_observation.rs ... ok
+test tests/ui/producer_cannot_construct_bridge_evidence.rs ... ok
+test tests/ui/observation_cannot_deserialize.rs ... ok
+test tests/ui/interpretation_cannot_dispatch.rs ... ok
+test tests/ui/witness_frame_cannot_dispatch.rs ... ok
+test tests/ui/lived_state_witness_cannot_be_forged.rs ... ok
+test tests/ui/lived_state_witness_cannot_deserialize.rs ... ok
+test tests/ui/reciprocal_experiential_cannot_be_forged.rs ... ok
+test tests/ui/reciprocal_experiential_cannot_deserialize.rs ... ok
+test tests/ui/reciprocal_resonance_cannot_be_forged.rs ... ok
+test tests/ui/reciprocal_resonance_cannot_deserialize.rs ... ok
+test tests/ui/study_capture_cannot_be_forged.rs ... ok
+test tests/ui/study_capture_cannot_deserialize.rs ... ok
+
+
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.61s
+
+
+running 1 test
+    Checking spectral-bridge-server-tests v0.0.0 (/Users/v/other/worktrees/study-choice-20260909/astrid/capsules/spectral-bridge/target/tests/trybuild/spectral-bridge-server)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.18s
+
+
+test tests/ui/signal_stage_cannot_be_forged.rs ... ok
+test tests/ui/signal_receipt_cannot_deserialize.rs ... ok
+
+
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.76s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

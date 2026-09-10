@@ -611,7 +611,9 @@ mod tests {
             .contains("exact persisted state")
         );
 
-        handoff.signature_hex.replace_range(0..2, "00");
+        // A random signature can already start with 00; corruption must change it.
+        let replacement = if handoff.signature_hex.starts_with("00") { "01" } else { "00" };
+        handoff.signature_hex.replace_range(0..2, replacement);
         write_owner_json(&root.path().join(PENDING_FILENAME), &handoff).unwrap();
         assert!(
             verify_handoff(root.path(), &handoff, &binding, now + 1, true)

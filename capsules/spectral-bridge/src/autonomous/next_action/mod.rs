@@ -1357,6 +1357,7 @@ fn normalize_steward_typo_alias(base_action: &str, original: &str) -> Option<(St
 }
 
 fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
+    if base_action == "WRITE" { return "protected"; }
     if crate::transition_afterimages::is_action(base_action) {
         return "protected_summary";
     }
@@ -1467,6 +1468,7 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
 }
 
 fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
+    if base_action == "WRITE" { return "language_only"; }
     if crate::transition_afterimages::is_action(base_action) {
         return if base_action == "AFTERIMAGE_LIST" {
             "read_only"
@@ -1816,7 +1818,7 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "SUMMON_ATTRACTOR"
         | "RELEASE_ATTRACTOR" => "attractor",
         "SHADOW_PREFLIGHT" | "SHADOW_INFLUENCE" | "RELEASE_SHADOW" | "LEND_DENSITY" => "shadow",
-        "INTROSPECT" | "SELF_STUDY" => "modes",
+        "INTROSPECT" | "SELF_STUDY" | "WRITE" => "modes",
         "INTROSPECTION_CADENCE" => "introspection_cadence",
         "OWNER_POLICY_CREATE"
         | "OWNER_POLICY_STATUS"

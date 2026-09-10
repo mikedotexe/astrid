@@ -1,0 +1,72 @@
+{
+  "schema": "extended_writing_qualification_checks_v1",
+  "completed_at": "2026-09-10T01:33:47.961613+00:00",
+  "checks_passed": true,
+  "reader_passed": 46,
+  "bridge_passed": 2274,
+  "bridge_ignored": 1,
+  "minime_passed": 1300,
+  "minime_skipped": 1,
+  "minime_subtests_passed": 132,
+  "strict_clippy": "reader all targets; bridge all targets/all features",
+  "workspace_format_passed": true,
+  "boundary_passed": true,
+  "minime_commit": "33c324d229893a061ea958891f19fa450f232bd6",
+  "records": [
+    {
+      "path": "reader-tests-v2.log",
+      "sha256": "6e890df0471665ac4f36587ed3aa78efe44a3f2fdce8db4029073f49eaf36a3b",
+      "bytes": 954
+    },
+    {
+      "path": "reader-clippy-v2.log",
+      "sha256": "0f3dec7f47ef1d1e485e00a187d236fa39951f1172332c8e326321d02f06f9ee",
+      "bytes": 191
+    },
+    {
+      "path": "minime-all-final.log",
+      "sha256": "5533a725cf68630bfe4e46d1ed1e657d1a0ea64fbdc5f90173562e8adf25cf1b",
+      "bytes": 1514
+    },
+    {
+      "path": "bridge-clippy-verified.log",
+      "sha256": "199ca4e29f9ce0674384cd51f2e559eacbf9c2ab2c2ba20836945042d9e7d169",
+      "bytes": 193
+    },
+    {
+      "path": "bridge-tests-verified.log",
+      "sha256": "f7b409e4fde1b743f090f75310a29999ba6154da405de1857c5b2798b61e571f",
+      "bytes": 6675
+    },
+    {
+      "path": "workspace-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "boundary-final.json",
+      "sha256": "4efa0544256caf667edcfee6f4d245cf42c925e4428d7cfa53a51558cde41a14",
+      "bytes": 3231
+    },
+    {
+      "path": "native-qualification.log",
+      "sha256": "8a4ba48dde3c2ab5f77af80ac1f62b85264b7a453f0e58cf01872f7d779078f8",
+      "bytes": 988
+    }
+  ],
+  "native_trials": {
+    "count": 2,
+    "output_ceiling": 8192,
+    "context_tokens": 65536,
+    "generated_tokens": [
+      781,
+      572
+    ],
+    "native_finish": [
+      "stop",
+      "stop"
+    ],
+    "scope": "Uncoupled admission/usability only; semantic source-control criterion not met; no natural benefit claim"
+  },
+  "incidental_test_repair": "Random signature tampering now always changes the first byte instead of occasionally replacing 00 with 00."
+}

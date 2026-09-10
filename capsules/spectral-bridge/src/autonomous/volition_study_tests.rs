@@ -10,6 +10,8 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
     for (request, action) in [
         ("SELF_STUDY OPEN astrid/Cargo.toml 1", "SELF_STUDY CONTINUE"),
         ("SELF_STUDY MAP", "SELF_STUDY MAP astrid"),
+        ("WRITE START trace a question", "WRITE CONTINUE"),
+        ("WRITE PROFILE EXTENDED", "WRITE START develop the answer"),
         (
             "SELF_STUDY FIND package",
             "SELF_STUDY RESUME astrid/Cargo.toml",
@@ -43,7 +45,7 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
         assert!(delivery.is_ok());
         let artifact = temp.path().join("study.txt");
         let written = fs::write(&artifact, &text);
-        let mode = runtime::source_study_completion_mode(delivery.is_ok(), written.is_ok());
+        let mode = if request.starts_with("WRITE") && delivery.is_ok() && written.is_ok() { "private_writing" } else { runtime::source_study_completion_mode(delivery.is_ok(), written.is_ok()) };
         let chosen = next_action::parse_next_action(&text).unwrap();
         assert_eq!(chosen, action);
         let root = temp.path().join("volition");

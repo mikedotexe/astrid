@@ -133,6 +133,7 @@ pub(super) fn mode_supports_being_attestation(mode_name: &str) -> bool {
             // Both producers return model text; preparation/carriage failures
             // use separate, ineligible notice modes.
             | "self_study"
+            | "private_writing"
     )
 }
 

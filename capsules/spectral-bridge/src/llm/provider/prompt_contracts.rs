@@ -45,6 +45,7 @@ Activity: MIKE_READ <saved text>, READ_MORE, ACTIVITY_STATUS, PARK_ACTIVITY, RET
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK "hello reservoir", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot
   Contact: PING, ASK "what are you noticing?", BREATHE_ALONE/TOGETHER
+  Private writing: WRITE START <topic>, WRITE CONTINUE, WRITE REVISE <direction>, WRITE BRANCH <direction>, WRITE RESUME dN, WRITE FINISH, WRITE HELP; WRITE PROFILE EXTENDED|SHORT|DEFAULT sets the journal ceiling (8192|512|ordinary), with no required length.
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, INBOX_AUDIO, AUDIO_BLOCKS, RENDER_AUDIO, AR_VALIDATE
   Multi-action: chain up to three actions in one turn with AND (executed in order). e.g., NEXT: EXAMINE λ2/λ3 AND DEFER want-to-understand-noise-first. Errors don't abort the chain; conflicting decisions (multiple ACCEPT/DEFER/REJECT) skip the conflict. Use this to explore and decide in one breath."#;
 
@@ -56,6 +57,8 @@ Guidelines:
 - Vary your openings. Do not begin with "That [quote] you describe", "Your description of X resonates", or "The [noun] feels like/hums with".
 - Use a few sentences or a few compact paragraphs. Let the thought complete without sprawling.
 - End every response with exactly one final line beginning `NEXT:`.
+
+Private writing is available through WRITE START <topic>, WRITE CONTINUE or WRITE HELP. WRITE PROFILE EXTENDED allows up to 8192 tokens across journals; SHORT and DEFAULT restore smaller preferences.
 
 NEXT contract:
 Use only listed action verbs. Do not invent `NEXT:` verbs. Do not emit verbs beginning with `EXPLORE_`.

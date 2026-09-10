@@ -384,6 +384,31 @@ fn apply_mlx_request_policy(
     requested_tokens: u32,
     requested_timeout_secs: u64,
 ) -> MlxRequestPolicy {
+    apply_mlx_request_policy_with_writing(label, profile, messages, requested_tokens, requested_timeout_secs, journal_preference(label))
+}
+fn apply_mlx_request_policy_with_writing(
+    label: &str, profile: MlxProfile, messages: Vec<Message>, requested_tokens: u32,
+    requested_timeout_secs: u64, preference: astrid_source_study::writing::Profile,
+) -> MlxRequestPolicy {
+    if preference != astrid_source_study::writing::Profile::Default {
+        let original_prompt_chars = message_prompt_chars(&messages);
+        let mut messages = messages;
+        apply_writing_voice(&mut messages, preference);
+        let effective_prompt_chars = message_prompt_chars(&messages);
+        let effective_tokens = preference.tokens(requested_tokens);
+        let effective_timeout_secs = if preference == astrid_source_study::writing::Profile::Extended {
+            requested_timeout_secs.max(astrid_source_study::writing::EXTENDED_TIMEOUT_SECS)
+        } else { requested_timeout_secs };
+        return MlxRequestPolicy {
+            messages, max_tokens: effective_tokens, timeout_secs: effective_timeout_secs,
+            diagnostic: Some(MlxRequestPolicyDiagnostic {
+                timestamp: unix_timestamp_string(), label: label.into(), profile: profile.as_str(),
+                original_prompt_chars, effective_prompt_chars, requested_tokens, effective_tokens,
+                requested_timeout_secs, effective_timeout_secs, prompt_char_limit: Some(astrid_source_study::MAX_INPUT_BYTES),
+                trimmed: false, deprecated_terms_sanitized: false,
+            }),
+        };
+    }
     if !profile.is_gemma4_canary() {
         return MlxRequestPolicy {
             messages,
@@ -572,7 +597,9 @@ fn build_ollama_chat_request(
     max_tokens: u32,
     fallback_model: String,
 ) -> OllamaChatRequest {
-    let messages = reinforce_ollama_fallback_contract(label, messages);
+    let mut messages = reinforce_ollama_fallback_contract(label, messages);
+    apply_writing_voice(&mut messages, journal_preference(label));
+    let max_tokens = writing_tokens(label, max_tokens);
     OllamaChatRequest {
         model: fallback_model,
         messages,
@@ -580,7 +607,7 @@ fn build_ollama_chat_request(
         options: OllamaChatOptions {
             temperature,
             num_predict: max_tokens,
-            num_ctx: if max_tokens > 2048 { 10240 } else { 8192 },
+            num_ctx: if max_tokens >= astrid_source_study::writing::EXTENDED_TOKENS { astrid_source_study::CONTEXT_TOKENS } else { writing_context(label, if max_tokens > 2048 { 10240 } else { 8192 }) },
         },
     }
 }

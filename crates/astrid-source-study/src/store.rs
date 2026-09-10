@@ -250,6 +250,13 @@ impl Reader {
         request_json: &str,
         response_json: &str,
     ) -> Result<DeliveryReceipt> {
+        if navigation_id.starts_with("writing-") {
+            return crate::writing::Writer::new(self.directory.join("writing")).delivered(
+                navigation_id,
+                request_json,
+                response_json,
+            );
+        }
         let _lock = self.lock()?;
         let mut state = self.load()?;
         self.hydrate(&mut state)?;
@@ -333,6 +340,16 @@ impl Reader {
     /// # Errors
     /// Returns source or checkpoint errors; recovery cannot bypass reader integrity.
     pub fn prepare_action(&self, action: &str) -> Result<StudyOutput> {
+        if action.split_whitespace().next() == Some("WRITE") {
+            let _lock = self.lock()?;
+            let state = self.load()?;
+            let seed = state
+                .questions
+                .notebook_for(state.questions.active.as_deref(), &state.notebook)
+                .render();
+            return crate::writing::Writer::new(self.directory.join("writing"))
+                .prepare(action, &seed);
+        }
         self.prepare_parsed(Command::parse(action))
     }
 
@@ -789,7 +806,7 @@ fn verify_wire(page: &Page, request_json: &str, response_json: &str) -> Result<(
     verify_text(&page.text, request_json, response_json)
 }
 
-fn verify_text(text: &str, request_json: &str, response_json: &str) -> Result<()> {
+pub(crate) fn verify_text(text: &str, request_json: &str, response_json: &str) -> Result<()> {
     let request: Value = serde_json::from_str(request_json)?;
     let response: Value = serde_json::from_str(response_json)?;
     let present = request["messages"].as_array().is_some_and(|messages| {
@@ -824,7 +841,7 @@ fn verify_text(text: &str, request_json: &str, response_json: &str) -> Result<()
     Ok(())
 }
 
-fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
+pub(crate) fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
     let temp = path.with_extension(format!("{}.tmp", std::process::id()));
     let mut options = OpenOptions::new();
     options.write(true).create(true).truncate(true);
@@ -841,7 +858,7 @@ fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 
-fn completion_text(response: &str) -> Result<String> {
+pub(crate) fn completion_text(response: &str) -> Result<String> {
     let value: Value = serde_json::from_str(response)?;
     Ok(value
         .pointer("/choices/0/message/content")

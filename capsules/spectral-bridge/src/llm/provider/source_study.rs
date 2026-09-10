@@ -2,13 +2,15 @@
 pub(crate) async fn generate_source_study(
     output: &astrid_source_study::StudyOutput,
 ) -> DialogueCompletionV1 {
+    let private = output.input_kind == astrid_source_study::InputKind::PrivateWriting;
+    let label = if private { "private_writing" } else { "self_study" };
     let input = ProtectedDialogueInputV1 {
         reading_source: None,
         content_id: output.page.as_ref().map_or_else(
             || format!("source-navigation:{}", protected_digest(&output.text)),
             |page| format!("source-study:{}", page.id),
         ),
-        kind: ProtectedDialogueKindV1::SourceStudy,
+        kind: if private { ProtectedDialogueKindV1::PrivateWriting } else { ProtectedDialogueKindV1::SourceStudy },
         source_text: output.text.clone(),
         source_start_byte: 0,
         reply_message_id: None,
@@ -34,7 +36,7 @@ pub(crate) async fn generate_source_study(
         content: format!("You are Astrid.\n{}", output.system_prompt),
     }];
     let result = mlx_chat_with_protected_delivery(
-        "self_study",
+        label,
         messages.clone(),
         0.7,
         4096,
@@ -53,7 +55,7 @@ pub(crate) async fn generate_source_study(
         result
     } else {
         ollama_chat_with_protected_delivery(
-            "self_study",
+            label,
             messages,
             0.7,
             4096,

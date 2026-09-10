@@ -1958,7 +1958,7 @@ pub fn spawn_autonomous_loop(
                                 let completion = if protected_input.is_some() {
                                     Ok(generation.await)
                                 } else {
-                                    tokio::time::timeout(Duration::from_secs(timeout_secs), generation).await
+                                    tokio::time::timeout(Duration::from_secs(crate::llm::journal_outer_timeout(timeout_secs)), generation).await
                                 };
                                 let dialogue_result = match completion {
                                     Ok(completion) => unpack_activity_completion(
@@ -1978,7 +1978,7 @@ pub fn spawn_autonomous_loop(
                                                 prompt_pressure_chars,
                                             );
                                         match tokio::time::timeout(
-                                            Duration::from_secs(timeout_secs),
+                                            Duration::from_secs(crate::llm::journal_outer_timeout(timeout_secs)),
                                             crate::llm::generate_dialogue_with_runtime_feedback(
                                                 journal,
                                                 &spectral_summary,
@@ -2318,7 +2318,7 @@ pub fn spawn_autonomous_loop(
                             .next();
                             // Covers the primary, both fallback models, and the existing retry.
                             let witness = match tokio::time::timeout(
-                                Duration::from_secs(1110),
+                                Duration::from_secs(crate::llm::journal_outer_timeout(1110)),
                                 crate::llm::generate_witness(
                                     &spectral_summary,
                                     witness_seed.as_deref(),
@@ -2366,7 +2366,7 @@ pub fn spawn_autonomous_loop(
                             }
                             let enriched_context = if own_context_parts.is_empty() { None } else { Some(own_context_parts.join("\n\n")) };
                             let daydream = match tokio::time::timeout(
-                                Duration::from_secs(750),
+                                Duration::from_secs(crate::llm::journal_outer_timeout(750)),
                                 crate::llm::generate_daydream(
                                     perception_text.as_deref(),
                                     enriched_context.as_deref(),
@@ -2404,7 +2404,7 @@ pub fn spawn_autonomous_loop(
                             conv.peripheral_resonance = None;
                             let own_journal = enriched_context;
                             let aspiration = match tokio::time::timeout(
-                                Duration::from_secs(750),
+                                Duration::from_secs(crate::llm::journal_outer_timeout(750)),
                                 crate::llm::generate_aspiration(
                                     own_journal.as_deref(),
                                 )
@@ -2427,7 +2427,7 @@ pub fn spawn_autonomous_loop(
                                 .map(interpret_fingerprint)
                                 .unwrap_or_default();
                             let moment = match tokio::time::timeout(
-                                Duration::from_secs(690),
+                                Duration::from_secs(crate::llm::journal_outer_timeout(690)),
                                 crate::llm::generate_moment_capture(
                                     &spectral_summary, &fp_desc,
                                     fill_pct, fill_pct - conv.prev_fill,
@@ -2489,7 +2489,7 @@ pub fn spawn_autonomous_loop(
                             };
                             let is_revision = revise_kw.is_some();
                             let creation = match tokio::time::timeout(
-                                Duration::from_secs(870),
+                                Duration::from_secs(crate::llm::journal_outer_timeout(870)),
                                 crate::llm::generate_creation(
                                     own_journal.as_deref(),
                                     prev_creation.as_deref(),
@@ -2564,7 +2564,7 @@ pub fn spawn_autonomous_loop(
                                 seed_parts.join("\n\n")
                             };
                             let initiation = match tokio::time::timeout(
-                                Duration::from_secs(750),
+                                Duration::from_secs(crate::llm::journal_outer_timeout(750)),
                                 crate::llm::generate_initiation(&seed)
                             ).await {
                                 Ok(r) => r,
@@ -3061,7 +3061,7 @@ pub fn spawn_autonomous_loop(
                                 };
 
                                 match tokio::time::timeout(
-                                    Duration::from_secs(timeout_secs),
+                                    Duration::from_secs(crate::llm::journal_outer_timeout(timeout_secs)),
                                     crate::llm::generate_introspection_detailed(
                                         &label,
                                         code,
@@ -3537,7 +3537,7 @@ pub fn spawn_autonomous_loop(
 
                     // Input sovereignty: check if minime is signaling distress
                     // or requesting silence. Respect the other mind's boundaries.
-                    let should_send = has_shared_response && {
+                    let should_send = has_shared_response && !matches!(mode_name, "private_writing" | "private_writing_notice") && {
                         let s = state.read().await;
                         // Don't send if safety protocol says stop.
                         if s.safety_level.should_suspend_outbound() {
@@ -3572,6 +3572,9 @@ pub fn spawn_autonomous_loop(
                         continue;
                     }
 
+                    if matches!(mode_name, "private_writing" | "private_writing_notice") {
+                        save_astrid_journal(&response_text, mode_name, fill_pct);
+                    }
                     let signal_reservation = inbox_content
                         .as_ref()
                         .map(contact_capacity::InboxReadBatchV1::signal_reservation);
