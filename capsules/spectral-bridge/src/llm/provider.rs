@@ -23,6 +23,7 @@ include!("provider/protected_delivery.rs");
 include!("provider/afterimages.rs");
 include!("provider/runtime_feedback.rs");
 include!("provider/provider_observation.rs");
+include!("provider/generation_controls.rs");
 include!("provider/provider_observation_store.rs");
 include!("provider/provider_observation_tests.rs");
 include!("provider/provider_execution.rs");

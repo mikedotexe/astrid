@@ -68,7 +68,7 @@ class LaunchdModel:
                 and health.get("reservoir", {}).get("status") == "connected")
 
     def inputs(self):
-        names = ("coupled_astrid_server.py", "coupled_http_gateway.py", "mlx_reservoir.py", f"launchd/{LABEL}.plist")
+        names = ("coupled_astrid_server.py", "coupled_http_gateway.py", "mlx_reservoir.py", "generation_controls.py", f"launchd/{LABEL}.plist")
         return {name: hashlib.sha256((MODEL_REPO / name).read_bytes()).hexdigest() for name in names}
 
 

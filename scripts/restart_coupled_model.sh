@@ -8,6 +8,7 @@ WORKSPACE="$ASTRID/capsules/spectral-bridge/workspace"
 SERVER="$MODEL_REPO/coupled_astrid_server.py"
 GATEWAY="$MODEL_REPO/coupled_http_gateway.py"
 PROCESSOR="$MODEL_REPO/mlx_reservoir.py"
+CONTROLS="$MODEL_REPO/generation_controls.py"
 PYTHON_BIN="$MODEL_REPO/.venv/bin/python"
 PLIST="$MODEL_REPO/launchd/com.reservoir.coupled-astrid.plist"
 INSTALLED_PLIST="$HOME/Library/LaunchAgents/com.reservoir.coupled-astrid.plist"
@@ -84,6 +85,7 @@ record_stack_receipt() {
     --script "server=$SERVER"
     --script "gateway=$GATEWAY"
     --script "logit-processor=$PROCESSOR"
+    --script "generation-controls=$CONTROLS"
     --script "launchd-plist=$PLIST"
     --script "restart-wrapper=$ASTRID/scripts/restart_coupled_model.sh"
     --script "reload-helper=$ASTRID/scripts/graceful_model_reload.py"
@@ -155,6 +157,7 @@ if ! python3 "$ASTRID/scripts/environment_receipts.py" manifest coupled-model \
   --artifact "server=$SERVER" \
   --artifact "gateway=$GATEWAY" \
   --artifact "logit-processor=$PROCESSOR" \
+  --artifact "generation-controls=$CONTROLS" \
   --artifact "launchd-plist=$PLIST" \
   --actor "$ACTOR" \
   --command "verified launchd SIGTERM drain and KeepAlive reload $LABEL" \

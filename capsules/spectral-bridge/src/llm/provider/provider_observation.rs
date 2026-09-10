@@ -141,6 +141,7 @@ impl ProviderAttemptObserver {
             "configured_model_truncated": configured_model.chars().count() > 256,
             "reported_model": null,
             "request_sha256": hex::encode(Sha256::digest(request_bytes)),
+            "generation_controls": provider_control_request(request_bytes),
             "raw_response_stage": "parsed_message_content_before_cleanup",
             "input_availability": "response_unavailable",
             "marker_observed_total": null,
@@ -169,6 +170,20 @@ impl ProviderAttemptObserver {
         })
     }
 
+    fn requested_controls(
+        observer: &mut Option<Self>,
+        temperature: f32,
+        max_tokens: u32,
+        timeout_secs: u64,
+    ) {
+        if let Some(observer) = observer {
+            observer.envelope["generation_controls"]["requested"] = serde_json::json!({
+                "temperature": temperature, "max_tokens": max_tokens, "timeout_secs": timeout_secs,
+                "source": "provider_caller_before_adapter_policy",
+            });
+        }
+    }
+
     fn outcome(observer: &mut Option<Self>, outcome: &'static str) {
         if let Some(observer) = observer {
             observer.link.outcome = outcome;
@@ -177,6 +192,8 @@ impl ProviderAttemptObserver {
 
     fn body(observer: &mut Option<Self>, body: &str, model: Option<&str>) {
         if let Some(observer) = observer {
+            observer.envelope["generation_controls"]["server_reported"] =
+                provider_control_response(body);
             observer.envelope["http_body_sha256"] = generation_sha256_hex(body).into();
             observer.envelope["http_body_bytes"] = body.len().into();
             observer.link.reported_model = model

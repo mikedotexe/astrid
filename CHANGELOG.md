@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Retain caller, serialized-adapter and server-reported generation controls separately in provider attempt evidence. Track the coupled sampling module in graceful reload inputs and deployment receipts; no sampling retune or new Being actions.
+
 - Verify the shared extended-writing release live for both Beings, including exact checkpoint/pending-choice continuity and unchanged surrounding services; retain the interrupted activation and successful V3 recovery receipts.
 
 - Permit verified V3 shared-reader release bundles in stopped-transition recovery, retaining exact release, checkpoint and owned-hold checks.

@@ -79,6 +79,7 @@ async fn mlx_chat_with_runtime_feedback(
     context_submission: Option<&ContextSubmissionTrackerV1>,
     observation_context: Option<&ProviderObservationContext>,
 ) -> Option<MlxChatResultV1> {
+    let requested_controls = (temperature, max_tokens, timeout_secs);
     let profile = configured_mlx_profile();
     let policy = apply_mlx_request_policy(label, profile, messages, max_tokens, timeout_secs);
     if let Some(ref diagnostic) = policy.diagnostic {
@@ -115,7 +116,8 @@ async fn mlx_chat_with_runtime_feedback(
     }
 
     let final_limit = if matches!(label, "self_study" | "private_writing")
-        || journal_preference(label) == astrid_source_study::writing::Profile::Extended {
+        || journal_preference(label) == astrid_source_study::writing::Profile::Extended
+    {
         astrid_source_study::MAX_INPUT_BYTES
     } else if profile.is_gemma4_canary() {
         gemma4_canary_prompt_limit(label).unwrap_or(48_000)
@@ -180,6 +182,12 @@ async fn mlx_chat_with_runtime_feedback(
         profile.as_str(),
         &request_bytes,
         observation_context,
+    );
+    ProviderAttemptObserver::requested_controls(
+        &mut observation,
+        requested_controls.0,
+        requested_controls.1,
+        requested_controls.2,
     );
     let response = match client
         .post(&mlx_url)
@@ -391,10 +399,14 @@ async fn ollama_chat_with_runtime_feedback(
     context_submission: Option<&ContextSubmissionTrackerV1>,
     observation_context: Option<&ProviderObservationContext>,
 ) -> Option<OllamaFallbackResponse> {
+    let requested_controls = (temperature, max_tokens, timeout_secs);
     let max_tokens = writing_tokens(label, max_tokens);
-    let timeout_secs = if max_tokens >= astrid_source_study::writing::EXTENDED_TOKENS && journal_label(label) {
-        timeout_secs.max(astrid_source_study::writing::EXTENDED_TIMEOUT_SECS)
-    } else { writing_timeout(label, timeout_secs) };
+    let timeout_secs =
+        if max_tokens >= astrid_source_study::writing::EXTENDED_TOKENS && journal_label(label) {
+            timeout_secs.max(astrid_source_study::writing::EXTENDED_TIMEOUT_SECS)
+        } else {
+            writing_timeout(label, timeout_secs)
+        };
     let client = delivery_http_client(
         timeout_secs,
         protected.is_some() || !feedback.is_empty() || context_submission.is_some(),
@@ -428,7 +440,11 @@ async fn ollama_chat_with_runtime_feedback(
             &mut request.messages,
             protected,
             feedback,
-            if matches!(label, "self_study" | "private_writing") { astrid_source_study::MAX_INPUT_BYTES } else { 16_000 },
+            if matches!(label, "self_study" | "private_writing") {
+                astrid_source_study::MAX_INPUT_BYTES
+            } else {
+                16_000
+            },
             "ollama",
             &fallback_model,
         ) else {
@@ -451,6 +467,12 @@ async fn ollama_chat_with_runtime_feedback(
             &fallback_model,
             &request_bytes,
             observation_context,
+        );
+        ProviderAttemptObserver::requested_controls(
+            &mut observation,
+            requested_controls.0,
+            requested_controls.1,
+            requested_controls.2,
         );
         let response = match client
             .post(&ollama_url)
