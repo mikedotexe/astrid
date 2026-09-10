@@ -15,8 +15,11 @@
   "records": [
     {
       "path": "reader-tests-v2.log",
-      "sha256": "6e890df0471665ac4f36587ed3aa78efe44a3f2fdce8db4029073f49eaf36a3b",
-      "bytes": 954
+      "sha256": "b4197d5ff9ca45d74e16b6536d7f9dcac8d6a1926ea239920400ae0b57d49564",
+      "bytes": 953,
+      "raw_sha256": "6e890df0471665ac4f36587ed3aa78efe44a3f2fdce8db4029073f49eaf36a3b",
+      "raw_bytes": 954,
+      "normalization": "Removed surplus terminal blank lines for git whitespace hygiene; unmodified raw log remains in rollout evidence directory."
     },
     {
       "path": "reader-clippy-v2.log",
@@ -35,8 +38,11 @@
     },
     {
       "path": "bridge-tests-verified.log",
-      "sha256": "f7b409e4fde1b743f090f75310a29999ba6154da405de1857c5b2798b61e571f",
-      "bytes": 6675
+      "sha256": "055acc7a6adfbd71d7f10595d007d965debd9363078b4e4629c399fb7c07a48b",
+      "bytes": 6674,
+      "raw_sha256": "f7b409e4fde1b743f090f75310a29999ba6154da405de1857c5b2798b61e571f",
+      "raw_bytes": 6675,
+      "normalization": "Removed surplus terminal blank lines for git whitespace hygiene; unmodified raw log remains in rollout evidence directory."
     },
     {
       "path": "workspace-fmt.log",
