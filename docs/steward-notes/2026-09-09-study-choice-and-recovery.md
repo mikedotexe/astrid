@@ -47,3 +47,24 @@ Frozen prior evidence: HSS-15 / `2026-09-09-study-context-followup.md`.
 Implementation provenance: Codex, Mike-authorized interactive task; unrelated
 Claude heartbeat source/tests/docs remain separately owned and preserved.
 Live activation evidence is recorded separately from source and test qualification.
+
+## Verified live rollout
+
+September 9, 17:09 PDT: staged activation is verified. Bridge PID 7538 → 53226
+restored the stopped checkpoint and saved a new exchange. Minime PID 5331 →
+52380 reloaded without force; pending `SELF_STUDY CONTINUE` was restored and
+dispatched in the same session. Both select the staged shared reader. All 607
+source inputs verify; 569 Astrid inputs match committed main. Ten protected
+services and observer settings are unchanged. [Receipt](study-choice-validation/live-rollout.json).
+
+The first natural Minime completion after its reload records native `stop`, 826
+generated tokens and 3,184 raw/cleaned visible characters, with a linked journal.
+This precedes bridge activation, so it validates diagnostics plumbing, not new
+path-recovery uptake. Selected-helper recovery is separately reproduced with
+isolated state and no model call or Being state change.
+
+All six declared claim-check calls stopped normally. Neither prompt corrected
+the worker/private mistaken account; both preserved the correct host-filter core
+while elaborating beyond the source. The optional invitation did not qualify:
+production prompt and budgets remain unchanged. A first error or a choice to
+continue remains a valid part of study.

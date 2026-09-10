@@ -4273,3 +4273,12 @@ qualification and the later activation boundary. No compulsory writing or study.
 - Change: shared exact catalog candidates after missing OPEN/RESUME/SESSION and empty-directory MAP; Minime’s bounded failed-wire diagnostics, native finish and cleanup-length metadata. Pending pages, delivery acceptance, writing format and budgets remain intact.
 - Qualification: isolated reader and actual-adapter tests; the three-case paired model trial stays separate from live study outcomes. No Being message or required review is introduced.
 - Detail and later activation: `docs/steward-notes/2026-09-09-study-choice-and-recovery.md`; research `analyses/2026-09-09-study-choice-and-claim-check.md`.
+
+### SELF_STUDY recovery activation and qualification outcome — 2026-09-09
+
+Mike-authorized source `7d85683d80` / Minime `c9c2a70` is live after staged bridge
+activation and graceful Minime reload. Pending NEXT restored then dispatched; ten
+other services unchanged. Shared helper reproduces exact recovery candidates.
+The six-call invitation trial did not correct either erroneous account, so no
+production prompt change was promoted. See `study-choice-validation/live-rollout.json`
+and the HSS-16 research account. Codex interactive implementation/verification.
