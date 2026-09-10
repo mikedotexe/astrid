@@ -23,3 +23,25 @@ proof of deployment; rollout receipts will establish the release boundary separa
 
 Board mirroring remains pending. This work originates in Mike's accepted plan, not
 a Being-authored feedback request; no research prompt or letter is sent to either Being.
+
+## Verified rollout
+
+Astrid's staged source `39f959ea91` is active as PID 20518. Transaction
+`27a2ff67cdcf4785802e5b10128b12cc` verified the exact stopped checkpoint and a fresh
+saved exchange (194605 → 194606). Minime main `997de4f` is active as PID 22243;
+its exact pending `SELF_STUDY CONTINUE` was restored and dispatched. The coupled
+control/receipt source `b421952` is active as PID 23974 after graceful reload.
+Natural server receipts match all four loaded model source hashes to the manifest,
+including native completion/count fields. Ollama receipt values remain adapter
+request evidence, not invented server confirmation. No studies were induced.
+
+The model transition exposed and repaired the old-manifest/candidate-source
+preflight mismatch (`abcccc45f4`). Its original refusal remains in evidence.
+An overlapping first Minime attempt refused before signaling while the bridge was
+down; the sequenced retry succeeded. Engine, division gateway/supervisor, camera,
+microphone, host sensory, visual service, watchdog and collaboration feeder retained
+their process identities. There is no zero-downtime claim.
+
+Evidence: research `research/outputs/2026-09-09-provider-controls-rollout/`.
+The offline experiment is a separate, still-running research deliverable; no outcome
+can enable contextual feedback live. Owning source checkouts are clean and pushed.

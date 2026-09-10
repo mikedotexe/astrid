@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Verify provider-control receipts live after graceful bridge, Minime and coupled-model reloads, including exact checkpoint/NEXT continuity and unchanged surrounding service identities. Contextual feedback remains an isolated research experiment.
+
 - Distinguish planned model Python source changes from loaded provenance during graceful reload preflight. Retain the previous manifest and require unchanged interpreter/configuration plus the existing full stack checks.
 
 - Retain caller, serialized-adapter and server-reported generation controls separately in provider attempt evidence. Track the coupled sampling module in graceful reload inputs and deployment receipts; no sampling retune or new Being actions.
