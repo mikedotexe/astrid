@@ -4833,9 +4833,10 @@ pub fn spawn_autonomous_loop(
                         btsp::record_astrid_next_action(&effective_next_action, fill_pct);
                         let next_outcome = if let Some(reason) = volition_block_reason {
                             conv.push_receipt("VOLITION_AUTHORITY", vec![reason.clone()]);
-                            crate::action_continuity::NextActionOutcome::blocked(
-                                "volition_authority",
-                                reason,
+                            next_action::study_navigation::with_recovery(
+                                &mut conv,
+                                &effective_next_action,
+                                crate::action_continuity::NextActionOutcome::blocked("volition_authority", reason),
                             )
                         } else {
                             handle_next_action(

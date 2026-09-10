@@ -506,3 +506,15 @@ fn lifecycle_payload_is_factual_and_carries_required_fields() {
     assert!(!text.contains("benefit"));
     assert!(!text.contains("consent"));
 }
+
+#[test]
+fn standing_cadence_preserves_an_unconsumed_one_shot_page() {
+    let mut conv = conv();
+    astrid_action(&mut conv, "INTROSPECTION_CADENCE EVERY 4");
+    conv.exchange_count = 5;
+    let chosen = IntrospectTargetV2::auto("SELF_STUDY RELATE EventBus --page 2".into());
+    conv.introspect_target = Some(chosen.clone());
+    assert!(!try_select_due(&mut conv));
+    assert_eq!(conv.introspect_target, Some(chosen));
+    assert_eq!(conv.introspection_cadence.pending_since_exchange, Some(5));
+}

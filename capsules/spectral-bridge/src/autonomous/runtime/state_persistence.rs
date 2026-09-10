@@ -399,7 +399,9 @@ fn restore_state_from_paths(
     conv.last_research_anchor = state.last_research_anchor;
     conv.last_read_meaning_summary = state.last_read_meaning_summary;
     conv.collaboration_prompt_checkpoint = state.collaboration_prompt_checkpoint;
-    conv.wants_introspect = state.wants_introspect;
+    // A concrete retained choice is authoritative even if the old mode flag
+    // was cleared before its source was consumed.
+    conv.wants_introspect = state.wants_introspect || state.introspect_target.is_some();
     conv.wants_deep_think = state.wants_deep_think;
     conv.introspect_target = state.introspect_target;
     conv.introspection_cadence = state.introspection_cadence;
@@ -484,6 +486,22 @@ mod cadence_saved_state_tests {
             std::fs::read_to_string(&state_path).unwrap(),
             "{partial checkpoint"
         );
+    }
+
+    #[test]
+    fn retained_source_target_restores_eligibility_without_another_next_request() {
+        let directory = tempfile::tempdir().unwrap();
+        let store = crate::action_continuity::ActionContinuityStore::new(directory.path().join("threads"));
+        let state_path = directory.path().join("conversation.json");
+        let mut value = minimal_saved_state();
+        let target = state::IntrospectTargetV2::auto("SELF_STUDY RELATE EventBus --page 2".into());
+        value["wants_introspect"] = serde_json::json!(false);
+        value["introspect_target"] = serde_json::to_value(&target).unwrap();
+        std::fs::write(&state_path, serde_json::to_vec(&value).unwrap()).unwrap();
+        let mut restored = ConversationState::new(Vec::new(), None);
+        restore_state_from_paths(&mut restored, &state_path, &store);
+        assert!(restored.wants_introspect);
+        assert_eq!(restored.introspect_target, Some(target));
     }
 
     #[test]

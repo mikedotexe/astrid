@@ -35,6 +35,7 @@ mod space_hold;
 mod spectral_drift;
 #[cfg(test)]
 mod study_inquiries_tests;
+pub(in crate::autonomous) mod study_navigation;
 mod temporal_bearing;
 mod workspace;
 

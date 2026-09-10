@@ -489,6 +489,18 @@ fn handle_next_action_with_author(
             .with_stage_visibility(stage, visibility);
     }
 
+    if let Some(mut outcome) = study_navigation::handle_request(conv, &base_action, &original) {
+        if outcome.handled && let Some(activity) = record_activity_choice(conv, &base_action) {
+            // The source choice is already retained. Failure to park a separate
+            // foreground reading must not falsely report that choice as blocked.
+            outcome.outcome_summary.push_str(&format!(
+                " Source request remains queued. Separate activity warning: {}",
+                activity.outcome_summary
+            ));
+        }
+        return outcome;
+    }
+
     if modes::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         if let Some(outcome) = record_activity_choice(conv, &base_action) {
             return outcome;
@@ -598,7 +610,7 @@ fn handle_next_action_with_author(
         "Astrid chose unknown NEXT: '{}' — not wired (logged to unwired_actions)",
         original
     );
-    NextActionOutcome::unwired(&original).with_stage_visibility("proposal", visibility)
+    study_navigation::with_recovery(conv, &original, NextActionOutcome::unwired(&original).with_stage_visibility("proposal", visibility))
 }
 
 // A reader status must survive an intervening non-dialogue mode. The old

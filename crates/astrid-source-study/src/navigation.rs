@@ -2,8 +2,6 @@ use crate::progress::Progress;
 use crate::{Catalog, MAX_PAGE_BYTES};
 use anyhow::{Result, bail};
 use std::fmt::Write as _;
-use std::fs::File;
-use std::io::{BufRead as _, BufReader};
 
 impl Catalog {
     pub(crate) fn map(
@@ -114,51 +112,33 @@ impl Catalog {
     }
 
     pub(crate) fn find(&self, query: &str, page: usize) -> Result<String> {
-        let mut lines = vec![format!(
+        let report = self.search(query, false)?;
+        let header = report.header(&format!(
             "Literal source search: {query}. Path and content matches; line numbers are one-based."
-        )];
-        let mut unreadable = 0usize;
-        for source in self.sources()? {
-            if source.id.contains(query) {
-                lines.push(format!("SELF_STUDY OPEN {} 1 [path match]", source.id));
-            }
-            let Ok(file) = File::open(&source.path) else {
-                unreadable = unreadable.saturating_add(1);
-                continue;
-            };
-            for (offset, line) in BufReader::new(file).lines().enumerate() {
-                let Ok(line) = line else {
-                    unreadable = unreadable.saturating_add(1);
-                    break;
-                };
-                if let Some(at) = line.find(query) {
-                    let from = line.floor_char_boundary(at.saturating_sub(50));
-                    let to = line.floor_char_boundary(
-                        at.saturating_add(query.len())
-                            .saturating_add(120)
-                            .min(line.len()),
-                    );
-                    lines.push(format!(
-                        "SELF_STUDY OPEN {} {} — {}",
-                        source.id,
-                        offset.saturating_add(1),
-                        &line[from..to]
-                    ));
-                }
-            }
-        }
-        if lines.len() == 1 {
-            lines.push(format!("No matches for the exact literal query {query:?}. Punctuation is part of the query; try a shorter identifier or SELF_STUDY MAP. No source page was delivered."));
-        }
-        lines.push(format!("{unreadable} unreadable/non-UTF-8 files skipped. Search lists matches; it does not mark source as delivered."));
-        paginate(lines, &format!("SELF_STUDY FIND {query}"), page)
+        ));
+        paginate_with_header(
+            &header,
+            report.lines(query, false),
+            &format!("SELF_STUDY FIND {query}"),
+            page,
+        )
     }
 }
 
 pub(crate) fn paginate(lines: Vec<String>, command: &str, page: usize) -> Result<String> {
+    paginate_with_header("", lines, command, page)
+}
+
+pub(crate) fn paginate_with_header(
+    header: &str,
+    lines: Vec<String>,
+    command: &str,
+    page: usize,
+) -> Result<String> {
     let mut pages = vec![String::new()];
     let budget = MAX_PAGE_BYTES
         .saturating_sub(command.len())
+        .saturating_sub(header.len())
         .saturating_sub(300);
     for line in lines {
         let line = &line[..line.floor_char_boundary(budget.min(line.len()))];
@@ -174,6 +154,7 @@ pub(crate) fn paginate(lines: Vec<String>, command: &str, page: usize) -> Result
         .get(page.saturating_sub(1))
         .cloned()
         .ok_or_else(|| anyhow::anyhow!("navigation page is past the end"))?;
+    text.insert_str(0, header);
     write!(text, "\nNavigation page {page}/{}.", pages.len())?;
     if page < pages.len() {
         write!(text, " Next: {command} --page {}", page.saturating_add(1))?;

@@ -134,7 +134,10 @@ impl Reader {
         let notebook = state
             .questions
             .notebook_for(question_id.as_deref(), &state.notebook);
-        text.insert_str(0, &notebook.study_choices(&self.catalog, page.as_ref()));
+        text.insert_str(
+            0,
+            &notebook.study_choices(&self.catalog, page.as_ref(), &text),
+        );
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         text.push_str(
             &state
@@ -416,11 +419,7 @@ impl Reader {
                 return self.output(&mut state, text, None, InputKind::Questions);
             },
             Command::Relate { symbol, page } => {
-                let text = match self.catalog.relate(&symbol, page) {
-                    Ok(text) => text,
-                    Err(error) => return self.recovery_map(&mut state, &error),
-                };
-                return self.output(&mut state, text, None, InputKind::Relationships);
+                return self.prepare_relate(&mut state, &symbol, page);
             },
             Command::Session { targets } => return self.prepare_session(&mut state, &targets),
             Command::Trace { target } => {
@@ -493,6 +492,26 @@ impl Reader {
             Command::Continue => return self.prepare_continue(&mut state),
         };
         self.offer_page(&mut state, page)
+    }
+
+    fn prepare_relate(&self, state: &mut State, symbol: &str, page: usize) -> Result<StudyOutput> {
+        let text = match self.catalog.relate(symbol, page) {
+            Ok(text) => text,
+            Err(error) => {
+                if let Some(recovery) =
+                    crate::recover_local_navigation(&format!("SELF_STUDY RELATE {symbol}"))
+                {
+                    let text = format!(
+                        "Source request unavailable. No requested source bytes were delivered.\n{}\n\n{}",
+                        recovery.text,
+                        self.map(state, "", 1)?
+                    );
+                    return self.output(state, text, None, InputKind::Recovery);
+                }
+                return self.recovery_map(state, &error);
+            },
+        };
+        self.output(state, text, None, InputKind::Relationships)
     }
 
     fn prepare_continue(&self, state: &mut State) -> Result<StudyOutput> {

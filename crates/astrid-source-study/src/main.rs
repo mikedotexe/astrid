@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use astrid_source_study::{Catalog, Reader};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -11,7 +11,7 @@ struct Request {
     roots: BTreeMap<String, PathBuf>,
     astrid_root: Option<PathBuf>,
     minime_root: Option<PathBuf>,
-    state_directory: PathBuf,
+    state_directory: Option<PathBuf>,
     runtime_workspace: Option<PathBuf>,
     being: Option<String>,
     #[serde(flatten)]
@@ -20,6 +20,9 @@ struct Request {
 #[derive(Deserialize)]
 #[serde(tag = "operation", rename_all = "snake_case")]
 enum Operation {
+    RecoverNavigation {
+        action: String,
+    },
     Prepare {
         action: String,
     },
@@ -40,16 +43,27 @@ fn run() -> Result<serde_json::Value> {
         .take(16 * 1024 * 1024)
         .read_to_string(&mut input)?;
     let request: Request = serde_json::from_str(&input)?;
+    if let Operation::RecoverNavigation { action } = &request.operation {
+        return Ok(serde_json::to_value(
+            astrid_source_study::recover_local_navigation(action),
+        )?);
+    }
     let catalog = match (request.astrid_root, request.minime_root) {
         (Some(astrid), Some(minime)) => Catalog::installation(&astrid, &minime)?,
         (None, None) => Catalog::new(request.roots)?,
         _ => anyhow::bail!("both installation roots are required"),
     };
-    let mut reader = Reader::new(catalog, request.state_directory);
+    let mut reader = Reader::new(
+        catalog,
+        request
+            .state_directory
+            .context("state_directory is required for reader operations")?,
+    );
     if let (Some(workspace), Some(being)) = (request.runtime_workspace, request.being) {
         reader = reader.with_runtime_workspace(workspace, &being);
     }
     match request.operation {
+        Operation::RecoverNavigation { .. } => unreachable!("handled before constructing a reader"),
         Operation::Prepare { action } => Ok(serde_json::to_value(reader.prepare_action(&action)?)?),
         Operation::Delivered {
             page_id,

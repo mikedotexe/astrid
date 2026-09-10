@@ -23,6 +23,9 @@ impl Command {
         let input = input.trim();
         let input = input.strip_prefix("SELF_STUDY").unwrap_or(input).trim();
         let (verb, rest) = input.split_once(' ').unwrap_or((input, ""));
+        if verb.eq_ignore_ascii_case("REPLACE") {
+            return Self::parse_replacement(rest);
+        }
         match verb.to_ascii_uppercase().as_str() {
             "" | "CONTINUE" => Ok(Self::Continue),
             "QUESTION" => Ok(Self::Question(crate::QuestionCommand::parse(rest)?)),
@@ -99,6 +102,39 @@ impl Command {
                 source: input.into(),
             }),
         }
+    }
+
+    fn parse_replacement(rest: &str) -> Result<Self> {
+        let inner = rest.trim();
+        let (operation, argument) = inner.split_once(char::is_whitespace).unwrap_or((inner, ""));
+        let argument = argument.trim();
+        if !matches!(
+            operation.to_ascii_uppercase().as_str(),
+            "MAP"
+                | "FIND"
+                | "OPEN"
+                | "RESUME"
+                | "CONTINUE"
+                | "RELATE"
+                | "QUESTION"
+                | "SESSION"
+                | "TRACE"
+        ) {
+            bail!(
+                "REPLACE requires one ordinary source-study operation; nested REPLACE and private WRITE are not source-study operations"
+            );
+        }
+        if operation.eq_ignore_ascii_case("RESUME") && argument.is_empty() {
+            bail!(
+                "REPLACE RESUME requires a source path; use REPLACE CONTINUE to continue the current source"
+            );
+        }
+        if operation.eq_ignore_ascii_case("CONTINUE") && !argument.is_empty() {
+            bail!(
+                "REPLACE CONTINUE takes no arguments; use REPLACE OPEN or REPLACE RESUME for a chosen source"
+            );
+        }
+        Self::parse(&format!("{operation} {argument}"))
     }
 }
 

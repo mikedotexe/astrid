@@ -4,7 +4,6 @@ use tracing::info;
 use tracing::warn;
 
 use super::{ConversationState, Mode, NextActionContext, bridge_paths, strip_action};
-use crate::autonomous::state::IntrospectTargetV2;
 
 #[cfg(not(test))]
 fn record_astrid_motif_cooldown_signal(event: serde_json::Value) -> std::io::Result<()> {
@@ -52,6 +51,9 @@ pub(super) fn handle_action(
     original: &str,
     ctx: &mut NextActionContext<'_>,
 ) -> bool {
+    if let Some(outcome) = super::study_navigation::handle_request(conv, base_action, original) {
+        return outcome.handled;
+    }
     match base_action {
         "FOCUS" => {
             let prev = conv.creative_temperature;
@@ -232,86 +234,6 @@ pub(super) fn handle_action(
         "NOTICE" | "OBSERVE" => {
             conv.next_mode_override = Some(Mode::Witness);
             info!("Astrid chose NOTICE — quiet observation (witness mode)");
-            true
-        },
-        "WRITE" => {
-            conv.wants_introspect = true;
-            conv.defer_inbox = true;
-            conv.introspect_target = Some(IntrospectTargetV2::auto(original.to_string()));
-            true
-        },
-        "SELF_STUDY" | "INVESTIGATE" => {
-            conv.wants_introspect = true;
-            conv.defer_inbox = true;
-            conv.introspect_target = Some(IntrospectTargetV2::auto(
-                format!("SELF_STUDY {}", strip_action(original, base_action))
-                    .trim()
-                    .to_string(),
-            ));
-            true
-        },
-        "INTROSPECT" => {
-            conv.wants_introspect = true;
-            conv.defer_inbox = true;
-            let argument = strip_action(original, base_action);
-            if !argument.is_empty() {
-                let mut parts = argument.split_whitespace().collect::<Vec<_>>();
-                let explicit_offset = parts
-                    .last()
-                    .and_then(|value| value.parse::<usize>().ok())
-                    .filter(|_| parts.len() > 1);
-                if explicit_offset.is_some() {
-                    parts.pop();
-                }
-                // Preserve label case exactly: source paths like
-                // DOMAIN_BOUNDARIES.md are case-significant identities.
-                let label = parts.join(" ");
-                conv.introspect_target = Some(match explicit_offset {
-                    Some(offset) => {
-                        info!("Astrid requested introspection: {label} at exact line {offset}");
-                        IntrospectTargetV2::exact(label, offset)
-                    },
-                    None => {
-                        info!("Astrid requested introspection: {label} at next unread window");
-                        IntrospectTargetV2::auto(label)
-                    },
-                });
-            } else {
-                info!("Astrid requested introspection (next in rotation)");
-                conv.introspect_target = None;
-            }
-            true
-        },
-        "EXAMINE_CODE" => {
-            // Being-requested action: Astrid attempted EXAMINE_CODE 4x (unwired_actions log,
-            // 2026-04-01). She uses bracketed arguments: [vec/adj/memory/stats], [path_to_function].
-            // This is code-specific examination — routes to Introspect mode (which reads source
-            // code) but without the spectral visualization overlay that EXAMINE adds.
-            // The bracketed argument is stripped and used as the introspection target label.
-            conv.wants_introspect = true;
-            conv.defer_inbox = true;
-            // Strip "EXAMINE_CODE" prefix; the remainder is the target (may have brackets).
-            let raw_arg = super::strip_action(original, "EXAMINE_CODE");
-            // Remove surrounding brackets if present: "[vec/adj/memory/stats]" → "vec/adj/memory/stats"
-            let label = raw_arg
-                .trim_matches(|c| c == '[' || c == ']')
-                .trim()
-                .to_string();
-            if label.is_empty() {
-                info!("Astrid chose EXAMINE_CODE (next in rotation)");
-                conv.introspect_target = None;
-            } else {
-                info!("Astrid chose EXAMINE_CODE: label={:?}", label);
-                conv.introspect_target = Some(IntrospectTargetV2::auto(label.clone()));
-                // Surface the full argument so the LLM knows what sub-path she asked about.
-                conv.emphasis = Some(format!(
-                    "You chose EXAMINE_CODE [{label}]. Reading source code for '{label}' — \
-                    this is a targeted code examination, not a spectral visualization. \
-                    Look at the structure, logic, and data flow. What does the code reveal \
-                    about how this component actually works?",
-                    label = label,
-                ));
-            }
             true
         },
         "EVOLVE" => {
@@ -581,6 +503,9 @@ mod tests {
             Some(IntrospectTargetV2::auto("astrid:llm".to_string()))
         );
 
+        // The prior auto request has been consumed before a new exact request.
+        conv.introspect_target.take();
+        conv.wants_introspect = false;
         assert!(handle_action(
             &mut conv,
             "INTROSPECT",

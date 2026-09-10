@@ -28,7 +28,12 @@ struct Entry {
 }
 
 impl Notebook {
-    pub(crate) fn study_choices(&self, catalog: &Catalog, page: Option<&Page>) -> String {
+    pub(crate) fn study_choices(
+        &self,
+        catalog: &Catalog,
+        page: Option<&Page>,
+        navigation: &str,
+    ) -> String {
         let mut out = String::new();
         let mut question_sources = Vec::new();
         if let Some(question) = self.question_text() {
@@ -93,10 +98,7 @@ impl Notebook {
                 })
                 .take(2)
             {
-                let _ = writeln!(
-                    out,
-                    "Find this question's symbol: SELF_STUDY RELATE {symbol}"
-                );
+                append_lookup_choice(&mut out, navigation, symbol);
             }
         }
         let current = page.map(|p| format!("SELF_STUDY OPEN {} {}", p.source, p.start.line));
@@ -282,4 +284,20 @@ fn bounded(text: &str, limit: usize) -> String {
     let head = text.floor_char_boundary(room / 2);
     let tail = text.ceil_char_boundary(text.len().saturating_sub(room.saturating_sub(head)));
     format!("{}{}{}", &text[..head], MARKER, &text[tail..])
+}
+
+fn append_lookup_choice(out: &mut String, navigation: &str, symbol: &str) {
+    if navigation.starts_with(&format!("Symbol relationships: {symbol}."))
+        || navigation.starts_with(&format!("Literal source search: {symbol}."))
+    {
+        let _ = writeln!(
+            out,
+            "This turn already supplies lexical results for the question's identifier {symbol}. Inspect their roles and numbered source before treating a match as evidence; you remain free to reread or change direction."
+        );
+    } else {
+        let _ = writeln!(
+            out,
+            "Optional lexical lookup for a name in your question (existence and meaning unverified): SELF_STUDY RELATE {symbol}"
+        );
+    }
 }

@@ -104,6 +104,63 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
 }
 
 #[test]
+fn dispatched_study_choices_preserve_pending_page_until_consumption_or_explicit_replacement() {
+    let temp = tempfile::tempdir().unwrap();
+    let mut conv = ConversationState::new(Vec::new(), None);
+    let db = crate::db::BridgeDb::open(":memory:").unwrap();
+    let (sensory_tx, mut sensory_rx) = tokio::sync::mpsc::channel(1);
+    let telemetry =
+        serde_json::from_value(json!({"t_ms":0,"eigenvalues":[4.0,2.0,1.0],"fill_ratio":0.68}))
+            .unwrap();
+    let mut burst = 0;
+    let page_two = "SELF_STUDY RELATE EventBus --page 2";
+    for (action, status, expected) in [
+        (page_two, "handled", page_two),
+        ("SELF_STUDY RELATE EventBus", "blocked", page_two),
+        (page_two, "handled", page_two),
+        ("SELF_STUDY REPLACE MAP", "handled", "SELF_STUDY MAP"),
+    ] {
+        // A retained target remains authoritative even if mode selection reset.
+        conv.wants_introspect = false;
+        let outcome = next_action::handle_next_action(
+            &mut conv,
+            action,
+            next_action::NextActionContext {
+                burst_count: &mut burst,
+                db: &db,
+                sensory_tx: &sensory_tx,
+                telemetry: &telemetry,
+                fill_pct: 68.0,
+                response_text: "",
+                workspace: Some(temp.path()),
+            },
+        );
+        assert_eq!(outcome.status, status, "{}", outcome.outcome_summary);
+        assert_eq!(conv.introspect_target.as_ref().unwrap().label, expected);
+        assert!(conv.wants_introspect);
+        assert!(sensory_rx.try_recv().is_err());
+    }
+    // Production consumption takes this slot; the following authored choice is free.
+    conv.introspect_target.take();
+    conv.wants_introspect = false;
+    let outcome = next_action::handle_next_action(
+        &mut conv,
+        page_two,
+        next_action::NextActionContext {
+            burst_count: &mut burst,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 68.0,
+            response_text: "",
+            workspace: Some(temp.path()),
+        },
+    );
+    assert_eq!(outcome.status, "handled");
+    assert_eq!(conv.introspect_target.unwrap().label, page_two);
+}
+
+#[test]
 fn failed_carriage_is_ineligible_and_study_authorship_does_not_grant_elevated_authority() {
     let temp = tempfile::tempdir().unwrap();
     for (delivered, written) in [(false, false), (false, true), (true, false)] {

@@ -752,6 +752,9 @@ pub(in crate::autonomous) fn defer_pending(conv: &mut ConversationState, reason:
 }
 
 fn explicit_action_deferral_reason(conv: &ConversationState) -> Option<&'static str> {
+    if conv.introspect_target.is_some() || conv.wants_introspect {
+        return Some("pending_authored_introspection");
+    }
     if conv
         .introspection_cadence
         .last_astrid_action_completed_exchange

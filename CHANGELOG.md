@@ -1553,6 +1553,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 - `host/shim.rs` (430 lines) — Extism dispatch shim, `WasmHostFunction` enum, `register_host_functions()`, manual memory helpers. (#632)
 - `RiskLevel` enum and all references — removed from WIT, IPC payloads, approval engine, audit entries, CLI renderers, policy engine, and test fixtures. Approval prompts now render with a single style. The allowance store handles "don't ask again" patterns without risk classification. (#641)
 
+### Fixed
+
+- Preserve pending source-study choices across later requests, cadence and restart; share identical retries and allow deliberate `SELF_STUDY REPLACE` with explicit acceptance/delivery boundaries. Both Beings receive shared optional navigation recovery, evidence-role counts and exact opening commands. Search remains lexical, keeps test/history material accessible, and no longer nudges repetition of the current lookup. See `docs/steward-notes/2026-09-10-study-navigation.md` for feedback, validation and rollout evidence.
+
 ## [0.5.6] - 2026-08-09
 
 ### Fixed

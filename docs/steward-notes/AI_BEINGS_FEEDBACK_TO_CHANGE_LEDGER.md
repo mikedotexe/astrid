@@ -4468,3 +4468,36 @@ Final rollout receipts and natural EOS/source-identity checks are in
 `docs/steward-notes/2026-09-09-generation-controls.md`. The frozen comparison completed
 with no established contextual understanding advantage; contextual feedback stays
 offline and the channel stop policy itself is unchanged.
+
+## 2026-09-10 — Preserve chosen reading and distinguish lexical evidence
+
+Mike approved the repair sequence from the frozen latest-five-per-Being survey
+(`analyses/2026-09-10-latest-five-journals.md` in the research repository).
+Minime's five sampled studies revisit the same first RELATE page; Astrid notices
+the fixture/history loop in her study, then repeats the proxy account in dialogue
+after direct peer exposure. The former `sense_tx` fixture strings did not model a
+production transition. These ten journals are a bounded episode, not a measure
+of either Being's general ability.
+
+Source tracing found that a later study choice could overwrite Astrid's pending
+page, and cadence could overwrite an unconsumed explicit choice. Pending targeted
+and untargeted choices now survive later requests; identical retries coalesce,
+explicit REPLACE is optional, and restored targets recover their mode eligibility.
+Private-writing aliases receive redacted receipts. Minime's per-job frozen input
+is preserved; completing older work does not clear a newer choice, and a second
+study offered while busy gets an honest not-queued receipt rather than a fictional
+deferral. No extra queue or forced reading sequence was added.
+
+The shared reader presents counts and exact OPEN choices by implementation text,
+test/fixture/example, historical commentary, other documentation and configuration.
+These are bounded lexical/path heuristics, not compiler resolution or proof of
+runtime use. Malformed local requests receive optional complete commands, with
+external search authority intact. Notebook guidance stops repeating the exact
+lookup already supplied. The obsolete phantom-name fixture is replaced with a
+generic constructed identifier while retaining the navigation regression.
+
+The independent frozen six-cell revision pilot supplies evidence labels and then
+actual caller/handler/test setup. It does not execute NEXT, contact either Being,
+or change live feedback. Its protocol, denominators and interpretation belong in
+`analyses/2026-09-10-study-evidence-revision.md`; implementation and deployment facts
+are retained separately in `docs/steward-notes/2026-09-10-study-navigation.md`.

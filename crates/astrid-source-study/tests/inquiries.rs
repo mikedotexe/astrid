@@ -239,7 +239,10 @@ fn relationships_prioritize_definitions_and_show_tests_without_claiming_calls() 
     assert_eq!(out.input_kind, InputKind::Relationships);
     assert!(out.text.contains("Definition candidates"));
     assert!(out.text.contains("Implementation blocks"));
-    assert!(out.text.contains("Test occurrences"));
+    assert!(
+        out.text
+            .contains("Test / fixture / example material: 1 matching lines")
+    );
     assert!(out.text.contains("not compiler-resolved"));
     assert!(
         out.text.find("Definition candidates").unwrap()
