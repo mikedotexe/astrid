@@ -66,3 +66,17 @@ pending WRITE actions remain. Keep new writing records during any code rollback.
 
 The owning rollout receipt is appended after activation; source tests alone are not live
 verification. Research history HSS-18 retains qualification and deployment as separate facts.
+
+### Graceful activation interruption
+
+The first activation drained PID 53226 and saved checkpoint
+`384897312290a79e8c4dfe1080306513953adbd6fb6071f38245655af70a56f0`,
+then reported "old PID was reused during transition" while the process exited.
+The launcher retained its owned hold; no activation or force kill occurred.
+The supported stopped-transition path rejected the matching V3 release because
+its schema gate admitted only V2, although ordinary activation already admits V3.
+The recovery helper now admits those same two formats, preserving all hash,
+checkpoint, PID-absence, handoff and hold guards. Regression tests exercise V3
+continuity, mismatched hashes and rejected legacy/unknown formats. The immutable
+staged binaries and source inputs remain unchanged. Live recovery is recorded
+separately after its verification completes.

@@ -194,7 +194,7 @@ class StoppedTransitionMixin:
                 raise RuntimeError("stopped transition snapshot is partial or internally inconsistent")
             snapshot_prepared = True
         self.ready = stage_tools.verify_stage(self.stage)
-        if (self.ready["schema"] != "bridge_staged_release_v2"
+        if (self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3"}
                 or failed.get("stage") != str(self.stage)
                 or failed.get("manifest_sha256") != self.ready["manifest_sha256"]
                 or failed.get("binary_sha256") != self.ready["binary_sha256"]):

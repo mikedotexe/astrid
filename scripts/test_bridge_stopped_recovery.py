@@ -146,6 +146,35 @@ class StoppedRecoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "already has progress"):
             self.resume()
 
+    def test_v3_shared_reader_release_recovers_with_exact_continuity(self):
+        self.backend.ready["schema"] = "bridge_staged_release_v3"
+        result = self.resume()
+        self.assertEqual(result["status"], "transition_recovered")
+        self.assertEqual(self.failure.read_bytes(), self.failure_bytes)
+        self.assertEqual(activation.digest(self.backend.transaction / "conversation.before.json"), self.checkpoint)
+        self.assertFalse(self.hold.exists())
+
+    def test_v3_mismatched_release_binding_never_releases_hold(self):
+        self.backend.ready["schema"] = "bridge_staged_release_v3"
+        for key in ("manifest_sha256", "binary_sha256"):
+            original = self.backend.ready[key]
+            with self.subTest(key=key):
+                self.backend.ready[key] = "0" * 64
+                with self.assertRaisesRegex(RuntimeError, "does not bind"):
+                    self.resume()
+                self.backend.ready[key] = original
+                self.assertEqual(self.records(), [])
+                self.assertEqual(self.hold.read_bytes(), self.hold_bytes)
+
+    def test_legacy_and_unknown_release_formats_never_release_hold(self):
+        for schema in ("bridge_staged_release_v1", "bridge_staged_release_v99"):
+            with self.subTest(schema=schema):
+                self.backend.ready["schema"] = schema
+                with self.assertRaisesRegex(RuntimeError, "does not bind"):
+                    self.resume()
+                self.assertEqual(self.records(), [])
+                self.assertEqual(self.hold.read_bytes(), self.hold_bytes)
+
     def test_complete_original_activation_snapshot_is_validated_without_replay(self):
         self.backend.snapshot_and_handoff("fixture", "original activation snapshot")
         with patch.object(self.backend, "snapshot_and_handoff", side_effect=AssertionError("snapshot replayed")):
