@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Verify the coupled termination-evidence follow-up live: distinguish model EOS from configured channel/server stops in natural receipts, retain loaded source identities, and record the completed offline contextual-feedback comparison without enabling it live.
+
 - Correct the dispatcher's ordering documentation: single matches use a per-capsule worker, while multi-interceptor events invoke matches directly in separate chain tasks. The comment no longer promises publish ordering that these paths do not guarantee.
 
 - Verify provider-control receipts live after graceful bridge, Minime and coupled-model reloads, including exact checkpoint/NEXT continuity and unchanged surrounding service identities. Contextual feedback remains an isolated research experiment.

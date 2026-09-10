@@ -4458,8 +4458,13 @@ implementation/source review provide the relevant validation.
 
 The same study exposes an inherited channel-closing stop that can leave no cleaned
 prose. Coupled completion receipts now have a separately committed refinement
-(`e719cd7`, rollout pending) distinguishing model EOS from channel/server-policy
+(`e719cd7`, subsequently verified live as PID 43115) distinguishing model EOS from channel/server-policy
 stops without changing thinking or generation behavior. The model suite passes
 178 tests. This is user-directed research-to-change work; no feedback letter or
 research prompt is sent to the live Beings. Full protocol, annotations and limits:
 `/Users/v/other/reservoir-llm-research/analyses/2026-09-09-contextual-feedback-experiment.md`.
+
+Final rollout receipts and natural EOS/source-identity checks are in
+`docs/steward-notes/2026-09-09-generation-controls.md`. The frozen comparison completed
+with no established contextual understanding advantage; contextual feedback stays
+offline and the channel stop policy itself is unchanged.
