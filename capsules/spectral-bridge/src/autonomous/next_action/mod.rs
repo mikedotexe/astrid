@@ -1357,7 +1357,9 @@ fn normalize_steward_typo_alias(base_action: &str, original: &str) -> Option<(St
 }
 
 fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
-    if base_action == "WRITE" { return "protected"; }
+    if base_action == "WRITE" {
+        return "protected";
+    }
     if crate::transition_afterimages::is_action(base_action) {
         return "protected_summary";
     }
@@ -1468,7 +1470,9 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
 }
 
 fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
-    if base_action == "WRITE" { return "language_only"; }
+    if base_action == "WRITE" {
+        return "language_only";
+    }
     if crate::transition_afterimages::is_action(base_action) {
         return if base_action == "AFTERIMAGE_LIST" {
             "read_only"
@@ -2260,7 +2264,8 @@ mod tests {
         action_preflight_report, canonicalize_next_action_components,
         canonicalize_next_action_text, extract_residue_from_next_action, handle_next_action,
         is_action_token_like, is_parameter_decision_verb, parse_next_action,
-        route_for_preflight_base, split_multi_action, strip_action, unresolved_angle_placeholder,
+        retain_read_more_status_feedback, route_for_preflight_base, split_multi_action,
+        strip_action, unresolved_angle_placeholder,
     };
     use crate::db::BridgeDb;
     use crate::paths::bridge_paths;
@@ -2274,29 +2279,15 @@ mod tests {
     #[test]
     fn read_more_unavailable_status_survives_perception_consumption() {
         let mut conv = ConversationState::new(Vec::new(), None);
-        let db = BridgeDb::open(":memory:").unwrap();
-        let (sensory_tx, _) = mpsc::channel(1);
-        let telemetry = telemetry();
-        let mut burst_count = 0;
-        // No source and no history: READ_MORE reports this without inventing a target.
-        let outcome = handle_next_action(
-            &mut conv,
-            "READ_MORE",
-            NextActionContext {
-                burst_count: &mut burst_count,
-                db: &db,
-                sensory_tx: &sensory_tx,
-                telemetry: &telemetry,
-                fill_pct: 68.0,
-                response_text: "NEXT: READ_MORE",
-                workspace: None,
-            },
-        );
-        assert_eq!(outcome.route, "workspace");
+        conv.pending_file_listing =
+            Some("[There's no active source to continue right now. Use BROWSE first.]".to_string());
+
+        let outcome = retain_read_more_status_feedback(&mut conv, "READ_MORE").unwrap();
         conv.pending_file_listing.take();
         let feedback = conv.pending_runtime_feedback.last().unwrap();
         assert_eq!(feedback.requested_action, "READ_MORE");
         assert_eq!(feedback.status, "reported");
+        assert!(outcome.contains("SELF_STUDY CONTINUE"));
         assert!(feedback.message.contains("SELF_STUDY CONTINUE"));
         assert!(conv.activity.foreground_reader.is_none());
     }

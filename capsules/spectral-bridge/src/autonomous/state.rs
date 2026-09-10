@@ -1485,9 +1485,15 @@ impl ConversationState {
     /// Record a NEXT: choice and return diversity feedback if fixation detected.
     pub(super) fn record_next_choice(&mut self, choice: &str) -> NextChoiceFeedback {
         let mut feedback = self.record_next_choice_observation(choice);
-        let base = choice.split_whitespace().next().unwrap_or("").to_uppercase();
-        if (is_self_read_action(&base) || is_research_like_action(&base)
-            || is_competing_route_gravity_action(&base) || base == "WRITE")
+        let base = choice
+            .split_whitespace()
+            .next()
+            .unwrap_or("")
+            .to_uppercase();
+        if (is_self_read_action(&base)
+            || is_research_like_action(&base)
+            || is_competing_route_gravity_action(&base)
+            || base == "WRITE")
             && feedback.override_action.take().is_some()
         {
             feedback.hint = Some("You have returned to this inquiry repeatedly. Continuing, revising, branching or pausing remain your choice; novelty is not a condition of read-only exploration.".into());
@@ -3578,10 +3584,22 @@ mod freely_chosen_continuation_tests {
     use super::*;
     #[test]
     fn read_only_repetition_is_advisory_without_earned_progress() {
-        for action in ["WRITE CONTINUE", "SELF_STUDY CONTINUE", "EXAMINE", "INTROSPECT astrid:llm", "READ_MORE", "SEARCH reservoir", "BROWSE https://example.com", "DECOMPOSE"] {
+        for action in [
+            "WRITE CONTINUE",
+            "SELF_STUDY CONTINUE",
+            "EXAMINE",
+            "INTROSPECT astrid:llm",
+            "READ_MORE",
+            "SEARCH reservoir",
+            "BROWSE https://example.com",
+            "DECOMPOSE",
+        ] {
             let mut conv = ConversationState::new(Vec::new(), None);
             for _ in 0..30 {
-                assert!(conv.record_next_choice(action).override_action.is_none(), "{action}");
+                assert!(
+                    conv.record_next_choice(action).override_action.is_none(),
+                    "{action}"
+                );
             }
             assert!(!conv.recent_next_choices.is_empty());
         }
