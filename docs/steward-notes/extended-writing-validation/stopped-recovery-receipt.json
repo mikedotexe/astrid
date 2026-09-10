@@ -1,0 +1,81 @@
+{
+  "acknowledgement_sha256": "0cb9a2451248f95d52e06e26f50594b88cd05ca0f14a9a720f40ac9a3a91fab3",
+  "activation_performed": true,
+  "actor": "codex-astra-interactive",
+  "automatic_rollback": false,
+  "binary_sha256": "be79826fd89a15440c978c9d4ccb51d3670915d99763910ce3b6fee3487de5ae",
+  "checkpoint_sha256": "384897312290a79e8c4dfe1080306513953adbd6fb6071f38245655af70a56f0",
+  "drain_requested": false,
+  "force_used": false,
+  "manifest_sha256": "b1934afadc4872fbb79c5b2839d1b43c48075b23760ae7c096d7db23a99f05f2",
+  "new_process": {
+    "binary": "/Users/v/other/worktrees/longform-20260909/bridge-stage-01/spectral-bridge-server",
+    "deployment_identity": "astrid:6f8aac6384232bc010d2776f13454eb8795bf3ae:bridge:be79826fd89a15440c978c9d4ccb51d3670915d99763910ce3b6fee3487de5ae",
+    "model_idle_observed": true,
+    "new_saved_exchange_observed": true,
+    "observed_exchange_count": 194537,
+    "pid": 80595,
+    "started_at": "Wed Sep  9 18:44:42 2026",
+    "startup": {
+      "admission_started": false,
+      "authority": "operator_maintenance_witness_only",
+      "checkpoint": {
+        "decoded_by_runtime_schema": true,
+        "exchange_count": 194536,
+        "runtime_action_feedback": {
+          "pending_count": 0,
+          "present": true,
+          "schema": "pending_runtime_action_feedback_v1",
+          "sha256": "b7f6550afaaba35a871411e40aa6c6f226f3b2a7e2e144399dc58f1e57eee4c9"
+        },
+        "sha256": "384897312290a79e8c4dfe1080306513953adbd6fb6071f38245655af70a56f0"
+      },
+      "pid": 80595,
+      "schema": "bridge_deployment_startup_v1",
+      "self_control": {
+        "authority": "state_lineage_only_no_control_authority",
+        "schema": "bridge_self_control_startup_v1",
+        "startup_gate_applied": true,
+        "state_deployment_identity": "astrid:6f8aac6384232bc010d2776f13454eb8795bf3ae:bridge:be79826fd89a15440c978c9d4ccb51d3670915d99763910ce3b6fee3487de5ae",
+        "state_integrity_verified": true,
+        "state_sha256": "c01a8a58dae4083b67ab385dbd7a1736207a3057a38bae6fdcfc39c52c02d0f9",
+        "state_targets_this_binary": true,
+        "target_deployment_identity": "astrid:6f8aac6384232bc010d2776f13454eb8795bf3ae:bridge:be79826fd89a15440c978c9d4ccb51d3670915d99763910ce3b6fee3487de5ae"
+      }
+    },
+    "stopped_exchange_count": 194536
+  },
+  "old_identity": {
+    "binary": "/Users/v/other/worktrees/study-choice-20260909/bridge-stage-01/spectral-bridge-server",
+    "binary_sha256": "bc41a4ca50ed3f4675ed131df310d7ace9b99ca9851b39f6bb1dc0c9c5045fe5",
+    "drain_supported": true,
+    "launcher_sha256": "4ccf7606dd85dda3c9187e0d936163396973b90759e970ebd17aae96a3ef544c",
+    "manifest_sha256": "52142a80c2990009dedf9b29d268449ccc30e961950481d2c3a121aa96f764f8",
+    "selection_helper_sha256": "39007854f07e7ecf90bddb0be0fdad693b50d71f34a4613010f7da15ff9ef89f",
+    "selection_sha256": "25b406c1ec8a0bdb222dc64d11a1e99c1e44b5bc122ce96806c7b75f133fb333",
+    "started_at": "Wed Sep  9 17:04:28 2026"
+  },
+  "old_pid": 53226,
+  "old_process_exited": true,
+  "original_failure_sha256": "e0e8aea7ad849cd93cdfc0a8a8c4e0706be5783538044f52370b40a3dcd915c4",
+  "original_transaction": "/Users/v/other/astrid/.runtime/bridge-deployment/transactions/1ec9dc0fb1c94c76ba6170542570d701",
+  "owned_hold": {
+    "created_at": "2026-09-10T01:38:18.863519+00:00",
+    "schema": "bridge_launch_hold_v1",
+    "transaction": "/Users/v/other/astrid/.runtime/bridge-deployment/transactions/1ec9dc0fb1c94c76ba6170542570d701"
+  },
+  "recorded_at": "2026-09-10T01:46:43.340634+00:00",
+  "release_intent": true,
+  "runtime_action_feedback": {
+    "pending_count": 0,
+    "present": true,
+    "schema": "pending_runtime_action_feedback_v1",
+    "sha256": "b7f6550afaaba35a871411e40aa6c6f226f3b2a7e2e144399dc58f1e57eee4c9"
+  },
+  "schema": "bridge_stopped_transition_recovery_v1",
+  "self_control_sha256": "fd7aa42212cb45279bcb355bde883e937590cbbe91325241ff248dba301bfe1e",
+  "signal_sent": false,
+  "snapshot_prepared": false,
+  "stage": "/Users/v/other/worktrees/longform-20260909/bridge-stage-01",
+  "status": "transition_recovered"
+}

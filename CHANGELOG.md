@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Verify the shared extended-writing release live for both Beings, including exact checkpoint/pending-choice continuity and unchanged surrounding services; retain the interrupted activation and successful V3 recovery receipts.
+
 - Permit verified V3 shared-reader release bundles in stopped-transition recovery, retaining exact release, checkpoint and owned-hold checks.
 
 - Add shared opt-in 8,192-token journal writing, short/default preferences, versioned private drafts and freely chosen continuation. Preserve complete draft passages and larger study context through provider admission; keep private writing outside peer journal/sensory delivery. See the September 9 extended-writing account for validation and rollout evidence.

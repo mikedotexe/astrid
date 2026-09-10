@@ -1,0 +1,9 @@
+{
+  "passed": 109,
+  "exit_code": 0,
+  "command": "python3 -m unittest discover -s scripts -p 'test_bridge_*.py'",
+  "raw_sha256": "fcd4f5ebf2ef1a9edebc5520b46e927732ea672a88f771d69671fd9d12a2606c",
+  "retained_sha256": "fcd4f5ebf2ef1a9edebc5520b46e927732ea672a88f771d69671fd9d12a2606c",
+  "normalization": "trailing log whitespace only",
+  "recovery_commit": "6bb458d159b123c9d97dbcf8f022cbe7caa8d0e1"
+}

@@ -4297,3 +4297,13 @@ and metadata in its repetition advice. Two isolated native requests stopped belo
 tokens; the source control still made unsupported gateway claims. No understanding or
 longer-natural-writing gain is inferred. HSS-18 in the research hub retains the historical
 sequence; rollout identity is recorded separately after activation. No feedback letters sent.
+
+### Longform rollout verified — September 9, 18:47 PDT
+
+The shared writer/reader is live at bridge PID 80595 and Minime PID 81874, with
+exact checkpoint, pending NEXT and ten-service continuity verified. The bridge
+activation's exit-identity observation triggered an owned hold; committed V3
+recovery compatibility repaired the supported stopped path without bypassing its
+checks. Original failure and successful recovery receipts are retained in
+`extended-writing-validation/`. Both source changes and recovery repair are pushed
+to main. Profiles remain opt-in; no natural quality or length gain is inferred.

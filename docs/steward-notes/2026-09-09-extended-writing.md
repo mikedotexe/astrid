@@ -8,7 +8,8 @@ an explicit, persistent choice and a place to continue the same thought.
 
 - `WRITE PROFILE EXTENDED` selects an 8,192-token output ceiling across journal-producing
   provider calls; `SHORT` selects 512 and `DEFAULT` restores existing mode preferences.
-  Defaults and Astrid's existing LENGTH preference are preserved. There is no minimum
+  An explicitly selected WRITE profile overrides ordinary mode/LENGTH ceilings; DEFAULT
+  restores those preserved preferences. There is no minimum
   length. The profile survives Ollama/MLX fallback clamps and adjusts request/job deadlines.
 - `WRITE START <topic>`, `CONTINUE`, `REVISE <direction>`, `BRANCH <direction>`,
   `RESUME dN`, `FINISH`, `LIST`, `QUESTION <text>`, and `EVIDENCE <text>` use one shared
@@ -64,8 +65,9 @@ The profile is opt-in. Reverting it to DEFAULT restores ordinary capacities whil
 all drafts. An older helper cannot understand WRITE, so do not point Minime at one while
 pending WRITE actions remain. Keep new writing records during any code rollback.
 
-The owning rollout receipt is appended after activation; source tests alone are not live
-verification. Research history HSS-18 retains qualification and deployment as separate facts.
+The [owning rollout receipt](extended-writing-validation/live-rollout.json) verifies
+the release and process boundary. Research history HSS-18 retains qualification and
+deployment as separate facts.
 
 ### Graceful activation interruption
 
@@ -80,3 +82,31 @@ checkpoint, PID-absence, handoff and hold guards. Regression tests exercise V3
 continuity, mismatched hashes and rejected legacy/unknown formats. The immutable
 staged binaries and source inputs remain unchanged. Live recovery is recorded
 separately after its verification completes.
+
+### Verified live release
+
+At 2026-09-10 01:47:20 UTC (September 9, 18:47 PDT), bridge PID **80595** runs
+Astrid source **6f8aac6384232bc010d2776f13454eb8795bf3ae**, with matching immutable
+helper and manifest. Recovery restored the exact drained conversation checkpoint,
+verified self-control integrity and its new binary binding, and observed a new saved
+exchange. The original failed activation receipt is retained unchanged alongside the
+successful stopped-recovery receipt. No force, second signal, or automatic rollback.
+
+Minime PID **81874** loads **33c324d229893a061ea958891f19fa450f232bd6** after an
+observed idle-boundary SIGTERM. Its exact pending `SELF_STUDY FIND
+astrid/capsules/spectral-bridge/src/autonomous/next_action/mod.rs Route` survived
+restart and was dispatched by the new worker. Session identity and cycle continuity
+verify. The shared helper selection and new writing adapter source hashes match.
+All ten surrounding engine, model, sensory and collaboration services retained their
+PIDs, start times and launch configurations.
+
+All 610 staged source inputs remain byte-identical. 571 Astrid source/build inputs matched canonical main; the only differing
+input was the separately committed recovery helper, whose
+single schema compatibility change is recorded explicitly in the receipt; the frozen
+stage was not edited. Source and recovery commits are on main. The shared checkout's
+pre-existing uncommitted edits are preserved separately from this release.
+
+No WRITE profile or draft was forced into either Being's state. The release provides
+choices; spontaneous uptake, sustained long writing and improved understanding are
+future observations. The process-identity error during the original stop is retained
+as an unresolved controller observation, not evidence that PID reuse actually occurred.
