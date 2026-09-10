@@ -12,6 +12,11 @@ fn setup() -> (tempfile::TempDir, Reader) {
         "pub fn dispatch_single() {}\n".repeat(3000),
     )
     .unwrap();
+    fs::write(
+        root.join("crates/example/src/dispatch.rs"),
+        "pub fn dispatch(ctx: &Context) { ctx.sensory_tx.send(); }\n".repeat(300),
+    )
+    .unwrap();
     let reader = Reader::new(
         Catalog::new(BTreeMap::from([("astrid".into(), root)])).unwrap(),
         temp.path().join("reader"),
@@ -202,4 +207,49 @@ fn malformed_question_symbols_cannot_inject_a_navigation_command() {
     );
     assert!(!output.text.contains("SELF_STUDY RELATE tokio::task::spawn"));
     assert!(!output.text.contains("SELF_STUDY RELATE MAP | evil"));
+}
+
+#[test]
+fn navigation_question_names_exact_sibling_source_before_recycling_old_pages() {
+    let (_temp, reader) = setup();
+    let output = reader
+        .prepare_action(&format!("SELF_STUDY OPEN {SOURCE} 1"))
+        .unwrap();
+    accept(
+        &reader,
+        &output,
+        "STUDY_QUESTION: Where does `dispatch.rs` trigger `sense_tx`?\nI need the included implementation.",
+    );
+
+    let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert!(map.page.is_none());
+    assert!(map.text.contains(
+        "Open a source named in this question (exact catalog path; no source bytes are supplied until you choose it): SELF_STUDY OPEN astrid/crates/example/src/dispatch.rs 1"
+    ));
+    assert!(
+        map.text
+            .contains("Find this question's symbol: SELF_STUDY RELATE sense_tx")
+    );
+    assert!(!map.text.contains("Compare recent source locations"));
+
+    let failed_scoped_search = reader
+        .prepare_action(&format!("SELF_STUDY FIND {SOURCE} sense_tx"))
+        .unwrap();
+    assert!(failed_scoped_search.page.is_none());
+    assert!(failed_scoped_search.text.contains(
+        "No matches for the exact literal query \"astrid/crates/example/src/lib.rs sense_tx\""
+    ));
+    assert!(
+        failed_scoped_search
+            .text
+            .contains("SELF_STUDY OPEN astrid/crates/example/src/dispatch.rs 1")
+    );
+
+    let dispatch = reader
+        .prepare_action("SELF_STUDY OPEN astrid/crates/example/src/dispatch.rs 1")
+        .unwrap();
+    let page = dispatch.page.unwrap();
+    assert_eq!(page.source, "astrid/crates/example/src/dispatch.rs");
+    assert_eq!(page.start.line, 1);
+    assert!(page.text.contains("sensory_tx"));
 }

@@ -1,4 +1,4 @@
-use crate::{Page, digest};
+use crate::{Catalog, Page, digest};
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
 
@@ -28,17 +28,62 @@ struct Entry {
 }
 
 impl Notebook {
-    pub(crate) fn study_choices(&self, page: Option<&Page>) -> String {
+    pub(crate) fn study_choices(&self, catalog: &Catalog, page: Option<&Page>) -> String {
         let mut out = String::new();
+        let mut question_sources = Vec::new();
         if let Some(question) = self.question_text() {
             let _ = writeln!(
                 out,
                 "YOUR CURRENT QUESTION — {question}\nIf this reading changes your answer, you can save the finding with STUDY_NOTE: and revise STUDY_QUESTION: (or use - to clear it). These are optional; your prose can develop the answer freely."
             );
-            for symbol in question
+            let quoted = question
                 .split('`')
                 .skip(1)
                 .step_by(2)
+                .filter(|value| !value.is_empty() && value.len() <= 300)
+                .collect::<Vec<_>>();
+            let context_sources = page
+                .map(|page| page.source.as_str())
+                .into_iter()
+                .chain(
+                    self.question
+                        .iter()
+                        .chain(self.note.iter())
+                        .chain(self.previous.iter())
+                        .chain(self.recent.iter().rev())
+                        .filter_map(source_from_reopen),
+                )
+                .collect::<Vec<_>>();
+            for reference in quoted
+                .iter()
+                .copied()
+                .filter(|value| source_reference(value))
+            {
+                let direct = catalog.resolve(reference).ok().into_iter();
+                let sibling = context_sources.iter().filter_map(|context| {
+                    let (parent, _) = context.rsplit_once('/')?;
+                    catalog.resolve(&format!("{parent}/{reference}")).ok()
+                });
+                for source in direct.chain(sibling) {
+                    if !question_sources.contains(&source.id) {
+                        question_sources.push(source.id);
+                    }
+                    if question_sources.len() == 2 {
+                        break;
+                    }
+                }
+                if question_sources.len() == 2 {
+                    break;
+                }
+            }
+            for source in &question_sources {
+                let _ = writeln!(
+                    out,
+                    "Open a source named in this question (exact catalog path; no source bytes are supplied until you choose it): SELF_STUDY OPEN {source} 1"
+                );
+            }
+            for symbol in quoted
+                .into_iter()
                 .filter(|s| {
                     !s.is_empty()
                         && s.len() <= 160
@@ -69,7 +114,7 @@ impl Notebook {
                 break;
             }
         }
-        if targets.len() == 2 {
+        if targets.len() == 2 && question_sources.is_empty() {
             let _ = writeln!(
                 out,
                 "Compare recent source locations in one turn (current checkout, smaller pages): SELF_STUDY SESSION {} | {}",
@@ -200,6 +245,23 @@ impl Notebook {
             "\n\nRECALLED ACCOUNT — your study notebook contains recent visible responses and your saved findings, not source supplied this turn or verified code facts. Recent accounts are oldest first; previous is the latest. complete=false marks an excerpt, never a full answer. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. A reopen link marks the page behind that account; the question's link is where it was asked, not a known answer location. Reopen checks current source; resume continues the bookmark. Missing fields mean no note was saved.\n{serialized}\nEnd of study notebook.\n"
         )
     }
+}
+
+fn source_from_reopen(entry: &Entry) -> Option<&str> {
+    let rest = entry.reopen.as_deref()?.strip_prefix("SELF_STUDY OPEN ")?;
+    let (source, line) = rest.rsplit_once(' ')?;
+    line.parse::<usize>().ok()?;
+    Some(source)
+}
+
+fn source_reference(value: &str) -> bool {
+    !value
+        .bytes()
+        .any(|byte| byte.is_ascii_whitespace() || matches!(byte, b'|' | b'"' | b'\'' | b'<' | b'>'))
+        && (value.contains('/')
+            || [".rs", ".py", ".md", ".toml", ".json", ".txt"]
+                .iter()
+                .any(|suffix| value.ends_with(suffix)))
 }
 
 fn update(value: &str, entry: &impl Fn(&str, usize) -> Entry, limit: usize) -> Option<Entry> {

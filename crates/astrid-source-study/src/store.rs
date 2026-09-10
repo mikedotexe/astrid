@@ -134,7 +134,7 @@ impl Reader {
         let notebook = state
             .questions
             .notebook_for(question_id.as_deref(), &state.notebook);
-        text.insert_str(0, &notebook.study_choices(page.as_ref()));
+        text.insert_str(0, &notebook.study_choices(&self.catalog, page.as_ref()));
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         text.push_str(
             &state

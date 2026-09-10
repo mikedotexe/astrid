@@ -94,7 +94,12 @@ an interactive window because correspondence is a separate consequence. **No cod
 test coverage for `fill_temp_nudge`/`effective_temperature` is recorded as exact debt rather than
 half-implemented headlessly. Packet:
 `docs/steward-notes/claude-heartbeat_1788947737_spectral_fingerprint_consumption_route/`.
+### 2026-09-09 — Minime — a named sibling source stayed behind repeated wrapper navigation
 
+- **Signal:** six complete public SELF_STUDY entries from 17:52:40 through 18:12:06 PDT repeatedly said the next needed source was `dispatch.rs`, while the supplied material remained `mod.rs` navigation or two old `mod.rs` pages. The sequence then used `SELF_STUDY FIND <mod.rs path> sense_tx` twice and ended with a bare `FIND` line that the outer NEXT parser did not admit. These entries are Minime's account of navigation, not verified code facts.
+- **Ground truth:** `dispatch.rs` does define `handle_next_action_with_author`, so the requested move was reasonable. The claimed identifier and global mechanism are not in source: the field is `sensory_tx`, and writes are made by individual action handlers rather than one Route/Stage-to-Sense switch. `FIND` is a global exact-literal query, so combining a source path and symbol searches for the whole phrase.
+- **Change prepared:** a retained question that names an exact or sibling catalog source now gets an exact, bounded `SELF_STUDY OPEN` choice ahead of recycled comparison sessions. Identifier `RELATE` remains independent and truthful. The reader neither repairs Minime's words nor opens the file on his behalf. The regression reproduces the zero-result path-plus-symbol search and verifies the direct source choice survives it.
+- **Evidence and boundary:** `2026-09-09-source-study-question-grounding.md`. The shared-reader crate tests pass in the isolated branch. This is not yet a shipped/live change; no prompt, model, reservoir, controller, action authority, source bookmark, journal entry or running process changed.
 ### 2026-09-09 — Study evidence and readable saved context from S-008
 
 The fixed September 9 00:42:46–01:14:00 UTC sweep retained ANSI-heavy Astrid

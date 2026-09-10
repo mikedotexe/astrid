@@ -14,6 +14,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 - Permit verified V3 shared-reader release bundles in stopped-transition recovery, retaining exact release, checkpoint and owned-hold checks.
 
 - Add shared opt-in 8,192-token journal writing, short/default preferences, versioned private drafts and freely chosen continuation. Preserve complete draft passages and larger study context through provider admission; keep private writing outside peer journal/sensory delivery. See the September 9 extended-writing account for validation and rollout evidence.
+- **[codex / source-study question grounding]** When a retained study question names an exact or sibling catalog source, the shared Astrid/Minime reader now offers a bounded `SELF_STUDY OPEN` route to that source before recycling earlier comparison pages. Exact-identifier `RELATE` choices remain visible, including truthful zero-match paths for misspellings; no source opens automatically and navigation alone advances no bookmark. A regression covers Minime's observed wrapper-page loop and path-plus-symbol `FIND` misuse. Source-only candidate; live activation is not established. Evidence and authority boundary: `docs/steward-notes/2026-09-09-source-study-question-grounding.md`.
 
 - Verified the SELF_STUDY recovery/diagnostics rollout, preserved pending Minime choice, and recorded the six-call claim-check result without promoting an unhelpful prompt change.
 
