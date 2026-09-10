@@ -10,9 +10,11 @@ WORKSPACE="$ASTRID/capsules/spectral-bridge/workspace"
 DOMAIN="gui/$(id -u)"
 ACTOR="${ASTRID_DEPLOY_ACTOR:-interactive-agent}"
 ACK=""
+MODEL_CONTEXT_MANIFEST=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --model-context-manifest) MODEL_CONTEXT_MANIFEST="${2:-}"; shift 2 ;;
     --ack)     ACK="${2:-}"; shift 2 ;;
     --ack=*)   ACK="${1#*=}"; shift ;;
     --actor)   ACTOR="${2:-}"; shift 2 ;;
@@ -57,7 +59,7 @@ LIVEZ_OK=false; [ "$(curl --silent --max-time 2 --output /dev/null --write-out '
 READYZ_OK=false; [ "$(curl --silent --max-time 2 --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8090/readyz 2>/dev/null || true)" = "200" ] && READYZ_OK=true
 
 BRIDGE_MANIFEST="$WORKSPACE/deployment_manifests/spectral-bridge.json"
-MODEL_MANIFEST="$WORKSPACE/deployment_manifests/coupled-model.json"
+MODEL_MANIFEST="${MODEL_CONTEXT_MANIFEST:-$WORKSPACE/deployment_manifests/coupled-model.json}"
 BRIDGE_MANIFEST_OK=false; [ -f "$BRIDGE_MANIFEST" ] && BRIDGE_MANIFEST_OK=true
 MINIME_MANIFEST_OK=false; [ -f "$MINIME_MANIFEST" ] && MINIME_MANIFEST_OK=true
 MODEL_MANIFEST_OK=false; [ -f "$MODEL_MANIFEST" ] && MODEL_MANIFEST_OK=true

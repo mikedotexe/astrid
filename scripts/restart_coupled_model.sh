@@ -137,8 +137,14 @@ fi
 OLD_PID="$(label_pid "$LABEL" || true)"
 [ -n "$OLD_PID" ] || fail_deploy "no running model PID to drain"
 
+# Retain the old model manifest while witnessing intentional Python source drift.
+# Interpreter/plist mismatches still refuse this transition before any signal.
+PREFLIGHT_CONTEXT="$(mktemp -d "$WORKSPACE/deployment_manifests/model-preflight.XXXXXX")"
+python3 "$ASTRID/scripts/model_reload_context.py" --manifest "$MANIFEST" \
+  --model-root "$MODEL_REPO" --output "$PREFLIGHT_CONTEXT/candidate-context.json"
+
 # A local model readiness check cannot waive a failed stack identity/topology.
-if ! bash "$ASTRID/scripts/capture_stack_receipt.sh" --actor "$ACTOR" --ack "$ACK; pre-model-reload inventory"; then
+if ! bash "$ASTRID/scripts/capture_stack_receipt.sh" --model-context-manifest "$PREFLIGHT_CONTEXT/candidate-context.json" --actor "$ACTOR" --ack "$ACK; pre-model-reload candidate inventory; old loaded manifest retained"; then
   fail_deploy "pre-reload stack identity/topology receipt failed; no signal sent"
 fi
 if ! python3 "$ASTRID/scripts/deploy_preflight.py" "${PREFLIGHT_ARGS[@]}"; then
