@@ -754,3 +754,50 @@ fn misspelled_crate_path_suggests_exact_identity_without_opening_or_advancing() 
         pending
     );
 }
+
+/// Astrid's navigation shape in `introspection_source_catalog_1788931359`: a source
+/// is fully delivered, `CONTINUE` answers with the End-of-file notice whose own words
+/// are "OPEN deliberately rereads", and she replies `SELF_STUDY OPEN <source> 1`.
+/// The invited reread must supply real source bytes from line 1 rather than a second
+/// navigation notice, and the following `CONTINUE` must resume forward from the
+/// reread page instead of snapping back to the End-of-file notice.
+#[test]
+fn invited_reread_after_end_of_file_opens_line_one_and_continues_forward() {
+    use astrid_source_study::InputKind;
+    let (_temp, _, reader) = setup(&"row\n".repeat(3000));
+    let first = reader.prepare(open()).unwrap();
+    let first_page = first.page.as_ref().unwrap().clone();
+    let mut output = first;
+    loop {
+        let page = output.page.as_ref().unwrap().clone();
+        reader
+            .delivered(&page.id, &wire(&output.text), &response())
+            .unwrap();
+        if page.eof {
+            break;
+        }
+        output = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    }
+    let notice = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert_eq!(notice.input_kind, InputKind::EndOfFile);
+    assert!(notice.page.is_none());
+    assert!(notice.text.contains("no new source bytes"));
+
+    let reread = reader
+        .prepare_action(&format!("SELF_STUDY OPEN {SOURCE} 1"))
+        .unwrap();
+    assert_eq!(reread.input_kind, InputKind::SourcePage);
+    let reread_page = reread.page.as_ref().unwrap().clone();
+    assert_eq!(reread_page.start.byte, 0);
+    assert_eq!(reread_page.start.line, 1);
+    assert_eq!(reread_page.start, first_page.start);
+    assert!(!reread_page.eof);
+    assert_ne!(reread_page.id, first_page.id);
+
+    reader
+        .delivered(&reread_page.id, &wire(&reread.text), &response())
+        .unwrap();
+    let after = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert_eq!(after.input_kind, InputKind::SourcePage);
+    assert_eq!(after.page.as_ref().unwrap().start, reread_page.end);
+}

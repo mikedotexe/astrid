@@ -1,0 +1,81 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "report_binding": {
+    "report_declared_source": "astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+    "report_declared_sha256": "d378eb8e1f564556f996d2fff1c0f9688b2fd8c90e03ec949464ef822965d778",
+    "report_declared_byte_window": "284111..288756",
+    "working_copy_sha256": "d378eb8e1f564556f996d2fff1c0f9688b2fd8c90e03ec949464ef822965d778",
+    "match": true,
+    "mismatch_handling": "not required; working copy is byte-identical to the report binding"
+  },
+  "window_hash_note": "The witness records source_snapshot_v1.window_sha256=1e96d7f4... which does NOT equal the sha256 of the raw source bytes 284111..288756 (0a668dcf...) nor of lines 4562-4648 (6fb51502...). This is expected, not an integrity defect: lived_state_witness/mod.rs:140 computes window_sha256 over the RENDERED numbered page, not raw file bytes.",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "d378eb8e1f564556f996d2fff1c0f9688b2fd8c90e03ec949464ef822965d778",
+      "total_bytes": 306455,
+      "total_lines": 4951,
+      "read_scope": "scoped intervals, complete within scope",
+      "intervals_read": [
+        "12-71 (run_semantic_heartbeat_loop, complete function)",
+        "91-140 (spawn_autonomous_loop head)",
+        "800-815 (Mode::Contemplate exchange_pause branch)",
+        "2580-2596 (Mode::Contemplate arm, complete)",
+        "3480-3578 (should_send, shadow_input_provenance, contemplate early continue)",
+        "4190-4205 and 4250-4262 (chunk-loop continue/break, scoped)",
+        "4455-4470 (first observe_and_publish_with_provenance site)",
+        "4555-4660 (the report-bound window plus surrounding context)"
+      ],
+      "whole_file_scans": [
+        "grep -n for continue/return/break across the file: exactly 6 `continue;` sites; only L3576 lies in the outer exchange loop upstream of L4614",
+        "grep -n observe_and_publish: only L4465 and L4630 in orchestration.rs, both downstream of L3577"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs",
+      "sha256": "313afb9df476df7ca33330b04d5c0d1ba84027e011560c73996a27d742fa6620",
+      "total_bytes": 19590,
+      "total_lines": 486,
+      "read_scope": "lines 1-40 complete (mode/role table)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+      "sha256": "0a2519a65fc54c7a7802d12bba2663cfa60d2f181c46a9b38c7a8b689a20da38",
+      "total_bytes": 24025,
+      "total_lines": 649,
+      "read_scope": "lines 205-240 complete (CONTEMPLATE/BE/STILL -> Mode::Contemplate override)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/witness_friction.rs",
+      "sha256": "9e0b25adf8b89133471e95dcd76c334d5871df30ec96f7500b24826ae6b3118b",
+      "total_bytes": 30837,
+      "total_lines": 789,
+      "read_scope": "lines 1-12 complete (non_instrumental_presence_readiness_v1 fixture)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/witness_contracts.rs",
+      "sha256": "d9decce60c95e58b52c46542155d7d25f6ed89a67f36c1ceda1356eaacd38faf",
+      "total_bytes": 22682,
+      "total_lines": 599,
+      "read_scope": "lines 248-256 complete (NonInstrumentalPresenceReadinessV1 struct)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/state.rs",
+      "sha256": "cabb8cebe60b07dcd2263ebb7ede95486e9d49bb8db2c8c5c340c54e0c8ced5d",
+      "total_bytes": 128981,
+      "total_lines": 3496,
+      "read_scope": "line 3432 (Mode::Contemplate -> \"contemplate\" name mapping)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lived_state_witness/mod.rs",
+      "read_scope": "line 140 (window_sha256 = sha256_bytes(rendered_window)) - establishes the window-hash note above"
+    },
+    {
+      "path": "docs/steward-notes/AI_BEINGS_AFFORDANCE_RECEPTION_FRAMEWORK_2026_05_13.md",
+      "sha256": "0aaf088d8e6269cd4ba6af2d1130758fd45d3e1fa14344954dbba52bd43d31de",
+      "total_bytes": 13148,
+      "total_lines": 251,
+      "read_scope": "existence and identity verified only; cited by orchestration.rs L4597"
+    }
+  ]
+}

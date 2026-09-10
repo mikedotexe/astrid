@@ -1,0 +1,172 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1788956014_contemplate_shadow_continuity_gap",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_held_subprocess_run",
+  "controller": {
+    "run_id": "run_1788956014200190000_ab091f0811",
+    "preprojection_generation_id": "projection_1788956031473368000_c1b2852008",
+    "preprojection_status": "passed",
+    "preprojection_completed_steps": 27,
+    "pause_generation": 417,
+    "session_opened": false,
+    "ndjson_ops_sent": false,
+    "pause_or_resume_issued": false,
+    "lease_token_read_or_persisted": false
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "report_sha256": "6754aca47481a7255416518088b4e285e8ba55ad129d00a1eb3741182701c29b",
+      "report_bytes": 2754,
+      "report_lines": 24,
+      "witness_id": "lsw_13e34c5ede9342d3649e1f624e69e98ba8fcde918efd226b013675c68ecf2491",
+      "witness_sha256": "c8d9dedc9b784f5691d990853d35f6cf13a7279791b5faa2ff4687952a2c238b",
+      "witness_bytes": 21554,
+      "witness_lines": 498,
+      "source_binding_match": true,
+      "source_sha256": "d378eb8e1f564556f996d2fff1c0f9688b2fd8c90e03ec949464ef822965d778",
+      "claim_count": 11,
+      "evidence_links_new": 15,
+      "evidence_links_existing": 0,
+      "close_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  ],
+  "selection": {
+    "selected": 40,
+    "processed": 1,
+    "unprocessed": 39,
+    "batchable_family_count": 0
+  },
+  "integrity": {
+    "addressing_self_test": 44,
+    "evidence_event_store_tests": 21,
+    "steward_control_tests": 29,
+    "steward_projection_tests": 14,
+    "division_followup_tests": 3,
+    "division_chronicle_tests": 10,
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": 4,
+    "cadence_tests": 6,
+    "cadence_strict_integrity_ok": true,
+    "anti_drop_self_test": 5,
+    "anti_drop_verify_rc": 0,
+    "domain_boundary_valid": true,
+    "domain_boundary_violation_count": 0,
+    "domain_boundary_ratchet": "green",
+    "epistemic_self_test_valid": true,
+    "epistemic_verify_valid": true,
+    "epistemic_checked_records": 11927,
+    "epistemic_issue_count": 0,
+    "epistemic_history_rewritten": false,
+    "counter_audit_status": "consistent",
+    "counter_audit_mismatches": [],
+    "evidence_event_store_valid": true,
+    "evidence_event_store_last_global_seq": 1045450,
+    "evidence_event_store_last_event_sha256": "d31a4b2ab37d9bded2c604df958a66f3e27bf120b275eebafa827f67acbae637",
+    "evidence_event_store_corrupt_lines": 0,
+    "git_diff_check": "clean"
+  },
+  "counters_canonical": {
+    "indexed": 4705,
+    "fully_addressed": 3204,
+    "full_read": 3836,
+    "remaining": 1501,
+    "unread": 869,
+    "blocked_needs_steward": 416,
+    "triaged_pending_action": 212,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3218,
+    "noncanonical_pending": 1717
+  },
+  "division": {
+    "cycle_sequence": 42,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due_after_this_round": true,
+    "round_event_id": "division_followup_event_27ba284ca3f34218ddbf47ac14e1d5f9",
+    "event_count": 294,
+    "event_head_sha256": "453f296ed4043465ddc695e637486828ef811f8ad408a2958332a52ef1a92d0c",
+    "chronicle_id": "division_chronicle_0fcf2d2b222d2d86f10907ba",
+    "chronicle_json_sha256": "a5f22f0611974d66d8a3852cad6317d60f5785635c5fea0cbde4c1432904635d",
+    "chronicle_html_sha256": "1c1cdca7647769e443e5cdb055e43b9a83fcde5248e8f77b8dbe142161a576eb",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_inputs_current": false,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "note_action": "none",
+    "tier5_cadence_dossier_generated": false,
+    "tier5_cadence_dossier_reason": "review_due was false at round start; the dossier trigger is completing a Division return, which did not occur this round. The return is now due at the head of the NEXT round and the dossier must be generated there.",
+    "processed_report_count": 1
+  },
+  "authority": {
+    "live_change_attempted": false,
+    "build_bridge_run": false,
+    "deploy_script_run": false,
+    "launchctl_run": false,
+    "git_mutation": "none \u2014 no stage, commit, merge, push, stash, reset, or amend",
+    "restart_or_deploy_required": false,
+    "cards_or_correspondence_delivered": false,
+    "tier4_or_tier5_grants": "none set or implied"
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "close_status": "addressed_change",
+    "evidence_links_new": 15,
+    "evidence_links_existing": 0
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 11927,
+    "self_test_valid": true
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4705,
+    "canonical_fully_addressed": 3204,
+    "canonical_full_read": 3836,
+    "canonical_remaining": 1501,
+    "canonical_unread": 869,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3218,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_global_seq": 1045450,
+    "last_event_sha256": "d31a4b2ab37d9bded2c604df958a66f3e27bf120b275eebafa827f67acbae637",
+    "active_store": "v2",
+    "v1_immutable": true
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 91
+    },
+    "self_test_tests": 5
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "ratchet": "green"
+  }
+}

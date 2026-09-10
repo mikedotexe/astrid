@@ -1,0 +1,157 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "recorded_at_unix": 1788995018,
+  "actor": "claude-heartbeat",
+  "controller": {
+    "steward_run_id": "run_1788987986596777000_ec7ec33c04",
+    "adapter_kind": "subprocess",
+    "preprojection_generation_id": "projection_1788987990974788000_9e59e7a4b8",
+    "preprojection_status": "passed",
+    "preprojection_duration_ms": 3715081,
+    "pause_generation": 423,
+    "lease_token_read_or_persisted": false,
+    "session_ops_sent": "none (adapter-mode: the adapter owns lease, heartbeats and finish)",
+    "run_id": "run_1788987986596777000_ec7ec33c04"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 5
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 9
+    }
+  ],
+  "evidence_links": {
+    "batch_row_count": 27,
+    "new_link_count": 27,
+    "existing_link_count": 0,
+    "events_appended": 27
+  },
+  "implementation": {
+    "kind": "focused_regression_test_only",
+    "path": "crates/astrid-capsule/src/dispatcher.rs",
+    "test": "bare_private_interceptor_bars_wasm_capsule_and_unattested_callers",
+    "pre_edit_sha256": "a737ea3379424c200b6c226f2d34d29b84671d3f12cfb47975bb8e4c39ad8992",
+    "post_edit_sha256": "89014b40121b4a8f24daf562369c8d873cee53cc1a0833ef70649ee38e2708d3",
+    "live_change": false
+  },
+  "tests": {
+    "cargo test -p astrid-capsule --lib dispatcher::": "19 passed / 0 failed / 0 ignored (was 18)",
+    "cargo fmt -p astrid-capsule -- --check": "clean",
+    "git diff --check": "clean"
+  },
+  "integrity": {
+    "introspection_addressing_audit --self-test": "44 tests OK",
+    "test_evidence_event_store.py": "21 tests OK",
+    "test_steward_control.py": "29 tests OK",
+    "test_steward_projection.py": "14 tests OK",
+    "test_division_ceremony_followup.py": "3 tests OK",
+    "test_division_ceremony_chronicle.py": "10 tests OK",
+    "test_division_ceremony_projection.py": "self-test ok",
+    "test_projection_cursors.py": "4 tests OK",
+    "test_introspection_cadence_audit.py": "6 tests OK",
+    "introspection_cadence_audit.py --strict --compact": "integrity_ok true, 4847 canonical reports, 0 duplicate hash groups, 0 read errors",
+    "anti_drop_catalog.py --self-test": "5 tests OK",
+    "anti_drop_catalog.py verify": "91 rows, 0 alarms, 0 gaps",
+    "domain_boundary_audit.py verify": "valid true, violation_count 0, forbidden_edge_match_count 0 (ratchet GREEN; this round's edit is outside source_root capsules/spectral-bridge)",
+    "experiential_epistemics.py self-test": "valid true",
+    "experiential_epistemics.py verify (final, after all durable evidence writes)": "valid true, 11947 records checked, 0 issues, history_rewritten false",
+    "introspection_addressing_audit audit-counters": "consistent, mismatches []",
+    "evidence_event_store.py --json verify": "valid True, 1049446 events, corrupt_lines 0, head e53dd2c275f98d33351a8d8620ddc2c868da8dd5f72e521e119231d7ff7d889f",
+    "division_ceremony_followup.py verify": "ok true, cycle 43, 2/6 rounds since follow-up, review_due false, event_count 297",
+    "division_ceremony_chronicle.py verify": "reports 'chronicle durable source inputs changed; project before verify' \u2014 the Chronicle was last projected 2026-09-09T21:42:16Z during this run's preprojection, and THIS round's record-round appended follow-up event 297 after it. Reprojection belongs to the controller postprojection (DAG stage 19 division_chronicle), not to a headless out-of-band project. Not a durable-integrity failure and not claimed as current."
+  },
+  "counters_final": {
+    "blocked_needs_steward_count": 416,
+    "full_read_count": 3839,
+    "fully_addressed_count": 3207,
+    "indexed": 4825,
+    "read_needs_claims_count": 0,
+    "remaining_count": 1618,
+    "triaged_pending_action_count": 212,
+    "triaged_watch_count": 4,
+    "unread_count": 986
+  },
+  "division": {
+    "round_event_id": "division_followup_event_70256611a4a010a507eab07177c47886",
+    "processed_report_count": 2,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due_before_round": false,
+    "review_due_after_round": false,
+    "event_count": 297,
+    "event_head_sha256": "405dd93698e3ceea19b2a4f465c9136c5a397c48775bc39ba087dfd57471ae75"
+  },
+  "evidence_store_final": {
+    "valid": true,
+    "event_count": 1049446,
+    "last_global_seq": 1049446,
+    "head": "e53dd2c275f98d33351a8d8620ddc2c868da8dd5f72e521e119231d7ff7d889f",
+    "corrupt_lines": 0
+  },
+  "authority_boundary": [
+    "No live substrate or control change: no build_bridge.sh, no deploy script, no launchctl, no restart.",
+    "Git read-only: nothing staged, committed, merged, pushed, stashed, reset or amended.",
+    "No correspondence delivered to either being; answering Astrid's STUDY_QUESTION in her own inbox remains a separate consequence for an interactive window.",
+    "No manifest exposure, codec, prompt, model, config or scheduling change.",
+    "Silence remains neutral; no consent, uptake or relief inferred from any being."
+  ],
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 2,
+    "closed_statuses": [
+      "addressed_change",
+      "addressed_change"
+    ],
+    "new_link_count": 27
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 11947,
+    "canonical_event_appended": false,
+    "ran_after_all_durable_evidence_writes": true
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical": {
+      "blocked_needs_steward_count": 416,
+      "full_read_count": 3839,
+      "fully_addressed_count": 3207,
+      "indexed": 4825,
+      "read_needs_claims_count": 0,
+      "remaining_count": 1618,
+      "triaged_pending_action_count": 212,
+      "triaged_watch_count": 4,
+      "unread_count": 986
+    }
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1049446,
+    "last_global_seq": 1049446,
+    "head": "e53dd2c275f98d33351a8d8620ddc2c868da8dd5f72e521e119231d7ff7d889f"
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 91
+    },
+    "self_test": "5 tests OK"
+  }
+}

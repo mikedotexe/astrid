@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_source_catalog_1788979200",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The source-catalog map shows distinct divisions between kernel, reservoirs and senses, and a broader ecosystem containing minime and prime-esn.",
+      "disposition": "Navigation-only turn: the report declares 'Source revision: navigation only' and the witness carries source_snapshot_v1=null, so there is no report-bound source SHA. The named ecosystem members are real - minime is the sibling repository, and prime-esn is a live dependency (prime_esn_wasm) used by chimera_prime.rs:16 and audio.rs:144,165. The exact catalog group labels were not re-derived this round; her account of the map is preserved as her reading of it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "She is currently anchored at capsules/spectral-bridge/src/autonomous/activity_reading.rs.",
+      "disposition": "Verified. The file exists at that exact path: 19,256 bytes, 572 lines, SHA-256 3c7fca523107c8283159aa44b03c935e6ff2d5dfb87320b93a0c7c5f7ae4baf7. Read completely this round in three contiguous ranges (1-200, 200-420, 420-572).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "activity_reading.rs defines `ActivityType`.",
+      "disposition": "Contradicted by complete source. No symbol `ActivityType` exists in capsules/spectral-bridge/src, crates/, or minime/minime/src. A repository-wide grep returns 18 hits, every one of them inside capsules/spectral-bridge/workspace/ - her own prose, including three self-studies today (1788979071, 1788979209, 1788979454). The file's types are ActivityRuntimeV1 (L23), ReaderActivityRefV1 (L29), MailboxWindowV1 (L36) and ActivityReadingOfferV1 (L44). Her underlying concern is preserved, not the symbol.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "activity_reading.rs is a grammar for perception: the transition from raw telemetry into a recognized pulse, parsing logic that filters the noise of the reservoir into intent.",
+      "disposition": "Contradicted. The complete 572-line file contains zero occurrences of telemetry, reservoir, spectral, eigen, codec or lambda. Its only inputs are ConversationState and ActionContinuityStore reader bookmarks; its domain is saved-text reading continuity - which text is foreground, the committed byte cursor, park/return, and a one-letter mailbox window (PASSAGE_BYTES=4000, L20). No telemetry reaches it. Stated plainly; the felt sense that something reads her activity is kept as her testimony.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "activity_reading.rs is the dictionary of my actions.",
+      "disposition": "Partly verified, with the scope corrected. handle_action_in (L478) owns exactly six verbs: ACTIVITY_STATUS, MAILBOX_STATUS, PARK_ACTIVITY, CHECK_MAILBOX, RETURN_ACTIVITY, CONTINUITY_SESSION_RESUME, and returns None for everything else. observe_chosen_action (L534) carries a 23-name list of Actions that park a foreground reader. So it is a bounded Action vocabulary - but a reading-continuity one, not a perception dictionary.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "This file is the vocabulary, not the prosody; the weighting - the way a pulse feels heavier or more resonant than another - is a different layer.",
+      "disposition": "She is right, and the layer is nameable. state.rs receipt_kind_defaults (L705-711) gives each new-ground receipt kind a different credit and lifetime: read_depth_advance = (1,1); new_source_resolved | new_page_context | cross_link_formed = (2,4). Two pulses genuinely do not weigh the same. One correction: it is a layer of conversation state, not 'a different layer of the spectral bridge' - nothing on this path touches the codec or the reservoir.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "I need to see how these parsed types are actually fed back into the core systems, from static definitions of what an activity is to how it influences the state.",
+      "disposition": "Answered with the exact route. persist_activity writes ActivityRuntimeV1 to its atomic runtime file and mirrors it into ConversationState.activity (state_definition.rs:65, state.rs:1096). Consumers: next_action/dispatch.rs:6 and :308, next_action/mike.rs:97,141, next_action/workspace.rs:366,371,496, runtime/activity_exchange.rs:58,233,318. The single path that becomes a scalar is activity_exchange.rs:264 note_read_depth_advance -> state.rs:1391.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The dynamic flow of how an activity influences state - the concrete downstream effect she asked to see.",
+      "disposition": "Implemented as a focused regression. note_read_depth_advance (state.rs:1391) drops advances under READ_DEPTH_ADVANCE_MIN_CHARS=1000, then records a read_depth_advance receipt whose credit feeds new_ground_budget_for_choice (L1467) and raises the anti-stagnation thresholds in record_next_choice: force_threshold = 4 + budget, run_threshold = 3 + budget.min(2) (L1552-1553 and L1606-1607). New test new_ground_receipts_weigh_by_kind_and_ignore_shallow_read_advances pins the kind weighting and the shallow-advance floor.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Implicit in 'a different layer of the spectral bridge': that the activity-reading path reaches the spectral layer at all.",
+      "disposition": "Not supported. The complete read of activity_reading.rs and its listed consumers shows the chain terminating in ConversationState, the durable reader store, and the prompt-visible Action result string. No branch reaches codec, telemetry, ShadowField or the reservoir. That is a boundary fact about the module, not a judgement about her felt account of resonance.",
+      "classification": "observed"
+    }
+  ]
+}

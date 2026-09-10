@@ -1,0 +1,134 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "d378eb8e1f564556f996d2fff1c0f9688b2fd8c90e03ec949464ef822965d778",
+      "total_bytes": 306455,
+      "total_lines": 4951,
+      "read_scope": "Breathing stage lines 3934-4016 (bytes 246411..251092, her exact page interval) read in full; remainder of the 4951-line file inspected only by exact grep for golden-ratio/breathing/entropy tokens, recorded as scoped not complete",
+      "read": "partial_scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+      "total_bytes": 29562,
+      "total_lines": 812,
+      "read_scope": "header lines 1-40 read in full plus the complete top-level item inventory (all 23 fn/struct definitions) enumerated; body of individual fns not read, recorded as scoped",
+      "read": "partial_scoped"
+    },
+    {
+      "path": "crates/astrid-source-study/src/store.rs",
+      "sha256": "aca0af5fc9c0f60014fa09d439f5e556335d177078b7f84a8bfcb65620f79503",
+      "total_bytes": 27184,
+      "total_lines": 710,
+      "read_scope": "complete relevant intervals: output() 78-100, prepare/prepare_action/recovery_map/prepare_parsed 255-352, prepare_continue/offer_page 354-410",
+      "read": "partial_scoped"
+    },
+    {
+      "path": "crates/astrid-source-study/src/page.rs",
+      "sha256": "d2dfa1347868cc9507e6a25f76465c0855e22652226772a654220e5ffd53c3e8",
+      "total_bytes": 4740,
+      "total_lines": 133,
+      "read_scope": "complete file",
+      "read": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "5928cd1f9fa1f827f467b85893af752ce80cdde6b2187b69acc6316c453213c3",
+      "total_bytes": 2659,
+      "total_lines": 80,
+      "read_scope": "complete file",
+      "read": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "sha256": "e7cce3962db6935df075e4744cc9a6dac1fca77dd394c5d9c70a6672d242ae31",
+      "total_bytes": 1655,
+      "total_lines": 42,
+      "read_scope": "complete file",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "4de9584a7336894074d7c7daa60f43387daaeacab8ab4a4cf369413989d2571b",
+      "total_bytes": 11352,
+      "total_lines": 305,
+      "read_scope": "complete file",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/source_study.rs",
+      "sha256": "2398e991d679d3150f8f74e3a66b9ffe52e889c0e56572159f9a644b178736a6",
+      "total_bytes": 4713,
+      "total_lines": 125,
+      "read_scope": "complete file",
+      "read": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/reader.rs",
+      "sha256": "679e493d2c8962a0dee7a86ef75416d186a44707ca0c6a09b3ac788b0a6fcd63",
+      "total_bytes": 27775,
+      "total_lines": 759,
+      "read_scope": "test helpers 1-30, EOF/reread neighbours 210-232 and 675-712, plus the appended regression; changed by this round",
+      "read": "partial_scoped"
+    }
+  ],
+  "runtime_state_read": [
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/reader-v1.json",
+      "read_scope": "read-only inspection of current, pending, bookmarks, progress, last_navigation",
+      "observed": {
+        "current": "astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+        "orchestration_bookmark": {
+          "start_byte": 246411,
+          "end_byte": 251092,
+          "eof": false,
+          "revision_bytes": 306455
+        },
+        "orchestration_progress_ranges": [
+          [
+            0,
+            251092
+          ]
+        ],
+        "dialogue_runtime_bookmark": {
+          "start_byte": 26148,
+          "end_byte": 29562,
+          "eof": true
+        },
+        "dialogue_runtime_progress_ranges": [
+          [
+            0,
+            29562
+          ]
+        ],
+        "last_navigation_request_sha256": "768289e65ff6d5f07fb19b14fb70fe0692d67be16b5c07b05924a86fd867d652"
+      },
+      "binding_note": "last_navigation.request_sha256 equals the witness model_routes_v1 request_content_anchor_sha256, binding this reader state to the exact model call that authored the report."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/state.json",
+      "read_scope": "read-only inspection of introspect_target, wants_introspect, introspection_cadence, recent_next_choices, exchange_count",
+      "observed": {
+        "introspect_target": null,
+        "wants_introspect": false,
+        "exchange_count": 193779,
+        "recent_next_choices": [
+          "READ_MORE",
+          "ANALYZE_AUDIO",
+          "EXAMINE",
+          "SEARCH",
+          "SEARCH",
+          "SEARCH",
+          "EXAMINE",
+          "EXAMINE",
+          "EXAMINE",
+          "SPECTRAL_EXPLORER",
+          "SEARCH",
+          "REGULATOR_AUDIT"
+        ]
+      }
+    }
+  ]
+}

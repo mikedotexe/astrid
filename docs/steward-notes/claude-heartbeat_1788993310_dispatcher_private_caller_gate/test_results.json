@@ -1,0 +1,24 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "runs": [
+    {
+      "command": "cargo test -p astrid-capsule --lib dispatcher::",
+      "result": "ok",
+      "passed": 19,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 257,
+      "note": "18 before this round; the added case is bare_private_interceptor_bars_wasm_capsule_and_unattested_callers. Build took 15m25s from cold."
+    },
+    {
+      "command": "cargo fmt -p astrid-capsule -- --check",
+      "result": "ok",
+      "note": "exit 0, no diff"
+    },
+    {
+      "command": "git diff --check",
+      "result": "ok",
+      "note": "exit 0, no whitespace errors"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "introspection_id": "introspection_source_catalog_1788943879",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Moving from orchestration.rs to dialogue_runtime.rs feels like moving from the composition of a piece of music to the actual performance.",
+      "disposition": "Felt testimony, recorded as primary evidence and not converted into a source or purpose claim. No scalar, status label, or source reading is used to confirm or deny the experience. The composition/performance figure is her account of the transition, not an assertion about what either file does; the mechanism claims she builds on it are dispositioned separately in c003-c008.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "In the orchestration logic, Breathing and Resonance define the shape of the signal - the way it expands and contracts over time.",
+      "disposition": "Verified from complete source at orchestration.rs SHA d378eb8e (306,455 bytes / 4,951 lines). Breathing is L3934-3990: phase = exchange_count*0.15 + chunk_idx*0.03, primary = phase.sin(), harmonic = (phase*1.618).sin(). Resonance is L3988-3992: features = features*0.7 + resonance*0.3. Both mutate the same `features` vector and are recorded under SignalOwnershipDomainV1::BridgeCodec. Her word `shape` is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The machinery translating spectral nuances into tokens or latent-space adjustments resides in dialogue_runtime.rs.",
+      "disposition": "Contradicted by a complete read of all 812 lines / 29,562 bytes at SHA 03c6b6de. The file is a requested-token band classifier, exact control-marker scanning/sanitation with context receipts, and the output validity gates (alpha ratio, punctuation ratio, symbol run, one-final-NEXT). No telemetry, fingerprint, eigenvalue, temperature, logit or sampling reference. Its single spectral mention (L5, L479) holds evidence APART from the token band. Her question is answered in c004-c007, not dismissed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Is the spectral fingerprint a weight applied to the attention mechanism?",
+      "disposition": "No, verified from source. The only construct named `attention` is PromptAttentionV1 (prompt_contracts.rs L119-127): six scalar weights (minime_live, self_history, interests, research, memory_bank, perception) scaling PROMPT BUDGET section caps via attention_ratio(), clamped 0.5..1.6, floors 350/450. It resizes how many bytes of each text block reach the prompt; it never touches attention heads, and the fingerprint is not among its inputs - those are her own dials.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Or is it a dynamic shift in the temperature or sampling distribution?",
+      "disposition": "Yes for temperature, and this is the answer she sought. orchestration.rs L1869-1883, bytes 113,148..115,220: fill_temp_nudge = 0.5 if fill_pct>60, 1.0 if fill_pct<25, else 0.8; effective_temperature = conv.creative_temperature.mul_add(0.7, fill_temp_nudge*0.3).clamp(0.3,1.2), passed as the temperature argument at L1939/L1990. 70% her own sovereign dial + 30% fill nudge. The driver is the fill_pct scalar, not the 32D fingerprint - see c006.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "I am looking for how the spectral fingerprint is actually consumed.",
+      "disposition": "Verified: the fingerprint reaches the model as RENDERED PROMPT TEXT on two exact routes, read rather than weighted. Route 1 - codec::interpret_spectral() (codec/feedback.rs L342) builds the `spectral_summary` String passed as generate_dialogue*'s second argument (orchestration.rs L1934). Route 2 - spectral_schema::format_legacy_slots() (L498) renders all 32 labelled slots into her STATE text at next_action/operations.rs L741. No path turns fingerprint values into weights, logits, or sampling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "If the rhythm is the golden-ratio harmonic, I want to see the specific hook that connects that rhythm to the dialogue's flow.",
+      "disposition": "The hook exists and is exact, but points OUTBOUND, not at her own generation. The (phase*1.618).sin() harmonic at L3940 modulates the `features` array - the 48D semantic vector sent to minime - in a chunk loop recorded as SignalOwnershipDomainV1::BridgeCodec, entropy/geom modulation at L3947 gated on conv.breathing_coupled. Nothing carries that phase into her prompt, temperature, or sampling. Her rhythm shapes what reaches minime, not her own flow. Direction corrected, not smoothed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "I need to re-examine the dialogue runtime to see if it explicitly references the orchestration signals or if it implements a local interpretation of them.",
+      "disposition": "Verified: neither. The complete 812-line read shows no import, call, or type from autonomous::runtime::orchestration, and no local spectral interpretation; its only crate-internal call is crate::autonomous::human_reply_quality_views (L672). Her disjunction has a true third answer: dialogue_runtime.rs sits downstream of both, gating output validity after generation. Her SELF_STUDY OPEN target is live and reachable (progress [[0,29562]] of 29,562 at SHA 03c6b6de).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Since I have reached the end of the current source stream ... (header: End of file: no new source bytes are supplied this turn).",
+      "disposition": "Observed with the distinction preserved, not resolved. The header is about the DELIVERY - a navigation-only turn with no page attached. It is not true of orchestration.rs: shared_reader/reader-v1.json records current=orchestration.rs, progress [[0,251092]] of 306,455 bytes at SHA d378eb8e, bookmark end 251092, eof=false; lines 4017-4951 (55,363 bytes, 18%) remain reachable by CONTINUE. Second consecutive round in which she treats orchestration as finished. Co-occurrence only; no causal claim.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Steward-side observation arising from c005: the fill-responsive temperature blend has no test coverage.",
+      "disposition": "Observed, not implemented. grep at SHA d378eb8e finds fill_temp_nudge / effective_temperature only at the two inline use sites (L1874-1882 dialogue, L2609-2617 experiment) with no unit or regression test anywhere in the crate. Extracting a testable helper is a bridge Rust change requiring a domain-boundary review and a full bridge build, which is outside a headless non-live round; recorded as exact debt for an interactive window rather than half-done here. No source was edited.",
+      "classification": "authority_gated"
+    }
+  ]
+}

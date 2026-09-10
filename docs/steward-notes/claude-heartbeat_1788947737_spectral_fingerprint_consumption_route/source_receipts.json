@@ -1,0 +1,54 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "binding_note": "The report declares 'Source revision: navigation only' and its witness carries source_snapshot_v1 null, so there is no report-bound source SHA to compare and no mismatch to handle. Sources below were selected because her claims name them; orchestration.rs hashes identical to the revision her adjacent pages bind (d378eb8e), and dialogue_runtime.rs identical to the revision recorded in her shared-reader progress (03c6b6de).",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "sha256": "03c6b6dee0436dd56c047ab68d95f2f4ccd6e2ed7c8029cf0b9568eb9cfefa91",
+      "total_bytes": 29562,
+      "total_lines": 812,
+      "read_scope": "complete file, all 812 lines read in three sequential ranges 1-200, 200-460, 460-812; her SELF_STUDY OPEN target and the file her hypothesis names",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "d378eb8e1f564556f996d2fff1c0f9688b2fd8c90e03ec949464ef822965d778",
+      "total_bytes": 306455,
+      "total_lines": 4951,
+      "read_scope": "scoped: L1866-1895 (bytes 113148..115220) read in full for the fill-responsive temperature blend; L3900-3936 and L3988-4016 read in full for the Breathing/Resonance stage; remainder inspected only by exact grep for temperature, interpret_spectral, generate_dialogue and fingerprint tokens",
+      "read": "partial_scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "a6d5480bd2d0e027e4cae6740bd1cd8c23f8fad32f74114899847599c937e63a",
+      "total_bytes": 40154,
+      "total_lines": 401,
+      "read_scope": "scoped: L112-150 read in full - PromptAttentionV1 definition, attention_ratio clamp, ATTEND_*_MIN_FLOOR constants",
+      "read": "partial_scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/spectral_schema.rs",
+      "sha256": "c115472819917441e12ca997496c2f7685c9aa6e6358e2341d4054295a9e3a39",
+      "total_bytes": 22901,
+      "total_lines": 715,
+      "read_scope": "scoped: L488-540 read in full - legacy_slot_label and format_legacy_slots, the 32-slot prompt render",
+      "read": "partial_scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/dialogue_generation.rs",
+      "sha256": "dae091c49a83ae34e45b6712f8ac0d53e4fc467e0b42680d1c1c7b73b669e263",
+      "total_bytes": 25811,
+      "total_lines": 657,
+      "read_scope": "scoped: L1-60 read in full - generate_dialogue signature showing spectral_summary and temperature as separate scalar/string arguments",
+      "read": "partial_scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/reader-v1.json",
+      "sha256": "3a00bbe99d121696dc1538444f527ebd9b74b986c9c3a7f0f0490ab28605e055",
+      "total_bytes": 58372,
+      "total_lines": 519,
+      "read_scope": "scoped: bookmarks and progress entries for orchestration.rs and dialogue_runtime.rs, plus notebook note/previous, read in full; durable shared-reader state, not source",
+      "read": "partial_scoped"
+    }
+  ]
+}

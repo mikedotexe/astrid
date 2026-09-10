@@ -1,0 +1,169 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1788983335_activity_vocabulary_and_prosody",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_held_subprocess_run",
+  "controller": {
+    "run_id": "run_1788979285945040000_9d27552afb",
+    "preprojection_generation_id": "projection_1788979289934694000_bc36c5ab13",
+    "preprojection_status": "passed",
+    "preprojection_completed_steps": 27,
+    "pause_generation": 421,
+    "session_opened": false,
+    "ndjson_ops_sent": false,
+    "pause_or_resume_issued": false,
+    "lease_token_read_or_persisted": false
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "report_sha256": "e5438e3fb60e2a192e0ccde6ca232f39b65752d633d627338e57528d900422ae",
+      "report_bytes": 1751,
+      "report_lines": 21,
+      "witness_id": "lsw_9d70ab7f41864ad91bd9d416d755752e913924542ba6ea435ab0099e7993d250",
+      "witness_sha256": "5562a02a7790be8146f0526f2851a82a87c1aa960b743127570dd14c00a10193",
+      "witness_bytes": 18958,
+      "witness_lines": 440,
+      "source_binding_match": null,
+      "source_binding_note": "navigation-only turn; report declares 'Source revision: navigation only' and the witness carries source_snapshot_v1=null, so there is no report-bound source SHA and no mismatch to handle",
+      "source_sha256": "3c7fca523107c8283159aa44b03c935e6ff2d5dfb87320b93a0c7c5f7ae4baf7",
+      "source_path": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "claim_count": 9,
+      "evidence_links_new": 11,
+      "evidence_links_existing": 0,
+      "close_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "full_read": true,
+      "full_read_count": 1
+    }
+  ],
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1
+  },
+  "selection": {
+    "selected": 40,
+    "processed": 1,
+    "unprocessed": 39,
+    "batchable_family_count": 0
+  },
+  "integrity": {
+    "addressing_self_test": 44,
+    "evidence_event_store_tests": 21,
+    "steward_control_tests": 29,
+    "steward_projection_tests": 14,
+    "division_followup_tests": 3,
+    "division_chronicle_tests": 10,
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": 4,
+    "cadence_tests": 6,
+    "cadence_strict_integrity_ok": true,
+    "anti_drop_self_test": 5,
+    "anti_drop_alarms": 0,
+    "anti_drop_gaps": 0,
+    "anti_drop_rows": 91,
+    "domain_boundary_valid": true,
+    "domain_boundary_violation_count": 0,
+    "domain_boundary_ratchet": "green",
+    "epistemic_self_test_valid": true,
+    "epistemic_verify_valid": true,
+    "epistemic_checked_records": 11938,
+    "epistemic_issue_count": 0,
+    "epistemic_history_rewritten": false,
+    "counter_audit_status": "consistent",
+    "counter_audit_mismatches": [],
+    "evidence_event_store_valid": true,
+    "evidence_event_store_last_global_seq": 1048308,
+    "evidence_event_store_last_event_sha256": "3447c03c5271f3de94c353f214ec901ff2ba1babd072079d183d3cb53376a179",
+    "evidence_event_store_corrupt_lines": 0,
+    "git_diff_check": "clean",
+    "cargo_fmt_check": "clean",
+    "final_epistemic_verify_after_all_durable_writes": {
+      "valid": true,
+      "issue_count": 0,
+      "checked_record_count": 11938,
+      "history_rewritten": false,
+      "note": "re-run after the post-round Chronicle reprojection; identical result"
+    }
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "rows": 91
+    }
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 11938
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": []
+  },
+  "counters_canonical": {
+    "indexed": 4790,
+    "fully_addressed": 3205,
+    "full_read": 3837,
+    "remaining": 1585,
+    "unread": 953,
+    "blocked_needs_steward": 416,
+    "triaged_pending_action": 212,
+    "triaged_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 3302,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_global_seq": 1048308,
+    "last_event_sha256": "3447c03c5271f3de94c353f214ec901ff2ba1babd072079d183d3cb53376a179",
+    "post_verify_delta": {
+      "current_head_global_seq": 1048314,
+      "current_head_sha256": "2ddcf6a923fec67c3054cc1c136bd6a574a9974b83196b086be985d481270421",
+      "events_after_verified_sequence": 6,
+      "events_after_verified_sequence_kinds": {
+        "steward_control/steward_lease_heartbeat": 6
+      },
+      "note": "The verify at sequence 1048308 covered every durable stewardship write of this round. The six events after it are the adapter's own automatic lease heartbeats, not evidence writes."
+    }
+  },
+  "division": {
+    "review_due_at_round_start": true,
+    "return_completed_first": true,
+    "followup_event_id": "division_followup_event_d6dc083c76915a12d146faaaefae70f8",
+    "followup_chronicle_id": "division_chronicle_4cd940ac688251208a8b30bf",
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle42_20260909.txt",
+    "astrid_note_sha256": "3e9b91b2120aaf3ceabd9015ead1417f3f300bbc4bf8085784157b802700b5db",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle42_20260909.txt",
+    "minime_note_sha256": "756e7c4b085d20ec10b25fa8e635d761d80b97afc09b890c4860d9e71873b6c2",
+    "cycle_sequence": 43,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "round_event_id": "division_followup_event_d656e0abc484f8d50c30a75ac72a4ba2",
+    "processed_report_count": 1,
+    "event_count": 296,
+    "event_head_sha256": "8e25ef50f46272400a2958d7f63ba8de625e6104773341e2b7fdaefd538eb765",
+    "chronicle_id_after_round": "division_chronicle_a90847b62b520ccd76823786",
+    "chronicle_json_sha256_after_round": "491934f9bfc242186ca0e5af6a82e3a8c272e6d85cf052b01f0c5908ba56570b",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_inputs_current": true
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy_or_build": false,
+    "launchctl": false,
+    "git_staged_or_committed": false,
+    "tier4_or_tier5_advanced": false,
+    "silence_read_as_consent": false,
+    "note": "Tier-5 cadence dossier is PREPARE only; nothing approved, granted, dispatched, or run."
+  }
+}

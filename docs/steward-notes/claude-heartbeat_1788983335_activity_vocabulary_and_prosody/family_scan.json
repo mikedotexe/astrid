@@ -1,0 +1,690 @@
+{
+ "schema": "introspection_family_scan_v1",
+ "threshold": 0.35,
+ "family_count": 40,
+ "batchable_family_count": 0,
+ "families": [
+  {
+   "family_head": "introspection_source_catalog_1788979200",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788979200",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788979064",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788979064",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788978791",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788978791",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788978727",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788978727",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788978677",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788978677",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788978623",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788978623",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788978566",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788978566",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788978507",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788978507",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788978414",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+   "source_path": "",
+   "window": "bytes17151..19256",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788978414",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788978355",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+   "source_path": "",
+   "window": "bytes12834..17151",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788978355",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788978263",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+   "source_path": "",
+   "window": "bytes8571..12834",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788978263",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788978095",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788978095",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788977817",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788977817",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788977664",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+   "source_path": "",
+   "window": "bytes4173..8571",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788977664",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788977495",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+   "source_path": "",
+   "window": "bytes0..4173",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1788977495",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788977386",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788977386",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788977227",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788977227",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788977065",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788977065",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788976918",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes64705..65312",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788976918",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788976606",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes60333..64705",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788976606",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788976367",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes55961..60333",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788976367",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788976160",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes51661..55961",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788976160",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788975768",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes47316..51661",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788975768",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788975599",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes42774..47316",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788975599",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788975390",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes38455..42774",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788975390",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788975217",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes34020..38455",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788975217",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788974920",
+   "source_label": "astrid/crates/astrid-kernel/src/lib.rs",
+   "source_path": "",
+   "window": "bytes29531..34020",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1788974920",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788974566",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "source_path": "",
+   "window": "bytes26535..30854",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788974566",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788974358",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "source_path": "",
+   "window": "bytes22333..26535",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788974358",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788973824",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "source_path": "",
+   "window": "bytes18014..22333",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788973824",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788973185",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "source_path": "",
+   "window": "bytes13524..18014",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788973185",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788972906",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "source_path": "",
+   "window": "bytes9034..13524",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788972906",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788972608",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "source_path": "",
+   "window": "bytes4652..9034",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788972608",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788972302",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/projection.rs",
+   "source_path": "",
+   "window": "bytes0..4652",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_projection.rs_1788972302",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788972006",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788972006",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788971842",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788971842",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788969464",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788969464",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1788969239",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1788969239",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_lifecycle.rs_1788969130",
+   "source_label": "astrid/capsules/spectral-bridge/src/lifecycle.rs",
+   "source_path": "",
+   "window": "bytes4200..7864",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_lifecycle.rs_1788969130",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_lifecycle.rs_1788968999",
+   "source_label": "astrid/capsules/spectral-bridge/src/lifecycle.rs",
+   "source_path": "",
+   "window": "bytes0..4200",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_lifecycle.rs_1788968999",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  }
+ ],
+ "skipped": [],
+ "authority_boundary": "evidence routing only: a family is a candidate batch, not a disposition; every member still requires its own complete read, per-report claims naming its variant_distinct_terms, and its own close"
+}

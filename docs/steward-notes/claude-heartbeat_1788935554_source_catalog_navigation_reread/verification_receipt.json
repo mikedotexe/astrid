@@ -1,0 +1,108 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round": "claude-heartbeat_1788935554_source_catalog_navigation_reread",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run",
+  "controller": {
+    "run_id": "run_1788931992040748000_222f84660b",
+    "preprojection_generation_id": "projection_1788931995130653000_f65a13253e",
+    "preprojection_status": "passed",
+    "pause_generation": 417,
+    "stop_requested_observed": false,
+    "postprojection": "runs after this process exits; not observable from inside the adapter"
+  },
+  "addressing": {
+    "processed": [
+      "introspection_source_catalog_1788931359"
+    ],
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 7,
+    "evidence_links_new": 10,
+    "evidence_links_existing_before": 0,
+    "full_read": true,
+    "full_read_count": 1
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 4696,
+    "canonical_fully_addressed": 3202,
+    "canonical_fully_read": 3834,
+    "canonical_remaining": 1494,
+    "canonical_unread": 862,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3211,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "event_count": 1042145,
+    "last_global_seq": 1042145,
+    "last_event_sha256": "3d5fad76b12243a783ef34aa2e80b52f7300342141e0aa1d2ccf37f045d2163f",
+    "corrupt_lines": 0,
+    "history_rewritten": false,
+    "active_store": "v2",
+    "errors": []
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 11910,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "anti_drop": {
+    "self_test": "OK (5)",
+    "verify": {
+      "alarms": 0,
+      "gaps": 0
+    },
+    "verify_rc": 0
+  },
+  "domain_boundary": {
+    "verify_rc": 0,
+    "violation_count": 0,
+    "ratchet": "green"
+  },
+  "cadence_audit": {
+    "strict_rc": 0,
+    "integrity_ok": true,
+    "canonical_count": 4696,
+    "duplicate_hash_group_count": 0
+  },
+  "division": {
+    "round_recorded": true,
+    "steward_run_id": "run_1788931992040748000_222f84660b",
+    "processed_report_count": 1,
+    "projection_generation_id": "projection_1788931995130653000_f65a13253e",
+    "round_event_id": "division_followup_event_f5f99a12c3f891f838b3fb06f412ef3f",
+    "event_count": 292,
+    "event_head_sha256": "964619ae36d71e8f34c2080e29fd353231d2d21da9c470faa759db48bd866454",
+    "review_due_at_round_start": false,
+    "review_return_performed": false,
+    "tier5_cadence_dossier": "not generated: only required when a Division return is completed, and review_due was false"
+  },
+  "chronicle": {
+    "projected": true,
+    "chronicle_id": "division_chronicle_d077a31f45fafccb33df93c8",
+    "json_sha256": "5ae1a0d555cdcef8b7f902d9ef0d880564a078ab90505e92e43afd0c4a5927de",
+    "html_sha256": "9f91cece58b347605dbc41d15063d9a19f1151a8a8141e367645034a9c3c4a65",
+    "durable_inputs_current": true,
+    "volatile_mismatch": [
+      "supervisor_status_sha256"
+    ],
+    "note": "Durable inputs are current; the only mismatch is the volatile supervisor status hash. Not fully current, and not a durable-integrity failure."
+  },
+  "authority_boundary": {
+    "live_change_attempted": false,
+    "build_or_deploy_run": false,
+    "launchctl_run": false,
+    "restart_required": false,
+    "git_mutation": "none: no stage, commit, merge, push, stash, reset, or amend",
+    "note": "Evidence only. Nothing here grants live substrate or control authority."
+  }
+}

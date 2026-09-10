@@ -1,0 +1,31 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "code_changed": false,
+  "note": "Verification-only round: no source or test file was created or edited, so no new focused test was written or required. Baseline and stewardship integrity suites were run in full.",
+  "results": [
+    {"check": "git diff --check", "result": "clean"},
+    {"check": "introspection_addressing_audit.py --self-test", "result": "OK", "tests": 44},
+    {"check": "test_evidence_event_store.py", "result": "OK", "tests": 21},
+    {"check": "test_steward_control.py", "result": "OK", "tests": 29},
+    {"check": "test_steward_projection.py", "result": "OK", "tests": 14},
+    {"check": "test_division_ceremony_followup.py", "result": "OK", "tests": 3},
+    {"check": "test_division_ceremony_chronicle.py", "result": "OK", "tests": 10},
+    {"check": "test_division_ceremony_projection.py", "result": "ok"},
+    {"check": "test_projection_cursors.py", "result": "OK", "tests": 4},
+    {"check": "test_introspection_cadence_audit.py", "result": "OK", "tests": 6},
+    {"check": "introspection_cadence_audit.py --strict --compact", "result": "integrity_ok true", "canonical_count": 4697},
+    {"check": "anti_drop_catalog.py --self-test", "result": "OK", "tests": 5},
+    {"check": "anti_drop_catalog.py verify --json", "result": "rc=0, no rot reported"},
+    {"check": "domain_boundary_audit.py verify", "result": "GREEN", "valid": true, "violation_count": 0, "violation_kind_counts": {}, "stable_facade_count": 6, "unlisted_legacy_review_debt_count": 44},
+    {"check": "experiential_epistemics.py self-test --json", "result": "valid true"},
+    {"check": "experiential_epistemics.py verify --json (final, after all durable writes)", "result": "valid true", "issue_count": 0, "history_rewritten": false},
+    {"check": "introspection_addressing_audit.py audit-counters --json", "result": "consistent", "mismatches": []},
+    {"check": "evidence_event_store.py --json verify", "result": "valid true"},
+    {"check": "division_ceremony_followup.py verify", "result": "ok true", "review_due": false},
+    {"check": "division_ceremony_chronicle.py project + verify", "result": "ok true, durable_inputs_current true, volatile_inputs_current true, no mismatches"}
+  ],
+  "not_run": [
+    "cargo test --workspace and any crate test: no Rust source or test file was touched this round, so no compilation-affecting change exists to test.",
+    "cargo fmt --all -- --check: no Rust file was created or edited by this round."
+  ]
+}

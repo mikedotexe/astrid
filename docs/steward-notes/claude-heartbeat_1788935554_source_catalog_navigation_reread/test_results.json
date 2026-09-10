@@ -1,0 +1,28 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "focused": [
+    {"command":"cargo test -p astrid-source-study --test reader invited_reread_after_end_of_file_opens_line_one_and_continues_forward","result":"ok","passed":1,"failed":0,"note":"new report-derived regression"},
+    {"command":"cargo test -p astrid-source-study","result":"ok","passed":21,"failed":0,"note":"whole crate; 20 before this round"},
+    {"command":"cargo fmt -p astrid-source-study -- --check","result":"ok","rc":0},
+    {"command":"git diff --check","result":"ok","rc":0}
+  ],
+  "stewardship_integrity": [
+    {"command":"scripts/introspection_addressing_audit.py --self-test","result":"OK","tests":44},
+    {"command":"scripts/test_evidence_event_store.py","result":"OK","tests":21},
+    {"command":"scripts/test_steward_control.py","result":"OK","tests":29},
+    {"command":"scripts/test_steward_projection.py","result":"OK","tests":14},
+    {"command":"scripts/test_division_ceremony_followup.py","result":"OK","tests":3},
+    {"command":"scripts/test_division_ceremony_chronicle.py","result":"OK","tests":10},
+    {"command":"scripts/test_division_ceremony_projection.py","result":"ok","tests":null},
+    {"command":"scripts/test_projection_cursors.py","result":"OK","tests":4},
+    {"command":"scripts/anti_drop_catalog.py --self-test","result":"OK","tests":5},
+    {"command":"scripts/anti_drop_catalog.py verify --json","result":"rc=0"},
+    {"command":"scripts/test_introspection_cadence_audit.py","result":"OK","tests":6},
+    {"command":"scripts/introspection_cadence_audit.py --strict --compact","result":"rc=0","integrity_ok":true,"canonical_count":4696,"duplicate_hash_group_count":0},
+    {"command":"scripts/domain_boundary_audit.py verify","result":"rc=0","violation_count":0,"ratchet":"green"}
+  ],
+  "not_run": [
+    {"command":"cargo test --workspace","reason":"out of scope for a test-only change confined to crates/astrid-source-study; the touched crate was run in full"}
+  ],
+  "live_change": "none attempted: no build_bridge.sh, no deploy script, no launchctl, no restart"
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1788979200.txt",
+      "bytes": 1751,
+      "lines": 21,
+      "sha256": "e5438e3fb60e2a192e0ccde6ca232f39b65752d633d627338e57528d900422ae",
+      "read": "complete",
+      "witness_id": "lsw_9d70ab7f41864ad91bd9d416d755752e913924542ba6ea435ab0099e7993d250",
+      "witness_path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_9d70ab7f41864ad91bd9d416d755752e913924542ba6ea435ab0099e7993d250.json",
+      "witness_bytes": 18958,
+      "witness_lines": 440,
+      "witness_sha256": "5562a02a7790be8146f0526f2851a82a87c1aa960b743127570dd14c00a10193",
+      "witness_read": "complete",
+      "source_binding": "navigation_only_no_report_bound_source_sha",
+      "source_coverage": "complete_for_the_file_she_named",
+      "witness_artifact_sha256_matches_report": true
+    }
+  ]
+}

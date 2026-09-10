@@ -1,0 +1,193 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a001",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "MockCapsule doc L620, struct L621-633, ctor impl L635-698, impl Capsule L700-738 inside #[cfg(test)] mod tests (L603)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a002",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "interceptor_accepts_caller L563-601; Private branch L576-583 bars wasm_capsule producers before any guest invocation."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a002",
+      "kind": "test",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "bare_private_interceptor_bars_wasm_capsule_and_unattested_callers: isolates the wasm_capsule bar with both caller pins empty."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the verification and the added regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a002",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row for this report pair."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a003",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/engine/wasm/host/ipc.rs",
+      "note": "ipc_publish stamps IpcProducerV1::new(\"wasm_capsule\", capsule_id) host-side at L269-274; the guest never authors the producer field."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a003",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/engine/wasm/host/sys.rs",
+      "note": "hooks::trigger interceptor selection L114-121 calls the same gate with caller=None and skips the calling capsule at L97."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a003",
+      "kind": "test",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "bare_private_interceptor_bars_wasm_capsule_and_unattested_callers also pins the caller=None rejection used by the hooks::trigger path."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a004",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "invoke_interceptor signature L717-722; chain consumption L300-353 (Final L313-322, Deny L323-332); ordered path L382-431."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a005",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "Only a non-wasm_capsule host-attested producer satisfying L584-599, or a changed exposure, passes the Private gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "claim_id": "a005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788993310_dispatcher_private_caller_gate/summaries/introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745.md",
+      "note": "Bounded steward reading of her conclusion; no exposure or manifest change made or authorized."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b001",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "find_matching_interceptors L522-558; interceptor_accepts_caller L560-601; gate applied at L540-542."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b002",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "Private + tool.v1.request.describe rejected unconditionally at L570-572."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b002",
+      "kind": "test",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "Existing private_tool_interceptor_is_hidden_... covers the describe rejection; new bare-Private test repeats it without caller pins."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b003",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "Private branch L576-583 including the missing/unsupported-producer rejection at L573-579."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b003",
+      "kind": "test",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "bare_private_interceptor_bars_wasm_capsule_and_unattested_callers covers wasm_capsule, None, unattested and unsupported-schema callers."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the verification and the added regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row for this report pair."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b004",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "caller_producer_kind exact-match check L584-588; manifest field manifest.rs L489."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b005",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "caller_source_ids whitelist L589-599; manifest field manifest.rs L494."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b006",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "Gate runs during match collection L540-542; invocation happens later at L300 and L382."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b007",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "Deny short-circuits the chain at L323-332 but only logs on the ordered single-capsule path at L397-405."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b008",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "publish_exact_local_provider_failure L452-472 and exact_local_provider_failure_message L474-520 with all six gating conditions."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b008",
+      "kind": "test",
+      "target": "crates/astrid-capsule/src/dispatcher.rs",
+      "note": "Existing provider_failure_bridge_rejects_unattested_or_inexact_requests covers nil request_id and the other rejections."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b009",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/engine/wasm/host/ipc.rs",
+      "note": "Host-stamped producer at L269-274 is why no producer_kind bypass exists for a guest."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b009",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/engine/wasm/host/sys.rs",
+      "note": "hooks::trigger passes caller=None at L114-121, so Private is rejected on that route too."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "claim_id": "b009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788993310_dispatcher_private_caller_gate/summaries/introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492.md",
+      "note": "Answer to her STUDY_QUESTION, corroborating the answer she reached herself in 1788987745."
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "crates/astrid-capsule/src/dispatcher.rs",
+      "state": "report_time_and_pre_edit_working_copy",
+      "sha256": "a737ea3379424c200b6c226f2d34d29b84671d3f12cfb47975bb8e4c39ad8992",
+      "total_lines": 1456,
+      "total_bytes": 57458,
+      "read_scope": "complete file: lines 1-1000 and 1430-1456 read from the pre-edit working copy (byte-identical to HEAD), lines 1000-1432 read from `git show HEAD:` after the edit",
+      "matches_report_binding": true,
+      "note": "Working copy was byte-identical to the report-bound SHA and to git HEAD before this round's test insertion."
+    },
+    {
+      "path": "crates/astrid-capsule/src/dispatcher.rs",
+      "state": "post_edit_working_copy",
+      "sha256": "89014b40121b4a8f24daf562369c8d873cee53cc1a0833ef70649ee38e2708d3",
+      "total_lines": 1534,
+      "total_bytes": 60386,
+      "read_scope": "inserted regression test read back in full; rustfmt --check clean",
+      "matches_report_binding": false,
+      "note": "Report-time bytes remain recoverable at `git show HEAD:crates/astrid-capsule/src/dispatcher.rs` (SHA a737ea33...) for the four dispatcher.rs reports still queued against that binding."
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/host/ipc.rs",
+      "state": "current_working_copy",
+      "sha256": "c1beb495ea1baa3782fafb2a21388f9f5a1ecd677c374c228731aa90f1e760c1",
+      "total_lines": 459,
+      "total_bytes": 17484,
+      "read_scope": "lines 240-300 (ipc_publish producer stamping)",
+      "matches_report_binding": null,
+      "note": "Adjacent evidence: guest-published IPC producer is host-constructed, not guest-supplied."
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/host/sys.rs",
+      "state": "current_working_copy",
+      "sha256": "2edfd5574abb9129f7e06fa258c42ae177ee96ffcf7e5db63d7ba4fa9ac9a0e2",
+      "total_lines": 335,
+      "total_bytes": 14821,
+      "read_scope": "lines 90-140 (hooks::trigger interceptor selection)",
+      "matches_report_binding": null,
+      "note": "Adjacent evidence: second enforcement site for interceptor_accepts_caller, called with caller=None."
+    }
+  ]
+}

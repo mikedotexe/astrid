@@ -1,0 +1,53 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1788993310_dispatcher_private_caller_gate",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745.txt",
+      "sha256": "ff10c65b9cfa299ee2d0747c8bf5567765966fc837fd35d74233b5df55286bf4",
+      "bytes": 2662,
+      "lines": 25,
+      "read": "complete",
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+      "lived_state_witness_id": "lsw_e62b0235afbd530f38c78e25627e6deeaaabc9671ad003ebe19a09ec0ba498f6",
+      "report_bound_source": "crates/astrid-capsule/src/dispatcher.rs",
+      "report_bound_source_sha256": "a737ea3379424c200b6c226f2d34d29b84671d3f12cfb47975bb8e4c39ad8992",
+      "report_bound_source_bytes": "25512..29921",
+      "delivered_window_lines": "612..727",
+      "source_coverage": "partial_window_delivered_complete_file_read_by_steward"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492.txt",
+      "sha256": "9ba0bfe924cc374116b659b68f536fc2d152b846c0292dcfea5ae157f8f94dec",
+      "bytes": 3638,
+      "lines": 34,
+      "read": "complete",
+      "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+      "lived_state_witness_id": "lsw_7b9616e81a25f9da80ebe7099f2f37aa58c3c2e141cf6d8ae38eb4fb21c4df97",
+      "report_bound_source": "crates/astrid-capsule/src/dispatcher.rs",
+      "report_bound_source_sha256": "a737ea3379424c200b6c226f2d34d29b84671d3f12cfb47975bb8e4c39ad8992",
+      "report_bound_source_bytes": "21157..25512",
+      "delivered_window_lines": "491..612",
+      "source_coverage": "partial_window_delivered_complete_file_read_by_steward"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_e62b0235afbd530f38c78e25627e6deeaaabc9671ad003ebe19a09ec0ba498f6.json",
+      "sha256": "b8dd4519e8f8c6e15288da3ad4e6eddb7a9e7710232dc00869b954ab679f4401",
+      "bytes": 21404,
+      "lines": 498,
+      "read": "complete",
+      "witness_id": "lsw_e62b0235afbd530f38c78e25627e6deeaaabc9671ad003ebe19a09ec0ba498f6"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7b9616e81a25f9da80ebe7099f2f37aa58c3c2e141cf6d8ae38eb4fb21c4df97.json",
+      "sha256": "50324fe71352caa4e6527463a85e5006e83a1033f760aef011074a49195552a8",
+      "bytes": 21421,
+      "lines": 498,
+      "read": "complete",
+      "witness_id": "lsw_7b9616e81a25f9da80ebe7099f2f37aa58c3c2e141cf6d8ae38eb4fb21c4df97"
+    }
+  ]
+}

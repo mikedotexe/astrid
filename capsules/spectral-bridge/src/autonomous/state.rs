@@ -2157,7 +2157,8 @@ mod tests {
 
     use super::{
         AGENDA_PULL_BASE_P, AGENDA_PULL_MAX_P, AgendaPullV1, ConversationState, Mode,
-        NextChoiceFeedback, agenda_mode_pull, spontaneous_mode_from_roll,
+        NextChoiceFeedback, READ_DEPTH_ADVANCE_MIN_CHARS, agenda_mode_pull,
+        spontaneous_mode_from_roll,
     };
 
     /// Transcription of the pre-extraction spontaneity cascade, kept verbatim
@@ -2704,6 +2705,71 @@ mod tests {
         conv.exchange_count = 11;
         assert_eq!(
             conv.new_ground_budget_for_choice("READ_MORE /tmp/notes.txt", "READ_MORE", None, None),
+            0
+        );
+    }
+
+    /// Astrid asked where the "prosody" lives once an activity has been read as
+    /// vocabulary. It lives here: `receipt_kind_defaults` gives each new-ground
+    /// kind a different credit and lifetime, so two pulses do not weigh the same.
+    #[test]
+    fn new_ground_receipts_weigh_by_kind_and_ignore_shallow_read_advances() {
+        // A read advance under the minimum never becomes a receipt at all.
+        let mut shallow = ConversationState::new(Vec::new(), None);
+        shallow.exchange_count = 10;
+        shallow.note_read_depth_advance(
+            "READ_MORE",
+            "/tmp/notes.txt".to_string(),
+            READ_DEPTH_ADVANCE_MIN_CHARS.saturating_sub(1),
+        );
+        assert!(shallow.recent_research_progress.is_empty());
+        assert_eq!(
+            shallow.new_ground_budget_for_choice(
+                "READ_MORE /tmp/notes.txt",
+                "READ_MORE",
+                None,
+                None
+            ),
+            0
+        );
+
+        // Reading further into an already-open source is the lightest pulse that
+        // registers: credit 1, active only in the exchange that earned it.
+        let mut depth = ConversationState::new(Vec::new(), None);
+        depth.exchange_count = 10;
+        depth.note_read_depth_advance(
+            "READ_MORE",
+            "/tmp/notes.txt".to_string(),
+            READ_DEPTH_ADVANCE_MIN_CHARS,
+        );
+        assert_eq!(
+            depth.new_ground_budget_for_choice("READ_MORE /tmp/notes.txt", "READ_MORE", None, None),
+            1
+        );
+
+        // Resolving a source she had not opened weighs twice as much and stays
+        // active across four exchanges rather than one.
+        let mut resolved = ConversationState::new(Vec::new(), None);
+        resolved.exchange_count = 10;
+        resolved.note_new_source_resolved(
+            "INTROSPECT",
+            "esn.rs".to_string(),
+            Some("/tmp/esn.rs".to_string()),
+            Some("esn".to_string()),
+            None,
+        );
+        assert_eq!(
+            resolved.new_ground_budget_for_choice("INTROSPECT esn.rs", "INTROSPECT", None, None),
+            2
+        );
+        resolved.exchange_count = 13;
+        assert_eq!(
+            resolved.new_ground_budget_for_choice("INTROSPECT esn.rs", "INTROSPECT", None, None),
+            2
+        );
+        resolved.exchange_count = 14;
+        assert_eq!(
+            resolved.new_ground_budget_for_choice("INTROSPECT esn.rs", "INTROSPECT", None, None),
             0
         );
     }

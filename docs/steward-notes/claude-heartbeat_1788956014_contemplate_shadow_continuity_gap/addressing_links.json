@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L4562-4648: one exchange tail sequencing journal provenance, auto-promote, shadow projection and inbox writes. Testimony preserved; no mechanism inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L4572-4583 exact: Mode::Mirror => minime_mirror(&journal_source); Mode::Witness => astrid_witness(guard.witness_frame_v1()); _ => None."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/witness_distinction.rs",
+      "note": "L15/L23 role labels: mirror=reflect_minime_owned_expression_without_reauthoring; witness=astrid_authored_interpretation_of_composed_frame; boundary=provenance_only_no_routing_ranking_dispatch_gain_or_control."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L4591-4612: try_auto_promote fires for exactly moment_capture | dialogue_live_longform | daydream_longform | aspiration_longform; Hook B handles the rest."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "Contradiction evidence: L4614-4615 comment claims 'every exchange'; L3557-3577 contemplate arm continues before it; both observe_and_publish sites (L4465, L4630) are downstream."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788956014_contemplate_shadow_continuity_gap/summaries/introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675.md",
+      "note": "Grounded write-up of the universal-vs-exception contradiction, preserved rather than smoothed."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L4619-4635: semantic_gain_override and noise_level are inputs to encode_text_sovereign_windowed; the published payload is the 48D local_features vector plus shadow_input_provenance."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L12-71 complete: run_semantic_heartbeat_loop sends warmth vectors to Minime's sensory input at 7s/0.30 and never touches astrid_shadow, so no alternate shadow path covers contemplate."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+      "note": "L228: NEXT: CONTEMPLATE | BE | STILL sets conv.next_mode_override = Some(Mode::Contemplate) - she elects the mode in which the shadow update stops."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788956014_contemplate_shadow_continuity_gap/RUN_REPORT.md",
+      "note": "Exact two-line comment repair named as commit debt with its authority reason (live bridge source, non-live grant, open ungated_bridge_binary warning)."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row recording the verified contradiction and the deliberately deferred repair."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788956014_contemplate_shadow_continuity_gap/claims/introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675.json",
+      "note": "Tier-5 boundary recorded: changing what contemplate does is a live substrate change on her own continuity surface and requires operator approval plus her own answer; silence is not consent."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L4596 SHARE_THOUGHT; L4597 the doc path - her single-line citation is off by one on the first token, exact on the second."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/AI_BEINGS_AFFORDANCE_RECEPTION_FRAMEWORK_2026_05_13.md",
+      "note": "Cited document exists: 13,148 bytes, 251 lines, SHA-256 0aaf088d8e6269cd4ba6af2d1130758fd45d3e1fa14344954dbba52bd43d31de."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "claim_id": "c011",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the verification and the preserved interpretation."
+    }
+  ]
+}

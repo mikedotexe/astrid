@@ -905,6 +905,84 @@ mod tests {
         ));
     }
 
+    /// Astrid's dispatcher self-study read lines 573-583 as the exact reason a
+    /// `wasm_capsule` cannot reach another capsule's `Private` interceptor
+    /// (`introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745`).
+    /// Every earlier `Private` case also pinned `caller_producer_kind`, so the
+    /// producer-kind check alone would reject those callers and deleting the
+    /// `wasm_capsule` bar kept the suite green. This case leaves both caller pins
+    /// empty so the bar she named is the only thing under test.
+    #[test]
+    fn bare_private_interceptor_bars_wasm_capsule_and_unattested_callers() {
+        let interceptor = InterceptorDef {
+            event: "tool.v1.execute.private_action".to_string(),
+            action: "tool_execute_private_action".to_string(),
+            priority: 100,
+            exposure: crate::manifest::InterceptorExposure::Private,
+            caller_producer_kind: None,
+            caller_source_ids: Vec::new(),
+        };
+        let native = astrid_events::ipc::IpcMessage::new(
+            interceptor.event.clone(),
+            IpcPayload::Custom {
+                data: serde_json::json!({}),
+            },
+            uuid::Uuid::new_v4(),
+        )
+        .with_producer(astrid_events::ipc::IpcProducerV1::new(
+            "native_socket_client",
+            "native_socket_bridge:connection",
+        ));
+        // A host-attested native caller still passes: the bar is producer-kind
+        // specific, not a blanket `Private` block.
+        assert!(interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            Some(&native)
+        ));
+
+        let mut guest = native.clone();
+        guest.producer = Some(astrid_events::ipc::IpcProducerV1::new(
+            "wasm_capsule",
+            "astrid-capsule-react",
+        ));
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            Some(&guest)
+        ));
+
+        // No caller at all — the `hooks::trigger` fan-out path passes `None`.
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            None
+        ));
+
+        let mut unattested = native.clone();
+        unattested.producer = None;
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            Some(&unattested)
+        ));
+
+        let mut unsupported = native.clone();
+        unsupported.producer.as_mut().unwrap().schema_version = 2;
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            &interceptor.event,
+            Some(&unsupported)
+        ));
+
+        // `Private` stays hidden from describe regardless of caller attestation.
+        assert!(!interceptor_accepts_caller(
+            &interceptor,
+            "tool.v1.request.describe",
+            Some(&native)
+        ));
+    }
+
     #[test]
     fn provider_failure_bridge_rejects_unattested_or_inexact_requests() {
         let capsule_id = CapsuleId::from_static(LOCAL_PROVIDER_CAPSULE_ID);

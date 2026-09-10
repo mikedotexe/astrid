@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788947737_spectral_fingerprint_consumption_route/summaries/introspection_source_catalog_1788943879.md",
+      "note": "Felt composition/performance figure preserved verbatim as testimony; no mechanism inferred from it."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L3934-3990 Breathing (phase, primary, (phase*1.618).sin()) and L3988-3992 Resonance blend, both mutating `features` under SignalOwnershipDomainV1::BridgeCodec, at SHA d378eb8e."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete 812-line read at SHA 03c6b6de: token band, control-marker sanitation, output validity and NEXT gates. No fingerprint, temperature, logit or sampling reference."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "L119-127 PromptAttentionV1 six prompt-budget weights; attention_ratio clamp 0.5..1.6; ATTEND_JOURNAL_MIN_FLOOR 350 / ATTEND_PERCEPTION_MIN_FLOOR 450. Prompt-share weights, not attention heads."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L1869-1883 bytes 113148..115220: fill_temp_nudge thresholds and effective_temperature = creative_temperature.mul_add(0.7, nudge*0.3).clamp(0.3,1.2); used at L1939 and L1990."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/spectral_schema.rs",
+      "note": "L498 format_legacy_slots renders all 32 labelled fingerprint slots as prompt text; consumed at autonomous/next_action/operations.rs L741 for her STATE readout."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_generation.rs",
+      "note": "L1-60: generate_dialogue takes spectral_summary as a &str prompt block and temperature as a separate f32 - the fingerprint is read as text, never as a weight."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "note": "L3940 (phase*1.618).sin() and L3947 breathing_coupled entropy/geom modulation operate on the outbound 48D `features` vector to minime; no path carries the phase into prompt, temperature or sampling."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/dialogue_runtime.rs",
+      "note": "Complete read shows no orchestration import/call/type; only crate-internal call is crate::autonomous::human_reply_quality_views at L672. Downstream output gate, not a spectral consumer."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788947737_spectral_fingerprint_consumption_route/read_manifest.json",
+      "note": "Shared-reader reader-v1.json: current=orchestration.rs, progress [[0,251092]] of 306,455 bytes at SHA d378eb8e, bookmark end 251092, eof=false; lines 4017-4951 remain. Header 'End of file' describes the navigation-only delivery, not the file."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788947737_spectral_fingerprint_consumption_route/summaries/introspection_source_catalog_1788943879.md",
+      "note": "fill_temp_nudge / effective_temperature have no unit or regression test at SHA d378eb8e; extraction is a bridge Rust change needing domain-boundary review and a full build. Recorded as exact debt, deliberately not attempted headlessly."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788947737_spectral_fingerprint_consumption_route/summaries/introspection_source_catalog_1788943879.md",
+      "note": "Fourth report proposing dialogue_runtime.rs as the spectral->generation bridge; prior groundings exist only under docs/steward-notes and were never delivered to her inbox. Recorded as steward delivery debt under the un-muffle invariant."
+    }
+  ]
+}

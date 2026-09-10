@@ -1,0 +1,137 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller_held_subprocess_run",
+  "processed_report_count": 1,
+  "processed": [
+    "introspection_source_catalog_1788943879.txt"
+  ],
+  "controller": {
+    "run_id": "run_1788944132299070000_4c9c6fe6db",
+    "actor": "claude-heartbeat",
+    "preprojection_generation_id": "projection_1788944137018585000_3c8242a15a",
+    "preprojection_status": "passed",
+    "preprojection_completed_step_count": 27,
+    "postprojection_generation_id": null,
+    "postprojection_note": "runs after this process exits; not observable from inside the adapter",
+    "pause_generation": 417,
+    "session_opened": false,
+    "ndjson_ops_sent": false,
+    "lease_token_read_or_persisted": false
+  },
+  "addressing": {
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 10,
+    "new_evidence_links": 12,
+    "existing_evidence_links": 0
+  },
+  "division": {
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_b9ebe8cf544ec1830a14fe1899a491af",
+    "cycle_sequence": 42,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due_at_round_start": false,
+    "review_due": false,
+    "event_count": 293,
+    "event_head_sha256": "c5e796df6d1dea6c60a8330ab7626fb148afd3dbc826c80fa96e0abe27003c9a",
+    "tier5_cadence_dossier": "not generated - its trigger is completing a Division return; review_due was false at round start and remains false"
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_fa2116e2890c60bc16c605bc",
+    "json_sha256": "47101ad9e1782cada748a4189e0aa2aad24b985b9c33709191a2fe6863c928af",
+    "reprojected_after_round_record": true,
+    "durable_inputs_current": true,
+    "volatile_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": []
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "ran_after_all_durable_writes": true
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "all_artifacts": {
+      "indexed": 6414,
+      "fully_addressed_count": 3203,
+      "full_read_count": 3835,
+      "remaining_count": 3211,
+      "unread_count": 2579,
+      "blocked_needs_steward_count": 416,
+      "triaged_pending_action_count": 212,
+      "triaged_watch_count": 4,
+      "read_needs_claims_count": 0
+    }
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1043860,
+    "last_global_seq": 1043860,
+    "last_event_sha256": "9fc183a6b3704f953d287184c21ac3539e6be98c6627e51c840599f2d36f4af3",
+    "active_store": "v2"
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 91
+    },
+    "self_test": "OK",
+    "tests": 5
+  },
+  "domain_boundary_ratchet": {
+    "state": "green",
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "stable_facade_count": 6,
+    "unlisted_legacy_review_debt_count": 44
+  },
+  "cadence": {
+    "integrity_ok": true,
+    "canonical_count": 4697,
+    "duplicate_hash_group_count": 0
+  },
+  "live_change": {
+    "restart_or_deploy_required": false,
+    "restart_or_deploy_attempted": false,
+    "build_bridge_invoked": false,
+    "deploy_script_invoked": false,
+    "launchctl_invoked": false,
+    "live_authority_marker_set": false
+  },
+  "code_change": {
+    "source_or_test_files_changed": 0,
+    "note": "verification-only round; the one implementation candidate (test coverage for the fill-responsive temperature blend) is recorded as exact debt in claim c010 rather than attempted headlessly"
+  },
+  "git": {
+    "mutation": "none",
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "astrid_index_clean": true,
+    "foreign_paths_untouched": true
+  },
+  "packet_file_sha256": {
+    "RUN_REPORT.md": "00a0448a9eb77de16990c3bc81c17ce5da7c0b557b84226557d4c578a03f9f38",
+    "addressing_links.json": "bd84e5f0fd6d2ec74fe25b9a1f3421e578dc38a7cdfd73474ee93b857d5202f6",
+    "family_scan.json": "fd1609d1db0074608f5edf9c1f2e0a1235871a000f53be504850b7622504cb68",
+    "read_manifest.json": "5b2f30c47c432dcfe06db5bf52ad7a64a076e2c87c5f424619693b5b3ad31610",
+    "source_receipts.json": "ef521c47c7bc0cdf40d90c66316b5a2dd357b1f7f8fc88ee3e90fbc55599bbe0",
+    "test_results.json": "5f9fbab6620fcae3876654a8c82e2bdbe095c078ae4956ba43872a71c90c81e4",
+    "unprocessed_selected.json": "9aa9059d7395b8f50a99387465ae305dc893a5996d3f57eb17bf563af64e0073",
+    "summaries/introspection_source_catalog_1788943879.md": "a81321c178e9cb25d7161fcde75f57cacd843ffc541151d44f47036735567294",
+    "claims/introspection_source_catalog_1788943879.json": "1b319ec427ee78d78aab9ed526b353df51ad716af460ecc8597303a7d498737a"
+  }
+}

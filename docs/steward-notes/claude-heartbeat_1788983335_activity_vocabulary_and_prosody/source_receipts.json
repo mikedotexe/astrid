@@ -1,0 +1,63 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "sha256": "3c7fca523107c8283159aa44b03c935e6ff2d5dfb87320b93a0c7c5f7ae4baf7",
+      "bytes": 19256,
+      "lines": 572,
+      "read_scope": "complete file, lines 1-572 in three contiguous ranges"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "sha256": "1bd78462e0d24979eabeb4913b44847b5c414e27cc380cdedabab728c0f07d8c",
+      "bytes": 26937,
+      "lines": 613,
+      "read_scope": "scoped: lines 1-20 and 300-315"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/activity_exchange.rs",
+      "sha256": "36e3faba4d1e4fd5dfd4aa72162c44eeb4f835771ee2d82f2fbbf2c1ac5bae5e",
+      "bytes": 13189,
+      "lines": 334,
+      "read_scope": "scoped: lines 40-80 and 225-330"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/state.rs",
+      "sha256": "52bcbc7f4aa1fc6ad9aa84562217d6ce674ef6650ff4b130fe29ca20d7a2ce5e",
+      "bytes": 131538,
+      "lines": 3562,
+      "read_scope": "scoped: 485-500, 540-560, 690-725, 1213-1250, 1290-1325, 1333-1360, 1385-1415, 1449-1500, 1540-1590, 2141-2150, 2640-2760; hash is the post-edit working copy including this round's added test",
+      "edited_this_round": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+      "sha256": "e9fde8824cda267d4af670b70119070a16aa01b764492d092afffe7ac4276823",
+      "bytes": 16014,
+      "lines": 442,
+      "read_scope": "scoped: lines 1-64 and 313-355"
+    }
+  ],
+  "negative_evidence": [
+    {
+      "query": "ActivityType",
+      "roots": [
+        "capsules/spectral-bridge/src",
+        "crates",
+        "/Users/v/other/minime/minime/src"
+      ],
+      "source_matches": 0,
+      "repository_matches": 18,
+      "note": "all 18 matches are under capsules/spectral-bridge/workspace/ (Astrid-authored prose), including self_study_1788979071, self_study_1788979209, self_study_1788979454"
+    },
+    {
+      "query": "telemetry|reservoir|spectral|eigen|codec|lambda",
+      "roots": [
+        "capsules/spectral-bridge/src/autonomous/activity_reading.rs"
+      ],
+      "source_matches": 0,
+      "note": "case-insensitive count over the complete 572-line file"
+    }
+  ],
+  "note": "Hashes are the working copies at packet close. state.rs was edited by this round (one added test plus its import); every other source is unmodified."
+}

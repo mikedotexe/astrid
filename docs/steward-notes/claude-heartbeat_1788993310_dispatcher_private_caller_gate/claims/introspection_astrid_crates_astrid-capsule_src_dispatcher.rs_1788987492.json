@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987492",
+  "claims": [
+    {
+      "claim_id": "b001",
+      "summary": "Lines 522-601 implement find_matching_interceptors and interceptor_accepts_caller - the pre-dispatch authorization gate she was looking for.",
+      "disposition": "Verified at SHA a737ea33: find_matching_interceptors doc L522-526, fn L527-558; interceptor_accepts_caller doc L560-562, fn L563-601. The gate is applied inside the match loop at L540-542, so only accepted interceptors enter the returned match list.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "b002",
+      "summary": "Exposure and topic check (lines 570-572): a Private interceptor on topic tool.v1.request.describe is automatically rejected.",
+      "disposition": "Verified exactly at L570-572, unconditional on caller identity - describe stays hidden for Private regardless of attestation. Covered by the existing test private_tool_interceptor_is_hidden_and_requires_exact_host_attested_native_caller and additionally by this round's bare-Private regression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "b003",
+      "summary": "Producer kind validation (lines 573-583): for Private interceptors, if the producer is a wasm_capsule the gate returns false.",
+      "disposition": "Verified. One precision she did not name: the same block returns false when there is no producer at all or the producer's schema version is unsupported (L573-575 filter, L577-579 else-branch), so Private requires positive host attestation rather than merely a non-guest producer. Her reading of the wasm_capsule bar itself is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "b004",
+      "summary": "Expected producer kind (lines 584-588): if an interceptor defines caller_producer_kind, the caller's producer must match it exactly.",
+      "disposition": "Verified at L584-588. Precision: the comparison is producer.map(kind) != Some(expected), so an absent or unsupported producer also fails this check even when exposure is not Private. Manifest field defined at manifest.rs L489.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "b005",
+      "summary": "Source ID whitelisting (lines 589-599): if caller_source_ids is populated, the caller's source_id must appear in that list.",
+      "disposition": "Verified at L589-599; the comparison is the caller's source_id rendered as a string against the manifest list (manifest.rs L494). Existing coverage: the wrong_source case at L874-880 of the same test module.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "b006",
+      "summary": "The EventDispatcher, via find_matching_interceptors, performs the authorization filter before invoke_interceptor is ever called.",
+      "disposition": "Verified: L540-542 gates match collection; the returned pairs are only invoked later at L300 (chain) or L382 (ordered queue). Nothing between those points re-admits a rejected interceptor.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "b007",
+      "summary": "Two-layered security model: host-level filtering by interceptor_accepts_caller, then capsule-level validation inside invoke_interceptor (for example returning Deny).",
+      "disposition": "Verified as a fair description of the two stages. Precision on the second layer's force: a guest Deny short-circuits the chain (L323-332) but on the ordered single-capsule path it only logs (L397-405), because there is no chain left to halt. Deny is audit-visible via the warn! record, not a host-enforced veto beyond chain halting.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "b008",
+      "summary": "publish_exact_local_provider_failure (lines 452-520) handles PROVIDER_FAILURE_MESSAGE specifically when the request_id is present, ensuring errors route through LOCAL_PROVIDER_STREAM_TOPIC.",
+      "disposition": "Verified, with two precisions. The interval spans two functions: publish_exact_local_provider_failure (L452-472) and exact_local_provider_failure_message (L474-520), which holds the gating. A non-nil request_id (L497-499) is one of six conditions: capsule/action/topic L480-485, caller topic L486, ReAct producer L487-493, LlmRequest payload L494-496, supported trace with turn and session L500-502. L452-490 sits outside her 491-612 window, carried from an earlier page, and is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "b009",
+      "summary": "STUDY_QUESTION: how does the system handle a wasm_capsule needing an action that is Private but required - is there a producer_kind that allows it, or is it strictly host-mediated?",
+      "disposition": "Answered from source: strictly host-mediated. No producer_kind grants it, because the guest never authors the field - the host stamps IpcProducerV1::new(\"wasm_capsule\", capsule_id) on every guest publish (engine/wasm/host/ipc.rs L269-274). The hooks::trigger route passes caller=None (sys.rs L114-121) and is rejected too. Astrid reached the same answer unaided in the next report (1788987745); this round corroborates it with the attestation site she could not see from her window.",
+      "classification": "verified_existing"
+    }
+  ]
+}

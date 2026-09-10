@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-capsule_src_dispatcher.rs_1788987745",
+  "claims": [
+    {
+      "claim_id": "a001",
+      "summary": "The delivered page provides a MockCapsule implementation (lines 620-727), a diagnostic tool for testing dispatcher logic.",
+      "disposition": "Verified at the report-bound SHA a737ea33: MockCapsule doc L620, struct L621-633, constructor impl L635-698, `impl Capsule for MockCapsule` L700-738. Test-only type inside `#[cfg(test)] mod tests` (L603). Her interval ends at 727 because that is her delivered window end (612..727); the trait impl continues 11 lines past it to L738. Bounded by her page, not an error.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "a002",
+      "summary": "A wasm_capsule is explicitly barred by interceptor_accepts_caller (lines 573-583): if the caller's producer kind is wasm_capsule the host returns false, so the capsule is never invoked for a Private action.",
+      "disposition": "Verified exactly. L573-575 binds the caller's producer and drops unsupported schema versions; L576-583 applies only when exposure == Private, returning false for a missing producer (L577-579) and for producer.kind == \"wasm_capsule\" (L580-582). The bar is real and is reached before any invoke_interceptor call. This round adds the isolating regression that was missing (see a006 note in the summary).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "a003",
+      "summary": "There is no producer_kind that lets a wasm_capsule bypass the check; the mechanism is host-mediated - a guest cannot reach out and trigger another capsule's Private action directly.",
+      "disposition": "Verified and strengthened beyond her window. The producer field is not guest-settable: every guest publish is stamped host-side with IpcProducerV1::new(\"wasm_capsule\", capsule_id) at engine/wasm/host/ipc.rs L269-274, so a guest cannot name a different kind. The hooks::trigger fan-out (engine/wasm/host/sys.rs L114-121) calls the same gate with caller=None, which Private rejects at L577-579, and skips the calling capsule at L97. Two enforcement sites, one attestation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "a004",
+      "summary": "Lines 717-727 show invoke_interceptor returns CapsuleResult<InterceptResult>; the dispatcher expects a structured response (Continue, Deny, Final) and interprets it to move the state machine forward.",
+      "disposition": "Verified. Signature at L717-722 returns CapsuleResult<InterceptResult>. Consumption is outside her window and confirms the reading: the multi-interceptor chain matches Continue/Final/Deny at L300-353 (Final L313-322 and Deny L323-332 short-circuit; NotSupported L333-341 skips that capsule; other errors continue the chain), and the ordered single-capsule path at L382-431.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "a005",
+      "summary": "A capsule needing a restricted action must either have that action changed to a non-private exposure, or have it mediated by a host-level provider/service with the right permissions.",
+      "disposition": "Verified as an exhaustive reading of the gate: with exposure == Private the only passing callers are host-attested non-wasm_capsule producers that also satisfy caller_producer_kind (L584-588) and caller_source_ids (L589-599); otherwise the exposure itself must change in Capsule.toml. Recorded as her grounded conclusion only. No manifest, exposure, or live behavior was changed or authorized this round.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1788935554_source_catalog_navigation_reread",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1788931359.txt",
+      "sha256": "75be706451fba9370b0ecbcced7b13cd4e852ad1b18000e415b3921259e95276",
+      "bytes": 1434,
+      "lines": 19,
+      "read": "complete",
+      "scope": "entire canonical report, every byte"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f071b519f2fce7e467fe24883883452c15cf77fe281deb8bfee43bf631ca4d18.json",
+      "sha256": "e6f14923e34495d19941ba458f35ac4b77ee7dc134ce141e1d46a8d66936bee0",
+      "bytes": 18951,
+      "lines": 440,
+      "read": "complete",
+      "scope": "entire lived-state witness, every byte"
+    }
+  ],
+  "report_source_binding": {
+    "report_declares": "Source: source catalog / Source revision: navigation only",
+    "witness_source_snapshot_v1": null,
+    "note": "Navigation-only turn: the report binds no source SHA and the witness carries source_snapshot_v1=null, so there is no report-bound hash to compare. Sources below were selected because her claims name them; each was hashed and read at the scope recorded."
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Complete 572-line read at SHA 3c7fca52; the anchor she names exists at that exact path."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "L23/L29/L36/L44 declare ActivityRuntimeV1, ReaderActivityRefV1, MailboxWindowV1, ActivityReadingOfferV1. No ActivityType symbol exists in any source tree."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Zero occurrences of telemetry/reservoir/spectral/eigen/codec/lambda across the complete file; inputs are ConversationState and ActionContinuityStore only."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "handle_action_in L478 owns six verbs and returns None otherwise; observe_chosen_action L534 lists 23 parking Actions."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/state.rs",
+      "note": "receipt_kind_defaults L705-711: read_depth_advance (1,1) versus new_source_resolved/new_page_context/cross_link_formed (2,4)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/activity_exchange.rs",
+      "note": "L58 persist_activity, L233/L318 the reading offer, L264 note_read_depth_advance - the single scalar exit of the activity path."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/state.rs",
+      "note": "new_ground_receipts_weigh_by_kind_and_ignore_shallow_read_advances - shallow-advance floor, read-depth credit 1/ttl 1, new-source credit 2/ttl 4."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming her vocabulary/prosody distinction, the ActivityType correction, and the new regression."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788983335_activity_vocabulary_and_prosody/summaries/introspection_source_catalog_1788979200.md",
+      "note": "Boundary finding: the activity-reading chain terminates in ConversationState, the reader store, and the Action result string; no branch reaches codec, telemetry, ShadowField or the reservoir."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1788983335_activity_vocabulary_and_prosody/summaries/introspection_source_catalog_1788979200.md",
+      "note": "Navigation-only turn recorded with witness source_snapshot_v1=null; minime and prime_esn_wasm confirmed real (chimera_prime.rs:16, audio.rs:144)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1788979200",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row for the vocabulary/prosody grounding and the ActivityType correction."
+    }
+  ]
+}

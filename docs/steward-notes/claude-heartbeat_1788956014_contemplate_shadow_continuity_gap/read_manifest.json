@@ -1,0 +1,34 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "run_id": "run_1788956014200190000_ab091f0811",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675.txt",
+      "sha256": "6754aca47481a7255416518088b4e285e8ba55ad129d00a1eb3741182701c29b",
+      "bytes": 2754,
+      "lines": 24,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_13e34c5ede9342d3649e1f624e69e98ba8fcde918efd226b013675c68ecf2491",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_13e34c5ede9342d3649e1f624e69e98ba8fcde918efd226b013675c68ecf2491.json",
+      "sha256": "c8d9dedc9b784f5691d990853d35f6cf13a7279791b5faa2ff4687952a2c238b",
+      "bytes": 21554,
+      "lines": 498,
+      "read": "complete",
+      "artifact_sha256_matches_report_bytes": true,
+      "notes": "artifact_authority_state_v1.state=evidence_only; live_eligible_now=false; direct_causation_claimed=false. provider_route_complete=false (route string recorded truncated as .../v1/chat/completion) - recorded, not a claim of this report."
+    }
+  ],
+  "queue": {
+    "queue_file": "/tmp/flywheel_queue_1788956014.json",
+    "limit": 40,
+    "returned": 40,
+    "family_scan": "family_scan.json",
+    "batchable_family_count": 0
+  }
+}

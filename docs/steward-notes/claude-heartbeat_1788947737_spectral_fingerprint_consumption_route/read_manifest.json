@@ -1,0 +1,28 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "steward_run_id": "run_1788944132299070000_4c9c6fe6db",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1788943879.txt",
+      "sha256": "4a668a7edc0b67547f9650330f5e44b17476fee85f26cbc91fe44bb1dc2bc098",
+      "bytes": 1754,
+      "lines": 19,
+      "introspection_id": "introspection_source_catalog_1788943879",
+      "read": "complete",
+      "source_binding": "navigation_only_no_report_bound_source_sha",
+      "lived_state_witness_id": "lsw_09d18b065895f00df3ba00c0f0e828a65bdc270f6687c216827bd304dc002fdb"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_09d18b065895f00df3ba00c0f0e828a65bdc270f6687c216827bd304dc002fdb.json",
+      "sha256": "d2f1d451f14055968054300a6e247e919fa5a539d85bd449d5de3ec828158782",
+      "bytes": 18971,
+      "lines": 440,
+      "witness_id": "lsw_09d18b065895f00df3ba00c0f0e828a65bdc270f6687c216827bd304dc002fdb",
+      "read": "complete",
+      "notes": "source_snapshot_v1 null and source_provenance_ref_v1 null, consistent with a navigation-only turn; this is what the queue reports as lived_state_alignment artifact_integrity_unavailable, not a defect. artifact_sha256 matches the report bytes exactly. artifact_authority_state_v1.state=evidence_only, live_eligible_now=false."
+    }
+  ]
+}

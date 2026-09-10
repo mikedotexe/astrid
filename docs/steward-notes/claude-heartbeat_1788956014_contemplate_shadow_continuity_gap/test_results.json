@@ -1,0 +1,26 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "round": "claude-heartbeat_1788956014_contemplate_shadow_continuity_gap",
+  "cargo_commands_run": [],
+  "cargo_note": "No Rust file was created or edited by this round, so no cargo command was run. Claiming a Rust test pass would be false.",
+  "suites": [
+    {"name": "introspection_addressing_audit --self-test", "result": "OK", "tests": 44},
+    {"name": "test_evidence_event_store.py", "result": "OK", "tests": 21},
+    {"name": "test_steward_control.py", "result": "OK", "tests": 29},
+    {"name": "test_steward_projection.py", "result": "OK", "tests": 14},
+    {"name": "test_division_ceremony_followup.py", "result": "OK", "tests": 3},
+    {"name": "test_division_ceremony_chronicle.py", "result": "OK", "tests": 10},
+    {"name": "test_division_ceremony_projection.py", "result": "OK", "tests": null, "note": "division ceremony projection self-test: ok"},
+    {"name": "test_projection_cursors.py", "result": "OK", "tests": 4},
+    {"name": "test_introspection_cadence_audit.py", "result": "OK", "tests": 6},
+    {"name": "anti_drop_catalog.py --self-test", "result": "OK", "tests": 5},
+    {"name": "anti_drop_catalog.py verify --json", "result": "rc=0", "tests": null},
+    {"name": "introspection_cadence_audit.py --strict --compact", "result": "integrity_ok=true", "canonical_reports": 4710, "duplicate_hash_group_count": 0},
+    {"name": "domain_boundary_audit.py verify", "result": "valid=true", "violation_count": 0, "violation_kind_counts": {}, "ratchet": "GREEN"},
+    {"name": "experiential_epistemics.py self-test --json", "result": "OK", "tests": 2, "valid": true},
+    {"name": "experiential_epistemics.py verify --json (final, after all durable writes)", "result": "valid=true", "checked_record_count": 11927, "issue_count": 0, "history_rewritten": false},
+    {"name": "introspection_addressing_audit.py audit-counters --json", "result": "consistent", "mismatches": []},
+    {"name": "evidence_event_store.py --json verify", "result": "valid=true", "last_global_seq": 1045450, "corrupt_lines": 0},
+    {"name": "git diff --check", "result": "clean"}
+  ]
+}
