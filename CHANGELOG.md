@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Correct the dispatcher's ordering documentation: single matches use a per-capsule worker, while multi-interceptor events invoke matches directly in separate chain tasks. The comment no longer promises publish ordering that these paths do not guarantee.
+
 - Verify provider-control receipts live after graceful bridge, Minime and coupled-model reloads, including exact checkpoint/NEXT continuity and unchanged surrounding service identities. Contextual feedback remains an isolated research experiment.
 
 - Distinguish planned model Python source changes from loaded provenance during graceful reload preflight. Retain the previous manifest and require unchanged interpreter/configuration plus the existing full stack checks.

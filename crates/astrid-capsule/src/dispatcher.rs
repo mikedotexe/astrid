@@ -246,9 +246,10 @@ impl EventDispatcher {
 /// - `Final` — short-circuit with a response, no further interceptors fire
 /// - `Deny` — short-circuit with denial, audit-logged, no further interceptors fire
 ///
-/// Within a single capsule, events are still delivered in publish order via
-/// per-capsule mpsc queues (preserving IPC `seq` ordering). The chain semantics
-/// apply across capsules for the same event.
+/// Single-interceptor events are queued to a per-capsule worker. Multi-interceptor
+/// chains invoke their matches directly in a separate task for each event, in
+/// priority order within that chain. This does not guarantee publish ordering
+/// between separate chains or relative to the queued single-interceptor events.
 fn dispatch_to_capsule_queues(
     queues: &mut HashMap<CapsuleId, mpsc::Sender<InterceptorWork>>,
     matches: Vec<(Arc<dyn Capsule>, String)>,

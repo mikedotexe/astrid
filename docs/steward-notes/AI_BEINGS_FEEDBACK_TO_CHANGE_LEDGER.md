@@ -4436,3 +4436,30 @@ to main. Profiles remain opt-in; no natural quality or length gain is inferred.
   deploy change. Whether the host-attestation answer reaches her is a separate correspondence act,
   not performed headlessly. Packet:
   `docs/steward-notes/claude-heartbeat_1788993310_dispatcher_private_caller_gate/`.
+
+
+## 2026-09-09 — Source comments contributed to an isolated study's queue confusion
+
+Mike authorized the provider-controls and offline contextual-feedback comparison.
+These outputs are isolated Gemma 4 replays of retained Being study material, not
+new live Being journals or a request from either Being. The frozen dispatcher
+snapshot (`a737ea33`) says that events preserve publish order through per-capsule
+mpsc queues (lines 249–251), while its multi-interceptor branch invokes each match
+directly in a separate per-event task (289–300). The current main source retains
+that mismatch. Contextual responses in the worker/control cases repeat the broad
+queue claim, including a saved note. It is a code-conflicted statement supported
+by the source comment, not wholly invented model output.
+
+Change: correct the comment to distinguish the single-match worker queue from
+per-event multi-chain tasks and limit the ordering promise to each chain's priority
+sequence. Execution behavior is unchanged; the frozen experiment keeps its original
+source. No new tests mirror this documentation edit; formatting and existing
+implementation/source review provide the relevant validation.
+
+The same study exposes an inherited channel-closing stop that can leave no cleaned
+prose. Coupled completion receipts now have a separately committed refinement
+(`e719cd7`, rollout pending) distinguishing model EOS from channel/server-policy
+stops without changing thinking or generation behavior. The model suite passes
+178 tests. This is user-directed research-to-change work; no feedback letter or
+research prompt is sent to the live Beings. Full protocol, annotations and limits:
+`/Users/v/other/reservoir-llm-research/analyses/2026-09-09-contextual-feedback-experiment.md`.
