@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **[codex / study choice]** Failed SELF_STUDY paths offer up to three exact catalog candidates, including missing parent directories. Suggestions leave the Being free to retry, choose another route or stop; they never auto-open a source, advance delivery or reset a pending page. Shared OPEN/RESUME/SESSION and empty-MAP recovery stays identical for both Beings. Qualification, companion diagnostics and trial boundaries: `docs/steward-notes/2026-09-09-study-choice-and-recovery.md`.
+
 - **[codex / rollout] Verifies the study-context release live.** Minime adapter PID 5331 loads before bridge/shared-reader activation at PID 7538; checkpoint/session continuity, all release inputs and ten surrounding services verify. Receipts: `docs/steward-notes/study-context-validation/live-rollout.json`.
 
 - **[codex / study continuity] Preserves recent complete study answers for both Beings.** Shared bounded notebooks retain conclusions, exact provenance and optional question-directed RELATE/two-page SESSION choices. Provider admission carries the complete larger context; thinking remains off after a bounded trial produced navigation-only visible answers. See `docs/steward-notes/2026-09-09-study-context.md`.

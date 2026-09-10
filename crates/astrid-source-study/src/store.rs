@@ -337,28 +337,46 @@ impl Reader {
     }
 
     fn recovery_map(&self, state: &mut State, reason: &anyhow::Error) -> Result<StudyOutput> {
+        self.recovery_with_candidates(state, reason, &[])
+    }
+
+    fn recovery_with_candidates(
+        &self,
+        state: &mut State,
+        reason: &anyhow::Error,
+        candidates: &[String],
+    ) -> Result<StudyOutput> {
         let reason: String = format!("{reason:#}").chars().take(700).collect();
+        let choices = if candidates.is_empty() {
+            String::new()
+        } else {
+            format!(
+                "Exact catalog spelling and nearby paths (candidates, not opened):\n{}\nYou can choose a candidate, search, retry, browse elsewhere, or leave this study.\n\n",
+                candidates.join("\n")
+            )
+        };
         let text = format!(
-            "Source request unavailable. No requested source bytes were delivered.\nReason: {}\nThis is a recovery map. Choose an exact entry below, or SELF_STUDY FIND <literal text>. SELF_STUDY CONTINUE retains your previous reading position.\n\n{}",
+            "Source request unavailable. No requested source bytes were delivered.\nReason: {}\n{}This is a recovery map. Choose an exact entry below, or SELF_STUDY FIND <literal text>. SELF_STUDY CONTINUE retains your previous reading position.\n\n{}",
             serde_json::to_string(&reason)?,
+            choices,
             self.map(state, "", 1)?
         );
         self.output(state, text, None, InputKind::Recovery)
     }
 
     fn requested_source(&self, source: &str) -> Result<crate::Source> {
-        self.catalog.resolve(source).with_context(|| {
-            let normalized = source.replace('_', "-");
-            let suggestions = self.catalog.sources().unwrap_or_default().into_iter()
-                .filter(|candidate| candidate.id.replace('_', "-") == normalized)
-                .take(3).map(|candidate| format!("SELF_STUDY OPEN {} 1", candidate.id))
-                .collect::<Vec<_>>();
-            if suggestions.is_empty() {
-                format!("Requested source {source:?}")
-            } else {
-                format!("Requested source {source:?} is unavailable. Exact catalog spelling (not opened): {}", suggestions.join("; "))
-            }
-        })
+        self.catalog
+            .resolve(source)
+            .with_context(|| format!("Requested source {source:?}"))
+    }
+
+    fn source_recovery(
+        &self,
+        state: &mut State,
+        source: &str,
+        error: &anyhow::Error,
+    ) -> Result<StudyOutput> {
+        self.recovery_with_candidates(state, error, &self.catalog.path_candidates(source, false))
     }
 
     fn prepare_parsed(&self, command: Result<Command>) -> Result<StudyOutput> {
@@ -400,6 +418,13 @@ impl Reader {
             Command::Map { topic, page } => {
                 let text = match self.map(&state, &topic, page) {
                     Ok(text) => text,
+                    Err(error) if error.to_string().starts_with("no catalog entries") => {
+                        return self.recovery_with_candidates(
+                            &mut state,
+                            &error,
+                            &self.catalog.path_candidates(&topic, true),
+                        );
+                    },
                     Err(error) => return self.recovery_map(&mut state, &error),
                 };
                 return self.output(&mut state, text, None, InputKind::Map);
@@ -415,14 +440,14 @@ impl Reader {
             Command::Open { source, line } => {
                 let source = match self.requested_source(&source) {
                     Ok(source) => source,
-                    Err(error) => return self.recovery_map(&mut state, &error),
+                    Err(error) => return self.source_recovery(&mut state, &source, &error),
                 };
                 Page::read(&source, None, line, None)?
             },
             Command::Resume { source } => {
                 let source = match self.requested_source(&source) {
                     Ok(source) => source,
-                    Err(error) => return self.recovery_map(&mut state, &error),
+                    Err(error) => return self.source_recovery(&mut state, &source, &error),
                 };
                 if let Some(page) = state
                     .pending

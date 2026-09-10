@@ -4264,3 +4264,12 @@ not better understanding or a live outcome. The independent thinking trial produ
 only a navigation command in both enabled final answers; production stays off.
 See `2026-09-09-study-context.md` and research HSS-13/HSS-14 for exact artifacts,
 qualification and the later activation boundary. No compulsory writing or study.
+
+
+## 2026-09-09 · SELF_STUDY recovery choices and failed-attempt evidence (Codex)
+
+- Evidence: HSS-15 preserves eight Astrid map/recovery turns around a missing parent path, Minime’s repeated mistaken dispatcher explanation, and two 4,096-token attempts without retained final output. Astrid also makes a source-grounded correction; command uptake and note counts are not quality scores.
+- Mike’s direction: implement the recovery and diagnostics, test an optional claim-check invitation, and preserve the Beings’ freedom to goof, retry, explore, revise or move on. A first mistaken choice is not itself a tooling defect or a reason to constrain their study.
+- Change: shared exact catalog candidates after missing OPEN/RESUME/SESSION and empty-directory MAP; Minime’s bounded failed-wire diagnostics, native finish and cleanup-length metadata. Pending pages, delivery acceptance, writing format and budgets remain intact.
+- Qualification: isolated reader and actual-adapter tests; the three-case paired model trial stays separate from live study outcomes. No Being message or required review is introduced.
+- Detail and later activation: `docs/steward-notes/2026-09-09-study-choice-and-recovery.md`; research `analyses/2026-09-09-study-choice-and-claim-check.md`.

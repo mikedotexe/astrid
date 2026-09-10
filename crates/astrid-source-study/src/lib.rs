@@ -10,6 +10,7 @@ mod evidence;
 mod navigation;
 mod notebook;
 mod page;
+mod path_recovery;
 mod progress;
 mod questions;
 mod relationships;

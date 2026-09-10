@@ -16,7 +16,7 @@ impl Reader {
         for (name, line) in targets {
             let source = match self.requested_source(name) {
                 Ok(source) => source,
-                Err(error) => return self.recovery_map(state, &error),
+                Err(error) => return self.source_recovery(state, name, &error),
             };
             match Page::read_with_budget(&source, None, *line, None, budget) {
                 Ok(page) => pages.push(page),
