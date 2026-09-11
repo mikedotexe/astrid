@@ -90,5 +90,53 @@ sequence it does not replace the next-input choice record. The first offer
 prepared by the new reader receives ordered delivery-bound feedback. Existing
 private-draft delivery does not share this conservative migration boundary.
 
-Minime implementation commits are 38e3dba and 96b0b61. Activation remains a separate
-step: no committed source identity is presented as proof of loaded code.
+Minime implementation commits are 38e3dba and 96b0b61. The following receipts
+establish activation separately from committed source identity.
+
+## Verified paired activation — September 11, 07:14 Pacific
+
+Implementation is merged and pushed to both main branches: Astrid
+`ed62f1b8c2524b18922f3bb3c796a3a25f452119`, Minime
+`96b0b615d917c8edc164ab8a457c1dd1ddb5b0df`. The clean isolated Astrid source
+worktree and selected stage are retained at
+`/Users/v/other/worktrees/journal-coherence-20260911/` and must not be edited or
+removed while selected. The staged reader passes 53 additional host checks.
+Independent review verifies 28 final source hashes, eight validation logs and
+five staged artifacts. All 103 unrelated canonical Astrid files are preserved;
+the retained safety stash covers only the two overlapping documents.
+
+The initial activation attempt refused the shared-tree settle gate before any
+live action. The successful wrapper transaction
+`c6d672c9e4eb4255a0dd025040023608` records `activated_verified` at
+2026-09-11T14:06:50.901457Z. Astrid PID 89145 started at 14:05:29 UTC after the
+old process drained and received SIGTERM. The new process restores exact
+checkpoint SHA-256 `f40a6498d9de8e0fb54c24aaa20d4e853b438ff9ac273b49d86a64712bb1838f`
+at exchange 195829, saves exchange 195830 and reaches observed model idle.
+Bridge SHA-256 is `46d4c54d43fccea792f1724ab077a604a92c7c48f1b87cfee38c761d05ceba90`;
+shared reader SHA-256 is `0aa85909094a849ba4a96d53385162273744cf082031afd12cdecbac9e39d746`.
+The new response_choice module is explicitly present in the 618-input stage inventory.
+
+Minime's wrapper waits for accepted jobs and the stable quiet window, sends one
+SIGTERM at 14:13:32 UTC and reports success at 14:14:14.224998 UTC. New PID 93033
+started at 14:13:32. All 82 startup source inputs match committed production
+source, with reload_required false. Session 5318 remains; cycle 28859 advances
+to 28860. There is no pending NEXT at either signal boundary or readiness, so
+this restart does not supply a positive pending-choice preservation example.
+No new interrupted job is recovered and no force is used. Managed settings and
+installed launch configuration remain identical. The wrapper does not claim
+atomic traffic quiescence or remote delivery confirmation.
+
+The 14:14:36.589629 UTC paired capture verifies unchanged PID/start identities
+for all nine surrounding services: engine, division gateway/supervisor, coupled
+model, microphone, camera, visual-frame service, host-sensory and Astrid feeder.
+All 71 existing Minime draft IDs remain; only active d71 differs between the
+broader captures, which span natural writing. Mutable reader/draft state is not
+misrepresented as an exact restart checkpoint. The selected shared helper changes
+before Minime's host reload; that short mixed interval is a separate exposure era.
+
+The first natural Astrid study and its immediate continuation verify exact
+delivery of PREVIOUS RESPONSE CHOICE, bound to the preceding CONTINUE response.
+This is interface delivery evidence, not improved understanding. No studies,
+private writing or messages were induced. Natural evidence, limitations and the
+sealed release packet are retained in the research account:
+`/Users/v/other/reservoir-llm-research/analyses/2026-09-11-journal-coherence-repairs.md`.
