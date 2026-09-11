@@ -135,76 +135,61 @@ pub(super) fn reconcile_lease_law(conv: &mut super::state::ConversationState) {
 
 /// Parse NEXT: action from Astrid's response.
 pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
-    let mut in_fence = false;
-    for line in text.lines().rev() {
-        let trimmed = line.trim();
-        if trimmed.starts_with("```") {
-            in_fence = !in_fence;
-            continue;
+    if let Some(action) = astrid_source_study::response_choice::final_explicit_next(text) {
+        if action.starts_with("AFTERIMAGE_KEEP ") {
+            return Some(action);
         }
-        if in_fence {
-            continue;
+        let mut clean = action.trim();
+        for token in &[
+            "<end_of_turn>",
+            "<END_OF_TURN>",
+            "<End_of_turn>",
+            "</s>",
+            "<|endoftext|>",
+        ] {
+            clean = clean.trim_end_matches(token);
         }
-        if let Some(action) = trimmed.strip_prefix("NEXT:") {
-            if let Some(raw) = line.trim_start().strip_prefix("NEXT:")
-                && raw.trim_start().starts_with("AFTERIMAGE_KEEP ")
+        if let Some(pos) = clean.rfind('<') {
+            let after = &clean[pos..];
+            if after.contains("end")
+                || after.contains("turn")
+                || after.contains("eos")
+                || after.len() < 20
             {
-                return Some(raw.trim_start());
+                clean = clean[..pos].trim();
             }
-            let mut clean = action.trim();
-            for token in &[
-                "<end_of_turn>",
-                "<END_OF_TURN>",
-                "<End_of_turn>",
-                "</s>",
-                "<|endoftext|>",
-            ] {
-                clean = clean.trim_end_matches(token);
-            }
-            if let Some(pos) = clean.rfind('<') {
-                let after = &clean[pos..];
-                if after.contains("end")
-                    || after.contains("turn")
-                    || after.contains("eos")
-                    || after.len() < 20
-                {
-                    clean = clean[..pos].trim();
-                }
-            }
-            // Kink follow-up (2026-05-14, post-Tranche-5): strip markdown
-            // decorations from leading/trailing positions. Recurring LLM
-            // artifact: `**READ_MORE**`, ` `RELEASE_SHADOW ...` `, etc. land
-            // in NEXT lines because chat models emit markdown bold/code
-            // formatting around action names. See
-            // project_unwired_actions_catalog.md for the diagnostic.
-            // Slice-based trim preserves &str return type — no allocation.
-            clean = clean.trim_matches(|c| c == '`' || c == '*');
-            clean = strip_choice_metadata_from_next_action(clean);
-            return Some(clean.trim());
         }
+        // Kink follow-up (2026-05-14, post-Tranche-5): strip markdown
+        // decorations from leading/trailing positions. Recurring LLM
+        // artifact: `**READ_MORE**`, ` `RELEASE_SHADOW ...` `, etc. land
+        // in NEXT lines because chat models emit markdown bold/code
+        // formatting around action names. See
+        // project_unwired_actions_catalog.md for the diagnostic.
+        // Slice-based trim preserves &str return type — no allocation.
+        clean = clean.trim_matches(|c| c == '`' || c == '*');
+        clean = strip_choice_metadata_from_next_action(clean);
+        return Some(clean.trim());
     }
-    // A final bare source-reader choice is already an explicit read-only request.
-    // Keep quoted/fenced examples and every other action behind the normal NEXT rule.
-    let last = text
-        .lines()
-        .rev()
-        .find(|line| !line.trim().is_empty())?
-        .trim();
-    if text
-        .lines()
-        .filter(|line| line.trim().starts_with("```"))
-        .count()
-        .is_multiple_of(2)
-        && let Some(rest) = last.strip_prefix("SELF_STUDY ")
-        && matches!(
-            rest.split_whitespace().next(),
-            Some("MAP" | "FIND" | "OPEN" | "RESUME" | "CONTINUE" | "RELATE" | "SESSION" | "TRACE")
-        )
-        && astrid_source_study::Command::parse(last).is_ok()
-    {
-        return Some(last);
+    // The shared forward scanner keeps incomplete/tilde/indented examples inert.
+    // Bare source requests retain their read-only recovery path, even if malformed.
+    astrid_source_study::response_choice::final_bare_source_command(text)
+}
+
+/// A verified private response may request an unsupported exact FINISH.
+/// This returns recovery data only; it neither finishes a draft nor queues an alias.
+pub(crate) fn private_writing_finish_recovery(
+    mode_name: &str,
+    text: &str,
+) -> Option<astrid_source_study::response_choice::ChoiceFeedback> {
+    if mode_name != "private_writing" {
+        return None;
     }
-    None
+    let feedback = astrid_source_study::response_choice::inspect_response(text, true);
+    feedback
+        .selected_next
+        .as_deref()
+        .is_some_and(|action| action.eq_ignore_ascii_case("FINISH"))
+        .then_some(feedback)
 }
 
 pub(crate) fn strip_choice_metadata_from_next_action(action: &str) -> &str {
@@ -2265,8 +2250,8 @@ mod tests {
         action_preflight_report, canonicalize_next_action_components,
         canonicalize_next_action_text, extract_residue_from_next_action, handle_next_action,
         is_action_token_like, is_parameter_decision_verb, parse_next_action,
-        retain_read_more_status_feedback, route_for_preflight_base, split_multi_action,
-        strip_action, unresolved_angle_placeholder,
+        private_writing_finish_recovery, retain_read_more_status_feedback,
+        route_for_preflight_base, split_multi_action, strip_action, unresolved_angle_placeholder,
     };
     use crate::db::BridgeDb;
     use crate::paths::bridge_paths;
@@ -2276,6 +2261,55 @@ mod tests {
     use tokio::sync::mpsc;
 
     static PERCEPTION_FLAG_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    #[test]
+    fn shared_choice_scanner_matches_actual_parser() {
+        let cases: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../crates/astrid-source-study/tests/fixtures/response_choice_cases.json"
+        ))
+        .unwrap();
+        for case in cases.as_array().unwrap() {
+            assert_eq!(
+                parse_next_action(case["text"].as_str().unwrap()),
+                case["selected_next"].as_str(),
+                "{}",
+                case["name"]
+            );
+        }
+    }
+
+    #[test]
+    fn private_finish_reports_recovery_without_aliasing_other_choices() {
+        for action in ["FINISH", "finish"] {
+            let text = format!("NEXT: {action}");
+            let feedback = private_writing_finish_recovery("private_writing", &text).unwrap();
+            assert_eq!(feedback.recovery_commands, ["WRITE FINISH"]);
+            assert!(
+                feedback
+                    .explanation
+                    .unwrap()
+                    .contains("does not mark the draft finished")
+            );
+            assert_eq!(parse_next_action(&text), Some(action));
+            for mode in ["self_study", "private_writing_notice", "write"] {
+                assert!(private_writing_finish_recovery(mode, &text).is_none());
+            }
+        }
+        for text in [
+            "NEXT: WRITE FINISH",
+            "NEXT: FINISH d36",
+            "FINISH",
+            "~~~\nNEXT: FINISH",
+            "    NEXT: FINISH",
+            "> NEXT: FINISH",
+            "NEXT: FINISH\nNEXT: REST",
+        ] {
+            assert!(
+                private_writing_finish_recovery("private_writing", text).is_none(),
+                "{text}"
+            );
+        }
+    }
 
     #[test]
     fn read_more_unavailable_status_survives_perception_consumption() {

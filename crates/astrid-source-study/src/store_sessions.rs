@@ -74,6 +74,7 @@ impl Reader {
                 response_sha256: digest(response),
                 artifact_path: path,
                 artifact_sha256: hash,
+                choice_feedback: None,
             };
             progress::record(state.progress.get_or_insert_with(Progress::new), page);
             state.bookmarks.insert(page.source.clone(), page.clone());
@@ -99,6 +100,7 @@ impl Reader {
             state.last_input = Some(receipt.clone());
         }
         state.last_navigation = Some(receipt.clone());
+        record_choice(state, receipt, request, response)?;
         Ok(())
     }
 

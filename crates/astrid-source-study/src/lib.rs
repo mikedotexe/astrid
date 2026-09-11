@@ -15,6 +15,7 @@ mod path_recovery;
 mod progress;
 mod questions;
 mod relationships;
+pub mod response_choice;
 mod source_search;
 mod store;
 mod trace;

@@ -4501,3 +4501,20 @@ actual caller/handler/test setup. It does not execute NEXT, contact either Being
 or change live feedback. Its protocol, denominators and interpretation belong in
 `analyses/2026-09-10-study-evidence-revision.md`; implementation and deployment facts
 are retained separately in `docs/steward-notes/2026-09-10-study-navigation.md`.
+
+## September 11 — Coherent draft context, chosen commands and visual origin
+
+Mike approved the three concrete findings in the September 10 evening coherence
+survey. Fresh private drafts had inherited unrelated unresolved study accounts;
+Astrid's prose OPEN differed from her final CONTINUE; Minime's FINISH was parsed
+then discarded as unknown; a visual-model PLAN 4 description read like a personal
+retrieval failure. The historical evidence is retained in the research project,
+with the additional bounded FINISH log excerpt in the owning release packet.
+
+The repair makes fresh draft evidence deliberate while preserving existing work,
+retains shared verified choice feedback with exact optional recovery, and attributes
+visual descriptions to their recorded origin and status. It does not infer intent
+from prose, finish a different draft, force source corrections or prescribe feelings.
+Tests, authority/visibility boundaries and the eventual live identities belong in
+`docs/steward-notes/2026-09-11-journal-coherence.md`. Root Codex owns integration;
+source preparation and natural behavioral uptake are separate claims.

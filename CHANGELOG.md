@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Keep new private drafts independent of unrelated study notes; preserve existing drafts and deliberate evidence. Add verified command-choice feedback and safe fenced-example parsing shared with Minime, retaining final choices and optional recovery. See `docs/steward-notes/2026-09-11-journal-coherence.md` for tests and rollout boundaries.
+
 - Verify the coupled termination-evidence follow-up live: distinguish model EOS from configured channel/server stops in natural receipts, retain loaded source identities, and record the completed offline contextual-feedback comparison without enabling it live.
 
 - Correct the dispatcher's ordering documentation: single matches use a per-capsule worker, while multi-interceptor events invoke matches directly in separate chain tasks. The comment no longer promises publish ordering that these paths do not guarantee.

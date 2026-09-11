@@ -62,6 +62,8 @@ pub struct DeliveryReceipt {
     pub response_sha256: String,
     pub artifact_path: PathBuf,
     pub artifact_sha256: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub choice_feedback: Option<crate::response_choice::ChoiceFeedback>,
 }
 #[derive(Default, Serialize, Deserialize)]
 struct State {
@@ -88,6 +90,12 @@ struct State {
     pending_session: Option<StudyOutput>,
     #[serde(default)]
     last_input: Option<DeliveryReceipt>,
+    #[serde(default)]
+    last_choice: Option<crate::response_choice::ChoiceReceipt>,
+    #[serde(default)]
+    last_choice_sequence: u64,
+    #[serde(default)]
+    choice_sequences: BTreeMap<String, u64>,
 }
 pub struct Reader {
     catalog: Catalog,
@@ -146,6 +154,9 @@ impl Reader {
                 .render(),
         );
         text.push_str(&state.questions.render_context(question_id.as_deref()));
+        if let Some(choice) = &state.last_choice {
+            text.push_str(&choice.render(false));
+        }
         if text
             .len()
             .saturating_add(crate::STUDY_PROMPT.len())
@@ -176,11 +187,33 @@ impl Reader {
                 state.sequence, output.text
             )));
             state.pending_navigation = Some(output.clone());
-            self.save(state)?;
         } else {
             state.pending_page_output = Some(output.clone());
-            self.save(state)?;
         }
+        let pending_ids: Vec<_> = state
+            .pending_page_output
+            .iter()
+            .chain(state.pending_navigation.iter())
+            .chain(state.pending_session.iter())
+            .filter_map(|o| {
+                o.page
+                    .as_ref()
+                    .map(|p| p.id.clone())
+                    .or_else(|| o.navigation_id.clone())
+            })
+            .collect();
+        state
+            .choice_sequences
+            .retain(|id, _| pending_ids.contains(id));
+        if let Some(id) = output
+            .page
+            .as_ref()
+            .map(|p| p.id.clone())
+            .or_else(|| output.navigation_id.clone())
+        {
+            state.choice_sequences.insert(id, state.sequence);
+        }
+        self.save(state)?;
         Ok(output)
     }
 
@@ -304,6 +337,10 @@ impl Reader {
             response_sha256: digest(response_json),
             artifact_path,
             artifact_sha256,
+            choice_feedback: Some(crate::response_choice::inspect_response(
+                &completion_text(response_json)?,
+                false,
+            )),
         };
         self.record_output(&mut state, &offered, &receipt, request_json, response_json)?;
         self.save(&state)?;
@@ -344,14 +381,7 @@ impl Reader {
     /// Returns source or checkpoint errors; recovery cannot bypass reader integrity.
     pub fn prepare_action(&self, action: &str) -> Result<StudyOutput> {
         if action.split_whitespace().next() == Some("WRITE") {
-            let _lock = self.lock()?;
-            let state = self.load()?;
-            let seed = state
-                .questions
-                .notebook_for(state.questions.active.as_deref(), &state.notebook)
-                .render();
-            return crate::writing::Writer::new(self.directory.join("writing"))
-                .prepare(action, &seed);
+            return crate::writing::Writer::new(self.directory.join("writing")).prepare(action);
         }
         self.prepare_parsed(Command::parse(action))
     }
@@ -642,7 +672,12 @@ impl Reader {
             response_sha256,
             artifact_path,
             artifact_sha256,
+            choice_feedback: Some(crate::response_choice::inspect_response(
+                &completion_text(response_json)?,
+                false,
+            )),
         };
+        record_choice(&mut state, &receipt, request_json, response_json)?;
         let page = state.pending.take().context("pending page")?;
         record_study(&mut state, &page, response_json)?;
         state.current = Some(page.source.clone());
@@ -714,8 +749,13 @@ impl Reader {
                 response_sha256: digest(response),
                 artifact_path: path,
                 artifact_sha256: hash,
+                choice_feedback: Some(crate::response_choice::inspect_response(
+                    &completion_text(response)?,
+                    false,
+                )),
             };
             let page = page.clone();
+            record_choice(state, &receipt, request, response)?;
             record_study(state, &page, response)?;
             state.current = Some(page.source.clone());
             state.bookmarks.insert(page.source.clone(), page.clone());
@@ -771,6 +811,10 @@ impl Reader {
                     response_sha256: digest(response),
                     artifact_path: path,
                     artifact_sha256: hash,
+                    choice_feedback: Some(crate::response_choice::inspect_response(
+                        &completion_text(response)?,
+                        false,
+                    )),
                 };
                 self.record_output(state, &output, &receipt, request, response)?;
                 self.save(state)?;
@@ -899,5 +943,27 @@ fn record_study(state: &mut State, page: &Page, response: &str) -> Result<()> {
         &completion_text(response)?,
         std::slice::from_ref(page),
     );
+    Ok(())
+}
+
+fn record_choice(
+    state: &mut State,
+    receipt: &DeliveryReceipt,
+    request: &str,
+    response: &str,
+) -> Result<()> {
+    // A late completion can belong to an older still-pending inquiry. Do not
+    // replace feedback from a newer prepared/delivered input with that response.
+    if let Some(sequence) = state.choice_sequences.remove(&receipt.page_id)
+        && sequence >= state.last_choice_sequence
+    {
+        state.last_choice = Some(crate::response_choice::ChoiceReceipt::from_delivery(
+            &receipt.page_id,
+            request,
+            response,
+            false,
+        )?);
+        state.last_choice_sequence = sequence;
+    }
     Ok(())
 }

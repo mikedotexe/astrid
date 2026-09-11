@@ -1,0 +1,462 @@
+[
+  {
+    "name": "final_wins",
+    "text": "SELF_STUDY OPEN astrid/Cargo.toml 1\nNEXT: SELF_STUDY CONTINUE",
+    "private_writing": false,
+    "eligible_indices": [
+      0,
+      1
+    ],
+    "selected_next": "SELF_STUDY CONTINUE",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": "SELF_STUDY OPEN astrid/Cargo.toml 1",
+    "recovery_commands": []
+  },
+  {
+    "name": "bare_find",
+    "text": "FIND dispatcher.rs",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": [
+      "SELF_STUDY FIND dispatcher.rs"
+    ]
+  },
+  {
+    "name": "bare_source",
+    "text": "SELF_STUDY OPEN astrid/Cargo.toml 1",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "SELF_STUDY OPEN astrid/Cargo.toml 1",
+    "selection_kind": "bare_source",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "malformed_bare_source",
+    "text": "SELF_STUDY OPEN",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "SELF_STUDY OPEN",
+    "selection_kind": "bare_source",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "multiple_next",
+    "text": "NEXT: LOOK\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      0,
+      1
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "case_insensitive_next",
+    "text": "next: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "earlier_rest",
+    "text": "NEXT: REST\nSELF_STUDY OPEN astrid/Cargo.toml 1",
+    "private_writing": false,
+    "eligible_indices": [
+      0,
+      1
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "closed_backticks",
+    "text": "```text\nNEXT: LOOK\n```\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "unclosed_backticks",
+    "text": "NEXT: REST\n```text\nNEXT: LOOK",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "closed_tildes",
+    "text": "~~~text\nNEXT: LOOK\n~~~\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "unclosed_tildes",
+    "text": "~~~text\nNEXT: LOOK",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "short_closer",
+    "text": "````text\nNEXT: LOOK\n```\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "mismatched_closer",
+    "text": "```text\nNEXT: LOOK\n~~~\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "closer_with_suffix",
+    "text": "```text\nNEXT: LOOK\n```suffix\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "longer_closer",
+    "text": "```text\nNEXT: LOOK\n````\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "indented",
+    "text": "    NEXT: LOOK\n\tNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "quoted",
+    "text": "> NEXT: LOOK\n\"NEXT: REST\"\n'NEXT: REST'\n`NEXT: REST`\n“NEXT: LOOK”\n‘NEXT: REST’",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "unfinished_bare",
+    "text": "```\nSELF_STUDY OPEN astrid/Cargo.toml 1",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "duplicate_find_in_fence",
+    "text": "FIND dispatcher.rs\n```\nFIND dispatcher.rs",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_finish",
+    "text": "NEXT: FINISH",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "FINISH",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": [
+      "WRITE FINISH"
+    ]
+  },
+  {
+    "name": "private_lowercase_finish",
+    "text": "NEXT: finish",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "finish",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": [
+      "WRITE FINISH"
+    ]
+  },
+  {
+    "name": "public_finish",
+    "text": "NEXT: FINISH",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "FINISH",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "finish_with_args",
+    "text": "NEXT: FINISH d36",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "FINISH d36",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "bare_finish",
+    "text": "FINISH",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "fenced_finish",
+    "text": "~~~\nNEXT: FINISH\n~~~",
+    "private_writing": true,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "find_not_final",
+    "text": "FIND dispatcher.rs\nAn example.",
+    "private_writing": false,
+    "eligible_indices": [
+      0,
+      1
+    ],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_think",
+    "text": "<think>\nNEXT: LOOK\n</think>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_analysis",
+    "text": "<analysis>\nNEXT: LOOK\n</analysis>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_thinking",
+    "text": "<thinking>\nNEXT: LOOK\n</thinking>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_Thinking",
+    "text": "<Thinking>\nNEXT: LOOK\n</Thinking>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_writing_mode",
+    "text": "<writing_mode>\nNEXT: LOOK\n</writing_mode>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_denial_record",
+    "text": "<denial_record>\nNEXT: LOOK\n</denial_record>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_unclosed",
+    "text": "<analysis>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_inline",
+    "text": "A <think>\nNEXT: LOOK\n</think> NEXT: LOOK\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_reopens_same_line",
+    "text": "<think>x</think><analysis>\nNEXT: LOOK\n</analysis>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_tag_in_fence",
+    "text": "```\n<think>\n```\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_tag_in_quote",
+    "text": "> <think>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      1
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_tag_in_indent",
+    "text": "    <think>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      1
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "hidden_close_indented",
+    "text": "<think>\nNEXT: LOOK\n    </think>\nNEXT: REST",
+    "private_writing": false,
+    "eligible_indices": [
+      3
+    ],
+    "selected_next": "REST",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  }
+]

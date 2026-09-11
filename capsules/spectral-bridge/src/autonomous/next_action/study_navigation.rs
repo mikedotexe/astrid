@@ -36,7 +36,7 @@ fn request_target(base: &str, original: &str) -> Option<Option<IntrospectTargetV
     Some(target)
 }
 
-fn private(target: &IntrospectTargetV2) -> bool {
+pub(in crate::autonomous) fn private(target: &IntrospectTargetV2) -> bool {
     // Classify before syntax validation: malformed source prefixes may still
     // carry a private title. Use the same rule for labels and receipt actions.
     target

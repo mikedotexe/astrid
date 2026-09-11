@@ -20,6 +20,11 @@ struct Request {
 #[derive(Deserialize)]
 #[serde(tag = "operation", rename_all = "snake_case")]
 enum Operation {
+    AnalyzeResponse {
+        text: String,
+        #[serde(default)]
+        private_writing: bool,
+    },
     RecoverNavigation {
         action: String,
     },
@@ -43,6 +48,15 @@ fn run() -> Result<serde_json::Value> {
         .take(16 * 1024 * 1024)
         .read_to_string(&mut input)?;
     let request: Request = serde_json::from_str(&input)?;
+    if let Operation::AnalyzeResponse {
+        text,
+        private_writing,
+    } = &request.operation
+    {
+        return Ok(serde_json::to_value(
+            astrid_source_study::response_choice::inspect_response(text, *private_writing),
+        )?);
+    }
     if let Operation::RecoverNavigation { action } = &request.operation {
         return Ok(serde_json::to_value(
             astrid_source_study::recover_local_navigation(action),
@@ -63,7 +77,9 @@ fn run() -> Result<serde_json::Value> {
         reader = reader.with_runtime_workspace(workspace, &being);
     }
     match request.operation {
-        Operation::RecoverNavigation { .. } => unreachable!("handled before constructing a reader"),
+        Operation::AnalyzeResponse { .. } | Operation::RecoverNavigation { .. } => {
+            unreachable!("handled before constructing a reader")
+        },
         Operation::Prepare { action } => Ok(serde_json::to_value(reader.prepare_action(&action)?)?),
         Operation::Delivered {
             page_id,

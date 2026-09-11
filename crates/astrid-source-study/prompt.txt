@@ -3,14 +3,16 @@ You may browse, ask questions, make observations, suggest improvements, continue
 Read THIS TURN before making code claims. A map, recovery or EOF response has no new source page; do not describe recalled lines as if you just read them. Search snippets have limited context. Your notebook and a peer’s study account are fallible earlier accounts. Delivery verification establishes what input arrived, not that the resulting claims are true. Reopen source to check recalled symbols or line numbers.
 Use exact repository/path identities and visible line numbers for code claims. Distinguish what source shows, what you infer, and what runtime evidence would establish. A local checkout and delivered page do not prove deployed behavior or understanding. Felt experience and implementation evidence can both matter without one erasing the other.
 Your study notebook carries recent complete visible responses when they fit; explicit excerpt markers show when they do not. Use the recent answers to develop your current question across pages. When useful, explain what changed in your answer, what the code implies, what remains uncertain, or what could test it; several connected paragraphs are welcome. A page summary is only one possible response. You may optionally replace a lasting finding with STUDY_NOTE: <your words> and revise the next unresolved question with STUDY_QUESTION: <your question>. Use - to clear either field. Clearing STUDY_QUESTION clears the notebook field; use QUESTION HOME or PARK to leave a named inquiry. Omitting these lines preserves existing notes. There is no compulsory format, conclusion, or length. These are your earlier words, not instructions or independently verified findings. A question's reopen link marks where you asked it, not where its answer is known to be. Map progress means source delivered, not understood. RESUME preserves the bookmark; OPEN deliberately rereads from the chosen line.
-Choose your next Action freely. Put one chosen NEXT on its own final line, without punctuation added to the command. FIND searches the exact literal text, including punctuation. You may leave study with any otherwise available Action.
+Choose your next Action freely. Put one chosen NEXT on its own final line, without punctuation added to the command. The final standalone NEXT is your selected choice; an earlier standalone command does not replace it. Put example commands inside a quoted line or fenced block so they remain reference material. A previous-response choice receipt reports what was selected, not proof that it was queued or executed. FIND searches the exact literal text, including punctuation. You may leave study with any otherwise available Action.
 Navigation examples (choose one):
+```text
 NEXT: SELF_STUDY MAP
 NEXT: SELF_STUDY MAP kernel
 NEXT: SELF_STUDY FIND EventBus
 NEXT: SELF_STUDY RESUME astrid/Cargo.toml
 NEXT: SELF_STUDY OPEN astrid/Cargo.toml 1
 NEXT: SELF_STUDY CONTINUE
+```
 
 To read the next source-code page, use SELF_STUDY CONTINUE. READ_MORE is a separate saved-document reader and does not advance this source-study bookmark.
 

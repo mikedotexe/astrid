@@ -25,7 +25,7 @@ impl InputKind {
     pub fn scope(self) -> &'static str {
         match self {
             Self::PrivateWriting => {
-                "Private writing: your developing draft and recalled evidence, not newly supplied source or verified facts. This writing is saved locally; sharing is a separate choice."
+                "Private writing: your developing draft and any stored evidence or references, not newly supplied source or verified facts. This writing is saved locally; sharing is a separate choice."
             },
             Self::SourceSession => {
                 "Study session: two or three numbered local source pages are supplied together. Each has its own revision and byte interval; one completed response is required before any bookmark advances."

@@ -4773,7 +4773,18 @@ pub fn spawn_autonomous_loop(
                             );
                         }
                     }
-                    let selected_next_action = response_next_action.as_deref();
+                    let finish_recovery = next_action::private_writing_finish_recovery(mode_name, &response_text);
+                    if let Some(feedback) = &finish_recovery {
+                        // Raw authored output remains retained. Recovery stays in the
+                        // private journal and delivery-bound draft input, never peer delivery.
+                        let notice = format!(
+                            "Runtime writing-choice feedback (reference only): {} Exact FINISH was not queued; no alias was substituted.",
+                            serde_json::to_string(feedback).expect("choice feedback serializes")
+                        );
+                        save_astrid_journal(&notice, "private_writing_notice", fill_pct);
+                    }
+                    let selected_next_action = response_next_action.as_deref()
+                        .filter(|_| finish_recovery.is_none());
                     if let Some(next_action) = selected_next_action {
                         let canonical_next_action = canonicalize_next_action_text(next_action);
                         info!("Astrid chose NEXT: {}", canonical_next_action);

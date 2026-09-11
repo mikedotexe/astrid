@@ -3,7 +3,7 @@ fn uses_shared_source_study(conv: &ConversationState) -> bool {
     let Some(target) = conv.introspect_target.as_ref() else {
         return true;
     };
-    if target.label.starts_with("SELF_STUDY") || target.label.split_whitespace().next() == Some("WRITE") {
+    if target.label.starts_with("SELF_STUDY") || next_action::study_navigation::private(target) {
         return true;
     }
     let sources = introspect::introspect_sources();
@@ -20,7 +20,8 @@ fn shared_study_command(
     use astrid_source_study::Command;
     match target {
         None => Ok(Command::Continue),
-        Some(target) if (target.label.starts_with("SELF_STUDY") || target.label.split_whitespace().next() == Some("WRITE")) => Command::parse(&target.label),
+        Some(target) if next_action::study_navigation::private(&target) => anyhow::bail!("private writing requires the writing preparation path"),
+        Some(target) if target.label.starts_with("SELF_STUDY") => Command::parse(&target.label),
         Some(target) if target.offset == state::IntrospectOffsetV2::Auto => Ok(Command::Resume {
             source: target.label,
         }),
@@ -34,6 +35,37 @@ fn shared_study_command(
     }
 }
 
+/// Private intent controls preparation before source recovery can echo a title.
+/// This is a privacy boundary, not an alias or a broader writing grammar.
+fn prepare_shared_study_target(
+    reader: &astrid_source_study::Reader,
+    target: Option<state::IntrospectTargetV2>,
+) -> anyhow::Result<astrid_source_study::StudyOutput> {
+    if let Some(target) = target.as_ref() {
+        if next_action::study_navigation::private(target) {
+            if target.label.split_whitespace().next() != Some("WRITE") {
+                anyhow::bail!("use an explicit WRITE command without a source prefix or colon; WRITE HELP lists writing choices");
+            }
+            return reader.prepare_action(&target.label);
+        }
+        if target.label.starts_with("SELF_STUDY") {
+            return reader.prepare_action(&target.label);
+        }
+    }
+    reader.prepare(shared_study_command(target)?)
+}
+
+fn source_study_prepare_notice(
+    private_request: bool,
+    error: &anyhow::Error,
+) -> (&'static str, String, String) {
+    (
+        if private_request { "private_writing_notice" } else { "introspect_notice" },
+        if private_request { format!("Private writing: {error:#}. WRITE HELP lists your choices; WRITE CONTINUE retries a pending draft turn.") } else { format!("Source study: {error:#}. Use SELF_STUDY MAP or SELF_STUDY FIND <text>.") },
+        String::new(),
+    )
+}
+
 async fn run_shared_source_study(
     conv: &mut ConversationState,
     state: &Arc<RwLock<BridgeState>>,
@@ -41,7 +73,7 @@ async fn run_shared_source_study(
 ) -> (&'static str, String, String) {
     let _attempt = next_action::introspection_cadence::begin_attempt(conv);
     let requested = conv.introspect_target.take();
-    let private_request = requested.as_ref().is_some_and(|t| t.label.split_whitespace().next() == Some("WRITE"));
+    let private_request = requested.as_ref().is_some_and(next_action::study_navigation::private);
     let prepared = (|| -> anyhow::Result<_> {
         let paths = bridge_paths();
         let catalog =
@@ -53,14 +85,7 @@ async fn run_shared_source_study(
                 .join("diagnostics/source_first_v3/shared_reader"),
         )
         .with_runtime_workspace(paths.bridge_workspace().to_path_buf(), "astrid");
-        let output = if let Some(target) = requested
-            .as_ref()
-            .filter(|target| target.label.starts_with("SELF_STUDY") || target.label.split_whitespace().next() == Some("WRITE"))
-        {
-            reader.prepare_action(&target.label)?
-        } else {
-            reader.prepare(shared_study_command(requested)?)?
-        };
+        let output = prepare_shared_study_target(&reader, requested)?;
         Ok((reader, output, catalog))
     })();
     let (reader, output, catalog) = match prepared {
@@ -71,11 +96,7 @@ async fn run_shared_source_study(
                 format!("source_study_prepare:{error}"),
                 None,
             );
-            return (
-                if private_request { "private_writing_notice" } else { "introspect_notice" },
-                if private_request { format!("Private writing: {error:#}. WRITE HELP lists your choices; WRITE CONTINUE retries a pending draft turn.") } else { format!("Source study: {error:#}. Use SELF_STUDY MAP or SELF_STUDY FIND <text>.") },
-                String::new(),
-            );
+            return source_study_prepare_notice(private_request, &error);
         },
     };
     let source_snapshot = output.page.as_ref().and_then(|page| {
@@ -308,6 +329,55 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 #[cfg(test)]
 mod source_study_tests {
     use super::*;
+    #[test]
+    fn malformed_private_targets_cannot_prepare_public_source_recovery() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("astrid");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("Cargo.toml"), "[workspace]\nmembers=[]\n").unwrap();
+        let directory = temp.path().join("reader");
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([
+                ("astrid".into(), root),
+            ])).unwrap(),
+            directory.clone(),
+        );
+        for label in [
+            "write START PRIVATE_TITLE_MARKER",
+            "WRITE: START PRIVATE_TITLE_MARKER",
+            "write: START PRIVATE_TITLE_MARKER",
+            "SELF_STUDY write START PRIVATE_TITLE_MARKER",
+            "SELF_STUDY REPLACE WRITE START PRIVATE_TITLE_MARKER",
+            "SELF_STUDY replace write START PRIVATE_TITLE_MARKER",
+            "WRITE NOT_A_WRITING_VERB PRIVATE_TITLE_MARKER",
+        ] {
+            for target in [state::IntrospectTargetV2::auto(label.into()), state::IntrospectTargetV2::exact(label.into(), 9)] {
+                let mut conv = ConversationState::new(Vec::new(), None);
+                conv.introspect_target = Some(target.clone());
+                assert!(uses_shared_source_study(&conv));
+                assert!(next_action::study_navigation::private(&target));
+                assert!(shared_study_command(Some(target.clone())).is_err());
+                let error = prepare_shared_study_target(&reader, Some(target)).unwrap_err();
+                let (mode, notice, source) = source_study_prepare_notice(true, &error);
+                assert_eq!(mode, "private_writing_notice");
+                assert!(notice.contains("WRITE HELP"));
+                assert!(!notice.contains("PRIVATE_TITLE_MARKER"));
+                assert!(source.is_empty());
+                assert!(!directory.join("reader-v1.json").exists());
+            }
+        }
+        let writing = prepare_shared_study_target(&reader, Some(state::IntrospectTargetV2::auto(
+            "WRITE START a private topic".into(),
+        ))).unwrap();
+        assert_eq!(writing.input_kind, astrid_source_study::InputKind::PrivateWriting);
+        assert!(!writing.text.contains("recovery map"));
+        assert!(!directory.join("reader-v1.json").exists());
+        let source = prepare_shared_study_target(&reader, Some(state::IntrospectTargetV2::auto(
+            "SELF_STUDY OPEN astrid/Cargo.toml 1".into(),
+        ))).unwrap();
+        assert!(source.page.is_some());
+    }
+
     #[test]
     fn source_action_keeps_exact_identity_and_one_based_line() {
         let action = shared_study_command(Some(state::IntrospectTargetV2::auto(
