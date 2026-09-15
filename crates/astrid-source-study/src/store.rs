@@ -1,5 +1,7 @@
 use crate::notebook::Notebook;
 use crate::questions::Questions;
+#[path = "store_navigation.rs"]
+mod navigation;
 #[path = "store_sessions.rs"]
 mod sessions;
 use crate::progress::{self, Progress};
@@ -96,6 +98,10 @@ struct State {
     last_choice_sequence: u64,
     #[serde(default)]
     choice_sequences: BTreeMap<String, u64>,
+    #[serde(default)]
+    navigation_history: crate::navigation_history::NavigationHistory,
+    #[serde(default)]
+    navigation_offers: BTreeMap<String, crate::navigation_history::NavigationOffer>,
 }
 pub struct Reader {
     catalog: Catalog,
@@ -121,109 +127,6 @@ impl Reader {
             being: being.into(),
         });
         self
-    }
-
-    fn output(
-        &self,
-        state: &mut State,
-        mut text: String,
-        page: Option<Page>,
-        input_kind: InputKind,
-    ) -> Result<StudyOutput> {
-        let input_kind = if page.as_ref().is_some_and(|p| p.start.byte == p.end.byte) {
-            InputKind::EndOfFile
-        } else {
-            input_kind
-        };
-        let evidence_scope = input_kind.scope().to_string();
-        let question_id = page
-            .as_ref()
-            .map_or_else(|| state.questions.active.clone(), |p| p.question_id.clone());
-        let notebook = state
-            .questions
-            .notebook_for(question_id.as_deref(), &state.notebook);
-        text.insert_str(
-            0,
-            &notebook.study_choices(&self.catalog, page.as_ref(), &text),
-        );
-        text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
-        text.push_str(
-            &state
-                .questions
-                .notebook_for(question_id.as_deref(), &state.notebook)
-                .render(),
-        );
-        text.push_str(&state.questions.render_context(question_id.as_deref()));
-        if let Some(choice) = &state.last_choice {
-            text.push_str(&choice.render(false));
-        }
-        if text
-            .len()
-            .saturating_add(crate::STUDY_PROMPT.len())
-            .saturating_add(32)
-            > crate::MAX_INPUT_BYTES
-        {
-            bail!("complete study input exceeds the shared provider budget; bookmark unchanged");
-        }
-        let mut output = StudyOutput {
-            input_kind,
-            evidence_scope,
-            system_prompt: crate::STUDY_PROMPT.into(),
-            input_budget_bytes: crate::MAX_INPUT_BYTES,
-            context_tokens: crate::CONTEXT_TOKENS,
-            text,
-            question_id,
-            page,
-            session_pages: Vec::new(),
-            navigation_id: None,
-        };
-        if output.page.is_none() {
-            state.sequence = state
-                .sequence
-                .checked_add(1)
-                .context("source-study sequence exhausted")?;
-            output.navigation_id = Some(digest(format!(
-                "navigation:{}:{}",
-                state.sequence, output.text
-            )));
-            state.pending_navigation = Some(output.clone());
-        } else {
-            state.pending_page_output = Some(output.clone());
-        }
-        let pending_ids: Vec<_> = state
-            .pending_page_output
-            .iter()
-            .chain(state.pending_navigation.iter())
-            .chain(state.pending_session.iter())
-            .filter_map(|o| {
-                o.page
-                    .as_ref()
-                    .map(|p| p.id.clone())
-                    .or_else(|| o.navigation_id.clone())
-            })
-            .collect();
-        state
-            .choice_sequences
-            .retain(|id, _| pending_ids.contains(id));
-        if let Some(id) = output
-            .page
-            .as_ref()
-            .map(|p| p.id.clone())
-            .or_else(|| output.navigation_id.clone())
-        {
-            state.choice_sequences.insert(id, state.sequence);
-        }
-        self.save(state)?;
-        Ok(output)
-    }
-
-    fn map(&self, state: &State, topic: &str, page: usize) -> Result<String> {
-        let progress = state
-            .progress
-            .as_ref()
-            .context("study progress not loaded")?;
-        self.catalog
-            .map(topic, page, progress, state.current.as_deref())
     }
 
     // Migrate only retained, verified shared-reader deliveries. Preparation-only
@@ -462,18 +365,10 @@ impl Reader {
                 return self.output(&mut state, text, None, InputKind::RuntimeTrace);
             },
             Command::Map { topic, page } => {
-                let text = match self.map(&state, &topic, page) {
-                    Ok(text) => text,
-                    Err(error) if error.to_string().starts_with("no catalog entries") => {
-                        return self.recovery_with_candidates(
-                            &mut state,
-                            &error,
-                            &self.catalog.path_candidates(&topic, true),
-                        );
-                    },
-                    Err(error) => return self.recovery_map(&mut state, &error),
-                };
-                return self.output(&mut state, text, None, InputKind::Map);
+                return self.prepare_map_view(&mut state, &topic, page, false);
+            },
+            Command::List { topic, page } => {
+                return self.prepare_map_view(&mut state, &topic, page, true);
             },
             Command::Find { query, page } => {
                 return self.output(
@@ -954,6 +849,7 @@ fn record_choice(
 ) -> Result<()> {
     // A late completion can belong to an older still-pending inquiry. Do not
     // replace feedback from a newer prepared/delivered input with that response.
+    let offer = state.navigation_offers.remove(&receipt.page_id);
     if let Some(sequence) = state.choice_sequences.remove(&receipt.page_id)
         && sequence >= state.last_choice_sequence
     {
@@ -964,6 +860,15 @@ fn record_choice(
             false,
         )?);
         state.last_choice_sequence = sequence;
+        if let Some(offer) = offer {
+            state
+                .navigation_history
+                .record(offer, &receipt.page_id, &completion_text(response)?);
+        }
+    } else if let Some(offer) = offer {
+        // A late source for this same inquiry still supplies real code now.
+        // It resets the no-source count without replacing newer choice feedback.
+        state.navigation_history.late_source(&offer);
     }
     Ok(())
 }

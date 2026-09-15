@@ -36,7 +36,12 @@ impl Reader {
             text.push_str(&page.text);
             text.push('\n');
         }
-        let mut output = self.output(state, text, None, InputKind::SourceSession)?;
+        let kind = if pages.iter().all(|page| page.start.byte == page.end.byte) {
+            InputKind::EndOfFile
+        } else {
+            InputKind::SourceSession
+        };
+        let mut output = self.output(state, text, None, kind)?;
         output.session_pages = pages;
         state.pending_navigation = None;
         state.pending = None;

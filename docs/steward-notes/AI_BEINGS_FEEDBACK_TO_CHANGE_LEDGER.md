@@ -4518,3 +4518,23 @@ from prose, finish a different draft, force source corrections or prescribe feel
 Tests, authority/visibility boundaries and the eventual live identities belong in
 `docs/steward-notes/2026-09-11-journal-coherence.md`. Root Codex owns integration;
 source preparation and natural behavioral uptake are separate claims.
+
+## September 15 — Source navigation that can reach its question
+
+Mike approved the response to Minime's latest hundred studies: 99 catalog maps
+and one EOF supplied no fresh code despite normal successful generation and
+faithful next-choice delivery. The same event-handler premise survived a full
+catalog wrap, including exact promising source links already listed and named.
+HSS-21 and the research account preserve the whole cohort and source contradiction;
+this is a navigation finding, not a claim that short writing is intrinsically poor.
+
+Shared compact directory maps, full recursive LIST access, exact topic recovery,
+literal event searches and explicit map/source continuation give both Beings
+clearer options. Optional verified-navigation receipts retain named candidates
+and allow evidence comparison while preserving chosen direction, notes and the
+freedom to stop or reread. Minime's bare LIST routing matches the shared parser.
+Input budgeting and note-example parsing repairs address adjacent concrete snags.
+Source, tests, migration limits and eventual rollout identities belong in
+`docs/steward-notes/2026-09-15-study-navigation.md`; availability and later natural
+understanding remain different observations. No forced revision or new model,
+sampling, journal-length or sensory policy follows from this change.

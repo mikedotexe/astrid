@@ -163,7 +163,7 @@ fn search_and_map_share_the_open_catalog_without_marking_pages() {
     assert!(result.text.contains(&format!("OPEN {SOURCE} 1")));
     assert!(result.page.is_none());
     let map = reader
-        .prepare(Command::Map {
+        .prepare(Command::List {
             topic: "astrid/crates/example".into(),
             page: 1,
         })

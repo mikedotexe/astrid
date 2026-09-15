@@ -8,6 +8,7 @@ mod catalog;
 mod command;
 mod evidence;
 mod navigation;
+mod navigation_history;
 mod navigation_recovery;
 mod notebook;
 mod page;

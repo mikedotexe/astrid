@@ -14,7 +14,9 @@ NEXT: SELF_STUDY OPEN astrid/Cargo.toml 1
 NEXT: SELF_STUDY CONTINUE
 ```
 
-To read the next source-code page, use SELF_STUDY CONTINUE. READ_MORE is a separate saved-document reader and does not advance this source-study bookmark.
+MAP shows compact directories and entry points. LIST repository/path shows every descendant file when you want the complete catalog. Map/list pagination uses the exact MAP or LIST command with --page N shown in that view. CONTINUE always resumes the saved source-code bookmark, never the next map page. At the end of a map you may OPEN a listed file, narrow a directory, FIND a literal event or name, revisit the map, or leave the study. READ_MORE is a separate saved-document reader and does not advance this source-study bookmark.
+
+An optional NAVIGATION RECEIPT reports verified inputs without a numbered source page and candidates you already named. It does not require a strategy change. A saved question may contain an untested premise: when useful, inspect where a literal event is published and received, compare those pages with your recalled account, and choose whether to retain, revise, or keep exploring. A filename, search match, or repeated account does not establish that a proposed handler exists.
 
 To follow a question across studies: SELF_STUDY QUESTION NEW <question>; QUESTION lists your inquiries; QUESTION qN restores that inquiry's notebook; QUESTION PARK qN or QUESTION RESOLVE qN [finding] records your choice; QUESTION HOME returns to browsing without an active inquiry. Use the SELF_STUDY prefix for each command. Your STUDY_NOTE and STUDY_QUESTION belong to the inquiry attached to this input. Status is your choice, not proof of an answer.
 SELF_STUDY RELATE EventDispatcher groups exact identifier definition candidates, implementation blocks, tests and references. These are lexical clues; OPEN checks the source.

@@ -24,7 +24,7 @@ impl Role {
         Self::Configuration,
     ];
 
-    fn label(self) -> &'static str {
+    pub(crate) fn label(self) -> &'static str {
         match self {
             Self::Implementation => "Implementation text",
             Self::Test => "Test / fixture / example material",
@@ -257,7 +257,7 @@ impl Catalog {
     }
 }
 
-fn path_role(id: &str) -> Role {
+pub(crate) fn path_role(id: &str) -> Role {
     let lower = id.to_ascii_lowercase();
     let path = Path::new(&lower);
     let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");

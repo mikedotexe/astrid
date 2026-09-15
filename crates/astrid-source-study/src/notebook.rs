@@ -41,12 +41,7 @@ impl Notebook {
                 out,
                 "YOUR CURRENT QUESTION — {question}\nIf this reading changes your answer, you can save the finding with STUDY_NOTE: and revise STUDY_QUESTION: (or use - to clear it). These are optional; your prose can develop the answer freely."
             );
-            let quoted = question
-                .split('`')
-                .skip(1)
-                .step_by(2)
-                .filter(|value| !value.is_empty() && value.len() <= 300)
-                .collect::<Vec<_>>();
+            let quoted = inquiry_terms(question);
             let context_sources = page
                 .map(|page| page.source.as_str())
                 .into_iter()
@@ -69,9 +64,14 @@ impl Notebook {
                     let (parent, _) = context.rsplit_once('/')?;
                     catalog.resolve(&format!("{parent}/{reference}")).ok()
                 });
-                for source in direct.chain(sibling) {
-                    if !question_sources.contains(&source.id) {
-                        question_sources.push(source.id);
+                let candidates = catalog.candidate_sources(reference).into_iter();
+                for source in direct
+                    .map(|source| source.id)
+                    .chain(sibling.map(|source| source.id))
+                    .chain(candidates)
+                {
+                    if !question_sources.contains(&source) {
+                        question_sources.push(source);
                     }
                     if question_sources.len() == 2 {
                         break;
@@ -87,18 +87,14 @@ impl Notebook {
                     "Open a source named in this question (exact catalog path; no source bytes are supplied until you choose it): SELF_STUDY OPEN {source} 1"
                 );
             }
-            for symbol in quoted
+            for term in quoted
                 .into_iter()
-                .filter(|s| {
-                    !s.is_empty()
-                        && s.len() <= 160
-                        && s.bytes().enumerate().all(|(i, b)| {
-                            b == b'_' || b.is_ascii_alphabetic() || (i > 0 && b.is_ascii_digit())
-                        })
+                .filter(|term| {
+                    !source_reference(term) && (identifier(term) || dotted_literal(term))
                 })
                 .take(2)
             {
-                append_lookup_choice(&mut out, navigation, symbol);
+                append_lookup_choice(&mut out, navigation, term);
             }
         }
         let current = page.map(|p| format!("SELF_STUDY OPEN {} {}", p.source, p.start.line));
@@ -153,34 +149,40 @@ impl Notebook {
             reopen: page.map(|p| format!("SELF_STUDY OPEN {} {}", p.source, p.start.line)),
             resume: page.map(|p| format!("SELF_STUDY RESUME {}", p.source)),
         };
-        // Provider reasoning fields are never read. Some older lanes place a
-        // reasoning block in content; it must not become a carried study note.
-        let mut visible = text.to_owned();
-        for tag in ["think", "analysis"] {
-            while let Some(start) = visible.find(&format!("<{tag}>")) {
-                let end_tag = format!("</{tag}>");
-                let end = visible[start..].find(&end_tag).map_or(visible.len(), |n| {
-                    start.saturating_add(n).saturating_add(end_tag.len())
-                });
-                visible.replace_range(start..end, "");
-            }
-        }
         let mut prose = Vec::new();
-        let mut fenced = false;
-        for original in visible.lines() {
+        let eligible = crate::response_choice::eligible_choice_line_indices(text);
+        for (index, original) in text.lines().enumerate() {
             let line = original.trim();
-            if line.starts_with("```") || line.starts_with("~~~") {
-                fenced = !fenced;
-            }
-            if !fenced && let Some(value) = line.strip_prefix("STUDY_NOTE:") {
+            let directive = eligible.binary_search(&index).is_ok();
+            if directive && let Some(value) = line.strip_prefix("STUDY_NOTE:") {
                 self.note = update(value, &entry, 1600);
-            } else if !fenced && let Some(value) = line.strip_prefix("STUDY_QUESTION:") {
+            } else if directive && let Some(value) = line.strip_prefix("STUDY_QUESTION:") {
                 self.question = update(value, &entry, 500);
-            } else if !line.starts_with("NEXT:") {
+            } else if !directive || !line.starts_with("NEXT:") {
                 prose.push(original);
             }
         }
-        let prose = prose.join("\n");
+        let mut prose = prose.join("\n");
+        // Provider reasoning fields are never read. Some older lanes place a
+        // reasoning block in content; it must not become a carried study note.
+        // Determine directive eligibility before cleanup, so removing an inline
+        // metadata block cannot promote the rest of that line into a command.
+        for tag in [
+            "think",
+            "analysis",
+            "thinking",
+            "Thinking",
+            "writing_mode",
+            "denial_record",
+        ] {
+            while let Some(start) = prose.find(&format!("<{tag}>")) {
+                let end_tag = format!("</{tag}>");
+                let end = prose[start..].find(&end_tag).map_or(prose.len(), |n| {
+                    start.saturating_add(n).saturating_add(end_tag.len())
+                });
+                prose.replace_range(start..end, "");
+            }
+        }
         if !prose.trim().is_empty() {
             let latest = entry(prose.trim(), 64_000);
             if self
@@ -199,53 +201,63 @@ impl Notebook {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn render(&self) -> String {
+        self.render_with_budget(usize::MAX)
+            .expect("recorded notebook fields fit the default rendering budget")
+    }
+
+    /// Bound the complete carried notebook, including framing and valid JSON.
+    /// Rendering never edits the durable notebook. Oldest whole accounts are
+    /// omitted before the latest account becomes an explicitly marked excerpt.
+    pub(crate) fn render_with_budget(&self, max_total_bytes: usize) -> anyhow::Result<String> {
+        const HEADER: &str = "\n\nRECALLED ACCOUNT — your study notebook contains recent visible responses and your saved findings, not source supplied this turn or verified code facts. Recent accounts are oldest first; previous is the latest. complete=false marks an excerpt, never a full answer. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. A reopen link marks the page behind that account; the question's link is where it was asked, not a known answer location. Reopen checks current source; resume continues the bookmark. Missing fields mean no note was saved.\n";
+        const FOOTER: &str = "\nEnd of study notebook.\n";
         if self.note.is_none() && self.question.is_none() && self.previous.is_none() {
-            return String::new();
+            return Ok(String::new());
         }
+        let Some(json_budget) =
+            max_total_bytes.checked_sub(HEADER.len().saturating_add(FOOTER.len()))
+        else {
+            anyhow::bail!(
+                "study notebook framing exceeds the remaining input budget; notebook unchanged"
+            );
+        };
+        let json_budget = json_budget.min(32_000);
         let mut view = self.clone();
         // Bound the serialized value without ever cutting JSON syntax or an exact path.
-        let serialized = loop {
-            let rendered = serde_json::to_string(&view).expect("notebook strings serialize");
-            if rendered.len() <= 32_000 {
-                break rendered;
+        loop {
+            let serialized = serde_json::to_string(&view)?;
+            if serialized.len() <= json_budget {
+                return Ok(format!("{HEADER}{serialized}{FOOTER}"));
             }
-            // Prefer complete recent answers. Drop the oldest whole account
-            // before excerpting anything; always keep the current question/note.
             if !view.recent.is_empty() {
                 view.recent.remove(0);
                 continue;
             }
-            let mut changed = false;
-            for item in [&mut view.previous, &mut view.note, &mut view.question]
-                .into_iter()
-                .flatten()
-            {
-                if item.text.len() > 64 {
-                    item.text = bounded(&item.text, (item.text.len() / 2).max(64));
-                    item.complete = false;
-                    changed = true;
-                    break;
+            if let Some(previous) = &mut view.previous {
+                if previous.text.len() > 64 {
+                    previous.text = bounded(&previous.text, (previous.text.len() / 2).max(64));
+                    previous.complete = false;
+                    continue;
                 }
-                if item.reopen.is_some() || item.resume.is_some() {
-                    item.reopen = None;
-                    item.resume = None;
-                    changed = true;
-                    break;
+                if previous.reopen.is_some() || previous.resume.is_some() {
+                    previous.reopen = None;
+                    previous.resume = None;
+                    continue;
                 }
-                if item.origin.len() > 100 {
-                    item.origin = bounded(&item.origin, 100);
-                    changed = true;
-                    break;
+                if previous.origin.len() > 100 {
+                    previous.origin = bounded(&previous.origin, 100);
+                    continue;
                 }
             }
-            if !changed {
-                break r#"{"note":null,"question":null,"previous":null}"#.into();
-            }
-        };
-        format!(
-            "\n\nRECALLED ACCOUNT — your study notebook contains recent visible responses and your saved findings, not source supplied this turn or verified code facts. Recent accounts are oldest first; previous is the latest. complete=false marks an excerpt, never a full answer. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. A reopen link marks the page behind that account; the question's link is where it was asked, not a known answer location. Reopen checks current source; resume continues the bookmark. Missing fields mean no note was saved.\n{serialized}\nEnd of study notebook.\n"
-        )
+            // Preserve the chosen note and question in full. If even their
+            // minimum framing cannot fit, report failure rather than silently
+            // replacing them with null or clipping serialized JSON.
+            anyhow::bail!(
+                "saved study note, question and minimum account exceed the remaining input budget; notebook unchanged"
+            );
+        }
     }
 }
 
@@ -295,9 +307,114 @@ fn append_lookup_choice(out: &mut String, navigation: &str, symbol: &str) {
             "This turn already supplies lexical results for the question's identifier {symbol}. Inspect their roles and numbered source before treating a match as evidence; you remain free to reread or change direction."
         );
     } else {
+        let operation = if dotted_literal(symbol) {
+            "FIND"
+        } else {
+            "RELATE"
+        };
         let _ = writeln!(
             out,
-            "Optional lexical lookup for a name in your question (existence and meaning unverified): SELF_STUDY RELATE {symbol}"
+            "Optional lexical lookup for a name in your question (existence and meaning unverified): SELF_STUDY {operation} {symbol}"
         );
+    }
+}
+
+/// Bounded lexical mentions for optional navigation, never verified claims.
+/// Quotes are not command quoting: returned terms contain no whitespace or
+/// command delimiters, and literal FIND choices use the exact unquoted term.
+pub(crate) fn inquiry_terms(text: &str) -> Vec<&str> {
+    let text = &text[..text.floor_char_boundary(8192)];
+    let mut terms = Vec::new();
+    let mut quote: Option<(char, usize)> = None;
+    let mut previous = None;
+    for (index, character) in text.char_indices() {
+        if let Some((delimiter, start)) = quote {
+            if character == delimiter {
+                let value = &text[start..index];
+                if technical_term(value) && !terms.contains(&value) {
+                    terms.push(value);
+                    if terms.len() == 8 {
+                        return terms;
+                    }
+                }
+                quote = None;
+            }
+        } else if matches!(character, '`' | '"' | '\'')
+            && !previous.is_some_and(char::is_alphanumeric)
+        {
+            quote = Some((character, index.saturating_add(character.len_utf8())));
+        }
+        previous = Some(character);
+    }
+    // Event names need not be quoted. Restrict bare detection to multiple
+    // dotted segments so ordinary sentence punctuation does not become a name.
+    for term in text.split(|c: char| !c.is_ascii_alphanumeric() && !"_./-".contains(c)) {
+        let term = term.trim_end_matches('.');
+        if term.matches('.').count() >= 2 && dotted_literal(term) && !terms.contains(&term) {
+            terms.push(term);
+            if terms.len() == 8 {
+                break;
+            }
+        }
+    }
+    terms
+}
+
+fn technical_term(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 300
+        && !value.starts_with(['.', '/', '-'])
+        && !value.ends_with(['.', '/'])
+        && !value.contains("..")
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || b"_./-".contains(&byte))
+}
+
+fn identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 160
+        && value.bytes().enumerate().all(|(index, byte)| {
+            byte == b'_' || byte.is_ascii_alphabetic() || (index > 0 && byte.is_ascii_digit())
+        })
+}
+
+fn dotted_literal(value: &str) -> bool {
+    technical_term(value)
+        && value.len() <= 160
+        && value.contains('.')
+        && !value.contains('/')
+        && value.split('.').all(|part| !part.is_empty())
+}
+
+#[cfg(test)]
+mod budget_tests {
+    use super::Notebook;
+
+    #[test]
+    fn a_tight_budget_preserves_notes_and_marks_excerpts_without_mutating_storage() {
+        let mut notebook = Notebook::default();
+        let response = format!(
+            "STUDY_NOTE: Keep this finding.\nSTUDY_QUESTION: Keep this question.\n{}END",
+            "🦀".repeat(1800)
+        );
+        notebook.record("first", &response, None);
+        let stored = serde_json::to_value(&notebook).unwrap();
+        let full = notebook.render();
+        let compact = notebook.render_with_budget(2400).unwrap();
+        assert!(compact.len() <= 2400);
+        assert!(compact.len() < full.len());
+        assert!(compact.contains("Keep this finding."));
+        assert!(compact.contains("Keep this question."));
+        assert!(compact.contains("excerpt truncated; middle omitted"));
+        assert!(compact.contains("\"complete\":false"));
+        let body = compact.split_once('\n').unwrap().1;
+        let json = body.split_once('\n').unwrap().1.split_once('\n').unwrap().1;
+        let json = json.strip_suffix("\nEnd of study notebook.\n").unwrap();
+        let _: serde_json::Value = serde_json::from_str(json).unwrap();
+        assert_eq!(serde_json::to_value(&notebook).unwrap(), stored);
+        assert!(notebook.render_with_budget(100).is_err());
+        assert_eq!(serde_json::to_value(&notebook).unwrap(), stored);
+        assert_eq!(Notebook::default().render_with_budget(0).unwrap(), "");
     }
 }

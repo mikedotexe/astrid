@@ -9,6 +9,13 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Improved — shared source-study navigation (2026-09-15)
+
+- Default MAP views show compact directories and direct source choices; LIST retains full recursive catalog access, including historical commentary. Map/list pagination is explicitly separate from source CONTINUE, with recovery for former long-map page numbers.
+- Failed component and filename requests offer bounded exact catalog candidates; quoted event topics offer literal FIND alongside identifier RELATE. Note/question directives use the shared quoted/fenced-line rules.
+- Verified navigation receipts offer previously named source candidates and optional comparison without replacing NEXT, rewriting notes, or limiting exploration. Counts distinguish late source delivery, empty sessions, retries and question changes; optional framing and recalled accounts fit the complete input budget.
+- Qualification, source ownership, staged rollout and natural-exposure boundaries: `docs/steward-notes/2026-09-15-study-navigation.md`.
+
 - Keep new private drafts independent of unrelated study notes; preserve existing drafts and deliberate evidence. Add verified command-choice feedback and safe fenced-example parsing shared with Minime, retaining final choices and optional recovery. See `docs/steward-notes/2026-09-11-journal-coherence.md` for tests and rollout boundaries.
 
 - Verify the coupled termination-evidence follow-up live: distinguish model EOS from configured channel/server stops in natural receipts, retain loaded source identities, and record the completed offline contextual-feedback comparison without enabling it live.

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "command", rename_all = "snake_case")]
 pub enum Command {
     Map { topic: String, page: usize },
+    List { topic: String, page: usize },
     Find { query: String, page: usize },
     Open { source: String, line: usize },
     Resume { source: String },
@@ -70,6 +71,16 @@ impl Command {
                     page,
                 })
             },
+            "LIST" => {
+                let (topic, page) = page_suffix(rest)?;
+                if topic.is_empty() {
+                    bail!("use SELF_STUDY LIST <repository/directory> [--page N]");
+                }
+                Ok(Self::List {
+                    topic: topic.into(),
+                    page,
+                })
+            },
             "FIND" => {
                 let (query, page) = page_suffix(rest)?;
                 if query.is_empty() {
@@ -111,6 +122,7 @@ impl Command {
         if !matches!(
             operation.to_ascii_uppercase().as_str(),
             "MAP"
+                | "LIST"
                 | "FIND"
                 | "OPEN"
                 | "RESUME"

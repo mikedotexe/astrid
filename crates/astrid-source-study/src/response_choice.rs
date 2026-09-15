@@ -109,7 +109,17 @@ fn source_command(text: &str) -> bool {
     text.strip_prefix("SELF_STUDY ").is_some_and(|rest| {
         matches!(
             rest.split_whitespace().next(),
-            Some("MAP" | "FIND" | "OPEN" | "RESUME" | "CONTINUE" | "RELATE" | "SESSION" | "TRACE")
+            Some(
+                "MAP"
+                    | "LIST"
+                    | "FIND"
+                    | "OPEN"
+                    | "RESUME"
+                    | "CONTINUE"
+                    | "RELATE"
+                    | "SESSION"
+                    | "TRACE"
+            )
         )
     })
 }

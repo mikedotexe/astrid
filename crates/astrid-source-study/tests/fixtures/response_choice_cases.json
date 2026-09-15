@@ -458,5 +458,39 @@
     "selection_kind": "explicit_next",
     "earlier_source_command": null,
     "recovery_commands": []
+  },
+  {
+    "name": "bare_list",
+    "text": "SELF_STUDY LIST astrid --page 2",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "SELF_STUDY LIST astrid --page 2",
+    "selection_kind": "bare_source",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "explicit_list",
+    "text": "NEXT: SELF_STUDY LIST astrid/docs --page 3",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "SELF_STUDY LIST astrid/docs --page 3",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "fenced_list",
+    "text": "```text\nSELF_STUDY LIST astrid\n```",
+    "private_writing": false,
+    "eligible_indices": [],
+    "selected_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
   }
 ]

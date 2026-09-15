@@ -2,21 +2,39 @@
 use crate::Catalog;
 use std::cmp::Reverse;
 use std::collections::BTreeSet;
-use std::path::{Component, Path};
+use std::path::Path;
 
 impl Catalog {
     pub(crate) fn path_candidates(&self, requested: &str, directory: bool) -> Vec<String> {
-        let requested = requested.trim_end_matches('/');
-        let parts: Vec<_> = requested.split('/').collect();
-        let Some(repository) = parts.first() else {
+        self.catalog_candidates(requested, directory)
+            .into_iter()
+            .filter(|id| id != requested.trim_end_matches('/'))
+            .map(|id| {
+                if directory {
+                    format!("SELF_STUDY MAP {id}")
+                } else {
+                    format!("SELF_STUDY OPEN {id} 1")
+                }
+            })
+            .collect()
+    }
+
+    /// Exact public source IDs matching a safe spelling, basename or file stem.
+    /// Multiple results remain choices; none is resolved or opened implicitly.
+    pub(crate) fn candidate_sources(&self, requested: &str) -> Vec<String> {
+        self.catalog_candidates(requested, false)
+    }
+
+    fn catalog_candidates(&self, requested: &str, directory: bool) -> Vec<String> {
+        let requested = requested.strip_suffix('/').unwrap_or(requested);
+        if !safe_reference(requested) {
             return Vec::new();
-        };
-        if parts.len() < 2
-            || !self.roots.contains_key(*repository)
-            || !Path::new(requested)
-                .components()
-                .all(|c| matches!(c, Component::Normal(_)))
-        {
+        }
+        let parts: Vec<_> = requested.split('/').collect();
+        let repository = parts.first().filter(|id| self.roots.contains_key(**id));
+        // Bare names can recover across repositories. A repository-qualified
+        // request must never silently broaden to a different installation root.
+        if parts.len() > 1 && repository.is_none() {
             return Vec::new();
         }
         let Ok(sources) = self.sources() else {
@@ -38,16 +56,22 @@ impl Catalog {
             }
         }
         let normalized = requested.replace('_', "-");
+        let leaf = parts.last().copied().unwrap_or("");
         let mut candidates: Vec<_> = available
             .into_iter()
             .filter(|id| {
                 let candidate: Vec<_> = id.split('/').collect();
-                id != requested
-                    && id.len() <= 500
-                    && !id.chars().any(char::is_whitespace)
-                    && candidate.first() == parts.first()
-                    && candidate.last().map(|p| p.replace('_', "-"))
-                        == parts.last().map(|p| p.replace('_', "-"))
+                let candidate_leaf = candidate.last().copied().unwrap_or("");
+                let same_name = candidate_leaf.replace('_', "-") == leaf.replace('_', "-");
+                let same_stem = !directory
+                    && !leaf.contains('.')
+                    && Path::new(candidate_leaf)
+                        .file_stem()
+                        .and_then(|stem| stem.to_str())
+                        .is_some_and(|stem| stem.replace('_', "-") == leaf.replace('_', "-"));
+                safe_reference(id)
+                    && repository.is_none_or(|id| candidate.first() == Some(id))
+                    && (same_name || same_stem)
             })
             .collect();
         candidates.sort_by_key(|id| {
@@ -71,16 +95,39 @@ impl Catalog {
                 id.clone(),
             )
         });
-        candidates
-            .into_iter()
-            .take(3)
-            .map(|id| {
-                if directory {
-                    format!("SELF_STUDY MAP {id}")
-                } else {
-                    format!("SELF_STUDY OPEN {id} 1")
-                }
-            })
-            .collect()
+        candidates.into_iter().take(3).collect()
     }
+}
+
+fn safe_reference(requested: &str) -> bool {
+    !requested.is_empty()
+        && requested.len() <= 500
+        && requested
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || b"_./-".contains(&byte))
+        && requested.split('/').all(|part| {
+            !part.is_empty()
+                && !matches!(part, "." | "..")
+                && (!part.starts_with('.') || matches!(part, ".cargo" | ".github"))
+                && !matches!(
+                    part.to_ascii_lowercase().as_str(),
+                    "workspace"
+                        | "workspaces"
+                        | "journal"
+                        | "journals"
+                        | "generations"
+                        | "drafts"
+                        | "private"
+                        | "target"
+                        | "node_modules"
+                        | "__pycache__"
+                        | "venv"
+                        | "dist"
+                        | "backups"
+                        | "releases"
+                        | "secrets.json"
+                        | "tokens.json"
+                        | "credentials.json"
+                )
+        })
 }
