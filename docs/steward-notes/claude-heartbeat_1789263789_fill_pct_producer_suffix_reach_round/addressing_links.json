@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "resolve_fill_pct 639-654: (telemetry.fill_ratio * 100.0).clamp(0.0, 100.0) primary_fill_ratio, estimate_fill_pct sigmoid fallback 1031-1041, assigned s.fill_pct at 473 via 316."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "The guard takes fill_pct as an f32 parameter (315-329) and uses it at exactly one line, 396: spectral_state(fill_pct, telemetry). No arithmetic inside the guard."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "All eight fill_pct sites verified pass-through: 85 (guard call), 153, 218, 229, 337, 444, 579, 608. No arithmetic anywhere in the fragment."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+      "note": "struct NextActionContext at 114-121 holds fill_pct as a plain f32 field; line 2121 include!s dispatch.rs, so the fragment is not a module."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789263789_fill_pct_producer_suffix_reach_round/summaries/introspection_source_catalog_1789259010.md",
+      "note": "Witness corroborates the navigation-only turn: source_snapshot_v1 and source_provenance_ref_v1 both null, model route complete at 90981 ms, twenty fresh parameter observations."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "The producing function is named resolve_fill_pct and lives in ws/telemetry_port.rs, carrying none of the authority/budget/guard/policy identifiers she is scanning for."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789263789_fill_pct_producer_suffix_reach_round/summaries/introspection_source_catalog_1789259010.md",
+      "note": "Negative assertion recorded with its scope: no fn under those four identifier families produces fill_pct anywhere in capsules/ or crates/."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/source_search.rs",
+      "note": "Complete read at SHA f0900f1a. kind 0 requires exact && words.windows(2) w[1] == query (118-127); spelling_distance rejects on length bound and three-character prefix (321-352)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "The twin that does rank as a Definition candidate: SpectralTelemetry::fill_pct() at 335-337 is self.fill_ratio * 100.0, without the clamp or the lambda1 fallback."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/producer_name_search_reach.rs",
+      "note": "Three new tests pin the reachability boundary on a synthetic twin-and-producer catalog. 3/3 pass; crate suite 76/76."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming what she surfaced, the verified producer location, the twin hazard, and the Tier-5 boundary left unchanged."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for the repeated navigation loop and the regression that pins its cause."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/producer_name_search_reach.rs",
+      "note": "exact_search_on_the_full_producer_name_is_the_one_move_recovery pins RELATE resolve_fill_pct ranking the producing declaration first."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789263789_fill_pct_producer_suffix_reach_round/summaries/introspection_source_catalog_1789259010.md",
+      "note": "Her MAP --page 18 choice is recorded as hers; no redirection was written to any being-facing surface."
+    }
+  ]
+}

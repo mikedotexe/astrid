@@ -1,0 +1,189 @@
+{
+ "schema": "flywheel_verification_receipt_v1",
+ "actor": "claude-heartbeat",
+ "adapter_kind": "subprocess",
+ "controller": {
+  "run_id": "run_1789409544088534000_64463949a4",
+  "preprojection_generation_id": "projection_1789409549235168000_512aeb1c79",
+  "preprojection_completed_steps": 27,
+  "preprojection_authority_scan_passed": true,
+  "pause_generation": 439,
+  "postprojection_generation_id": "not_observable_from_inside_the_child_process",
+  "lease_token_read_or_persisted": false,
+  "ndjson_session_opened": false,
+  "controller_paused_or_resumed_by_this_actor": false,
+  "preprojection_status": "passed"
+ },
+ "processed": [
+  {
+   "introspection_id": "introspection_source_catalog_1789409507",
+   "terminal_status": "addressed_change",
+   "fully_addressed": true,
+   "full_read": true,
+   "proof_missing_claims": [],
+   "claim_count": 7,
+   "evidence_link_count": 11,
+   "new_links": 11,
+   "existing_links": 0,
+   "classifications": {
+    "c001": "verified_existing",
+    "c002": "observed",
+    "c003": "implemented_now",
+    "c004": "verified_existing",
+    "c005": "verified_existing",
+    "c006": "observed",
+    "c007": "implemented_now"
+   }
+  }
+ ],
+ "queue": {
+  "selected": 40,
+  "processed": 1,
+  "unprocessed": 39,
+  "family_scan": {
+   "family_count": 40,
+   "batchable_family_count": 0,
+   "reason": "every family is a single member; similarity_basis none_no_snag_or_test_text_or_unparsed_header"
+  }
+ },
+ "division": {
+  "cycle_sequence": 48,
+  "completed_rounds_since_followup": 2,
+  "rounds_remaining_before_followup": 4,
+  "review_due_at_round_start": false,
+  "review_due_after_record": false,
+  "round_event_id": "division_followup_event_9f958ab0763db1be8057bd3ab7c7e3ef",
+  "event_count": 332,
+  "event_head_sha256": "443f20ec46aaeb3097ed0baabff4fffad882e08589f220f360d1c71b6525e1f4",
+  "verify": "ok",
+  "return_performed": false,
+  "tier5_cadence_dossier_generated": false,
+  "tier5_dossier_reason": "No Division return was due (review_due false at round start), so the dossier obligation did not fire.",
+  "notes_written": 0,
+  "chronicle": {
+   "chronicle_id": "division_chronicle_1e24f0a015eadeb675cf7adb",
+   "json_sha256": "f9a82abddceed727b8d987f56d13f2a35b135cf76ce7490cf96be01fb262bf85",
+   "html_sha256": "b760a51dddb1c368fd162cf4ca5514a8f0e2f0c56431080097853b67313a2b92",
+   "durable_inputs_current": true,
+   "durable_mismatches": [],
+   "volatile_mismatches": [
+    "supervisor_status_sha256"
+   ],
+   "note": "Verify refused before reprojection (round-record append changed a durable input); reprojected and reverified in-round. Durable inputs are current; the supervisor hash is volatile only. Not called fully current, and not filed as a durable-integrity failure."
+  },
+  "processed_report_count": 1
+ },
+ "counters": {
+  "status": "consistent",
+  "mismatches": [],
+  "canonical_indexed": 6623,
+  "canonical_fully_addressed": 3241,
+  "canonical_full_read": 3873,
+  "canonical_remaining": 3382,
+  "canonical_unread": 2750,
+  "canonical_blocked_needs_steward": 416,
+  "canonical_triaged_pending_action": 212,
+  "canonical_triaged_watch": 4,
+  "canonical_read_needs_claims": 0,
+  "all_artifact_pending": 5099,
+  "noncanonical_pending": 1717
+ },
+ "evidence_event_store": {
+  "valid": true,
+  "event_count": 1097132,
+  "last_global_seq": 1097132,
+  "last_event_sha256": "fa54a757d92963d3cedd3a8aa49abc8e643fb00bea0d60d18881a39f376a07b0",
+  "active_store": "v2",
+  "legacy_imported_global_seq": 32278,
+  "stream_counts": {
+   "addressing": 63961,
+   "agency_commons": 7052,
+   "attention_portfolio": 3,
+   "claim_families": 239598,
+   "corridor_v1": 5,
+   "corridor_v2": 112,
+   "felt_contracts": 211318,
+   "felt_mechanism_concordance": 80,
+   "lived_state_witness": 12645,
+   "model_qos": 337437,
+   "reciprocal_uptake": 75872,
+   "representation_contracts": 60537,
+   "sandbox": 3507,
+   "signal_spine": 62684,
+   "steward_control": 21585,
+   "steward_work_selection": 736
+  },
+  "honesty_note": "Verified twice. The first run (seq 1097114, head ba7b47b4...) was captured through a tail window that cut corrupt_lines and errors, so it was re-run to completion after every durable write of this round: valid true, corrupt_lines 0, errors [], seq 1097132, head fa54a757d92963d3cedd3a8aa49abc8e643fb00bea0d60d18881a39f376a07b0. The 18-event delta between the runs is this round's own addressing and Division appends. `evidence_event_store.py status` was not separately run (budget); active_store v2 and legacy boundary 32278 are read from the durable active_store.json and head.json.",
+  "corrupt_lines": 0,
+  "errors": [],
+  "verified_checkpoint_at_first_verify": {
+   "global_seq": 1097114,
+   "event_sha256": "ba7b47b4b2d7a1e1562ee1919172d22e2e7a16916c12c738b4e9ace80c246ebb"
+  }
+ },
+ "integrity": {
+  "addressing_self_test": "44 OK",
+  "evidence_store_unit": "21 OK",
+  "steward_control_unit": "29 OK",
+  "steward_projection_unit": "14 OK",
+  "division_followup_unit": "3 OK",
+  "division_chronicle_unit": "10 OK",
+  "division_projection_self_test": "ok",
+  "projection_cursors_unit": "4 OK",
+  "cadence_unit": "6 OK",
+  "cadence_strict": "integrity_ok true, errors []",
+  "anti_drop_self_test": "5 OK",
+  "anti_drop_verify": "100 rows, 0 gaps, 0 alarms",
+  "domain_boundary_verify": "valid true, violation_count 0 \u2014 ratchet GREEN",
+  "epistemic_self_test": "OK, valid true",
+  "epistemic_verify_final": "valid true, 12266 records checked, 0 issues, history_rewritten false",
+  "evidence_event_store_verify": "valid true, corrupt_lines 0, errors [], seq 1097132"
+ },
+ "live_surface": {
+  "restart_required": false,
+  "deploy_attempted": false,
+  "build_bridge_invoked": false,
+  "launchctl_invoked": false,
+  "live_control_changed": false,
+  "note": "No live substrate, bridge, prompt, codec, model, config, or control change was required, attempted, or made."
+ },
+ "git": {
+  "read_only": true,
+  "staged": false,
+  "committed": false,
+  "branch": "main",
+  "note": "Index left clean; all foreign dirty paths preserved untouched."
+ },
+ "authority_boundary": "Evidence and non-live test only. Nothing here approves, grants, dispatches, deploys, or changes live control. The single shared study-target slot, the candidate-gate precondition, and the recovery text were deliberately NOT changed.",
+ "addressing": {
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "full_read": true,
+  "full_read_count": 1,
+  "processed_report_count": 1,
+  "terminal_status": "addressed_change",
+  "claim_count": 7,
+  "evidence_link_count": 11,
+  "new_link_count": 11,
+  "existing_link_count": 0,
+  "self_test": "44 OK"
+ },
+ "epistemic_lint": {
+  "valid": true,
+  "issue_count": 0,
+  "issues": [],
+  "checked_record_count": 12266,
+  "history_rewritten": false,
+  "self_test": "OK",
+  "run_after_all_durable_writes": true
+ },
+ "anti_drop": {
+  "self_test": "5 OK",
+  "verify": {
+   "total": 100,
+   "gaps": 0,
+   "alarms": 0,
+   "non_ok_verdicts": 0
+  }
+ }
+}

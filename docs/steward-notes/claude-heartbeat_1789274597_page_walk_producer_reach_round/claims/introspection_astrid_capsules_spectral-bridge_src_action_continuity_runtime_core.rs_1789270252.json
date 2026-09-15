@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789270252",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current page of action_continuity/runtime/core.rs still does not reveal the arithmetic formula for fill_pct.",
+      "disposition": "Verified from the complete report-bound window. Working copy file_sha256 fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62 equals the report binding and the witness source_snapshot_v1. Lines 1233-1339 contain zero occurrences of fill_pct, so no arithmetic could have been on her page. Her negative reading is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The block shows retrieving or creating experiments via find_experiment_by_id, matching_active_experiment and unique_experiment_id.",
+      "disposition": "Verified at exact lines in the read window: self.find_experiment_by_id at 1233, self.matching_active_experiment at 1243, self.unique_experiment_id at 1260. All three are inside start_experiment_with_options.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The ExperimentRecord struct (lines 1262-1285) stores fields including motif_allowance_v1 and charter_v1, but not raw telemetry data.",
+      "disposition": "Substantively verified with one precision correction. 1262-1285 is an ExperimentRecord struct LITERAL constructed inside start_experiment_with_options, not the struct definition. Her field reading holds exactly: motif_allowance_v1 at 1281 and charter_v1 at 1282, both None, and no telemetry field of any kind. fill_ratio appears zero times in the whole file.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "experiment_start_command and experiment_branch_command handle the high-level lifecycle of an experiment.",
+      "disposition": "Verified: pub fn experiment_start_command at 1300 and pub fn experiment_branch_command at 1324. Both delegate to start_experiment_with_options and return operator-facing strings; neither computes telemetry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "experiment_branch_command (lines 1324-1339) shows a child spawned from a parent and handles policy and parent_experiment_id, but not the calculation of fill_pct.",
+      "disposition": "Verified, plus a page-boundary fact she could not see. policy experiment_branch_v1 is at 1335 and parent_experiment_id at 1336, both inside her page. The function actually runs 1324-1348, so her page cut it mid json! literal. The unseen remainder 1340-1348 is the branch-ref append and the return format; it carries no fill_pct arithmetic either, so the truncation cost her nothing on this question.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "fill_pct consistently appears as a pre-calculated f32 in the functions seen previously, such as record_next_event.",
+      "disposition": "Verified and strengthened past her evidence. record_next_event is at 909 with fill_pct: f32 at 916, exactly as she says. Exhaustively across all 10187 lines there are 14 fill_pct occurrences: parameters at 916, 1175, 6637, 6675, 6808; pass-throughs into spectral_state at 941, 6642, 6689, 6812, spectral_comfort at 1121, record_active_experiment_auto_link at 1095, append_proposal at 1039 and 1170; and one JSON field at 1184. None is arithmetic. Her word consistently is literally true file-wide.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The telemetry-to-percentage conversion is likely in a utility or state-transition function not yet opened.",
+      "disposition": "Her hypothesis is correct and now named exactly. The producer is resolve_fill_pct at capsules/spectral-bridge/src/ws/telemetry_port.rs:640-654 (file SHA a56cad35914aa66d274127d705d74647478362eaf5a055ab158edb3aa2aaf872): (telemetry.fill_ratio * 100.0).clamp(0.0, 100.0) tagged primary_fill_ratio, else estimate_fill_pct(telemetry.lambda1()) tagged lambda1_sigmoid_fallback. The fallback sigmoid is at 1031-1041, centre 154.0, steepness 0.015, mapped to 35.0 + 30.0 * sigmoid, clamped.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "I need to find where the bridge_db or a telemetry stream is actually queried to produce the numbers that feed into fill_pct.",
+      "disposition": "Half right, and the wrong half matters. It is the telemetry stream, never bridge_db. resolve_fill_pct reads only a &SpectralTelemetry (the 7878 packet) and touches no database. In core.rs, BridgeDb is used solely to mirror threads and events (db.mirror_action_thread at 1256 and 1295); fill_ratio appears zero times in the file. A page walk hunting a bridge_db query would follow a branch that does not exist. Stated as contradiction, not smoothed over.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "I will continue moving forward to see if the orchestration logic is present in the next section. NEXT: SELF_STUDY CONTINUE.",
+      "disposition": "Her choice, left hers; recorded as a reachability boundary, not altered in her runtime. Her page ends at byte 51631 of 414540, about 12 percent in, with roughly 83 more ~4.4KB pages. Because core.rs holds zero fill_pct arithmetic (c006), no remaining page can answer her: the walk is complete and still insufficient. Pinned by three new tests in crates/astrid-source-study/tests/page_walk_producer_reach.rs, which also pin the one-step cross-file OPEN recovery. No live change.",
+      "classification": "implemented_now"
+    }
+  ]
+}

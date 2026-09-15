@@ -1,0 +1,57 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "shared_source": {
+    "path": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+    "sha256": "111a9f092c0a6bf7f662b9f2b0f79377a7168f3cf57bcf4b306155f1224316d6",
+    "total_bytes": 4618,
+    "total_lines": 125,
+    "report_binding_match": true,
+    "read_scope": "complete file, lines 1-125, read in one pass",
+    "shared_by": [
+      "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895"
+    ],
+    "shared_verification_rationale": "Both reports are bound to the identical source SHA-256 and the working copy matches it, so one complete file read grounds both. Each report still has its own full report and witness read, its own claims file, and its own close."
+  },
+  "delivered_window_ledger": {
+    "introspection_..._1789082895": {
+      "bytes": "0..4368",
+      "witness_window_lines": "1..117",
+      "complete_lines_delivered": "1..116",
+      "note": "byte 4368 is four bytes into line 117, whose first byte is 4364; the window carries only line 117's leading indentation"
+    },
+    "introspection_..._1789083028": {
+      "bytes": "4368..4618",
+      "witness_window_lines": "117..125",
+      "note": "page opens mid-line 117; the rendered fragment keeps its line number per the page contract, but the receiver .source_comparison (116) and the negation ! (115) are on the previous page"
+    },
+    "coverage": "contiguous and exhaustive: 0..4368 + 4368..4618 = the whole 4618-byte file"
+  },
+  "window_reproduction": {
+    "method": "reconstructed the numbered body from the file bytes using crates/astrid-source-study/src/page.rs:86-106",
+    "result": "the nine numbered lines Astrid quoted in the 1789083028 report reproduce byte-for-byte",
+    "full_page_digest": "not reproduced; window_sha256 covers the whole rendered page including catalog id and header fields that were not reconstructed"
+  },
+  "corroborating_source": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmarks.rs",
+      "sha256_scope": "lines 50-102",
+      "establishes": "source_comparison is Some exactly when bookmark is Some, making the None arm of the line 117 guard unreachable after line 105"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_types.rs",
+      "sha256_scope": "line 102",
+      "establishes": "dispatch_semantic_microdose is a real symbol, not a phantom reference"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp/mod.rs",
+      "sha256_scope": "line 1",
+      "establishes": "BTSP is documented in-source as 'Being-Time Synaptic Plasticity domain facade'"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lived_state_witness/mod.rs",
+      "sha256_scope": "line 808",
+      "establishes": "provider_route is bounded to 40 chars with provider_route_complete flagged false; provider_route_sha256 hashes the untruncated value"
+    }
+  ]
+}

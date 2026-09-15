@@ -1,0 +1,57 @@
+{
+  "schema": "flywheel_read_manifest.v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789020943.txt",
+      "sha256": "3191aa9e287d443addf9b76f7d5defa323ed911018241b055b4f53047f0726d5",
+      "bytes": 1496,
+      "lines": 18,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a368b92e5d8f2f6a78e60a4ec7eab407fa26ef30e24679a1b6831728aed2aeb1.json",
+      "sha256": "d71950935d553d4f0651a94f305eb53f95cb1b08e85e6201310fd6f643de2d11",
+      "bytes": 18954,
+      "lines": 440,
+      "read": "complete"
+    }
+  ],
+  "continuity_evidence": [
+    {
+      "path": "docs/steward-notes/2026-09-09-source-study-question-grounding.md",
+      "sha256": "c7c8b899bde931e8b58005030e8436bf9222b4aa6cadcefe3232bddac2f69f22",
+      "bytes": 7349,
+      "lines": 153,
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789002932.txt",
+      "read": "complete",
+      "note": "earliest sense_tx-bearing artifact in her corpus; loop origin frame"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789020871.txt",
+      "read": "body_complete",
+      "note": "queue item 2; names btsp/mod.rs as the signal destination"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/state.json",
+      "read": "scoped",
+      "note": "live history entries containing sense_tx; her attribution of the symbol to Minime"
+    }
+  ],
+  "corpus_scans": [
+    {
+      "scope": "all 40 queue-selected reports scanned for sense_tx / btsp / dispatch.rs / crates-example tokens",
+      "result": "40/40 carry the premise"
+    },
+    {
+      "scope": "all introspection_*.txt greped for sense_tx",
+      "result": "84 artifacts; earliest 1789002932"
+    }
+  ],
+  "binding_note": "The report declares 'Source: source catalog / Source revision: navigation only' and its witness carries source_snapshot_v1=null, so there is no report-bound source SHA to compare. Source verification was therefore performed against the working checkout and recorded in source_receipts.json."
+}

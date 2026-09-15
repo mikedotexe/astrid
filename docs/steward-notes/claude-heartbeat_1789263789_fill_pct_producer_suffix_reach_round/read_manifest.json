@@ -1,0 +1,41 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "recorded_by": "claude-heartbeat",
+  "steward_run_id": "run_1789259107372203000_6770e2dcf0",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789259010.txt",
+      "sha256": "c4808e74cb73a9413ddfbe9c34b68aa0c2f43f378d294c2ee2942b133eb85e8c",
+      "bytes": 1505,
+      "lines": 16,
+      "read": "complete",
+      "source_named_by_report": "source catalog (navigation only; no source page supplied this turn)",
+      "source_sha_named_by_report": null,
+      "source_coverage": "not_applicable_navigation_only_turn",
+      "lived_state_witness_id": "lsw_25c6835628db0e146b207be294195901f56ee2e96ade0b759f3e37bd95f5e6cc"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_25c6835628db0e146b207be294195901f56ee2e96ade0b759f3e37bd95f5e6cc",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_25c6835628db0e146b207be294195901f56ee2e96ade0b759f3e37bd95f5e6cc.json",
+      "sha256": "5cd5682b329fe17b8399c917b0824274988fdbba60d5bdb3b1e3970be6aa564d",
+      "bytes": 18970,
+      "lines": 440,
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "source_snapshot_v1": null,
+      "source_provenance_ref_v1": null,
+      "authority_state": "evidence_only",
+      "direct_causation_claimed": false
+    }
+  ],
+  "continuity": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789249785_next_action_context_include_fragment_round/claims/introspection_source_catalog_1789246606.json",
+      "read": "complete",
+      "relation": "prior round on the same question 12404s earlier; identical dispatch.rs/guards.rs/telemetry_port.rs source SHAs"
+    }
+  ]
+}

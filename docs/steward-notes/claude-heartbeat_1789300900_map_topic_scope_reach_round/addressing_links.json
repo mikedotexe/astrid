@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "All 14 fill_pct sites at SHA fafc1f4a are a parameter or a pass-through; none is arithmetic."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "hold|repeat|alter|retire at 3821 and 4033 are review-payload outcomes; functions 3803-3954 and 4016-4130 contain zero fill_pct and zero telemetry."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "Lines 1036-1050: fill_pct and telemetry enter research_budget_guard_assessment_with_base; route becomes research_budget_guard with stage and status blocked."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "resolve_fill_pct 640-654 multiplies fill_ratio by 100 and clamps; estimate_fill_pct 1032-1041 is the sigmoid fallback. No division by a capacity constant here."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Line 213 documents fill_ratio as 0.0-1.0 NOT percentage; 333-336 SpectralTelemetry::fill_pct is fill_ratio * 100.0."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/map_topic_scope_observation.json",
+      "note": "Read-only observation: both producers are [Not delivered] in her reader ledger; core.rs delivered 0..382218 of 414540."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/summaries/introspection_source_catalog_1789295290.md",
+      "note": "Complete producer chain from minime eigenfill.rs active/sample_dim through orchestration.rs:2601 to the astrid consumers."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "note": "Her predicted telemetry-ingestion module is exactly where resolve_fill_pct lives; hypothesis confirmed, not merely plausible."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/summaries/introspection_source_catalog_1789295290.md",
+      "note": "Her hypothesis recorded as correct, with the PrimeRing::fill_ratio name collision named so a name-led search is not misled."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/map_topic_scope_reach.rs",
+      "note": "Four read-only pins: repository scope excludes the peer producer; a MAP entry carries no bytes and no ranking marker; the peer map and a direct OPEN do reach it; MAP senses is one page."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Lines 61-76: MAP <topic> filters catalog sources by the topic prefix and paginates; lines 128-162 are the greedy page fill that puts both producers on page 8."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/map_topic_scope_observation.json",
+      "note": "123 pages / 6440 entries; region boundaries; producers on page 8; pages 1..76 delivered strictly in order; no capsules/ or crates/ entry at or after page 54."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the measurement, the tests, and the deliberate authority boundary."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/read_manifest.json",
+      "note": "Witness source_snapshot_v1 and source_provenance_ref_v1 are both null and artifact_sha256 matches the report: navigation-only by design, not a dropped delivery."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c009",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row recording the confirmed hypothesis, the page-8 measurement, the tests, and the unexercised Mike/operator authority boundary."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/RUN_REPORT.md",
+      "note": "Authority boundary stated: no live navigation, ranking or dispatch change; no being-facing surface written."
+    }
+  ]
+}

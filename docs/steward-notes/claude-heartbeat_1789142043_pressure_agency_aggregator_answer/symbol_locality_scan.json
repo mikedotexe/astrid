@@ -1,0 +1,446 @@
+{
+  "schema": "symbol_locality_watch_v1",
+  "being": "astrid",
+  "window": 60,
+  "min_run": 2,
+  "artifacts_scanned": 60,
+  "open_turns_with_stated_want": 17,
+  "wanted_symbols": 31,
+  "unreached_symbols": 13,
+  "other_file_symbols": 7,
+  "turns_with_an_unreached_want": 12,
+  "chase_runs": [
+    {
+      "symbols": [
+        "SpectralTelemetry"
+      ],
+      "length": 5,
+      "turns_ago": 0,
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789140065.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789139715.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789138996.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789138626.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137989.txt"
+      ]
+    },
+    {
+      "symbols": [
+        "render_pressure_agency_status"
+      ],
+      "length": 2,
+      "turns_ago": 6,
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789136753.txt"
+      ]
+    },
+    {
+      "symbols": [
+        "shadow_preflight"
+      ],
+      "length": 3,
+      "turns_ago": 11,
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789134341.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789134219.txt",
+        "introspection_source_catalog_1789134013.txt"
+      ]
+    },
+    {
+      "symbols": [
+        "shadow_preflight"
+      ],
+      "length": 2,
+      "turns_ago": 15,
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789133134.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789132804.txt"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789140065.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "requested_line": 140,
+      "page_lines": [
+        140,
+        266
+      ],
+      "wants": [
+        {
+          "symbol": "shadow_preflight",
+          "state": "reached",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:256"
+          ]
+        },
+        {
+          "symbol": "SpectralTelemetry",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/types/schema/telemetry.rs:208"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789139715.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "requested_line": 1,
+      "page_lines": [
+        1,
+        102
+      ],
+      "wants": [
+        {
+          "symbol": "shadow_preflight",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:256"
+          ]
+        },
+        {
+          "symbol": "SpectralTelemetry",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/types/schema/telemetry.rs:208"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789138996.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "requested_line": 1,
+      "page_lines": [
+        1,
+        102
+      ],
+      "wants": [
+        {
+          "symbol": "SpectralTelemetry",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/types/schema/telemetry.rs:208"
+          ]
+        },
+        {
+          "symbol": "pressure_agency",
+          "state": "no_definition_found",
+          "sites": []
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789138626.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "requested_line": 1,
+      "page_lines": [
+        1,
+        128
+      ],
+      "wants": [
+        {
+          "symbol": "SpectralTelemetry",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/types/schema/telemetry.rs:208"
+          ]
+        },
+        {
+          "symbol": "resonance_density_v1",
+          "state": "no_definition_found",
+          "sites": []
+        },
+        {
+          "symbol": "pressure_source_v1",
+          "state": "no_definition_found",
+          "sites": []
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137989.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "requested_line": 434,
+      "page_lines": [
+        434,
+        527
+      ],
+      "wants": [
+        {
+          "symbol": "active_spectral_drift",
+          "state": "no_definition_found",
+          "sites": []
+        },
+        {
+          "symbol": "white_noise_drift_risk",
+          "state": "no_definition_found",
+          "sites": []
+        },
+        {
+          "symbol": "SpectralTelemetry",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/types/schema/telemetry.rs:208"
+          ]
+        },
+        {
+          "symbol": "render_pressure_agency_status",
+          "state": "reached",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs:434"
+          ]
+        },
+        {
+          "symbol": "resonance_density_v1",
+          "state": "no_definition_found",
+          "sites": []
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_source_catalog_1789137764.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "requested_line": 434,
+      "page_lines": [
+        434,
+        527
+      ],
+      "wants": [
+        {
+          "symbol": "render_pressure_agency_status",
+          "state": "reached",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs:434"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "requested_line": 64,
+      "page_lines": [
+        64,
+        178
+      ],
+      "wants": [
+        {
+          "symbol": "render_pressure_agency_status",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs:434"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789136753.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "requested_line": 64,
+      "page_lines": [
+        64,
+        178
+      ],
+      "wants": [
+        {
+          "symbol": "render_pressure_agency_status",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs:434"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_source_catalog_1789136438.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "requested_line": 1,
+      "page_lines": [
+        1,
+        134
+      ],
+      "wants": [
+        {
+          "symbol": "pressure_agency",
+          "state": "no_definition_found",
+          "sites": []
+        },
+        {
+          "symbol": "spectral_drift",
+          "state": "no_definition_found",
+          "sites": []
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_source_catalog_1789135908.txt",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "requested_line": 8450,
+      "page_lines": [
+        8450,
+        8559
+      ],
+      "wants": [
+        {
+          "symbol": "matched_terms",
+          "state": "no_definition_found",
+          "sites": []
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789135393.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "requested_line": 591,
+      "page_lines": [
+        591,
+        702
+      ],
+      "wants": [
+        {
+          "symbol": "active_spectral_drift",
+          "state": "no_definition_found",
+          "sites": []
+        },
+        {
+          "symbol": "white_noise_drift_risk",
+          "state": "no_definition_found",
+          "sites": []
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789134341.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "requested_line": 1,
+      "page_lines": [
+        1,
+        102
+      ],
+      "wants": [
+        {
+          "symbol": "shadow_preflight",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:256"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789134219.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "requested_line": 1,
+      "page_lines": [
+        1,
+        128
+      ],
+      "wants": [
+        {
+          "symbol": "shadow_preflight",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:256"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_source_catalog_1789134013.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "requested_line": 1,
+      "page_lines": [
+        1,
+        128
+      ],
+      "wants": [
+        {
+          "symbol": "shadow_preflight",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:256"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_source_catalog_1789133503.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "requested_line": 256,
+      "page_lines": [
+        256,
+        374
+      ],
+      "wants": [
+        {
+          "symbol": "spectral_drift",
+          "state": "no_definition_found",
+          "sites": []
+        },
+        {
+          "symbol": "pressure_agency",
+          "state": "no_definition_found",
+          "sites": []
+        },
+        {
+          "symbol": "resource_governor",
+          "state": "no_definition_found",
+          "sites": []
+        },
+        {
+          "symbol": "shadow_preflight",
+          "state": "reached",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:256"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789133134.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "requested_line": 103,
+      "page_lines": [
+        103,
+        215
+      ],
+      "wants": [
+        {
+          "symbol": "shadow_preflight",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:256"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789132804.txt",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "requested_line": 1,
+      "page_lines": [
+        1,
+        102
+      ],
+      "wants": [
+        {
+          "symbol": "shadow_preflight",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:256"
+          ]
+        }
+      ]
+    }
+  ],
+  "authority": {
+    "steward_only": true,
+    "read_only": true,
+    "asserts_being_state": false,
+    "lexical_not_compiler_resolved": true
+  }
+}

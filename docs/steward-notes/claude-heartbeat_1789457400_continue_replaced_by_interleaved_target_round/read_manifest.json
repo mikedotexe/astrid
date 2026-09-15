@@ -1,0 +1,72 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789453053",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789453053.txt",
+      "sha256": "6aa03eca8d5d104a9660f4b3e5785ec01ca63692f289991abad2e4399ea63cff",
+      "bytes": 2095,
+      "lines": 24,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_4c3156cba95caa56696777123501a48e86be1e1b9d89d64fd45c42472cd27020",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4c3156cba95caa56696777123501a48e86be1e1b9d89d64fd45c42472cd27020.json",
+      "sha256": "a1ae99bc1afd80a3222b7f14b95ba9102bb57d34de6e2fb9549bc4e54eb89dd0",
+      "bytes": 18973,
+      "lines": 440,
+      "read": "complete",
+      "source_snapshot_v1": null,
+      "source_provenance_ref_v1": null,
+      "note": "Navigation-only turn: no report-bound source snapshot, so no report-time/current-source hash split exists for this artifact."
+    }
+  ],
+  "adjacent_reports_read_as_continuity_evidence_not_closed": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_capsule_runtime_health.rs_1789452200.txt",
+      "sha256": "33c4dbf9951b33d6c3d41d9efb0500785a7fab6845f4167fed8b9b7867e262df",
+      "bytes": 2187,
+      "lines": 23,
+      "read": "complete",
+      "why": "The page turn that bound capsule_runtime_health.rs at sha256:3a20e5ee…, bytes 0..4335, and recorded her open question. Remains unprocessed in the canonical queue."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789452645.txt",
+      "sha256": "8512c7de055b05f3c729a51c7d77d43ad593c2bbf207040b11120b9678258531",
+      "bytes": 2061,
+      "lines": 24,
+      "read": "complete",
+      "why": "The first of the two recovery turns; queue position 2, left unprocessed and unread-marked."
+    }
+  ],
+  "runtime_evidence_read": [
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/navigation/b6f8f11c22ff5fb1568da9da00d8e5f13aa964176cb893a287da244bb30a6399/",
+      "scope": "output.text only — the recovery map offered as input at 1789452645. Reason line and bookmark line quoted; request_json/response_json wire bodies not read.",
+      "read": "scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/navigation/13f860a0a30a3eb38f4b16caf5c594839b3a09a1ac83f8d643317facd6a33266/",
+      "scope": "output.text only — the recovery map offered as input at 1789453053. Same reason token.",
+      "read": "scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/bridge.db",
+      "scope": "SELECT timestamp, system, canonical_action, route, status FROM action_events over 1789452100..1789453200 and 1789447400..1789448800. Dispatch metadata only; no message or journal prose read.",
+      "read": "scoped"
+    }
+  ],
+  "continuity_evidence_read": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789204702_bare_stem_recovery_loop_round/RUN_REPORT.md",
+      "sha256": "bbccf399ca7cd975cc6df0e46641c6b214a85aed410eb25ab0bcc79687278c2e",
+      "bytes": 15553,
+      "lines": 213,
+      "read": "complete",
+      "why": "Establishes the prior grounding of the bare-topic candidate gate and its open operator boundary, so this round does not re-implement or reopen it."
+    }
+  ]
+}

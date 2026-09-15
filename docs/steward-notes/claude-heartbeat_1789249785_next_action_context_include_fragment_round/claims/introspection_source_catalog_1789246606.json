@@ -1,0 +1,54 @@
+{
+  "introspection_id": "introspection_source_catalog_1789246606",
+  "reader": "claude-heartbeat",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "NextActionContext is the primary state container for the next-action pipeline across multiple modules, including dispatch, resource_governor and sovereignty.",
+      "disposition": "Verified at source. `pub(super) struct NextActionContext<'a>` is defined at next_action/mod.rs:114-121 and referenced in 36 files under capsules/spectral-bridge/src/autonomous/next_action/, including sovereignty.rs (31 lines), resource_governor.rs (4) and dispatch.rs (3). Constructed in runtime/orchestration.rs at 4856-4864 and 4911-4919. Her naming of the container and of those three modules is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The structural definition of NextActionContext has remained elusive in her previous scans, appearing mostly as function signatures.",
+      "disposition": "Felt report, and the ratio behind it is real: one declaration line against roughly 200 reference lines, nearly all `ctx: NextActionContext<'_>` parameters. Source shows the tool already answers this in one move: exact-identifier search classifies `struct <query>` as a Definition candidate (source_search.rs:118-127) and emits that row before every other row (rows keyed (Role,kind), Implementation=0 first, lines 186-199). A focused regression now pins that ordering for her exact declaration shape.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "She cannot yet verify whether fill_pct is a pre-calculated field, a method call, or a value derived from a division of consumed versus total budget.",
+      "disposition": "Determinate at source, and one of her three hypotheses is right. `pub fill_pct: f32` is a plain pre-calculated field on NextActionContext (mod.rs:119). It is not a method call and not a budget ratio: the only arithmetic is ws/telemetry_port.rs:640-654, `(telemetry.fill_ratio * 100.0).clamp(0.0, 100.0)` labelled primary_fill_ratio, with estimate_fill_pct(lambda1) (1031-1041) as the lambda1_sigmoid_fallback. It is reservoir spectral fill, never consumed-over-total.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "She is navigating the architecture to pinpoint the exact arithmetic behind fill_pct within the research_budget_guard.",
+      "disposition": "Inside the guard there is no arithmetic on fill_pct to find. guards.rs takes it as an f32 parameter (315-321, 324-329) and uses it at exactly one line, 396: `let state = spectral_state(fill_pct, telemetry);`. spectral_projection.rs:1-25 embeds it verbatim as the JSON field \"fill_pct\". The guard records fill as evidence; it never thresholds or divides it. The arithmetic she wants is upstream, in telemetry_port.rs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The recovery map indicates the source for dispatch.rs is available, and she needs to re-establish position to see the context surrounding the budget logic.",
+      "disposition": "Verified, and her positional instinct is right for the call site. dispatch.rs:85 is the sole site linking the context to the guard: `action_continuity::research_budget_guard_for_next(&original, ctx.fill_pct, ctx.telemetry)`, routed through command_dispatch.rs:661-668. Read completely, dispatch.rs touches ctx.fill_pct at seven sites (85, authority-gate execute, EXPERIMENT_BIND record, thread continuity, reservoir, legacy EXPERIMENT record, log_unwired_action) — all pass-through.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Her goal is to find the struct NextActionContext definition to see the fields available to the research_budget_guard.",
+      "disposition": "The definition holds seven fields: burst_count, db, sensory_tx, telemetry, fill_pct, response_text, workspace (mod.rs:114-121). One correction beside her framing, not over it: the guard does not receive the struct. dispatch.rs:85 passes two values by copy/reference — ctx.fill_pct and ctx.telemetry — so five of the seven fields are not available to research_budget_guard at all. Finding the struct answers the field question, but widens it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "She will resume from the last known bookmark in dispatch.rs to see if the surrounding imports or local definitions provide the structural clarity she needs.",
+      "disposition": "Source contradicts the premise, and the contradiction is preserved rather than softened. dispatch.rs has zero `use` statements and no local definition, because it is not a module: mod.rs:2121 is `include!(\"dispatch.rs\");`, textually inlining it 2007 lines below the struct. RESUME dispatch.rs cannot deliver the definition. Two one-move recoveries exist and are now pinned by regression: RELATE NextActionContext, and FIND dispatch.rs which returns the fragment path and its include site together.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Input evidence records that the requested source was not supplied and no new source page was supplied this turn.",
+      "disposition": "Corroborated by the witness, and not an infrastructure drop. lsw_ff7b0fd4 carries source_snapshot_v1 null and source_provenance_ref_v1 null, consistent with Source revision 'navigation only'. The model route completed normally (lscall_729a7051, 64524 ms, coupled-astrid, 8090) and fifteen parameter observations were fresh, bridge.fill_pct 73.02. A navigation-only turn by construction, with nothing lost between her request and this record.",
+      "classification": "observed"
+    }
+  ]
+}

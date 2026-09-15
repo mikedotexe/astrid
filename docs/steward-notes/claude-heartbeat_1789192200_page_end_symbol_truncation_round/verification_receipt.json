@@ -1,0 +1,128 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round": "claude-heartbeat_1789192200_page_end_symbol_truncation_round",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "steward_control subprocess run adapter (controller-held lease; no session opened, no NDJSON ops, no pause/resume, no lease token read)",
+  "controller": {
+    "run_id": "run_1789187230959887000_d7db29bb34",
+    "preprojection_generation_id": "projection_1789187234473234000_5109d19b25",
+    "preprojection_status": "passed",
+    "pause_generation": 439,
+    "postprojection_generation_id": "runs after this process exits (adapter-owned)"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 16,
+      "evidence_links": {
+        "batch_rows": 25,
+        "new": 25,
+        "existing": 0,
+        "events_appended": 25
+      },
+      "report_sha256": "1e27f0d3b676adb0064180b693738c42b54b187ca0b102f5fb8a2a0694f062f4",
+      "witness_id": "lsw_0ec265685aef7d370ea8381a3fdf79b7d0a09de63526b3a76b4230816a8a8793",
+      "witness_sha256": "00d8cfa02f2d0efff2df52e7d5d51c45ff279af211e4778304a895d544b3b20c",
+      "source_path": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "source_sha256": "3c7fca523107c8283159aa44b03c935e6ff2d5dfb87320b93a0c7c5f7ae4baf7",
+      "source_binding_match": true,
+      "source_read_scope": "complete file, 572 lines / 19256 bytes"
+    }
+  ],
+  "division": {
+    "cycle_sequence": 45,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due_before_round": false,
+    "review_due_after_round": false,
+    "round_event_id": "division_followup_event_33ac732f6619aa00312db0d32bb2cd2b",
+    "event_count": 312,
+    "event_head_sha256": "c08ac2be2d143f92d2f5608b260670c8b6f17235169205d2c84bcd85f46c054b",
+    "tier5_dossier_required": false,
+    "tier5_dossier_reason": "review_due was false at round start and remains false after recording round 3 of 6; no Division return was owed, so no cadence dossier was generated.",
+    "processed_report_count": 1
+  },
+  "counters": {
+    "canonical_indexed": 5775,
+    "canonical_fully_addressed": 3223,
+    "canonical_full_read": 3855,
+    "canonical_remaining": 2552,
+    "canonical_unread": 1920,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "audit_status": "consistent",
+    "mismatches": [],
+    "status": "consistent"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "event_count": 1070337,
+    "last_global_seq": 1070337,
+    "head": "d8feb0605efb27bd38b3ea9c08c3c30d57990beba167883d8a8b5aac17d3c2f3",
+    "stream_enumeration": "deferred (status command exceeded 600s at current size; verify green)",
+    "errors": []
+  },
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "evidence_store_unit": "21 OK",
+    "steward_control": "29 OK",
+    "steward_projection": "14 OK",
+    "projection_cursors": "4 OK",
+    "division_followup": "3 OK",
+    "division_chronicle_unit": "10 OK",
+    "division_projection": "ok",
+    "cadence_unit": "6 OK",
+    "cadence_strict": "integrity_ok",
+    "domain_boundary_verify": "valid, 0 violations (ratchet GREEN)",
+    "epistemics_self_test": "2 OK",
+    "epistemics_verify": "12097 checked, 0 issues, no history rewrite",
+    "chronicle_verify": "expected-stale, project-before-verify from this round's own append",
+    "git_diff_check": "clean"
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "git_mutation": false,
+    "staged": false,
+    "committed": false,
+    "being_facing_surface_change": false,
+    "being_text_modified": false,
+    "note": "Steward tooling and documentation only. The obvious downstream of the finding \u2014 a source-page footer naming the item that straddles the page boundary \u2014 touches a being-facing delivery surface and was deliberately NOT taken headlessly. Foreign dirty paths (authority_gate.rs, pressure_agency.rs, activity_reading/tests.rs, proactive_scan.py, test_steward_control.py, domain_boundaries_legacy_large_files_v1.json) were read-only and left untouched."
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "closed_status": "addressed_change",
+    "claim_count": 16,
+    "evidence_link_count": 25,
+    "introspection_ids": [
+      "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098"
+    ]
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12097,
+    "note": "final run, after every durable write of this round"
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 100
+    },
+    "self_test": "5 OK",
+    "guard_registered": "source_page_symbol_truncation_watch_wired"
+  }
+}

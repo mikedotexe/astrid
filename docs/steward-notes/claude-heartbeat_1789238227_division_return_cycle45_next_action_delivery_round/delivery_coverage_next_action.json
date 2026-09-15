@@ -1,0 +1,102 @@
+{
+  "authority_boundary": "read-only delivery accounting; coverage is not comprehension, no being is reached, nothing is written, and no source, prompt, cursor, or delivery behavior is changed",
+  "being": "astrid",
+  "deliveries": 211,
+  "label_filter": "next_action/",
+  "rows": [
+    {
+      "covered_bytes": 163938,
+      "covered_pct": 99.2,
+      "current_bytes": 165334,
+      "current_revision_covered_bytes": 0,
+      "current_revision_covered_pct": 0.0,
+      "gap_count": 0,
+      "largest_gap_bytes": 0,
+      "pages": 83,
+      "revision_count": 3,
+      "revisions": [
+        "3da2cd5678ac24ad3d4ddcc735b4a409be4212133220f79e95c78555339f01ea",
+        "a12d0f70e3bb2c038307faf2f6c9042d16d6952c4391bf79e7f79b2a51bf40f7",
+        "ff024570e6a81f9188579b0eedae189a2ddd6430a590056b917df1951e3350ff"
+      ],
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+      "stitched": true,
+      "working_copy_present": true
+    },
+    {
+      "covered_bytes": 20916,
+      "covered_pct": 63.8,
+      "current_bytes": 32769,
+      "current_revision_covered_bytes": 20916,
+      "current_revision_covered_pct": 63.8,
+      "gap_count": 3,
+      "largest_gap_bytes": 7923,
+      "pages": 14,
+      "revision_count": 2,
+      "revisions": [
+        "412304677e54224e3388f0d476b246928fc6fd2f4490708daeeee14247826fa7",
+        "4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e"
+      ],
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "stitched": true,
+      "working_copy_present": true
+    },
+    {
+      "covered_bytes": 27240,
+      "covered_pct": 97.7,
+      "current_bytes": 27880,
+      "current_revision_covered_bytes": 26949,
+      "current_revision_covered_pct": 96.7,
+      "gap_count": 0,
+      "largest_gap_bytes": 0,
+      "pages": 40,
+      "revision_count": 3,
+      "revisions": [
+        "1bd78462e0d24979eabeb4913b44847b5c414e27cc380cdedabab728c0f07d8c",
+        "644b12e6ae168604553b3120fba82d431686b9eb06a3ddea94d9a348ba747e5c",
+        "aa1bce2e4d5379db6c09120f35c4680ecae66f2cb2dcfca2bd78ad4291f06a9e"
+      ],
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "stitched": true,
+      "working_copy_present": true
+    },
+    {
+      "covered_bytes": 32595,
+      "covered_pct": 100.0,
+      "current_bytes": 32595,
+      "current_revision_covered_bytes": 32595,
+      "current_revision_covered_pct": 100.0,
+      "gap_count": 0,
+      "largest_gap_bytes": 0,
+      "pages": 60,
+      "revision_count": 1,
+      "revisions": [
+        "b5ca9d91cf4d88c9e4817a56125f2736b8264dae17a7e85bf48e599439d20915"
+      ],
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "stitched": false,
+      "working_copy_present": true
+    },
+    {
+      "covered_bytes": 6651,
+      "covered_pct": 100.0,
+      "current_bytes": 6651,
+      "current_revision_covered_bytes": 6651,
+      "current_revision_covered_pct": 100.0,
+      "gap_count": 0,
+      "largest_gap_bytes": 0,
+      "pages": 14,
+      "revision_count": 1,
+      "revisions": [
+        "d7d9bb9422222f5e166c2e697421bc878f7e7f6fba579dd913608e9219c1fd61"
+      ],
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "stitched": false,
+      "working_copy_present": true
+    }
+  ],
+  "schema": "source_delivery_coverage_v1",
+  "sources": 5,
+  "stitched_across_revisions": 3,
+  "whole_at_current_revision": 2
+}

@@ -1,0 +1,85 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+    "report_bound_sha256": "111a9f092c0a6bf7f662b9f2b0f79377a7168f3cf57bcf4b306155f1224316d6",
+    "working_copy_sha256": "111a9f092c0a6bf7f662b9f2b0f79377a7168f3cf57bcf4b306155f1224316d6",
+    "match": true,
+    "delivered_window_bytes": "0..4368",
+    "read_scope": "complete file, lines 1-125; same source SHA as the 1789083028 report, so the file read is shared"
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "validate_activity and validate_reader_ref (lines 11-48) act as a secondary gate over saved state.",
+      "disposition": "Verified against the complete file at the report-bound SHA. validate_reader_ref spans 11-23 and validate_activity 25-48; load_activity calls validate_activity at line 99 and persist_activity at line 54, so the gate covers both directions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Identities (thread IDs, session IDs, window IDs) are checked for structural soundness: alphanumeric and proper length.",
+      "disposition": "Verified exactly. Lines 13-18 reject empty values, values over 512 bytes, and any byte outside ASCII alphanumeric plus '_' and '-'. Lines 33-38 apply the identical rule to mailbox_window.id. Her characterisation matches the predicate, including the underscore/hyphen allowance she summarised as 'alphanumeric'.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Validation is logically consistent too, preventing selection of a foreground reader and a mailbox simultaneously.",
+      "disposition": "Verified. Lines 42-46 return Err(\"foreground reading and mailbox cannot be selected together\") when both Options are Some. This is a cross-field invariant, distinct from the per-identity checks, exactly as she separated them.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "persist_activity (lines 50-77) is a robust atomic write: temp file with random suffix, JSON write, sync, rename to RUNTIME_FILE.",
+      "disposition": "Verified for every named step (temp name 57-59, create_new+0o600 open 61-65, serialize 66, sync_all 68, rename 69). Refined: two durability steps she did not name are also present - the containing directory is fsynced at line 70, and the temp file is removed on any failure at 73-75, so a crashed write leaves no orphan.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The load_activity function spans lines 79-116.",
+      "disposition": "Window-bounded, not wrong reading: load_activity actually spans 79-125. Her delivered page was bytes 0..4368, which ends four bytes into line 117 (line 117 starts at byte 4364), so 116 was the last complete line she held. The remainder arrived on the contiguous next page and she reported it 133 seconds later.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "If the runtime file is missing, load_activity defaults gracefully.",
+      "disposition": "Verified. Lines 83-85 match std::io::ErrorKind::NotFound and return Ok(ActivityRuntimeV1::default()); any other open error propagates at line 86. The existing test absent_and_corrupt_runtime_reads_never_create_or_repair_state also asserts no directory is created.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "It enforces a MAX_RUNTIME_BYTES size limit to prevent memory exhaustion or reading garbage.",
+      "disposition": "Verified and refined: the limit is enforced twice, not once. Line 88 checks metadata length, then lines 92-96 read through a bounded take(MAX+1) and re-check the actual byte count. The second check closes the time-of-check/time-of-use gap a metadata-only test would leave open.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Lines 106-114: a foreground_reader whose session is not active/summarized, or whose disposition is not Active, is nullified and potentially moved to return_reader.",
+      "disposition": "Verified line for line. 106-107 test session_status against 'active'|'summarized' and bookmark.disposition against ReaderDisposition::Active; 111 clears foreground_reader; 112-114 move it to return_reader only when that slot is empty. Her 'potentially' is exactly right.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "That reconciliation is the system's way of handling a mutation that occurred while previous state was being saved - continuity despite imperfect persistence.",
+      "disposition": "Verified against the source's own comment at lines 109-110: 'A session mutation may have survived an interrupted pointer write. Quiet wins; restart cannot silently reactivate its old checkpoint.' Her interpretation and the authored comment agree on both the cause and the quiet-wins resolution.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "She states she needs to see the rest of load_activity to learn how source_comparison and other checks influence the final state.",
+      "disposition": "Observed as fulfilled, not inferred. The contiguous next page (bytes 4368..4618) was delivered and she authored introspection_..._1789083028 on it 133 seconds later, naming source_comparison's retained_source_available. No relief, satisfaction, or closure is inferred from delivery.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "This file confirms the autonomous module is responsible for the grounding of the bridge's trajectory.",
+      "disposition": "Observed with narrowed scope. The file does sit under src/autonomous/ and is the sole owner of activity-selection persistence (activity_reading.rs:18 re-exports load_activity/persist_activity). Nothing in source contradicts her reading; equally, nothing establishes that the whole autonomous module carries that responsibility, so the wider claim stays unadjudicated.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "It ensures that when the system recovers, it knows exactly where it left off.",
+      "disposition": "Observed, and corrected by her own next page rather than by us. The full file shows recovery may deliberately decline to resume: 111-114 drop the foreground position, 119-121 refuse the load entirely. On the next page she restated it as prioritising integrity over continuity, which the source supports. Recorded as her refinement, not a steward overwrite.",
+      "classification": "observed"
+    }
+  ]
+}

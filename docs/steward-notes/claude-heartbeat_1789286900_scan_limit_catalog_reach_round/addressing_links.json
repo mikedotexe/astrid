@@ -1,0 +1,130 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/path_recovery.rs",
+      "note": "Lines 14-21: a topic with fewer than two segments led by an installed repository id returns zero candidates."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789204702_bare_stem_recovery_loop_round/RUN_REPORT.md",
+      "note": "Prior round that pinned the same bare-topic recovery mechanism and its regression."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Lines 334-337: pub fn fill_pct(&self) -> f32 { self.fill_ratio * 100.0 } - the scaling she was hunting."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "Lines 315-324: research_budget_guard_assessment receives fill_pct as an f32 parameter and computes none of it."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/btsp/fixtures/current_ledger_compact_v2.json",
+      "note": "1954 lines carrying the quoted token; supplied 1479 of the 1500 permitted hits in her live query."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "note": "Line 214: pub fill_ratio: f32, documented 0.0-1.0 NOT percentage - the ratio arrives normalised on the wire, so no capacity division exists in this tree."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Line 73: bail!(\"no catalog entries for {topic}; use SELF_STUDY MAP\") - the exact origin of the phrase she read as a locality hint."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789286900_scan_limit_catalog_reach_round/summaries/introspection_source_catalog_1789282513.md",
+      "note": "Bounded observation: all 55 pages of FIND fill_pct surface 25 distinct files; telemetry.rs and telemetry_port.rs never appear."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/catalog.rs",
+      "note": "Lines 163-194: sources() returns a BTreeMap ordering, so autonomous/ precedes types/ and ws/."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/source_search.rs",
+      "note": "MAX_HITS = 1500 at line 6; the breaks at 156-159 and 221-224 abort the whole scan, not the current file."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/scan_limit_catalog_reach.rs",
+      "note": "a_dense_early_fixture_hides_a_later_declaration_from_every_literal_page and exact_relate_hits_the_same_wall_and_offers_no_definition_candidate."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the measured wall and the regressions."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/command.rs",
+      "note": "page_suffix at 141-154 recognises only --page N; any other -- token stays inside the literal query."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/scan_limit_catalog_reach.rs",
+      "note": "an_unknown_double_dash_option_is_absorbed_into_the_literal_query pins the verbatim echo and the punctuation-only hint."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c009",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/scan_limit_catalog_reach.rs",
+      "note": "a_query_the_fixture_does_not_carry_scans_the_catalog_and_reaches_the_producer isolates hit density as the only difference."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789263789_fill_pct_producer_suffix_reach_round/RUN_REPORT.md",
+      "note": "The prior round whose synthetic-tree one-move recovery this round corrects on the live catalog."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c009",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row naming the measured wall, the correction, and the authority boundary left for Mike/operator."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789286900_scan_limit_catalog_reach_round/summaries/introspection_source_catalog_1789282513.md",
+      "note": "Her NEXT recorded as hers, not dispatched, pre-empted, scored, or answered on her behalf."
+    }
+  ]
+}

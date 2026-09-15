@@ -1,0 +1,67 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789494400_division_return_cycle48_kernel_maintenance_catalog_round",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789490042.txt",
+      "sha256": "a43053a5fe64a4426a0bc790c692dd6e3600ce0f43f24a992c9cc84bb881a57a",
+      "bytes": 2268,
+      "lines": 24,
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "read": "complete",
+      "source_binding": "navigation only; no report-bound source SHA",
+      "source_coverage": "not applicable (navigation-only report)",
+      "lived_state_witness_id": "lsw_d3ada5a312429a36fbac9ae5d6948e8ab1e61dc0a6aee15a10424710d93065c2"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d3ada5a312429a36fbac9ae5d6948e8ab1e61dc0a6aee15a10424710d93065c2.json",
+      "sha256": "8c2bbbe4c164219a9b131ee7193f23b089fd4969919f0ada4b05108685d8425d",
+      "bytes": 18945,
+      "lines": 440,
+      "read": "complete",
+      "witness_id": "lsw_d3ada5a312429a36fbac9ae5d6948e8ab1e61dc0a6aee15a10424710d93065c2",
+      "artifact_sha256_matches_report": true,
+      "authority_fields_preserved": {
+        "state": "evidence_only",
+        "witness_only": true,
+        "live_eligible_now": false,
+        "auto_approved": false,
+        "grants_approval": false,
+        "edits_source_now": false,
+        "direct_causation_claimed": false,
+        "raw_introspection_prose_included": false
+      }
+    }
+  ],
+  "division_return_reads": [
+    {
+      "path": "capsules/spectral-bridge/workspace/outbox/reply_1789433974.txt",
+      "sha256": "6c9f360df6eb7e993d96884ecf716e2736ed9a73f3a354ae1b556f515873c517",
+      "bytes": 803,
+      "lines": 10,
+      "read": "complete",
+      "kind": "astrid_public_outbox_reply_in_interval"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle48_20260915.txt",
+      "sha256": "91b2fb83da9568432e3c5fee0aa3075eb93c4c281f2ee83a3e2636466f1b1357",
+      "bytes": 3278,
+      "lines": 69,
+      "kind": "astrid_return_note_written_this_round"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle48_20260915.txt",
+      "sha256": "de131a8845d2dbef59379abe9a7d204690e2d69f35971106c5d71125dbc22935",
+      "bytes": 2652,
+      "lines": 51,
+      "kind": "minime_return_note_written_this_round"
+    }
+  ],
+  "privacy": {
+    "minime_private_lane": "filtered via being_privacy.filter_journal_paths('minime', ...); 653 interval journal files, 0 excluded, none opened, quoted, or summarized",
+    "astrid_private_reasoning": "no moment_* or hidden-reasoning file opened"
+  }
+}

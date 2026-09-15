@@ -1,0 +1,62 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "note": "Report is navigation-only and binds no source SHA; these are steward-selected verification sources read at round time.",
+  "sources": [
+    {
+      "path": "crates/astrid-source-study/src/source_search.rs",
+      "sha256": "f0900f1a4dda8e5b058bf7fa7d65b541a532e51e2b9b07c152d349e085a3de25",
+      "bytes": 13170,
+      "lines": 352,
+      "read_scope": "complete (1-352)"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "read_scope": "lines 95-163 (find + paginate_with_header)"
+    },
+    {
+      "path": "crates/astrid-source-study/src/catalog.rs",
+      "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67",
+      "bytes": 11498,
+      "lines": 329,
+      "read_scope": "lines 1-250 (manifest, resolve, sources, blocked_path, source_path)"
+    },
+    {
+      "path": "crates/astrid-source-study/catalog.toml",
+      "sha256": "6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae",
+      "bytes": 3756,
+      "lines": 71,
+      "read_scope": "lines 1-60 (repository include globs, components)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "sha256": "412304677e54224e3388f0d476b246928fc6fd2f4490708daeeee14247826fa7",
+      "bytes": 32769,
+      "lines": 824,
+      "read_scope": "lines 735-800 complete around the cited line 765; #[cfg(test)] boundary at 633 confirmed by grep over the whole file"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "read_scope": "lines 1-35 and 8442-8460; all #[cfg(test)] positions (8,14,19,28,436) and all multi-motif positions (6081,8455) enumerated over the whole file"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+      "bytes": 23174,
+      "lines": 834,
+      "read_scope": "symbol location only: interpretation_risk_terms at 548"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "sha256": "06dea9ee6a050f6c5e151b6fb62fe2c81c4c0e4af0c72d0822adeedababff39a",
+      "bytes": 188513,
+      "lines": 5058,
+      "read_scope": "match positions only: 3358, 3363"
+    }
+  ]
+}

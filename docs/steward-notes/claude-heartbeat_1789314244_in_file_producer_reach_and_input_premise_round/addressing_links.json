@@ -1,0 +1,130 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "fn ingest at line 349; her window 372-480 lies inside it."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "SensoryIngress::Semantic arm 391; semantic_age_ticks reset 396."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "ScheduledSemantic arm 399; lane assign 421; scale 426-428; reset 429."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "AUX_INPUT_SCALE line 387 (const 66); SEMANTIC_INPUT_SCALE line 427 (const 63)."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "fill_pct absent from 372-480; first occurrence line 1145."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "fn update( and fn compute_metrics( both zero occurrences; nearest is update_mode_continuity at 558."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "fn sample 651; instantaneous_fill 709; fill_ema 710-714; fill_ratio 816; fill_pct render 1145."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "fill derives from spectral_metrics.effective_modes/128.0 (686,705-709); self.input enters only as sensory_drive 607-612."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c012",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "state/next_state/running_mean/covariance declared 311-314; self.input read for reporting only at 738, 829."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c013",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/in_file_producer_walk_reach.rs",
+      "note": "forward_walk_reaches_an_in_file_producer_the_ingest_page_withholds: CONTINUE is sufficient in this case."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c011",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/in_file_producer_walk_reach.rs",
+      "note": "delivered_fill_arithmetic_reads_from_spectral_metrics_not_the_input_buffer pins the refuted premise."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c014",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/in_file_producer_walk_reach.rs",
+      "note": "the_elusive_page_carries_no_indicator_that_a_producer_lies_ahead pins the affordance boundary and both phantom names."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c014",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789314244_in_file_producer_reach_and_input_premise_round/summaries/introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733.md",
+      "note": "Round summary: reachability verdict inverts the prior cross-file pin."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "No SensoryIngress::Sensory variant; enum at 74, arms Video 351 / Audio 356 / Aux 361; line 389 is aux_age_ticks reset."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "Witness records window 372-480 of 1839 lines; SensoryIngress arms at 351/356/361/391/399."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "services/astrid-edge-runtime/src/reservoir.rs",
+      "note": "Lane assigns 352/357/366/392/421; age resets 389/396/429; fields 270/277."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c014",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the reachability pin and the refuted input-buffer premise."
+    },
+    {
+      "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+      "claim_id": "c011",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/authority_gate.rs",
+      "revision_read": "git HEAD blob at 3844836169a00d7aa071260a87dd46af3d7c1767",
+      "sha256": "b439a82fd88cdad9b3dbafe039d7bad80bf3ad41e3e9f7346f3d715c4320f663",
+      "total_bytes": 175460,
+      "total_lines": 4588,
+      "binding_match": "EXACT — equals the `Source revision:` SHA the report names and the witness `source_snapshot_v1.file_sha256`",
+      "read_scope": [
+        "lines 957-1070 (the report-bound window, bytes 34899..39319) — complete",
+        "lines 1071-1090 — complete",
+        "lines 1128-1145 — complete",
+        "lines 1160-1175 — complete",
+        "lines 1200-1232 — complete",
+        "repository-wide `grep -n sensory_tx` over the whole file: L855, L861, L871, L1167, L1206, L1252, L1374"
+      ],
+      "raw_window_byte_sha256": "1aa9086dfaffaea4863e9433dfb7c7585aba3625fb697e0d3d3e59b2426f48d7",
+      "witness_window_sha256": "d76c1d4df1da203affc5c939c76a144027c272d43e77debddaaf3619faa240e3",
+      "window_hash_note": "The two differ because the witness hashes the rendered numbered window, not the raw file bytes. The LINE boundaries agree exactly: bytes 34899..39319 of the report-bound blob start at line 957 and end at line 1070, matching witness window_start_line=957 / window_end_line=1070.",
+      "working_copy_divergence": {
+        "working_copy_sha256": "e353325baf71895ccbc7bdd8c866a1c7cb15ce7f299f3b121bc2a36c761ed7e6",
+        "working_copy_lines": 4694,
+        "explanation": "The dirty working copy is the PRIOR claude-heartbeat round's own uncommitted work (two appended regressions from docs/steward-notes/claude-heartbeat_1789065100_sensory_tx_transport_not_verdict_round). It was read but NOT modified, staged, reverted, or committed. All source conclusions in this packet are labelled report-time (HEAD blob), not current-working-copy."
+      }
+    }
+  ]
+}

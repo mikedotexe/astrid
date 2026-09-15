@@ -1,0 +1,105 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml dead_sensory_channel",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "note": "The two new regressions answering the report's STUDY_QUESTION. First run failed one assertion (guessed field name outcome_kind); corrected to the actual DispatchOutcomeV1 shape (record_type=dispatch_outcome, outcome=released) from authority_temporal.rs:62-83 and re-run green."
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib authority_gate::",
+      "result": "ok",
+      "passed": 26,
+      "failed": 0,
+      "note": "Full authority_gate module suite, re-run after rustfmt. Was 24 before this round."
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "clean",
+      "note": "Only authority_gate.rs needed formatting; rustfmt applied to that package, no other file changed."
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    }
+  ],
+  "stewardship_integrity": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "result": "ok",
+      "tests": 44
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "result": "ok",
+      "tests": 21
+    },
+    {
+      "command": "test_steward_control.py",
+      "result": "FAILED",
+      "tests": 29,
+      "errors": 1,
+      "failing_test": "StewardControlTests.test_pause_cooperatively_interrupts_wrapped_subprocess",
+      "note": "Pre-existing nondeterministic fixture race, NOT caused by this round (no Python control-plane file was touched). Isolated three times: run 1 FileNotFoundError on an os.replace of a tempdir pending_events file, run 2 OK, run 3 PausedError('fixture stop') from lease.acquire. Two distinct nondeterministic failure modes plus one pass in isolation. Durable state is unaffected: steward_control durable verify, audit-counters and evidence_event_store verify all pass. Recorded as exact debt, not repaired, because repairing the control-plane test fixture is outside this round's read scope and authority."
+    },
+    {
+      "command": "test_steward_projection.py",
+      "result": "ok",
+      "tests": 14
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "result": "ok",
+      "tests": 3
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "result": "ok",
+      "tests": 10
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "result": "ok",
+      "note": "self-test: ok"
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "result": "ok",
+      "tests": 4
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "result": "ok",
+      "tests": 6
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "result": "ok",
+      "tests": 5
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "result": "ok",
+      "total": 94,
+      "alarms": 0,
+      "gaps": 0
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "result": "ok",
+      "note": "integrity_ok true, errors []"
+    },
+    {
+      "command": "experiential_epistemics.py self-test --json",
+      "result": "ok",
+      "note": "valid true"
+    },
+    {
+      "command": "domain_boundary_audit.py verify",
+      "result": "ok_after_recapture",
+      "note": "RED on first run: legacy_large_files_cannot_grow false, 1 large_file_growth violation, counter audit inconsistent - this round grew src/authority_gate.rs past its captured baseline of 4588. Re-captured 4588 -> 4694 in domain_boundaries_legacy_large_files_v1.json in the SAME change per the ratchet rule; re-verify returns valid true, violation_count 0, counter audit consistent. New baseline sha256 c58fb91e8b6be5bc749437f09010a78ef5060796e8d1eaefd4c7bb25a8d6e34d."
+    }
+  ]
+}

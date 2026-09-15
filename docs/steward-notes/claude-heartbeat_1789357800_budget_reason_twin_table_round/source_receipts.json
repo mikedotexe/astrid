@@ -1,0 +1,37 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "round": "claude-heartbeat_1789357800_budget_reason_twin_table_round",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+      "bytes": 36711,
+      "lines": 830,
+      "matches_report_binding": true,
+      "read_scope": "complete: lines 1-180, 180-450, 450-543, 543-830",
+      "note": "Report-bound source. Working-copy hash is byte-identical to the header binding and to the witness source_snapshot_v1.file_sha256, so no report-time/current split was needed."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+      "bytes": 23174,
+      "lines": 834,
+      "read_scope": "scoped: lines 142-200 and 267-300, plus whole-file function extraction of read_only_research_budget_base / mutating_research_budget_base / research_budget_projection_only_base",
+      "note": "Same-basename sibling that owns the base-classifier and term tables the flags are computed from. Read only to the extent the flag-origin claim needs."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "sha256": "5ffae5a8d00fba478dc1bfd518de2d0f6a9a608147a7952d719071873ad675f5",
+      "bytes": 196414,
+      "lines": 5248,
+      "read_scope": "scoped: 2558-2640 and 2635-2800 before the edit; the inserted block after it",
+      "note": "Edited by this round: one new focused regression appended after research_budget_guard_flags_are_fill_pct_invariant. File carries accumulated prior-round edits; authorship must be separated at any later checkpoint."
+    }
+  ],
+  "whole_file_enumerations": {
+    "fill_pct in action_continuity/guards.rs": "4 sites - 318 and 328 (f32 parameters), 321 (pass-through), 396 (spectral_state). Zero sites in the report window 450-543.",
+    "is_liveish_projection": "produced 355; consumed 387, 400, 500, 522",
+    "is_guarded_cascade_or_shadow_alias": "produced 364-365; consumed 379, 389, 402, 504, 526",
+    "is_guarded_embedded_status": "produced 371; consumed 372, 390, 403, 502, 524"
+  }
+}

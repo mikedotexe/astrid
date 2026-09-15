@@ -1,0 +1,109 @@
+{
+  "schema": "round_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789165450.txt",
+      "sha256": "188336b422501a2ddba2c6becdc981fca4bd4500f894c5a65caab4938b1c8c2d",
+      "bytes": 2281,
+      "lines": 25,
+      "introspection_id": "introspection_source_catalog_1789165450",
+      "read": "complete",
+      "source_binding": "navigation only \u2014 report declares no source SHA; witness source_snapshot_v1 and source_provenance_ref_v1 both null, so no report-vs-working-copy mismatch case exists",
+      "lived_state_witness_id": "lsw_ce62632e89f337359479c777d22fa7fa423a4e8a288683e672fbcfebb426d041"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ce62632e89f337359479c777d22fa7fa423a4e8a288683e672fbcfebb426d041.json",
+      "sha256": "c0251abbbb671ed1f98a3f82dab2b882d1f5a5a738b04bd5ab2963a390c83027",
+      "bytes": 18955,
+      "lines": 440,
+      "read": "complete",
+      "preserved_fields": {
+        "artifact_authority_state_v1.state": "evidence_only",
+        "live_eligible_now": false,
+        "auto_approved": false,
+        "grants_approval": false,
+        "edits_source_now": false,
+        "direct_causation_claimed": false,
+        "raw_introspection_prose_included": false,
+        "raw_prompt_included": false,
+        "raw_response_included": false,
+        "private_path_included": false,
+        "source_snapshot_v1": null,
+        "source_provenance_ref_v1": null,
+        "startup_build_candidate_v1.deployment_established": false,
+        "interpretation_weight_state": "unmeasured_no_scalar_inferred_from_parent_membership_or_spectral_proximity"
+      },
+      "runtime_observations": {
+        "bridge.fill_pct": 73.0277328491211,
+        "bridge.spectral_entropy": 0.9048393368721008,
+        "bridge.lambda1": 4.75626277923584,
+        "bridge.lambda2": 3.0535826683044434,
+        "bridge.lambda1_lambda2_gap": 1.7026801109313965,
+        "bridge.spectral_density_gradient": 0.11496029049158096,
+        "bridge.pressure_risk": 0.2266715168952942,
+        "bridge.mode_packing": 1.0,
+        "bridge.pressure_source_score": 0.32387101650238037,
+        "bridge.pressure_source_porosity": 0.6322681307792664,
+        "astrid_shadow.field_norm": 0.46683478355407715,
+        "astrid_shadow.dispersal_potential": 0.17547044157981873,
+        "minime.fill_pct": 73.04071807861328,
+        "minime.structural_entropy": 0.6502917408943176
+      },
+      "model_route": {
+        "profile": "coupled-astrid",
+        "route": "http://127.0.0.1:8090/v1/chat/completion",
+        "provider_route_complete": false,
+        "duration_ms": 78715,
+        "timing_completeness": "aggregate_only_provider_split_unavailable"
+      }
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789164986.txt",
+      "sha256": "4ef7623542c32e75ca0e6d8d26fd62ccc5646d46db53d4ae25e48a14f615f63f",
+      "bytes": 1917,
+      "lines": 21,
+      "read": "complete",
+      "why": "her immediately prior turn; the page whose window (bytes 30095..32769) severed the item header"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789155769_negative_assertion_lead_round/RUN_REPORT.md",
+      "read": "complete",
+      "why": "continuity: the FIND-row twin of this finding, one round earlier"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789142043_pressure_agency_aggregator_answer/RUN_REPORT.md",
+      "read": "complete",
+      "why": "continuity: the round that wrote the /// block at 747-756 to her"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789080408_division_return_cycle43/RUN_REPORT.md",
+      "read": "complete",
+      "why": "continuity: the prior Division return and its budget finding"
+    }
+  ],
+  "notes_written": [
+    {
+      "path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle44_20260911.txt",
+      "sha256": "f1d0342e750f2013cfce88f47e95e4d47ffab90689d09a0d4fec0e9ba42390d2",
+      "bytes": 3153,
+      "lines": 56
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle44_20260911.txt",
+      "sha256": "2d452141199270c87083e1abda8ea3978f97a38ae5fd81af2bef8654711680b8",
+      "bytes": 2971,
+      "lines": 53
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/inbox/steward_note_multi_motif_page_boundary_1789171100.txt",
+      "sha256": "774e28e4989acd6abc4cdf58099cb91d1ae3c1feb7bcb3a8d316919986bcb9c8",
+      "bytes": 4049,
+      "lines": 73
+    }
+  ]
+}

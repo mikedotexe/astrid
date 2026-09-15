@@ -1,0 +1,42 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "crates/astrid-approval/src/interceptor/capability.rs",
+      "sha256": "00e4e0f49c04179f63fa66f2fe69e084fb939bef7dfcb1e44443db7f0e93405b",
+      "report_bound_sha256": "00e4e0f49c04179f63fa66f2fe69e084fb939bef7dfcb1e44443db7f0e93405b",
+      "hash_match": true,
+      "total_lines": 276,
+      "total_bytes": 10893,
+      "read_scope": "complete: lines 1-140 and 140-276",
+      "git_state_at_read": "clean (no working-tree modification)",
+      "key_intervals": {
+        "check_capability": "40-91",
+        "handle_allow_always_doc": "93-97",
+        "handle_allow_always": "98-136",
+        "token_create": "115-123",
+        "token_scope_persistent": "118",
+        "ttl_argument": "122",
+        "store_add_failure_degrade": "126-129",
+        "ttl_log_line": "131",
+        "action_to_resource_permission": "145-190",
+        "live_control_mutation_none": "187-188",
+        "tests": "191-276",
+        "rejects_untrusted_issuer": "230"
+      }
+    },
+    {
+      "path": "crates/astrid-approval/src/interceptor/types.rs",
+      "read_scope": "targeted: ALLOW_ALWAYS_DEFAULT_TTL definition at line 6",
+      "fact": "pub(crate) const ALLOW_ALWAYS_DEFAULT_TTL: Duration = Duration::hours(1);",
+      "git_state_at_read": "clean",
+      "why_read": "resolves claim c007; the constant's value is outside the report-bound file"
+    }
+  ],
+  "byte_to_line_map": {
+    "note": "computed on the report-bound bytes to corroborate claim c002",
+    "bytes0..4522": "lines ~1..102",
+    "bytes4522..8893": "lines ~102..220",
+    "bytes8893..10893": "lines ~220..276 (this report's window)"
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "schema": "symbol_locality_watch_v1",
+  "being": "astrid",
+  "window": 80,
+  "min_run": 2,
+  "artifacts_scanned": 80,
+  "open_turns_with_stated_want": 4,
+  "wanted_symbols": 10,
+  "unreached_symbols": 10,
+  "other_file_symbols": 6,
+  "turns_with_an_unreached_want": 4,
+  "chase_runs": [
+    {
+      "symbols": [
+        "paused_primary_return_v1"
+      ],
+      "length": 2,
+      "turns_ago": 0,
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789094771.txt"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401.txt",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "requested_line": 1407,
+      "page_lines": [
+        1407,
+        1505
+      ],
+      "wants": [
+        {
+          "symbol": "shared_investigation_authority_boundary",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/persistence_helpers.rs:73"
+          ]
+        },
+        {
+          "symbol": "shared_investigation_lane",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/persistence_helpers.rs:63"
+          ]
+        },
+        {
+          "symbol": "paused_primary_return_v1",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs:140"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789094771.txt",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "requested_line": 1371,
+      "page_lines": [
+        1371,
+        1466
+      ],
+      "wants": [
+        {
+          "symbol": "paused_primary_return_v1",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs:140"
+          ]
+        },
+        {
+          "symbol": "shared_investigation_v1",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/core.rs:9843"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789093987.txt",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "requested_line": 1036,
+      "page_lines": [
+        1036,
+        1133
+      ],
+      "wants": [
+        {
+          "symbol": "pressure_source_status_value",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/spectral_projection.rs:27"
+          ]
+        },
+        {
+          "symbol": "inhabitable_fluctuation_status_value",
+          "state": "other_file",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/spectral_projection.rs:55"
+          ]
+        },
+        {
+          "symbol": "ObservationWindow",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/core.rs:119"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789093123.txt",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "requested_line": 542,
+      "page_lines": [
+        542,
+        650
+      ],
+      "wants": [
+        {
+          "symbol": "resolve_thread",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/core.rs:8577"
+          ]
+        },
+        {
+          "symbol": "ensure_active_thread",
+          "state": "same_file_out_of_page",
+          "sites": [
+            "capsules/spectral-bridge/src/action_continuity/runtime/core.rs:6840"
+          ]
+        }
+      ]
+    }
+  ],
+  "authority": {
+    "steward_only": true,
+    "read_only": true,
+    "asserts_being_state": false,
+    "lexical_not_compiler_resolved": true
+  }
+}

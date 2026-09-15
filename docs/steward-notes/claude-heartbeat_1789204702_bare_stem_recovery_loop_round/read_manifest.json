@@ -1,0 +1,42 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "round": "claude-heartbeat_1789204702_bare_stem_recovery_loop_round",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789200495.txt",
+      "sha256": "2c3c8c775efef6c9c9454b4c20d99e1e33dbedf3c9278c7dd8896c098915c3e3",
+      "bytes": 1550,
+      "lines": 18,
+      "read": "complete",
+      "scope": "every byte, header through the NEXT line",
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "source_binding": "source catalog; Source revision: navigation only (no source page bound)",
+      "lived_state_witness_id": "lsw_4db0c0258272550654615a265cd5ce9eb4e72e2d61b3c3480ccb703fc6d4a084",
+      "source_coverage": "not applicable \u2014 the report is bound to a navigation-only catalog turn, so there is no report-time source window to re-read; the witness confirms source_snapshot_v1 = null and source_provenance_ref_v1 = null"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4db0c0258272550654615a265cd5ce9eb4e72e2d61b3c3480ccb703fc6d4a084.json",
+      "sha256": "9ff92f9e055543f2e17eeb50c8fb8df4af780f738048d3eebbd7d809433f38b4",
+      "bytes": 18956,
+      "lines": 440,
+      "read": "complete",
+      "scope": "entire JSON document",
+      "witness_id": "lsw_4db0c0258272550654615a265cd5ce9eb4e72e2d61b3c3480ccb703fc6d4a084",
+      "artifact_authority_state": "evidence_only; witness_only=true; live_eligible_now=false",
+      "direct_causation_claimed": false,
+      "raw_prose_included": false,
+      "note": "source_snapshot_v1 null and source_provenance_ref_v1 null, consistent with the navigation-only binding. Queue reported lived_state_alignment=artifact_integrity_unavailable with artifact_integrity_issue_count=1 and gap_count=1; that is the absent source snapshot, not a hash failure."
+    }
+  ],
+  "chain_evidence": {
+    "description": "Header + trailing-action lines only (never prose) of the 16 consecutive turns carrying the identical action and the 3 turns after the escape, used to establish the loop extent.",
+    "first": "introspection_source_catalog_1789200287.txt",
+    "last": "introspection_source_catalog_1789203675.txt",
+    "escape": "introspection_source_catalog_1789203836.txt (NEXT: SELF_STUDY MAP astrid)",
+    "turns": 16,
+    "span_seconds": 3388
+  }
+}

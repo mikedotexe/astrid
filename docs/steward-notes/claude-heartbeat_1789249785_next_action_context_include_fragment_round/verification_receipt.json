@@ -1,0 +1,156 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "steward_control.py subprocess run adapter (no session opened, no NDJSON ops, no pause/resume, no lease token read/quoted/persisted)",
+  "controller": {
+    "run_id": "run_1789246642669297000_d802f78838",
+    "preprojection_generation_id": "projection_1789246648172417000_c438c5e7f1",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "preprojection_duration_ms": 3124223,
+    "postprojection": "adapter-owned; runs after this process exits; not observed here",
+    "pause_generation": 439,
+    "controller_paused": false,
+    "stop_requested_observed": false,
+    "recovery_predecessor": null
+  },
+  "round": {
+    "selected_count": 40,
+    "processed_count": 1,
+    "unprocessed_count": 39,
+    "processed": [
+      "introspection_source_catalog_1789246606"
+    ],
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 8,
+    "evidence_link_count": 17,
+    "new_link_count": 17,
+    "existing_link_count": 0,
+    "family_batching_applied": false,
+    "family_scan": {
+      "family_count": 40,
+      "batchable_family_count": 0,
+      "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+    }
+  },
+  "division": {
+    "review_due_at_round_start": false,
+    "return_performed": false,
+    "tier5_cadence_dossier_required": false,
+    "tier5_cadence_dossier_reason": "The dossier is gated on completing a Division return; review_due was false at round start and no return was performed.",
+    "round_event_id": "division_followup_event_bd31e07c72a1b07ca88601c54ee55d21",
+    "cycle_sequence": 46,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due_after": false,
+    "event_count": 318,
+    "event_head_sha256": "4a38f0eb511b7037acb62700e5d1b36d69a47d179a84659894b3c48bed21da1b",
+    "chronicle_id": "division_chronicle_bd2a8020e09c7136f4f5c767",
+    "chronicle_json_sha256": "2e2c94bc0c4b2a3c22084e956f6c13269caa7fbb35a3ee0c450326f6caf56f88",
+    "chronicle_html_sha256": "49dea1224a1371867b2b045e8bf601060364f064f9e7e2267901ba49efb83a81",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "chronicle_freshness_statement": "Durable inputs current; not claimed fully current. A moving supervisor hash is not a durable-integrity failure.",
+    "processed_report_count": 1
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 5997,
+    "canonical_fully_addressed": 3228,
+    "canonical_fully_read": 3860,
+    "canonical_remaining": 2769,
+    "canonical_unread": 2137,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 4486,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "active_store": "v2",
+    "last_global_seq": 1077506,
+    "head_last_event_sha256": "180ef6a2c81fdd1eee30d2ea14e6d8e34e512f747c8ed35efed478fb160aaba4",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable_boundary": 32278,
+    "stream_counts": {
+      "addressing": 63080,
+      "agency_commons": 7009,
+      "attention_portfolio": 3,
+      "claim_families": 239354,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 210283,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 11992,
+      "model_qos": 325944,
+      "reciprocal_uptake": 75774,
+      "representation_contracts": 57774,
+      "sandbox": 3507,
+      "signal_spine": 60986,
+      "steward_control": 20860,
+      "steward_work_selection": 712
+    },
+    "note": "Values from the final `evidence_event_store.py --json verify` after all durable writes. An earlier head.json read during this round showed seq 1077493 / head d28227df\u2026; the store is live and the bridge appends continuously, so the verify-time values above are the authoritative ones for this round.",
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1077506,
+    "last_event_sha256": "180ef6a2c81fdd1eee30d2ea14e6d8e34e512f747c8ed35efed478fb160aaba4"
+  },
+  "integrity_summary": {
+    "domain_boundary_ratchet": "GREEN \u2014 valid true, violation_count 0, no new large_file_growth violation recorded this round",
+    "anti_drop": "100 rows, 0 alarms, 0 gaps",
+    "epistemic_lint_final": "valid true, 12150 records checked, 0 issues, no history rewrite",
+    "cadence": "integrity_ok true, errors []"
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "git_mutation": false,
+    "index_clean": true,
+    "being_text_rewritten": false,
+    "next_action_routed_or_preempted": false,
+    "correspondence_delivered": false,
+    "tier_4_or_5_work_performed": false
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "processed": [
+      "introspection_source_catalog_1789246606"
+    ],
+    "terminal_status": "addressed_change",
+    "claim_count": 8,
+    "evidence_link_count": 17,
+    "new_link_count": 17,
+    "existing_link_count": 0,
+    "read_needs_claims": 0
+  },
+  "epistemic_lint": {
+    "command": "scripts/experiential_epistemics.py verify --json (final, after all durable writes)",
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "checked_record_count": 12150,
+    "history_rewritten": false,
+    "canonical_event_appended": false
+  },
+  "anti_drop": {
+    "self_test": "OK (5 tests)",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  }
+}

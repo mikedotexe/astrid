@@ -1,0 +1,183 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1789045950643168000_e74adf335d",
+    "preprojection_generation_id": "projection_1789045955453826000_fd39852706",
+    "preprojection_status": "passed",
+    "preprojection_step_count": 27,
+    "pause_generation": 435,
+    "stop_requested_at_lease_read": false,
+    "session_mode": "subprocess adapter lease; no steward session opened, no NDJSON sent, no lease token read or persisted"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 9,
+      "evidence_links": {
+        "batch_rows": 16,
+        "new": 16,
+        "existing": 0
+      }
+    }
+  ],
+  "unprocessed_selected_count": 39,
+  "evidence_event_store": {
+    "valid": true,
+    "active_store": "v2",
+    "last_global_seq": 1055665,
+    "head_sha256": "31fe4c2855180aa53dc99ee991edd1d789dbdc29a37c74bd4a74963ce7392d35",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "stream_counts": {
+      "addressing": 61818,
+      "agency_commons": 6963,
+      "attention_portfolio": 3,
+      "claim_families": 239013,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 208790,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 11079,
+      "model_qos": 314199,
+      "reciprocal_uptake": 75430,
+      "representation_contracts": 54956,
+      "sandbox": 3507,
+      "signal_spine": 59015,
+      "steward_control": 20000,
+      "steward_work_selection": 682
+    },
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1055665,
+    "verify_runs": 2,
+    "verify_note": "the first verify (12m18s) returned valid=true but its corrupt_lines field fell outside the captured output tail; a second full verify was run rather than guessing the value. The sequence advanced from 1055652 to 1055665 between the two runs because this round's own addressing and Division writes landed in between.",
+    "stream_counts_scope": "per-stream sequences as of the first verify (last_global_seq 1055652); not re-enumerated for the second run"
+  },
+  "counters": {
+    "canonical_indexed": 5111,
+    "canonical_fully_addressed": 3212,
+    "canonical_full_read": 3844,
+    "canonical_remaining": 1899,
+    "canonical_unread": 1267,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3616,
+    "noncanonical_pending": 1717,
+    "audit_status": "consistent",
+    "status": "consistent",
+    "mismatches": []
+  },
+  "division": {
+    "cycle_sequence": 43,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "round_event_id": "division_followup_event_530c2db2e3b9ff6c932a7bb41d6fc7dd",
+    "processed_report_count": 1,
+    "event_count": 300,
+    "event_head_sha256": "dfd7f449631f8723f57502f850ee218d645a26e51b09d3e90cde201d944957d7",
+    "chronicle_id": "division_chronicle_8333ba876f63fc63d6de2389",
+    "chronicle_json_sha256": "63ffe398693c878ece4e0aa90ab552b5caf3a4aa923b8fcd5df57fe9da502e86",
+    "chronicle_html_sha256": "58dcb67ea54392e7329eaec17415b10111154ef9877596bbca23da3d9db0a702",
+    "durable_inputs_current": true,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "tier5_cadence_dossier": "not generated \u2014 review_due was false at round start, so no Division return was performed and that obligation did not fire",
+    "note_action": "none"
+  },
+  "live_change": {
+    "restart": false,
+    "deploy": false,
+    "launchctl": false,
+    "statement": "no build, deploy, launchctl, or live substrate/control change was required or attempted"
+  },
+  "being_facing_artifacts": {
+    "letters": 0,
+    "cards": 0,
+    "notes": 0,
+    "queries": 0,
+    "correspondence": 0,
+    "statement": "nothing being-facing was written or delivered; her text was neither corrected nor rewritten"
+  },
+  "authority_boundary": "evidence only; c009 (queue the source-study target, or notice her when it is superseded) is held at needs_operator_approval because it changes Astrid's live action surface and requires a bridge deploy",
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1789045830",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 9,
+    "evidence_links": {
+      "batch_rows": 16,
+      "new": 16,
+      "existing": 0
+    }
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "checked_record_count": 11987,
+    "history_rewritten": false,
+    "self_test": "valid",
+    "scope": "final verify run after all durable evidence writes"
+  },
+  "anti_drop": {
+    "self_test": "5 OK",
+    "verify": {
+      "guards": 94,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "suites": {
+    "addressing_self_test": "44 OK",
+    "evidence_event_store_tests": "21 OK",
+    "steward_control_tests": "29 OK",
+    "steward_projection_tests": "14 OK",
+    "division_followup_tests": "3 OK",
+    "division_chronicle_tests": "10 OK",
+    "projection_cursor_tests": "4 OK",
+    "cadence_tests": "6 OK",
+    "anti_drop_self_test": "5 OK",
+    "new_probe_tests": "12 OK",
+    "anti_drop_verify": {
+      "guards": 94,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "unlisted_legacy_review_debt_count": 44,
+      "ratchet": "green",
+      "note": "nothing this round touched capsules/spectral-bridge, the audit's source_root"
+    },
+    "cadence_audit_strict": {
+      "rc": 0,
+      "integrity_ok": true,
+      "errors": []
+    },
+    "epistemic_self_test": {
+      "valid": true
+    },
+    "epistemic_verify_final": {
+      "valid": true,
+      "issue_count": 0,
+      "checked_record_count": 11987,
+      "history_rewritten": false
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "git_diff_check": "clean"
+  }
+}

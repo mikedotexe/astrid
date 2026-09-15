@@ -1,0 +1,159 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round": "claude-heartbeat_1789457400_continue_replaced_by_interleaved_target_round",
+  "actor": "claude-heartbeat",
+  "mode": "steward_control.py subprocess run adapter \u2014 no session opened, no NDJSON ops, no pause/resume, no lease token read, quoted or persisted",
+  "controller": {
+    "run_id": "run_1789453220775670000_f9fd227f27",
+    "preprojection_generation_id": "projection_1789453225866579000_4c64fca070",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "postprojection": "adapter-owned; runs after this process exits",
+    "pause_generation": 439,
+    "stop_requested_observed": false
+  },
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1789453053",
+    "full_read": true,
+    "full_read_count": 1,
+    "claims": 14,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "status": "addressed_change",
+    "evidence_links": {
+      "batch_rows": 22,
+      "new": 22,
+      "existing": 0,
+      "events_appended": 22
+    },
+    "lived_state_artifact_integrity_issue_count": 0
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 6778,
+    "canonical_fully_addressed": 3244,
+    "canonical_full_read": 3876,
+    "canonical_remaining": 3534,
+    "canonical_unread": 2902,
+    "canonical_blocked_needs_steward": 416,
+    "canonical_triaged_pending_action": 212,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 5251,
+    "noncanonical_pending": 1717,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0
+  },
+  "division": {
+    "cycle_sequence": 48,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due_at_round_start": false,
+    "review_due_after_record": false,
+    "round_event_id": "division_followup_event_272702160a2e24de5b805269ac128d0c",
+    "processed_report_count": 1,
+    "event_count": 335,
+    "event_head_sha256": "6b5db658170d433add1fcda8494f41b5b1e610554e52ca500268d47ba5efb3b5",
+    "note_action": "none \u2014 no Division return was due, so no note was written to either being and no Tier-5 cadence dossier was required",
+    "chronicle": {
+      "chronicle_id": "division_chronicle_95e195a5b194f87afeafa1cd",
+      "json_sha256": "fcb79a39b62b5361435a277b17f2c7d0e373aad297cc15a72b904a6f95e4264e",
+      "html_sha256": "04ecf52fe9be9f265f50721f9ecf604080c09193da9994b2ab4b19f6377ca71e",
+      "durable_inputs_current": true,
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "reading": "Chronicle is NOT fully current: one volatile mismatch. A moving supervisor hash is not a durable-integrity failure."
+    }
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1102246,
+    "last_global_seq": 1102246,
+    "last_event_sha256": "4713c15948b28b504c2b92df5efaaaf41b5e9232b176040be3c770b859dbb6b4",
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "stream_counts": {
+      "addressing": 64189,
+      "agency_commons": 7063,
+      "attention_portfolio": 3,
+      "claim_families": 239655,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 211562,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 12804,
+      "model_qos": 340497,
+      "reciprocal_uptake": 75872,
+      "representation_contracts": 61269,
+      "sandbox": 3507,
+      "signal_spine": 63128,
+      "steward_control": 21758,
+      "steward_work_selection": 742
+    },
+    "note": "Final verify re-run after every durable write of this round, with complete output captured. An earlier verify in the same round returned valid at seq 1102228 / head 5ca9f933\u2026ba19f0 but was captured only as a tail, so corrupt_lines and errors were not observed there; this run is the recorded one. The store advances under concurrent bridge activity, which is expected on a live append-only store."
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 100
+    },
+    "self_test": "5 tests OK"
+  },
+  "live_surface": {
+    "restart_attempted": false,
+    "deploy_attempted": false,
+    "launchctl_used": false,
+    "build_bridge_used": false,
+    "statement": "No live substrate, bridge, codec, prompt, model, config or control change was made or required. The live shared_reader state was never written; every reader exercise ran on a tempdir."
+  },
+  "git": {
+    "read_only": true,
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "astrid_head": "3d55734438ab0b4fb5a3a24e82156cf3db1f8259",
+    "astrid_branch": "main",
+    "minime_worktree": "clean"
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12293,
+    "self_test": "valid",
+    "note": "Final verify run after every durable write of this round."
+  },
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789457400_continue_replaced_by_interleaved_target_round",
+  "processed": [
+    "introspection_source_catalog_1789453053.txt"
+  ],
+  "adapter_overrides_honored": {
+    "no_steward_session_opened": true,
+    "no_ndjson_ops_sent": true,
+    "no_pause_or_resume": true,
+    "no_lease_token_read_quoted_or_persisted": true,
+    "git_read_only": true,
+    "no_build_or_deploy_or_launchctl": true,
+    "foreign_dirty_paths_preserved": true
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "verdict": "GREEN",
+    "pre_existing_debt": {
+      "unlisted_legacy_review_debt_count": 44,
+      "resolved_large_file_debt_count": 3
+    },
+    "why_surfaced": "Projection stage 10 records violations every round but recording is not surfacing; this line is the round summary consuming it."
+  }
+}

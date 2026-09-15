@@ -1,0 +1,72 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "round": "claude-heartbeat_1789216637_study_question_want_channel_round",
+  "report_bound_source_sha256": null,
+  "binding_note": "This report is bound to `Source: source catalog` / `Source revision: navigation only`; the witness confirms source_snapshot_v1 and source_provenance_ref_v1 are both null. There is no report-bound file hash to compare, so no report-time/current-source split is claimed. Every receipt is the current working-copy hash at read time.",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "sha256": "c684be7643e522415be342f47861a58b3ef0de9b7eb7caf80cdd52b323cf0842",
+      "bytes": 23230,
+      "lines": 641,
+      "scope": "complete (641 lines)",
+      "why": "report-cited definition 112 and use sites 413, 439; sibling definition 120; weight ladders 128-142; residue lane 435-463"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/text.rs",
+      "sha256": "739ee26188e87527c449b7e77d668f0d9a0236a48ccc6abc76afa82a34453cd2",
+      "bytes": 7139,
+      "lines": 274,
+      "scope": "scoped: lines 40-62 and 236-272 (constants and both term tables)",
+      "why": "CONTINUITY_TRAJECTORY_AFTERIMAGE_{LIMIT,MIN_SCORE} 44-45, CONTINUITY_FAINT_RESIDUE_LIMIT 49, CONTINUITY_FAINT_RESIDUE_SIGNAL_TERMS 252-266"
+    },
+    {
+      "path": "crates/astrid-source-study/src/source_search.rs",
+      "sha256": "f0900f1a4dda8e5b058bf7fa7d65b541a532e51e2b9b07c152d349e085a3de25",
+      "bytes": 13170,
+      "lines": 352,
+      "scope": "complete (352 lines)",
+      "why": "single-query search, role counts, hit rows, nearby-spelling branch; grounds c004"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "scope": "scoped: lines 100-163 (find + paginate_with_header)",
+      "why": "FIND runs search(query, false) once and titles the page with that one query; grounds c004"
+    },
+    {
+      "path": "crates/astrid-source-study/src/page.rs",
+      "sha256": "a99605dd40391182ea3ecb85734549cb53c89a1bf1d64d1e8c243ce38e5c20f2",
+      "bytes": 5179,
+      "lines": 146,
+      "scope": "complete (146 lines)",
+      "why": "OPEN <line> starts the page at that line and fills the byte allowance; grounds the 112..235 span in c009"
+    },
+    {
+      "path": "crates/astrid-source-study/src/notebook.rs",
+      "sha256": "44ed9135603c76b43daa73ef9d5a10ce13de32ce638cdc0544a63c9c537abe93",
+      "bytes": 12206,
+      "lines": 303,
+      "scope": "scoped: lines 28-130 and 160-215 (study_choices, STUDY_QUESTION parse, append_lookup_choice)",
+      "why": "production reads backticked STUDY_QUESTION tokens as the being's named identifiers and offers RELATE for the first two; grounds c008 and c009"
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "sha256": "1842133fa5b3f88741fe42a347e27da36a29a3583397b7e6a91fe1ee86620405",
+      "bytes": 2889,
+      "lines": 62,
+      "scope": "complete (62 lines)",
+      "why": "InputKind::Search scope line quoted in the report header"
+    },
+    {
+      "path": "crates/astrid-source-study/src/relationships.rs",
+      "sha256": "a41a1c6a33ba9d7049dfee1ad70c964cdc3a704f4f7a41b457763d872c881d22",
+      "bytes": 1107,
+      "lines": 30,
+      "scope": "complete (30 lines)",
+      "why": "RELATE is the exact-identifier path and the verb the surface offered her; grounds c009"
+    }
+  ]
+}

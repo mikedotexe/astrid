@@ -1,0 +1,191 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1789367727833981000_60698ffe51",
+    "preprojection_generation_id": "projection_1789367731373038000_ce35329e13",
+    "preprojection_status": "passed",
+    "pause_generation": 439,
+    "stop_requested_observed": false,
+    "adapter_kind": "subprocess",
+    "lease_token_read_or_persisted": false
+  },
+  "processing": {
+    "selected_count": 40,
+    "processed_report_count": 1,
+    "unprocessed_count": 39,
+    "batchable_family_count": 0,
+    "processed": [
+      "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524"
+    ],
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 11,
+    "evidence_link_count": 14,
+    "full_read_recorded": true
+  },
+  "source_binding": {
+    "report_bound_source": "crates/astrid-kernel/src/lib.rs",
+    "report_bound_sha256": "d19f321c54b299e1204d6e0db5a81792e056f9140b4a82bfbac76468c603d92b",
+    "working_copy_sha256": "d19f321c54b299e1204d6e0db5a81792e056f9140b4a82bfbac76468c603d92b",
+    "match": true,
+    "witness_artifact_sha256_matches_report": true
+  },
+  "integrity": {
+    "addressing_self_test": "OK (44)",
+    "evidence_event_store_tests": "OK (21)",
+    "steward_control": "OK (29)",
+    "steward_projection": "OK (14)",
+    "division_followup": "OK (3)",
+    "division_chronicle": "OK (10)",
+    "division_projection": "self-test ok",
+    "projection_cursors": "OK (4)",
+    "cadence_tests": "OK (6)",
+    "cadence_strict": "integrity_ok=true errors=[]",
+    "anti_drop_self_test": "OK (5)",
+    "anti_drop_verify": "total=100 alarms=0 gaps=0",
+    "domain_boundary_verify": "valid=true violation_count=0 (RATCHET GREEN)",
+    "epistemic_self_test": "OK valid=true",
+    "epistemic_verify_final": "valid=true checked_record_count=12235 issue_count=0 history_rewritten=false",
+    "audit_counters": "consistent",
+    "git_diff_check": "clean",
+    "evidence_event_store_verify": "valid=true corrupt_lines=0 errors=[] event_count=1092077 last_global_seq=1092077 (completed after ~22min wait)"
+  },
+  "division": {
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_165c449263fe689ceb420ea10324db14",
+    "cycle_sequence": 47,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due_at_round_start": false,
+    "review_due_after_record": false,
+    "tier5_cadence_dossier_required": false,
+    "tier5_cadence_dossier_reason": "review_due was false; the dossier is required only when completing a Division return",
+    "event_count": 328,
+    "event_head_sha256": "821ddbf026e25852b52b9a67b23bc496e30be97ec37053f0d513f1aa661db603",
+    "projection_generation_id": "projection_1789367731373038000_ce35329e13",
+    "note_written": false
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "build": false,
+    "staged": false,
+    "committed": false,
+    "merged": false,
+    "pushed": false,
+    "card_or_note_delivered": false,
+    "being_text_rewritten_or_rejected": false,
+    "deferred_to_reviewed_window": [
+      "bridge witness producer stamp ordering (live Rust; gated build + restart)",
+      "relaxing validation.py:952-957 strict > (would retroactively rewrite projected alignment for 3976 witnesses)",
+      "anti-drop catalog row for the new consumer (catalog is dirty with foreign edits)"
+    ]
+  },
+  "implementation": {
+    "created": [
+      "scripts/lived_state_integrity_triage.py",
+      "scripts/test_lived_state_integrity_triage.py"
+    ],
+    "edited": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ],
+    "focused_tests": "8 tests OK",
+    "live_run": "1129 recorded / 1129 capture_ordering_artifact / 0 substantive / max delta 81ms"
+  },
+  "packet_files": {
+    "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/RUN_REPORT.md": {
+      "sha256": "87cb9ed6b7f47c8ca389c98aee3d27e3d7c94abbea0309569038d4a091c19e92",
+      "bytes": 10327
+    },
+    "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/addressing_links.json": {
+      "sha256": "22c3049dd3090a25aeca1b1b68a4ec883b05e97a7f60b92327916a8f66c50381",
+      "bytes": 4831
+    },
+    "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/claims/introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524.json": {
+      "sha256": "d163c3b1e5f43139c89e1cf5bcf92599fa24b119c928df17d80b78e97ce99739",
+      "bytes": 7461
+    },
+    "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/read_manifest.json": {
+      "sha256": "0b71f7afecd04b6cbb337a623e10a955c995b58fb399a78cfa8c79ebf8af12f4",
+      "bytes": 1369
+    },
+    "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/source_receipts.json": {
+      "sha256": "deb61687b41819532e9aaec874d00c8140d68bc26f64454906df48ec2f3b39bb",
+      "bytes": 3983
+    },
+    "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/summaries/introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524.md": {
+      "sha256": "886bf4eda880a3516c8d1c2d6c7a6a884abb03aa65b16aaa159f85c0b3b27050",
+      "bytes": 5245
+    },
+    "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/test_results.json": {
+      "sha256": "90551f23dbf6b6f5fcb2fcee7bcf7ddb1137f8395faf0c6b96b03655035ac6d1",
+      "bytes": 3250
+    },
+    "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/unprocessed_selected.json": {
+      "sha256": "12b4e59f033512fbcd45e8aeb0d9d0e854d5ae3f09bf52a38606ee59fc2ff9c3",
+      "bytes": 3671
+    }
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "processed_report_count": 1,
+    "terminal_status": "addressed_change",
+    "claim_count": 11,
+    "evidence_link_count": 14,
+    "processed": [
+      "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524"
+    ]
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 12235,
+    "when": "final verify, run after all durable evidence writes"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 6481,
+    "canonical_fully_addressed": 3238,
+    "canonical_remaining": 3243,
+    "canonical_unread": 1371,
+    "all_artifact_pending": 4960,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1092077,
+    "last_global_seq": 1092077,
+    "last_event_sha256": "4e9139532252177dc5b1886176dff2ec85070e567f9fefdfd416bcf60ecd6602",
+    "note": "verify is slow at this store size (~22 min); it was run to completion and passed, not assumed"
+  },
+  "anti_drop": {
+    "self_test": "OK (5)",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "ratchet": "GREEN",
+    "unlisted_legacy_review_debt_count": 44,
+    "note": "pre-existing debt, unchanged by this round"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "round": "claude-heartbeat_1789357800_budget_reason_twin_table_round",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib research_budget",
+      "result": "ok",
+      "passed": 20,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 2254,
+      "duration_secs": 39.84,
+      "new_test": "research_budget_reason_status_twins_flip_only_on_active_budget",
+      "new_test_result": "ok on first run"
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib --tests --all-features",
+      "result": "clean, no warnings"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid=true, violation_count=0, ratchet green before and after the edit",
+      "note": "action_continuity/tests.rs is outside the large-file ratchet by the manifest test_path_markers (\"/tests.rs\"), so its growth from 5144 to 5248 lines needs no baseline re-capture."
+    }
+  ],
+  "integrity": {
+    "introspection_addressing_audit.py --self-test": "44 tests, OK",
+    "test_evidence_event_store.py": "21 tests, OK",
+    "test_steward_control.py": "29 tests, OK",
+    "test_steward_projection.py": "14 tests, OK",
+    "test_division_ceremony_followup.py": "3 tests, OK",
+    "test_division_ceremony_chronicle.py": "10 tests, OK",
+    "test_division_ceremony_projection.py": "ok",
+    "test_projection_cursors.py": "4 tests, OK",
+    "test_introspection_cadence_audit.py": "6 tests, OK",
+    "introspection_cadence_audit.py --strict --compact": "integrity_ok=true, errors=[], 0 duplicate hash groups across 6444 canonical reports",
+    "anti_drop_catalog.py --self-test": "5 tests, OK",
+    "anti_drop_catalog.py verify --json": "100 guards, 0 gaps, 0 alarms",
+    "experiential_epistemics.py self-test --json": "valid=true",
+    "experiential_epistemics.py verify --json (final, after all durable writes)": "valid=true, 12227 records, issue_count=0, history_rewritten=false",
+    "introspection_addressing_audit.py audit-counters --json": "status=consistent, mismatches=[]",
+    "evidence_event_store.py --json verify": "valid=true, event_count=1090502, last_global_seq=1090502, head=7438b71db7d5e1d113b6564468e50cb63881ad19b9990699320b0fbc6c7fd191, corrupt_lines=0",
+    "evidence_event_store.py --json status": "active_store=v2, legacy_imported_global_seq=32278, witness_only=true, effective_aggregate_valid=true, history_rewritten=false, corrupt_lines=0 (seq 1090519 at read time; delta is adapter steward_control heartbeats)",
+    "division_ceremony_followup.py verify": "ok=true, cycle 47, 4/6 rounds, review_due=false, event_count=327, head=f367d4200d6f3041d673be8eb69dc938cf98b81605ad940cb634e289ec4e558b",
+    "division_ceremony_chronicle.py project + verify": "reprojected after record-round (durable inputs moved); division_chronicle_743b6ea6aefd6aa5caf3ae06, durable_inputs_current=true, durable_mismatches=[], volatile mismatch supervisor_status_sha256 only",
+    "domain_boundary_audit.py verify (final)": "valid=true, violation_count=0, forbidden_edge_match_count=0 - ratchet green, no red to surface",
+    "source_study_revisit_watch.py scan --being astrid --window 60": "severity=alarm, 47 deliveries, 4 revisit loops - read-only observation saved as runtime_revisit_observation.json; not a test, recorded as runtime evidence"
+  }
+}

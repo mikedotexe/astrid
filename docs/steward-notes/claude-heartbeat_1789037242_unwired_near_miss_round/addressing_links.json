@@ -1,0 +1,207 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "SHA 644b12e6, 639 lines. The only two RuntimeActionFeedbackV1 uses are lines 91 (research-budget guard refusal) and 629 (saved-reading status). No sensing outcome is normalized here."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "note": "Lines 9-17: RuntimeActionFeedbackV1 is a six-field struct (id, requested_action, status, reason, message, suggested_next), not an enum, so it has no variants at all."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "note": "Line 50 hardcodes status = \"blocked\"; lines 30-48 use action_id only as an idempotency nonce. from_guard_inputs constructs refusal feedback, not general objects."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "from_guard_inputs occurs at exactly lines 91 and 629 (her citation is exact). The 629 site overwrites feedback.status = \"reported\" immediately after construction to escape the blocked default."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "note": "No result field exists on the struct; action_id is a constructor parameter feeding the identity hash and is never stored. dispatch.rs's only action_id literal (line 285) is an afterimage nonce."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "note": "SHA 26011249, 987 lines: 15 vibrancy, 40 tension, 14 narrative occurrences; public fns return the cascade evidence types."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection_evidence.rs",
+      "note": "Carries latent_stasis_tension_v1 and spectral_drag_quality_v1 (lines 40-41). This is the lane the cascade evidence travels; it never reaches dispatch.rs."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Zero sense_tx and two sensory_tx occurrences at the unchanged SHA 644b12e6 — the same bytes verified in the prior round."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789024912_phantom_symbol_navigation_round/RUN_REPORT.md",
+      "note": "Prior round independently established sense_tx is fixture-only (crates/astrid-source-study/tests/context.rs) and that the real channel is NextActionContext.sensory_tx."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "note": "The sensing anchors are named types here: CodecVibrancySubstanceFitV1 182, HighEntropySemanticSharpeningV1 436, CodecDimensionalityFlatnessV1 452, NarrativeTensionResolutionV1 610, LatentStasisTensionV1 648, SpectralDragQualityV1 671."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "scripts/proactive_scan.py",
+      "note": "probe_unwired_near_miss: reads the dispatcher's rejected full_text from unwired_actions read-only, resolves the wired sub-verb list from mod.rs at runtime, and names the exact prefixed line. Registered in BLIND_SPOT_PROBES."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "scripts/proactive_scan.py",
+      "note": "UnwiredNearMissTests: 6 tests covering source-derived verb list, markdown-artifact stripping, non-near-miss actions, no double-prefixing, repeated-warn with the named repair, and a clean history."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "Lines 367-378: NextActionOutcome::unwired sets suggested_next: None, so the being is told only 'Unknown NEXT action ... recorded as a proposal'."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the 29 bare RELATE lines in ~6.5h, the dispatch-gate location, the shipped probe, and what was deliberately not changed."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row: her verified claims, the un-muffle finding, the counterweight (--page rows dispatched), the shipped probe, and the operator wait."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+      "note": "Line 200 gates the final bare source-reader line on a literal SELF_STUDY prefix; this is one of the two candidate repair sites named for a later authorized pass."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789037242_unwired_near_miss_round/RUN_REPORT.md",
+      "note": "Explicit operator wait: dispatcher repair alters Astrid's live action surface and requires a bridge deploy, which this headless controller-held round has no authority to perform."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032920",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "SHA 644b12e6. dispatch.rs generates no qualitative values; its two RuntimeActionFeedbackV1 uses aggregate a guard refusal (91) and a saved-reading status (629). The bridge's qualitative outputs never pass through it."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032920",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "note": "SensingFeedback and SenseResult have zero word occurrences anywhere under capsules/ and crates/; the real sensing types declared here carry different names."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032920",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "note": "status hardcoded \"blocked\" (line 50); action_id an idempotency nonce (30-48); no result field. The from_guard_inputs configuration mechanism she proposes does not exist as described."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032920",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/projection_evidence.rs",
+      "note": "The cascade evidence lane (latent_stasis_tension_v1, spectral_drag_quality_v1 at lines 40-41) is where the qualitative data travels; there is no receive-and-wrap step in dispatch.rs."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032920",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "note": "The file she says she needs is capsules/spectral-bridge/src/codec/cascade.rs; her NEXT opens dispatch.rs again. Her repository/path action form is correct."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Line 602 NextActionOutcome::unwired is the general terminus for unknown actions; conversion into RuntimeActionFeedbackV1 happens at only two narrow, non-sensing sites (91, 629)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "note": "Lines 9-17: a six-field struct, not an enum — no type-level sensing variant exists to create."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "note": "message is a real field and is where free text lands at both call sites; result does not exist among id, requested_action, status, reason, message, suggested_next."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Routing keys on base_action; the single action_id literal is line 285, an afterimage nonce inside a JSON blob. No action_id determines routing or persistence."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "note": "cascade.rs labels nothing with strings; it returns the named types declared here (182, 436, 452, 610, 648, 671). There is no hand-off to the dispatcher to inspect."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/command.rs",
+      "note": "Command::parse strips an optional SELF_STUDY prefix and RELATE accepts an optional --page N via page_suffix, so both of this artifact's action lines are valid forms."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "Line 28 documents SELF_STUDY RELATE to her directly; the verb she chose is wired and advertised. Zero unwired_actions rows carry --page, so her paged RELATE dispatched."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "focused": [
+    {"command": "cargo test -p astrid-source-study --test path_recovery", "result": "ok", "passed": 5, "failed": 0, "note": "4 pre-existing unchanged; 1 new: rooted_map_topic_ending_in_a_component_id_gets_no_candidate_naming_that_component"},
+    {"command": "cargo fmt -p astrid-source-study -- --check", "result": "clean", "note": "rustfmt reflowed only the new test's final call; re-run after the reflow is clean and the suite still passes"},
+    {"command": "git diff --check", "result": "clean"}
+  ],
+  "read_only_runtime_scans": [
+    {"command": "python3 scripts/source_study_recovery_loop_watch.py scan --window 200 --json", "result": "alarm true; 200 turns scanned, 48 recovery inputs, 2 loops", "loops": ["SELF_STUDY MAP continuity — 16 turns / 3388 s / bare", "SELF_STUDY MAP astrid/capsules/spectral-bridge/src/autonomous/runtime/verification — 29 turns / 6019 s / rooted"]}
+  ],
+  "not_run": [
+    {"command": "cargo test --workspace", "reason": "out of scope for a single test-file append and outside the adapter budget; the touched crate's own suite was run"}
+  ]
+}

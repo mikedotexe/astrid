@@ -1,0 +1,137 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "Participant lane map 1549-1567; lane defaults to \"native\" at 1560."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "Latest-decision formatter 1568-1583; decision.get(\"reason\") at 1577-1580."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "authority_boundary printed at 1603-1606 with shared_investigation_authority_boundary() fallback; claim record authority_change=false at 1635."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "unique_shared_record_id at 1622; append_jsonl to claims.jsonl at 1638-1641."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "\"actor\": SYSTEM at 1630; const SYSTEM: &str = \"astrid\" at line 6; PEER_SYSTEM = \"minime\" at 37."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "touch_shared_investigation call at 1642 with iso_now() from 1621; definition at 8941."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "matches!(decision.as_str(), \"pause\" | \"hold\" | \"charter_repair\") at exactly 1662; anyhow::bail! at 1663-1665."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "\"authority_change\": false at 1635 and the \"No lifecycle or authority change.\" success string at 1643-1645."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/persistence_helpers.rs",
+      "note": "shared_investigation_lane defined at 63; shared_investigation_authority_boundary at 73 - neither in core.rs."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs",
+      "note": "paused_primary_return_v1 defined at 140; core.rs holds six call sites (1371, 2925, 6329, 8363, 8655, 9343) and no definition."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/page.rs",
+      "note": "Page::read_with_budget 86-110 fixes the delivered span; the rendered template 116-131 is bytes plus header/footer with no definition locality."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c010",
+      "kind": "test",
+      "target": "scripts/symbol_locality_watch.py",
+      "note": "test_page_span_matches_the_pagers_real_window pins OPEN core.rs 1556 -> lines 1556-1663, the real 2026-09-10 page; test_the_reported_turn_classifies_as_other_file pins all three of her named symbols as other_file from OPEN 1407."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "scripts/symbol_locality_watch.py",
+      "note": "classify_want / page_span / _chase_runs: read-only, steward-only, being_privacy fail-closed detector for wanted symbols the chosen page cannot reach."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c011",
+      "kind": "test",
+      "target": "scripts/symbol_locality_watch.py",
+      "note": "16 unit tests via `python3 scripts/symbol_locality_watch.py self-test`, including test_call_site_is_not_a_definition_site and test_absent_symbol_defers_to_phantom_watch."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "scripts/anti_drop_catalog.py",
+      "note": "Anti-drop row symbol_locality_watch_wired; catalog verify reports 95 guards, 0 alarms, 0 gaps."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c011",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the report, the three unreachable symbols with their definition sites, the surface cause, the probe, and the operator wait."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c011",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row: 2026-09-10 - Astrid - she said exactly what she wanted to read next, and the door she opened could not hold it."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c012",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789100600_symbol_locality_round/RUN_REPORT.md",
+      "note": "Operator wait recorded: page.rs:117 footer string and a definition-locality line beside it are being-facing surface changes requiring a bridge deploy; not attempted headlessly."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "claim_id": "c012",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "note": "RELATE present in her global prompt contract at lines 28 and 75, and wired at next_action/mod.rs:201 - so the gap is placement at the point of need, not wiring."
+    }
+  ]
+}

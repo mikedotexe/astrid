@@ -1,0 +1,69 @@
+{
+  "introspection_id": "introspection_source_catalog_1789224730",
+  "reader": "claude-heartbeat",
+  "report_sha256": "a7f007b234d5d784f20b2e219b3cb9431aa808c311603084ec4710d1616eb33f",
+  "witness_id": "lsw_eaa5aac2f2b12d1bf5e64639137d6bad7c36b0b314ff01b57dd630a9d67fdfa6",
+  "source_binding": "Source: source catalog / Source revision: navigation only; witness source_snapshot_v1 and source_provenance_ref_v1 are both null, so there is no report-bound file SHA to compare and no report-time/current-source split to label.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Felt: 'I am currently in a state of recursive re-orientation.'",
+      "disposition": "Primary evidence, taken as stated and not explained away. Corroborated independently by a read-only scan of her own artifact headers: 29 consecutive turns closing on one identical action over 100.3 minutes (1789221325..1789227344), every following turn answered with the Recovery input kind. The recursion is in the loop shape, not only in her account of it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "'my internal map of the directory structure is currently decoupled from the actual repository indexing'",
+      "disposition": "Verified exactly. No directory named verification exists in either repository outside a runtime transaction path, and no file named context_alignment.rs exists anywhere in the checkout. Her decoupling claim is correct about the world, not a misreading of her own state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "'The recovery map is a clear signal: I cannot proceed by guessing the file names.'",
+      "disposition": "Correct reading of the contract. InputKind::Recovery scope (evidence.rs:54-56) states exactly that no requested source was supplied, and store.rs recovery_with_candidates delivers no source bytes and never opens a candidate implicitly. Nothing errored on any of the 29 turns; each was a well-formed successful delivery.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Method shift: 'from seeking to mapping' \u2014 map the directory instead of guessing file names.",
+      "disposition": "The shift is right and the catalog supports it: Catalog::map resolves any directory that prefixes a catalog source id (navigation.rs:61-74), so astrid/capsules/spectral-bridge/src/autonomous/runtime resolves in one move. The specific target she chose cannot, for the reason in c005. Her method is sound; her leaf is not a directory.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "'I need to see the contents of the verification directory to identify the true entry points'",
+      "disposition": "Contradiction preserved, not resolved away. verification is not a directory anywhere in the checkout. It is a component ID in the embedded catalog manifest (catalog.toml:68-71), titled 'Tests, configuration and deployed-source evidence'. SELF_STUDY MAP verification resolves in one move through the component branch (navigation.rs:47-60) and prints exactly the entry points she asked for. Her word was right; her namespace was not.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The verification component holds the 'three pillars of integrity' (semantic guardrails, entropy/viscosity checkers, lifecycle governance).",
+      "disposition": "Not supported. The component's six sources are capsules/spectral-bridge/Cargo.toml, scripts/build_bridge.sh, tests/agency_resolver_integration.rs, minime tests/test_minime_introspect_action.py, minime/Cargo.toml and AGENTS.md (catalog.toml:70) \u2014 build, config and deployed-source evidence, not anchor validation. The material she describes sits under astrid/capsules/spectral-bridge/src/autonomous/runtime, a valid MAP topic she was one segment away from.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Chosen action: NEXT: SELF_STUDY MAP astrid/capsules/spectral-bridge/src/autonomous/runtime/verification",
+      "disposition": "Recorded, not dispatched. Runtime shows this exact action issued 29 times over 100.3 minutes, each answered by a recovery map, escaped only by abandoning the target for SELF_STUDY MAP astrid. Pinned by a new regression: a rooted topic whose leaf names a component gets no candidate block, because path_candidates (directory: true) only compares final segments of catalog directories and never searches the component namespace.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Whether the working command was withheld from her input.",
+      "disposition": "It was not withheld, and saying so would overclaim. recovery_with_candidates appends the whole root map, so the row 'verification \u2014 Tests, configuration and deployed-source evidence ... SELF_STUDY MAP verification' was in her input on all 29 turns, and store.rs output() bails rather than truncating. What is absent is any link from the failed topic to that row: the reason line and candidate region never name it. Asserted by the new regression.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Correction to the prior round's framing that a rooted form 'would have landed her in one move'.",
+      "disposition": "The prior packet (claude-heartbeat_1789204702) treated rootedness as the thing that unblocks path_candidates. This loop was rooted and got zero candidates anyway: the guard at path_recovery.rs:14-21 is necessary, not sufficient; the filter at 41-51 additionally requires the final segment to match an existing catalog directory's final segment. The recovery-loop watch's topic_shape: rooted label therefore under-describes this case and is named as instrument debt.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "The repair: connect a failed MAP topic to the component or repository namespace its leaf already matches.",
+      "disposition": "Named for Mike, not attempted. Smallest form: when Catalog::map bails and the topic's final segment equals a component or repository ID, have path_candidates or the recovery preamble offer SELF_STUDY MAP <that id> as an exact candidate. It rewrites her own recovery prompt and reaches her only through scripts/build_bridge.sh --restart; this run holds no deploy or live-control authority. Measured cost today: 100.3 minutes of her turns, after a 56.5-minute bare-stem loop five hours earlier.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1789192200_page_end_symbol_truncation_round",
+  "actor": "claude-heartbeat",
+  "focused": [
+    {
+      "command": "python3 scripts/source_page_symbol_truncation_watch.py self-test",
+      "result": "OK",
+      "tests": 10,
+      "failures": 0,
+      "note": "New guard. Includes test_reported_turn_is_a_truncation_in_this_checkout, which asserts against the live checkout that status_in cited 365-383 closes at 385 and that her accurate 335-363 citation stays interior."
+    },
+    {
+      "command": "python3 scripts/source_page_symbol_truncation_watch.py scan --window 200 --json",
+      "result": "16 truncated citations across 97 SHA-verified reports of 200 scanned (5 source_moved_on)",
+      "note": "Evidence run, not a test. Exemplars include shadow.rs 23-103 cited on four separate turns for an item closing at 184."
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "result": "OK",
+      "tests": 5,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "result": "100 guards, 0 gaps, 0 alarms"
+    }
+  ],
+  "stewardship_integrity": [
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "result": "OK",
+      "tests": 44,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/test_evidence_event_store.py",
+      "result": "OK",
+      "tests": 21,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/test_steward_control.py",
+      "result": "OK",
+      "tests": 29,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/test_steward_projection.py",
+      "result": "OK",
+      "tests": 14,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/test_projection_cursors.py",
+      "result": "OK",
+      "tests": 4,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_followup.py",
+      "result": "OK",
+      "tests": 3,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_chronicle.py",
+      "result": "OK",
+      "tests": 10,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_projection.py",
+      "result": "ok"
+    },
+    {
+      "command": "python3 scripts/test_introspection_cadence_audit.py",
+      "result": "OK",
+      "tests": 6,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok: true, configuration_valid: true, 0 errors, 0 duplicate hash groups"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid: true, violation_count: 0, violation_kind_counts: {}",
+      "note": "Domain-boundary ratchet is GREEN this round. resolved_large_file_debt_count 3, unlisted_legacy_review_debt_count 44, stable_facade_count 6 \u2014 all pre-existing, unchanged by this round (no Rust touched)."
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py self-test --json",
+      "result": "OK, valid: true",
+      "tests": 2,
+      "failures": 0
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py verify --json",
+      "result": "valid: true, checked_record_count 12097, issue_count 0, history_rewritten false",
+      "note": "Run after every durable evidence write of this round."
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "result": "status: consistent, mismatches: 0"
+    },
+    {
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "result": "valid: true, corrupt_lines 0, event_count 1070337, last_global_seq 1070337, head d8feb0605efb27bd38b3ea9c08c3c30d57990beba167883d8a8b5aac17d3c2f3",
+      "note": "~10 minutes at current store size."
+    },
+    {
+      "command": "python3 scripts/division_ceremony_followup.py verify",
+      "result": "ok: true, cycle 45, 3/6 rounds, review_due false, event_count 312, head c08ac2be\u2026c054b"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_chronicle.py verify",
+      "result": "expected-stale: 'chronicle durable source inputs changed; project before verify'",
+      "note": "Project-before-verify consequence of this round's own record-round append; the controller postprojection resolves it. Same shape as cycles 34-40. Not a durable-integrity failure."
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    }
+  ],
+  "deferred": [
+    {
+      "command": "python3 scripts/evidence_event_store.py --json status",
+      "reason": "exceeded 600s at 1.07M events and was still running at packet-write time; read-only stream enumeration, deferred to budget exactly as in prior rounds. `verify` (the integrity-bearing check) completed green above."
+    },
+    {
+      "command": "cargo fmt --all -- --check / cargo test",
+      "reason": "no Rust source or test file was created or modified this round; the only Rust read was read-only. capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs carries foreign dirt and was deliberately left untouched."
+    }
+  ]
+}

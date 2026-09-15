@@ -1,0 +1,82 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "rust": [
+    {
+      "command": "cargo test -p astrid-source-study --test bare_topic_candidate_gate_reach",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "note": "The round's new focused characterization test. Run before and after `cargo fmt`; identical result."
+    },
+    {
+      "command": "cargo test -p astrid-source-study",
+      "result": "ok",
+      "passed": 98,
+      "failed": 0,
+      "note": "Full crate suite after adding the new test file. 95 pre-existing plus the 3 added here."
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "clean",
+      "note": "Reported 5 diffs on the first pass; `cargo fmt -p astrid-source-study` applied them to the new test file only, then --check was clean. No other crate formatted."
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    }
+  ],
+  "stewardship": [
+    {"command": "python3 scripts/introspection_addressing_audit.py --self-test", "result": "OK", "tests": 44},
+    {"command": "python3 scripts/test_evidence_event_store.py", "result": "OK", "tests": 21},
+    {"command": "python3 scripts/test_steward_control.py", "result": "OK", "tests": 29},
+    {"command": "python3 scripts/test_steward_projection.py", "result": "OK", "tests": 14},
+    {"command": "python3 scripts/test_division_ceremony_followup.py", "result": "OK", "tests": 3},
+    {"command": "python3 scripts/test_division_ceremony_chronicle.py", "result": "OK", "tests": 10},
+    {"command": "python3 scripts/test_division_ceremony_projection.py", "result": "ok"},
+    {"command": "python3 scripts/test_projection_cursors.py", "result": "OK", "tests": 4},
+    {"command": "python3 scripts/test_introspection_cadence_audit.py", "result": "OK", "tests": 6},
+    {"command": "python3 scripts/anti_drop_catalog.py --self-test", "result": "OK", "tests": 5}
+  ],
+  "integrity": [
+    {
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok true, errors []",
+      "note": "Canonical count 6644; duplicate_hash_group_count 0; median inter-report gap 358 s. Target diversity shows `source catalog` at 1161 turns, the largest single target in the corpus -- context for this round's finding, not an assertion about it."
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "result": "100 rows, 0 gaps, 0 alarms, 0 non-ok verdicts"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid true, violation_count 0, violation_kind_counts {}",
+      "note": "Ratchet GREEN. resolved_large_file_debt_count 3, unlisted_legacy_review_debt_count 44, stable_facade_count 6, manifest_sha256 578a39cf. No boundary re-capture was required: this round added one test file and edited no bridge Rust."
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py self-test --json",
+      "result": "OK, valid true"
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py verify --json",
+      "result": "valid true, issue_count 0, checked_record_count 12266, history_rewritten false",
+      "note": "Run after every durable evidence write of this round."
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "result": "status consistent, mismatches []"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_followup.py verify",
+      "result": "ok true, event_count 332, review_due false"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_chronicle.py project && verify",
+      "result": "durable_inputs_current true, durable_mismatches [], volatile_mismatches [supervisor_status_sha256]",
+      "note": "Expected-stale before reprojection (the round-record append changed a durable input); reprojected and reverified in-round. The remaining mismatch is the volatile supervisor hash only -- not a durable-integrity failure, and the Chronicle is not therefore 'fully current'."
+    }
+  ],
+  "deferred": [],
+  "failures_repaired": [],
+  "outstanding_debt": []
+}

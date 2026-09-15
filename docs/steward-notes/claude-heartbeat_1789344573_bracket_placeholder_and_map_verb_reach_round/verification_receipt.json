@@ -1,0 +1,217 @@
+{
+ "schema": "flywheel_verification_receipt_v1",
+ "round": "claude-heartbeat_1789344573_bracket_placeholder_and_map_verb_reach_round",
+ "actor": "claude-heartbeat",
+ "controller": {
+  "run_id": "run_1789339396995167000_b97e5552c2",
+  "adapter_kind": "subprocess",
+  "preprojection_generation_id": "projection_1789339405283009000_60afaf8db9",
+  "preprojection_status": "passed",
+  "pause_generation": 439,
+  "stop_requested_observed": false,
+  "session_opened_by_this_child": false,
+  "lease_token_read_or_persisted": false,
+  "postprojection": "runs after this child exits; not observed here",
+  "steward_run_id": "run_1789339396995167000_b97e5552c2"
+ },
+ "processed": [
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "status": "addressed_change",
+   "fully_addressed": true,
+   "proof_missing_claims": [],
+   "claim_count": 7,
+   "evidence_links": 17,
+   "new_links": 17,
+   "existing_links": 0,
+   "full_read": true,
+   "lived_state_artifact_integrity_issue_count_after_read": 0
+  }
+ ],
+ "addressing_counters": {
+  "status": "consistent",
+  "mismatches": [],
+  "canonical": {
+   "indexed": 6380,
+   "fully_addressed": 3236,
+   "full_read": 3868,
+   "remaining": 3144,
+   "unread": 2512,
+   "blocked_needs_steward": 416,
+   "triaged_pending_action": 212,
+   "triaged_watch": 4,
+   "read_needs_claims": 0
+  },
+  "all_artifacts": {
+   "indexed": 8097,
+   "remaining": 4861,
+   "unread": 4229
+  }
+ },
+ "integrity": {
+  "addressing_self_test": "44/44",
+  "test_evidence_event_store": "21/21",
+  "test_steward_control": "29/29",
+  "test_steward_projection": "14/14",
+  "test_division_ceremony_followup": "3/3",
+  "test_division_ceremony_chronicle": "10/10",
+  "test_division_ceremony_projection": "ok",
+  "test_projection_cursors": "4/4",
+  "test_introspection_cadence_audit": "6/6",
+  "anti_drop_self_test": "5/5",
+  "anti_drop_verify": {
+   "rows": 100,
+   "alarms": 0,
+   "gaps": 0
+  },
+  "introspection_cadence_audit_strict": {
+   "integrity_ok": true,
+   "errors": []
+  },
+  "domain_boundary_verify": {
+   "valid": true,
+   "violation_count": 0,
+   "ratchet": "green",
+   "legacy_large_files": 51,
+   "resolved_large_file_debt": 3,
+   "unlisted_legacy_review_debt": 44,
+   "forbidden_edge_matches": 0
+  },
+  "experiential_epistemics_self_test": {
+   "valid": true
+  },
+  "experiential_epistemics_verify_final": {
+   "valid": true,
+   "checked_record_count": 12220,
+   "issue_count": 0,
+   "history_rewritten": false
+  }
+ },
+ "evidence_event_store": {
+  "verify": {
+   "valid": true,
+   "event_count": 1088930,
+   "last_global_seq": 1088930,
+   "last_event_sha256": "f193bf8e68d5bf2f63820639b189a273754c3077e7341382b5f010503b50a1a5",
+   "corrupt_lines": 0
+  },
+  "stream_counts": {
+   "addressing": 63621,
+   "agency_commons": 7034,
+   "attention_portfolio": 3,
+   "claim_families": 239501,
+   "corridor_v1": 5,
+   "corridor_v2": 112,
+   "felt_contracts": 210916,
+   "felt_mechanism_concordance": 80,
+   "lived_state_witness": 12394,
+   "model_qos": 332523,
+   "reciprocal_uptake": 75872,
+   "representation_contracts": 59364,
+   "sandbox": 3507,
+   "signal_spine": 61969,
+   "steward_control": 21303,
+   "steward_work_selection": 726
+  },
+  "status_subcommand": "not completed inside this child's budget \u2014 the store is now 1,088,930 events and `status` was still running when the round closed; `verify` completed and is recorded above. Exact debt, first safe command: python3 scripts/evidence_event_store.py --json status",
+  "valid": true,
+  "corrupt_lines": 0,
+  "errors": [],
+  "active_store": "v2",
+  "v1_immutable": "not re-observed this round \u2014 the `status` subcommand did not finish inside the child budget; `verify` passed with zero corrupt lines",
+  "provenance_note": "`--json verify` completed this round and returned valid=true with the full stream-count table; corrupt_lines=0 and errors=[] are the store's own contract from that verdict."
+ },
+ "division": {
+  "cycle_sequence": 47,
+  "completed_rounds_since_followup": 3,
+  "rounds_remaining_before_followup": 3,
+  "review_due": false,
+  "review_due_at_round_start": false,
+  "round_event_id": "division_followup_event_d4e88d0c847fb7a8eca6a90b85ee05e0",
+  "processed_report_count": 1,
+  "event_count": 326,
+  "event_head_sha256": "0071add7684a18240ccf2351ca65bdd4f0c7d90502fa274b04ee394d58921c6c",
+  "chronicle": {
+   "chronicle_id": "division_chronicle_7301d56177db132cdbccb171",
+   "timeline_event_count": 326,
+   "json_sha256": "c44e4d17004ee0fc25f41d1f6aae323a4696244895e704c4e40872d9cd017a2f",
+   "html_sha256": "658d29b32265e496af4e324e075718694506a383f50c06d6d4df140cbb485590",
+   "durable_inputs_current": true,
+   "volatile_mismatches": [
+    "supervisor_status_sha256"
+   ]
+  },
+  "return_performed": false,
+  "notes_written": [],
+  "tier5_cadence_dossier": "not generated \u2014 no Division return was due this round",
+  "threshold_rounds": 6
+ },
+ "tests": {
+  "cargo_test_placeholder_bracket_path_reach": "2/2",
+  "cargo_test_crate": "92/92",
+  "cargo_fmt_check": "clean",
+  "cargo_clippy_new_test_target": "clean",
+  "known_debt": "cargo clippy -p astrid-source-study --all-targets errors at tests/scan_limit_catalog_reach.rs:64 (clippy::arithmetic_side_effects) \u2014 untracked foreign file from an earlier round, preserved untouched"
+ },
+ "authority": {
+  "live_change": false,
+  "deploy_or_restart": "not required and not attempted",
+  "git": "read-only; nothing staged, committed, merged, pushed, stashed, reset or amended",
+  "index_clean": true,
+  "foreign_dirty_paths_touched": false,
+  "cards_notes_correspondence_delivered": false,
+  "new_authority_waits": [
+   "c007 \u2014 bracket-wrapped path acceptance / bare-directory help / MAP bridge-relative fallback (being-facing live navigation change, Mike/operator approval)"
+  ],
+  "silence_treated_as": "neutral"
+ },
+ "commit_debt": [
+  "crates/astrid-source-study/tests/placeholder_bracket_path_reach.rs",
+  "CHANGELOG.md",
+  "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+  "docs/steward-notes/claude-heartbeat_1789344573_bracket_placeholder_and_map_verb_reach_round/"
+ ],
+ "adapter_mode": "controller-held subprocess run adapter; no session opened, no NDJSON ops, no pause/resume, no lease token read or persisted",
+ "addressing": {
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "full_read": true,
+  "full_read_count": 1,
+  "closed_statuses": {
+   "introspection_source_catalog_1789339213": "addressed_change"
+  },
+  "evidence_links_new": 17,
+  "evidence_links_existing": 0,
+  "claim_count": 7
+ },
+ "counters": {
+  "status": "consistent",
+  "mismatches": [],
+  "canonical_indexed": 6380,
+  "canonical_fully_addressed": 3236,
+  "canonical_fully_read": 3868,
+  "canonical_remaining": 3144,
+  "canonical_unread": 2512,
+  "canonical_blocked": 416,
+  "canonical_pending_action": 212,
+  "canonical_watch": 4,
+  "canonical_read_needs_claims": 0,
+  "all_artifact_indexed": 8097,
+  "all_artifact_pending": 4861
+ },
+ "epistemic_lint": {
+  "valid": true,
+  "issue_count": 0,
+  "history_rewritten": false,
+  "checked_record_count": 12220,
+  "command": "python3 scripts/experiential_epistemics.py verify --json (run after all durable evidence writes including the Division round record and Chronicle reprojection)"
+ },
+ "anti_drop": {
+  "verify": {
+   "alarms": 0,
+   "gaps": 0,
+   "total": 100
+  },
+  "self_test": "5 tests OK"
+ }
+}

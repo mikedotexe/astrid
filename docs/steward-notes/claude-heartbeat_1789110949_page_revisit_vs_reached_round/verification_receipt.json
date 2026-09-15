@@ -1,0 +1,161 @@
+{
+  "schema": "flywheel_verification_receipt.v1",
+  "round": "claude-heartbeat_1789110949_page_revisit_vs_reached_round",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1789107325083947000_60da1390fb",
+    "preprojection_generation_id": "projection_1789107330791851000_3698397396",
+    "pause_generation": 437,
+    "paused": false,
+    "stop_requested_at_lease_read": false,
+    "adapter_kind": "subprocess",
+    "session_opened_by_this_actor": false,
+    "lease_token_read_or_persisted": false,
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "preprojection_profile": "source-first",
+    "preprojection_completed_step_count": 27,
+    "preprojection_authority_scan_passed": true,
+    "preprojection_recorded_at": "2026-09-11T07:15:39.208752+00:00"
+  },
+  "addressing": {
+    "processed_report_count": 1,
+    "processed": [
+      "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304"
+    ],
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 13,
+    "evidence_links_new": 19,
+    "evidence_links_existing": 0,
+    "counter_audit": "consistent",
+    "counter_audit_mismatches": [],
+    "canonical": {
+      "indexed": 5366,
+      "fully_addressed": 3217,
+      "full_read": 3849,
+      "remaining": 2149,
+      "unread": 1517,
+      "blocked_needs_steward": 416,
+      "triaged_pending_action": 212,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": {
+      "indexed": 7083,
+      "remaining": 3866
+    },
+    "full_read": true,
+    "full_read_count": 1
+  },
+  "division": {
+    "cycle_sequence": 44,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_b046abb1dabbc7ff386835b3de59871b",
+    "event_count": 305,
+    "event_head_sha256": "c07cb2e08a3547763389c2685b60e6d7f13d7988d5259e612f544781399ef491",
+    "chronicle_id": "division_chronicle_a3b6a85a891dd7ab00d65f78",
+    "chronicle_json_sha256": "8d0168a62eabf3926d69e96146cfebce586736d152f27505809b8d18654fafe0",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "followup_note_written": false,
+    "tier5_cadence_dossier_generated": false,
+    "tier5_dossier_reason": "review_due=false at round start; no Division return was due",
+    "processed_report_count": 1
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "event_count": 1061353,
+    "last_global_seq": 1061353,
+    "last_event_sha256": "61cb37ccad87ac3bbae67e182b45ceb8c8ea27794022ea3c584ff8e2aa820220",
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "status_stream_counts": "not captured in-round: `evidence_event_store.py --json status` exceeded the 600s shell timeout twice. `verify` is the integrity gate and passed.",
+    "errors": []
+  },
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "evidence_event_store_tests": "21 OK",
+    "steward_control_tests": "29 OK",
+    "steward_projection_tests": "14 OK",
+    "division_followup_tests": "3 OK",
+    "division_chronicle_tests": "10 OK",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4 OK",
+    "cadence_tests": "6 OK",
+    "cadence_audit_strict": {
+      "rc": 0,
+      "integrity_ok": true,
+      "errors": []
+    },
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": {
+      "total": 96,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "unlisted_legacy_review_debt_count": 44,
+      "ratchet": "GREEN",
+      "recapture_due": false,
+      "recapture_reason": "no Rust file touched this round"
+    },
+    "epistemic_self_test": "2 OK",
+    "epistemic_verify_final": {
+      "valid": true,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "checked_record_count": 12035
+    },
+    "new_tool_tests": {
+      "source_study_revisit_watch": "15 OK"
+    },
+    "cargo_fmt": "not run \u2014 cargo absent from PATH in this headless shell; no Rust source changed"
+  },
+  "live_surface": {
+    "build": false,
+    "deploy": false,
+    "launchctl": false,
+    "restart": false,
+    "bridge_binary_touched": false,
+    "being_facing_text_written_or_delivered": false,
+    "note": "restart and deployment were not required and not attempted"
+  },
+  "git": {
+    "staged": false,
+    "committed": false,
+    "merged": false,
+    "pushed": false,
+    "foreign_dirty_paths_touched": false
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12035,
+    "note": "final verify run after every durable evidence write of this round"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": []
+  },
+  "anti_drop": {
+    "self_test": "5 OK",
+    "verify": {
+      "total": 96,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "rows_added": [
+      "source_study_revisit_watch_wired"
+    ]
+  }
+}

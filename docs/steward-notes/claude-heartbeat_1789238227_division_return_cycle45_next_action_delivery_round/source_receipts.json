@@ -1,0 +1,100 @@
+{
+ "schema": "flywheel_source_receipts_v1",
+ "binding": "report declares 'Source revision: navigation only'; witness carries null source_snapshot_v1 and null source_provenance_ref_v1, so there is no report-bound source SHA and no hash-mismatch case exists",
+ "verification_sources": [
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+   "sha256_prefix": "aa1bce2e4d5379db",
+   "lines": 651,
+   "bytes": 27880,
+   "scope": "existence, size and line count only; contents not read this round"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+   "sha256_prefix": "efc3ee3a7c117524",
+   "lines": 4424,
+   "bytes": 165334,
+   "scope": "existence, size and line count only; contents not read this round"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+   "sha256_prefix": "412304677e54224e",
+   "lines": 824,
+   "bytes": 32769,
+   "scope": "existence, size and line count only; contents not read this round"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+   "sha256_prefix": "b5ca9d91cf4d88c9",
+   "lines": 876,
+   "bytes": 32595,
+   "scope": "existence, size and line count only; contents not read this round"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+   "sha256_prefix": "d7d9bb9422222f5e",
+   "lines": 187,
+   "bytes": 6651,
+   "scope": "existence, size and line count only; contents not read this round"
+  },
+  {
+   "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/sessions/",
+   "scope": "complete enumeration of all 63 read_session_checkpoint_v3 files; every source_identity tallied; zero sessions for any src/autonomous/next_action/* identity"
+  }
+ ],
+ "division_inputs": [
+  {
+   "path": "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.json",
+   "scope": "ceremony_rails, current_native_state, return_interval, authority, runtime_topology, destination_contract, runtime_shell_evidence, phase_space_preservation read completely"
+  }
+ ],
+ "minime_lane_evidence": {
+  "path": "/Users/v/other/minime/logs/autonomous-agent.log",
+  "scope": "last 3000 'Autonomous action:' lines tallied; transition window 2026-09-11 07:10-07:20 read line by line",
+  "privacy": "no private-lane journal file opened, read or quoted; lane state derived from filesystem mtime only"
+ },
+ "correction": "The verification_sources entry for the source_first_v3 sessions directory led the round's FIRST pass to a wrong inference: zero read sessions for any next_action/* identity was read as evidence of non-delivery. It is not. The SELF_STUDY OPEN paging route writes no v3 read session. The authoritative delivery record is the per-artifact header 'Source revision: sha256:<hex>; bytes A..B'. The corrected evidence is delivery_coverage_next_action.json.",
+ "authoritative_delivery_evidence": {
+  "method": "merged every per-page byte window from canonical introspection headers under capsules/spectral-bridge/workspace/introspections",
+  "tool": "scripts/source_delivery_coverage.py",
+  "result_file": "delivery_coverage_next_action.json",
+  "pages_merged": 211,
+  "per_module": {
+   "shadow.rs": {
+    "pages": 60,
+    "current_revision_covered_pct": 100.0,
+    "revisions": 1,
+    "gaps": 0
+   },
+   "spectral_drift.rs": {
+    "pages": 14,
+    "current_revision_covered_pct": 100.0,
+    "revisions": 1,
+    "gaps": 0
+   },
+   "dispatch.rs": {
+    "pages": 40,
+    "current_revision_covered_pct": 96.7,
+    "lifetime_pct": 97.7,
+    "revisions": 3,
+    "gaps": 0,
+    "stitched": true
+   },
+   "mod.rs": {
+    "pages": 83,
+    "current_revision_covered_pct": 0.0,
+    "lifetime_pct": 99.2,
+    "revisions": 3,
+    "gaps": 0,
+    "stitched": true
+   },
+   "pressure_agency.rs": {
+    "pages": 14,
+    "current_revision_covered_pct": 63.8,
+    "revisions": 2,
+    "gaps": 3,
+    "stitched": true
+   }
+  }
+ }
+}

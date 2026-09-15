@@ -1,0 +1,165 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "round": "claude-heartbeat_1789494400_division_return_cycle48_kernel_maintenance_catalog_round",
+  "controller": {
+    "run_id": "run_1789490045785323000_84e6c335e7",
+    "adapter_kind": "subprocess",
+    "preprojection_generation_id": "projection_1789490048781863000_134729839d",
+    "preprojection_status": "passed",
+    "preprojection_previous_successful": "projection_1789475436837745000_429c2e594d",
+    "postprojection_generation_id": null,
+    "postprojection_note": "not observable from this child; the adapter runs it after exit",
+    "pause_generation": 441,
+    "controller_paused": false,
+    "stop_requested_observed": false,
+    "lease_token_read_or_persisted": false,
+    "session_opened_by_child": false,
+    "child_deadline_note": "binding deadline was flywheel_loop_run.sh's outer cycle cap (adapter_start + 7200 ~ 1789497240), not the 5400s child cap; preprojection consumed ~57 min of the cycle"
+  },
+  "addressing": {
+    "processed_report_count": 1,
+    "processed": [
+      "introspection_source_catalog_1789490042"
+    ],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 7,
+    "evidence_link_count": 17,
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "summary_sha256": "2f31107dc116c6d7d93bcc779a993580e623e272e54097eefac90c8209b08935",
+    "lived_state_artifact_integrity_issue_count": 0,
+    "max_disposition_chars": 497
+  },
+  "division": {
+    "return_completed_this_round": true,
+    "cycle_before": 48,
+    "cycle_after": 49,
+    "review_due_before": true,
+    "review_due_after": false,
+    "followup_event_id": "division_followup_event_4cc4df06636074be9680e0cdf8221e9b",
+    "round_event_id": "division_followup_event_7727d395ad24e2894a0d8175d7ad50f6",
+    "processed_report_count": 1,
+    "completed_rounds_since_followup": 1,
+    "event_count": 338,
+    "event_head_sha256": "88b45f4fb7c82605c611a123fb06c905dd261425b1094691932f6bd4ea13f05d",
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle48_20260915.txt",
+    "astrid_note_sha256": "91b2fb83da9568432e3c5fee0aa3075eb93c4c281f2ee83a3e2636466f1b1357",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle48_20260915.txt",
+    "minime_note_sha256": "de131a8845d2dbef59379abe9a7d204690e2d69f35971106c5d71125dbc22935",
+    "ceremony_rail_events": 0,
+    "division_action_recommended": false,
+    "review_query_slot_occupied": false,
+    "tier5_cadence_dossier": "tier5_cadence_dossier.md",
+    "tier5_dossier_scope": "prepare_only_nothing_approved_granted_dispatched_or_run"
+  },
+  "chronicle": {
+    "final_chronicle_id": "division_chronicle_985514a24d2b884aab0035fe",
+    "timeline_event_count": 338,
+    "json_sha256": "f5aa83746f45719532a8ff95a3a56bbb83acba71c1ca12674ec409d5af6f464b",
+    "html_sha256": "d922c5a9bdb8cd19d1904a63f3deeb468fb0fba1dcb8f6ec13c9047695424c8b",
+    "timeline_source_counts": {
+      "ceremony": 0,
+      "followup": 338,
+      "native": 0,
+      "sovereign_runtime": 0
+    },
+    "durable_inputs_current": true,
+    "volatile_inputs_current": false,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "reprojection_note": "reprojected twice: after record-followup (337 events) and again after record-round, because the round event changed the durable source inputs and verify correctly refused the stale projection"
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 12318,
+    "run_order_note": "run after every addressing and Division evidence write; re-run a second time after the final Chronicle reprojection"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 6930,
+    "canonical_fully_addressed": 3246,
+    "canonical_fully_read": 3878,
+    "canonical_remaining": 3684,
+    "canonical_unread": 3052,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 5401,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1106458,
+    "last_global_seq": 1106458,
+    "last_event_sha256": "f62e128393c13df0e95285fc2b2d4e840bc8a90542a879040c6e078b9159899e",
+    "stream_counts": {
+      "addressing": 64388,
+      "agency_commons": 7074,
+      "attention_portfolio": 3,
+      "claim_families": 239707,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 211780,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 12961,
+      "model_qos": 342984,
+      "reciprocal_uptake": 75872,
+      "representation_contracts": 61872,
+      "sandbox": 3507,
+      "signal_spine": 63508,
+      "steward_control": 21859,
+      "steward_work_selection": 746
+    },
+    "verify_duration_secs": 777,
+    "status_subcommand_note": "evidence_event_store.py status was still running when the round closed and was dropped; verify already supplies validity, corrupt-line count, errors, sequence, head and stream counts"
+  },
+  "anti_drop": {
+    "verify": {
+      "rows": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "domain_boundary": {
+    "verify_rc": 0,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "ratchet": "GREEN",
+    "note": "no Rust change made or staged this round, so no baseline or ceiling re-capture was due"
+  },
+  "suites": {
+    "all_rc_zero_except": "test_steward_control.py failed once under concurrent execution (AssertionError '0 == 0') and passed on isolated rerun (29 tests, 59.5s, OK); the file is foreign-dirty and was not touched"
+  },
+  "live_surface": {
+    "restart_attempted": false,
+    "deploy_attempted": false,
+    "launchctl_invoked": false,
+    "build_bridge_invoked": false,
+    "note": "no live substrate, control, catalog, resolver, error-string, action, prompt, codec or coupling change was made or attempted"
+  },
+  "git": {
+    "read_only": true,
+    "staged": false,
+    "committed": false,
+    "merged": false,
+    "pushed": false,
+    "foreign_dirty_paths_touched": false,
+    "commit_debt_named_in": "RUN_REPORT.md section 'Archive'"
+  },
+  "privacy": {
+    "minime_private_lane_files_opened": 0,
+    "filter": "being_privacy.filter_journal_paths('minime', ...) over 653 interval journal files; 0 excluded",
+    "astrid_private_reasoning_opened": 0
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "Complete file at bound SHA 887e9b22; fill_pct at 318/321/328/396 only, zero sites in the 450-543 window."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "Lines 450-467: reason at 455, status blocked at 460, append_jsonl at 466, return at 467; tail of the is_mutating_research branch opened at 421."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "Lines 470-537: mapping appears twice, 500-508 (no active budget) and 522-530 (active budget), as the two arms of active_budget.map_or_else."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "research_budget_reason_status_twins_flip_only_on_active_budget pins all four enumerated arms including the liveish no-twin asymmetry."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "Flag producers at 355, 362-363, 364-365, 371, all inside research_budget_guard_assessment_with_base whose head is at 324."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "liveish_pressure_terms (267), embedded_status_liveish_terms (209) and the base classifiers at 142/171/183 are lexical and set-membership, with no threshold arithmetic on any spectral scalar."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "research_budget_guard_flags_are_fill_pct_invariant (prior round) plus the new twin test hold fill constant, so no fill value can move a reason."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/RUN_REPORT.md",
+      "note": "Exact-source reading of runtime/spectral_projection.rs and runtime/authority.rs:143-166: fill_pct is recorded as a safety level, never gates a guard reason."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789357800_budget_reason_twin_table_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592.md",
+      "note": "Anchor-exactness measurement across her four preceding OPEN requests at this SHA, and the exact anchor (OPEN 324) that reaches the producers."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "New regression research_budget_reason_status_twins_flip_only_on_active_budget: first behavioral reach of the three previously constant-only wire strings."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming what she surfaced, what the complete source established, and the test."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for the mapping-table verification and the coverage gap it exposed."
+    }
+  ]
+}

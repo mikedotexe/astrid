@@ -1,0 +1,71 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+    "sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+    "bytes": 23174,
+    "lines": 834,
+    "read": "complete",
+    "scope": "complete file, lines 1-834, read in three sequential ranges 1-200, 200-500, 500-834",
+    "note": "working-copy SHA-256 equals the SHA-256 bound by both reports (94ddbd3f...); shared by both members because both are bound to the same source bytes"
+  },
+  "adjacent_source": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+      "bytes": 36711,
+      "lines": 830,
+      "read": "complete",
+      "scope": "lines 123-170 (BudgetReason), 310-540 (research_budget_guard_assessment_with_base)",
+      "note": "same-basename sibling that actually assigns is_liveish_projection (355) and is_guarded_embedded_status (371) and forwards fill_pct to spectral_state (396)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/spectral_projection.rs",
+      "sha256": "22170ae717c62547097bcd32fa01ef87670154a7ed6f0169a5e27237595f1cba",
+      "bytes": 11376,
+      "lines": 345,
+      "read": "complete",
+      "scope": "lines 1-60 (spectral_state and status helpers)",
+      "note": "spectral_state embeds fill_pct in JSON and compares nothing"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "sha256": "93a1146d0ff05bd455b41e3f5c8e345bf6a4a2d0eb5c69dcad4cb6712d08822a",
+      "bytes": 33922,
+      "lines": 896,
+      "read": "complete",
+      "scope": "lines 143-166 (authority_safety_snapshot)",
+      "note": "the only fill_pct arithmetic in the research-budget path: 75/85/92 to green/yellow/orange/red plus outbound_allowed, recorded not gating"
+    },
+    {
+      "path": "crates/astrid-source-study/src/progress.rs",
+      "sha256": "3952f8a55bf52d0a908e05429c2e8171026db9aadbc568a1da039ac5c915b3ab",
+      "bytes": 2021,
+      "lines": 69,
+      "read": "complete",
+      "scope": "lines 1-70 (SourceProgress and label)",
+      "note": "navigation/RESUME surface already renders `delivered bytes .. of {bytes}`, so the denominator exists in the system"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "0aee1c4f8214c993b690e951fb41c445e7139a86a45e6d439b239bb70d15aa81",
+      "bytes": 16990,
+      "lines": 406,
+      "read": "complete",
+      "scope": "lines 95-260 (prompt/artifact assembly and revision string)",
+      "note": "the artifact header renders `sha256:..; bytes X..Y` with no total, and Source is the fully path-qualified catalog label"
+    }
+  ],
+  "byte_to_line_map": {
+    "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs": {
+      "bytes 4930..8997": "lines 183..334",
+      "bytes 8997..13052": "lines 334..486",
+      "total_lines": 834,
+      "total_bytes": 23174
+    }
+  },
+  "fill_pct_occurrences_in_report_bound_source": 0,
+  "numeric_comparisons_in_report_bound_source": [
+    "line 714: research_budget_duplicate_count(...) >= 2"
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "Complete file at bound SHA 94ddbd3f: 834 lines, zero fill_pct occurrences; only numeric comparison is >= 2 at line 714."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "liveish_pressure_terms spans 267-463; pattern table holds anti-lambda, convergence, spectral-ripple, cascade-shaping; 465 begins the next fn."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "is_liveish_projection = !matched_terms.is_empty() at 355 and is_guarded_embedded_status = !embedded_status_terms.is_empty() at 371 in the same-basename sibling."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049.md",
+      "note": "Locus correction stated plainly with both SHAs; her mechanism claim preserved as verified."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "constraint_release_language_terms opens at 465; has_context list includes lambda, spectral, reservoir."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "Line 396 is exactly `let state = spectral_state(fill_pct, telemetry);` in the sibling file her earlier notes covered."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "authority_safety_snapshot 143-166: the only fill_pct arithmetic in the path, labelling the recorded row at 75/85/92 without gating."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "research_budget_guard_flags_are_fill_pct_invariant shows the decision does not move with fill while the recorded level does."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "New focused regression pinning the negative answer across fill 0/14/68/75/85/92; 19 research_budget tests pass."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] steward round 1789328968 records the question, the negative answer, and the exact tests."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Feedback-to-change row dated 2026-09-13 naming her STUDY_QUESTION as the cause of the regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049.md",
+      "note": "Observation that pages 486-834 contain no fill_pct, so continuing this file cannot answer the question."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/progress.rs",
+      "note": "SourceProgress::label already renders `delivered bytes .. of {bytes}`; the denominator exists on the navigation surface, so nothing is dropped."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "Lines 183-185 are guarded_embedded_status_projection_base with matches!(base, \"INTROSPECT\" | \"EXPERIMENT_STATUS\"); her window starts at 183 exactly."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "embedded_status_liveish_terms opens at 209 with the three labels and appends exactly the six pressure terms she lists."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "The regression drives this helper via `INTROSPECT quiet low activity` and asserts the matched term stimulus-reduction."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "liveish_pressure_terms opens at 267 and runs to 463; disrupt, simulate, nudge and anti-lambda are all present."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "Zero fill_pct occurrences in the complete file; single numeric comparison >= 2 at line 714."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "Reason and matched terms identical at fill 0/14/68/75/85/92 while safety_snapshot.level moves green to red: action-shaped decision, recorded fill."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] round 1789328968 credits this report with the correct mechanism one page before the follow-on."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "research_budget_guard_assessment_with_base is lines 324-330 of the sibling file and compares no numbers; fill_pct is only forwarded at 396."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636.md",
+      "note": "Summary hands back the exact sibling path and line range she was looking for."
+    }
+  ]
+}

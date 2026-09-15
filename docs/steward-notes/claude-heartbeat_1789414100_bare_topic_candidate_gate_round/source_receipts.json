@@ -1,0 +1,109 @@
+{
+ "schema": "flywheel_source_receipts_v1",
+ "report_bound_source": {
+  "declared": "source catalog",
+  "declared_revision": "navigation only",
+  "resolution": "The report binds no single source file: it is a navigation-only turn whose Input evidence is a recovery map. The report-bound surface is the shared source catalog itself, so the catalog manifest and the code that resolves, maps, and recovers topics were read instead.",
+  "witness_source_snapshot_v1": null
+ },
+ "sources": [
+  {
+   "path": "crates/astrid-source-study/catalog.toml",
+   "sha256": "6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae",
+   "bytes": 3756,
+   "lines": 71,
+   "scope": "complete"
+  },
+  {
+   "path": "crates/astrid-source-study/src/catalog.rs",
+   "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67",
+   "bytes": 11498,
+   "lines": 329,
+   "scope": "complete"
+  },
+  {
+   "path": "crates/astrid-source-study/src/path_recovery.rs",
+   "sha256": "7799bda8f134b2e6f47782dbf6237dccf020305253706462427017fc4548ec00",
+   "bytes": 2984,
+   "lines": 86,
+   "scope": "complete"
+  },
+  {
+   "path": "crates/astrid-source-study/src/navigation.rs",
+   "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+   "bytes": 6187,
+   "lines": 163,
+   "scope": "complete"
+  },
+  {
+   "path": "crates/astrid-source-study/src/command.rs",
+   "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0",
+   "bytes": 5699,
+   "lines": 155,
+   "scope": "complete"
+  },
+  {
+   "path": "crates/astrid-source-study/src/evidence.rs",
+   "sha256": "1842133fa5b3f88741fe42a347e27da36a29a3583397b7e6a91fe1ee86620405",
+   "bytes": 2889,
+   "lines": 62,
+   "scope": "complete"
+  },
+  {
+   "path": "crates/astrid-source-study/src/store.rs",
+   "sha256": "4c7da264d7d8beaa704f756e6d9dc66c76386d988c4b102817f0a2900e0cfbd1",
+   "bytes": 37420,
+   "lines": 969,
+   "scope": "lines 380-560 (prepare_action, recovery_map, recovery_with_candidates, requested_source, source_recovery, prepare_parsed command dispatch, prepare_relate, prepare_continue)"
+  },
+  {
+   "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+   "sha256": "0aee1c4f8214c993b690e951fb41c445e7139a86a45e6d439b239bb70d15aa81",
+   "bytes": 16990,
+   "lines": 406,
+   "scope": "lines 1-140 (uses_shared_source_study, shared_study_command, prepare_shared_study_target, source_study_prepare_notice, run_shared_source_study through the source snapshot)"
+  },
+  {
+   "path": "crates/astrid-source-study/tests/path_recovery.rs",
+   "scope": "lines 1-40 and 140-234 (setup fixture and the two existing bare-stem / rooted-component recovery tests, read to avoid duplicating an already-pinned boundary)",
+   "note": "Pre-existing dirty file authored by earlier rounds. Read only; NOT edited by this round."
+  },
+  {
+   "path": "crates/astrid-source-study/tests/scan_limit_catalog_reach.rs",
+   "scope": "complete",
+   "note": "Read for the round's test idiom. Pre-existing untracked file from an earlier round; not edited."
+  },
+  {
+   "path": "crates/astrid-source-study/tests/map_topic_scope_reach.rs",
+   "scope": "header and test names",
+   "note": "Read to confirm this round's boundary is additive. Pre-existing untracked file; not edited."
+  }
+ ],
+ "created_by_this_round": [
+  {
+   "path": "crates/astrid-source-study/tests/bare_topic_candidate_gate_reach.rs",
+   "sha256": "c6b74efcb0834171ee500f9e178e0399c221336a989bfaba9ddd50ba2ce54599",
+   "bytes": 7679,
+   "lines": 191,
+   "note": "Hash and size are post-`cargo fmt -p astrid-source-study`; the pre-format draft hashed 587d3c4a56c31ecfe539add8c72e77fff5adf3711af239d7e822b60a879f54cf (7625 bytes / 185 lines). Behaviour identical; 3/3 pass before and after."
+  }
+ ],
+ "runtime_observations": [
+  {
+   "observation": "17 consecutive `NEXT: SELF_STUDY MAP astrid-kernel` choices, 1789404601 through 1789409195 (about 76 minutes), each answered with InputKind::Recovery.",
+   "method": "Chronological read of the NEXT line and Input-evidence line of every introspection_source_catalog_1789*.txt in the window."
+  },
+  {
+   "observation": "The byte-identical `NEXT: SELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs 1` appears at 1789404440 (answered with a spectral_bridge recovery) and at 1789410137 (answered with six astrid-kernel lib.rs source pages, 1789410403-1789411754).",
+   "method": "od -c comparison of both NEXT lines; directory listing of the introspections written between."
+  },
+  {
+   "observation": "Every recovery delivered between 1789399313 and 1789404956 carries Reason \"no catalog entries for spectral_bridge; use SELF_STUDY MAP\". No source-catalog introspection ever chose that topic; the journal lane chose it 148 times.",
+   "method": "Read of the shared_reader navigation delivery records in the window; grep of NEXT lines across introspections and journal."
+  },
+  {
+   "observation": "All manifest component sources and all six repository roots resolve on disk once repository IDs map through their configured directories.",
+   "method": "tomllib parse of catalog.toml plus os.path existence checks."
+  }
+ ]
+}

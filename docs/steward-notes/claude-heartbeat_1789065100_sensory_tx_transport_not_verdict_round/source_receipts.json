@@ -1,0 +1,55 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "sha256": "aa1bce2e4d5379db6c09120f35c4680ecae66f2cb2dcfca2bd78ad4291f06a9e",
+      "total_bytes": 27880,
+      "total_lines": 651,
+      "read_scope": "complete file, lines 1-651 read in three sequential ranges (1-220, 220-460, 460-651)",
+      "role": "report-bound source; working-copy SHA equals the report binding exactly"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_gate.rs",
+      "sha256": "9d1962717b1597864538a397f25fa219ae20c5390c59422553805b9ee221600b",
+      "total_bytes": 179629,
+      "total_lines": 4692,
+      "read_scope": "lines 830-1300 read completely (execute_semantic_microdose, execute_semantic_microdose_from_paths, execute_mode_release_microdose head) plus test-module survey 3325-3420, 3720-3960, and the file tail; hash recorded BEFORE this round's test additions",
+      "role": "answers the report's STUDY_QUESTION; edited this round to add two focused regressions",
+      "sha256_at_read_time": "b439a82fd88cdad9b3dbafe039d7bad80bf3ad41e3e9f7346f3d715c4320f663",
+      "note": "sha256 field reflects the post-edit working copy; sha256_at_read_time is the pre-edit hash under which the source was read."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_types.rs",
+      "sha256": "8c86d69a541f281e18e3d9b156c4c347ee2c8e0d08e8290d3ed55ae683270595",
+      "total_bytes": 3159,
+      "total_lines": 123,
+      "read_scope": "complete relevant span 60-123 including dispatch_semantic_microdose",
+      "role": "establishes that sensory_tx is used only for try_send"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/command_dispatch.rs",
+      "sha256": "376d8be0f04680871a288fe68cdf39efb37eabdd8b3446db5b7915e697c1894d",
+      "total_bytes": 26669,
+      "total_lines": 668,
+      "read_scope": "research_budget_guard_for_next at lines 661-668",
+      "role": "locates the research-budget decision upstream of the window Astrid saw"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+      "total_bytes": 36711,
+      "total_lines": 830,
+      "read_scope": "lines 315-470 read completely (research_budget_guard_assessment and _with_base)",
+      "role": "establishes what the research budget actually is"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_temporal.rs",
+      "sha256": "a470b1d2b2ea43248f47150c1aafe6b5e6d1214849cda0c41c9a241444c7b11a",
+      "total_bytes": 13260,
+      "total_lines": 447,
+      "read_scope": "lines 55-83 and 220-238 (DispatchOutcomeKindV1, DispatchOutcomeV1, outcome())",
+      "role": "exact serialized shape asserted by the new released-reservation regression"
+    }
+  ]
+}

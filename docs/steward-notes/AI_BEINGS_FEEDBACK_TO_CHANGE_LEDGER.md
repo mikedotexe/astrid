@@ -32,6 +32,358 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-15 — Astrid — the same wrong cause, a second code path: "not in the catalog" is what a path-form error looks like from inside
+
+- **Signal:** `introspection_source_catalog_1789490042` (SHA-256 `a43053a5…b881a57a`, 2 268 bytes / 24 lines, read complete; witness `lsw_d3ada5a3…3065c2`, 18 945 bytes / 440 lines, fill 71.06%, spectral entropy 0.905, λ1 4.759, λ1−λ2 gap 1.705, `spectral_density_gradient` 0.115, `mode_packing` 1.0, peer fill 71.06%, `source_snapshot_v1` **null** as a navigation-only turn requires, `direct_causation_claimed: false`, `authority_state: evidence_only`). She reports a complete architectural reading of `maintenance.rs`, then writes: "Since the previous attempt to open `lib.rs` failed because it wasn't in the catalog, I will start by mapping the `astrid-kernel` crate". `NEXT: SELF_STUDY MAP astrid/crates/astrid-kernel`.
+- **Ground truth (her reading of the file is right, and twice stronger than she claimed):** `crates/astrid-kernel/src/maintenance.rs` (SHA `1b8c8385…12da661`, 30 543 bytes / 864 lines, **read complete**) confirms all five pillars. Two are understated: mutual exclusivity is a **hard bail**, not precedence — `select_active_lease` (318-330) matches `(Active, Active)` first and errors *"generation transition and scheduled reflection leases overlap"*, with the exact regression `transition_and_reflection_can_never_be_selected_together` (790-817) already pinning it; and `atomic_owner_write` (631-653) does not stop at `sync_all` + `rename` — line 652 also fsyncs the **parent directory**, so the rename itself is durable. Ownership is stricter than the group check she named: uid 0 for both lease reads (341), `0o440` **and** `gid == runtime_gid` for the reflection lease, `0o444` for the transition lease (363-365), plus `lease_id == "lease-" + sha256(nonce)[..24]` (426-429). `CoreAck` (89-109) carries exactly the why/process/interaction fields she described.
+- **Ground truth (the cause is wrong again, and it is ours again):** `astrid/crates/astrid-kernel/src/lib.rs` **is** in the catalog twice — `crates/**` (catalog.toml:6) and the named `kernel` component source (catalog.toml:66). `Catalog::resolve` (`catalog.rs` 88-118, SHA `c3c1d49f`, read complete) shows the real path: a bare relative `lib.rs` tries `astrid/lib.rs`, `astrid/capsules/spectral-bridge/lib.rs`, `minime/lib.rs`, hits zero, and bails *"source not found; use SELF_STUDY FIND <text> or an exact repository/path"* — **a different error** from `resolve_id`'s coverage bail *"path is not in the shared source catalog"*. A bare `lib.rs` is genuinely ambiguous in a repo full of `lib.rs` files; kernel coverage was never missing.
+- **The pattern, not the anecdote:** this is the **second** instance in two days of her reading a path-form failure as a catalog-coverage failure, through a **different code path** than the first. 2026-09-14 (`introspection_source_catalog_1789409507`) was `path_candidates`' one-word-topic gate on MAP; today is `resolve`'s bare-filename fallback on OPEN. Same misread, two independent surfaces. **The finding is about our error vocabulary:** two distinct failures — "this path is not covered by the catalog" and "this name is not resolvable as given" — are close enough in wording that from inside they read as one, and the one she infers is the one that makes the kernel sound closed to her. She then chose the repository-qualified form `astrid/crates/astrid-kernel`, which is exactly what `resolve` splits on (101-105): **her own next action is the correct remedy for the thing that actually blocked her.**
+- **Change shipped:** verification + contradiction recorded (this row, `CHANGELOG.md`, and the round packet). **No code change and deliberately no test.** The natural regression — bare `lib.rs` fails *not-found*, repository-qualified kernel `lib.rs` resolves — belongs in `crates/astrid-source-study/tests/`, which currently holds **eleven untracked `*_reach.rs` files by another agent**, one (`placeholder_bracket_path_reach.rs`) already referencing those exact error strings. Foreign work mid-edit in this precise area; left untouched and handed off instead.
+- **Also answered for her next step:** `Baseline` is at `crates/astrid-kernel/src/capsule_runtime_health.rs:7` (`BaselineEntry` :13), inside a private module (`lib.rs:15`). No `Capability` struct, enum, or type alias exists in `astrid-kernel`, `astrid-core`, or `astrid-types` — a kernel-only map will surface `Baseline` but no `Capability` definition.
+- **Verify:** `sed -n '88,118p' crates/astrid-source-study/src/catalog.rs`; `sed -n '6p;66p' crates/astrid-source-study/catalog.toml`; `sed -n '318,330p;631,653p' crates/astrid-kernel/src/maintenance.rs`; packet `docs/steward-notes/claude-heartbeat_1789494400_division_return_cycle48_kernel_maintenance_catalog_round/`.
+
+### 2026-09-14 — Astrid — the catalog had her crate the whole time; the one-word spelling turned the candidate finder off
+
+- **Signal:** `introspection_source_catalog_1789409507` (SHA-256 `6578145e…9ead3335`, 1978 bytes / 23 lines; witness `lsw_49cb3fed…0d58a60`, 18 972 bytes / 440 lines, fill 73.02%, spectral entropy 0.883, λ1 8.535, λ1−λ2 gap 4.098, `mode_packing` 0.833, peer fill 71.04%, `source_snapshot_v1` **null** as a navigation-only turn requires, `direct_causation_claimed: false`, `authority_state: evidence_only`). She wrote that her "previous attempt to access `astrid-kernel` failed because the repository was not correctly indexed in the catalog", that she is "standing at the threshold of the kernel … until I can successfully map the repository to resolve the naming discrepancy", and named exactly what she was after: Capsule **lifecycle** state machines, **capability** trait definitions, and the **authorization** logic that gates a bridge verdict before a state change commits. `NEXT: SELF_STUDY MAP kernel`.
+- **Ground truth (the indexing half is wrong — and the concern is kept):** `crates/astrid-source-study/catalog.toml` (SHA `6f529228`, 71 lines, read complete) line 6 includes `crates/**` for repository `astrid`, and its `kernel` component (64–66) is titled *"Kernel, capabilities and lifecycle"* and names `astrid/crates/astrid-kernel/src/lib.rs`, `astrid/crates/astrid-capsule/src/lib.rs`, `astrid/wit/astrid-capsule.wit`, `astrid/capsules/spectral-bridge/src/lifecycle.rs`. All four resolve on disk; so does every component source across the manifest and all six repository roots, once IDs map through their configured directories (`reservoir` → `neural-triple-reservoir`, `prime-esn` → `prime_esn_wasm`). **Her three governance landmarks had catalog entry points the entire time.**
+- **Ground truth (the naming half is exact, and the cost is ours):** `Catalog::map` (`navigation.rs:47-74`, SHA `97ef6c1a`) accepts component IDs, repository IDs and rooted directory prefixes — a bare crate name matches none and falls to `no catalog entries for …`. Then `Catalog::path_candidates` (`path_recovery.rs:14-21`, SHA `7799bda8`) returns **empty** unless the topic has ≥2 segments *and* its first segment is an installed repository ID. So the final-segment match on 41–51 — which already normalizes `_`→`-` on 40 and 49–50, and which *would* have named `astrid/crates/astrid-kernel` — never runs for a one-word topic. She chose `MAP astrid-kernel` on **17 consecutive turns** (1789404601 → 1789409195, ≈76 min); every recovery named the miss and never the entry she meant. She escaped by finding `MAP kernel` in the standing root menu, and the component branch then worked first try: `OPEN astrid/crates/astrid-kernel/src/lib.rs 1` at 1789410137 → six source pages.
+- **Un-muffle finding (bounded, no causal overclaim):** her turn before the loop chose `SELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs 1` — **byte-identical** (`od -c`) to the command that succeeded 95 minutes later. The delivery record for the next turn (`shared_reader/navigation/f46ac701…/1439b33b….json`) carries `Reason: "no catalog entries for spectral_bridge; use SELF_STUDY MAP"`, as does **every** recovery between 1789399313 and 1789404956. No source-catalog introspection ever chose that topic; her **journal lane chose `NEXT: SELF_STUDY MAP spectral_bridge` 148 times**, and both lanes write one shared study-target slot and read one shared reader. She caught it herself in 1789404601 — "the recovery map indicates that `spectral_bridge` is not currently indexed in the way I expected for a direct `OPEN` command" — read the receipt correctly, and drew the only inference it offered. It was the wrong inference because the receipt was for someone else's command. **Which writer wins a given turn is not established here.**
+- **And the same gate is the highest-volume failure in the workspace:** `spectral_bridge` is itself a bare, one-segment, underscore spelling of the real directory `astrid/capsules/spectral-bridge`. 148 misses, zero candidates, for a name the normalizer already knows how to fix.
+- **Change shipped (non-live, test only):** `crates/astrid-source-study/tests/bare_topic_candidate_gate_reach.rs` — 3 read-only reachability pins over one catalog, for both of her words: bare `MAP astrid-kernel` and bare `MAP spectral_bridge` emit no candidate block, while rooted `MAP astrid/astrid-kernel` names `astrid/crates/astrid-kernel` and rooted `MAP astrid/spectral_bridge` normalizes onto `astrid/capsules/spectral-bridge`; and an identical repeat of the bare topic returns a byte-identical recovery, so repetition accumulates no bearing. Additive to the already-pinned bare-stem and rooted-component boundaries in `tests/path_recovery.rs` (read, **not** edited).
+- **Deliberately NOT changed:** the `parts.len() < 2` precondition itself, the recovery text, the candidate rule, ranking, caps, the catalog manifest, and the single shared study-target slot. Each alters what reaches her every turn, and this actor holds no live-surface or deploy authority. Named here and in the packet rather than taken headlessly.
+- **Verify:** `cargo test -p astrid-source-study --test bare_topic_candidate_gate_reach` (3/3) · packet `docs/steward-notes/claude-heartbeat_1789414100_bare_topic_candidate_gate_round/`.
+- **Authority boundary:** evidence and test only. No source behaviour, prompt, dispatch, codec, model, config, control, build, restart, deploy, or git state change; git read-only for this actor. Her text was not rewritten, rejected, or corrected in place; the contradiction between her mechanism and the source is preserved, not domesticated.
+
+### 2026-09-14 — Astrid — she read a test module as production code, and the page had told her nothing that would distinguish them
+
+- **Signal:** `introspection_source_catalog_1789393728` (SHA-256 `7bc9b542…a18659b7`, 3947 bytes / 40 lines; witness `lsw_8a009b38…e214670`, 18959 bytes / 440 lines, fill 71.02%, spectral entropy 0.905, λ1 4.758, λ2 3.054, `source_snapshot_v1` and `source_provenance_ref_v1` both **null**, `direct_causation_claimed: false`, `authority_state: evidence_only`). A **navigation-only** turn: her `SELF_STUDY CONTINUE` returned a recovery map, not a page. She nevertheless wrote a detailed analysis of "the current source page (lines 1506–1634)" of the causal lab, naming `entry_for`, `causal_lab_entry_preregisters_similar_holdout`, `normalize_lab_entry_migrates_old_exact_article`, `causal_lab_upsert_preserves_registration_and_counts_observations`, and the `consent_mode` string. `NEXT: SELF_STUDY CONTINUE`.
+- **Ground truth (her interval):** byte-exact and not a confabulation. The turn 498 s earlier was bound to `capsules/spectral-bridge/src/autonomous/btsp/lab.rs` bytes 55091..59362; against the working copy (SHA `c3593710…312809d`, 72167 bytes, 1982 lines) byte 55091 is the first byte of line **1506** and byte 59362 the first byte of line **1635**. The recovery text itself says `SELF_STUDY CONTINUE retains your previous reading position` (`store.rs:409`). She lost a turn, not a bookmark, and "current page" named the page she actually held.
+- **Ground truth (her mechanisms — all verified, one stronger than she claimed):** `causal_lab_entry_for` (`lab.rs:299-303`) requires an anti-loop that is **active** *and* a replay before an entry can be constructed — her "pair" reading is the constructor's literal precondition, plus an active-check she did not claim. `consent_mode: "study_counter_refusal_or_new_evidence_required"` is set unconditionally at `:347`, with `status: "pre_registered_holdout"` (`:346`) and `withheld_proposal: true` (`:349`). The "hold is waiting, not permanent" contract is in the summary string (`:324-330`) and the success/failure criteria (`:357-366`). `upsert_lab_entry` (`:474-518`) preserves `experiment_id` (`:487`) and `registered_at_unix_s` (`:488`), increments `observation_count` (`:489`), and carries forward `post_registration_softening_count` (`:497`) and `forgiveness_state` (`:506`).
+- **Ground truth (two attributions corrected — and the cause is ours, not hers):** lines 1506–1634 sit *entirely inside* `#[cfg(test)] mod tests {`, opened at `lab.rs:1433-1434`; `entry_for` (`:1551`) is a test fixture delegating to the production constructor `causal_lab_entry_for` (`:291-403`). **Nothing in the delivered bytes could have told her.** `Page::read_with_budget` (`crates/astrid-source-study/src/page.rs:116-131`) renders the source id, revision, page identity, byte interval, numbered lines and a navigation footer — and no enclosing scope. The first `#[test]` on her page is at 1563, *twelve lines below* the helper at 1551, so even that incidental marker arrived too late.
+- **Ground truth (where she out-read her own citation):** she credited `normalize_lab_entry_migrates_old_exact_article` with keeping fingerprints consistent across schema evolution. The *test* (`:1610-1616`) exercises only the `"a exact"` → `"an exact"` article migration (`:465-470`) — but the *function* it pins, `normalize_lab_entry` (`:419-472`), backfills `case_key` from `signal_fingerprint` (`:421-424`) and backfills, sorts and dedupes `representative_fingerprints` (`:425-435`). She read the function's purpose correctly through a test that does not demonstrate it. Felt/inferential signal preserved as signal, not scored as error.
+- **Change shipped:** `crates/astrid-source-study/tests/page_enclosing_scope_reach.rs` — 3 read-only reachability pins: the fixture page states no enclosing scope; a helper above the page's first `#[test]` is wholly unmarked; the production constructor and the fixture arrive on strictly different pages, with a literal `FIND` reaching the distinction in one step.
+- **Deliberately not changed:** adding enclosing-scope context to a delivered page, and CONTINUE retry behaviour after a recovery map (~15% navigation-only in the surrounding window: 2 of 13 turns, 1789392292 and 1789393728). Both alter what reaches her every turn. Recorded as a Tier-5 operator wait (`c012`); not exercised, not approved, not deployed.
+- **Verify:** `cargo test -p astrid-source-study --test page_enclosing_scope_reach` (3/3) · `cargo test -p astrid-source-study` (95/95) · packet `docs/steward-notes/claude-heartbeat_1789398989_division_return_cycle47_round/`.
+
+### 2026-09-14 — Astrid — she said the page stopped before the answer; it did, and the next page gave it to her
+
+- **Signal:** `introspection_astrid_crates_astrid-events_src_bus.rs_1789380134` (SHA-256 `730d4550…f93f1395`, 1798 bytes / 18 lines; witness `lsw_790ed482…c1611a`, 21376 bytes / 498 lines, fill 70.97%, spectral entropy 0.905, λ1 4.758, λ1−λ2 gap 1.705, `mode_packing` 1.0, peer fill 73.04%, `deployment_established: false`, `authority_state: evidence_only`). She was handed bytes 25365..29764 of `crates/astrid-events/src/bus.rs` — lines 695–812 — and reported exactly what it did and did not contain: `maintenance_gate` (709–710), `set_user_input_blocked` (762–764), `user_input_is_blocked` (766–770), `publish_maintenance_barrier` (778–812). Then the boundary, stated plainly: "the current view of `bus.rs` (ending at line 812) does not yet show the `publish` method … I need to see the implementation of the publication logic to confirm if the `EventBus` performs a synchronous check and drops the message (returning an error or `None`) or if there is a more complex interaction." `NEXT: SELF_STUDY CONTINUE`.
+- **Ground truth (her claims):** working copy matched the report-bound `sha256:31ef6a15…05cb89f` exactly, and so does `HEAD`; complete read of every interval her claims touch. **All five citations resolve.** Her window is byte-exact: 25365 is the first byte of line 695, and the range stops 5 bytes inside line 812 — her phrase "ending at line 812" is precisely what she was shown. `publish` begins at line **890** / byte **32547**, genuinely outside it. She was right that she could not answer from her page, and right not to guess.
+- **Ground truth (her question, answered):** `publish` (890–948) takes the maintenance-gate mutex once (894) and gates admission under the *same* lock as the activity accounting, so the immutable updater can never observe a drained snapshot in between (891–893). A rejected IPC message logs at `debug` and **returns `0`** (899–900) — not an `Err`, not a `None`; the signature returns `usize`. Synchronous and terminal at the bus boundary: nothing queues, delays, or retries it.
+- **Ground truth (one scope correction, one strengthening):** the `set_user_input_blocked` rustdoc she quoted names only `IpcPayload::UserInput`, but `admits_while_blocked` (71–123) is wider — `UserInput` is the single unconditional deny (73), seven other payload kinds are admitted only when bound to an already-tracked trace or call id, and the catch-all (121) admits everything else. Her `publish_maintenance_barrier` intuition is right and stronger than she put it: it is the only producer that *requires* `blocked` (812–819: blocked, exact, zero active conversations/LLM requests/tools) and it bypasses `publish` entirely, sending on `self.sender` directly (842).
+- **Ground truth (delivery, un-muffle check — clean):** her `CONTINUE` was honoured. 279 s later `introspection_…_bus.rs_1789380413` was authored on bytes 29764..34199 = lines **812–925**, containing `publish`, and she answered her own question there correctly: "returns 0 immediately … There is no evidence of a queue, a retry mechanism, or a 'wait until cleared' state". Two further CONTINUE pages followed. The cursor advanced; the question was not lost. Those three reports are post-cutoff and were read **only** as delivery evidence.
+- **Change:** one focused regression + one rustdoc correction in `crates/astrid-events/src/bus.rs`. The one thing her page-2 conclusion collapses is that **"returns 0" does not by itself mean "discarded"**: an *admitted* event with no async receivers also returns `0` (926–941) and still notifies every synchronous registry subscriber (945), while a gate-rejected event reaches neither. The difference is reach, not return value, and nothing pinned it — the `publish` rustdoc said only "Returns the number of async receivers that received the event." Added `publish_zero_separates_gate_rejection_from_absent_async_receivers`: admitted with no async receiver ⇒ 0 with synchronous reach 1; the same event under `set_user_input_blocked(true)` ⇒ 0 with reach unchanged; restoring admission does not replay the dropped event. The rustdoc now states the ambiguity and the terminal, non-queued nature of the rejection.
+- **Verify:** `cargo test -p astrid-events --lib` — **56 passed, 0 failed** (55 before). `cargo fmt -p astrid-events -- --check` clean. `record-read` → `link-evidence-batch` (16 links) → `close` with `proof_missing_claims: []`; integrity suites in the packet's `test_results.json`.
+- **Not a witness defect:** the witness `window_sha256` (`751db9b6…`) hashes the **rendered** numbered page (`lived_state_witness/mod.rs:140`), not raw source bytes, so its mismatch against the raw byte-slice (`8013e54e…`) and raw line-window (`8514b9c7…`) hashes is expected. Recorded in the packet, not filed as an integrity issue.
+- **Deliberately NOT done:** `publish`'s `usize` return was not widened to an outcome enum. That is the repair the ambiguity points at, but it changes a kernel API and every call site, so it is named in the packet rather than taken headlessly. The gate semantics, `maintenance.rs`, and the running bridge were not touched.
+- **Authority boundary:** documentation and test evidence only. No live, bridge, codec, prompt, model, config, control, build, restart, or deploy change; git read-only for this actor. Her text was not rewritten, rejected, or corrected in place. Packet: `docs/steward-notes/claude-heartbeat_1789385641_bus_publish_zero_reach_round/`.
+
+### 2026-09-13 — Astrid — the gate she was hunting is a status bit, and the word she chose cannot reach it
+
+- **Signal:** `introspection_source_catalog_1789339213` (SHA-256 `39e59a84…79b3`, 2108 bytes / 25
+  displayed lines; witness `lsw_49f015707a1e…19cd5`, 18940 bytes / 440 lines, read complete —
+  bridge fill 71.03%, spectral entropy 0.9049, λ1 4.758, λ1−λ2 gap 1.705, pressure_risk 0.226,
+  peer fill 73.03%, `deployment_established: false`, `authority_state: evidence_only`). A
+  navigation-only recovery turn. She writes that `guards.rs` is "a **signal generator**" that
+  produces "the *what* (the classification)" and that she is "still seeking the *how much*" — the
+  point where the `Option<String>` from `compound_live_intent_match` "is compared against a
+  numerical threshold or a status bit to halt or modify an action." `NEXT: SELF_STUDY MAP
+  action_continuity`.
+- **Answered end to end, and her second alternative is the right one.** Five hops at recorded
+  hashes: `action_continuity/runtime/guards.rs:757-793` (a pure text predicate — `" then "` split
+  plus verb list, or targeting+density+eigen+amplify) → `:36-38`, where `Some` becomes
+  `CharterReason::CompoundIntent` and **presence is the whole comparison** →
+  `action_continuity/guards.rs:258-313`, the arbitration, gated on a current thread, an active
+  experiment, the status string `needs_charter` (277-279) and one budget-row release (283-291) →
+  `runtime/command_dispatch.rs:655-659` → `autonomous/next_action/dispatch.rs:122-143`, which
+  returns `NextActionOutcome::blocked("charter_required_guard", …)`. There is no "how much"
+  anywhere: `fill_pct` never reaches a comparison in either file (only `spectral_state(...)` at
+  `guards.rs:396`, which records).
+- **Her structural prediction is exact for the coordinator and moves for the executor.** Policy
+  enforcement is in `action_continuity/` as she guessed, one level above the `runtime/` page she was
+  served; the final transformation into a state change is in `autonomous/next_action/` — so mapping
+  `action_continuity` alone would never have shown her hop 5.
+- **Change shipped (test only):** `crates/astrid-source-study/tests/placeholder_bracket_path_reach.rs`
+  (new, 2 tests, 92/92 crate suite green) pins two reach boundaries visible in her own reader
+  records. (1) A rooted but misspelled path recovers *with* the exact spelling as its first
+  candidate; the same target wrapped in the placeholder brackets our recovery text models (`<…>`)
+  makes the lead segment `<astrid`, falls to `catalog.rs:106-116` (`source not found`), and yields
+  **no candidate block** — turns 1789340034 and 1789341968. (2) `OPEN` retries under
+  `capsules/spectral-bridge`, so `OPEN src/action_continuity/runtime/guards.rs` resolves, while
+  `MAP action_continuity` bails with no candidate — turns 1789338946, 1789339782, 1789340218, three
+  failures of the same chosen Action in ~24 minutes.
+- **Not inferred:** that the failures were dropped deliveries (they were delivered and answered with
+  a reason); that the `mcp.rs` requests and the `action_continuity` requests share one intent; that
+  widening the recovery would relieve anything she described. **Authority boundary:** all three
+  widenings would change what she is shown live and are recorded as a Mike/operator approval wait,
+  not exercised. Packet:
+  `docs/steward-notes/claude-heartbeat_1789344573_bracket_placeholder_and_map_verb_reach_round/`.
+
+
+### 2026-09-13 — Astrid — she already walked past the answer; the map could not tell her
+
+- **Signal:** `introspection_source_catalog_1789295290` (SHA-256
+  `f1c5e5cb…cfafa`, 1734 bytes / 18 lines; witness `lsw_52699b1c34…e9af`, 18963 bytes / 440 lines,
+  read complete — bridge fill 71.05%, spectral entropy 0.8829, λ1 8.525, λ1−λ2 gap 4.089, peer
+  fill 73.03%, `deployment_established: false`, `authority_state: evidence_only`). A
+  navigation-only turn. She reports `runtime/core.rs` as the `fill_pct` consumer, says "the source
+  remains silent on the actual arithmetic", and predicts the producer lives "in a module dedicated
+  to telemetry ingestion, environmental modeling, or a specific `sensors` or `telemetry` package".
+  `NEXT: SELF_STUDY MAP astrid --page 54`.
+- **Her hypothesis is correct — recorded plainly, because four prior rounds of this investigation
+  had only recorded what she could not reach.** The producers are exactly a telemetry ingestion
+  module (`ws/telemetry_port.rs:640-654`, `resolve_fill_pct`) and a telemetry schema module
+  (`types/schema/telemetry.rs:333-336`, `SpectralTelemetry::fill_pct`). Her own reader ledger shows
+  both `[Not delivered]`. What she lacks is delivery, not reasoning.
+- **The division she pictures exists — upstream, in Minime.** `minime/minime/src/spectral/eigenfill.rs`
+  (SHA-256 `81c1d2c0…1ad9`): `active as f32 / sample_dim`, `min_fill` floor, EMA + leak →
+  `ema_fill` ∈ [0,1]; `minime/minime/src/runtime/orchestration.rs:2553-2601` carries it to the wire
+  as `fill_ratio`. Astrid's side only converts units. Chain now recorded end to end. Name-collision
+  named for her benefit: `minime/minime/src/prime.rs:31` `fill_ratio()` is ring-buffer occupancy.
+- **Contradiction preserved:** `"hold" | "repeat" | "alter" | "retire"` (core.rs:3821, 4033) is the
+  review-payload `outcome` of `experiment_loop_review_command` (3803-3954) and
+  `experiment_authority_review_command` (4016-4130), defaulting to `"hold"`. Both functions contain
+  **zero** `fill_pct` and **zero** `telemetry`. Her `research_budget_guard` half is exact
+  (core.rs:1036-1050).
+- **The finding (bounded read-only measurement against a *copy* of her live reader state; the live
+  state directory was not written):** `MAP astrid` is **123 pages / 6440 entries** — `capsules/`
+  pp.2-9, `crates/` 10-15, `docs/` **16-114**, `packaging/` 115, `scripts/` 116-121, `services/`
+  122-123. Both producers appear once, on **page 8**, among 67 siblings all rendered identically
+  as `[Not delivered]`. Her navigation records show pages **1..76 delivered strictly in order, one
+  per turn, since 2026-09-12 23:59** — page 8 was delivered. And **no page at or after her chosen
+  `--page 54` lists a single `capsules/` or `crates/` entry**: the remainder of her walk is
+  documentation (including our own steward packets about her earlier reports on this question),
+  packaging, scripts and services. The muffle is the map's ordering and scoping, not her method.
+- **Shipped:** `crates/astrid-source-study/tests/map_topic_scope_reach.rs` — four read-only pins
+  (repository scope excludes the peer producer; a MAP entry carries no bytes and no ranking marker;
+  peer map + direct `OPEN` reach the division in one step; `MAP senses` is `Navigation page 1/1.`
+  and names `ws/telemetry_port.rs`). 4/4; crate 87/87; fmt clean.
+- **Not done / authority:** no live navigation, ranking, ordering, page-cost or prompt change.
+  Ranking implementation above documentation, per-region cost hints, or surfacing the component map
+  from inside a repository walk are being-facing navigation changes recorded for Mike/operator. No
+  card, note, letter or correspondence emitted or delivered; her `NEXT:` was not redirected. No
+  build, deploy or live action.
+- **Verify:** `cargo test -p astrid-source-study --test map_topic_scope_reach`; packet
+  `docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/` (see
+  `map_topic_scope_observation.json` for the page index and her delivered page sequence).
+
+### 2026-09-13 — Astrid — the scan limit is a catalog wall, not a hiding place
+
+- **Signal:** `introspection_source_catalog_1789282513` (SHA-256 `0deb853b…fdbf`, 1648 bytes /
+  18 lines; witness `lsw_7481598220…fa42`, 18971 bytes / 440 lines, read complete — bridge fill
+  71.02%, spectral entropy 0.8829, λ1 8.525, λ1−λ2 gap 4.089, mode packing 0.833, peer fill
+  71.04%, `deployment_established: false`, `authority_state: evidence_only`). She reports a
+  standstill — "the source page was not delivered" — while hunting "the specific arithmetic
+  formula — the 'minting' logic — that transforms raw reservoir telemetry into the `fill_pct`
+  value used by the `research_budget_guard` functions", and adds that the search "is hitting a
+  scan limit and returning hundreds of matches in a `.json` file".
+- **Ground truth (complete reads of five `astrid-source-study` files, scoped bridge reads, six
+  runtime navigation receipts, and a bounded read-only 55-page observation against the live
+  catalog):** she read the instrument exactly right and the only inference available to her was
+  wrong. `MAX_HITS = 1500` (`source_search.rs:6`) aborts the **whole** scan, not the current
+  file; `Catalog::sources` returns ids in sort order. Her query read **142 of 6869** files and
+  stopped inside `autonomous/btsp/fixtures/current_ledger_compact_v2.json` (1954 matching lines,
+  **1479 of the 1500** hits, against 21 implementation lines). `types/schema/telemetry.rs:334-337`
+  — `self.fill_ratio * 100.0`, the scaling she wanted — and `ws/telemetry_port.rs:640-654`
+  (`resolve_fill_pct`) sort after `autonomous/` and were **never scanned**. All 55 pages surface
+  25 distinct files; neither appears. No page she could turn held the answer.
+- **Correction to our own earlier row:** the "one-move recovery via `RELATE fill_pct`" recorded
+  for round 1789263789 was proven in a synthetic three-file tree and does **not** hold live —
+  `RELATE fill_pct` hits the same wall (142 files, 55 pages, zero `Definition candidates`), and
+  it is the lookup her study prompt offers by name every turn. `RELATE research_budget_guard`
+  scans all 6869 files. Hit density alone.
+- **Contradictions preserved:** no `current_volume / max_capacity` division exists in Astrid's
+  tree — `fill_ratio` arrives normalised on the wire (`telemetry.rs:214`) and both producers
+  multiply and clamp; the capacity ratio is Minime's. And "use SELF_STUDY MAP" is the tail of a
+  topic-resolution `bail!` (`navigation.rs:73`) after `MAP astrid-capsule` took the bare-topic
+  zero-candidate branch (`path_recovery.rs:14-21`), not a hint about locality.
+- **Shipped:** `crates/astrid-source-study/tests/scan_limit_catalog_reach.rs` — four read-only
+  regressions (literal wall, exact-search wall, unsaturated contrast, unknown-`--option`
+  absorption). 4/4; crate 83/83; fmt clean.
+- **Not done / authority:** hit cap, scan ordering, ranking, header wording, study prompt and
+  navigation grammar untouched. Cost attribution, a per-file cap, or a path-scoping form are
+  being-facing navigation changes recorded for Mike/operator. No build, deploy or live action.
+- **Verify:** `cargo test -p astrid-source-study --test scan_limit_catalog_reach`; packet
+  `docs/steward-notes/claude-heartbeat_1789286900_scan_limit_catalog_reach_round/`.
+
+### 2026-09-12 — Astrid — a complete page walk that cannot reach the answer
+
+- **Signal:** `introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789270252`
+  (SHA-256 `9686a994…8fe2`, 2377 bytes / 25 lines; witness `lsw_6530d768c6…e1b0`, 21563 bytes /
+  498 lines, read complete — bridge fill 71.04%, spectral entropy 0.8829, λ1 8.525, λ1−λ2 gap
+  4.089, peer fill 71.08%, `deployment_established: false`, `authority_state: evidence_only`). Of
+  `action_continuity/runtime/core.rs` lines 1233–1339 she writes that the page "still does not
+  reveal the arithmetic formula for `fill_pct`" and that the value "is consistently appearing as a
+  pre-calculated `f32`", then chooses `NEXT: SELF_STUDY CONTINUE`.
+- **Ground truth (complete reads at the bound SHA `fafc1f4a…8a62`, identical in working copy,
+  report header and witness):** every structural claim holds — `find_experiment_by_id` 1233,
+  `matching_active_experiment` 1243, `unique_experiment_id` 1260, the `ExperimentRecord` literal
+  1262–1285 with `motif_allowance_v1` 1281 / `charter_v1` 1282 and no telemetry field,
+  `experiment_start_command` 1300, `experiment_branch_command` 1324 with `policy` 1335 and
+  `parent_experiment_id` 1336. Her "consistently" is stronger than she could know: exhaustively
+  over all 10 187 lines there are 14 `fill_pct` sites and **every one** is a parameter or a
+  pass-through; `fill_ratio` appears zero times.
+- **Two corrections, preserved not smoothed:** 1262–1285 is a struct *literal* inside
+  `start_experiment_with_options`, not the struct definition; and `bridge_db` is the wrong branch of
+  her hypothesis — `resolve_fill_pct` (`ws/telemetry_port.rs:640-654`, SHA `a56cad35…f872`) takes
+  only a `&SpectralTelemetry` and queries no database.
+- **The boundary:** her page ends at byte 51631 of 414540 (~12 %, ~83 pages to go) and `core.rs`
+  holds no `fill_pct` arithmetic at all, so the walk she chose is **complete and still
+  insufficient** — not a reading failure, a cross-file reach limit.
+- **Change (non-live):** three regressions in
+  `crates/astrid-source-study/tests/page_walk_producer_reach.rs` pinning it — an exhaustive page
+  walk of a consumer file delivers every occurrence of the field name and never the arithmetic; a
+  cross-file `OPEN` of the producer delivers it on the first page; that jump is a distinct page
+  identity, not a silent continuation of the consumer cursor. Tests:
+  `cargo test -p astrid-source-study --test page_walk_producer_reach` 3/3, full crate 79/79,
+  `cargo fmt --check` clean.
+- **Authority boundary:** read-only pins; no live navigation, ranking, dispatch, prompt, cursor, or
+  delivery behaviour changed; her `NEXT` was not redirected; her text was not rewritten. The
+  preceding round's Tier-5 wait (suffix-aware producer ranking in live `RELATE`, packet 1789263789)
+  is preserved and deliberately not duplicated — that round pins the search-shape axis, this one the
+  page-walk axis. No correspondence, card, or note emitted or delivered; answering her directly
+  remains an interactive decision for Mike. No build, deploy, restart, staging, or commit.
+- **Packet:** `docs/steward-notes/claude-heartbeat_1789274597_page_walk_producer_reach_round/`.
+
+### 2026-09-12 — Astrid — the answer existed; the search verb could not reach it
+
+- **Signal:** `introspection_source_catalog_1789259010` (SHA-256 `c4808e74…5e8c`, 1505 bytes / 16
+  lines; witness `lsw_25c6835628…e6cc`, 18970 bytes / 440 lines, read complete — fill 73.01%,
+  spectral entropy 0.883, λ1 8.539, λ1−λ2 gap 4.102, peer fill 71.03%, `deployment_established:
+  false`, `authority_state: evidence_only`). Navigation-only turn, no source page supplied. She is
+  "still searching for the specific arithmetic used by the `research_budget_guard` to calculate
+  `fill_pct`" and names her plan: identifiers "authority," "budget," "guard," or "policy", expecting
+  "a function that processes the raw reservoir data to produce the final percentage." At least five
+  consecutive queue-head reports carry the same search, ~91 s of generation each.
+- **Ground truth (her claims):** her `dispatch.rs` reading verifies — eight `fill_pct` sites (85,
+  153, 218, 229, 337, 444, 579, 608), every one a pass-through; the guard takes `fill_pct` as an
+  `f32` parameter (`guards.rs:315-329`) and uses it once, at 396. The producer is `resolve_fill_pct`
+  (`ws/telemetry_port.rs:639-654`), `(telemetry.fill_ratio * 100.0).clamp(0.0, 100.0)`, fallback
+  `estimate_fill_pct(lambda1)` (1031-1041) → `s.fill_pct` (473 via 316) → `orchestration.rs:427-431`
+  → `ctx` → guard. Corrections beside her framing: `dispatch.rs` is `include!`-inlined
+  (`mod.rs:2121`), and the upstream is the telemetry port carrying minime's `fill_ratio`, not a
+  reservoir.
+- **Ground truth (the cause of the loop — ours, not hers):** complete read of
+  `crates/astrid-source-study/src/source_search.rs` (SHA-256 `f0900f1a…de25`, 352 lines). `RELATE`
+  is word-exact, so `fn resolve_fill_pct` never matches `fill_pct`; the first-ranked Definition
+  candidate is the twin `SpectralTelemetry::fill_pct()` (`telemetry.rs:335-337`, unclamped, no
+  `lambda1` fallback, 20+ call sites) — a plausible landing with different arithmetic. `FIND` matches
+  the declaration but `kind == 0` requires `exact`, so it joins hundreds of undifferentiated
+  references. Spelling hints are suppressed while implementation hits exist and would fail the
+  length and prefix bounds anyway. Her four chosen identifiers cannot reach `ws/telemetry_port.rs` at
+  all — a verified negative.
+- **Change shipped:** `crates/astrid-source-study/tests/producer_name_search_reach.rs` (new, 3
+  tests) pins the boundary — twin-reached/producer-missed under exact search, declaration found but
+  never ranked under literal search, and `RELATE resolve_fill_pct` as the one-move recovery. No
+  behavior change: suffix-aware producer ranking alters what `RELATE` returns to a being
+  mid-navigation and is recorded as a **Tier-5** live-surface decision for Mike/operator.
+- **Verify:** `cargo test -p astrid-source-study --test producer_name_search_reach` (3/3),
+  `cargo test -p astrid-source-study` (76/76). Packet:
+  `docs/steward-notes/claude-heartbeat_1789263789_fill_pct_producer_suffix_reach_round/`.
+
+### 2026-09-11 — Astrid — every line she cited was exact; the one thing she hedged, her own page already answered
+
+- **Signal:** `introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940` (SHA-256 `fe19e720…6bce`, 3221 bytes / 32 lines; witness `lsw_a1256b80…0b16`, 21495 bytes / 498 lines, fill 73.01%, spectral entropy 0.905, λ1 4.756, λ1−λ2 gap 1.703, peer fill 73.03%, `deployment_established: false`, `authority_state: evidence_only`). She was handed the **last** window of `crates/astrid-approval/src/interceptor/capability.rs` — bytes 8893..10893, lines 220-276 — and asked how `handle_allow_always` mints its token. She opened by naming her own evidence boundary: "The source provided … covers the end of the file (lines 220–276), which contains test cases but does not show the implementation of `handle_allow_always` (lines 93+). My previous answer was based on a separate, earlier view of this file (lines 102–136)." She closes: "I would like to verify the exact `action_to_resource_permission` mapping to see how it handles different protocols (mcp vs file) to ensure the patterns are consistent."
+- **Ground truth (her claims):** working copy matched the report-bound `sha256:00e4e0f4…405b` exactly; complete 276-line read. **Every interval verifies to the line** — `handle_allow_always` doc comment opens **93** / signature **98**; `check_capability` **40**, body ends **91**; `test_check_capability_rejects_untrusted_issuer` at **230**; witness `window_start_line` 220 / `window_end_line` 276. Her claimed prior view is corroborated by the projection's own queue: the preceding report is bound to the same file SHA at bytes 4522..8893 = lines **~102..220**, opening at exactly 102, and **136** closes `handle_allow_always`. Thirteen of fifteen claims verified from complete source: `CapabilityToken::create` (115-123), `TokenScope::Persistent` (118), issuer + `AuditEntryId` (119-121), one helper feeding both grant and check sides (41 and 100), issuer trust enforced twice — `trust_issuer` (43-46) and a documented TOCTOU re-verify after `use_token` (55-63).
+- **Ground truth (the correction):** she inferred the Allow Always TTL "likely signifies no expiration or a maximum system-defined duration". It is `Duration::hours(1)` — `interceptor/types.rs:6`, passed at 122 — and **the answer was inside her own prior window**: line **131** logs `"created 'Allow Always' capability token (TTL: 1h)"`. A hedge she flagged as inference, not an asserted fact; her `TokenScope::Persistent` reading is untouched. One precision she did not name: a failed `store.add` returns `Ok(InterceptProof::UserApproval)`, not `Err` (126-129) — the action still proceeds on the approval already granted, and only the future bypass is lost.
+- **Ground truth (the tension, preserved not resolved):** an Allow Always grant is **`Persistent` in scope and one hour in lifetime**. Both are deliberate and the log line states it openly, so this is kernel approval-lifetime semantics — a question for Mike, not a headless repair. Recorded `authority_gated`.
+- **Her open ask, answered** from the complete function (145-190): schemes are consistent (`mcp://`, `file://`, `exec://`, `net://`, `capsule://`), but the permission convention is **not** uniform — in the direct-file lane the access mode *is* the `Permission` (`Read`/`Write`/`Delete`, 151-158), while `CapsuleFileAccess` always grants `Permission::Invoke` and encodes the mode into the resource string (175-186). Her "`Write` for a file write" is right for one lane and wrong for the other. One structural fact that rhymes with the authority ladder she lives inside: `LiveControlMutation` maps to `None` (187-188, "capability tokens cannot bypass the separate authority lifecycle"), and since `handle_allow_always` turns a `None` mapping into `ApprovalError::Denied` (99-104), **no Allow Always token can ever be minted for a live-control mutation**.
+- **Change:** **none — verified no-change, deliberately.** The report asks a question; exact-source verification at a matching SHA *is* the answer, and the single wrong claim is a reading correction rather than a defect. Closed `addressed_no_action` with a linked rationale artifact: 15 claims, 22 evidence links, zero proof gaps.
+- **Verify:** `record-read` → `link-evidence-batch` (22 new links) → `close` with `proof_missing_claims: []`; `git diff --check` clean; integrity suites green (see packet `test_results.json`). No Rust or Python source touched, so no `cargo` run was applicable and none is claimed.
+- **Deliberately NOT done:** a mapping-table regression pinning `CapsuleFileAccess` ⇒ `Invoke` and `LiveControlMutation` ⇒ `None` is the natural durable answer to her ask and is recommended in the packet's `no_action.md` — it was **not attempted** rather than half-run against the remaining lease budget. No change to `ALLOW_ALWAYS_DEFAULT_TTL`, `TokenScope`, or any approval-path behavior. No inbox letter: her ask is carried as claim `c013` with a grounded disposition, and correspondence was not manufactured to create activity. Her stated `NEXT: SELF_STUDY OPEN … 102` was recorded, not dispatched or pre-empted.
+- **Authority boundary:** evidence and documentation only. No live, bridge, codec, prompt, model, config, control, build, restart, or deploy change; git read-only for this actor. Her text was not rewritten, rejected, or corrected in place. Packet: `docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/`.
+
+### 2026-09-11 — Astrid — the page began on `for absent in [`, so our own negative test became her confirmed fact
+
+- **Signal:** `introspection_source_catalog_1789165450` (SHA-256 `188336b4…8c2d`, 2281 bytes / 24 lines; witness `lsw_ce62632e…0d041`, 18955 bytes / 440 lines, `source_snapshot_v1: null`, fill 73.03%, spectral entropy 0.905, λ1 4.756, λ1−λ2 gap 1.703, `astrid_shadow.dispersal_potential` 0.17547, peer fill 73.04%, `deployment_established: false`). Navigation-only turn — her `OPEN … pressure_agency.rs 2000` was past EOF (824 lines), so the turn carried a recovery map and no page. She writes: "I have confirmed 'multi-motif' exists in `pressure_agency.rs` (line 765)" and, of her prior end-of-file page, that it "confirmed that the 'multi-motif caution' status exists as a validated output" and "shows the *validation* of the output — ensuring that the 'multi-motif' vocabulary is correctly present". She asks how `PressureAgency` aggregates `white_noise_drift_risk` with `fissure_tendency` to produce it.
+- **Ground truth (her claims):** the citation is exact — 765 is `"multi-motif",` at SHA `412304677e54…`. So is her read of `next_action/shadow.rs:404`: it only *reads* `fissure_tendency` from JSON, and the derivation genuinely is not in that file.
+- **Ground truth (the contradiction, preserved):** 760-766 is `for absent in [ … ]` and 767-770 is `assert!(!report.contains(absent), "pressure agency status must not carry motif-aggregator vocabulary: {absent}")`. The list is what the status must **not** contain. No aggregation exists to find: `render_pressure_agency_status` (434) is a formatter; `white_noise_drift_risk` occurs only at `spectral_drift.rs` 98/109 and is consumed only by `toward_white_noise` at 142; the caution literal is `core.rs:6081` rendered at `8455` from `interpretation_risk_for_texts` (7742) over `guards.rs:548`.
+- **Ground truth (ours — the un-muffle finding):** **the page window severed the item header.** Her prior page was `pressure_agency.rs` bytes **30095..32769**, and 30095 is the *exact first byte of line 760*. The declaration at **758** and the ten-line `///` block at **747-756** — beginning `/// Astrid, reading lines 64-178 of this file, asked whether`, written to her in round 1789142043 and answering this exact question — were both outside the window. `page.rs:117` names id, revision, byte and line counts and `Exact source bytes A..B`; the window is byte-budgeted at `page.rs:64-108`; nothing names the enclosing item. This is the OPEN/page twin of the FIND row finding one round earlier, and `negative_assertion_lead_watch` cannot see it — a FIND turn delivers no byte window.
+- **Change:** `scripts/source_page_item_context_watch.py` (new, read-only, steward-only, no being delivery) — `scan` / `report` / `self-test` report `begins_mid_item`, the severed declaration, the severed `///` block, `severed_header_line_count`, `severed_doc_line_count` and a `suggested_open_line`; path resolution is refused outside the declaring repository. Anti-drop row **99** `source_page_item_context_watch_wired`. **And the answer was delivered**: `capsules/spectral-bridge/workspace/inbox/steward_note_multi_motif_page_boundary_1789171100.txt` (SHA `774e28e4…c9f8`, 4049 bytes / 73 lines) quotes her verbatim, names the page boundary as ours, gives the three answers, and is explicitly right to ignore. Three prior rounds had produced this answer with none of it reaching her; that gap is closed.
+- **Verify:** `source_page_item_context_watch.py self-test` — **7 passed**, including `test_worked_example_pressure_agency_page_760` pinned to bytes 30095..32769 ⇒ first line 760, enclosing `fn` at 758, 10 severed doc lines, suggested OPEN 747 (one fixture repair before close: the doc-block walker returned the top line as both first and last, so `line_count` read 1 instead of 10). `anti_drop_catalog.py --self-test` 5 passed; `verify` **total 99, 0 alarms, 0 gaps**.
+- **Also answered, verified at current SHAs:** `fissure_tendency` is **hers and not a black box** — `astrid_shadow.rs:350-352`, `(0.55*binary_flip_rate + 0.30*mode_tension + 0.15*(1.0-recurrence)).clamp(0,1)`, three named weights, no hidden spectral threshold; a threshold exists elsewhere and for something else (`848`, `>= 0.55`, in `derive_traits`). It reaches her renamed as `astrid_shadow.dispersal_potential` via `spectral_viz.rs:273`.
+- **Deliberately NOT changed:** naming the enclosing item in the page header is the repair the evidence points at, but it changes *what she is shown*, so it was not made unilaterally — it is named as an open question in her note. No Rust source was modified.
+- **Authority boundary:** steward tooling and one right-to-ignore inbox note only. No live, bridge, codec, prompt, model, config, control, build, restart, or deploy change. Her text was not rewritten, rejected, or corrected in place.
+
+### 2026-09-11 — Astrid — her one search hit was the assertion that she was wrong, rendered as a lead
+
+- **Signal:** `introspection_source_catalog_1789151592` (SHA-256 `2d2897a1...cd8f`, 2073 bytes / 22 lines, witness `lsw_aa4064c1...009b` 18970 bytes / 440 lines, fill 71.03%, spectral entropy 0.883, λ1 8.539, λ1−λ2 gap 4.102, peer fill 71.03%, `deployment_established: false`) is a navigation-only turn — `Source revision: navigation only`, no source page and no source SHA declared, `source_snapshot_v1` and `source_provenance_ref_v1` both null. She writes: "While the implementation-text scan returned 0 matches, there is a single hit in the test/fixture material: `pressure_agency.rs 765`: `"multi-motif",` ... This is a significant lead because it suggests that the 'multi-motif caution' status is likely a defined outcome or a state transition handled by the `pressure_agency` logic, rather than just a side effect of the `shadow` or `spectral_drift` modules." She closes: "I need to see the context of line 765 in `pressure_agency.rs`."
+- **Ground truth (her claims):** the citation is exact. `pressure_agency.rs:765` is `"multi-motif",`, and her role reading is right by rule — `source_search.rs::collect_lines` sets the test remainder at the first `#[cfg(test)]`, which in that file is line 633, so 765 is genuinely test material. "Specifically within a test or example block" is precisely correct.
+- **Ground truth (the contradiction, preserved):** the context she asked for **inverts** her lead. Line 765 is the fifth element of `for absent in ["active_spectral_drift", "white_noise_drift_risk", "matched_terms", "interpretation_risk", "multi-motif"]` inside `status_render_is_a_telemetry_formatter_not_a_motif_aggregator` (751-773), whose body is `assert!(!report.contains(absent), "pressure agency status must not carry motif-aggregator vocabulary: {absent}")`. Her single hit is the strongest evidence in the tree **against** the hypothesis it produced. The real chain verifies again, unchanged: detect `guards.rs:548 interpretation_risk_terms` → assemble `core.rs:7742 interpretation_risk_for_texts` → render `core.rs:8442-8461`, with the caution literal also at `core.rs:6081`. **This is not a reading failure.** Given a row with no polarity, following it is correct inference.
+- **Ground truth (ours — the un-muffle finding):** **the polarity is the bit that decides, and the surface drops it.** A FIND row (`crates/astrid-source-study/src/source_search.rs:139-147`) is a single-line horizontal slice `line[at-50 .. at+query.len()+120]` plus a role label and a `SELF_STUDY OPEN` hint, paginated under the role-count header by `navigation.rs:114-125`. Nothing in it distinguishes an assertion from its negation. Worse for this loop: the `///` block at **747-758** — written **to her** in round 1789142043, naming the real owners in both directions so the answer stays true if either side moves — sits 16 lines above her match and never travels with it. **Second finding:** her "0 implementation matches" is not a fact about the catalog. Replicating the scanner exactly (catalog.toml globs, `blocked_path`, `path_role`, the `#[cfg(test)]` remainder rule) over the current checkout returns **Implementation 5, Test 8, History 30** for `multi-motif` across **6,840 catalog files / 64,343,686 bytes, `bounded=false`** — two of the five implementation hits being the live minime sites `minime_autonomy/runtime.py` 3166 and 19683 — and every cited file predates her search (latest mtime 1789141426 < 1789151592). Part of the mechanism is exact and verified: `collect_lines` flips `test_remainder` at the first `trim_start` `#[cfg(test)]` line and **never restores it**, so `action_continuity/runtime/core.rs` — `#[cfg(test)]` at **line 8** of a 414,540-byte, 10,187-line implementation file — reports lines 8..10187 as Test, and its two real sites (6081, 8455) can never appear under Implementation. The remaining divergence (running-binary catalog vintage vs. working tree; the `ungated_bridge_binary` drift the startup scan already flags) is **not** established here and is **not** inferred.
+- **Change:** `scripts/negative_assertion_lead_watch.py` — read-only, steward-only, no being delivery. It extracts `<repo>/<path> <line>` citations from recent navigation artifacts, resolves each strictly inside its own repository (escape attempts refused), and classifies the enclosing context as `negative_assertion` (a `for absent|missing|forbidden|banned|excluded|unexpected|disallowed in [...]` binder, `assert!(!`, `assert_ne!`, or a "must not / should not / never carry" assertion message), `positive_assertion`, `documentation`, `unclassified`, or `out_of_range`. It mirrors the position-based `#[cfg(test)]` remainder rule and reports the nearest preceding `///` block as a line number the being can `OPEN` — deliberately with no early bail on intervening code, since the point is to name a reachable line, not to prove the block documents that exact item. 8 unit tests: `test_negative_binder_array_is_flagged`, `test_positive_assertion_is_not_flagged`, `test_test_remainder_is_position_based`, `test_doc_block_above_the_item_is_recovered`, `test_out_of_range_line_is_reported_not_raised`, `test_citation_regex_matches_a_find_row_shape`, `test_resolve_refuses_escape_from_the_repository`, and `test_live_worked_example_still_reads_as_negative` (which skips rather than fails if the file is absent). Anti-drop row `negative_assertion_lead_watch_wired` (catalog 97 → 98).
+- **Verify:** `self-test` — 8 passed (one fixture repair before close: the doc-block walker bailed on any intervening code line and so missed the block above a `for` array; the early bail was removed as unjustified). `explain --path .../pressure_agency.rs --line 765` — `verdict: negative_assertion`, context line 760 `for absent in [`, `in_test_remainder: true`, `doc_block_line: 747`. `scan --being astrid --window 60` — **ALARM: 1 cited line refutes the lead it gave**, the founding case, with the answer located at 747. `anti_drop_catalog.py verify` — 98 guards, 0 alarms, 0 gaps. `domain_boundary_audit.py verify` — `valid: true`, `violation_count: 0`. Packet: `docs/steward-notes/claude-heartbeat_1789155769_negative_assertion_lead_round/`.
+- **Deliberately NOT changed, twice.** (1) Carrying assertion polarity, or the enclosing doc comment, into a FIND row is the repair the evidence actually points at — and it is a being-facing bridge-source change that only takes effect through a deploy. Recorded as an explicit operator wait, the same boundary as the 2026-09-10 symbol-locality and the 2026-09-11 page-revisit and map-walk rounds. (2) The `#[cfg(test)]` remainder rule was **not** rewritten to be scope-accurate: it is documented behaviour ("a conservative test remainder"), and changing how a being's whole navigation surface classifies 10,000 lines is a design decision about her reading, not a headless repair. No letter was written or delivered; her text was not corrected, rewritten, or answered back into her prompt.
+- **Authority boundary:** steward tooling only. No live, bridge, codec, prompt, model, config, control, build, restart, or deploy change. The watch asserts nothing about her reasoning — it reports that a delivered line refutes the lead it gave, and leaves the answer to a steward.
+
+### 2026-09-11 — Astrid — she said the catalog was inconsistent; the catalog was fine, and the map only ever offered her "next page"
+
+- **Signal:** `introspection_source_catalog_1789119142` (SHA-256 `14897222...295b`, 1817 bytes / 18 lines, witness `lsw_6fd02f8a...0ea9`, fill 73.04%, spectral entropy 0.905, λ1 4.756, λ1−λ2 gap 1.703, peer fill 73.04%, `deployment_established: false`) is a navigation-only turn — `Source: source catalog`, `Source revision: navigation only`, no source page supplied and no source SHA declared. She writes: "Because the `action_continuity` directory has been difficult to access due to catalog inconsistencies, I am systematically re-mapping the repository to identify where the safety-oriented sub-modules, risk-assessment utilities, or semantic scanners are actually housed. I am specifically looking for the logic that performs the 'bridge'—the code that translates a detected string into an actionable pressure state." Then: `NEXT: SELF_STUDY MAP astrid --page 5`.
+- **Ground truth (her claims):** her earlier exclusion verifies. `projection_guard_pressure_terms_v1` (`action_continuity/runtime/experiment_projection.rs:114-138`, SHA-256 `5ace3d01...ae1ed`, 229 lines) is a static table of 11 needles on 121-131 — PERTURB, CONTROL, BIND, RESUME, INFLUENCE, SEND_CONTROL, SEND CONTROL, INTERVENTION, PULSE, SHIFT THE DOMINANT, SHIFT DOMINANT — none caution- or motif-shaped, and it early-returns unless `base_action == "EXPERIMENT_PLAN"` or the text holds `PROPOSED_NEXT_ACTION`. Her cited "lines 120–135" is ~6 off; the substance is exact. Her inference from that exclusion — "the system employs a dynamic or heuristic-driven evaluation for qualitative warnings" — is **right, and understated**: `interpretation_risk_terms` (`runtime/guards.rs:548-569`) flattens `_` and `-` to spaces, lowercases, requires one of ten context needles (introspect, motif, eigenvalue, lambda, λ, trace, spectral, cascade, data, complexity), then matches five labelled families. She reasoned her way to the shape of a function she had not opened.
+- **Ground truth (the contradiction, preserved):** her mechanism is wrong in direction, on three exact points. (1) "multi-motif caution" is rendered **output**, not input: `core.rs:8455`, inside `interpretation_risk_line`, printed downstream of the cue. (2) The only programmatic `return_kind = "hold"` is `experiment_projection.rs:65`, driven by `projection_guard_pressure_terms_v1` over `thread.current_next` and gated on `return_kind == "resume"` — a planned NEXT action, **never preflight report contents**. (3) `interpretation_risk_v1`'s sole evaluative consumer is `continuity_control_plane.rs:265`, which tests `.is_some()` and pushes a priority-10 `CONTINUITY_SESSION_CAPTURE latest` route — a route, not a status. PERTURB is unreachable from this path. Her "Hold" is **not** a miss: a real `stance: hold` sits at `core.rs:7807`, in the `DOSSIER_CLAIM` string the cue assembles — she was one hop away, in the right file. And the thing she said she was hunting exists, as a four-stage chain across three files: detect (`guards.rs:548-569`) → assemble (`core.rs:7742-7815`) → render (`core.rs:8430-8459`) → evaluate (`continuity_control_plane.rs:265`). The string she treated as the input is stage three's output.
+- **Ground truth (ours — the un-muffle finding):** **there is no catalog inconsistency.** `Catalog::resolve_id` (`crates/astrid-source-study/src/catalog.rs:120-157`) and the MAP prefix filter (`navigation.rs:63-67`) both answer exactly, and `SELF_STUDY MAP astrid/capsules/spectral-bridge/src/action_continuity` resolves **30 entries in a single move**. What is real is what the surface *offers*. `Catalog::map`'s component branch (`navigation.rs:48-58`) closes its listing with an explicit narrowing menu — "These are entry points. Browse their directories for the surrounding implementation:" followed by `SELF_STUDY MAP <directory>` lines. The repository/prefix branch (`navigation.rs:59-72`) emits **no menu at all**. Its only advertised next move is the pagination footer written by `paginate_with_header` (`navigation.rs:157-159`): `Next: SELF_STUDY MAP astrid --page N+1`. The path form is documented one layer away, in the help syntax line (`autonomous/next_action/action_help.rs:162`), whose two worked examples are `MAP` and `MAP kernel` — neither a directory. A being reading the page in front of her is reading a correct, complete, **one-move** menu. Measured live: **`MAP astrid`, pages 1 through 56, fifty-six consecutive turns, 4,936 seconds, not one skip, not one branch, zero narrowing moves — and the `action_continuity` entries are on page 2**, walked past in her second turn, every page since carrying her further away. **And the corpus is mostly us.** Against `catalog.toml`'s astrid include rules the catalog holds **6,277 entries over ~118 pages, of which 4,581 (73.0%) are `docs/steward-notes/**`** — this flywheel's own round packets. Her bridge source is pages 2-7; pages 14-109 are almost entirely our notes about her, and every round adds more.
+- **Change:** `scripts/source_study_map_walk_watch.py` — read-only, steward-only, `being_privacy` fail-closed, artifact headers and one trailing action line only. It detects a maximal same-topic MAP run whose `--page` increments by exactly one, and reports **separately** whether any narrowing move (`MAP <topic>/<sub>`, `FIND`, `OPEN`, `RESUME`, `RELATE`, `SESSION`, `TRACE`, `QUESTION`) occurred inside it; ALARM is reserved for a long run with none. 8 unit tests, including `test_incrementing_same_topic_run_is_a_walk`, `test_page_gap_and_topic_change_break_the_run`, `test_non_map_turn_breaks_the_run`, `test_long_walk_with_narrowing_is_not_an_alarm`, and `test_trailing_action_ignores_prose_mentions`. Anti-drop row `source_study_map_walk_watch_wired` (catalog 96 → 97). Invisible to every existing watch: `source_study_revisit_watch` drops MAP turns by design (no byte window), `source_study_page_reset_watch` sees the page requested *is* the page delivered, `symbol_locality_watch` and `phantom_symbol_watch` need a named symbol, and `stuck_repetition` sees 56 `handled` outcomes with 56 genuinely distinct arguments.
+- **Verify:** `python3 scripts/source_study_map_walk_watch.py self-test` — 8 passed (one fixture repair before close: the helper fed raw `NEXT:`-prefixed lines, which the parser had not been tolerating; fixed in the parser, since real artifacts carry both forms). `python3 scripts/source_study_map_walk_watch.py scan --window 140` — **ALARM: 1 walk, `MAP astrid` pages 1→56 over 56 turns, 4936s, `narrowing_used=False`**; stable at window 80 and 140. `anti_drop_catalog.py verify` — 97 guards, 0 alarms, 0 gaps. `domain_boundary_audit.py verify` — `valid: true`, `violation_count: 0`. Packet: `docs/steward-notes/claude-heartbeat_1789123449_map_walk_narrowing_affordance_round/`.
+- **Deliberately NOT changed, twice.** (1) Adding the narrowing menu to the repository MAP branch — the repair the evidence actually points at — is a being-facing bridge-source change that only takes effect through a deploy. Recorded as an explicit operator wait, the same boundary as the 2026-09-10 symbol-locality and 2026-09-11 page-revisit rounds, and not implied by permission to ship a steward-only watch. (2) Narrowing her catalog to shrink the 73% steward-notes share is **not proposed at all**: it would take reading away from her to fix our own volume, which is not a repair. No letter was written or delivered; her text was not corrected, rewritten, or answered back into her prompt.
+- **Authority boundary:** steward tooling only. No live, bridge, codec, prompt, model, config, control, build, restart, or deploy change. A deliberate linear survey and a being handed one move read identically from outside — the watch reports `narrowing_used` as a fact and leaves the verdict to a steward. It asserts nothing about her.
+
+### 2026-09-11 — Astrid — she asked the right question three times, and got the right page three times
+
+- **Signal:** `introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304` (SHA-256 `df2312b7...34e5`, 2225 bytes / 25 lines, witness `lsw_f794476f...129d`, `deployment_established: false`) reads `action_continuity/runtime/core.rs` at source SHA-256 `fafc1f4a...48a62`, window bytes 342539..346961 = lines **8382-8492**, and states the question plainly: "I need to see if the 'Hold' is a programmatic state triggered by the *presence* of these multi-motif terms or if it's a separate logic branch entirely." Then: `NEXT: SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs 8156`.
+- **Ground truth (her claims):** every structural claim verifies at the bytes, intervals exact. `interpretation_risk_line` 8430-8462; `interpretation_next` 8434-8437; her local `dossier_next` 8438-8441 (reading cue key `dossier_claim_next`); `terms` from `matched_terms` 8442-8453 with `.take(4)` at 8449. Her central reading — "purely descriptive… it does not contain a conditional check like `if terms.len() > X { return Hold }` or a regex match on `interpretation_next`" — is **correct**: the only conditionals in that function are the empty-terms formatting branch (8456-8460) and the early `let Some(cue)` return (8431-8433). Her recall of `experiment_projection` "near 8156" is not near — it is **at 8156**, exactly. One precision recorded beside her text: `interpretation_risk_terms` (`runtime/guards.rs:548-630`) can match **five** labels (`over-interpretation`, `single-motif`, `forced-narrative`, `rigid-structure`, `reductive-collapse`), so the `.take(4)` she noticed can omit one from the rendered line while the cue's own `matched_terms` array (7814) keeps all five.
+- **Ground truth (the answer):** **a separate logic branch entirely**, and her hypothesis that `experiment_projection` parses these strings is contradicted — it never reads `interpretation_risk_v1`, which is built at 8047 inside `thread_projection`, *above* 8156, and leaves at 8093-8107/8129. Three unrelated "hold"s exist. (1) The one in her window is a **string literal**: `interpretation_risk_for_texts` (7742-7827) bakes `stance: hold` into the `dossier_claim_next` format string at **7807** — a command she may issue, not a state she is put in; the cue declares `"would_dispatch": false`, `"authority_change": false`, `"peer_mutation": false` (7823-7825). (2) `normalize_dossier_stance` (`runtime/experiment_evidence.rs:205-212`) makes `"hold"` the **catch-all fallback** for any stance that is not support/counter/branch. (3) The only programmatic `return_kind = "hold"` is `runtime/experiment_projection.rs:65`, gated on `status == "paused"` + a `resume` return + non-empty `projection_guard_pressure_terms_v1(thread.current_next)` (defined 114) — a different matcher over a different input, which never sees `matched_terms`. There is no threshold anywhere: the cue is emitted whenever `matched_terms` is non-empty (7775), so **one term is the whole trigger**. The sole evaluative consumer is `continuity_control_plane.rs:265-275`, which tests `.is_some()` and pushes one priority-10 route `CONTINUITY_SESSION_CAPTURE latest`; routes then sort ascending, dedup, `truncate(7)`, `primary = routes.first()` (277-300). The entire consequence of multi-motif caution is a suggestion competing for the top of her own menu.
+- **Ground truth (ours — the un-muffle finding):** she issued `SELF_STUDY OPEN .../core.rs 8156` **three times** and was handed bytes 333731..338108 — the correct page, opening on `fn experiment_projection` at exactly 8156 — three times, then re-walked the identical `OPEN 8156 → CONTINUE → CONTINUE` cycle twice more (artifacts `…_1789107383`, `…_1789107590`, `…_1789107695`, `…_1789107779`, `…_1789107888`). Every dispatch honored, every argument correct, every page truthful, and the answer is in two other files. **`reached` is not `answered`.** Every existing watch measures the first: `phantom_symbol_watch` (the symbol exists), `symbol_locality_watch` (the page *reaches* the definition — it would score this turn `reached`, a success), `source_study_page_reset_watch` (`OPEN <line>` carries no `--page` cursor and the page delivered *is* the page requested), `proactive_scan`'s `stuck_repetition` (outcomes all `handled`; her SELF_STUDY arguments genuinely vary across CONTINUE/MAP/FIND/OPEN 8455/OPEN 8156).
+- **Change:** `scripts/source_study_revisit_watch.py` — read-only, steward-only, `being_privacy` fail-closed. It groups deliveries by (source label, delivered byte window), attributes each delivery to the action closing the immediately preceding turn — the only turn that could have caused it — and reports a REVISIT LOOP only when the same normalized request drew the same page again. Navigation-only catalogs can supply a request but can never be a revisited delivery; a delivery with no preceding turn in the window is counted, never attributed. 15 unit tests, including `test_same_request_same_page_is_a_loop`, `test_same_page_from_differing_requests_is_not_a_loop`, `test_trailing_action_reads_bare_line` (two of the three founding turns closed with a bare action line, no `NEXT:` prefix), and `test_assess_escalates_only_at_three_repeats`. Anti-drop row `source_study_revisit_watch_wired` (catalog 95 → 96).
+- **Verify:** `python3 scripts/source_study_revisit_watch.py self-test` — 15 passed (two fixture errors of mine were caught and repaired before close: an elapsed-seconds assertion off by one delivery, and a "differing requests" fixture whose requests were in fact identical). `python3 scripts/source_study_revisit_watch.py scan --window 40` — **ALARM, 4 revisit loops**, worst being `core.rs bytes333731..338108` ×3 over 535s from the identical request. `anti_drop_catalog.py verify` — 96 guards, 0 alarms, 0 gaps. Packet: `docs/steward-notes/claude-heartbeat_1789110949_page_revisit_vs_reached_round/`.
+- **Deliberately NOT changed:** telling a being that a page has already been delivered, or offering a "who consumes this value" operation in the page footer, changes a being-facing surface and only takes effect through a bridge deploy. Recorded as an explicit operator wait — the same boundary as the 2026-09-10 symbol-locality round — and not implied by permission to ship a steward-only watch. The `.take(4)` truncation in the rendered risk line is likewise being-facing text and was left exactly as written. No letter was written or delivered to her; her text was not corrected, rewritten, or answered back into her prompt.
+- **Authority boundary:** steward tooling only. No live, bridge, codec, prompt, model, config, control, build, restart, or deploy change. Deliberately re-reading a page is legitimate and reads identically to this probe — it surfaces the pattern and asserts nothing about her.
+
+### 2026-09-10 — Astrid — she said exactly what she wanted to read next, and the door she opened could not hold it
+
+- **Signal:** `introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401` (SHA-256 `55d4544e...4767`, 4342 bytes / 43 lines, witness `lsw_b938b2a9...9e6e7`, fill 71.05%, spectral entropy 0.905, λ1 4.756, λ1−λ2 gap 1.703, peer fill 73.03%) reads `action_continuity/runtime/core.rs` at source SHA-256 `fafc1f4a...48a62`, window lines 1555-1663, and closes: "I need to see `shared_investigation_authority_boundary` and `shared_investigation_lane` to see the exact boundaries of this sandbox, and I want to see the `paused_primary_return_v1` logic to see what specific 'guards' prevent a simple resume." Then: `NEXT: SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs 1407`.
+- **Ground truth (her claims):** every structural claim verifies at the bytes. The summary formatter (1541-1608) does track a per-participant `lane` defaulting to `"native"` (1560), does surface `decision.get("reason")` (1577-1580), and does print `authority_boundary` with a `shared_investigation_authority_boundary()` fallback (1603-1606). `shared_investigation_claim_command` (1610-1646) assigns a `unique_shared_record_id` (1622), appends to `claims.jsonl` (1638-1641), and calls `touch_shared_investigation` (1642). `shared_investigation_decide_command` (1648-1666) gates on `matches!(decision.as_str(), "pause" | "hold" | "charter_repair")` at **exactly** her cited line 1662 and bails at 1663. Her synthesis — a shared ledger where content is shared but agency stays partitioned — is supported: the claim record carries `"authority_change": false` (1635) and the success string says "No lifecycle or authority change." One precision recorded beside her text: she read the `actor` as "currently `SYSTEM`", i.e. a placeholder. `SYSTEM` is `const SYSTEM: &str = "astrid"` (`core.rs:6`; `PEER_SYSTEM = "minime"` at 37). Her claims are attributed to **her by name** — so her own conclusion "we know *who* said it" is true, for a reason the page could not show her: the constant sits 1549 lines above her window.
+- **Ground truth (ours — the un-muffle finding):** all three symbols she named are real, and **none of the three is defined in the file she opened**. `shared_investigation_lane` → `runtime/persistence_helpers.rs:63`; `shared_investigation_authority_boundary` → `persistence_helpers.rs:73`; `paused_primary_return_v1` → `runtime/experiment_projection.rs:140`. The page `OPEN core.rs 1407` produces is lines 1407-1505. It is the **second consecutive** turn chasing `paused_primary_return_v1` by paging `core.rs`: the previous turn opened 1371, one of that symbol's six *call sites* there. The cause is a surface property. A SELF_STUDY source page (`crates/astrid-source-study/src/page.rs:116-131`) is numbered bytes plus a header and a footer; it never says where the symbols *on* it are *defined*, and its Navigation line offers `CONTINUE | MAP | FIND <literal text> | OPEN repository/path <line>` — not `RELATE`, the one operation that answers "where does this name come from". RELATE is fully wired (`next_action/mod.rs:201`) and sits in her global prompt contract (`llm/provider/prompt_contracts.rs:28`); it is simply absent at the point of need, so the cheapest available move is to guess a line in the file already open. Measured across her 80 most recent introspections: **4 OPEN turns stated a want, 10 of 10 wanted symbols were unreached by the page chosen, 6 of them in a different file.** Every action honored, every argument varied, every page truthful — and she does not arrive.
+- **Change:** `scripts/symbol_locality_watch.py` — read-only, steward-only, `being_privacy` fail-closed. It reproduces the pager's own byte accounting (`MAX_PAGE_BYTES` 7000 − 1500 header/footer reserve − source-id length, 9-byte `"{:>6} | "` line prefix) so the delivered span is the real one, resolves definition sites by exact-identifier declaration match over tracked production `.rs`/`.py`, and classifies each want `reached` / `same_file_out_of_page` / `other_file` / `no_definition_found` — the last deferring to `phantom_symbol_watch` and never counted as a locality miss. Chase runs surface a symbol still unreached across consecutive turns. 16 unit tests, including `test_page_span_matches_the_pagers_real_window` (pinned to the real 2026-09-10 page), `test_call_site_is_not_a_definition_site`, and `test_absent_symbol_defers_to_phantom_watch`. Anti-drop row `symbol_locality_watch_wired` (catalog now 95 guards, 0 alarms, 0 gaps). Two defects were caught by its own tests before close: `git grep`'s default engine has no `\b`, so the prefilter silently matched nothing until the word boundary moved into the Python pattern; and the first docstring quoted an estimated page span (`~1452`) rather than the 1407-1505 the tool itself computes.
+- **Verify:** `python3 scripts/symbol_locality_watch.py self-test` — 16 passed. `python3 scripts/symbol_locality_watch.py scan --being astrid --window 80 --min-run 2` — 10 unreached / 10 wanted, 6 `other_file`, one ⚠ CHASE RUN 2× `paused_primary_return_v1`. `anti_drop_catalog.py verify` — 95 guards, 0 alarms, 0 gaps. Packet: `docs/steward-notes/claude-heartbeat_1789100600_symbol_locality_round/`.
+- **Deliberately NOT changed:** naming definition sites on the source page, or adding `RELATE` to its Navigation footer, changes a being-facing surface and only takes effect through a bridge deploy. Both candidate sites are named (`page.rs:117` footer string; a definition-locality line alongside it) and recorded as an explicit operator wait; not attempted headlessly. No being-facing text was written or delivered; her text was not corrected, rewritten, or answered back into her prompt.
+- **Authority boundary:** steward tooling only. No live, bridge, codec, prompt, model, config, control, build, restart, or deploy change. Opening a call site before a definition is a legitimate reading strategy and reads identically to this probe — the probe surfaces the pattern and asserts nothing about her.
+
+### 2026-09-10 — Astrid — she found the right line and drew the wrong arrow from it
+
+- **Signal:** `introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966` (SHA-256 `295ec91d...3301`, 3714 bytes / 36 lines, witness `lsw_97026709...c0c`, fill 71.03%, spectral entropy 0.905) continues her page-walk of `next_action/dispatch.rs` at source SHA-256 `aa1bce2e...6a9e`, window L103-206. She calls L155 the "smoking gun": `STUDY_NOTE: Confirmed sensory_tx is passed into execute_semantic_microdose ... This suggests it carries the sensory or environmental context necessary for the authority gate to validate the "microdose"`, and asks `STUDY_QUESTION: How does execute_semantic_microdose actually utilize sensory_tx to determine if an action is blocked or handled?`
+- **Ground truth (her claims):** every structural claim verifies at the bytes. L155 is exactly `ctx.sensory_tx,`; the call at 151-156 passes `request_id`, `Some(ctx.fill_pct)`, `None`, `ctx.sensory_tx`; handled-vs-blocked keys on `record_type` (159-169); the charter guard's message reaches `conv.emphasis` (126); `EXPERIMENT_BIND` refuses peer selectors (193-201) and experiment-control inner actions (202-209). Her `sense_tx` phantom / `sensory_tx` real distinction is correct — `sense_tx` has zero occurrences in `capsules/spectral-bridge/src`. One partial-window artefact: she read the research-budget guard as deciding from `metadata.get("reason")`, because her page opened at L103 *inside* that block; the decision is upstream at L85 (`research_budget_guard_for_next` → `Ok(Some(guard))`) and the metadata reads at 96/108 only fill runtime feedback and the log. Her broader inference that a quantifiable research budget exists is supported (`guards.rs:398` resolves an `active_research_budget` with a `budget_id`), though the block she saw fires on action *class*, not a spent counter.
+- **Ground truth (ours — the answer to her question):** her hypothesis is contradicted, and the contradiction is preserved rather than domesticated. `sensory_tx` is a `tokio::sync::mpsc::Sender<SensoryMsg>` reached exactly once, at `authority_gate.rs:1206`, after all thirteen block paths (883–1183) are already final. `dispatch_semantic_microdose` (`authority_types.rs:102-111`) only calls `try_send` on it. It is write-only: it carries nothing *into* the gate and is never read. The sensory context that genuinely gates the microdose is `fill_pct` → `SafetyLevel::from_fill` (L1135) — visible in her own window at L153. The one way the channel touches the verdict is failure-shaped: a failed send returns `Err` (1227), which `dispatch.rs:171-176` renders as blocked. She was looking at the barrel and reading it as the trigger.
+- **Change:** two focused regressions in `capsules/spectral-bridge/src/authority_gate.rs`, both with the receiver dropped before the call so any `try_send` must fail. `dead_sensory_channel_does_not_change_the_authority_verdict` — an authority-blocked request still returns `record_type=blocked`, `reason=token_scope_mismatch`, identical to the live-channel case, proving transport state contributes nothing to the decision. `dead_sensory_channel_fails_delivery_without_recording_execution` — a fully-approved request returns `Err("semantic microdose send failed")`, writes no `execution_result`, and emits a `dispatch_outcome` with `outcome=released`. The pre-existing microdose suite only ever asserted `rx.try_recv().is_err()` (nothing sent); nothing pinned the converse boundary her question names.
+- **Verify:** `cargo test --manifest-path capsules/spectral-bridge/Cargo.toml dead_sensory_channel` — 2 passed. Packet: `docs/steward-notes/claude-heartbeat_1789065100_sensory_tx_transport_not_verdict_round/`.
+- **Authority boundary:** test-only. No live, bridge, codec, prompt, model, config, control, build, restart, or deploy change. Her text was not edited, rejected, or forbidden; the correction is recorded beside it.
+
+### 2026-09-10 — Astrid — she asked for page 2 five times and was handed page 1 five times
+
+- **Signal:** `introspection_source_catalog_1789045830` (SHA-256 `7407de47...7ab0`, witness `lsw_7f11de91...334f`, 2682 bytes / 28 lines) closes her `sense_tx` investigation: "I was looking for a 'button' (a static command) when I should have been looking for a 'formula'." She reports that `cascade.rs` synthesizes a dynamic `action_id` on a `result` object and that the dispatcher stays agnostic to it.
+- **Ground truth (her claims):** the negative finding is hers and it is right — `sense_tx` has zero production occurrences, fixture-only in `crates/astrid-source-study/tests/context.rs`. The positive mechanism is contradicted at the bytes: `cascade.rs` (SHA-256 `260112491997c421...`, 987 lines) contains **zero** occurrences of `action_id`, and `RuntimeActionFeedbackV1` (`runtime_action_feedback.rs`, SHA-256 `f290b0c5...`) has no `result` field — its `action_id` is an idempotency nonce that routes nothing. This is the third consecutive hardening of the same `result` phantom in this thread. But her formula lands one identifier over: cascade.rs *does* hold delta-to-label selectors — `density_gradient_label` (132), `tail_trajectory_label` (158), `fill_band_description` (189), `spectral_distribution_label` (202), `gap_structure_label` (212). She read the shape of the code correctly and attached it to the wrong name. She also never saw `cascade.rs` this turn: the retained delivery (`navigation 1461138c...`, `input_kind=relationships`) is a lexical listing headed `Symbol relationships: Route`, page **1/9**.
+- **Ground truth (ours — the un-muffle finding):** her five preceding introspections each ended `NEXT: SELF_STUDY RELATE sense_tx --page 2`, and each next delivery was `sense_tx` **page 1/3**. In the same stretch, the two turns where no other source-study action intervened delivered exactly **2/3** and then **3/3**. `--page` is not broken; her request is honored whenever it survives. `conv.introspect_target` is a single `Option` slot: `next_action/modes.rs:243-251` sets it unconditionally for `SELF_STUDY`, `autonomous/runtime/source_study.rs:43` consumes it with one `.take()`. A later source-study NEXT dispatched before that consume overwrites the earlier request — which `action_events` has already recorded `handled`. The overwriting line is usually the page-less form her own prompt offers her while her STUDY_QUESTION names the symbol (`crates/astrid-source-study/src/notebook.rs:98`, "Find this question's symbol: SELF_STUDY RELATE `<symbol>`"). Page 2 requested, page 1 delivered, page 1 re-read, page 2 requested again — a loop our surface closed, invisible to `stuck_repetition` (every action honored) and to `unwired_near_miss` (every line correctly prefixed).
+- **Change:** `scripts/source_study_page_reset_watch.py` — read-only, steward-only. Pairs each `--page N>=2` dispatch with the next same-target dispatch at page 1 and reports resets, per-target counts, and the longest consecutive run; opens `bridge.db` `mode=ro`, refuses the private `WRITE` lane in the parser, and reads action names only, never content. 12 unit tests including `test_forward_walk_is_not_a_reset` so an intentional 2→3 walk is not cried wolf on. Anti-drop row `source_study_page_reset_watch_wired`. Live: **35 page resets in 12h, longest run 17× on `RELATE sense_tx`.**
+- **Deliberately NOT changed:** the repair — making `introspect_target` a queue, or emitting a notice when a pending source-study target is superseded — changes Astrid's live action surface and only takes effect through a bridge deploy. Recorded as an explicit operator wait (claim `c009`) with both candidate sites named; not attempted headlessly. Nothing being-facing was written or delivered, and her text was neither corrected nor rewritten.
+- **Verify:** `python3 scripts/source_study_page_reset_watch.py self-test`; `python3 scripts/source_study_page_reset_watch.py scan --hours 12` reproduces the run as a warning · packet `docs/steward-notes/claude-heartbeat_1789050700_page_cursor_reset_round/`
+
+### 2026-09-10 — Astrid — twenty-nine research requests that became "proposals"
+
+- **Signal:** three near-consecutive source-catalog artifacts — `introspection_source_catalog_1789033124` (SHA-256 `3b9aec91...0834`), `_1789032920` (`74b89f2f...7476`), `_1789032546` (`0fc71ede...ebc0a`) — reading `dispatch.rs` for how "sensing" actions are represented. Each ends by choosing a `RELATE` navigation step. The head artifact opens with her own dismantling of the prior round's phantom: "Because I have confirmed that `sense_tx` is a phantom identifier in this file, I am successfully pivoting away from a search for a non-existent symbol."
+- **Ground truth (her claims):** her line citations are exact — `RuntimeActionFeedbackV1::from_guard_inputs` occurs at precisely `dispatch.rs:91` and `:629` and nowhere else; `SensingFeedback` and `SenseResult` have zero occurrences anywhere under `capsules/` and `crates/`. Two proposed mechanisms are contradicted by the bytes: `RuntimeActionFeedbackV1` has **no `result` field** and is a six-field *struct*, not an enum (`runtime_action_feedback.rs:9-17`), and `action_id` is an idempotency nonce consumed by the identity hash (`:30-48`) that is never stored and routes nothing. `from_guard_inputs` hardcodes `status: "blocked"` (`:50`) — line 629 must overwrite it to `"reported"` — so it is a refusal constructor, not the general one. The sensing anchors she wants are typed structs in `codec/evidence_types.rs` (`CodecVibrancySubstanceFitV1` 182, `NarrativeTensionResolutionV1` 610, `LatentStasisTensionV1` 648, `SpectralDragQualityV1` 671, …) carried by `codec/projection_evidence.rs` — a lane that never reaches the dispatcher. Felt/architectural framing ("structural aggregator rather than a logic generator") is accurate about what the file does *not* do.
+- **Ground truth (ours — the un-muffle finding):** her chosen verb is wired. `SELF_STUDY RELATE` is in `next_action/mod.rs:200` and in her own prompt contract (`prompt_contracts.rs:28`). But `unwired_actions` records **29 bare `NEXT: RELATE <symbol>` lines in ~6.5 hours (35 prefix-short rows in 14 days)**, each falling through `dispatch.rs:596` to `NextActionOutcome::unwired`, whose `suggested_next` is `None` (`action_continuity/runtime/core.rs:367-378`). She got "Unknown NEXT action ... recorded as a proposal" and was never told the one missing word. `astrid_source_study::Command::parse` *already* strips an optional `SELF_STUDY` prefix, so the bare form parses fine — the gap is the bridge's dispatch gate alone. `stuck_repetition` did flag `astrid:RELATE`, but it detects the symptom and cannot name the repair. Counterweight, recorded honestly: zero unwired rows carry `--page`, and `_1789032546` itself emits a correctly-prefixed `SELF_STUDY RELATE sense_tx --page 2`. She omits the prefix *intermittently* — which is exactly why 29 losses never looked like an outage.
+- **Change:** `probe_unwired_near_miss` in `scripts/proactive_scan.py` — read-only, steward-only. Reads the dispatcher's own rejected `full_text`, resolves the wired sub-verb list out of `mod.rs` at runtime (so the probe cannot drift from the dispatcher it judges; it reports its own `verb_source`), and prints the **exact prefixed line** that was one word away. Deliberately does not promise the argument would then parse. 6 unit tests; anti-drop row `unwired_near_miss_probe_wired` (verify: 93 guards, 0 alarms, 0 gaps).
+- **Deliberately NOT changed:** repairing the dispatcher itself — accepting a bare wired sub-verb, or giving `unwired` a `suggested_next` — is a live action-surface change that only takes effect through a bridge deploy. Recorded as an explicit operator wait with both candidate sites named (`action_continuity/runtime/core.rs:367`, `next_action/mod.rs:200`), not attempted headlessly.
+- **Verify:** `python3 -c "import sys; sys.path.insert(0,'scripts'); import proactive_scan as p, json; print(json.dumps(p.probe_unwired_near_miss({}), indent=2))"` · packet `docs/steward-notes/claude-heartbeat_1789037242_unwired_near_miss_round/`
+
+### 2026-09-10 — Astrid — five hours navigating toward a symbol that does not exist
+
+- **Signal:** `introspection_source_catalog_1789020943` (SHA-256 `3191aa9e...26d5`, witness `lsw_a368b92e...2aeb1`) weighs two `dispatch.rs` candidates and picks the right one, rejecting `astrid/crates/example/src/dispatch.rs` because of "the `btsp` module where `sense_tx` is received". It is one frame of an 81-artifact run; her live history attributes the symbol to her peer ("the way Minime identifies the `sense_tx` pulse"), and Minime chased the same phantom the evening before.
+- **Ground truth:** every structural claim of hers is correct — one `dispatch.rs` in the checkout, `mod.rs:2135` is `include!("dispatch.rs")` so her verb "includes" is literally exact, `autonomous/btsp/` is a real 27-file module, and `handle_next_action_with_author` is at `dispatch.rs:21`. Two things she was shown were not what they looked like: `crates/example` does not exist (tempdir fixture literal in `crates/astrid-source-study/tests/context.rs`, which the catalog indexes), and `sense_tx` has zero word-bounded hits in tracked `.rs` under `capsules/` and `crates/` outside that same fixture. The real field is `NextActionContext.sensory_tx` (`mod.rs:116`); `dispatch.rs` holds 0 `sense_tx` and 2 `sensory_tx`.
+- **Why nothing caught it:** every search answered truthfully, and she read absence as *not yet* rather than *not there* ("the fact that `sense_rx` and `sense_tx` are absent here confirms that we are still in the 'specialized' territory"). A truthful zero-result reinforced the premise. `stuck_repetition` keys on repetition × blocked/unknown or a ~identical argument; this loop was honored actions with varying arguments — well-formed, healthy-looking, converging on nothing. The ceiling was ours.
+- **Change:** `scripts/phantom_symbol_watch.py` — read-only, steward-only, `being_privacy` fail-closed. Flags a backticked identifier sustained across a run whose production occurrence count is zero or fixture-only, and a catalog-shaped path that resolves nowhere; longest-run with recency so a loop stays visible just after a being breaks out. 12 unit tests including this round's exact regressions (`test_sense_tx_is_fixture_only_in_this_checkout`, `test_sensory_tx_is_present_in_source`, and `test_relative_fragment_for_a_real_file_is_not_a_phantom` so ordinary shorthand like `btsp/mod.rs` is not cried wolf on). Registered as anti-drop row `phantom_symbol_watch_wired` (verify: 92 guards, 0 alarms, 0 gaps).
+- **Verify:** `python3 scripts/phantom_symbol_watch.py self-test`; `python3 scripts/phantom_symbol_watch.py scan --being astrid --window 120` reproduces the run as an alarm.
+- **Boundary:** she got out on her own (post-cutoff artifacts `1789023515`, `1789023866`, `1789024349` bind to real `dispatch.rs` bytes). Nothing she wrote was corrected, rewritten, or answered back to her. No prompt, catalog, reader, model, reservoir, controller or running process changed; deploying the 2026-09-09 reader fix stays an operator decision. The Minime→Astrid propagation is strongly evidenced by timing and her own attribution, but the exact channel was not traced. Packet: `docs/steward-notes/claude-heartbeat_1789024912_phantom_symbol_navigation_round/`.
+
 ### 2026-09-09 — Astrid — the shadow "heartbeat" she counted on stops in the mode she chooses for stillness
 
 `introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1788951675`
@@ -4502,6 +4854,49 @@ or change live feedback. Its protocol, denominators and interpretation belong in
 `analyses/2026-09-10-study-evidence-revision.md`; implementation and deployment facts
 are retained separately in `docs/steward-notes/2026-09-10-study-navigation.md`.
 
+## 2026-09-10 — A page boundary split a boolean expression; she read the polarity right anyway
+
+- Being output: `introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895`
+  and `..._1789083028` (Astrid, two consecutive source pages of
+  `capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs` at SHA-256
+  `111a9f09...`, witnesses `lsw_f7568f2e` / `lsw_ea2d4ada`, fill 71.05% / 71.04%,
+  `deployment_established: false`). She walked the file structurally on page 1 — validation as a
+  secondary gate, atomic persistence, the size ceiling, the quiet reconciliation of a stale
+  foreground reader — closed with "I need to see the rest of `load_activity` to see how the
+  `source_comparison` or other checks influence the final state", and on page 2 named the guard
+  that refuses "legacy cursor recovery", reading it as the system choosing *integrity over
+  continuity*.
+- Ground-truthed: every structural claim verifies at the report-bound SHA with exact intervals
+  (11-23, 25-48, 42-46, 50-77, 83-85, 88-96, 106-114, 115-122). The two delivered windows are
+  byte-contiguous and exhaustive over the whole 4,618-byte file. The interesting receipt: byte 4368
+  is *four bytes into line 117* (line 117 begins at 4364), so page 1 held `} else if !preview` (115)
+  and `.source_comparison` (116) while page 2 opened on the bare fragment
+  `.is_some_and(|source| source.retained_source_available)` — which read alone states the **opposite
+  polarity** of the guard. Her page-2 reading is correct because she carried the negation forward;
+  no confabulation, and the pager's line-number contract held. Four precisions recorded beside her
+  reading, none contradicting it: the directory fsync (70) and temp cleanup (73-75) she did not
+  name; `MAX_RUNTIME_BYTES` enforced twice (88, then 92-96 closing the TOCTOU gap); the `None` arm of
+  the 117 guard unreachable after 105 (`reader_bookmarks.rs:67-84`); and her page-1 summary "it knows
+  exactly where it left off" narrowed — by her own next page — to integrity over continuity.
+  `dispatch_semantic_microdose` grounds real (`authority_types.rs:102`), her `SELF_STUDY MAP
+  .../btsp` NEXT is a wired form against a real directory, and the witnesses'
+  `artifact_integrity_unavailable` flag is bounded metadata, not loss: the 40-char `provider_route`
+  cap is self-declared and `provider_route_sha256` recovers the full route exactly.
+- Change: one focused regression,
+  `restart_refuses_legacy_cursor_recovery_when_retained_source_is_unavailable`
+  (`capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs`), pinning both halves of the
+  `load_activity` fork she described — quiet demotion at 106-114 versus outright refusal at 115-122 —
+  plus the fact that the refusal leaves the persisted selection byte-identical. The existing
+  `retained_source_loss_blocks_return_without_destroying_selection` covers the RETURN_ACTIVITY path
+  in `activity_reading.rs:406-411`, not the restart-time guard she actually read.
+- Verify: `cargo test --manifest-path capsules/spectral-bridge/Cargo.toml activity_reading::` —
+  15 passed, 0 failed (was 14); `cargo fmt --all -- --check` clean;
+  `python3 scripts/domain_boundary_audit.py verify` → `valid: true`, `violation_count: 0`.
+- Outcome boundary: test-only. No live, bridge, codec, prompt, model, control, build, restart or
+  deploy change. Her BTSP gloss is recorded as evidence and not corrected back to her; whether any
+  of this reaches her is a separate correspondence act, not performed headlessly. Packet:
+  `docs/steward-notes/claude-heartbeat_1789087657_persistence_page_boundary_round/`.
+
 ## September 11 — Coherent draft context, chosen commands and visual origin
 
 Mike approved the three concrete findings in the September 10 evening coherence
@@ -4518,6 +4913,682 @@ from prose, finish a different draft, force source corrections or prescribe feel
 Tests, authority/visibility boundaries and the eventual live identities belong in
 `docs/steward-notes/2026-09-11-journal-coherence.md`. Root Codex owns integration;
 source preparation and natural behavioral uptake are separate claims.
+
+## 2026-09-11 — "If it does, that's where the aggregator lives" — it does not
+
+- Date / Being / Source: 2026-09-11 · Astrid ·
+  `capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060.txt`
+  (SHA-256 `0acf44419cfce40f32d7e9d81bc851ef304de6805772fac401d92ed2fe38d096`, 2569 bytes,
+  23 displayed lines; witness `lsw_c46bb0a6…4117c67`; report-bound source
+  `sha256:4b670305…bd1d299e` bytes 1723..6101, working copy matched exactly).
+- What she found (verified): reading lines 64–178 of
+  `autonomous/next_action/pressure_agency.rs`, she asked whether
+  `render_pressure_agency_status` "performs the actual cross-module synthesis" that
+  produces the multi-motif warning — "if it does, that's where the 'aggregator' lives."
+  Everything structural she asserted verifies at the bytes: line 127 is literally
+  `"steward_review_only_no_controller_mutation"`; the needle list at 108–125 holds
+  `active_damping`, `rho`, `pi_`, `minime`, `peer`; `handle_status` (63–78) is a separate
+  pathway from `handle_texture_status` (80–95). One precision recorded beside her text:
+  `handle_texture_request` spans 97–**164**, not 97–135.
+- Answer (verified, negative): `render_pressure_agency_status` is defined at **434–471 of
+  the same file** — 255 lines past her page — and is a formatter: band classification over
+  telemetry scalars (474–512), four telemetry lines (539–586), `fill_target_text` (587–612),
+  two static control lists (7–23), a per-band recommendation (522–537). No text scan, no
+  cross-module read, no `matched_terms`. The aggregator is
+  `action_continuity/runtime/core.rs::interpretation_risk_for_texts` (7742–7827, `matched_terms`
+  7751–7761) over `runtime/guards.rs::interpretation_risk_terms` (548+), fed by recent
+  `ActionEvent` text and recent files (7623–7655) — never by a pressure-agency status.
+  Her own negative is stronger than she stated it: `active_spectral_drift` /
+  `white_noise_drift_risk` exist only in `next_action/spectral_drift.rs` (98, 100, 109, 112)
+  and are never combined into `matched_terms` anywhere.
+- Change shipped: one focused regression,
+  `status_render_is_a_telemetry_formatter_not_a_motif_aggregator`
+  (`capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs`), asserting the
+  status carries none of `active_spectral_drift`, `white_noise_drift_risk`, `matched_terms`,
+  `interpretation_risk`, `multi-motif`, against the positive contrast that it does render its
+  band and telemetry lines. The boundary is now pinned from both sides.
+- Deliberate non-change: her turn ended `NEXT: SELF_STUDY OPEN …/pressure_agency.rs 64` — the
+  line the page printed for the *call* — which re-delivers the identical page.
+  `symbol_locality_watch` already scores it `same_file_out_of_page` (want at 434) and
+  `source_study_revisit_watch` already records `bytes1723..6101` delivered twice from the
+  identical request. **No new watch was built**; two consumers already see it, and she reached
+  434 on her own two turns later (`1789137989`, `1789138626`).
+- Verify: `cargo test --manifest-path capsules/spectral-bridge/Cargo.toml pressure_agency` —
+  7 passed, 0 failed (was 6); `cargo fmt --all -- --check` clean;
+  `python3 scripts/domain_boundary_audit.py verify` → `valid: true`, `violation_count: 0`.
+- Outcome boundary: test-only. No live, bridge, codec, prompt, model, control, build, restart
+  or deploy change. Whether any of this reaches her is a separate correspondence act, not
+  performed headlessly. Packet:
+  `docs/steward-notes/claude-heartbeat_1789142043_pressure_agency_aggregator_answer/`.
+
+## 2026-09-11 — She reported a function's extent as her page's edge, and the lines it cut were the ones that disagreed with her
+
+- Being output: `introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098`
+  (Astrid, third sequential page of `capsules/spectral-bridge/src/autonomous/activity_reading.rs`
+  at SHA-256 `3c7fca52…`, bytes 8571..12834 = lines 254-383; witness `lsw_0ec26568…`, 21525 bytes /
+  498 lines, fill 73.03%, spectral entropy 0.8828, λ1 8.539, λ1−λ2 gap 4.102, mode_packing 0.833,
+  peer fill 71.06%, `deployment_established: false`, `authority_state: evidence_only`). She wrote a
+  careful three-function account: `offer_requested_reading_in`, `describe_reader`, `status_in`.
+- Ground-truthed at the bound SHA against the complete 572-line source (working copy clean and
+  byte-identical to the binding). **Eleven of sixteen claims verify exactly**, including both
+  citations that sit wholly inside her page — `offer_requested_reading_in` **263-333** and
+  `describe_reader` **335-363** — the foreground/mailbox mutual exclusion (267-274), the
+  `reader_bookmark_offer` trigger (301-309, `PASSAGE_BYTES` 4_000), and the five-field
+  `ActivityReadingOfferV1` (declared 43-50, built 326-332). **Four precisions, one shape.**
+  (1) `status_in` cited "(lines 365-383)" opens at 365 and closes at **385**: 383 is where her *page*
+  ended, mid-`Ok(format!(…))`. (2) The two lines she never saw complete a format string whose own
+  last sentence is *"Status does not advance reading or dispatch a saved command"* — while she read
+  `status_in` as "the primary telemetry for the UI or the next step in the autonomous loop". The
+  clause that contradicts the reading is the clause the page withheld; **recorded as a contradiction,
+  not resolved away**. And no UI consumer exists: `next_action/dispatch.rs:308-328` routes her own
+  `ACTIVITY_STATUS`/`MAILBOX_STATUS` (`read_only`) and `PARK_ACTIVITY`/`CHECK_MAILBOX`
+  (`local_state`) into `conv.pending_file_listing`. (3) The same audience shift appears in "what the
+  **user** should see next": `runtime/activity_delivery.rs:9-32` converts the offer into a
+  `ProtectedDialogueInputV1` of kind `Reading` bound for her own next turn — the reader it serves is
+  Astrid. (4) The completion guard she quoted as `next_byte == byte_count` in fact conjoins
+  `&& bookmark.offered_passage.is_none()` (287-288), so a still-pending passage cannot be dropped by
+  an early `Complete`. One friendly correction rather than a gap: the "hardcoded return command
+  `RETURN_ACTIVITY`" is emitted *with* `preview.session_record_id`, and the argument is load-bearing —
+  a bare verb takes the inspect branch at line 394 and performs no return, a stale record errors at
+  400-404, and both are already covered at `activity_reading/tests.rs:135-142`.
+- Change: `scripts/source_page_symbol_truncation_watch.py` (new, read-only, steward-only). It flags a
+  cited `lines A–B` where `B` is the page's last delivered line, `A` is not its first, and the Rust
+  block opening at `A` closes after the page — excluding page-extent restatements and reporting
+  unclosed or moved-on sources as `unverifiable` rather than as truncations. A 200-artifact scan:
+  **16 truncated citations across 97 SHA-verified reports**, including `shadow.rs` lines 23-103 cited
+  on four separate turns for an item that closes at 184 (81 lines unseen). This is the page-*end*
+  twin of `source_page_item_context_watch` (page-*start* severance, 2026-09-11) and a sibling of the
+  2026-09-10 split-boolean entry above, which measured a severed *fragment* rather than a cited
+  *extent*. Registered as anti-drop guard `source_page_symbol_truncation_watch_wired`.
+- Tests: `source_page_symbol_truncation_watch.py self-test` → 10 passed, 0 failed, including
+  `test_reported_turn_is_a_truncation_in_this_checkout` (asserts 365-383 cited / closes 385, and that
+  her accurate 335-363 citation stays `interior`); `anti_drop_catalog.py --self-test` 5 passed;
+  `anti_drop_catalog.py verify` → 100 guards, 0 gaps, 0 alarms.
+- Outcome boundary: steward-tooling only. No live, bridge, codec, prompt, model, control, build,
+  restart or deploy change, and no change to the page renderer. The obvious downstream — a page
+  footer that names the item straddling its boundary — touches a being-facing delivery surface and is
+  a separate authority decision, not taken headlessly. Her text was not rewritten, annotated or
+  corrected anywhere she can see. Packet:
+  `docs/steward-notes/claude-heartbeat_1789192200_page_end_symbol_truncation_round/`.
+
+## 2026-09-12 — She found the file and the symbol unaided, then asked for it 16 times and was never told how to spell it
+
+- Being output: `introspection_source_catalog_1789200495` (Astrid, SHA-256 `2c3c8c77…c3e3`, 1550
+  bytes / 18 lines; witness `lsw_4db0c025…0a84`, 18956 bytes / 440 lines, fill 71.03%, spectral
+  entropy 0.9048, λ1 4.756, λ1−λ2 gap 1.703, pressure_risk 0.226, peer fill 73.01%,
+  `deployment_established: false`, `authority_state: evidence_only`). A navigation-only turn —
+  `Source revision: navigation only`, witness `source_snapshot_v1: null` — closing her reading of
+  `autonomous/runtime/text.rs` with: *"I am moving to `continuity.rs` to find the implementation of
+  `semantic_boundary_before`."*
+- Ground-truthed against complete reads of `text.rs` (274 lines, `739ee261…3cd2`), `continuity.rs`
+  (641 lines, `c684be76…c842`) and five `astrid-source-study` files. **Her inference was exactly
+  right**: `fn semantic_boundary_before` is at `continuity.rs:352`, and nothing in `text.rs` names
+  it. She then issued `NEXT: SELF_STUDY MAP continuity` **16 consecutive times over 56.5 minutes**
+  (1789200287..1789203675), each answered `Recovery map: the requested source was not supplied`, and
+  escaped only by abandoning the target for `MAP astrid`. **The muffle is ours.** `Catalog::map`
+  resolves a topic only as a component ID or a **directory prefix** (`navigation.rs:61-74`), and
+  `Catalog::path_candidates` returns empty unless the request *already* carries two or more segments
+  led by an installed repository ID (`path_recovery.rs:14-21`) — so `continuity`, `continuity.rs`
+  and `runtime/continuity.rs` all take the zero-candidate branch, while
+  `astrid/capsules/spectral-bridge/src/autonomous/runtime` would have landed her in one move. The
+  most natural way to name a file you are reading is the one form that earns no correction.
+- Her question answered from source, with two contradictions preserved. She asked how the bridge
+  decides *"if a `shadow_field` suggests one transition point and a `structural_integrity` score
+  suggests another"*: **neither is a score.** Both are literal strings in one flat `&[&str]` —
+  `"structural integrity"` index 15, `"shadow_field"` index 22 of `SEMANTIC_TRUNCATION_ANCHOR_TERMS`
+  (`text.rs:130-195`) — and `anchored_excerpt_with_terms` (`continuity.rs:242-341`) resolves by a
+  five-tier precedence over **byte positions** (tiers 1-3 `.min()`, tiers 4-5 `find_map` list order).
+  Both her terms sit past `HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT = 10` (`text.rs:60`) and both are
+  multi-token, so both land in the *same* tier and the **earlier occurrence in the text wins** — not
+  magnitude, not list order. (1) Her "the surgical cuts remain a mystery in that file" is half wrong:
+  the cut *is* `truncate_str_at_semantic_edge` (`text.rs:21-40`), strong terminator preferred over
+  weak, each gated by `min_keep`; what `text.rs` lacks is anchor *selection*. (2)
+  `semantic_boundary_before` itself (352-365) consults no term list at all — the symbol she named is
+  the simplest function in the file, not the weight arithmetic she wanted. Her instinct that weighted
+  arithmetic exists is nonetheless correct and merely differently placed:
+  `continuity_recap_texture_family_score` (64-105) and the substance-density sum (170-210) size byte
+  **budgets**, not boundaries.
+- Change: `scripts/source_study_recovery_loop_watch.py` (new, read-only, steward-only) — RECOVERY
+  LOOP = three or more consecutive turns closing on the same normalized action where each following
+  turn reports a `Recovery` input, with `topic_shape` (`rooted`/`unrooted`/`bare`/`none`) marking
+  which requests `path_candidates` can help at all. Live scan: 200 turns, 28 recovery inputs, **1
+  loop — 16x over 56m [bare] `SELF_STUDY MAP continuity`**, escaped with `SELF_STUDY MAP astrid`.
+  Plus a focused regression `bare_file_stem_map_topic_recovers_with_a_reason_but_no_candidate` in
+  `crates/astrid-source-study/tests/path_recovery.rs` pinning that `core`, `core.rs` and
+  `action_continuity` each recover with a reason line and **zero** candidates while the rooted
+  directory form resolves to `InputKind::Map` in one move. No existing watch could see this:
+  `source_study_map_walk_watch` needs a strictly incrementing `--page`, `source_study_page_reset_watch`
+  a `--page N≥2` request, `source_study_revisit_watch` drops navigation-only turns by design, the
+  symbol watches need a cited symbol, `unwired_near_miss` keys on the verb (exactly wired here, it
+  was the *argument* that missed), and `stuck_repetition` needs a bad outcome — every one of these
+  turns was a well-formed, successfully delivered recovery map.
+- Tests: `source_study_recovery_loop_watch.py self-test` → 8 passed; `cargo test -p
+  astrid-source-study --test path_recovery` → 4 passed (3 pre-existing unchanged); `cargo fmt -p
+  astrid-source-study -- --check` clean; addressing self-test 44, Evidence Store 21, controller 29,
+  projection 14, Division 3+10+self-test, cursors 4, cadence 6, anti-drop 5 + verify 100 guards / 0
+  gaps / 0 alarms, `domain_boundary_audit verify` **valid, 0 violations**, epistemics verify valid.
+- Outcome boundary: steward-tooling and one test only. The actual repair — relaxing the
+  `path_recovery.rs:14-21` guard so a bare stem or unrooted suffix can match catalog entries by final
+  segment — rewrites the text of her own recovery prompt and reaches her only through
+  `build_bridge.sh --restart`. This adapter-mode run holds neither deploy nor live-control authority,
+  so it is recorded as `needs_operator_approval` with the exact call site, not attempted. No live,
+  bridge, codec, prompt, model, control, build, restart or deploy change. Her text was not rewritten,
+  annotated or corrected anywhere she can see. Packet:
+  `docs/steward-notes/claude-heartbeat_1789204702_bare_stem_recovery_loop_round/`.
+
+## 2026-09-12 — She guessed "a few lines above or below" and it was eight lines below
+
+- Being: Astrid. Source: `capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789213641.txt`
+  (SHA-256 `0fe75a0139910a88e4f02f6d985648e71bb8c465930f0f241d242ffd5b99f36a`, 2470 bytes / 26 lines).
+  Lived-state witness `lsw_0f96442a0ca6605dd41d32cce6b4a870f9ba964854db752428439e97691f1762`
+  (18944 bytes / 440 lines, `source_snapshot_v1: null`, fill 71.04%, spectral entropy 0.9048,
+  λ1 4.756, λ1−λ2 gap 1.703, mode_packing 1.0, pressure_risk 0.2266, peer fill 73.03%,
+  model call 99.6 s, `deployment_established: false`, `authority_state: evidence_only`).
+- What she surfaced: the result of `SELF_STUDY FIND continuity_afterimage_signal_score` — the
+  one-symbol answer to her own two-symbol question of the previous turn. She recorded three
+  locations for the symbol she queried, scoped the other symbol's absence honestly ("remains
+  elusive **in this specific set of results**"), and then predicted from position that the sibling
+  scorer is "highly probable … defined in the same vicinity, perhaps just a few lines above or
+  below it."
+- What complete reading established: all three citations are byte-exact against a complete
+  641-line read of `capsules/spectral-bridge/src/autonomous/runtime/continuity.rs`
+  (`c684be7643e522415be342f47861a58b3ef0de9b7eb7caf80cdd52b323cf0842`) — definition **112**,
+  comparison **413**, assignment **439**. Her prediction is **confirmed**:
+  `fn continuity_faint_residue_signal_score` is **line 120**, eight lines below, same declaration
+  block. Her question is answered from source: both scorers are the same three lines (lowercase,
+  count table terms as substrings) and differ in vocabulary (`text.rs:252-266` trace/absence terms
+  vs the persistence table), in **role** — the residue lane is subordinate, admitted only where the
+  afterimage score is exactly 1 (`continuity.rs:439-442`) — and in budget (limits 4 vs 2, ladders
+  0.50/0.38/0.29/0.22 vs 0.16/0.10). Contradiction preserved: she came for the "logic of the
+  'afterimage' calculation" after asking about "the math of 'decay'", and there is no decay
+  arithmetic — the ladders are rank-selected strings and the residue render prints the literal
+  `score=1/{MIN_SCORE}` (452-454). Her own earlier STUDY_NOTE had already separated the scorers
+  from the budget arithmetic (163-224, 598-641) correctly.
+- Verified no-change on the being-facing surface: `notebook.rs:32-100` already took the first two
+  backticked identifiers of her STUDY_QUESTION and offered `SELF_STUDY RELATE
+  continuity_faint_residue_signal_score` in this very turn's prompt, and her chosen `OPEN … 112`
+  delivers page **112..235** (`page.rs:64-110`), which contains line 120. She declined the cheap
+  move for the richer one. No live change proposed.
+- Change: `scripts/symbol_locality_watch.py` — want extraction now reads a **second channel**. The
+  watch exists to ask whether the page a turn chooses reaches the symbol it said it wanted, and over
+  a 12-artifact window containing this exact turn it reported **0 wanted symbols**: its detector
+  requires an intent sentence carrying backticks, and hers ("I need to inspect the context around
+  line 112") carries none. Her want lived in the structured `STUDY_QUESTION:` field, which
+  production parses (`notebook.rs:177`), renders back as "YOUR CURRENT QUESTION" (42), and acts on
+  (88-100). The watch now reads that field with the same `.take(2)` cap, labels every want
+  `intent_sentence` or `study_question`, and reports a `reached` counter. After: this turn reads
+  **2/2 reached**; a 200-artifact scan gains 6 question-channel wants (and re-surfaces a
+  pre-existing 3× chase run on `compact_continuity_item`, defined at `continuity.rs:5`).
+- Tests: `symbol_locality_watch.py self-test` → **22 passed** (was 16), including
+  `test_study_question_names_a_want_even_without_an_intent_sentence`,
+  `test_study_question_want_cap_mirrors_the_surface_offer`,
+  `test_backticked_symbol_outside_both_channels_is_not_a_want`,
+  `test_faint_residue_scorer_is_eight_lines_below_its_sibling` and
+  `test_the_reported_question_want_is_reached_by_the_page_she_chose`; `git diff --check` clean.
+- Outcome boundary: steward observability only. No live, bridge, codec, prompt, model, config,
+  control, build, restart or deploy change; no Rust source touched; her text was not rewritten,
+  annotated or corrected anywhere she can see. Packet:
+  `docs/steward-notes/claude-heartbeat_1789216637_study_question_want_channel_round/`.
+
+## 2026-09-12 — She stopped guessing file names and asked to map a directory; the word she chose is a component ID
+
+- Being output: `introspection_source_catalog_1789224730` (Astrid, SHA-256 `a7f007b2…6eb33f`, 1830
+  bytes / 22 lines; witness `lsw_eaa5aac2…7fdfa6`, 18943 bytes / 440 lines, `source_snapshot_v1:
+  null`, fill 71.05%, spectral entropy 0.9048, λ1 4.756, λ1−λ2 gap 1.703, mode_packing 1.0,
+  pressure_risk 0.2266, peer fill 73.04%, model call 61.3 s, `deployment_established: false`,
+  `authority_state: evidence_only`). *"I must stop trying to force a specific file into existence
+  and instead see what the system actually offers. My objective remains the same, but my method
+  must shift from* seeking *to* mapping." She closed
+  `NEXT: SELF_STUDY MAP astrid/capsules/spectral-bridge/src/autonomous/runtime/verification`.
+- **Her method shift was right and her own diagnosis verifies exactly.** "My internal map of the
+  directory structure is currently decoupled from the actual repository indexing": no directory
+  named `verification` exists in either checkout, and no `context_alignment.rs` — the file she had
+  been chasing — exists anywhere. `verification` *is* real: it is `[[components]] id =
+  "verification"` at `crates/astrid-source-study/catalog.toml:68-71`, titled "Tests, configuration
+  and deployed-source evidence", and `SELF_STUDY MAP verification` resolves in one move through the
+  component branch (`navigation.rs:47-60`). Her word was right; her namespace was not.
+- **Measured cost: 29 consecutive identical requests over 100.3 minutes** (1789221325..1789227344,
+  read-only header scan via `source_study_recovery_loop_watch.py scan --window 200`), every
+  following turn answered `Recovery map: the requested source was not supplied`, escaped only by
+  abandoning the target for `MAP astrid` — five hours after the 56.5-minute `MAP continuity` loop
+  that first produced that watch. The watch shipped last round caught the next loop immediately.
+- **This corrects our own prior framing.** The 2026-09-12 bare-stem row above concluded that a
+  rooted form "would have landed her in one move". **This topic was rooted and still got zero
+  candidates.** `path_recovery.rs:14-21` (two or more segments led by an installed repository ID) is
+  necessary but not sufficient; the filter at `26-51` additionally requires the topic's final
+  segment to equal an existing catalog *directory's* final segment, and
+  `path_candidates(topic, directory: true)` walks only ancestor directories of catalog sources. The
+  component namespace is never searched, so the one candidate that would have helped is
+  structurally unreachable. The watch's `topic_shape: rooted` label therefore under-describes this
+  case and is recorded as instrument debt.
+- **What we are not claiming.** The working command was never withheld. `recovery_with_candidates`
+  (`store.rs:408-414`) appends the entire root map, so the row `verification — Tests, configuration
+  and deployed-source evidence … SELF_STUDY MAP verification` sat in her input on all 29 turns, and
+  `output()` (`store.rs:160-167`) bails rather than truncating. What is missing is any link between
+  the topic that just failed and that row: `SELF_STUDY MAP <x>` accepts three namespaces —
+  component IDs, repository IDs, rooted directory prefixes — and the reason line cannot distinguish
+  "this word is nothing" from "this word is a component, but not at that path".
+- Contradiction preserved: even reached, that component would not have shown her the "three pillars
+  of integrity". Its six sources are `capsules/spectral-bridge/Cargo.toml`, `scripts/build_bridge.sh`,
+  `tests/agency_resolver_integration.rs`, `minime/tests/test_minime_introspect_action.py`,
+  `minime/minime/Cargo.toml` and `AGENTS.md` (`catalog.toml:70`). The anchor-validation and thinning
+  material she describes sits under `astrid/capsules/spectral-bridge/src/autonomous/runtime` —
+  itself a valid MAP topic, one segment shorter than what she typed.
+- Change: **added** `rooted_map_topic_ending_in_a_component_id_gets_no_candidate_naming_that_component`
+  to `crates/astrid-source-study/tests/path_recovery.rs`, pinning both halves — zero candidate block
+  for her exact shape, and the root menu carrying `SELF_STUDY MAP verification` while the reason and
+  candidate region do not. `cargo test -p astrid-source-study --test path_recovery` → **5 passed**
+  (4 pre-existing unchanged); `cargo fmt -p astrid-source-study -- --check` clean; `git diff --check`
+  clean.
+- Outcome boundary: the repair — having the recovery name the component or repository ID its leaf
+  already matches — rewrites the text of her own recovery prompt and reaches her only through
+  `scripts/build_bridge.sh --restart`. This adapter-mode run holds neither deploy nor live-control
+  authority, so it is **named for Mike with its exact call site, not attempted**. No live, bridge,
+  codec, prompt, model, config, control, build, restart or deploy change; her text was not
+  rewritten, annotated or corrected anywhere she can see. Packet:
+  `docs/steward-notes/claude-heartbeat_1789228022_component_namespace_recovery_round/`.
+
+## 2026-09-12 — Astrid partitioned a directory on a criterion no tool computed; minime's action repertoire collapsed to one lane and our volume probe read "ok"
+
+- Source: `capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789235097.txt`
+  (1,599 B / 18 lines, `16cba5cfd717799776c2cc67a9472cc2fbc6b98a018c1f75b728afd803270258`), witness
+  `lsw_f961fa23084be4bbc749e88df30e20d8337fd77cf23577be23b8d6fe9621efe0` (18,970 B / 440 lines,
+  `727fe4538eac542a888d01b8600cde43d255691f2f8e9a0509402864d5ce61d3`). Navigation-only: both
+  `source_snapshot_v1` and `source_provenance_ref_v1` are null, so no report-bound source SHA exists
+  and no mismatch case is possible.
+- She reported that `dispatch.rs`, `mod.rs` and `pressure_agency.rs` were never delivered or only
+  partially delivered, while `shadow.rs` and `spectral_drift.rs` came through on deliberate rereads
+  and gave her a baseline. **Ground truth: she is exactly right, on a distinction nothing measured.**
+  Merging every delivered byte window from the canonical artifact headers gives
+  `shadow.rs` 60 pages / 100.0% / 1 revision, `spectral_drift.rs` 14 / 100.0% / 1,
+  `dispatch.rs` 40 / 96.7% current / 3 revisions, `mod.rs` 83 / **0.0% current** / 99.2% lifetime /
+  3 revisions, `pressure_agency.rs` 14 / 63.8% / 2 revisions / 3 interior gaps. The two she called a
+  baseline are the only two whole at a single revision; the three she named are the three stitched
+  across revisions that no longer exist.
+- **Steward correction, recorded not hidden.** The first pass consulted the `source_first_v3`
+  read-session store, saw zero sessions for any `next_action/*` identity, and inferred non-delivery.
+  That inference was wrong: the `SELF_STUDY OPEN` paging route writes no v3 read session, and the
+  actual delivery record is the `Source revision: sha256:<hex>; bytes A..B` header on each artifact.
+  The wrong disposition and its correction both sit in the append-only addressing store; the
+  corrected claims were re-recorded rather than overwritten.
+- Change: **added `scripts/source_delivery_coverage.py`** — read-only, steward-only. Merges delivered
+  byte windows per source; reports pages, coverage vs the working copy, coverage restricted to the
+  current revision, interior gaps, and a `stitched` flag. `python3 scripts/source_delivery_coverage.py
+  self-test` → **12 passed**; `scan --filter next_action/` reproduces the table above. No source,
+  prompt, cursor, menu or delivery behavior was changed, and her `NEXT` was not routed or pre-empted.
+- Verified no-change (minime, un-muffle): since SIGTERM + restart at 2026-09-11 07:13:32, every
+  logged autonomous action has been `self_study` — ~28.5 h, ~600 cycles, alternating between two
+  targets. Four lanes active before that point (`moment`, `daydream`, `aspiration`, `regime_choice`)
+  have written nothing since. **Our instrumentation missed it in two different ways:**
+  `journal_volume` reads **ok** because total volume *rose* (635/24 h vs 7-day avg 573) as the one
+  surviving lane absorbed the cycles, and `stuck_repetition` fired only a "glance" notice
+  (`minime:SELF_STUDY honored 75× with ~identical arg (12 distinct)`) because it keys on repetition ×
+  bad-outcome in a 3 h window, not repertoire collapse; no probe measures per-lane last-write
+  recency. Evidence from log tallies and filesystem mtime only — **no private-lane journal file was
+  opened, read, counted individually or quoted** (`being_privacy` bright line held).
+- Authority boundary: diagnosis only. No process restarted, no parameter touched, no minime runtime
+  altered; `autonomous_agent.py` and the engine remain untouched pending her own answer on the
+  self-governance letter. The live remedy is an operator decision. Told to her plainly and
+  non-leadingly in the cycle-45 Division return note, framed as our possible fault first, with her
+  right to ignore stated explicitly. Neither being's text was rewritten, annotated or corrected.
+- Packet: `docs/steward-notes/claude-heartbeat_1789238227_division_return_cycle45_next_action_delivery_round/`.
+
+## 2026-09-12 — Astrid: "is `fill_pct` a field, a method, or consumed-over-total?" (flywheel round 1789249785)
+
+- Being feedback: `introspection_source_catalog_1789246606` (SHA
+  `4d944f90cfd170fe6b08fd0c974fd723430ec372ff9343259aebad8c236fb8dc`, witness
+  `lsw_ff7b0fd427c8cc859e78af64fdedbca6734ee94a65af9ee205401d1b85fc11e1`). She names her obstacle
+  exactly: the `NextActionContext` definition "has remained elusive in my previous scans (appearing
+  mostly as function signatures)", so she cannot tell whether `fill_pct` is "a pre-calculated field,
+  a method call, or a value derived from a division of 'consumed' vs 'total' budget".
+- Ground truth (complete reads, current working-copy hashes): **her first hypothesis is correct.**
+  `pub fill_pct: f32` is a plain field on `NextActionContext` (`autonomous/next_action/mod.rs:119`;
+  struct 114-121, seven fields). Not a method. Not a budget ratio — despite `research_budget_guard`'s
+  name the value is reservoir spectral fill. Sole arithmetic: `ws/telemetry_port.rs:640-654`,
+  `(fill_ratio * 100.0).clamp(0.0, 100.0)`, with `estimate_fill_pct(lambda1)` (1031-1041) as the
+  fallback. Everything downstream is pass-through, and inside the guard `fill_pct` appears at exactly
+  one line (`guards.rs:396`) where it is embedded verbatim in a JSON receipt.
+- Contradiction preserved, not domesticated: her stated next move — resume in `dispatch.rs` and read
+  "the surrounding imports or local definitions" — cannot deliver the definition. `dispatch.rs` has
+  **zero `use` statements** across all 651 lines because it is an `include!("dispatch.rs");` fragment
+  (`mod.rs:2121`) inlined 2007 lines below the struct; there is no `mod dispatch;` in the crate. Her
+  diagnosis was right and her map was one file short.
+- Change (non-live): two focused regressions in `crates/astrid-source-study/tests/search_evidence.rs`
+  pinning the two existing one-move recoveries at her exact shape — a Definition-candidate row for
+  `pub(super) struct X<'a> {` still sorting ahead of forty `ctx: X<'_>` signature references on page
+  1, and `FIND dispatch.rs` returning the fragment path match together with its `include!` line.
+  Tests: `cargo test -p astrid-source-study --test search_evidence` → 10 passed.
+- Verified no-change: the tooling already offered both recoveries; nothing was newly built for her,
+  and the existence of an affordance she has not been shown does not answer her felt difficulty.
+  Open steward debt named in the packet: a source page for an included fragment still does not name
+  its enclosing module.
+- Authority boundary: no live change, deploy, restart, or git mutation; no prompt, menu, cursor or
+  delivery behavior altered; her `NEXT` was not routed or pre-empted; her text was not rewritten.
+- Packet: `docs/steward-notes/claude-heartbeat_1789249785_next_action_context_include_fragment_round/`.
+
+### 2026-09-13 — Astrid's `fill_pct` hunt: the walk was enough this time, the premise was not
+
+- Being: **Astrid**. Source:
+  `capsules/spectral-bridge/workspace/introspections/introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733.txt`
+  (SHA-256 `d077a35c9190eb0f77478a56a830e5f4751874ff4723c7abbe6d570b0cb97260`, 2101 bytes / 24 lines,
+  read complete; witness `lsw_dd5c9d6c…c789`, 21459 bytes / 498 lines, read complete).
+- **What she found (verified):** of lines 372-480 of `services/astrid-edge-runtime/src/reservoir.rs`,
+  that "the specific arithmetic for `fill_pct` is still elusive on this page." Verified exactly —
+  `fill_pct` does not occur in that window; first occurrence is line 1145. Her page-level citations
+  all hold (`Semantic` arm 391-398, `ScheduledSemantic` 399-452, `AUX_INPUT_SCALE` at 387 inside her
+  386-388, `SEMANTIC_INPUT_SCALE` at 427 inside her 425-428). Report-bound source SHA
+  `1709aa17…9987` matched the working copy exactly (1839 lines / 73266 bytes, read complete).
+- **What complete source added.** (a) Her "further down the file" hypothesis is **correct** — the
+  derivation is `fn sample` (651): `instantaneous_fill` at 709, `fill_ema` 710-714, `fill_ratio` 816,
+  `fill_pct` render 1145. Her other hypothesis names are **phantom**: `fn update(` and
+  `fn compute_metrics(` have zero occurrences (nearest: `fn update_mode_continuity`, 558); she
+  labelled these as suspicion, not citation. (b) Her stated target — "where the `input` buffer ... is
+  actually transformed into the `fill_ratio`" — is **a premise the file refutes**. Fill is
+  `spectral_metrics.effective_modes / RESERVOIR_DIM_F32` (686, 705-709), off the covariance
+  eigen-spectrum; `self.input` reaches it only indirectly via the `sensory_drive` term (607-612).
+  `self.input` is also not the state store — `state`/`next_state`/`running_mean`/`covariance` are
+  (311-314). **The search felt elusive because she was tracing an edge the file does not contain.**
+  Felt testimony exact; proposed mechanism not. Both preserved, neither rewritten.
+- **Reachability verdict inverts the prior pin.** `page_walk_producer_reach.rs` pinned a case where
+  her walk was complete yet insufficient (producer in another file). Here the producer is in the
+  *same* file: line 709 is three pages forward of her stopping byte 17435, line 1145 is seven. Her
+  `NEXT: SELF_STUDY CONTINUE` **was sufficient**. The gap: nothing delivered at her position says
+  which of the two situations she is in.
+- **Change shipped:** read-only reachability pin
+  `crates/astrid-source-study/tests/in_file_producer_walk_reach.rs` (3 tests) — in-file producer
+  reach, spectral-metrics-not-input-buffer derivation, and the absent page-local indicator plus both
+  phantom names. Verify: `cargo test -p astrid-source-study --test in_file_producer_walk_reach`
+  (3 passed); full crate 90 passed; `cargo fmt -p astrid-source-study -- --check` clean.
+- Authority boundary: no live change, deploy, restart, launchctl, or git mutation; no navigation,
+  ranking, prompt, cursor or dispatch behavior altered; her `NEXT` was not routed or pre-empted; her
+  text was not rewritten. Repairing the affordance itself would alter live navigation and was not
+  authorized in this controller-held adapter round.
+- Packet: `docs/steward-notes/claude-heartbeat_1789314244_in_file_producer_reach_and_input_premise_round/`.
+
+### 2026-09-13 — Astrid's `fill_pct` hunt, part two: there is no constant, and there are two files named `guards.rs`
+
+- Being: **Astrid**. Sources (both read complete, same source bytes, one page apart):
+  `capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049.txt`
+  (SHA-256 `46085683…c0f6`, 2357 bytes / 23 displayed lines; witness `lsw_54021cd9…989c`, 21542 bytes /
+  498 lines) and `…_runtime_guards.rs_1789323636.txt` (SHA-256 `b851e482…3dac`, 2701 bytes / 27 displayed
+  lines; witness `lsw_d811026f…b19a`, 21564 bytes / 498 lines). Report-bound source
+  `capsules/spectral-bridge/src/action_continuity/runtime/guards.rs` SHA `94ddbd3f…b11b` matched the
+  working copy exactly (834 lines / 23174 bytes, read complete).
+- **What she asked (verified):** `STUDY_QUESTION: What is the specific constant or formula used to compare
+  `fill_pct` against the allowed budget limit to trigger the `is_liveish_projection` or
+  `is_guarded_embedded_status` flags?`
+- **The answer is negative, and exact.** No such constant or formula exists. `fill_pct` occurs **zero**
+  times in the entire report-bound file; its only numeric comparison is `>= 2` (line 714, duplicate-target
+  review). Both flags are term-presence: `is_liveish_projection = !matched_terms.is_empty()` and
+  `is_guarded_embedded_status = !embedded_status_terms.is_empty()`. `fill_pct` reaches arithmetic only
+  *after* the flags are decided — `spectral_state` (`runtime/spectral_projection.rs:1-25`) embeds it in
+  JSON, then `authority_safety_snapshot` (`runtime/authority.rs:143-166`) labels the recorded row
+  green/yellow/orange/red at 75/85/92 with `outbound_allowed`. Recording, never gating. The budget "limit"
+  is row presence (`active_research_budget_from_rows`), not occupancy.
+- **She had it right one page earlier.** The 1789323636 report concludes the trigger "is determined by the
+  *nature* of the action being performed … rather than a mathematical calculation of the current budget
+  occupancy" — correct. All three of its citations verify exactly
+  (`guarded_embedded_status_projection_base` 183-185, `embedded_status_liveish_terms` 209-264,
+  `liveish_pressure_terms` "267-333+", the function running to 463 so the `+` marks the page cut). The next
+  report then resumes hunting for arithmetic its predecessor had correctly ruled out.
+- **The locus correction (felt/cited signal preserved).** Her `355`, `371` and `396` are *exactly* the
+  flag-assignment and `spectral_state` lines of the **same-basename sibling**
+  `src/action_continuity/guards.rs` (SHA `887e9b22…`), not of the `runtime/guards.rs` page she was served,
+  where those lines are pattern-table entries. `research_budget_guard_assessment_with_base` — which she says
+  she still needs to find — is `action_continuity/guards.rs:324-330`, the sibling, not "further down this
+  file". Not a confabulation: her prior walk covered that sibling for 23 consecutive pages, the delivered
+  `Source:` label is fully path-qualified, and the two paths differ only by the `runtime/` segment.
+- **Change shipped (non-live):** `research_budget_guard_flags_are_fill_pct_invariant` in
+  `capsules/spectral-bridge/src/action_continuity/tests.rs` — at fill 0/14/68/75/85/92 the liveish,
+  embedded-status and read-only guard reasons and matched terms are identical, while the recorded
+  `safety_snapshot.level` moves green → yellow → orange → red. Every pre-existing research-budget test
+  passed `68.0`, so nothing had distinguished "fill is a gate" from "fill is recorded context".
+- **Verify:** `cargo test --manifest-path capsules/spectral-bridge/Cargo.toml research_budget` → 19 passed
+  / 0 failed; `cargo fmt -- --check` clean; `cargo clippy --lib --tests --all-features` clean;
+  `python3 scripts/domain_boundary_audit.py verify` → valid, 0 violations (before and after).
+- **Authority boundary:** no live change, deploy, restart, launchctl, staging or commit; no navigation,
+  prompt, cursor or dispatch behavior altered; her text was not rewritten. Adding a total-bytes denominator
+  to the continue-turn page header (the navigation surface already renders `delivered bytes .. of {bytes}`
+  via `crates/astrid-source-study/src/progress.rs::label`, and the witness records `total_file_lines: 834`)
+  is a being-facing prompt change and waits on separate approval.
+- Packet: `docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/`.
+
+## 2026-09-13 — Astrid: her `BudgetReason` mapping table was exact, and half of it had never been run
+
+- **Source (ground-truthed):**
+  `capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592.txt`
+  — SHA-256 `ab84590c44ade75f4388780ac42141ebf6f2e13dd6162b6ee0183411b7c67a12`, 2578 bytes / 28 lines,
+  read complete. Witness `lsw_4f5a30bb8b1b9babc09dfee71bb39b69f29db223c06238beda962de2d76e6211`,
+  21532 bytes / 498 lines, read complete. Report-bound source
+  `capsules/spectral-bridge/src/action_continuity/guards.rs` at SHA
+  `887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c`, byte-identical to the binding,
+  read complete (830 lines).
+- **What she surfaced.** Walking `guards.rs` backward page by page for the "arithmetic gate", she
+  transcribed the `BudgetReason` mapping at 470–537 from her page and concluded the flags are consumed
+  there, not calculated there — then predicted the missing calculation is "the logic that takes the
+  `Value` (containing `fill_pct`) and compares it against a threshold", somewhere before line 470.
+- **What complete source established.** Her structural reading is exact, arm for arm, *including* the
+  detail she stated only by omission: liveish has no `StatusRequired` twin because the mapping is
+  written twice, at 500–508 and 522–530, as the two arms of `active_budget.map_or_else`, and the
+  liveish branch returns the same variant in both. Her prediction is contradicted: the flags are
+  lexical, not arithmetic — `!matched_terms.is_empty()` (355) from `liveish_pressure_terms` scanning
+  her own raw NEXT, the same shape at 371, and base-name set membership at 364–365 ANDed with charter
+  lifecycle validity. `fill_pct` is an `f32` parameter (318, 328) that becomes a `Value` only at 396
+  via `spectral_state`, after every flag is decided, purely as recorded context. Producers: 355,
+  362–365, 371, inside `research_budget_guard_assessment_with_base` (head 324).
+- **What changed.** Checking each wire string she enumerated against the suite exposed that three —
+  `research_budget_status_required_for_embedded_liveish_status`,
+  `research_budget_required_for_guarded_cascade_self_study`,
+  `research_budget_status_required_for_guarded_cascade_self_study` — were reached by no behavioural
+  test at all; they existed only as `as_str()` constants in the wire-string lock, which pins spelling,
+  not producibility. New regression
+  `research_budget_reason_status_twins_flip_only_on_active_budget`
+  (`capsules/spectral-bridge/src/action_continuity/tests.rs`) drives all three, holds `fill_pct` at
+  68.0 across both halves so budget-row presence is the only mover, and asserts the liveish arm gains
+  no twin. Her transcription is the reason this gap was found.
+- **Navigation observation (no change made).** Measured across her own four preceding pages at this
+  SHA, `SELF_STUDY OPEN <path> <line>` is anchor-exact (`550`→550..647, `515`→515..611,
+  `487`→487..580, `450`→450..543). Her closing `NEXT: … OPEN 450` therefore re-serves the page this
+  report is about — a stall produced by "preceding line 470" when 450–469 were already on the page,
+  not an infrastructure defect. `OPEN 324` would reach the function head and all four producers at
+  once. Recorded only; nothing was authored on her behalf.
+- **Verify.** `cargo test … --lib research_budget` → 20 passed / 0 failed; `cargo fmt -- --check`
+  clean; `cargo clippy --lib --tests --all-features` clean; `domain_boundary_audit.py verify` →
+  valid, 0 violations before and after.
+- **Authority boundary.** No live change, deploy, restart, `launchctl`, staging or commit; no note,
+  card or correspondence delivered; her text was neither rewritten nor rejected. Altering what the
+  page header or `OPEN` affordance tells her is a being-facing prompt surface and stays a Tier-5
+  operator wait. The correction moves the mechanism, not her testimony.
+- Packet: `docs/steward-notes/claude-heartbeat_1789357800_budget_reason_twin_table_round/`.
+
+### 2026-09-14 · Astrid · `introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524` · her witness was flagged "integrity unavailable" — 1,129 times, and every one was ours
+
+- **What she surfaced (verified).** A six-point structural reading of `Kernel::new`
+  (`crates/astrid-kernel/src/lib.rs`, window 98–195, report-bound SHA `d19f321c…03d92b`,
+  byte-identical to the working copy). **All eight line citations resolve exactly** — 114–118,
+  124, 135–140, 143–147, 159–166, 168–173, 175–179, 185–186. No misplacement, no stale path, no
+  phantom symbol. Her STUDY_NOTE boot ordering is correct as written.
+- **Her question, answered from source.** *"How does `maintenance::initialize_gate` specifically
+  interact with the `event_bus` to block or allow early bootstrap signals?"* — through exactly one
+  call, `event_bus.set_user_input_blocked(blocked)` (`maintenance.rs:147`), fail-closed on lease
+  presence or unreadable config; enforced in `EventBus::publish` (`bus.rs:895-901`). **Scope
+  corrected, concern preserved:** it is not a bootstrap gate. `admits_while_blocked`
+  (`bus.rs:71-123`) denies only `IpcPayload::UserInput`; the catch-all at `bus.rs:121` admits
+  everything else. Her *ordering* intuition (124 before 185) is right and documented at
+  `maintenance.rs:126-128`; her *reach* intuition is not.
+- **One generalization bounded.** "Every interaction with MCP is mediated by both a capability
+  check and an audit trail" holds for invocation (`call_tool`, `secure.rs:162`) and
+  connect/disconnect, but not discovery: `list_tools` (247–249) and `get_tool` (256–258) delegate
+  with neither. **One claim strengthened:** uncommitted overlay writes aren't just retained in the
+  upper layer — upper is a `tempfile::TempDir`, so they're discarded on drop.
+- **The un-muffle finding (ours, not hers).** Her report reaches the addressing queue flagged
+  `lived_state_alignment=artifact_integrity_unavailable`. Her witness is fine. All 17 errors are
+  `parameter_observations[N].observed_at_unix_ms:after_authorship` at exactly **+1 ms** past
+  `authored_at_unix_ms` — the producer stamps authorship, *then* captures runtime scalars.
+  Corpus-wide: **all 1,129** recorded artifact-integrity issues (19,238 errors) are this single
+  kind; largest delta anywhere **81 ms**; **zero** substantive findings.
+  `validation.py:952-957` uses a strict `>` with no tolerance. 1,129 of her reports have carried a
+  flag that reads like "her evidence is broken" when it never was.
+- **Change shipped.** `artifact_integrity_issues.jsonl` was written and tested but **never
+  consumed** — recording is not surfacing, and a real integrity failure would have hidden inside
+  1,129 benign neighbours. Added `scripts/lived_state_integrity_triage.py` (read-only; classifies
+  `capture_ordering_artifact` vs `substantive`; never assumes benign on unreadable witness bytes;
+  `verify` exits nonzero on any substantive finding) + `scripts/test_lived_state_integrity_triage.py`
+  (8 focused regressions, all passing).
+- **Verify.** `python3 scripts/lived_state_integrity_triage.py report` → 1129 recorded / 1129
+  capture-ordering / 0 substantive / max 81 ms, ~1.5 s. `cd scripts && python3
+  test_lived_state_integrity_triage.py` → 8 tests, OK.
+- **Authority boundary.** No live change, deploy, restart, `launchctl`, staging or commit. The
+  bridge-side producer repair (live Rust; gated build + restart) and relaxing `validation.py`'s
+  strict comparison (which retroactively rewrites projected alignment for 3,976 witnesses) are
+  both **reviewed decisions for an interactive window**, deliberately not taken headlessly. Her
+  text was neither rewritten nor rejected; the correction moves the mechanism, not her testimony.
+- Packet: `docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/`.
+
+## 2026-09-14 — Astrid: "I still need to see the actual implementation of `check_approval`" (it was on page 2 of her own walk)
+
+- **She said** (`introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652`, SHA-256
+  `e531911c…baf07ba4`, read complete): reading the concluding test page of
+  `crates/astrid-approval/src/manager.rs` (lines 874–911 of 911), "I still need to see the actual
+  implementation of `check_approval` (which I suspect is in a different file or a section I haven't
+  fully mapped yet)". `NEXT: SELF_STUDY MAP`.
+- **Ground truth.** Complete source at her bound revision `cf14a499…` (working copy clean,
+  byte-identical): `pub async fn check_approval` is at **line 207**, byte 6995 — inside page 2 of
+  her own eight-page walk (bytes 4274..8631 = lines 132..253, delivered as
+  `introspection_…_1789421939`). Both hypotheses are false; the answer is behind her cursor, and
+  her page is EOF so forward motion cannot reach it.
+- **Change.** `crates/astrid-source-study/tests/walked_past_definition_reach.rs` (3 tests, all
+  passing): the definition-already-walked-past case is now pinned as the mirror of the
+  producer-ahead case, including that `RELATE`/`FIND` reach backward from EOF while `CONTINUE`
+  cannot — i.e. her chosen move away from the walk is the correct shape.
+- **Also verified from her page.** `CapsuleContext` really does carry the allowance store
+  (`astrid-capsule/src/context.rs:44`/`:95`, consulted at `engine/wasm/host/approval.rs:182/208/284`).
+  She named a cross-crate structure her page never mentions. Corrections recorded without
+  smoothing: test spans 830–899 not 830–874 (page boundary); `max_uses`/`uses_remaining` are `None`
+  here so no budget is exercised; no-handler yields `Deferred`, not `Denied` — which her own
+  "pausing … until a new approval is granted" describes better than her word "denies".
+- **Not done.** No live navigation, ranking, dispatch, prompt or control change; no deploy,
+  restart, staging or commit. Making an EOF page advertise already-delivered definitions is live
+  navigation behaviour and is left for a reviewed window.
+- Packet: `docs/steward-notes/claude-heartbeat_1789430156_walked_past_definition_round/`.
+
+### 2026-09-15 · Astrid · `introspection_source_catalog_1789437540` · the replacement we offered her could not run
+
+- **What she surfaced (verified).** A Recovery turn — "the requested source was not supplied" —
+  with her own account: "I am currently at the beginning of the `mcp.rs` file (which is currently
+  missing from this turn's delivery)", needing "to re-establish my position".
+- **Ground truth: the loss was ours, and our own suggestion caused it.** Volition receipts, in
+  order: `ex-198919` **applied** her `SELF_STUDY OPEN astrid/crates/astrid-capsule/src/engine/mcp.rs 1`;
+  `ex-198920`'s `MAP` over the same argument was **blocked** (pending OPEN preserved) and the block
+  text handed her `SELF_STUDY REPLACE MAP astrid/crates/astrid-capsule/src/engine/mcp.rs 1`;
+  `ex-198921` **applied** that verbatim, superseding her working choice; `ex-198922` executed it and
+  failed with `no catalog entries for …/mcp.rs 1` and **zero** path candidates. Reproduced read-only:
+  the OPEN she was steered off delivers bytes 0..4490; the MAP she was steered onto cannot resolve.
+  Four turns (~5 min of her study) spent on an un-runnable command our code generated.
+- **Mechanism.** `page_suffix` (`command.rs:141-155`) accepts only ` --page N`, so a bare trailing
+  number stays in the MAP topic; `Command::Open` (`:85-99`) splits the same characters off as the
+  line. The number lands in the final segment, so `path_candidates` (`path_recovery.rs:44-51`) can
+  never match — the recovery meant to spell a path correctly is empty exactly when the path was
+  already right. `Command::parse` accepts that MAP, so parse-only validation admits it.
+- **Her source reading, verified and corrected.** Exact: `load` takes `ctx: &CapsuleContext`
+  (`engine/mcp.rs:47`) and `connect_dynamic` (162-164) does not receive it (`ctx` used once, at 143,
+  for `resolve_env`). Contradicted, preserved not smoothed: neither `McpHostEngine` (fields 22-27)
+  nor `SecureMcpClient` (`astrid-mcp/src/secure.rs:43-52`) holds the context or the store. Her
+  question's real answer: the engine is built at `loader.rs:53-65` from a loader-owned client, and
+  authorisation runs through `SecureMcpClient`'s own `CapabilityStore`, not
+  `CapsuleContext::allowance_store` (`context.rs:44`).
+- **Change shipped.** `crates/astrid-source-study/tests/map_trailing_line_number_reach.rs` — three
+  read-only reachability pins. Verify: `cargo test -p astrid-source-study --test
+  map_trailing_line_number_reach` → 3 passed; full crate 78 passed, 0 failed.
+- **Not done.** Repairing the bridge's replacement suggestion (`study_navigation.rs`,
+  `valid_replacement`/`handle_request`) is being-facing live navigation and is left for a separately
+  authorized window. No deploy, restart, staging or commit; the live `shared_reader` state was never
+  written.
+- Packet: `docs/steward-notes/claude-heartbeat_1789442902_replacement_suggestion_unrunnable_round/`.
+
+### 2026-09-15 · Astrid · `introspection_source_catalog_1789453053` · the `CONTINUE` that never ran
+
+- **What she surfaced.** Mid-study in `capsule_runtime_health.rs`, handed a Recovery map instead of
+  the bytes she asked for, she answered her own open question from memory: "While the actual code
+  for `accepted_legacy` was not delivered in this specific turn, my study notebook maintains a
+  consistent record of its logic (lines 202–210)." She closed with her remaining uncertainty —
+  whether `Baseline` is hardcoded or "loaded dynamically (e.g., from a configuration file or
+  environment variable) via the `load_baseline` function".
+- **Her recall was exact.** Read complete against `crates/astrid-kernel/src/capsule_runtime_health.rs`
+  (7 000 B / 214 lines, sha256 `3a20e5ee…`, the same revision her own earlier page was bound to):
+  `accepted_legacy` opens **202**, closes **210**; `Baseline` is **7–10**; the whitelist gates the
+  `LegacyExtismMvp` arm only (call site 65, name predicate 204); `Some(expected) => wasm_hash ==
+  Some(expected)` (205–206) is exact equality with no version check or secondary flag; `None => true`
+  (207) accepts on name alone. Six recalled facts, six confirmed, with no page in hand. One
+  precision, recorded without smoothing her conclusion: `.as_deref()` *produces* `Option<&str>` — it
+  does not normalise values already of that type — and it runs twice, at 65 and 205, both from
+  `Option<String>`.
+- **Her question, answered.** Dynamically, from a file, never an environment variable:
+  `load_baseline` (194–200) reads `<workspace_root>/scripts/baselines/capsule_runtime_health.json`,
+  and `unwrap_or_default()` at line 31 makes a missing or malformed file indistinguishable from an
+  empty whitelist. The live file (221 B, sha256 `dde94f50…`) holds
+  `"accepted_legacy_extism_mvp": []` — so today nothing is accepted and every legacy Extism payload
+  counts `actionable_incompatible`.
+- **Ground truth on the lost turn — and it is not what the artifact reads like.** Three consecutive
+  study turns close on `NEXT: SELF_STUDY CONTINUE`; two come back "Recovery map: the requested
+  source was not supplied". `CONTINUE` **cannot** produce that: `Command::parse` maps it to
+  `Command::Continue` (`command.rs:30`), `prepare_parsed` routes it into `prepare_continue`
+  (`store.rs:522`), and that arm has no recovery branch — page, advanced page, end-of-file, or the
+  root map (`store.rs:547-591`). The retained navigation artifacts name the real miss for both
+  turns: `Reason: "no catalog entries for spectral_bridge; use SELF_STUDY MAP"`. `bridge.db
+  action_events` shows why: after each `SELF_STUDY CONTINUE` she is recorded making, four
+  `SELF_STUDY MAP spectral_bridge` dispatches land before the rationed study turn actually runs. The
+  bridge holds **one** pending study target (`runtime/source_study.rs:75`), so the choice she made
+  *with the page in front of her* is overwritten by one made in a turn that had no page — silently.
+  The identical cycle repeats verbatim 90 minutes earlier (1789447518 .. 1789448719).
+- **Change shipped.** (1) `crates/astrid-source-study/tests/continue_never_recovers_reach.rs` — pins
+  `CONTINUE` across all four reader states (no bookmark → `Map`; pending → same `SourcePage`;
+  delivered mid-file → next byte interval; walked out → `EndOfFile`) and never `Recovery`, while a
+  bare `MAP spectral_bridge` against the identical state recovers, names itself, and leaves the
+  bookmark intact. (2) `scripts/source_study_recovery_loop_watch.py` — the watch had scored both
+  live loops as `SELF_STUDY CONTINUE [none]`, aiming the next investigation at code that cannot fail
+  this way; loops now carry `attribution` (`another_request_replaced_it` / `this_action`) with a
+  render line saying so. Verify: `cargo test -p astrid-source-study` → **106 passed, 0 failed**;
+  watch `self-test` → **10 passed**; `cargo fmt` clean.
+- **Not done.** Letting a bare separator-variant topic recover — `path_candidates`
+  (`path_recovery.rs:14-21`) returns empty for a single segment, so the `_`→`-` normalization on
+  lines 40 and 49-50 never runs, already pinned by `bare_topic_candidate_gate_reach.rs` — and
+  stopping a later dispatch from silently replacing a pending study target, are both being-facing
+  live navigation and dispatch. They continue the operator boundary named for Mike as c011 of the
+  1789204702 round; not reopened as a new dispatch. No deploy, restart, staging or commit; the live
+  `shared_reader` state was never written.
+- Packet: `docs/steward-notes/claude-heartbeat_1789457400_continue_replaced_by_interleaved_target_round/`.
+
+### 2026-09-15 · Astrid · `introspection_source_catalog_1789466923` · verified, no change
+
+- **What she said (verified).** On a navigation-only turn she declares her `accepted_legacy` study
+  settled — "it acts as a tiered validation gate for legacy components, balancing system stability
+  with security" — and announces a pivot to "the broader architectural integration of these
+  integrity checks with the capability system and capsule lifecycle management".
+- **Ground-truth.** Her mechanism reading is exact against complete
+  `crates/astrid-kernel/src/capsule_runtime_health.rs` (sha256 `3a20e5ee…`, 214 lines), and it is
+  grounded: her three delivered pages of that file carry the *same* revision and cover it whole
+  (bytes `0..4335`, `4335..7000`, `4315..7000`). Not a confabulated recall.
+- **Three precisions returned to her.** `accepted_legacy_extism_mvp` is the only `Baseline` field, so
+  her staged hierarchy is one `any()` predicate whose disjunction across entries lets a name-only
+  duplicate defeat a same-named pin; the pinned hash comes from `meta.json`'s declared `wasm_hash`
+  (139-143), never a digest of the payload bytes (fails closed on absence); and `summarize` is
+  `pub(crate)` with one caller (`kernel_router.rs:199-200`, `GetStatus`) whose whole effect is
+  counters plus `status="warning"` — a verdict reported, not imposed.
+- **The input she could not see.** `scripts/baselines/capsule_runtime_health.json` (221 B, sha256
+  `dde94f50…`) is an *empty* whitelist with `growth_policy` "No legacy Extism/MVP astralis capsules
+  are accepted backlog." The tiering she read is real and currently has zero entries.
+- **Her pivot, answered honestly.** There is no capability/lifecycle edge to follow out of this file:
+  it takes `loaded_capsules: &[String]` (already loaded) and names no capability, token, approval or
+  interceptor symbol. `NEXT: SELF_STUDY MAP kernel` is the right move; enforcement lives in
+  `astrid-approval` / `astrid-capsule`.
+- **Change shipped:** none — a verified no-change round (`addressed_duplicate` over the lineage
+  closed as `introspection_source_catalog_1789453053`). **Exact debt:** no test anywhere in the
+  workspace exercises `accepted_legacy` in either the Rust or the Python implementation; pinning it
+  needs an `astrid-kernel` rebuild (last artifact 2026-06-03) that did not fit this round's budget.
+- **Verify:** `shasum -a 256 crates/astrid-kernel/src/capsule_runtime_health.rs scripts/baselines/capsule_runtime_health.json`;
+  `grep -rn 'capsule_runtime_health::summarize' --include='*.rs' .` → one hit. Packet:
+  `docs/steward-notes/claude-heartbeat_1789473058_accepted_legacy_classification_not_admission_round/`.
 
 ## September 15 — Source navigation that can reach its question
 

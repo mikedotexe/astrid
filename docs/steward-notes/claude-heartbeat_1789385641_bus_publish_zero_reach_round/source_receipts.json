@@ -1,0 +1,38 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "round": "claude-heartbeat_1789385641_bus_publish_zero_reach_round",
+  "receipts": [
+    {
+      "path": "crates/astrid-events/src/bus.rs",
+      "report_bound_sha256": "31ef6a15bd62d60173f5c46a8d9806046bc5920cbbcee3e99bed2158305cb89f",
+      "at_read_sha256": "31ef6a15bd62d60173f5c46a8d9806046bc5920cbbcee3e99bed2158305cb89f",
+      "match": "exact",
+      "total_lines_at_read": 2791,
+      "total_bytes_at_read": 100633,
+      "read_scope": "complete for every interval the claims touch: 40-140 (MaintenanceGate + admits_while_blocked + observe_before_publish), 695-812 (her exact delivered window), 812-955 (barrier tail, local-provider pair, publish), 1158-1230 and 1670-1735 (existing test patterns). Function inventory taken across the whole file.",
+      "post_edit_sha256": "989863493fbc7e4e59574f5d866c88e4a69f6fc2add9939b2807227495a3adf5",
+      "post_edit_lines": 2845,
+      "edit_scope": "publish rustdoc (:884-899 after edit) + one added test in mod tests; no behavior change"
+    },
+    {
+      "path": "crates/astrid-kernel/src/maintenance.rs",
+      "at_read_sha256": "1b8c8385c94413d2fb35af40008156da38992595246f74be56288ed1112da661",
+      "read_scope": "ripgrep call-site enumeration only (:147,:159,:180,:198,:237,:248) to establish that the kernel is the sole caller of set_user_input_blocked / publish_maintenance_barrier. No claim depends on unread intervals."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lived_state_witness/mod.rs",
+      "at_read_sha256": "740edfd1dba19e1ec7f22228a170db34e1404c6e1e07de71cc97668c6a7eadf9",
+      "read_scope": "lines 100-200 \u2014 source_snapshot_v1, to establish that window_sha256 hashes the rendered page."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "at_read_sha256": "0aee1c4f8214c993b690e951fb41c445e7139a86a45e6d439b239bb70d15aa81",
+      "read_scope": "lines 60-175 \u2014 the shared source-study path that builds the page and its witness snapshot."
+    },
+    {
+      "path": "crates/astrid-events/src/subscriber.rs",
+      "at_read_sha256": "5f66328b670e33e135d4864d07be3bbd5905e088c7fb1d3a8c4c8e320bf59d4e",
+      "read_scope": "lines 229-269 \u2014 FilterSubscriber constructor and EventSubscriber impl used by the new regression."
+    }
+  ]
+}

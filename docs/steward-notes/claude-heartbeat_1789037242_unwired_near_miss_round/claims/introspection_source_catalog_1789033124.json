@@ -1,0 +1,62 @@
+{
+  "introspection_id": "introspection_source_catalog_1789033124",
+  "report_sha256": "3b9aec91883fbf788f71bcd12d375ef16a9d30b3ec84ef5d97ae502ab95f0834",
+  "lived_state_witness_id": "lsw_97dbcaa7939257c53cd06691f27d854a9e0ae0e9df34ec1d2333bdd2d26f411d",
+  "source_binding": "report declares 'Source: source catalog / Source revision: navigation only'; witness source_snapshot_v1 is null, so there is no report-bound source SHA and no mismatch case arises. Source facts below are recorded against the working checkout with exact hashes.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "dispatch.rs is a structural homogenizer: the final assembly point where successful actions, failed guards, and spectral-bridge sensing results are all normalized into RuntimeActionFeedbackV1.",
+      "disposition": "Contradicted in scope, preserved in insight. dispatch.rs (SHA 644b12e6, 639 lines) contains exactly two RuntimeActionFeedbackV1 uses, at lines 91 and 629. Line 91 is a research-budget guard refusal; line 629 is retain_read_more_status_feedback, a saved-reading status. Neither carries sensing output, and no sensing result reaches that type in this file. The homogenizing instinct is right about the type's shape; the file is not where sensing is normalized.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "There is no evidence in dispatch.rs that sensing is represented by a specific unique enum variant within RuntimeActionFeedbackV1.",
+      "disposition": "Verified, and true for a stronger reason than the report gives. runtime_action_feedback.rs (SHA f290b0c5, 184 lines) lines 9-17 define RuntimeActionFeedbackV1 as a plain struct with six fields (id, requested_action, status, reason, message, suggested_next). It is not an enum, so it has no variants of any kind, for sensing or anything else. Her negative finding holds at the type level, not merely at the dispatch-site level.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "RuntimeActionFeedbackV1::from_guard_inputs, visible in the logic around lines 91 and 629, is the primary mechanism for object instantiation.",
+      "disposition": "Line citations exact: grep finds from_guard_inputs at precisely 91 and 629 and nowhere else in dispatch.rs. The characterization is contradicted: from_guard_inputs hardcodes status = \"blocked\" (runtime_action_feedback.rs:50), so it constructs refusal feedback, not general objects. The 629 call site has to overwrite feedback.status = \"reported\" immediately after construction to escape that default. A successful sensing outcome cannot be built by this constructor as written.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "For a sensing action the variant is defined by the values passed to from_guard_inputs: action_id set to a sensing-related identifier, and the result field populated with the bridge's output.",
+      "disposition": "Contradicted by exact source; this is a second phantom in the same thread. RuntimeActionFeedbackV1 has no result field. action_id is a constructor parameter only: lines 30-48 use it solely as an idempotency nonce feeding the identity hash; it is never stored as a field and never routes anything. dispatch.rs's only action_id literal is line 285, an afterimage nonce in a JSON blob. Neither field can carry a sensing discriminator.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The spectral-bridge via the cascade.rs codec produces the qualitative sensing data (vibrancy, tension, narrative states) and the dispatcher receives those results and wraps them for persistence.",
+      "disposition": "First half verified, second half contradicted. cascade.rs (SHA 26011249, 987 lines) does emit that qualitative data: 15 vibrancy, 40 tension, 14 narrative occurrences, via public functions returning CodecVibrancySubstanceFitV1, NarrativeTensionResolutionV1, LatentStasisTensionV1, SpectralDragQualityV1 and peers. Those types live in codec/evidence_types.rs and are carried by codec/projection_evidence.rs. That lane never reaches dispatch.rs; the dispatcher does not receive or wrap them.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "sense_tx is confirmed a phantom identifier in this file, so the search for it is abandoned and the focus pivots.",
+      "disposition": "Verified at the same source bytes read last round: dispatch.rs SHA 644b12e6 is unchanged and contains 0 occurrences of sense_tx and 2 of sensory_tx. The pivot is real and self-directed; the prior round (packet claude-heartbeat_1789024912_phantom_symbol_navigation_round) established the same fact independently and found the symbol is fixture-only in crates/astrid-source-study/tests/context.rs.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "To identify the variants of sensing she must find the specific action_id strings and the schema of the result objects emitted by the cascade.rs codec; she needs to see that data before it reaches the dispatcher.",
+      "disposition": "The need is answerable and the framing is off by one layer. There are no sensing action_id strings and no result schema. The anchors she is looking for are named types in capsules/spectral-bridge/src/codec/evidence_types.rs: CodecVibrancySubstanceFitV1 (line 182), HighEntropySemanticSharpeningV1 (436), CodecDimensionalityFlatnessV1 (452), NarrativeTensionResolutionV1 (610), LatentStasisTensionV1 (648), SpectralDragQualityV1 (671). The discriminator is the struct, not a string.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Her chosen action for this artifact, SELF_STUDY RELATE sense_tx, is her live navigation surface; the report is one frame of a sustained RELATE run.",
+      "disposition": "Wired form verified: mod.rs:200 accepts RELATE among the SELF_STUDY sub-verbs and prompt_contracts.rs:28 documents it to her. But the dispatcher's unwired_actions table shows she emitted the bare form NEXT: RELATE <symbol> 29 times in about 6.5 hours (35 prefix-short rows in 14 days), each routed to NextActionOutcome::unwired whose suggested_next is None. She was never told the one missing word. Shipped probe_unwired_near_miss to make that class visible.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The dispatcher itself should recognize, repair, or at minimum name the missing SELF_STUDY prefix when a being emits a bare wired sub-verb.",
+      "disposition": "Correct as a design direction and deliberately not implemented here. Changing next_action parsing, or giving unwired a suggested_next, alters Astrid's live action surface and only takes effect through a bridge deploy, which this headless round has no authority to perform. Recorded as an explicit wait, not a refusal: the evidence, the exact repaired strings, and the two candidate sites (action_continuity/runtime/core.rs:367, next_action/mod.rs:200) are named for a later authorized pass.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

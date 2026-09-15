@@ -1,0 +1,273 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "steward_control_subprocess_run_adapter \u2014 no session opened, no NDJSON ops, no pause/resume, no lease token read, quoted or persisted",
+  "controller": {
+    "run_id": "run_1789213684560054000_683d0e4eb7",
+    "preprojection_generation_id": "projection_1789213688890472000_40369969a0",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "postprojection": "adapter-owned; runs after this process exits",
+    "pause_generation": 439,
+    "stop_requested_observed": false,
+    "recovery_predecessor": null
+  },
+  "reading": {
+    "selected": 40,
+    "processed": 1,
+    "unprocessed": 39,
+    "processed_reports": [
+      "introspection_source_catalog_1789213641.txt"
+    ],
+    "batchable_families": 0,
+    "family_scan": "family_scan.json",
+    "report_sha256": "0fe75a0139910a88e4f02f6d985648e71bb8c465930f0f241d242ffd5b99f36a",
+    "report_bytes": 2470,
+    "report_lines": 26,
+    "witness_id": "lsw_0f96442a0ca6605dd41d32cce6b4a870f9ba964854db752428439e97691f1762",
+    "witness_sha256": "b19ee2e5b9c49e72bd9557b5929f465f8190570b226d5868a656b62c6fc22f56",
+    "witness_bytes": 18944,
+    "witness_lines": 440,
+    "report_bound_source_sha256": null,
+    "binding_note": "source_catalog family: source_snapshot_v1 and source_provenance_ref_v1 are both null, so there is no report-bound file hash to compare and no report-time/current-source split is claimed."
+  },
+  "addressing": {
+    "introspection_ids": [
+      "introspection_source_catalog_1789213641"
+    ],
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "terminal_status": "addressed_change",
+    "claim_count": 9,
+    "evidence_link_count": 20,
+    "new_evidence_links": 20
+  },
+  "claims": {
+    "verified_existing": 6,
+    "observed": 2,
+    "implemented_now": 1,
+    "needs_operator_approval": 0,
+    "tier_5_wait": 0
+  },
+  "evidence_links": {
+    "rows": 20,
+    "new": 20,
+    "existing": 0,
+    "events_appended": 20
+  },
+  "implementation": {
+    "changed_paths": [
+      "scripts/symbol_locality_watch.py"
+    ],
+    "rust_source_touched": false,
+    "being_facing_surface_touched": false,
+    "focused_tests": {
+      "command": "python3 scripts/symbol_locality_watch.py self-test",
+      "passed": 22,
+      "previously": 16,
+      "new_tests": 6
+    },
+    "live_scan_before": "scan --being astrid --window 12: 0 want-turns, 0 wanted symbols",
+    "live_scan_after": "scan --being astrid --window 12: 1 want-turn, 2 wanted symbols (both study_question), 2 reached, 0 unreached; window 200: 20 want-turns, 29 wanted symbols, 6 from the new channel, 9 reached, 9 unreached (4 other_file), 1 pre-existing chase run",
+    "restart_or_deploy": "not required and not attempted"
+  },
+  "division": {
+    "cycle_sequence": 45,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "review_due_at_round_start": false,
+    "tier5_cadence_dossier": "not generated \u2014 review_due was false at round start and remains false, so no Division return fired and the dossier was not due",
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_d840398086aeffa4bc821347c9794faa",
+    "event_count": 314,
+    "event_head_sha256": "7cad4b17977d999d7e5fd30ee9217e4bfc92b0868371bf5292376b45191d65d9",
+    "chronicle_id": "division_chronicle_81ddd9d32047e7d34a428e1e",
+    "chronicle_json_sha256": "a1689d9f32d86268f9d338e24a26fd939f9bc80426f96b41935882619f02e938",
+    "chronicle_html_sha256": "2a465784e3ac4234bed57d9a8582d865c4ad62ca386cbbc02258c8b45cc0e2aa",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "note_written": false
+  },
+  "epistemic_lint": {
+    "command": "python3 scripts/experiential_epistemics.py verify --json",
+    "ran_after_all_durable_writes": true,
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "checked_record_count": 12124,
+    "history_rewritten": false
+  },
+  "counters": {
+    "canonical_indexed": 5873,
+    "canonical_fully_addressed": 3225,
+    "canonical_full_read": 3857,
+    "canonical_remaining": 2648,
+    "canonical_unread": 2016,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_indexed": 7590,
+    "all_artifact_pending": 4365,
+    "noncanonical_pending": 1717,
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0,
+    "status": "consistent",
+    "mismatches": [],
+    "checks_all_true": true
+  },
+  "evidence_event_store": {
+    "command": "python3 scripts/evidence_event_store.py --json verify",
+    "valid": true,
+    "event_count": 1073445,
+    "last_global_seq": 1073445,
+    "last_event_sha256": "423829ff9b167a796601ef1b920c6fe133abdf5538a3fc8859151b42c73ddef2",
+    "corrupt_lines": 0,
+    "errors": [],
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "stream_sequences": {
+      "addressing": 62880,
+      "agency_commons": 6999,
+      "attention_portfolio": 3,
+      "claim_families": 239299,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 210012,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 11862,
+      "model_qos": 323622,
+      "reciprocal_uptake": 75774,
+      "representation_contracts": 57217,
+      "sandbox": 3507,
+      "signal_spine": 60641,
+      "steward_control": 20726,
+      "steward_work_selection": 706
+    },
+    "status_subcommand": "not run \u2014 the per-stream `status` report did not fit the child budget; `verify` supplied the sequence, head, corrupt-line count and the stream sequences above"
+  },
+  "anti_drop": {
+    "self_test": "5 pass",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "registration_note": "no catalog row was added or edited: symbol_locality_watch already carries its guard row and this change extends an existing guard. scripts/anti_drop_catalog.py remains foreign dirty work and was preserved untouched, so the row owed by round 1789204702 for source_study_recovery_loop_watch is still outstanding."
+  },
+  "domain_boundary": {
+    "command": "python3 scripts/domain_boundary_audit.py verify",
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "ratchet": "green",
+    "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4",
+    "unlisted_legacy_review_debt_count": 44,
+    "resolved_large_file_debt_count": 3,
+    "note": "surfaced deliberately in the round summary \u2014 stage 10 records violations that no summary surfaced for two days in 2026-09-01..03. No Rust file was touched this round."
+  },
+  "integrity": {
+    "addressing_self_test": 44,
+    "evidence_event_store_tests": 21,
+    "steward_control_tests": 29,
+    "steward_projection_tests": 14,
+    "division_followup_tests": 3,
+    "division_chronicle_tests": 10,
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": 4,
+    "cadence_tests": 6,
+    "cadence_audit_strict": {
+      "integrity_ok": true,
+      "errors": []
+    },
+    "epistemics_self_test": {
+      "valid": true
+    },
+    "git_diff_check": "clean"
+  },
+  "authority": {
+    "live_change_attempted": false,
+    "deploy_or_restart_attempted": false,
+    "launchctl_invoked": false,
+    "build_bridge_invoked": false,
+    "git_mutation": "none \u2014 read-only; index clean, foreign dirty paths untouched",
+    "operator_asks_opened": 0,
+    "tier_5_waits_opened": 0,
+    "cards_notes_correspondence": "none",
+    "being_text_modified": false,
+    "delivery_into_being_context": false,
+    "her_stated_next_action": "recorded, not dispatched or pre-empted"
+  },
+  "git": {
+    "branch": "main",
+    "head": "3d55734438ab0b4fb5a3a24e82156cf3db1f8259",
+    "index_clean": true,
+    "minime_worktree": "clean",
+    "commit_debt": [
+      {
+        "path": "scripts/symbol_locality_watch.py",
+        "state": "modified"
+      },
+      {
+        "path": "CHANGELOG.md",
+        "state": "modified (append-only; shared accumulation)"
+      },
+      {
+        "path": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+        "state": "modified (append-only; shared accumulation)"
+      },
+      {
+        "path": "docs/steward-notes/claude-heartbeat_1789216637_study_question_want_channel_round",
+        "state": "created (whole packet)"
+      }
+    ],
+    "also_written_outside_git": [
+      "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.json",
+      "/Users/v/other/minime/workspace/division/chronicle/chronicle_v1.html"
+    ]
+  },
+  "packet_files": {
+    "RUN_REPORT.md": {
+      "sha256": "3fbe524d8ebfcf225a5bde9c5561e8a34c71cc2dce381f66cba0d9abe20dd569",
+      "bytes": 17003
+    },
+    "addressing_links.json": {
+      "sha256": "501ce23d99ed69366cd1f9cb36511cee60ce104341c8ef28414dfceaaf9b6efc",
+      "bytes": 6855
+    },
+    "claims/introspection_source_catalog_1789213641.json": {
+      "sha256": "73e3f34d4236893736347f758175c868dbdbdfcae89e0e7daec799e40414cb00",
+      "bytes": 6603
+    },
+    "family_scan.json": {
+      "sha256": "e8101f228d46ca80d08a385f581d40232b858e470c438349bbccefea30bab2b7",
+      "bytes": 19888
+    },
+    "read_manifest.json": {
+      "sha256": "d80c58926dbfa7f3bc95f59aefbe059f213c42f3a6c1a35376827162a4ed743b",
+      "bytes": 2633
+    },
+    "source_receipts.json": {
+      "sha256": "134b10cf50a7dd07a9ceb9042311a8350a8096681b8ab99e9e5ed65f06484279",
+      "bytes": 3554
+    },
+    "summaries/introspection_source_catalog_1789213641.md": {
+      "sha256": "fc8680fe76e7bbb553b89561055c3e21b4e39a405077dd106f0f6e5376077115",
+      "bytes": 5318
+    },
+    "test_results.json": {
+      "sha256": "1a447431f18a6f63954f84964db49f2f69e43d7cb0dafedc286c0040a7ae5c9b",
+      "bytes": 4609
+    },
+    "unprocessed_selected.json": {
+      "sha256": "5262a70833c8de12d238775333d39c48c8c8ba7a21ab46b0ef1ce2233457af18",
+      "bytes": 2917
+    }
+  }
+}

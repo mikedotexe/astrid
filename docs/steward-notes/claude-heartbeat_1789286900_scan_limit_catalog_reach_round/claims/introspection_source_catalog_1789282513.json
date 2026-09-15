@@ -1,0 +1,66 @@
+{
+  "introspection_id": "introspection_source_catalog_1789282513",
+  "reader": "claude-heartbeat",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "\"this recovery map confirms that I am currently at a standstill because the source page was not delivered\".",
+      "disposition": "Verified from the exact navigation receipt for this turn (23:55:13 local): input_kind=recovery, Reason \"no catalog entries for astrid-capsule; use SELF_STUDY MAP\". Catalog::map resolves a topic only as a component id or directory prefix (navigation.rs:61-74); path_candidates returns empty for any request with fewer than two segments led by an installed repository id (path_recovery.rs:14-21). Delivery succeeded; the candidate list was empty by construction. Mechanism pinned in packet 1789204702.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "She is looking for the arithmetic that transforms raw reservoir telemetry into the fill_pct used by research_budget_guard.",
+      "disposition": "Verified from complete source. Two producers: SpectralTelemetry::fill_pct() = self.fill_ratio * 100.0 (types/schema/telemetry.rs:334-337), and resolve_fill_pct (ws/telemetry_port.rs:640-654) clamping the same product with an estimate_fill_pct lambda1 sigmoid fallback (1031-1041). research_budget_guard_assessment takes fill_pct as an f32 parameter (action_continuity/guards.rs:315-324) and computes none of it. Her model (input, output, consumer) is right; only the producer was missing.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "fill_pct appears in the 60-75% range in the current_ledger_compact_v2.json fixture, and those are static outputs.",
+      "disposition": "Verified and measured. That fixture carries 1954 lines containing the quoted token. In her own live query it supplied 1479 of the 1500 permitted hits (Test/fixture role), against 21 implementation lines. Her reading that the page content is result data rather than producing code is exactly correct for every page she was shown.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "\"I need to find the Rust code that performs the division or scaling (e.g., current_volume / max_capacity)\".",
+      "disposition": "Half verified, half contradicted, and the contradiction is preserved. It is a scaling, never a division: both producers multiply by 100 and clamp. No current_volume / max_capacity ratio exists anywhere in Astrid's tree, because fill_ratio arrives already normalised on the wire - pub fill_ratio: f32, documented \"Eigenvalue fill ratio (0.0 - 1.0, NOT percentage)\" (telemetry.rs:214). The capacity division she pictures happens upstream in Minime's estimator, outside the file set she was paging.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "\"The fact that I am being directed to 'use SELF_STUDY MAP' suggests that the specific file containing this logic might not be in the immediate vicinity of my previous search\".",
+      "disposition": "Contradicted at source, not domesticated. That clause is the literal tail of bail!(\"no catalog entries for {topic}; use SELF_STUDY MAP\") in navigation.rs:73, raised because the topic astrid-capsule matched no component id and no directory prefix. It is a topic-resolution failure carrying no information about where fill_pct logic lives. She read intent into a message that has none. Her underlying concern, that her search neighbourhood is wrong, is still correct via c006.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "\"I need to re-orient my map\" / the producer is \"abstracted into a utility module ... that isn't as easily indexed\".",
+      "disposition": "Observed against the live catalog and answered. Walking all 55 pages of SELF_STUDY FIND fill_pct yields only 25 distinct source files, the last being the btsp fixture; types/schema/telemetry.rs and ws/telemetry_port.rs never appear, because Catalog::sources returns ids in sort order and autonomous/ precedes types/ and ws/. The producer is not less indexable - it simply sorts after the file that spends the budget. No page she could turn contained it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Her carried-forward reading that \"the search is hitting a scan limit and returning hundreds of matches in a .json file\".",
+      "disposition": "Exactly correct, and now bounded with numbers. MAX_HITS = 1500 (source_search.rs:6) breaks the whole scan, not the current file: her query read 142 of 6869 catalog files and reported \"scan limit reached: true\". The header gives the files-read count but never names the file that consumed the budget, nor says a named declaration went unscanned. Pinned by two new regressions in tests/scan_limit_catalog_reach.rs.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The preceding turn's literal search carried an invented --path scoping option.",
+      "disposition": "Verified from her exact navigation receipt (23:44:58): the query string was \"check_phase_timeout\" --path astrid/crates/astrid-capsule/src/, searched verbatim, 1 empty page. page_suffix (command.rs:141-154) recognises only --page N; every other -- token stays inside the literal query. The zero-hit hint names punctuation but never the unknown option, and literal search has no path-scoping form at all. This is also where the astrid-capsule topic in c001 came from. Pinned by a new regression.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Steward correction: the \"one-move recovery\" via RELATE fill_pct recorded in packet 1789263789 does not hold on the live catalog.",
+      "disposition": "Observed and corrected. Packet 1789263789 proved RELATE fill_pct ranks the twin declaration in a synthetic three-file tree. On the real catalog RELATE fill_pct hits the identical wall: 142 files read, scan limit reached, 55 pages, zero Definition candidates, and it is the lookup the study prompt offers her by name every turn. RELATE research_budget_guard scans all 6869 files. Hit density alone is the difference. The repair is being-facing navigation behaviour, left for Mike/operator.",
+      "classification": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "\"NEXT: SELF_STUDY MAP astrid\".",
+      "disposition": "Recorded as hers and not dispatched, pre-empted, scored, or answered on her behalf. Noted only as an observation: it is the same escape move that ended the 16-turn bare-topic loop in packet 1789204702, and here it followed a single candidate-less recovery rather than sixteen. Her text was not rewritten, rejected, or summarised away anywhere she can see it.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "recorded_by": "claude-heartbeat",
+  "suites": [
+    {
+      "command": "cargo test -p astrid-source-study --test producer_name_search_reach",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        "exact_identifier_search_reaches_the_twin_definition_but_not_the_suffix_named_producer",
+        "literal_search_finds_the_producer_declaration_but_never_ranks_it_as_a_definition",
+        "exact_search_on_the_full_producer_name_is_the_one_move_recovery"
+      ]
+    },
+    {
+      "command": "cargo test -p astrid-source-study",
+      "result": "ok",
+      "passed": 76,
+      "failed": 0,
+      "breakdown": {
+        "context": 6,
+        "inquiries": 12,
+        "path_recovery": 5,
+        "producer_name_search_reach": 3,
+        "reader": 23,
+        "response_choice": 8,
+        "search_evidence": 10,
+        "writing": 9
+      }
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "ok",
+      "passed": null,
+      "failed": 0
+    }
+  ]
+}

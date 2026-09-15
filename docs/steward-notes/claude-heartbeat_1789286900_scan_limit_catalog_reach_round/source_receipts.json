@@ -1,0 +1,93 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "crates/astrid-source-study/src/source_search.rs",
+      "sha256": "f0900f1a4dda8e5b058bf7fa7d65b541a532e51e2b9b07c152d349e085a3de25",
+      "bytes": 13170,
+      "lines": 352,
+      "read": "complete (352 lines): MAX_HITS=1500 at line 6; collect_lines break at 156-159; Catalog::search loop break at 221-224; path_role at 260-324"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "read": "complete (163 lines): Catalog::map topic resolution 61-74 incl. bail at 73; find 114-125; paginate_with_header 132-162"
+    },
+    {
+      "path": "crates/astrid-source-study/src/path_recovery.rs",
+      "sha256": "7799bda8f134b2e6f47782dbf6237dccf020305253706462427017fc4548ec00",
+      "bytes": 2984,
+      "lines": 86,
+      "read": "complete (86 lines): zero-candidate branch 14-21"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0",
+      "bytes": 5699,
+      "lines": 155,
+      "read": "complete (155 lines): FIND arm 73-82; page_suffix 141-154"
+    },
+    {
+      "path": "crates/astrid-source-study/src/catalog.rs",
+      "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67",
+      "bytes": 11498,
+      "lines": 329,
+      "read": "complete (329 lines): sources() BTreeMap ordering 163-194; blocked_path 197-214; source_path 216-299; alias 301-328"
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "sha256": "1842133fa5b3f88741fe42a347e27da36a29a3583397b7e6a91fe1ee86620405",
+      "bytes": 2889,
+      "lines": 62,
+      "read": "complete (62 lines): InputKind::Recovery scope string at 54-56"
+    },
+    {
+      "path": "crates/astrid-source-study/src/main.rs",
+      "sha256": "5bd491972228a8cc668cd7cb99727e884504d0bffb1f191d5259195c5d05b8bf",
+      "bytes": 3425,
+      "lines": 112,
+      "read": "complete (112 lines): the read-only Prepare operation used for this round's bounded observation"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "767f3f081e192d4a6785b49d8f866fb0a0865c9b62d8d376e2c0874f54b06c12",
+      "bytes": 38778,
+      "lines": 852,
+      "read": "scoped: 205-225 (pub fill_ratio: f32 at 214 with its 0.0-1.0 NOT percentage doc comment) and 325-345 (fn fill_pct at 334-337)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "0aee1c4f8214c993b690e951fb41c445e7139a86a45e6d439b239bb70d15aa81",
+      "bytes": 16990,
+      "lines": 406,
+      "read": "scoped: 30-130 (prepare_shared_study_target, source_study_prepare_notice, run_shared_source_study error path) and 200-270 (introspection header construction incl. Input evidence field)"
+    }
+  ],
+  "scoped_occurrence_enumerations": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "scope": "occurrence enumeration only: research_budget_guard_assessment declared at 315, _with_base at 324; fill_pct is an f32 parameter, no arithmetic",
+      "sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "scope": "occurrence enumeration only: fn resolve_fill_pct at 640, fn estimate_fill_pct at 1031; complete reads of 636-660 and 1025-1045 are recorded in packet claude-heartbeat_1789274597 at the identical SHA",
+      "sha256": "a56cad35914aa66d274127d705d74647478362eaf5a055ab158edb3aa2aaf872"
+    }
+  ],
+  "runtime_navigation_receipts_read": [
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/navigation/2938b5d454be47886f579e6f6ff30ae26dbd89c807f0d8ae5a2ad10277534b87/ed6a52fd0ab9669fae4c1913f2971b9140622d7fd43583eb9db9f561e1a37f51.json",
+      "observed": "input_kind=recovery; Reason \"no catalog entries for astrid-capsule; use SELF_STUDY MAP\"; STUDY_QUESTION and the two offered RELATE lookups; scope: header + prompt text only, no private writing"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/navigation/4606aadafa29dab7db030d0da8badee77a4b648c1ee1bf97fec9f98f175ecacc/f449400c0b8990a878aa6fc71e08e49e6c00612118a478f293d1b9254786e502.json",
+      "observed": "input_kind=search; literal query '\"check_phase_timeout\" --path astrid/crates/astrid-capsule/src/'; one empty page"
+    },
+    {
+      "note": "Four further navigation receipts at 23:31:11, 23:34:37, 23:37:25 and 23:46:15 were inspected for input_kind, query string and page counter only: query '\"fill_pct\"' at pages 13/55, 14/55, 15/55 and 16/55."
+    }
+  ]
+}

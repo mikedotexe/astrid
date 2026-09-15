@@ -1,0 +1,37 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "focused": [
+    {"name": "symbol_locality_watch self-test", "run": "python3 scripts/symbol_locality_watch.py self-test", "tests": 16, "result": "OK",
+     "note": "New probe. Includes test_page_span_matches_the_pagers_real_window (pinned to the real 2026-09-10 page: OPEN core.rs 1556 -> 1556-1663), test_the_reported_turn_classifies_as_other_file (all three of her named symbols from OPEN 1407), test_call_site_is_not_a_definition_site, test_absent_symbol_defers_to_phantom_watch, test_prefilter_is_loose_but_match_is_exact."},
+    {"name": "anti_drop_catalog self-test", "run": "python3 scripts/anti_drop_catalog.py --self-test", "tests": 5, "result": "OK"},
+    {"name": "anti_drop_catalog verify", "run": "python3 scripts/anti_drop_catalog.py verify --json", "result": "OK", "guards": 95, "alarms": 0, "gaps": 0}
+  ],
+  "integrity": [
+    {"name": "introspection_addressing_audit --self-test", "tests": 44, "result": "OK"},
+    {"name": "test_evidence_event_store.py", "tests": 21, "result": "OK"},
+    {"name": "test_steward_control.py", "tests": 29, "result": "FAILED (errors=1)",
+     "note": "Pre-existing, environmental, carried as debt. test_pause_cooperatively_interrupts_wrapped_subprocess errors in run_subprocess -> controller.begin() because THIS adapter run holds the lease. Same failure recorded by the 1789024912 round. No file in this round touches steward_control; not repaired headlessly."},
+    {"name": "test_steward_projection.py", "tests": 14, "result": "OK"},
+    {"name": "test_division_ceremony_followup.py", "tests": 3, "result": "OK"},
+    {"name": "test_division_ceremony_chronicle.py", "tests": 10, "result": "OK"},
+    {"name": "test_division_ceremony_projection.py", "result": "OK (self-test: ok)"},
+    {"name": "test_projection_cursors.py", "tests": 4, "result": "OK"},
+    {"name": "test_introspection_cadence_audit.py", "tests": 6, "result": "OK"},
+    {"name": "introspection_cadence_audit.py --strict --compact", "result": "rc=0, integrity_ok=true, errors=[]"},
+    {"name": "domain_boundary_audit.py verify", "result": "valid=true, violation_count=0 — ratchet GREEN",
+     "note": "unlisted_legacy_review_debt_count=44 carried, unchanged by this round. No Rust file was touched, so no re-capture was needed."},
+    {"name": "experiential_epistemics.py self-test --json", "tests": 2, "result": "OK"},
+    {"name": "experiential_epistemics.py verify --json (final, after all durable writes)", "result": "valid=true, issue_count=0, history_rewritten=false"},
+    {"name": "introspection_addressing_audit.py audit-counters --json", "result": "consistent, mismatches=[]"},
+    {"name": "evidence_event_store.py --json verify", "result": "valid=true"},
+    {"name": "division_ceremony_followup.py verify", "result": "ok=true, review_due=false"},
+    {"name": "division_ceremony_chronicle.py verify", "result": "durable_inputs_current=true; only volatile supervisor_status_sha256 mismatch"},
+    {"name": "git diff --check", "result": "clean"}
+  ],
+  "not_run": [
+    {"name": "cargo fmt --all -- --check",
+     "reason": "cargo is not on PATH in this headless adapter shell (rc=127, 'command not found: cargo'). No Rust source was changed this round — the only edits are two Python scripts and three Markdown/JSON documents — so formatting of Rust is not material to this change. Recorded as not-run rather than claimed."}
+  ],
+  "restart_deploy": "not required and not attempted. No build, deploy, launchctl, or live substrate/control change."
+}

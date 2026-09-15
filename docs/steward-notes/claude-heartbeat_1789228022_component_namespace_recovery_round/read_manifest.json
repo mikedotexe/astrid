@@ -1,0 +1,35 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789224730",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789224730.txt",
+      "sha256": "a7f007b234d5d784f20b2e219b3cb9431aa808c311603084ec4710d1616eb33f",
+      "bytes": 1830,
+      "lines": 22,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_eaa5aac2f2b12d1bf5e64639137d6bad7c36b0b314ff01b57dd630a9d67fdfa6",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_eaa5aac2f2b12d1bf5e64639137d6bad7c36b0b314ff01b57dd630a9d67fdfa6.json",
+      "sha256": "b8ba87e2196bb53e3a27190e597aa0c1dcc393a1e9639504928120d527d8657b",
+      "bytes": 18943,
+      "lines": 440,
+      "read": "complete",
+      "source_snapshot_v1": null,
+      "source_provenance_ref_v1": null,
+      "authority_state": "evidence_only, witness_only true, live_eligible_now false, grants_approval false",
+      "runtime_context": "bridge.fill_pct 71.05, spectral_entropy 0.905, lambda1 4.756, lambda1_lambda2_gap 1.703, pressure_risk 0.227, minime.fill_pct 73.04; model route coupled-astrid 61264 ms"
+    }
+  ],
+  "continuity_evidence": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789204702_bare_stem_recovery_loop_round/RUN_REPORT.md",
+      "read": "complete",
+      "role": "prior exact-source round packet; source of the bare-stem loop facts and of the rootedness framing corrected by c009"
+    }
+  ]
+}

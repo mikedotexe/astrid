@@ -1,0 +1,78 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "note": "dispatch.rs SHA 644b12e6... is unchanged from the prior round (claude-heartbeat_1789024912_phantom_symbol_navigation_round); all three processed reports bind to these same bytes, so the shared source verification is reused across them per the family-batch source rule.",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "sha256": "644b12e6ae168604553b3120fba82d431686b9eb06a3ddea94d9a348ba747e5c",
+      "bytes": 27240,
+      "lines": 639,
+      "read": "complete",
+      "read_scope": "complete file read plus exact intervals 60-120 and 595-639; grep receipts for from_guard_inputs (91, 629), sense_tx (0), sensory_tx (2), action_id (285), RuntimeActionFeedbackV1 (91, 629)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "sha256": "f290b0c501ad46258705e58ca1f0760cd7d36443f645dffd35da6e804261f6c3",
+      "bytes": 6426,
+      "lines": 184,
+      "read": "complete",
+      "read_scope": "complete file read, 184 lines"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "sha256": "260112491997c421571fb788d5a85d2066e5bfd80a2ba0ea29306346826da713",
+      "bytes": 35944,
+      "lines": 987,
+      "read": "complete",
+      "read_scope": "scoped: public fn signatures and vibrancy/tension/narrative occurrence counts; not read line-complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "sha256": "8dda7f02b4304b403865a2be7407e768648ae4c18ab9485d67518f5d4d756310",
+      "bytes": 37083,
+      "lines": 987,
+      "read": "complete",
+      "read_scope": "scoped: declaration lines for the six cascade evidence types (182, 436, 452, 610, 648, 671)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/projection_evidence.rs",
+      "sha256": "7bd61aea54fb4285def30c70a23d26740a30d8de2a6825be1178cfc9dbcc571b",
+      "bytes": 39280,
+      "lines": 957,
+      "read": "complete",
+      "read_scope": "scoped: lines 40-41 carrying latent_stasis_tension_v1 and spectral_drag_quality_v1"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+      "sha256": "c310c0fa05020f85d900dc565a7b19bebd2cbcf2c45f5867aa11908f1ea73340",
+      "bytes": 163890,
+      "lines": 4389,
+      "read": "complete",
+      "read_scope": "scoped: lines 175-206, the final bare source-reader rule and the wired sub-verb alternation at line 200"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "read": "complete",
+      "read_scope": "scoped: lines 350-400, NextActionOutcome::blocked and ::unwired"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "3b90c65d54e7fb38dc8ef4861f2c036f7b69f28b42599ce3cbd21452e9827902",
+      "bytes": 40680,
+      "lines": 393,
+      "read": "complete",
+      "read_scope": "scoped: line 28 grep receipt, the SELF_STUDY contract shown to Astrid"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "2b655574f85c1bf1f3ba9f925ac95c24e856bec799c99ef76390691a1a9abadf",
+      "bytes": 4334,
+      "lines": 119,
+      "read": "complete",
+      "read_scope": "scoped: lines 20-60, Command::parse prefix stripping and RELATE page_suffix"
+    }
+  ]
+}

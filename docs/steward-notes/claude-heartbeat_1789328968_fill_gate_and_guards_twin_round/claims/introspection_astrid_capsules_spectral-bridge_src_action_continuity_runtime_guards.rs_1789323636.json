@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+  "report_sha256": "b851e482d592f11fe3243082f03384ac923a8c686824c4c637ac17179a0a3dac",
+  "witness_id": "lsw_d811026f12ce4e773ee319e87cc44d6baefbe0126936b3ebbe8abeb713d1b19a",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+    "report_sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+    "working_copy_sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+    "match": true
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "guarded_embedded_status_projection_base at lines 183-185 checks whether base is INTROSPECT or EXPERIMENT_STATUS and uses no fill_pct or numeric threshold.",
+      "disposition": "Verified exactly at the report-bound SHA: lines 183-185 are `fn guarded_embedded_status_projection_base(base: &str) -> bool { matches!(base, \"INTROSPECT\" | \"EXPERIMENT_STATUS\") }`. Her byte window 4930..8997 starts precisely at line 183, so the citation is exact, not approximate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "embedded_status_liveish_terms at lines 209-264 identifies liveish patterns (action-preflight, attractor-release-review, stimulus-reduction) and pressure terms (perturb, pulse, inject, shift, control, influence).",
+      "disposition": "Verified: the function opens at line 209, its pattern table carries exactly those three labels, and it appends only the six pressure terms she lists from liveish_pressure_terms. The new regression drives this path with `INTROSPECT quiet low activity` and asserts the matched term `stimulus-reduction`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "liveish_pressure_terms at 267-333+ expands the pressure terms, including disrupt, simulate, nudge and anti-lambda.",
+      "disposition": "Verified: the function opens at line 267 and runs to 463, so her `333+` correctly marks the page cut rather than the function end. All four named labels are present in the table.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "This page is entirely string and pattern based: no arithmetic comparisons, no percentage constants, no fill_pct usage in these helpers.",
+      "disposition": "Verified across the complete file, not just her page: `fill_pct` occurs 0 times in runtime/guards.rs and the only numeric comparison is `>= 2` at line 714. Her stronger inference also holds in the sibling caller: the flags are !terms.is_empty() at action_continuity/guards.rs:355 and :371.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The trigger for the status flags is the nature of the action (its name and terms) rather than a mathematical calculation of current budget occupancy.",
+      "disposition": "Confirmed as the correct answer, reached one page before the follow-on report resumed hunting for arithmetic. Pinned by the new regression: reason and matched_terms are identical at fill 0/14/68/75/85/92 for liveish, embedded-status and read-only actions, while the recorded safety_snapshot.level moves green->yellow->orange->red. Decision is action-shaped; fill is recorded context.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "She still has not seen the fill_pct threshold check and must find where research_budget_guard_assessment_with_base compares the numbers.",
+      "disposition": "Grounded: that function is action_continuity/guards.rs:324-330 (the same-basename sibling, not further down this file), and it compares no numbers. fill_pct is only forwarded to spectral_state at line 396 and thence to authority_safety_snapshot (runtime/authority.rs:143-166), which labels the JSONL row at 75/85/92. Budget exhaustion is row presence via active_research_budget_from_rows.",
+      "classification": "verified_existing"
+    }
+  ]
+}

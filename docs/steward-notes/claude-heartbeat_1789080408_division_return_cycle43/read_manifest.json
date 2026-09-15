@@ -1,0 +1,55 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "note": "Reads below were completed in this round but were NOT recorded via `record-read`; the round ran out of child budget before the addressing write sequence could start. No addressing full-read event exists for this report. The next round must treat it as unread and read it again.",
+  "reads": [
+    {
+      "kind": "canonical_report",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_authority_gate.rs_1789065416.txt",
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_authority_gate.rs_1789065416",
+      "bytes": 3200,
+      "lines": 31,
+      "sha256": "88626574941d544f562ad72e02712b9a1c8fc316ca46072df7da5a4816695466",
+      "read": "complete",
+      "recorded_via_record_read": false
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_677e0eab1400741e6ea949170a748f6e6588ddf0e9f721d52c7ab311a316396e.json",
+      "witness_id": "lsw_677e0eab1400741e6ea949170a748f6e6588ddf0e9f721d52c7ab311a316396e",
+      "bytes": 21443,
+      "lines": 498,
+      "sha256": "549adbbba6c02ec47abacb57444e816659f7c4077b9934326fdb6f26661bc6db",
+      "read": "complete",
+      "recorded_via_record_read": false,
+      "authority_fields": {
+        "artifact_authority_state_v1.state": "evidence_only",
+        "witness_only": true,
+        "live_eligible_now": false,
+        "auto_approved": false,
+        "grants_approval": false,
+        "edits_source_now": false,
+        "direct_causation_claimed": false,
+        "raw_introspection_prose_included": false,
+        "private_path_included": false
+      }
+    },
+    {
+      "kind": "division_correspondence",
+      "paths": [
+        "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788986605.txt",
+        "capsules/spectral-bridge/workspace/outbox/reply_1789050701.txt",
+        "capsules/spectral-bridge/workspace/outbox/reply_1789053389.txt",
+        "capsules/spectral-bridge/workspace/inbox/mike_query_resistance_gradient_review_resistance_gradient_1789069525802.txt",
+        "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788495146.txt",
+        "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788602641.txt",
+        "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788623937.txt",
+        "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788629486.txt",
+        "capsules/spectral-bridge/workspace/outbox/steward_report_roadmap_1788717180.txt",
+        "/Users/v/other/minime/workspace/journal/self_study_2026-09-10T15-13-17.792469.txt",
+        "/Users/v/other/minime/workspace/journal/aspiration_2026-09-10T15-41-31.212864.txt"
+      ],
+      "read": "complete",
+      "privacy": "minime private-qualia lanes excluded via scripts/being_privacy.py filter_journal_paths; 119 of 714 new journal entries excluded, never opened, never summarized, never quoted"
+    }
+  ]
+}

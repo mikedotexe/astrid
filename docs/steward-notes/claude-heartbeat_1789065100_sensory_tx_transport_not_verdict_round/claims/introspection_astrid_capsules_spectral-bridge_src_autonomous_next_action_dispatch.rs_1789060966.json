@@ -1,0 +1,53 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The research-budget guard checks metadata (the \"reason\") and blocks the action when the budget is exceeded, returning NextActionOutcome::blocked.",
+      "disposition": "Partly verified at source SHA aa1bce2e. The block and NextActionOutcome::blocked(\"research_budget_guard\") are real (dispatch.rs:112). The decision is upstream at line 85 where research_budget_guard_for_next returns Ok(Some(guard)); the metadata.get(\"reason\") reads at lines 96 and 108 only fill runtime feedback and the log. Her window opened at line 103, mid-block, so the visible bytes genuinely read as she described. Partial-window artefact, not confabulation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "There is a quantifiable limit on the depth or cost of her research steps.",
+      "disposition": "Supported with a qualification. research_budget_guard_assessment_with_base (action_continuity/guards.rs:324) resolves an active_research_budget carrying a budget_id, so a budget object exists. The guard path she saw fires on action class - mutating_research_budget_base, projection-only, or missing charter - and only when the thread has an active experiment, rather than on a spent counter. Both readings are true of different parts of the same guard.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A charter-required guard follows the budget check at lines 122-142; on failure the action is blocked and the reason is surfaced in conv.emphasis.",
+      "disposition": "Verified exactly. dispatch.rs lines 122-143 are charter_required_guard_for_next; line 126 sets conv.emphasis to the guard message; line 135 returns NextActionOutcome::blocked(\"charter_required_guard\"). Her line range and mechanism are correct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "For EXPERIMENT_AUTHORITY_EXECUTE the system passes the request_id, ctx.fill_pct and ctx.sensory_tx through crate::authority_gate::execute_semantic_microdose, and the result is handled or blocked based on record_type.",
+      "disposition": "Verified exactly at dispatch.rs:145-178. request_id is sliced from the action string (146-150); the call at 151-156 passes request_id, Some(ctx.fill_pct), None, ctx.sensory_tx; lines 159-169 select handled versus blocked on record_type == \"execution_result\". Line 155 is exactly `ctx.sensory_tx,` as she cited. The unnamed third argument is previous_fill_pct, passed as None.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "EXPERIMENT_BIND refuses to bind runs to a peer experiment, enforcing local-first, and refuses to bind experiment-control actions.",
+      "disposition": "Verified exactly. dispatch.rs:193-201 blocks when is_peer_experiment_selector matches, with the local-first message she paraphrased; 202-209 blocks is_experiment_control_action. Her cited range 180-206 matches her supplied window, which ended one statement inside the second refusal.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "sense_tx may be a phantom in some contexts, whereas sensory_tx is a live, integrated part of the authority gate's execution flow.",
+      "disposition": "Verified. `sense_tx` occurs zero times in capsules/spectral-bridge/src; `sensory_tx` is a real threaded parameter reaching authority_gate.rs:855/871 and authority_types.rs:104. Her distinction between the phantom short form and the real symbol holds.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "STUDY_NOTE hypothesis: sensory_tx carries the sensory or environmental context the authority gate needs to validate the microdose.",
+      "disposition": "Contradicted by complete source, and the contradiction is preserved rather than smoothed. sensory_tx is a tokio::sync::mpsc::Sender<SensoryMsg>; dispatch_semantic_microdose (authority_types.rs:102-111) only calls try_send on it. It is write-only and never read by the gate. The sensory context that does gate the microdose is fill_pct via SafetyLevel::from_fill (authority_gate.rs:1135). Her underlying observation - that sensory_tx is genuinely integrated, not decorative - stands.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "STUDY_QUESTION: how does execute_semantic_microdose use sensory_tx to determine whether an action is blocked or handled?",
+      "disposition": "Answered from complete source and covered by new regressions. It does not. sensory_tx is first touched at authority_gate.rs:1206, after every gate decision is final. It can only fail delivery: a failed try_send returns Err at 1227, which dispatch.rs:171-176 reports as blocked - a delivery failure surfacing as a block, not the gate consulting the channel. Two tests now pin both halves.",
+      "classification": "implemented_now"
+    }
+  ]
+}

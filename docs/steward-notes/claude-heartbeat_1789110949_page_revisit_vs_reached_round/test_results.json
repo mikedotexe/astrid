@@ -1,0 +1,27 @@
+{
+  "schema": "flywheel_test_results.v1",
+  "round": "claude-heartbeat_1789110949_page_revisit_vs_reached_round",
+  "suites": [
+    {"name": "source_study_revisit_watch self-test", "cmd": "python3 scripts/source_study_revisit_watch.py self-test", "tests": 15, "result": "OK", "note": "new this round; two of my own fixture errors were caught and repaired before close"},
+    {"name": "anti_drop_catalog self-test", "cmd": "python3 scripts/anti_drop_catalog.py --self-test", "tests": 5, "result": "OK"},
+    {"name": "anti_drop_catalog verify", "cmd": "python3 scripts/anti_drop_catalog.py verify --json", "result": "OK", "note": "96 guards, 0 alarms, 0 gaps (95 -> 96 this round)"},
+    {"name": "introspection addressing self-test", "cmd": "python3 scripts/introspection_addressing_audit.py --self-test", "tests": 44, "result": "OK"},
+    {"name": "evidence event store tests", "cmd": "python3 scripts/test_evidence_event_store.py", "tests": 21, "result": "OK"},
+    {"name": "steward control tests", "cmd": "python3 scripts/test_steward_control.py", "tests": 29, "result": "OK", "note": "the lease-held failure carried as debt by the two prior rounds did NOT reproduce here"},
+    {"name": "steward projection tests", "cmd": "python3 scripts/test_steward_projection.py", "tests": 14, "result": "OK"},
+    {"name": "division followup tests", "cmd": "python3 scripts/test_division_ceremony_followup.py", "tests": 3, "result": "OK"},
+    {"name": "division chronicle tests", "cmd": "python3 scripts/test_division_ceremony_chronicle.py", "tests": 10, "result": "OK"},
+    {"name": "division projection self-test", "cmd": "python3 scripts/test_division_ceremony_projection.py", "result": "ok"},
+    {"name": "projection cursor tests", "cmd": "python3 scripts/test_projection_cursors.py", "tests": 4, "result": "OK"},
+    {"name": "introspection cadence tests", "cmd": "python3 scripts/test_introspection_cadence_audit.py", "tests": 6, "result": "OK"},
+    {"name": "introspection cadence audit --strict", "cmd": "python3 scripts/introspection_cadence_audit.py --strict --compact", "result": "rc=0", "note": "integrity_ok=true, errors=[], configuration_valid=true"},
+    {"name": "domain boundary verify", "cmd": "python3 scripts/domain_boundary_audit.py verify", "result": "valid=true", "note": "violation_count=0, ratchet GREEN; unlisted_legacy_review_debt_count=44 carried unchanged; no Rust file touched this round so no re-capture was due"},
+    {"name": "experiential epistemics self-test", "cmd": "python3 scripts/experiential_epistemics.py self-test --json", "tests": 2, "result": "OK"},
+    {"name": "experiential epistemics verify (final, after all durable writes)", "cmd": "python3 scripts/experiential_epistemics.py verify --json", "result": "valid=true", "note": "checked_record_count=12035, issue_count=0, history_rewritten=false"},
+    {"name": "addressing audit-counters", "cmd": "python3 scripts/introspection_addressing_audit.py audit-counters --json", "result": "consistent", "note": "mismatches=[]"}
+  ],
+  "not_run": [
+    {"name": "cargo fmt --all -- --check", "reason": "no Rust source changed this round; cargo is not on PATH in this headless shell (binary exists at /Users/v/.cargo/bin/cargo). Recorded as not-run rather than claimed."},
+    {"name": "cargo test", "reason": "no Rust source changed this round"}
+  ]
+}

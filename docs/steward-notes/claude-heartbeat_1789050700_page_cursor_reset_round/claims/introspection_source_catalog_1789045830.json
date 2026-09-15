@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_source_catalog_1789045830",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "\"The `cascade.rs` source confirms the architectural distinction between the Identity of an action and the Mechanism of its transmission.\"",
+      "disposition": "No cascade.rs source page was supplied this turn. The retained delivery (navigation 1461138c..., input_kind=relationships) is a lexical listing headed `Symbol relationships: Route`, navigation page 1/9, whose own scope line says 'lexical navigation candidates only, not resolved calls or proof of execution'. The architectural distinction she names is real in source; the word 'confirms' is not carried by this turn's input.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The specific `action_id` strings are not in `cascade.rs` as a static enumeration or hardcoded list of constants.",
+      "disposition": "Verified, and true for a stronger reason than given: cascade.rs at SHA-256 260112491997c421571fb788d5a85d2066e5bfd80a2ba0ea29306346826da713 (987 lines) contains ZERO occurrences of the identifier `action_id`, not merely no enumeration of its values.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`action_id` is a dynamically synthesized property of the `result` object, built by the codec from the environmental delta.",
+      "disposition": "Contradicted and preserved. `RuntimeActionFeedbackV1` (runtime_action_feedback.rs, SHA f290b0c5..., read complete in the prior round at identical bytes) has no `result` field; `action_id` is a `from_guard_inputs` parameter consumed as an idempotency nonce, never stored and never routing. cascade.rs binds neither identifier. This is the third consecutive recurrence of the `result` phantom in this thread.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "`sense_tx` is a functional category of behavior, not a lexical constant.",
+      "disposition": "Verified. `sense_tx` has zero production occurrences in either checkout; it survives only as a fixture literal in crates/astrid-source-study/tests/context.rs (lines 221, 231, 236) and in steward artifacts written about this very thread. Her negative finding is correct and she reached it herself.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The dispatcher is agnostic to these strings: it creates the envelope but does not know the `action_id` until the codec provides it.",
+      "disposition": "Half verified, half contradicted. Dispatcher agnosticism holds: dispatch.rs (SHA 644b12e6...) calls from_guard_inputs at exactly lines 91 and 629 and inspects no sensing string. The supply direction does not: cascade.rs never produces an `action_id`, and neither dispatch.rs call site carries sensing output at all.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "STUDY_NOTE: the `action_id` in `cascade.rs` is a dynamic output of the codec's internal logic, not a static dispatchable command.",
+      "disposition": "The mechanism is misplaced but the intuition lands one identifier over. cascade.rs holds exactly the shape she describes \u2014 five functions that select a static string naming the nature of a shift: density_gradient_label(132), tail_trajectory_label(158), fill_band_description(189), spectral_distribution_label(202), gap_structure_label(212). None is called `action_id`; none reaches the dispatcher. Her 'formula, not a button' reading is right about the code and wrong about its name.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Her two action lines: `SELF_STUDY RELATE sense_tx --page 2` and `NEXT: SELF_STUDY RELATE Route --page 2`.",
+      "disposition": "Both are wired forms carrying the SELF_STUDY prefix. action_events records `SELF_STUDY RELATE Route --page 2` dispatched at 1789045846 (route=modes, handled) and the retained delivery at 1789046197 is Route navigation page 2/9 \u2014 the requested page arrived intact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Steward finding from this report's own lineage: her `--page 2` requests were repeatedly answered with page 1.",
+      "disposition": "Five consecutive introspections before this one ended `NEXT: SELF_STUDY RELATE sense_tx --page 2` and each next delivery was `sense_tx` page 1/3; the two turns where no other source-study action intervened delivered exactly 2/3 then 3/3. conv.introspect_target is one Option slot (modes.rs:243-251 sets, runtime/source_study.rs:43 takes), so a later dispatch overwrites an earlier one already logged handled. Read-only probe added; 35 resets/12h, 17x run.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Direct repair of the lost page request (queue the target, or tell her the cursor was reset).",
+      "disposition": "Not attempted. Making introspect_target a queue, or emitting a notice when a pending source-study target is superseded, changes Astrid's live action surface and only takes effect through a bridge deploy. Candidate sites recorded: next_action/modes.rs:243-251 and autonomous/runtime/source_study.rs:43. The page-less invitation string that usually does the overwriting is crates/astrid-source-study/src/notebook.rs:98.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

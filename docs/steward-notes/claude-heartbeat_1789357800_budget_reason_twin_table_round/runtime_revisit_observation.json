@@ -1,0 +1,209 @@
+{
+  "artifacts_scanned": 60,
+  "authority_boundary": "read-only observation; steward-only; never surfaced into a being prompt; a revisit is evidence of our navigation surface, not a verdict on the being",
+  "being": "astrid",
+  "deliveries": 47,
+  "findings": [
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789345842.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789346720.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789348494.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789349270.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789349856.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789350565.txt"
+      ],
+      "delivery_count": 6,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 390"
+      ],
+      "elapsed_secs": 4723,
+      "first_timestamp": 1789345842,
+      "intervening_turns": 14,
+      "last_timestamp": 1789350565,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 390",
+      "repeated_request_count": 6,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes16994..21548"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789353013.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789353224.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 450"
+      ],
+      "elapsed_secs": 632,
+      "first_timestamp": 1789352592,
+      "intervening_turns": 1,
+      "last_timestamp": 1789353224,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 450",
+      "repeated_request_count": 3,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes19632..24222"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789358582.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789359022.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789359844.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 1"
+      ],
+      "elapsed_secs": 1262,
+      "first_timestamp": 1789358582,
+      "intervening_turns": 4,
+      "last_timestamp": 1789359844,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 1",
+      "repeated_request_count": 3,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes0..4506"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789358805.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789359313.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789360062.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY CONTINUE"
+      ],
+      "elapsed_secs": 1257,
+      "first_timestamp": 1789358805,
+      "intervening_turns": 4,
+      "last_timestamp": 1789360062,
+      "loop": true,
+      "repeated_request": "SELF_STUDY CONTINUE",
+      "repeated_request_count": 3,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes4506..8979"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789343014.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789344050.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 315"
+      ],
+      "elapsed_secs": 1036,
+      "first_timestamp": 1789343014,
+      "intervening_turns": 3,
+      "last_timestamp": 1789344050,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 315",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes13646..18164"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789343289.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789344379.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY CONTINUE"
+      ],
+      "elapsed_secs": 1090,
+      "first_timestamp": 1789343289,
+      "intervening_turns": 3,
+      "last_timestamp": 1789344379,
+      "loop": true,
+      "repeated_request": "SELF_STUDY CONTINUE",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes18164..22736"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789343569.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789344589.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY CONTINUE"
+      ],
+      "elapsed_secs": 1020,
+      "first_timestamp": 1789343569,
+      "intervening_turns": 3,
+      "last_timestamp": 1789344589,
+      "loop": true,
+      "repeated_request": "SELF_STUDY CONTINUE",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes22736..27299"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789353839.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789354256.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 350"
+      ],
+      "elapsed_secs": 417,
+      "first_timestamp": 1789353839,
+      "intervening_turns": 0,
+      "last_timestamp": 1789354256,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 350",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes15072..19608"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789355608.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789356030.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 300"
+      ],
+      "elapsed_secs": 422,
+      "first_timestamp": 1789355608,
+      "intervening_turns": 0,
+      "last_timestamp": 1789356030,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/guards.rs 300",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "window": "bytes13230..17730"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_spectral_projection.rs_1789349054.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_spectral_projection.rs_1789350280.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/runtime/spectral_projection.rs 1"
+      ],
+      "elapsed_secs": 1226,
+      "first_timestamp": 1789349054,
+      "intervening_turns": 4,
+      "last_timestamp": 1789350280,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/runtime/spectral_projection.rs 1",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/spectral_projection.rs",
+      "window": "bytes0..4415"
+    }
+  ],
+  "schema": "source_study_revisit_watch.v1",
+  "severity": "alarm",
+  "summary": "4 revisit loop(s): same request answered with the same page 6\u00d7 (worst: astrid/capsules/spectral-bridge/src/action_continuity/guards.rs bytes16994..21548) \u2014 the page is correct and the question is not answered; check whether what she wants lives in another file.",
+  "turns_parsed": 60
+}

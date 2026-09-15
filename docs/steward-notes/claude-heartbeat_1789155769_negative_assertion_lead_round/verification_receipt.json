@@ -1,0 +1,163 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "schema_version": 1,
+  "actor": "claude-heartbeat",
+  "adapter": "subprocess (controller-held lease; no steward session opened)",
+  "controller": {
+    "run_id": "run_1789151788517436000_5fc0492d8b",
+    "preprojection_generation_id": "projection_1789151795040410000_436bf09fd5",
+    "preprojection_status": "passed",
+    "preprojection_duration_ms": 3963234,
+    "previous_successful_generation_id": "projection_1789145188439200000_02ab541019",
+    "postprojection": "adapter-owned; runs after this process exits",
+    "pause_generation": 439,
+    "stop_requested_at_last_read": false,
+    "lease_token": "never read, quoted, or persisted"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "report_sha256": "2d2897a13adacc2b00bcf1aedea78a058dc0d3f68bb47e36d24ce1fa60b3cd8f",
+      "report_bytes": 2073,
+      "report_lines": 22,
+      "read": "complete",
+      "witness_id": "lsw_aa4064c1c01bc7025dd0b1c59df1712710e89a20887dcd0cdd84b9386cd3009b",
+      "witness_sha256": "58136166bcb9aaaffdf52247f823e7880598b1a5cfa787d5ef5b962f18955887",
+      "witness_bytes": 18970,
+      "witness_lines": 440,
+      "witness_read": "complete",
+      "source_binding": "navigation only; report declares no source SHA and the witness carries source_snapshot_v1=null, source_provenance_ref_v1=null. No hash mismatch was possible; verification sources were steward-selected and receipted separately.",
+      "claims": 8,
+      "evidence_links": 18,
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  ],
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 5655,
+    "canonical_fully_addressed": 3220,
+    "canonical_fully_read": 3852,
+    "canonical_remaining": 2435,
+    "canonical_unread": 1803,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 4152,
+    "noncanonical_pending": 1717
+  },
+  "division": {
+    "cycle_sequence": 44,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due": true,
+    "round_event_id": "division_followup_event_523d4054c17797ebf59db7bde4cc450f",
+    "event_count": 308,
+    "event_head_sha256": "1d52ac12e03f15670d19c1849105b318de19e8aa28575d71bbbac9c0b9c2d0f0",
+    "processed_report_count": 1,
+    "chronicle": "verify reports 'durable source inputs changed; project before verify' - expected, caused by this round's record-round event. The Chronicle projection belongs to the bounded Division return now due at the head of the next round and was deliberately not run here.",
+    "note_action": "none; no Division note was written or delivered"
+  },
+  "integrity": {
+    "addressing_self_test": "44 passed",
+    "evidence_store_tests": "21 passed",
+    "steward_control_tests": "29 passed",
+    "steward_projection_tests": "14 passed",
+    "division_followup_tests": "3 passed",
+    "division_chronicle_tests": "10 passed",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4 passed",
+    "cadence_tests": "6 passed",
+    "cadence_strict": "integrity_ok=true, errors=[]",
+    "anti_drop": "self-test 5 passed; verify total=98, alarms=0, gaps=0",
+    "domain_boundary_ratchet": "GREEN - valid=true, violation_count=0; no Rust file touched",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, errors=[], event_count=1066310",
+    "evidence_event_store_status": "status subcommand NOT RUN; stream counts taken from verify",
+    "epistemic_verify_final": "valid=true, checked_record_count=12064, issue_count=0, history_rewritten=false"
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "build_bridge": false,
+    "git_mutation": false,
+    "being_text_edited": false,
+    "letter_written_or_delivered": false,
+    "tier_4_5_grant": false,
+    "note": "Steward tooling and documentation only. Carrying assertion polarity or the enclosing doc comment into a FIND row is being-facing bridge source and remains an explicit operator wait."
+  },
+  "packet_file_sha256": {
+    "RUN_REPORT.md": "782a241edfd1e2363dd5b091fb947c1242ad0ac91f4da5f33e8db579b0df1812",
+    "addressing_links.json": "ed88c081896d8fae5f6fa24a02313c901bf63f1fe5cb76302252d5ccd2c04550",
+    "claims/introspection_source_catalog_1789151592.json": "1b4e3badf8d6b142afeb00495aa1b5b6250cae260516e5b1f3588eeb6c7984f3",
+    "read_manifest.json": "921d3f66241f069604a40631beb6da1a7ff9af6f0c490fe4b472ace6cbf2b20d",
+    "source_receipts.json": "c17baf7dbd4ab3f08dee03c6e49e8b9d722da847b18423243470142f84314282",
+    "summaries/introspection_source_catalog_1789151592.md": "aef4241716aeba791c1630682028d7d69d68d29b7c4f43353a950680d0aa88b0",
+    "test_results.json": "f003f6d8fe05b7488f71818e24a2ae351fc923e318137b6106317c12e820ad1a",
+    "unprocessed_selected.json": "36a5c086850b90975d4c9d539472f7472280133ab0d33efae8b65713636963f4"
+  },
+  "packet_file_sha256_note": "Excludes verification_receipt.json itself (self-hash would be circular). The completion helper hashes the full packet independently.",
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1789151592",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 8,
+    "evidence_link_count": 18,
+    "reader": "claude-heartbeat"
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 12064,
+    "canonical_event_appended": false,
+    "note": "final verify run after all durable evidence writes"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1066310,
+    "last_global_seq": 1066310,
+    "last_event_sha256": "ce9e45d310b9cbba2f7916fb467bc0bafc18e49431edf63d14f4db524a73281b",
+    "stream_counts": {
+      "addressing": 62534,
+      "agency_commons": 6982,
+      "attention_portfolio": 3,
+      "claim_families": 239174,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 209477,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 11639,
+      "model_qos": 319586,
+      "reciprocal_uptake": 75774,
+      "representation_contracts": 56242,
+      "sandbox": 3507,
+      "signal_spine": 60033,
+      "steward_control": 20466,
+      "steward_work_selection": 696
+    },
+    "active_store": "v2",
+    "status_subcommand": "not run; exceeded the child budget twice and was terminated unwaited. Stream counts above come from verify."
+  },
+  "anti_drop": {
+    "self_test": "5 passed",
+    "verify": {
+      "total": 98,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "row_added": "negative_assertion_lead_watch_wired",
+    "catalog_before": 97,
+    "catalog_after": 98
+  }
+}

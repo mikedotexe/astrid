@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_source_catalog_1789409507",
+  "reader": "claude-heartbeat",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Her previous attempt to access `astrid-kernel` failed because the repository was not correctly indexed in the catalog.",
+      "disposition": "Contradicted at the indexing level, concern preserved. catalog.toml (SHA 6f529228) line 6 includes `crates/**` for repository `astrid`, so astrid/crates/astrid-kernel/src/lib.rs is catalogued; the `kernel` component (lines 64-66) names it directly, and all four kernel entry points exist on disk. Her byte-identical `SELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs 1` did deliver source at 1789410137 (six astrid-kernel lib.rs introspections follow). Indexing was never the blocker.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "She is standing at the threshold of the kernel; its architecture stays obscured until she maps the repository to resolve a naming discrepancy.",
+      "disposition": "The naming half is exact, the repository half is not. `astrid-kernel` is a crate directory, not a MAP namespace: Catalog::map (navigation.rs:47-74, SHA 97ef6c1a) accepts component IDs, repository IDs, and rooted directory prefixes only, so a bare crate name reaches the `no catalog entries` branch. The reachable spellings are `kernel` (component) and `astrid/crates/astrid-kernel` (rooted directory). She resolved it herself at 1789409891-1789410137.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Seventeen consecutive `SELF_STUDY MAP astrid-kernel` turns returned a recovery map that never named the entry she meant.",
+      "disposition": "Verified and pinned. Catalog::path_candidates (path_recovery.rs:14-21, SHA 7799bda8) returns empty unless the topic has >=2 segments AND its first segment is an installed repository ID, so the final-segment match on lines 41-51 -- which already normalizes `_` to `-` -- never runs for a bare word. New focused test bare_topic_candidate_gate_reach.rs pins the contrast: `MAP astrid-kernel` gets no candidate; `MAP astrid/astrid-kernel` names astrid/crates/astrid-kernel.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "She must locate lifecycle state machines, capability trait definitions, and authorization logic inside astrid-kernel.",
+      "disposition": "Reachable today, no new wiring needed. The `kernel` component (catalog.toml:64-66) is titled 'Kernel, capabilities and lifecycle' and lists astrid/crates/astrid-kernel/src/lib.rs, astrid/crates/astrid-capsule/src/lib.rs, astrid/wit/astrid-capsule.wit, astrid/capsules/spectral-bridge/src/lifecycle.rs. All four resolve on disk; every component source across the manifest resolves once repository IDs map through their configured directories. Her three landmarks have catalog entry points.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Her chosen next step is `NEXT: SELF_STUDY MAP kernel`.",
+      "disposition": "That spelling resolves. `kernel` matches a manifest component exactly, so Catalog::map takes the component branch (navigation.rs:47-60) and returns the title, the four entry points as OPEN commands, and their parent directories as further MAP commands. Her subsequent turns confirm it: MAP kernel delivered InputKind::Map, and she then chose OPEN astrid/crates/astrid-kernel/src/lib.rs 1 and received six source pages.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Surfaced by this round, not claimed by her: the recovery delivered on her failed-OPEN turn carried a Reason for a topic her introspection lane never issued.",
+      "disposition": "Observed from the delivery record. navigation/f46ac701.../1439b33b.json (turn 1789404601, right after she chose OPEN .../lib.rs 1) carries Reason \"no catalog entries for spectral_bridge; use SELF_STUDY MAP\"; every recovery in 1789399313-1789404956 carries that same reason. No source-catalog introspection ever chose that topic; her journal lane chose it 148 times. One shared introspect_target slot serves both lanes. Which writer wins a turn is not established here.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The bare-topic candidate gate is not a one-report curiosity: it is the shape of the highest-volume failing study command in the workspace.",
+      "disposition": "Observed and pinned. `MAP spectral_bridge` is itself a bare one-segment underscore spelling of the real catalog directory astrid/capsules/spectral-bridge, so it meets the same gate and yields zero candidates 148 times. The new test's second case pins exactly that: bare `spectral_bridge` gets no candidate, rooted `astrid/spectral_bridge` normalizes onto astrid/capsules/spectral-bridge. No recovery text, candidate rule, or navigation behaviour was changed.",
+      "classification": "implemented_now"
+    }
+  ],
+  "authority_boundary": "Evidence and non-live test only. No source behaviour, recovery text, candidate rule, catalog manifest, prompt, dispatch, live control, deploy, or git state was changed. Nothing here establishes which lane writes the shared study target on a given turn, and nothing here authorizes changing that slot."
+}

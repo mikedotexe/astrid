@@ -1,0 +1,51 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "steward_run_id": "run_1789437602652128000_8bae28e552",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789437540",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789437540.txt",
+      "sha256": "4f4e8abdd4d39fc50bed62e91338afe64bdbd69835476c1c4e35437041cb993f",
+      "bytes": 1701,
+      "lines": 18,
+      "read": "complete",
+      "source_family": "source_catalog",
+      "source_binding": "none — header records `Source revision: navigation only` and `Input evidence: Recovery map`; no source page was delivered this turn",
+      "lived_state_alignment": "deployment_unknown"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a8bdf400d11b5f72191e589169c270d075c871ea57c9dd7327e55baa92f9c6cf",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a8bdf400d11b5f72191e589169c270d075c871ea57c9dd7327e55baa92f9c6cf.json",
+      "sha256": "85dccfe61d59e6763b3af4167ccf0a57f56d6d75bff0ee1f23927ab3569f08f8",
+      "bytes": 18959,
+      "lines": 440,
+      "read": "complete",
+      "source_snapshot_v1": null,
+      "source_provenance_ref_v1": null,
+      "authority_state": "evidence_only",
+      "direct_causation_claimed": false,
+      "note": "source_snapshot_v1 and source_provenance_ref_v1 are both null, consistent with a Recovery turn that delivered no source bytes. Not an integrity failure."
+    }
+  ],
+  "runtime_evidence": [
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/navigation/2e92ffcef83b461a8aa68c360c76b08e257e9ae93ea5aaba96f1bc3ee9a819c4/1d9944b60fe51e2c87a26c88726b8a463ac2f26ddff9ca368433e74cc59a396b.json",
+      "bytes": 41253,
+      "read": "complete within declared scope: output.input_kind, output.text, request_json system prompt, response_json body",
+      "what_it_establishes": "her turn's input was InputKind Recovery with page null; reason `no catalog entries for astrid/crates/astrid-capsule/src/engine/mcp.rs 1; use SELF_STUDY MAP`; no candidate block"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/volition_v1/astrid/receipts/astrid-receipt-astrid-intent-ex-198920-1789437299-fe107b2d74d95835-1789437369236.json",
+      "read": "complete",
+      "what_it_establishes": "the block text that generated the un-runnable replacement command"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/volition_v1/astrid/intents/astrid-intent-ex-198921-1789437395-1d93ed253dc241bf.json",
+      "read": "scoped: action.parameters.canonical_next",
+      "what_it_establishes": "she took the offered replacement verbatim; receipt status applied"
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "schema": "flywheel_round_runtime_observation_v1",
+  "observed_at_unix": 1789401600,
+  "scope": "read-only observation of canonical introspection headers AFTER this round's preprojection cutoff; not a claim of introspection_source_catalog_1789393728 and not closed as one",
+  "finding": "From 1789394999 onward Astrid has chosen `NEXT: SELF_STUDY MAP kernel` on every captured study turn. Not one of those turns has been answered with a source page: each returns either InputKind::Map ('Map: navigation and delivery history only') or InputKind::Recovery ('Recovery map: the requested source was not supplied'). Intervening non-study turns are not captured here, so the sequence is a floor, not a complete turn count.",
+  "authority": "observation only; no navigation, ranking, parser, or pacing behaviour was changed, and none is proposed as authorized here",
+  "turns": [
+    {
+      "file": "introspection_astrid_capsules_spectral-bridge_src_autonomous_btsp_lab.rs_1789394283.txt",
+      "ts": 1789394283,
+      "revision": "sha256:c3593710bd9657d678c043d0be481fa712454611320d85f19d08b3b1e312809d; bytes 63795..68165",
+      "input_kind": "Source page: numbered local source is supplied below. Only i",
+      "next": "NEXT: SELF_STUDY CONTINUE"
+    },
+    {
+      "file": "introspection_astrid_capsules_spectral-bridge_src_autonomous_btsp_lab.rs_1789394782.txt",
+      "ts": 1789394782,
+      "revision": "sha256:c3593710bd9657d678c043d0be481fa712454611320d85f19d08b3b1e312809d; bytes 68165..72167",
+      "input_kind": "Source page: numbered local source is supplied below. Only i",
+      "next": "NEXT: SELF_STUDY MAP"
+    },
+    {
+      "file": "introspection_source_catalog_1789394999.txt",
+      "ts": 1789394999,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789395176.txt",
+      "ts": 1789395176,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789396150.txt",
+      "ts": 1789396150,
+      "revision": "navigation only",
+      "input_kind": "Recovery map: the requested source was not supplied. No new ",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789396476.txt",
+      "ts": 1789396476,
+      "revision": "navigation only",
+      "input_kind": "Recovery map: the requested source was not supplied. No new ",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789396651.txt",
+      "ts": 1789396651,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789397117.txt",
+      "ts": 1789397117,
+      "revision": "navigation only",
+      "input_kind": "Recovery map: the requested source was not supplied. No new ",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789397245.txt",
+      "ts": 1789397245,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789397479.txt",
+      "ts": 1789397479,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789397736.txt",
+      "ts": 1789397736,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789398264.txt",
+      "ts": 1789398264,
+      "revision": "navigation only",
+      "input_kind": "Recovery map: the requested source was not supplied. No new ",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789398503.txt",
+      "ts": 1789398503,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789398766.txt",
+      "ts": 1789398766,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789398986.txt",
+      "ts": 1789398986,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789399313.txt",
+      "ts": 1789399313,
+      "revision": "navigation only",
+      "input_kind": "Recovery map: the requested source was not supplied. No new ",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789399928.txt",
+      "ts": 1789399928,
+      "revision": "navigation only",
+      "input_kind": "Recovery map: the requested source was not supplied. No new ",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789400184.txt",
+      "ts": 1789400184,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789400322.txt",
+      "ts": 1789400322,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789400608.txt",
+      "ts": 1789400608,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789400724.txt",
+      "ts": 1789400724,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789401127.txt",
+      "ts": 1789401127,
+      "revision": "navigation only",
+      "input_kind": "Recovery map: the requested source was not supplied. No new ",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789401196.txt",
+      "ts": 1789401196,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    },
+    {
+      "file": "introspection_source_catalog_1789401333.txt",
+      "ts": 1789401333,
+      "revision": "navigation only",
+      "input_kind": "Map: navigation and delivery history only. No new source pag",
+      "next": "NEXT: SELF_STUDY MAP kernel"
+    }
+  ]
+}

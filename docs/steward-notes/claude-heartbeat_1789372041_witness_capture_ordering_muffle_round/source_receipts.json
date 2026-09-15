@@ -1,0 +1,111 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round",
+  "report_bound_source": {
+    "path": "crates/astrid-kernel/src/lib.rs",
+    "sha256": "d19f321c54b299e1204d6e0db5a81792e056f9140b4a82bfbac76468c603d92b",
+    "bytes": 65312,
+    "lines": 1659,
+    "read": "complete",
+    "scope": "complete_file",
+    "report_bound_sha256": "d19f321c54b299e1204d6e0db5a81792e056f9140b4a82bfbac76468c603d92b",
+    "working_copy_matches_report_binding": true,
+    "report_window_lines": "98-195",
+    "report_window_bytes": "4579..9158",
+    "read_intervals": [
+      "1-1659 (complete file; cited window 90-200 and 724-744 read with absolute line numbering)"
+    ]
+  },
+  "transitive_sources": [
+    {
+      "path": "crates/astrid-kernel/src/maintenance.rs",
+      "sha256": "1b8c8385c94413d2fb35af40008156da38992595246f74be56288ed1112da661",
+      "bytes": 30543,
+      "lines": 864,
+      "read": "scoped",
+      "scope": "scoped",
+      "read_intervals": [
+        "1-200 (declarations, initialize_gate at 129-148, run loop head)"
+      ],
+      "why": "answers her STUDY_QUESTION: the only event_bus interaction is line 147"
+    },
+    {
+      "path": "crates/astrid-events/src/bus.rs",
+      "sha256": "31ef6a15bd62d60173f5c46a8d9806046bc5920cbbcee3e99bed2158305cb89f",
+      "bytes": 100633,
+      "lines": 2791,
+      "read": "scoped",
+      "scope": "scoped",
+      "read_intervals": [
+        "40-140 (MaintenanceGate, admits_while_blocked)",
+        "735-800 (set_user_input_blocked)",
+        "880-930 (publish enforcement)"
+      ],
+      "why": "establishes the gate's exact reach: UserInput only, catch-all admits at line 121"
+    },
+    {
+      "path": "crates/astrid-vfs/src/overlay.rs",
+      "sha256": "f6d58e6ac9aa55b5f29bc6c5f1cb7a13ced5fa237d7e6e86f19e7f25fd9955ef",
+      "bytes": 29817,
+      "lines": 787,
+      "read": "scoped",
+      "scope": "scoped",
+      "read_intervals": [
+        "40-130 (OverlayVfs fields, dirty_paths, commit)"
+      ],
+      "why": "verifies her claim 6 on uncommitted upper-layer state"
+    },
+    {
+      "path": "crates/astrid-mcp/src/secure.rs",
+      "sha256": "534f332e8089da794ad7297d371ce87d23a217fc69524cf62661fcb87b388a5e",
+      "bytes": 23636,
+      "lines": 691,
+      "read": "scoped",
+      "scope": "scoped",
+      "read_intervals": [
+        "43-52 (struct)",
+        "244-266 (list_tools, get_tool, connect)"
+      ],
+      "why": "bounds her claim 5: discovery paths are neither capability-checked nor audited"
+    },
+    {
+      "path": "scripts/lived_state_witness/validation.py",
+      "sha256": "cd19cf2fec18d544b021543cdb8bbe36aa9e4d44739307cdffcb80ad8ca2e889",
+      "bytes": 46842,
+      "lines": 1200,
+      "read": "scoped",
+      "scope": "scoped",
+      "read_intervals": [
+        "808-832 (model route analogue)",
+        "930-975 (parameter observation after_authorship check)"
+      ],
+      "why": "locates the strict > with zero tolerance behind the 1129 flags"
+    },
+    {
+      "path": "scripts/lived_state_witness/views.py",
+      "sha256": "fe83e2ab467d108539dc5de545402d8528a9f48b6ea13a1df5d2b1af6387d371",
+      "bytes": 22514,
+      "lines": 545,
+      "read": "scoped",
+      "scope": "scoped",
+      "read_intervals": [
+        "340-420 (artifact_integrity_unavailable alignment derivation)"
+      ],
+      "why": "shows how a recorded issue degrades projected alignment"
+    }
+  ],
+  "evidence_streams": [
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/lived_state_witness_v1/artifact_integrity_issues.jsonl",
+      "sha256": "6b5e92bcf2fbac17777127044763c3167351c0a1c2b9f2ad4c7cb292f70f5b1a",
+      "bytes": 3368244,
+      "lines": 1129,
+      "read": "complete_scan",
+      "scope": "complete_scan",
+      "read_intervals": [
+        "all 1129 records aggregated by error kind and per-witness delta"
+      ],
+      "why": "corpus-wide ground truth for c009/c010"
+    }
+  ]
+}

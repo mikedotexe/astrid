@@ -1,0 +1,52 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789216637_study_question_want_channel_round",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789213641.txt",
+      "sha256": "0fe75a0139910a88e4f02f6d985648e71bb8c465930f0f241d242ffd5b99f36a",
+      "bytes": 2470,
+      "lines": 27,
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "read": "complete",
+      "source_binding": "Source: source catalog / Source revision: navigation only",
+      "report_bound_source_sha256": null,
+      "lived_state_witness_id": "lsw_0f96442a0ca6605dd41d32cce6b4a870f9ba964854db752428439e97691f1762"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_0f96442a0ca6605dd41d32cce6b4a870f9ba964854db752428439e97691f1762.json",
+      "sha256": "b19ee2e5b9c49e72bd9557b5929f465f8190570b226d5868a656b62c6fc22f56",
+      "bytes": 18944,
+      "lines": 440,
+      "read": "complete",
+      "source_snapshot_v1": null,
+      "source_provenance_ref_v1": null,
+      "note": "no report-bound source SHA exists for the source_catalog family; every source receipt below is at its current working-copy hash"
+    }
+  ],
+  "continuity_evidence": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789204702_bare_stem_recovery_loop_round/RUN_REPORT.md",
+      "read": "complete",
+      "why": "prior round on the same file; establishes that she had not yet reached continuity.rs and names its hashes"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_continuity.rs_1789213454.txt",
+      "read": "scoped: header, STUDY_NOTE, STUDY_QUESTION, NEXT",
+      "why": "the action that produced this report's input; establishes the single-query scope of the FIND"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_continuity.rs_1789212918.txt",
+      "read": "scoped: header, STUDY_NOTE, STUDY_QUESTION, NEXT",
+      "why": "origin of the two-symbol question and of the 'math of decay' framing in c007"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_continuity.rs_1789213258.txt",
+      "read": "scoped: header, STUDY_NOTE, STUDY_QUESTION, NEXT",
+      "why": "intervening turn; confirms an unbroken CONTINUE chain, no re-query"
+    }
+  ]
+}

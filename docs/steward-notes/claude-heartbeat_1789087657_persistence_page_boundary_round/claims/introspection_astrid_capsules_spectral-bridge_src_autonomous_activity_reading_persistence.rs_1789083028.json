@@ -1,0 +1,55 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+    "report_bound_sha256": "111a9f092c0a6bf7f662b9f2b0f79377a7168f3cf57bcf4b306155f1224316d6",
+    "working_copy_sha256": "111a9f092c0a6bf7f662b9f2b0f79377a7168f3cf57bcf4b306155f1224316d6",
+    "match": true,
+    "delivered_window_bytes": "4368..4618",
+    "read_scope": "complete file, lines 1-125"
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The final lines of persistence.rs (quoted as 117-125) hold a safety check that refuses 'legacy cursor recovery'.",
+      "disposition": "Verified against the complete file at the report-bound SHA. The guard spans lines 115-122 inside load_activity; line 119-121 returns Err(anyhow!(\"foreground retained source is unavailable; refusing legacy cursor recovery\")). Her quoted fragment reproduces the delivered page byte-for-byte.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "If foreground_reader exists in persisted data but the underlying retained source is marked unavailable, the system refuses legacy cursor recovery.",
+      "disposition": "Verified. The guard is `!preview.source_comparison.is_some_and(|s| s.retained_source_available)`, so it also fires when source_comparison is None. Refinement: that None arm is unreachable here, because line 105 already errors on a missing bookmark and reader_bookmarks.rs:67-84 sets source_comparison Some exactly when bookmark is Some. Her reading covers every reachable state.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The bridge will not guess a position from old pointers when the source of that position is no longer valid; it prioritizes integrity over continuity.",
+      "disposition": "Verified for the retained-source branch, and refined: load_activity forks. Lines 106-114 quietly demote a non-active bookmark to return_reader (continuity preserved, no error); only lines 115-122 refuse outright. That fork had no direct restart-time test, so a focused regression now pins both halves plus non-repair of the persisted file.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "dispatch_semantic_microdose ensures the message gets through while persistence.rs accepts the result only if it stays grounded in a verifiable source.",
+      "disposition": "Symbol grounded, not phantom: dispatch_semantic_microdose is defined at capsules/spectral-bridge/src/authority_types.rs:102 and called at authority_gate.rs:1206. The cross-file relation she draws is interpretive architecture commentary; no source contradicts it, and no mechanism linking the two files is asserted by this disposition.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "She has now seen the start, middle and end of the persistence logic: atomic write pattern, reader identity validation, reconciliation nullifying non-active readers, and refusal of unsafe recovery.",
+      "disposition": "Verified by page ledger and source. Her two delivered pages are byte-contiguous (0..4368 then 4368..4618) and together cover the whole 4618-byte file. Each named element exists: atomic write 57-76, identity validation 11-23, non-active demotion 103-114, refusal 115-122.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "NEXT: SELF_STUDY MAP astrid/capsules/spectral-bridge/src/autonomous/btsp, glossed as 'Bridge Transition State Protocol'.",
+      "disposition": "Action is wired, target real: command.rs:66 parses MAP with a topic; navigation.rs:64-74 prefix-matches directory topics; the directory exists with 25 catalog-eligible files. Her expansion differs from the module's own doc comment, btsp/mod.rs:1 'Being-Time Synaptic Plasticity domain facade'. Recorded as evidence only; her text is not corrected or rewritten.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Witness-carried integrity flag: the addressing queue reports lived_state_alignment=artifact_integrity_unavailable with one integrity issue for this report.",
+      "disposition": "Traced and benign. lived_state_witness/mod.rs:808 bounds provider_route to 40 chars and sets provider_route_complete=false past that; the stored provider_route_sha256 hashes the untruncated value. sha256 of the full 41-char http://127.0.0.1:8090/v1/chat/completions reproduces 20176d67... exactly, so the route is recoverable, self-declared bounded metadata, not a silent drop.",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789274597_page_walk_producer_reach_round",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789270252.txt",
+      "sha256": "9686a994e03880f5416e31b1280d178f8e5f3a0065190cdc6768375fa4668fe2",
+      "bytes": 2377,
+      "lines": 26,
+      "read": "complete",
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789270252",
+      "source_path_named_by_report": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "source_sha_named_by_report": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "source_window_named_by_report": "bytes 47164..51631 / lines 1233-1339",
+      "source_coverage": "partial_window_read_by_astrid_complete_file_verified_by_steward",
+      "lived_state_witness_id": "lsw_6530d768c68a0094eaab2ffbfdc917f4ca0518e7e1ac55d66614647bf320e1b0"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_6530d768c68a0094eaab2ffbfdc917f4ca0518e7e1ac55d66614647bf320e1b0.json",
+      "sha256": "d9c16726da618b6880c4511dde5248a97480ccea898eccf1bff5a1453445efa6",
+      "bytes": 21563,
+      "lines": 498,
+      "read": "complete",
+      "witness_id": "lsw_6530d768c68a0094eaab2ffbfdc917f4ca0518e7e1ac55d66614647bf320e1b0",
+      "artifact_sha256_matches_report": true,
+      "note": "source_snapshot_v1.file_sha256 equals the working copy; window_sha256 1c6d3faa... is a render-layer hash of the numbered page and is not reproducible from a raw line or byte slice of the file; the file-level binding is intact, so this is not a byte contradiction"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "scope": "complete file re-read for binding; exhaustive fill_pct/fill_ratio occurrence enumeration; line-exact reads of 905-945 and 1225-1355",
+      "binding_match": true
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "a56cad35914aa66d274127d705d74647478362eaf5a055ab158edb3aa2aaf872",
+      "bytes": 39773,
+      "lines": 1041,
+      "scope": "scoped reads of resolve_fill_pct 636-660 and estimate_fill_pct 1025-1045 plus definition grep",
+      "binding_match": "not_report_bound_producer_evidence"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/page_walk_producer_reach.rs",
+      "sha256": "c5984bab3ff868e23d6cefba82afc30129430b751c3d7656ab7df01ae8fa5544",
+      "bytes": 7940,
+      "lines": 195,
+      "scope": "authored this round; complete",
+      "binding_match": "not_report_bound_new_test"
+    }
+  ],
+  "continuity": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789263789_fill_pct_producer_suffix_reach_round/RUN_REPORT.md",
+      "scope": "read complete; prior round in the same fill_pct-producer lineage; its Tier-5 RELATE suffix-ranking wait preserved, not duplicated"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/producer_name_search_reach.rs",
+      "scope": "read header and first test to avoid duplicating the search-shape axis"
+    }
+  ]
+}

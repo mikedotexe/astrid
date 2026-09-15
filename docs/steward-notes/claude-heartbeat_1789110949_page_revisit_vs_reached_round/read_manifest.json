@@ -1,0 +1,39 @@
+{
+  "schema": "flywheel_read_manifest.v1",
+  "round": "claude-heartbeat_1789110949_page_revisit_vs_reached_round",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304.txt",
+      "sha256": "df2312b7ca34d6966edc8aa2b1e4027549a330588532b7babf513c8fa31234e5",
+      "bytes": 2225,
+      "lines": 26,
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "read": "complete",
+      "source_binding": "sha256:fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62; bytes 342539..346961",
+      "source_binding_matched": true,
+      "window_lines": "8382..8492"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f794476f3cb6171012ffbf7587fc30c4bbc4fc458e96b6db54dace986f26129d.json",
+      "sha256": "0d75ba1df9de9e83010cf5130d2f0ed6f6a82297b1ffda743de62acbbaca9ceb",
+      "bytes": 21556,
+      "lines": 498,
+      "witness_id": "lsw_f794476f3cb6171012ffbf7587fc30c4bbc4fc458e96b6db54dace986f26129d",
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "canonical_body_sha256_reproduced": true,
+      "note": "queue reports lived_state_alignment=artifact_integrity_unavailable with gap_count=1; both durable hashes IN the witness reproduce exactly from the report bytes (artifact_sha256 df2312b7..., canonical_body_sha256 a787f053... over the trailing 1487 bytes), so the flag is a projection-side alignment label, not a byte discrepancy. Recorded, not explained away."
+    }
+  ],
+  "authority": {
+    "raw_prose_included": false,
+    "raw_prompt_included": false,
+    "raw_response_included": false,
+    "private_path_included": false,
+    "direct_causation_claimed": false,
+    "artifact_authority_state": "evidence_only"
+  }
+}

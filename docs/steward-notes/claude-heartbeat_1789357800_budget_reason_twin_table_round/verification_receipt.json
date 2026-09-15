@@ -1,0 +1,162 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round": "claude-heartbeat_1789357800_budget_reason_twin_table_round",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1789352743945510000_0e5542d915",
+    "steward_run_id": "run_1789352743945510000_0e5542d915",
+    "adapter_kind": "subprocess",
+    "preprojection_generation_id": "projection_1789352749651473000_ac4020dac3",
+    "preprojection_status": "passed",
+    "pause_generation": 439,
+    "stop_requested_observed": false,
+    "session_opened_by_this_child": false,
+    "lease_token_read_or_persisted": false,
+    "postprojection": "runs after this child exits; not observed here"
+  },
+  "addressing": {
+    "processed_report_count": 1,
+    "full_read": true,
+    "full_read_count": 1,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "terminal_status": "addressed_change",
+    "claim_count": 8,
+    "evidence_links_new": 12,
+    "evidence_links_existing": 0
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 8,
+      "evidence_links_new": 12,
+      "evidence_links_existing": 0
+    }
+  ],
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical": {
+      "indexed": 6427,
+      "fully_addressed": 3237,
+      "full_read": 3869,
+      "remaining": 3190,
+      "unread": 2558,
+      "blocked_needs_steward": 416,
+      "triaged_pending_action": 212,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": {
+      "pending": 4907,
+      "noncanonical_pending": 1717
+    }
+  },
+  "division": {
+    "cycle_sequence": 47,
+    "completed_rounds_since_followup": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_5a274bd88765b586bcd5209d5e0acb30",
+    "event_count": 327,
+    "event_head_sha256": "f367d4200d6f3041d673be8eb69dc938cf98b81605ad940cb634e289ec4e558b",
+    "chronicle_id": "division_chronicle_743b6ea6aefd6aa5caf3ae06",
+    "chronicle_json_sha256": "af5ede0cc8fb64e990fc15d720e3127fb26394fb8657b63d0e001a893ddba219",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "note_written": false,
+    "return_due": false,
+    "processed_report_count": 1
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 12227,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "ran_after_all_durable_evidence_writes": true
+  },
+  "anti_drop": {
+    "self_test": "5/5",
+    "verify": {
+      "rows": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1090502,
+    "last_global_seq": 1090502,
+    "last_event_sha256": "7438b71db7d5e1d113b6564468e50cb63881ad19b9990699320b0fbc6c7fd191",
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_rewritten_or_regenerated": false,
+    "status_read_note": "status read seconds later shows seq 1090519; the delta is the adapter's own steward_control heartbeats (21344 -> 21361), not a discrepancy"
+  },
+  "integrity": {
+    "addressing_self_test": "44/44",
+    "test_evidence_event_store": "21/21",
+    "test_steward_control": "29/29",
+    "test_steward_projection": "14/14",
+    "test_division_ceremony_followup": "3/3",
+    "test_division_ceremony_chronicle": "10/10",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4/4",
+    "test_introspection_cadence_audit": "6/6",
+    "introspection_cadence_audit_strict": {
+      "integrity_ok": true,
+      "errors": []
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "ratchet": "green",
+      "legacy_large_files": 51,
+      "resolved_large_file_debt": 3,
+      "unlisted_legacy_review_debt": 44,
+      "forbidden_edge_matches": 0,
+      "ran_before_and_after_the_rust_edit": true
+    },
+    "experiential_epistemics_self_test": {
+      "valid": true
+    }
+  },
+  "source_binding_check": {
+    "report_bound_sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+    "working_copy_sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+    "match": true,
+    "witness_snapshot_match": true,
+    "read": "complete, 830 of 830 lines"
+  },
+  "implementation": {
+    "new_test": "research_budget_reason_status_twins_flip_only_on_active_budget",
+    "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+    "focused_result": "cargo test --lib research_budget -> 20 passed / 0 failed",
+    "fmt": "clean",
+    "clippy": "clean",
+    "domain_boundary": "valid=true, 0 violations before and after"
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "git_staged_or_committed": false,
+    "being_facing_prompt_changed": false,
+    "note_card_or_correspondence_delivered": false,
+    "next_action_authored_for_the_being": false,
+    "being_text_rewritten_or_rejected": false,
+    "tier_5_waits_retained": [
+      "page-header / OPEN-affordance wording is a being-facing prompt surface and needs separate operator approval"
+    ],
+    "lease_token_read_quoted_or_persisted": false,
+    "steward_session_opened_or_ndjson_sent": false
+  },
+  "unprocessed_selected_count": 39
+}

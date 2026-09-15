@@ -1,0 +1,43 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml activity_reading::",
+      "when": "baseline, before the edit",
+      "passed": 14,
+      "failed": 0,
+      "note": "establishes the crate compiles with the pre-existing foreign dirty authority_gate.rs"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml activity_reading::",
+      "when": "after adding restart_refuses_legacy_cursor_recovery_when_retained_source_is_unavailable",
+      "passed": 15,
+      "failed": 0,
+      "note": "new test green; non-vacuous because load_activity().unwrap_err() would panic on Ok, and the exact refusal string is asserted"
+    },
+    {
+      "command": "cargo fmt --all -- --check",
+      "passed": true,
+      "failed": 0
+    },
+    {
+      "command": "git diff --check",
+      "passed": true,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "valid": true,
+      "violation_count": 0,
+      "legacy_large_file_count": 51,
+      "unlisted_legacy_review_debt_count": 44,
+      "note": "tests.rs grew 442 -> 495 lines; no ceiling crossed, so no baseline or manifest re-capture was required in this change"
+    }
+  ],
+  "not_run": [
+    {
+      "command": "cargo clippy --workspace --all-features -- -D warnings",
+      "reason": "full-workspace pedantic clippy exceeds the round budget; the change is a test-module append with no new production surface and cargo fmt plus the focused suite are clean"
+    }
+  ]
+}

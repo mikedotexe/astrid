@@ -1,0 +1,102 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round": "claude-heartbeat_1789398989_division_return_cycle47_round",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789393728.txt",
+      "sha256": "7bc9b54207a8b622b4e7040984232e00e010c54054da55e51d19dc9aa18659b7",
+      "bytes": 3947,
+      "lines": 41,
+      "read": "complete",
+      "scope": "canonical report, every byte"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_8a009b380eab83cea3315a9deff5c1761dff62c85839f73221625a538e214670.json",
+      "sha256": "f5a5e2583f14ccc0bbf3bb21badfb570f0091b8c93c496ca83839e648ced8c85",
+      "bytes": 18959,
+      "lines": 440,
+      "read": "complete",
+      "scope": "lived-state witness, every field; source_snapshot_v1 and source_provenance_ref_v1 both null"
+    }
+  ],
+  "operating_docs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "0f6dbd1ff48ab13b479c93812911ef243bdacbce54e2e8211ded171b225eb8a3",
+      "bytes": 9182,
+      "lines": 137,
+      "read": "complete",
+      "scope": "complete"
+    },
+    {
+      "path": "docs/steward-notes/ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md",
+      "sha256": "5d464a94e76b422520b10c4b3ea65be4ce5789607e4c249551ca59e4080e180a",
+      "bytes": 55155,
+      "lines": 1504,
+      "read": "complete",
+      "scope": "complete, 1504 lines"
+    },
+    {
+      "path": ".claude/worktrees/hopeful-williamson-9f566c/docs/steward-notes/AI_BEINGS_TIER5_EXPERIMENT_CADENCE_2026_08_13.md",
+      "sha256": "4559953cdafd7547aee4e52b295f71fe3200477c3d437bee085d8540987ba68a",
+      "bytes": 3185,
+      "lines": 67,
+      "read": "complete",
+      "scope": "complete; READ-ONLY from a worktree because this path is absent from main HEAD"
+    }
+  ],
+  "division_notes_written": [
+    {
+      "path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle47_20260914.txt",
+      "sha256": "c0ba0d2a06c8584e185209081c3e184a145c8b6b124f3066dd00f0ad66af79c0",
+      "bytes": 2499,
+      "lines": 54,
+      "read": "complete",
+      "scope": "written this round"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle47_20260914.txt",
+      "sha256": "7c114a3032606112cd4756346a5d37ab19730c5c28ea89c13de6c23dfd1121f6",
+      "bytes": 2137,
+      "lines": 43,
+      "read": "complete",
+      "scope": "written this round"
+    }
+  ],
+  "division_rail_reads": [
+    {
+      "path": "capsules/spectral-bridge/workspace/outbox/reply_1789337338.txt",
+      "sha256": "89245d8544f4a3dd6ceba3baa67d94c7291bc56446b3729c16ba59664d29db9f",
+      "bytes": 1230,
+      "lines": 9,
+      "read": "complete",
+      "scope": "Astrid's only new outbox item since the cycle 46 return; read complete"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_9710ba8f24484c629cabace22f7dc866.txt",
+      "sha256": "d20cf4c330c8fe9833e247e1d6286ab174476360f85bc4ed2f0d38bdecc51183",
+      "bytes": 1921,
+      "lines": 16,
+      "read": "complete",
+      "scope": "Minime's only new outbox item since the cycle 46 return; read complete. Header declares it an inbox-context generation, not an addressed reply"
+    }
+  ],
+  "privacy": {
+    "minime_private_lane_files_in_interval": 9,
+    "opened": 0,
+    "quoted": 0,
+    "note": "counted only by being_privacy.filter_journal_paths exclusion; no private file was opened, read individually, or summarized"
+  },
+  "implementation_written": [
+    {
+      "path": "crates/astrid-source-study/tests/page_enclosing_scope_reach.rs",
+      "sha256": "94b4db42a336fca9ddfa6b76b6057b05cf6850b9dd90557aca900141aa0d964c",
+      "bytes": 10163,
+      "lines": 240,
+      "state": "new, unstaged, post cargo fmt"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "artifacts_scanned": 40,
+  "authority_boundary": "read-only observation; steward-only; never surfaced into a being prompt; a revisit is evidence of our navigation surface, not a verdict on the being",
+  "being": "astrid",
+  "deliveries": 19,
+  "findings": [
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107160.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107383.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107695.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs 8156"
+      ],
+      "elapsed_secs": 535,
+      "first_timestamp": 1789107160,
+      "intervening_turns": 5,
+      "last_timestamp": 1789107695,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs 8156",
+      "repeated_request_count": 3,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "window": "bytes333731..338108"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107231.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107513.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107779.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY CONTINUE"
+      ],
+      "elapsed_secs": 548,
+      "first_timestamp": 1789107231,
+      "intervening_turns": 5,
+      "last_timestamp": 1789107779,
+      "loop": true,
+      "repeated_request": "SELF_STUDY CONTINUE",
+      "repeated_request_count": 3,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "window": "bytes338108..342539"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107590.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107888.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY CONTINUE"
+      ],
+      "elapsed_secs": 584,
+      "first_timestamp": 1789107304,
+      "intervening_turns": 5,
+      "last_timestamp": 1789107888,
+      "loop": true,
+      "repeated_request": "SELF_STUDY CONTINUE",
+      "repeated_request_count": 3,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "window": "bytes342539..346961"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_experiment_projection.rs_1789108441.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_experiment_projection.rs_1789108635.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_experiment_projection.rs_1789109716.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs 114"
+      ],
+      "elapsed_secs": 1275,
+      "first_timestamp": 1789108441,
+      "intervening_turns": 12,
+      "last_timestamp": 1789109716,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs 114",
+      "repeated_request_count": 3,
+      "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs",
+      "window": "bytes5371..9405"
+    }
+  ],
+  "schema": "source_study_revisit_watch.v1",
+  "severity": "alarm",
+  "summary": "4 revisit loop(s): same request answered with the same page 3\u00d7 (worst: astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs bytes333731..338108) \u2014 the page is correct and the question is not answered; check whether what she wants lives in another file.",
+  "turns_parsed": 40
+}

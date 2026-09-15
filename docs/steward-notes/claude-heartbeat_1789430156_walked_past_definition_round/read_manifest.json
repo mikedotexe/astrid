@@ -1,0 +1,47 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652.txt",
+      "sha256": "e531911c3d2680ae311a503e5455592ec8ee0318fe90e503703c838ebaf07ba4",
+      "bytes": 3442,
+      "lines": 29,
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_de20ecf2b0908beabf9d440efe65333728169c2ee6674c42cea54c514c41e9ae.json",
+      "sha256": "a7c2e6d6f01618d34b544e235527a0fb29161ac750f11bc325c34b4e48577ba9",
+      "bytes": 21421,
+      "lines": 498,
+      "witness_id": "lsw_de20ecf2b0908beabf9d440efe65333728169c2ee6674c42cea54c514c41e9ae",
+      "read": "complete"
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "path": "crates/astrid-source-study/tests/in_file_producer_walk_reach.rs",
+      "read": "complete",
+      "why": "the producer-ahead case this round mirrors"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/producer_name_search_reach.rs",
+      "read": "scoped",
+      "scope": "lines 1-60 plus RELATE/FIND call sites",
+      "why": "existing identifier-search reach shape"
+    },
+    {
+      "path": "docs/steward-notes/ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md",
+      "read": "complete",
+      "why": "operating law"
+    },
+    {
+      "path": "AGENTS.md",
+      "read": "complete",
+      "why": "operating law"
+    }
+  ]
+}

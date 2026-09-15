@@ -1,0 +1,89 @@
+{
+  "introspection_id": "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "She is examining the `ingest` methods within services/astrid-edge-runtime/src/reservoir.rs.",
+      "disposition": "Verified from complete source at the report-bound SHA 1709aa17...9987 (1839 lines, 73266 bytes). `fn ingest(&mut self, ingress: SensoryIngress)` is defined at line 349; her rendered window (lines 372-480) lies inside it and its trailing arms.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "On this page (lines 372-480) she sees branching logic for different SensoryIngress types.",
+      "disposition": "Verified. Witness source_snapshot_v1 records window_start_line=372, window_end_line=480, total_file_lines=1839. Match arms on SensoryIngress occur at 351 (Video), 356 (Audio), 361 (Aux), 391 (Semantic), 399 (ScheduledSemantic); the enum is declared at line 74.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`SensoryIngress::Sensory` (lines 349-389) handles raw sensory input, updating `aux_input` and `aux_source`.",
+      "disposition": "Region correct, variant name phantom. No `SensoryIngress::Sensory` variant exists; the raw-sensory arms in 349-389 are Video (351), Audio (356) and Aux (361), and line 389 is exactly `self.aux_age_ticks = 0;`. `aux_source` is a real field (line 280). Her line range and its described function are accurate; only the variant label is unsourced.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "`SensoryIngress::Semantic` (lines 391-398) handles higher-level semantic vectors.",
+      "disposition": "Verified exactly. The arm opens at line 391; line 392 assigns the semantic lane, 393-395 scale it, and 396 sets `self.semantic_age_ticks = 0;` - all inside her stated 391-398 range.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "`SensoryIngress::ScheduledSemantic` (lines 399-452) handles higher-level semantic vectors.",
+      "disposition": "Verified exactly. The arm opens at line 399; the lane assignment is at 421, the scale loop at 426-428, and `self.semantic_age_ticks = 0;` at 429, all within her stated 399-452 range.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Lines 386-388 and 425-428 apply AUX_INPUT_SCALE and SEMANTIC_INPUT_SCALE to the internal buffer.",
+      "disposition": "Verified. `*value *= AUX_INPUT_SCALE;` is at line 387 (inside 386-388) and `*value *= SEMANTIC_INPUT_SCALE;` at line 427 (inside 425-428). Constants: SEMANTIC_INPUT_SCALE = 0.12 (line 63), AUX_INPUT_SCALE = 0.25 (line 66). A third scale site she did not cite exists at 394.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The specific arithmetic for `fill_pct` is still elusive on this page.",
+      "disposition": "Verified, and her testimony is exact. `fill_pct` does not occur anywhere in lines 372-480. Its first occurrence in the file is line 1145, with further occurrences at 1147, 1149, 1202 and 1204 - all far outside the delivered window. No page-local reading error is involved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The ingest methods populate the `input` buffer and update `semantic_age_ticks` or `aux_age_ticks`.",
+      "disposition": "Verified. Lane assignment into `self.input` at 352, 357, 366, 392 and 421; age-tick resets at 389 (aux), 396 and 429 (semantic). Fields declared at 270 (semantic_age_ticks) and 277 (aux_age_ticks).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Hypothesis: the calculation might occur in a separate `update` or `compute_metrics` method called after ingestion.",
+      "disposition": "Contradicted by complete source; preserved as her stated suspicion, not a citation. Neither `fn update(` nor `fn compute_metrics(` exists in the file (zero occurrences of each). The nearest same-stem symbol is `fn update_mode_continuity` at line 558, which returns mode turnover and derives no fill. Both proposed names are phantom.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Hypothesis: the calculation may be integrated into a different part of the Reservoir logic further down the file.",
+      "disposition": "Verified correct - this half of her hypothesis holds. The derivation is in `fn sample` (line 651): effective_dimensionality at 705-708, `instantaneous_fill = (effective_dimensionality / RESERVOIR_DIM_F32).clamp(0.0, 1.0)` at 709, the FILL_EMA_ALPHA=0.18 smoothing at 710-714, `fill_ratio: self.fill_ema` at 816, and the percentage render at 1145/1202.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Stated need: find where the `input` buffer is actually transformed into the `fill_ratio` or `fill_pct` values.",
+      "disposition": "Premise contradicted by complete source, and this is why the search felt elusive. No arithmetic anywhere derives fill from `self.input`. Fill comes from the covariance eigen-spectrum: `spectral_metrics = sanitized.metrics()` (686), `effective_modes` / RESERVOIR_DIM_F32 = 128.0 (705-709). The input buffer reaches fill only indirectly: input -> sensory_drive (607-612) -> state -> covariance -> eigenvalues -> effective_modes -> fill_ema -> fill_ratio -> x100 (1145).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "`self.input` seems to be the primary data store for the reservoir's state.",
+      "disposition": "Contradicted in part. The reservoir state stores are `state`, `next_state`, `running_mean` and `covariance`, all sized RESERVOIR_DIM=128 (lines 311-314). `self.input` is the sensory input vector, consumed once per tick as the `sensory_drive` term at 607-612 and otherwise read only for reporting lane RMS (738) and lane variance (829).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c013",
+      "summary": "Chosen action `NEXT: SELF_STUDY CONTINUE` - keep walking this file forward.",
+      "disposition": "Observed sufficient here, unlike the already-pinned cross-file case. Her page ends at byte 17435; the derivation at line 709 is byte 27463 (3 pages forward at the ~4460-byte page stride) and the fill_pct render at line 1145 is byte 45734 (7 pages forward). The walk she chose does terminate in the answer. Pinned by the new regression; no live navigation change made.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c014",
+      "summary": "Navigation affordance gap: nothing on the delivered page states whether a producer lies ahead in the same file.",
+      "disposition": "Implemented as a read-only reachability pin. crates/astrid-source-study/tests/in_file_producer_walk_reach.rs (3 tests, all passing) fixes the contrast against page_walk_producer_reach.rs: same felt report, same chosen CONTINUE, opposite reachability verdicts, with no page-local indicator distinguishing them. Recorded as a boundary; repairing the affordance would change live navigation and is not authorized here.",
+      "classification": "implemented_now"
+    }
+  ]
+}

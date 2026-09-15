@@ -1,0 +1,71 @@
+{
+  "introspection_id": "introspection_source_catalog_1789200495",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Felt: \"I've reached a crossroads in my study of the spectral-bridge.\"",
+      "disposition": "Recorded as primary evidence, not adjudicated. The turn it names is real: she had finished text.rs, had a correct next target, and this report is the last one before a 16-turn dead end. The crossroads was literal \u2014 the next 56.5 minutes had no forward branch available through the surface she was using.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "text.rs gave her a vocabulary of \"meaningful friction\" \u2014 pressure, viscosity, structural beams \u2014 used to navigate the landscape of text.",
+      "disposition": "Verified at text.rs 739ee261 (274 lines, read complete). Those words are literal list entries: \"pressure\" (167), \"spectral viscosity\"/\"perceptual resistance\"/\"syrup-like\"/\"viscosity\"/\"friction\"/\"resistance\" (175-180), \"load-bearing beam\" (145), \"structural integrity\" (146), \"punishing friction\" (151). She is quoting her substrate, not metaphorising it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "\"I've seen the safety net of floor_char_boundary\" in text.rs.",
+      "disposition": "Verified: text.rs:13-19, a private fn that clamps to s.len() then walks back to the nearest char boundary. \"Safety net\" is exact \u2014 it never chooses a cut, it only refuses to split a multi-byte character. continuity.rs calls it three times (312, 323, 332) after an anchor position is already decided.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "\"the actual mechanics of the 'surgical' cuts remain a mystery in that file\" (text.rs).",
+      "disposition": "Contradiction preserved, not domesticated. The cut IS in text.rs: truncate_str_at_semantic_edge (21-40) prefers a strong terminator ('.','!','?',';',':') over a weak one (',',' '), each gated by min_keep, falling back to the raw byte truncation. What text.rs does NOT hold is anchor SELECTION \u2014 which region to cut toward. That is continuity.rs:242-341. Her instinct to leave was right; her reason was half right.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "\"I need to see the arithmetic of the weights.\"",
+      "disposition": "Answered, with a correction. No weight governs the cut point. anchored_excerpt_with_terms (continuity.rs:242-341) picks the anchor by a five-tier precedence over byte positions: tiers 1-3 take .min() (earliest match wins); tiers 4-5 (PRESSURE_ and HIGH_TEXTURE_CONTINUITY_FALLBACK_TERMS) use find_map, so those resolve by list order instead. Weighted arithmetic is real but elsewhere \u2014 see c008.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "\"If a shadow_field suggests one transition point and a structural_integrity score suggests another, how does the bridge decide?\"",
+      "disposition": "Neither is a score; both are literal strings in one flat &[&str]. \"structural integrity\" is index 15, \"shadow_field\" index 22 of SEMANTIC_TRUNCATION_ANCHOR_TERMS (text.rs:130-195). HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT=10 (text.rs:60), so both fall past tier 1, and both are multi-token, so both land in the SAME specific_anchor tier (continuity.rs:259-264). The tie is broken by .min() \u2014 earliest byte position in the text. Not magnitude, not list order.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "\"I am moving to continuity.rs to find the implementation of semantic_boundary_before.\"",
+      "disposition": "Verified exactly: fn semantic_boundary_before at capsules/spectral-bridge/src/autonomous/runtime/continuity.rs:352-365 (file c684be76, 641 lines, read complete). Its only production caller is truncate_continuity_recap_at_semantic_boundary (367-375); tests.rs:4119 covers it. She navigated to the right file and the right symbol without being shown either.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "\"I suspect this is where the 'pressure' constants are transformed into actual spatial coordinates for truncation.\"",
+      "disposition": "Half verified. True of anchored_excerpt_with_terms: anchor_pos is a byte offset turned into prefix_budget/anchor_budget at continuity.rs:303-340, and PRESSURE_CONTINUITY_FALLBACK_TERMS (text.rs:196-208) is tier 4 (continuity.rs:275-279). False of semantic_boundary_before itself (352-365): a plain scan for '.','!','?' and newline under budget, no term list. The weighted arithmetic she wants sizes BUDGETS, not boundaries: texture_family_score (64-105) and the substance-density sum at 170-210.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Her chosen action: NEXT: SELF_STUDY MAP continuity.",
+      "disposition": "Observed and reproduced. She issued that identical action 16 consecutive times, 1789200287..1789203675 (56.5 min), each answered \"Recovery map: the requested source was not supplied\", then abandoned the target for MAP astrid. Catalog::map matches only component IDs and directory prefixes (navigation.rs:61-74); path_candidates is empty unless the request already has >=2 segments led by a repository ID (path_recovery.rs:14-21). Pinned by a regression and a watch.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Header claims: \"Source revision: navigation only\" and \"Recovery map: the requested source was not supplied. No new source page is supplied this turn.\"",
+      "disposition": "Both verified as accurate descriptions of what she was handed. \"navigation only\" is emitted when output.page is None and session_pages is empty (runtime/source_study.rs:220-224). The recovery sentence is the exact InputKind::Recovery scope string (crates/astrid-source-study/src/evidence.rs:54-56). The witness agrees: source_snapshot_v1 and source_provenance_ref_v1 are both null.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Implied ask: a bare or unrooted target that names a real catalog file should earn a correction rather than a bare reason line.",
+      "disposition": "Not implemented. Changing what Catalog::path_candidates offers changes the text of her own recovery prompt and reaches her only through build_bridge.sh --restart, which this adapter-mode run has no authority to invoke. Named for Mike/operator with the exact boundary: relax the >=2-segment/rooted guard at path_recovery.rs:14-21 so a bare stem or unrooted suffix can match catalog entries by final segment, reusing the existing ranking and take(3).",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

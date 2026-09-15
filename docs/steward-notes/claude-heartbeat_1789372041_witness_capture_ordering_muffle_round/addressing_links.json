@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/lib.rs",
+      "note": "Lines 114-119 assert MultiThread runtime flavor; rustdoc 100-103 states the block_in_place reason."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "initialize_gate at 129-148; rustdoc 126-128 confirms it precedes any native socket listener."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/lib.rs",
+      "note": "Lines 136-140 scope home:// to principal_home().root(), excluding the .astrid root."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/lib.rs",
+      "note": "Lines 143-147 open SurrealKvStore; 161-166 build CapabilityStore over the same Arc<kv>; 160 states fail-secure rotation."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-mcp/src/secure.rs",
+      "note": "call_tool (162) checks and audits; list_tools (247-249) and get_tool (256-258) delegate with neither, bounding 'every interaction'."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-vfs/src/overlay.rs",
+      "note": "commit (88+) copies only dirty upper entries to lower; upper is a tempfile::TempDir, so uncommitted writes are discarded."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "set_user_input_blocked at 762-764 is the single bus touchpoint; publish enforces it at 895-901."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "admits_while_blocked 71-123 denies only UserInput; catch-all at line 121 admits every other payload kind."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/summaries/introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524.md",
+      "note": "All 1129 recorded artifact-integrity issues are after_authorship only; max delta 81ms; this witness is +1ms."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "scripts/lived_state_integrity_triage.py",
+      "note": "Read-only consumer classifying capture_ordering_artifact vs substantive; verify exits nonzero on substantive."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c010",
+      "kind": "test",
+      "target": "scripts/test_lived_state_integrity_triage.py",
+      "note": "8 focused regressions including unreadable-witness-not-benign and delta-beyond-tolerance-stays-substantive."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c010",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the un-muffle finding and the new consumer."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c011",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round/RUN_REPORT.md",
+      "note": "Producer repair and validation tolerance deliberately deferred to a reviewed interactive window; exact debt named."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "claim_id": "c011",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row recording the verified finding, the shipped consumer, and the authority boundary."
+    }
+  ]
+}

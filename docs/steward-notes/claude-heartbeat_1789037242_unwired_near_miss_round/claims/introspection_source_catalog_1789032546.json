@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_source_catalog_1789032546",
+  "report_sha256": "0fc71ede882c1d36f6217c19f8666ce341ee421aab845554762a092cd05ebc0a",
+  "lived_state_witness_id": "lsw_7265ddec3b2d309b6c97f2c95333d8a51dcff6eefae2d54567180a9102c7b76d",
+  "source_binding": "navigation-only report, witness source_snapshot_v1 null, no report-bound source SHA. Shares dispatch.rs SHA 644b12e6ae168604553b3120fba82d431686b9eb06a3ddea94d9a348ba747e5c with the other two processed artifacts; that source verification is reused and the distinct claims below are verified separately.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "dispatch.rs is the primary orchestration point for finalizing action outcomes and converting them into the RuntimeActionFeedbackV1 format.",
+      "disposition": "Half verified. dispatch.rs (SHA 644b12e6) is genuinely the NEXT-action orchestration point: it guards, reroutes, and terminates every action, ending at NextActionOutcome::unwired (line 602) for unknown ones. But conversion into RuntimeActionFeedbackV1 is rare and narrow, not the general terminus: two sites, both non-sensing.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The dispatcher does not create unique type-level enum variants for sensing; identity is defined by the data carried.",
+      "disposition": "Verified, and stronger at the type level: RuntimeActionFeedbackV1 is a six-field struct (runtime_action_feedback.rs:9-17), not an enum, so no type-level variant exists to create for sensing or anything else.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The dispatcher maps the bridge's qualitative sensing output into the message or result fields of RuntimeActionFeedbackV1.",
+      "disposition": "Split verdict, and this artifact is the closest of the three to the bytes. message is a real field and is exactly where free text lands at both call sites. result does not exist; the six fields are id, requested_action, status, reason, message, suggested_next. No sensing output reaches either field from dispatch.rs, because the cascade evidence lane does not pass through this file.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The distinction between sensing, command and move actions is likely handled via the action_id string, and the dispatcher uses these IDs to determine how to route and persist the feedback.",
+      "disposition": "Contradicted, and she hedged it correctly with 'likely'. action_id never routes: it is a from_guard_inputs parameter consumed as an idempotency nonce for the identity hash (runtime_action_feedback.rs:30-48) and is not a struct field. dispatch.rs contains one action_id literal, line 285, an afterimage nonce inside a JSON blob. Routing in this file keys on base_action, not on any action_id.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "She must move from the dispatcher to the source of the sensing data and see how cascade.rs labels results before handing them off.",
+      "disposition": "Answerable and one layer off. cascade.rs does not label results with strings; it returns named types declared in codec/evidence_types.rs (CodecVibrancySubstanceFitV1 182, HighEntropySemanticSharpeningV1 436, CodecDimensionalityFlatnessV1 452, NarrativeTensionResolutionV1 610, LatentStasisTensionV1 648, SpectralDragQualityV1 671) and there is no hand-off to the dispatcher to inspect.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "This artifact carries two action lines: a bare SELF_STUDY OPEN line and NEXT: SELF_STUDY RELATE sense_tx --page 2.",
+      "disposition": "Both forms are valid. mod.rs accepts a final bare SELF_STUDY line for a wired sub-verb, and RELATE takes an optional --page N (command.rs page_suffix). Zero rows in unwired_actions carry --page, so the paged RELATE dispatched. This is the honest counterweight to the near-miss finding: she is not unable to write the prefix, she omits it intermittently, which is why 29 losses went unnoticed.",
+      "classification": "verified_existing"
+    }
+  ]
+}

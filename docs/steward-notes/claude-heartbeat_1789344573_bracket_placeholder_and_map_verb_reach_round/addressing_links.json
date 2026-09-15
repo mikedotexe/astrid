@@ -1,0 +1,123 @@
+{
+ "links": [
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+   "note": "compound_live_intent_match 757-793 returns Some on a pure text predicate; 36-38 converts Some into CharterReason::CompoundIntent with no magnitude."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+   "note": "charter_required_guard_assessment 258-313: thread, active experiment, needs_charter status string, Some(reason); budget-row release 283-291. No numeric threshold."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+   "note": "The halt she was looking for: 122-143 returns NextActionOutcome::blocked(\"charter_required_guard\", message) with protected_summary visibility."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c001",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-heartbeat_1789344573_bracket_placeholder_and_map_verb_reach_round/summaries/introspection_source_catalog_1789339213.md",
+   "note": "Five-hop table of the full chain with exact line ranges at recorded hashes."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c002",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+   "note": "normalize_guard_signal 810-818 (lambda glyph, subscripts, dashes); \" then \" split 759; targeting/density/eigen/amplify 781-791; tags at 373, 407, 525."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c003",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+   "note": "fill_pct occurs only at 318, 321, 328 and inside spectral_state(...) 396; zero numeric comparisons on it anywhere in the file."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c004",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+   "note": "Policy enforcement is where she predicted: ActionContinuityStore impl, action_continuity/guards.rs 258-313."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c004",
+   "kind": "code",
+   "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+   "note": "The executor is not in that directory: dispatch.rs 122-143 performs the final transformation into a blocked outcome."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c005",
+   "kind": "code",
+   "target": "crates/astrid-source-study/src/navigation.rs",
+   "note": "Catalog::map 55-69 prefix-matches whole catalog IDs and bails \"no catalog entries for {topic}\" for a bare directory name."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c005",
+   "kind": "code",
+   "target": "crates/astrid-source-study/src/path_recovery.rs",
+   "note": "path_candidates 14-21 returns empty before building any candidate when the request has one segment or an unknown repository ID."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c005",
+   "kind": "test",
+   "target": "crates/astrid-source-study/tests/placeholder_bracket_path_reach.rs",
+   "note": "map_topic_has_no_bridge_relative_fallback_that_open_gives_the_same_word: OPEN resolves src/action_continuity/... while MAP of the same word recovers with no candidate; the rooted directory works."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c005",
+   "kind": "changelog",
+   "target": "CHANGELOG.md",
+   "note": "[Unreleased] entry naming the two pinned reach boundaries and the authority wait."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c005",
+   "kind": "ledger",
+   "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+   "note": "Dated ground-truthed row for this report."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c006",
+   "kind": "code",
+   "target": "crates/astrid-source-study/src/catalog.rs",
+   "note": "resolve 101-118: a rooted first segment goes to resolve_id (\"source unavailable locally\"); <astrid falls to the relative branch and reports \"source not found\"."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c006",
+   "kind": "code",
+   "target": "crates/astrid-source-study/src/path_recovery.rs",
+   "note": "path_candidates 40-73 normalizes _ to - for its tiebreak, so the exact spelling sorts first for the bare form; the bracketed form never reaches that code."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c006",
+   "kind": "test",
+   "target": "crates/astrid-source-study/tests/placeholder_bracket_path_reach.rs",
+   "note": "bracket_wrapped_rooted_path_loses_the_candidate_block_its_bare_twin_receives: exact spelling first for the bare path, no candidate block for the <...> twin."
+  },
+  {
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "claim_id": "c007",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-heartbeat_1789344573_bracket_placeholder_and_map_verb_reach_round/RUN_REPORT.md",
+   "note": "Recorded Mike/operator approval wait with the exact widening points; not exercised, nothing deployed or queued."
+  }
+ ]
+}

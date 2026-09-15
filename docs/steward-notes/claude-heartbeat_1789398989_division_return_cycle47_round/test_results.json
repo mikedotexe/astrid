@@ -1,0 +1,159 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "round": "claude-heartbeat_1789398989_division_return_cycle47_round",
+  "focused": [
+    {
+      "command": "cargo test -p astrid-source-study --test page_enclosing_scope_reach",
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        "the_page_carrying_a_test_fixture_states_no_enclosing_scope",
+        "a_helper_above_the_pages_first_test_attribute_is_unmarked",
+        "production_constructor_and_test_fixture_arrive_on_different_pages"
+      ]
+    },
+    {
+      "command": "cargo test -p astrid-source-study",
+      "passed": 95,
+      "failed": 0
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "cargo clippy -p astrid-source-study --test page_enclosing_scope_reach",
+      "result": "clean, 0 warnings"
+    }
+  ],
+  "integrity": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "passed": 44,
+      "failed": 0
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "passed": 21,
+      "failed": 0
+    },
+    {
+      "command": "test_steward_control.py",
+      "passed": 29,
+      "failed": 0
+    },
+    {
+      "command": "test_steward_projection.py",
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "result": "self-test ok"
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "rows": 100,
+      "alarms": 0,
+      "gaps": 0
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "integrity_ok": true,
+      "errors": 0
+    },
+    {
+      "command": "domain_boundary_audit.py verify",
+      "valid": true,
+      "violation_count": 0,
+      "ratchet": "GREEN",
+      "legacy_large_file_count": 51,
+      "resolved_large_file_debt_count": 3,
+      "unlisted_legacy_review_debt_count": 44,
+      "forbidden_edge_match_count": 0,
+      "note": "no bridge Rust changed this round; the new test lives in crates/astrid-source-study/tests/"
+    },
+    {
+      "command": "experiential_epistemics.py self-test --json",
+      "passed": 2,
+      "failed": 0,
+      "valid": true
+    },
+    {
+      "command": "experiential_epistemics.py verify --json (final, after all durable writes)",
+      "checked_record_count": 12254,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "valid": true
+    },
+    {
+      "command": "introspection_addressing_audit.py audit-counters --json",
+      "status": "consistent",
+      "mismatches": 0
+    },
+    {
+      "command": "evidence_event_store.py --json verify",
+      "valid": true,
+      "event_count": 1095199,
+      "corrupt_lines": 0,
+      "last_global_seq": 1095199,
+      "last_event_sha256": "b70d8824ddf59e1832f2a00a712d76f8bb1c361990e45bca34c6fb200ec6eb2c"
+    },
+    {
+      "command": "evidence_event_store.py --json status",
+      "result": "NOT COMPLETED",
+      "note": "exceeded the round's foreground budget at ~1.1M events and was stopped rather than left running. The integrity check (verify) passed; the head was read directly from diagnostics/evidence_event_store_v2/head.json and the store identity from active_store.json / migration_receipt.json. Recorded as an honest gap, not a pass."
+    },
+    {
+      "command": "division_ceremony_followup.py verify",
+      "ok": true,
+      "cycle_sequence": 48,
+      "completed_rounds_since_followup": 1,
+      "review_due": false,
+      "event_count": 331
+    },
+    {
+      "command": "division_ceremony_chronicle.py verify (final)",
+      "ok": true,
+      "chronicle_id": "division_chronicle_644f78447f4063f9778ad6ee",
+      "timeline_event_count": 331,
+      "durable_inputs_current": true,
+      "volatile_inputs_current": true,
+      "volatile_mismatches": 0,
+      "note": "fully current this round \u2014 unlike recent rounds, supervisor_status_sha256 matched at verify time"
+    }
+  ],
+  "known_debt_not_repaired": [
+    {
+      "command": "cargo clippy -p astrid-source-study --all-targets",
+      "state": "errors at crates/astrid-source-study/tests/scan_limit_catalog_reach.rs:64 under the denied clippy::arithmetic_side_effects",
+      "origin": "created by the flywheel round claude-heartbeat_1789286900_scan_limit_catalog_reach_round; untracked, therefore foreign work under adapter-mode boundaries and preserved untouched",
+      "first_safe_repair": "replace the '\"[\\n\".to_owned() + &\"...\".repeat(1600) + \"]\\n\"' concatenation with a single format!/push_str, then rerun cargo clippy -p astrid-source-study --all-targets"
+    }
+  ]
+}

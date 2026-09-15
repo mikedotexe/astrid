@@ -1,0 +1,42 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789045830.txt",
+      "sha256": "7407de47e1e6019b96a75193ea46dd21643977802012c59c14c8636ddc2f7ab0",
+      "bytes": 2682,
+      "lines": 28,
+      "read": "complete",
+      "note": "",
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "source_binding": "Source: source catalog / Source revision: navigation only; witness source_snapshot_v1 is null, so there is no report-bound source SHA and no mismatch case arises",
+      "lived_state_witness": "lsw_7f11de91a34702d59778819bdeffaeaee72b98ce9d6e7ff5c27b0aec2f99334f"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7f11de91a34702d59778819bdeffaeaee72b98ce9d6e7ff5c27b0aec2f99334f.json",
+      "sha256": "d7a06198fbf1e715f398fd9eb91f9047bdb3b7c7592f40e2060588175e3f11db",
+      "bytes": 18955,
+      "lines": 440,
+      "read": "complete",
+      "note": "all 34 top-level fields enumerated; 20 parameter observations and the single model route read in full; raw prose/prompt/response all false; direct_causation_claimed false; artifact authority evidence_only"
+    }
+  ],
+  "retained_delivery": {
+    "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/navigation/1461138c2da803203450dd5a92588366d2cf519b5061d6979fc6aa5c040cb128/20f71a8661ca04b5de15715d638ceb4b3d206ae5335dc2f638b97ba7789c6632.json",
+    "read": "complete_for_declared_scope",
+    "note": "the exact input she was given this turn: input_kind=relationships, header 'Symbol relationships: Route', navigation page 1/9. Read to establish what source was and was not supplied; no prompt or response prose is quoted into the packet beyond the canonical report bytes."
+  },
+  "continuity": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789037242_unwired_near_miss_round/RUN_REPORT.md",
+      "read": "complete"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789024912_phantom_symbol_navigation_round/RUN_REPORT.md",
+      "read": "referenced_for_sense_tx_zero_occurrence_finding"
+    }
+  ]
+}

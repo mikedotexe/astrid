@@ -1,0 +1,5 @@
+{
+  "links": [
+    {"introspection_id":"introspection_source_catalog_1789235097","claim_id":"c005","kind":"steward_note","target":"docs/steward-notes/claude-heartbeat_1789238227_division_return_cycle45_next_action_delivery_round/delivery_coverage_next_action.json","note":"Her chosen target measured rather than acted on: dispatch.rs sits at 96.7% of its current revision across 3 revisions, so the residue she is going after is small and real. Recorded as context for her move; the move stays hers and was not routed, seeded or pre-empted."}
+  ]
+}

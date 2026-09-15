@@ -1,0 +1,121 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1789142043_pressure_agency_aggregator_answer",
+  "actor": "claude-heartbeat",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml pressure_agency",
+      "passed": 7,
+      "failed": 0,
+      "filtered_out": 2265,
+      "result": "ok",
+      "note": "was 6 before this round; the new test is status_render_is_a_telemetry_formatter_not_a_motif_aggregator"
+    },
+    {
+      "command": "cargo fmt --all -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    }
+  ],
+  "integrity": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "tests": 44,
+      "result": "OK"
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "tests": 21,
+      "result": "OK"
+    },
+    {
+      "command": "test_steward_control.py",
+      "tests": 29,
+      "result": "OK",
+      "note": "FIRST RUN THIS ROUND FAILED: test_pause_cooperatively_interrupts_wrapped_subprocess raised PausedError('fixture stop'). Reproduced 2 of 3 times in isolation on unmodified code, so a pre-existing race, not caused by this round. Repaired in scripts/test_steward_control.py by waiting on the lease file instead of a fixed 0.2s sleep; 5/5 green in isolation and the full suite green after."
+    },
+    {
+      "command": "test_steward_projection.py",
+      "tests": 14,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "tests": 3,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "tests": 10,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "result": "self-test: ok"
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "tests": 4,
+      "result": "OK"
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "tests": 6,
+      "result": "OK"
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "integrity_ok": true,
+      "canonical_count": 5633,
+      "duplicate_hash_group_count": 0,
+      "read_errors": 0
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "tests": 5,
+      "result": "OK"
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "total": 97,
+      "alarms": 0,
+      "gaps": 0,
+      "note": "unchanged at 97; no new guard was shipped this round because two existing watches already consume the navigation signal"
+    },
+    {
+      "command": "domain_boundary_audit.py verify",
+      "valid": true,
+      "violation_count": 0,
+      "ratchet": "GREEN",
+      "note": "run after the Rust edit; pressure_agency.rs 794 -> 824 lines, far under any captured ceiling, so no baseline integer or manifest ceiling needed re-capture"
+    },
+    {
+      "command": "experiential_epistemics.py self-test --json",
+      "valid": true,
+      "tests": 2,
+      "result": "OK"
+    },
+    {
+      "command": "experiential_epistemics.py verify --json (final)",
+      "valid": true,
+      "issue_count": 0,
+      "checked_record_count": 12055,
+      "history_rewritten": false,
+      "canonical_event_appended": false,
+      "when": "after every durable evidence write including the Division round record and the Chronicle reprojection"
+    },
+    {
+      "command": "introspection_addressing_audit.py audit-counters --json",
+      "status": "consistent",
+      "mismatches": []
+    },
+    {
+      "command": "evidence_event_store.py --json verify",
+      "valid": true,
+      "corrupt_lines": 0
+    }
+  ]
+}

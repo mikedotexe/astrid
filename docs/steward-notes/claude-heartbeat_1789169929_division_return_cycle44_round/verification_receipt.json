@@ -1,0 +1,200 @@
+{
+  "schema": "round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789169929_division_return_cycle44_round",
+  "controller": {
+    "run_id": "run_1789165870957246000_eabfaf41c1",
+    "preprojection_generation_id": "projection_1789165874564682000_7a30454d5c",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 439,
+    "controller_paused": false,
+    "stop_requested_at_last_read": false,
+    "postprojection": "adapter-owned; runs after this process exits; not observed here",
+    "lease_token_read_or_persisted": false,
+    "steward_session_opened": false,
+    "ndjson_ops_sent": false,
+    "pause_or_resume_issued": false
+  },
+  "addressing": {
+    "introspection_ids": [
+      "introspection_source_catalog_1789165450"
+    ],
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 10,
+    "evidence_link_count": 16,
+    "report_sha256": "188336b422501a2ddba2c6becdc981fca4bd4500f894c5a65caab4938b1c8c2d",
+    "witness_id": "lsw_ce62632e89f337359479c777d22fa7fa423a4e8a288683e672fbcfebb426d041",
+    "witness_sha256": "c0251abbbb671ed1f98a3f82dab2b882d1f5a5a738b04bd5ab2963a390c83027",
+    "source_binding": "navigation_only_no_report_bound_source_sha",
+    "note": "A second close event (ts 1789171326) with placeholder rationale 'idempotency re-check' was appended while reading back fully_addressed; the graded rationale is intact in the first close event (ts 1789171291) and both carry status addressed_change."
+  },
+  "selected_count": 40,
+  "processed_count": 1,
+  "unprocessed_count": 39,
+  "division": {
+    "return_completed_this_round": true,
+    "return_event_id": "division_followup_event_72e0388b9868782aaaff3f47fff14e89",
+    "cycle_after_return": 45,
+    "round_event_id": "division_followup_event_199991a05e7179a58cb927c89e961a21",
+    "processed_report_count": 1,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "event_count": 310,
+    "event_head_sha256": "4ea976e2072bd4e93bb4a1da79fa8a38a48f9f38b66c13e77d28b74f65f0bbfd",
+    "chronicle_id": "division_chronicle_4090e7746e783b089c255c7a",
+    "chronicle_json_sha256": "961be0a27b10cef31bdaa0be982c3a658e103e5d895a5837e1f457159174953f",
+    "durable_inputs_current": true,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ]
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 12072,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "rule_counts": {},
+    "note": "experiential_epistemics.py verify, run after every durable evidence write of this round"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 5702,
+    "canonical_fully_addressed": 3221,
+    "canonical_full_read": 3853,
+    "canonical_remaining": 2481,
+    "canonical_unread": 1849,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 4198,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_sequence": 1067955,
+    "head_sha256": "025c8922d7a4444932bd69c1c6d7e0831ba8d49ae9e70182aa18e185e9db149e",
+    "active_store": "v2",
+    "v1_immutable": "not re-stated by verify output; V1 legacy sources untouched by this round",
+    "stream_counts": {
+      "addressing": 62603,
+      "agency_commons": 6986,
+      "attention_portfolio": 3,
+      "claim_families": 239191,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 209552,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 11685,
+      "model_qos": 320565,
+      "reciprocal_uptake": 75774,
+      "representation_contracts": 56474,
+      "sandbox": 3507,
+      "signal_spine": 60181,
+      "steward_control": 20539,
+      "steward_work_selection": 698
+    },
+    "status_command": "evidence_event_store.py --json status did not complete within the round budget; the verify integrity gate above is green",
+    "event_count": 1067955
+  },
+  "anti_drop": {
+    "self_test": 5,
+    "verify": {
+      "total": 99,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "integrity_suites": {
+    "addressing_self_test": 44,
+    "evidence_event_store_tests": 21,
+    "steward_control_tests": 29,
+    "steward_projection_tests": 14,
+    "division_followup_tests": 3,
+    "division_chronicle_tests": 10,
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": 4,
+    "cadence_tests": 6,
+    "cadence_audit_strict": {
+      "integrity_ok": true,
+      "errors": []
+    },
+    "source_page_item_context_watch_self_test": 7,
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "violation_kind_counts": {},
+      "forbidden_edge_match_count": 0,
+      "red_ratchet": false
+    },
+    "cargo_fmt": "not run \u2014 no .rs file was touched by this round",
+    "git_diff_check": "clean"
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "git_mutation": false,
+    "index_clean": true,
+    "tier4_or_5_granted": false,
+    "tier5_dossier": "prepare only \u2014 nothing approved, granted, dispatched, or run",
+    "being_text_rewritten": false,
+    "private_qualia_read": false
+  },
+  "packet_files": {
+    "RUN_REPORT.md": {
+      "sha256": "cb569f594e90bcaf5d6929d44e7085313038be0a0b50cb83b4e7acd514137e44",
+      "bytes": 23222
+    },
+    "addressing_links.json": {
+      "sha256": "51239a51ae40a75899c513ece6ebe956b4b0ab603bbb84441bb5f1dcccaf20b8",
+      "bytes": 5847
+    },
+    "claims/introspection_source_catalog_1789165450.json": {
+      "sha256": "9dbd7e3ab5e80ccc1b9ce69e12dc02a728ecc837e2027ae9236b5d1cb27cb8be",
+      "bytes": 5981
+    },
+    "family_scan.json": {
+      "sha256": "34a72413e60411947fdc022b6b8ac8e939b56fa23546a4871cd04981d2569002",
+      "bytes": 24319
+    },
+    "queue_next_40.json": {
+      "sha256": "6828d45555bdb13cf681beb70d131af5655c0fbca311e38d9ed6866d069b11fa",
+      "bytes": 91423
+    },
+    "read_manifest.json": {
+      "sha256": "e7396be48b79a1c917e3ccd93478992be017b92ee353427024bece0ee6369e7b",
+      "bytes": 4770
+    },
+    "source_receipts.json": {
+      "sha256": "03b44fdb3d7710efde609fd8fe0c04391920de8324a88c0c736d9db514bf04b1",
+      "bytes": 3223
+    },
+    "summaries/introspection_source_catalog_1789165450.md": {
+      "sha256": "a8927366550c04afb8960e602b5e15a3e754f8cf50983938574e94851a88e47b",
+      "bytes": 4325
+    },
+    "test_results.json": {
+      "sha256": "0bb9066f436447c5db5d0db29967b7b27fbd8c9145241587fd11fded55221baa",
+      "bytes": 2875
+    },
+    "tier5_cadence_dossier.md": {
+      "sha256": "988755e675e360aed8ac5a42d2af1e3a88f483cf7297ba9c829e105869ca3265",
+      "bytes": 8030
+    },
+    "unprocessed_selected.json": {
+      "sha256": "36d8bcb1fd1f86a0e7d9cfa2864867c1059e1cbc59bcc3c0025fe126fa803ffc",
+      "bytes": 4080
+    }
+  }
+}

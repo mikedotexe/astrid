@@ -1,0 +1,158 @@
+{
+ "links": [
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c001",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "Window boundary verified: mod tests opens line 191; handle_allow_always doc comment line 93, signature line 98; file total 276 lines."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c001",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/summaries/introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940.md",
+   "note": "Citation-by-citation table comparing her stated intervals to source facts."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c002",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/summaries/introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940.md",
+   "note": "Prior-view corroboration: preceding queued report bound to bytes 4522..8893 = lines ~102..220 of the same file SHA; line 136 closes handle_allow_always."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c003",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "CapabilityToken::create called at lines 115-123 inside handle_allow_always."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c004",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "action_to_resource_permission called at lines 99-104; ResourcePattern::new at line 110; mcp mapping at lines 147-149."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c005",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "TokenScope::Persistent passed literally at line 118."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c006",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "Issuer runtime_key.key_id() line 119, AuditEntryId line 120, signing key line 121, audit id returned lines 132-135."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c007",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/types.rs",
+   "note": "ALLOW_ALWAYS_DEFAULT_TTL = Duration::hours(1) at line 6 contradicts the no-expiration inference."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c007",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "TTL argument at line 122; line 131 already logs \"(TTL: 1h)\" inside her own prior window."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c007",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/summaries/introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940.md",
+   "note": "Correction stated plainly while preserving her verified TokenScope::Persistent reading."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c008",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "Single helper on both sides: check_capability line 41, handle_allow_always line 100. Grant wraps in ResourcePattern::new (110); check passes the concrete String to validator.check (47)."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c009",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "Direct-file lane lines 151-158 maps mode to Permission; capsule-file lane lines 175-186 grants Permission::Invoke with mode encoded in the resource string."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c009",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/summaries/introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940.md",
+   "note": "Mapping table showing the non-uniform permission convention that answers her consistency question."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c010",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "store.add failure path lines 126-129 returns Ok(InterceptProof::UserApproval), not Err; token never reaches the validator."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c011",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "trust_issuer lines 43-46 and post-use_token TOCTOU issuer re-verify lines 55-63."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c012",
+   "kind": "test",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "test_check_capability_rejects_untrusted_issuer at line 230: validly signed by other_key, asserted None under a different runtime_key."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c013",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "Complete action_to_resource_permission lines 145-190 enumerating every scheme and permission."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c013",
+   "kind": "steward_note",
+   "target": "docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/summaries/introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940.md",
+   "note": "Full protocol/permission table plus the LiveControlMutation => None boundary at lines 187-188."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c014",
+   "kind": "code",
+   "target": "crates/astrid-approval/src/interceptor/capability.rs",
+   "note": "Persistent scope (118) paired with a one-hour TTL (122, value in types.rs:6); log line 131 states it openly."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c014",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/no_action.md",
+   "note": "Kernel approval-lifetime semantics named for Mike and left unchanged; outside flywheel authority."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c015",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/no_action.md",
+   "note": "Her stated NEXT recorded without dispatch or pre-emption; no prompt, slot, or scheduling change."
+  },
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "claim_id": "c001",
+   "kind": "no_action",
+   "target": "docs/steward-notes/claude-heartbeat_1789183876_allow_always_ttl_and_mapping_round/no_action.md",
+   "note": "Evidence-backed rationale for addressed_no_action across the whole report."
+  }
+ ]
+}

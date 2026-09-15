@@ -1,0 +1,123 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "Complete read, 864 lines / 30543 bytes, SHA 1b8c8385c944. Two LeaseKind variants (57-58), each with its own schema and lease file; every action runs lease validation plus hash and filesystem checks."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789494400_division_return_cycle48_kernel_maintenance_catalog_round/summaries/introspection_source_catalog_1789490042.md",
+      "note": "Five-pillar reading verified against current source; navigation-only binding recorded."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "Boot identity gate (433), nonce-bound lease_id (426-429), uid 0 expected (341), reflection lease 0o440 + gid == runtime_gid and transition lease 0o444 (363-365) - stricter than group-only."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "Existing regression scheduled_reflection_lease_rejects_a_foreign_runtime_group (753-787) pins the GID check she named."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "select_active_lease (318-330) matches (Active, Active) first and bails 'generation transition and scheduled reflection leases overlap' - hard exclusion, not precedence."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "Existing regression transition_and_reflection_can_never_be_selected_together (790-817) asserts the overlap error and the single-active selection."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "stable_read (592-628) compares dev/ino/len/mtime across before, opened, after and path_after; atomic_owner_write (631-653) does sync_all, rename, then fsyncs the parent directory at 652."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "struct CoreAck (89-109) carries why (lease schema/kind/id/nonce+payload SHA, generation, blocked_since, acknowledged_at, authority), process context (pid, process_start_ticks) and interaction status (ipc_user_input_blocked, active_*, drain_barrier_sequence); built at 492."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "Existing regression core_ack_v2_exposes_the_exact_common_lease_binding (818-863) pins the ACK field contract."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-source-study/catalog.toml",
+      "note": "astrid include list carries crates/** (line 6) and the kernel component names astrid/crates/astrid-kernel/src/lib.rs (line 66): the file IS in the catalog, so the attributed cause is contradicted."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/catalog.rs",
+      "note": "Catalog::resolve (88-118): a bare relative name tries astrid/<name>, astrid/capsules/spectral-bridge/<name>, minime/<name> and bails 'source not found; use SELF_STUDY FIND <text> or an exact repository/path' - distinct from resolve_id's coverage bail (133-137). Path form, not coverage."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c006",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] 'Steward - Division return cycle 48 + a navigation cause corrected (2026-09-15)' records the contradiction and the deliberate no-test boundary."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-09-15 row: second instance in two days of a path-form failure read as catalog coverage, via a different code path than the 2026-09-14 path_candidates gate."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789494400_division_return_cycle48_kernel_maintenance_catalog_round/summaries/introspection_source_catalog_1789490042.md",
+      "note": "Contradiction stated plainly with her underlying obstacle preserved as real and ours."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Baseline (7) and BaselineEntry (13), inside the private module declared at lib.rs:15 - the definition her next step is looking for."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/catalog.rs",
+      "note": "resolve splits a leading known repository id before lookup (101-105), so her chosen 'astrid/crates/astrid-kernel' form is the one that resolves; no Capability declaration exists in astrid-kernel, astrid-core or astrid-types."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789490042",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789494400_division_return_cycle48_kernel_maintenance_catalog_round/summaries/introspection_source_catalog_1789490042.md",
+      "note": "Observed only; no navigation surface, catalog, resolver or error string changed."
+    }
+  ]
+}

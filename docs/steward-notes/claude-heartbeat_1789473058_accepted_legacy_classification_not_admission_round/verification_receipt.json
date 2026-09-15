@@ -1,0 +1,153 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round": "claude-heartbeat_1789473058_accepted_legacy_classification_not_admission_round",
+  "actor": "claude-heartbeat",
+  "mode": "steward_control.py subprocess run adapter — no session opened, no NDJSON ops, no pause/resume, no lease token read, quoted or persisted",
+  "controller": {
+    "run_id": "run_1789467045605525000_7e8471b7e5",
+    "preprojection_generation_id": "projection_1789467052799898000_2ac37ec532",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "preprojection_duration_ms": 5602324,
+    "postprojection": "adapter-owned; runs after this process exits",
+    "pause_generation": 439,
+    "stop_requested_observed": false
+  },
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1789466923",
+    "full_read": true,
+    "full_read_count": 1,
+    "claims": 11,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "status": "addressed_duplicate",
+    "evidence_links": {
+      "batch_rows": 19,
+      "new": 19,
+      "existing": 0,
+      "events_appended": 19
+    },
+    "lived_state_artifact_integrity_issue_count": 1,
+    "lived_state_note": "Queue flagged lived_state_alignment=artifact_integrity_unavailable with one gap; reconciled in claim c011 as absent source_snapshot_v1 on a navigation-only turn, not a byte contradiction (artifact_sha256 matches the report bytes; canonical_body_binding_v1 1087 B)."
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 6834,
+    "canonical_fully_addressed": 3245,
+    "canonical_full_read": 3877,
+    "canonical_remaining": 3589,
+    "canonical_unread": 2957,
+    "canonical_blocked_needs_steward": 416,
+    "canonical_triaged_pending_action": 212,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 5306,
+    "noncanonical_pending": 1717
+  },
+  "division": {
+    "cycle_sequence": 48,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due_at_round_start": false,
+    "review_due_after_record": true,
+    "round_event_id": "division_followup_event_111aba030cd8acb35b5cc62a208fd909",
+    "processed_report_count": 1,
+    "event_count": 336,
+    "event_head_sha256": "b038802d710631711532f0d69497370b68bff4ab27518afc7d554897638bc78d",
+    "verify_ok": true,
+    "return_disposition": "CLEAN SPLIT at the sixth-round boundary. Recording this round moved cycle 48 to 6/6 and review_due=true. The bounded Division return and the Tier-5 cadence dossier are DEFERRED to the next tracker-enforced session, which begins with review_due=true and must complete the return before processing any report — the precedent set at cycles 34, 35, 36, 37 and 40. No Division note, Action, recommendation or dispatch was written this round.",
+    "chronicle": "expected-stale: `division_ceremony_chronicle.py verify` returns 'chronicle durable source inputs changed; project before verify' because the round-6 event append changed durable inputs. Left for the adapter postprojection's division_chronicle stage and the next session's return, which projects before verifying. Not a durable-integrity failure."
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1104027,
+    "last_global_seq": 1104027,
+    "last_event_sha256": "6bd675325bc771b2e7eb645f296b6209961b5ad03fc755b0edb45904a2f77cea",
+    "stream_counts": {
+      "addressing": 64269,
+      "agency_commons": 7067,
+      "attention_portfolio": 3,
+      "claim_families": 239684,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 211683,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 12868,
+      "model_qos": 341537,
+      "reciprocal_uptake": 75872,
+      "representation_contracts": 61516,
+      "sandbox": 3507,
+      "signal_spine": 63271,
+      "steward_control": 21809,
+      "steward_work_selection": 744
+    },
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "active_store_source": "capsules/spectral-bridge/workspace/diagnostics/evidence_event_store_v2/active_store.json (read-only observation; this verify schema does not emit active_store or v1_immutable)",
+    "note": "Final verify re-run after every durable write of this round with complete output captured. An earlier same-round verify returned valid at seq 1104016 / head 7f07f20e… but was captured only as a tail, so corrupt_lines and errors were unobserved there; this run is the recorded one. The store advances under concurrent live bridge activity, which is expected on an append-only store.",
+    "unit_suite": "test_evidence_event_store.py — 21 tests OK",
+    "status_enumeration": "deferred to budget (read-only); stream counts above come from the verify run"
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 100
+    },
+    "self_test": "5 tests OK"
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "stable_facade_count": 6,
+    "unlisted_legacy_review_debt_count": 44,
+    "ratchet": "GREEN"
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12307,
+    "self_test": "valid",
+    "note": "Final verify run after every durable addressing and Division write of this round."
+  },
+  "cadence": {
+    "unit": "6 tests OK",
+    "strict": {
+      "integrity_ok": true,
+      "configuration_valid": true,
+      "errors": [],
+      "canonical_count": 6864,
+      "duplicate_hash_group_count": 0
+    }
+  },
+  "live_surface": {
+    "restart_required": false,
+    "deploy_required": false,
+    "attempted": false,
+    "note": "No build_bridge.sh, deploy script, launchctl, cargo build or live control action was run. No substrate, controller, codec, prompt, dispatch or model state was changed. The live bridge kept appending to the store throughout, untouched by this round."
+  },
+  "git": {
+    "branch": "main",
+    "index_clean": true,
+    "staged": false,
+    "committed": false,
+    "read_only": true,
+    "note": "Git was read-only for this adapter-mode run. Foreign dirty paths (71 entries at round end) were preserved untouched, including scripts/proactive_scan.py and scripts/test_steward_control.py which were read but never modified."
+  },
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789473058_accepted_legacy_classification_not_admission_round",
+  "processed": [
+    "introspection_source_catalog_1789466923.txt"
+  ],
+  "adapter_overrides_honored": [
+    "no steward session opened; no NDJSON ops; no pause/resume",
+    "no lease token read, quoted or persisted",
+    "git read-only: nothing staged, committed, merged, pushed, stashed, reset or amended",
+    "no build_bridge.sh, deploy script or launchctl invocation",
+    "every dirty or unknown path treated as foreign and preserved"
+  ]
+}

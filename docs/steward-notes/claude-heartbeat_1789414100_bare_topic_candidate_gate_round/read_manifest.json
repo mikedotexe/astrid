@@ -1,0 +1,50 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789409507.txt",
+      "sha256": "6578145eafbce2e296a0f746e133bd78107b57ea04f23ea56784dacd9ead3335",
+      "bytes": 1978,
+      "lines": 23,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_49cb3fed444f6219348dc083ab15af1d35f0db221c8d4174f20c8444a0d58a60",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_49cb3fed444f6219348dc083ab15af1d35f0db221c8d4174f20c8444a0d58a60.json",
+      "sha256": "81e84cd1f118304bb1da0ba9f997a89f9a430921ad76cb6911ac20acabea810d",
+      "bytes": 18972,
+      "lines": 440,
+      "read": "complete",
+      "source_snapshot_v1": null,
+      "note": "Navigation-only turn: no report-bound source snapshot. artifact_sha256 equals the report SHA; canonical_body_binding 1391 B; artifact_authority_state evidence_only, live_eligible_now false."
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789409195.txt",
+      "read": "complete",
+      "note": "Immediately preceding loop turn, same claim, NEXT: SELF_STUDY MAP astrid-kernel."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789408884.txt",
+      "read": "complete",
+      "note": "Loop turn two back, same claim and same NEXT."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789404601.txt",
+      "read": "complete",
+      "note": "The turn after her OPEN choice; names spectral_bridge as the topic the recovery reported."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/navigation/f46ac7017886360f59df603903f472d2c2f6b53b39a0836d54c0518c00edcb0f/1439b33be1e1677aa3591062e512a2f72cb68969276eb2fb8a15e8ba1fd20939.json",
+      "read": "scoped",
+      "scope": "output.input_kind, output.evidence_scope, request_json user message recovery region, response_json NEXT line",
+      "note": "Delivery record for turn 1789404601. Exact Reason string read. No private writing or hidden reasoning was read or quoted."
+    }
+  ],
+  "authority_boundary": "Read-only inspection of Astrid's study delivery records for the exact delivered Reason string. No moment_* file, private draft, or hidden reasoning was opened, quoted, or archived."
+}

@@ -1,0 +1,172 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter",
+  "controller": {
+    "run_id": "run_1789095431859348000_7f52a7739a",
+    "preprojection_generation_id": "projection_1789095436641103000_fd0d8c8f6b",
+    "preprojection_status": "passed",
+    "pause_generation": 437,
+    "controller_paused": false,
+    "stop_requested_at_last_read": false,
+    "session_opened_by_this_process": false,
+    "ndjson_ops_sent": 0,
+    "lease_token_read_or_persisted": false,
+    "postprojection": "adapter-owned, runs after this process exits; not observed here"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "report_sha256": "55d4544e73a40d500198546cecefb15dd19404f285f9b2968d8359406fdd4767",
+      "witness_id": "lsw_b938b2a910c6458f2c78f680fd956fbd0c1aa8bf9c8f3c66f47cce110df9e6e7",
+      "witness_sha256": "3d7806732d5ffa660b3d5443bdfb1ed9e586a82686c5a7a9be0e6bf87155ce6c",
+      "report_bound_source": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "report_bound_source_sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "source_hash_matched_report_binding": true,
+      "read": "complete",
+      "claim_count": 12,
+      "evidence_link_count": 19,
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  ],
+  "selected_count": 40,
+  "processed_count": 1,
+  "unprocessed_count": 39,
+  "family_scan": {
+    "families": 40,
+    "batchable": 0,
+    "threshold": 0.35,
+    "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "evidence_event_store_tests": "21 OK",
+    "steward_control_tests": "29 ran, 1 pre-existing environmental error (lease held by this run) \u2014 carried as debt",
+    "steward_projection_tests": "14 OK",
+    "division_followup_tests": "3 OK",
+    "chronicle_tests": "10 OK",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4 OK",
+    "cadence_tests": "6 OK",
+    "cadence_audit_strict": "rc=0, integrity_ok=true, errors=[]",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": {
+      "guards": 95,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "unlisted_legacy_review_debt_count": 44,
+      "ratchet": "GREEN",
+      "note": "no Rust file touched; no re-capture due"
+    },
+    "epistemic_self_test": "2 OK",
+    "epistemic_verify_final": {
+      "valid": true,
+      "issue_count": 0,
+      "history_rewritten": false
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "evidence_event_store_verify": {
+      "valid": true,
+      "active_store": "v2",
+      "corrupt_lines": 0,
+      "legacy_v1_immutable": true
+    },
+    "git_diff_check": "clean",
+    "cargo_fmt_check": "NOT RUN \u2014 cargo not on PATH in this headless shell (rc=127); no Rust source changed this round"
+  },
+  "division": {
+    "cycle_sequence": 44,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_ab7544e5ba2c9450b025b868bc2fca03",
+    "event_count": 304,
+    "event_head_sha256": "c8beefe5d4d21b87f1cde3cf02fb8056c24e33737a5a4c3816e08660b8c4ebc9",
+    "chronicle_id": "division_chronicle_cb3b8d96e1760f8dd448c59c",
+    "chronicle_json_sha256": "2166f0c66009af1771f55b212c6c109759e84818d25325261e7a609c65b98a0f",
+    "durable_inputs_current": true,
+    "durable_mismatches": [],
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "tier5_cadence_dossier": "not generated \u2014 no Division return was due (review_due=false)",
+    "note_action": "none",
+    "processed_report_count": 1
+  },
+  "changed_paths": [
+    "scripts/symbol_locality_watch.py",
+    "scripts/anti_drop_catalog.py",
+    "CHANGELOG.md",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+    "docs/steward-notes/claude-heartbeat_1789100600_symbol_locality_round/"
+  ],
+  "authority": {
+    "live_change": false,
+    "build_or_deploy": false,
+    "launchctl": false,
+    "git_mutation": false,
+    "being_facing_write": false,
+    "being_text_edited_or_rejected": false,
+    "operator_wait_recorded": "c012 \u2014 naming definition sites on the SELF_STUDY page, or adding RELATE to its Navigation footer (page.rs:117), is a being-facing surface change requiring a bridge deploy"
+  },
+  "counter_values": {
+    "canonical_indexed": 5289,
+    "canonical_fully_addressed": 3216,
+    "canonical_fully_read": 3848,
+    "canonical_remaining": 2073,
+    "canonical_unread": 1441,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3790,
+    "noncanonical_pending": 1717
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "terminal_status": "addressed_change",
+    "claim_count": 12,
+    "evidence_link_count": 19,
+    "introspection_ids": [
+      "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401"
+    ]
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "note": "experiential_epistemics.py verify --json, run after every durable write of this round"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "source": "introspection_addressing_audit.py audit-counters --json"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "active_store": "v2",
+    "legacy_v1_immutable": true
+  },
+  "anti_drop": {
+    "self_test": "5 OK",
+    "verify": {
+      "guards": 95,
+      "alarms": 0,
+      "gaps": 0
+    }
+  }
+}

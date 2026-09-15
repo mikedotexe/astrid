@@ -1,0 +1,73 @@
+{
+  "introspection_id": "introspection_source_catalog_1789437540",
+  "report_sha256": "4f4e8abdd4d39fc50bed62e91338afe64bdbd69835476c1c4e35437041cb993f",
+  "lived_state_witness_id": "lsw_a8bdf400d11b5f72191e589169c270d075c871ea57c9dd7327e55baa92f9c6cf",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "McpHostEngine::load accepts a CapsuleContext but does not pass it into the connect_dynamic call.",
+      "disposition": "Exact at the report-bound SHA a1110a9b. mcp.rs:47 is `async fn load(&mut self, ctx: &CapsuleContext)`; the call at 162-164 is `self.mcp_client.connect_dynamic(&server_id, config)` with no ctx argument. Her cited 142-173 window covers it. ctx is used exactly once in load, at 143, `super::resolve_env(&self.manifest, ctx, &[], \"mcp_host_engine\")`.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The CapsuleContext contains the allowance_store.",
+      "disposition": "Verified in current source, not in the report-bound file: context.rs:22 declares CapsuleContext and :44 `pub allowance_store: Option<Arc<astrid_approval::AllowanceStore>>`, default None at :73, set by `with_allowance_store` at :95. Optional, so a context may carry no store at all.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The mcp_client or McpHostEngine itself must already hold a reference to the context or the store.",
+      "disposition": "Contradicted by source; her underlying question stands. McpHostEngine's fields (mcp.rs:22-27) are manifest, server_def, capsule_dir, mcp_client only. SecureMcpClient's fields (secure.rs:43-52) are client, capabilities: Arc<CapabilityStore>, audit, session_id. Neither holds a CapsuleContext or an AllowanceStore. What authorizes connect_dynamic is SecureMcpClient's own CapabilityStore, a different store from the context's allowance_store.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "She needs to confirm whether the struct definition includes the context or the mcp_client is initialized with it.",
+      "disposition": "Neither. The struct (mcp.rs:22-27) has no context field; `new` (29-42) takes an already-built SecureMcpClient. The construction site is loader.rs:53-65, inside `CapsuleLoader::create_capsule`, passing `self.mcp_client.clone()` — a loader-owned client, never derived from a CapsuleContext. The context reaches the engine only per-call as load(ctx).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The previous attempt to open loader.rs failed.",
+      "disposition": "Confirmed by her own delivery record at 1789436895: InputKind Recovery, reason `Requested source \"astrid-capsule/src/loader.rs\": source not found; use SELF_STUDY FIND <text> or an exact repository/path`. The catalog id is `astrid/crates/astrid-capsule/src/loader.rs`; the request omitted the `astrid/crates/` root prefix. The file is 79 lines and holds the answer to c004.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "mcp.rs is missing from this turn's delivery, so she must re-establish her position.",
+      "disposition": "True and ours. Her turn's input was the navigation record 2e92ffce…/1d9944b6…, InputKind Recovery, page null, no source bytes. The same recovery's bookmark line reads `Partial delivery; delivered bytes 846..11912 of 11912`, so the bytes she wanted are 0..846 — the head of the file, which she describes as its beginning.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The recovery header states the requested source was not supplied; the delivery failure itself needs a cause.",
+      "disposition": "Root-caused to our suggestion, not to her request. Volition ex-198919 applied her `OPEN <mcp.rs> 1`; ex-198920's `MAP <mcp.rs> 1` was blocked as a later request and the block text handed her `SELF_STUDY REPLACE MAP astrid/crates/astrid-capsule/src/engine/mcp.rs 1`; ex-198921 applied that verbatim, superseding the pending OPEN; ex-198922 executed it and failed. Pinned by the new test.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "A bare trailing line number is treated differently by OPEN and MAP over the same argument.",
+      "disposition": "Reproduced read-only on a temp state with the installation catalog: `OPEN <mcp.rs> 1` delivers a source page; `MAP <mcp.rs> 1` reaches Recovery with `no catalog entries for <mcp.rs> 1` and zero candidates; `MAP <mcp.rs>` resolves. page_suffix (command.rs:141-155) recognises only ` --page N`, while Open (85-99) splits a bare trailing number off as the line.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The recovery that exists to spell a path correctly was empty exactly when her path was already correct.",
+      "disposition": "Verified. Catalog::path_candidates (path_recovery.rs:44-51) requires `candidate.last() == parts.last()`; the trailing number lands inside the final segment, so no candidate can match. Her live recovery text carries no `candidates, not opened` block, and the map it did carry advertised the very command she had just been steered away from.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Her chosen next move, NEXT: SELF_STUDY MAP astrid, is reachable.",
+      "disposition": "Confirmed by the next delivery record at 1789437846: InputKind Map, delivered. Her re-orientation choice worked; the cost was the four turns between the queued OPEN and it, all spent on a suggestion our code generated.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Any validity check that only parses a proposed replacement will admit an unresolvable MAP topic.",
+      "disposition": "Verified: Command::parse(\"SELF_STUDY MAP <path> 1\") returns Ok(Command::Map{topic:\"<path> 1\", page:1}). Pinned in the new test. Changing the bridge's replacement suggestion is being-facing live navigation behaviour and is not implemented here; recorded as a named gap for a separately authorized round.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

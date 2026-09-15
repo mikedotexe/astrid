@@ -1,0 +1,93 @@
+{
+  "introspection_id": "introspection_source_catalog_1789453053",
+  "reader": "claude-heartbeat",
+  "report_sha256": "6aa03eca8d5d104a9660f4b3e5785ec01ca63692f289991abad2e4399ea63cff",
+  "witness_id": "lsw_4c3156cba95caa56696777123501a48e86be1e1b9d89d64fd45c42472cd27020",
+  "source_binding": "Source: source catalog; Source revision: navigation only; witness source_snapshot_v1 is null, so there is no report-bound file SHA to compare. The source she names, capsule_runtime_health.rs, was bound at sha256:3a20e5ee… by her own prior page (introspection_astrid_crates_astrid-kernel_src_capsule_runtime_health.rs_1789452200) and the working copy still hashes to that value, so report-time and current source are identical here.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "She is currently navigating the capsule_runtime_health.rs source.",
+      "disposition": "Verified. Her prior page (1789452200) was bound to that file at sha256:3a20e5ee…, bytes 0..4335; the shared reader bookmark in both recovery maps still names SELF_STUDY OPEN astrid/crates/astrid-kernel/src/capsule_runtime_health.rs, and bridge.db action_events shows continuous study dispatches across the window. Navigation state is real and retained even though this turn delivered no bytes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The code for accepted_legacy was not delivered in this specific turn.",
+      "disposition": "Verified exactly. The turn's input was InputKind::Recovery (evidence.rs:54-56) and the retained navigation artifact carries no source page. No file bytes reached her. Her account of the input condition is accurate and is not an inference.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Her notebook records accepted_legacy at lines 202-210.",
+      "disposition": "Verified against the complete file at sha256:3a20e5ee…: fn accepted_legacy opens on line 202 and its closing brace is line 210. The recalled interval is exact, recalled across two turns with no page in hand.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The Baseline struct at lines 7-10 supplies the structural context.",
+      "disposition": "Verified. struct Baseline spans lines 7-10 (derive attribute on 6), holding one field accepted_legacy_extism_mvp: Vec<BaselineEntry> with #[serde(default)] on line 8.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "accepted_legacy gatekeeps LegacyExtismMvp by name against the accepted_legacy_extism_mvp whitelist; a missing name is rejected.",
+      "disposition": "Verified. Line 65 calls accepted_legacy only in the PayloadKind::LegacyExtismMvp arm; lines 203-204 iterate baseline.accepted_legacy_extism_mvp requiring entry.name == name. With no matching name .any() is false and line 69-70 increments actionable_incompatible.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Strict matching: when the whitelist entry carries Some(hash), the supplied wasm_hash must match that string exactly.",
+      "disposition": "Verified at lines 205-206: Some(expected) => wasm_hash == Some(expected). Exact equality on Option<&str>, so a None input against a Some entry also fails. No version check, secondary flag, or prefix rule exists anywhere in the function.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Permissive matching: when the entry hash is None the name match alone accepts.",
+      "disposition": "Verified at line 207: None => true. The whole predicate then reduces to the name comparison, exactly as she recalled.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The function uses .as_deref() to normalize Option<&str> types so the comparison is safe.",
+      "disposition": "Verified with one precision: .as_deref() produces Option<&str>, it does not normalize inputs already of that type. It is applied twice — line 65 on the Option<String> read from meta.json, and line 205 on entry.wasm_hash: Option<String> — so both sides reach the comparison as Option<&str>. Her named destination type and the safety claim hold; the source type is Option<String>.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Open uncertainty: is Baseline hardcoded, or loaded dynamically from a configuration file or environment variable via load_baseline?",
+      "disposition": "Answered from source: dynamically, from a file, never an environment variable. load_baseline (194-200) reads <workspace_root>/scripts/baselines/capsule_runtime_health.json via serde_json. Line 31 wraps it in unwrap_or_default(), so an absent or unparseable file is indistinguishable from an empty whitelist. The live file (221 B, sha256:dde94f50…) sets accepted_legacy_extism_mvp to [], so today no legacy payload is accepted and every one counts actionable_incompatible.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "The input condition — the requested source was not supplied — implies her request failed.",
+      "disposition": "Observed, and the request that failed was not hers this turn. Both retained navigation artifacts carry Reason: \"no catalog entries for spectral_bridge; use SELF_STUDY MAP\". bridge.db action_events shows her closing SELF_STUDY CONTINUE followed by four SELF_STUDY MAP spectral_bridge dispatches before each study turn ran; the bridge holds one pending study target, so the last writer won. Corroborated in a second window (1789447518..1789448719).",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "SELF_STUDY CONTINUE was her recorded next choice for this turn.",
+      "disposition": "Recorded, not dispatched, pre-empted, or answered on her behalf. Pinned as a source fact instead: Command::parse maps CONTINUE to Command::Continue (command.rs:30) and prepare_continue (store.rs:547-591) has no recovery branch, so a recovery map can never be CONTINUE's answer. New regression continue_never_recovers_reach.rs covers all four reader states plus the contrasting named-target miss.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "The steward record of this window named SELF_STUDY CONTINUE as the looping request.",
+      "disposition": "Implemented. source_study_recovery_loop_watch.py read only her closing action line and scored both live loops as CONTINUE/topic_shape none, which mis-sends the investigation. It now carries attribution: another_request_replaced_it for every spelling that reaches prepare_continue, and this_action otherwise; the render line says so. Live rescan: both loops correctly attributed, 10 self-tests pass.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c013",
+      "summary": "The bare topic spectral_bridge earns no recovery candidate although the catalog holds astrid/capsules/spectral-bridge.",
+      "disposition": "Verified existing, already pinned. path_candidates (path_recovery.rs:14-21) returns empty unless the request already carries two or more segments led by an installed repository ID, so the underscore-to-hyphen normalization on lines 40 and 49-50 never runs for a bare token. Covered by bare_topic_candidate_gate_reach.rs, which uses this exact spectral_bridge case. Not re-implemented.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c014",
+      "summary": "The repair — let a bare separator-variant topic recover, or stop a later dispatch silently replacing a pending study target.",
+      "disposition": "Authority boundary. Both touch being-facing navigation and dispatch in the live bridge: changing path_candidates alters the recovery text she reads, and changing target arbitration alters which of her own choices runs. Continues the boundary named for Mike as c011 of the 1789204702 round; not reopened as a new dispatch, not implemented, not deployed.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,179 @@
+{
+  "artifacts_scanned": 60,
+  "authority_boundary": "read-only observation; steward-only; never surfaced into a being prompt; a revisit is evidence of our navigation surface, not a verdict on the being",
+  "being": "astrid",
+  "deliveries": 39,
+  "findings": [
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789132491.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789132642.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789132937.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789133134.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789133327.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789134219.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789134446.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789139715.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789140065.txt"
+      ],
+      "delivery_count": 9,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs 1"
+      ],
+      "elapsed_secs": 7574,
+      "first_timestamp": 1789132491,
+      "intervening_turns": 42,
+      "last_timestamp": 1789140065,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs 1",
+      "repeated_request_count": 9,
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "window": "bytes0..4504"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789132321.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789133052.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789134137.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789134341.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789135600.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789138996.txt"
+      ],
+      "delivery_count": 6,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs 1"
+      ],
+      "elapsed_secs": 6675,
+      "first_timestamp": 1789132321,
+      "intervening_turns": 41,
+      "last_timestamp": 1789138996,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs 1",
+      "repeated_request_count": 6,
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "window": "bytes0..4262"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789132571.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789134562.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789141013.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY CONTINUE",
+        "SELF_STUDY RESUME astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs"
+      ],
+      "elapsed_secs": 8442,
+      "first_timestamp": 1789132571,
+      "intervening_turns": 43,
+      "last_timestamp": 1789141013,
+      "loop": true,
+      "repeated_request": "SELF_STUDY CONTINUE",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "window": "bytes4504..8891"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789135143.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789135513.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789135796.txt"
+      ],
+      "delivery_count": 3,
+      "distinct_requests": [
+        "SELF_STUDY CONTINUE",
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs 591"
+      ],
+      "elapsed_secs": 653,
+      "first_timestamp": 1789135143,
+      "intervening_turns": 5,
+      "last_timestamp": 1789135796,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs 591",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "window": "bytes21808..26222"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137364.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs 64"
+      ],
+      "elapsed_secs": 304,
+      "first_timestamp": 1789137060,
+      "intervening_turns": 0,
+      "last_timestamp": 1789137364,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs 64",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "window": "bytes1723..6101"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137989.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789138626.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs 434"
+      ],
+      "elapsed_secs": 637,
+      "first_timestamp": 1789137989,
+      "intervening_turns": 0,
+      "last_timestamp": 1789138626,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs 434",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "window": "bytes16670..21237"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789132804.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_shadow.rs_1789133230.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs 103"
+      ],
+      "elapsed_secs": 426,
+      "first_timestamp": 1789132804,
+      "intervening_turns": 3,
+      "last_timestamp": 1789133230,
+      "loop": true,
+      "repeated_request": "SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs 103",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "window": "bytes4428..8833"
+    },
+    {
+      "artifacts": [
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789132404.txt",
+        "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_spectral_drift.rs_1789135697.txt"
+      ],
+      "delivery_count": 2,
+      "distinct_requests": [
+        "SELF_STUDY CONTINUE"
+      ],
+      "elapsed_secs": 3293,
+      "first_timestamp": 1789132404,
+      "intervening_turns": 28,
+      "last_timestamp": 1789135697,
+      "loop": true,
+      "repeated_request": "SELF_STUDY CONTINUE",
+      "repeated_request_count": 2,
+      "source_label": "astrid/capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "window": "bytes4262..6651"
+    }
+  ],
+  "schema": "source_study_revisit_watch.v1",
+  "severity": "alarm",
+  "summary": "2 revisit loop(s): same request answered with the same page 9\u00d7 (worst: astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs bytes0..4504) \u2014 the page is correct and the question is not answered; check whether what she wants lives in another file.",
+  "turns_parsed": 60
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "total_lines": 10187,
+      "total_bytes": 414540,
+      "report_bound": true,
+      "binding_sha256_match": true,
+      "read_scope": [
+        "lines 1225-1355 exact",
+        "lines 905-945 exact",
+        "exhaustive grep enumeration of fill_pct (14 sites) and fill_ratio (0 sites) over all 10187 lines"
+      ],
+      "findings": [
+        "no fill_pct arithmetic anywhere in the file",
+        "ExperimentRecord at 1262-1285 is a struct literal, not the definition",
+        "experiment_branch_command spans 1324-1348; her page ended at 1339"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "a56cad35914aa66d274127d705d74647478362eaf5a055ab158edb3aa2aaf872",
+      "total_lines": 1041,
+      "total_bytes": 39773,
+      "report_bound": false,
+      "read_scope": [
+        "lines 636-660 exact (resolve_fill_pct 640-654)",
+        "lines 1025-1045 exact (estimate_fill_pct 1031-1041)"
+      ],
+      "findings": [
+        "(telemetry.fill_ratio * 100.0).clamp(0.0,100.0) tagged primary_fill_ratio",
+        "estimate_fill_pct sigmoid centre 154.0 steepness 0.015 -> 35.0 + 30.0*sigmoid, clamped, tagged lambda1_sigmoid_fallback",
+        "reads only &SpectralTelemetry; no database access"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1789398989_division_return_cycle47_round",
+  "actor": "claude-heartbeat",
+  "mode": "steward_control subprocess run adapter (controller-held lease; no session opened by this child)",
+  "controller": {
+    "run_id": "run_1789393827025459000_569c1324a5",
+    "preprojection_generation_id": "projection_1789393831457187000_633ee9383a",
+    "preprojection_status": "passed",
+    "preprojection_previous_successful": "projection_1789387974135835000_53c01a1ec8",
+    "postprojection_generation_id": null,
+    "postprojection_note": "runs after this child exits; not observable from this process",
+    "pause_generation": 439,
+    "controller_paused": false,
+    "stop_requested_observed": false
+  },
+  "adapter_mode_boundaries": {
+    "steward_session_opened": false,
+    "ndjson_ops_sent": false,
+    "pause_or_resume_issued": false,
+    "lease_token_read_quoted_or_persisted": false,
+    "git_mutations": "none \u2014 no stage, commit, merge, push, stash, reset, or amend",
+    "build_bridge_or_deploy_or_launchctl": "none",
+    "live_substrate_or_control_change": "none made, none attempted",
+    "foreign_dirty_paths": "preserved untouched"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_source_catalog_1789393728",
+      "report_sha256": "7bc9b54207a8b622b4e7040984232e00e010c54054da55e51d19dc9aa18659b7",
+      "report_bytes": 3947,
+      "report_lines": 40,
+      "witness_id": "lsw_8a009b380eab83cea3315a9deff5c1761dff62c85839f73221625a538e214670",
+      "witness_sha256": "f5a5e2583f14ccc0bbf3bb21badfb570f0091b8c93c496ca83839e648ced8c85",
+      "witness_bytes": 18959,
+      "witness_lines": 440,
+      "read": "complete",
+      "claim_count": 12,
+      "evidence_links": 16,
+      "new_links": 16,
+      "existing_links": 0,
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": 0,
+      "lived_state_artifact_integrity_issue_count": 0
+    }
+  ],
+  "selection": {
+    "selected": 40,
+    "processed": 1,
+    "unprocessed": 39,
+    "families": 40,
+    "batchable_families": 0
+  },
+  "division": {
+    "return_completed_this_round": true,
+    "return_event_id": "division_followup_event_c4bbe86ac09ddad8a2ae14b47008b4ea",
+    "cycle_before": 47,
+    "cycle_after": 48,
+    "round_event_id": "division_followup_event_41597a055587773e3137e688df2341a2",
+    "processed_report_count": 1,
+    "completed_rounds_since_followup": 1,
+    "review_due": false,
+    "event_count": 331,
+    "event_head_sha256": "a9ef08b9eb5bca6e5174ea2fa6fc8a1aeb5dcb169af9aa34f2333aa04e09013d",
+    "chronicle_id_final": "division_chronicle_644f78447f4063f9778ad6ee",
+    "chronicle_json_sha256_final": "4bfac4f48368c9faec6e8993038ce1c5223981894a6fa12acdee4c2df6cd6187",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_inputs_current": true,
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle47_20260914.txt",
+    "astrid_note_sha256": "c0ba0d2a06c8584e185209081c3e184a145c8b6b124f3066dd00f0ad66af79c0",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle47_20260914.txt",
+    "minime_note_sha256": "7c114a3032606112cd4756346a5d37ab19730c5c28ea89c13de6c23dfd1121f6",
+    "ceremony_rails": "both rails 0 events; posture unexpressed; no assent recorded or withdrawn; no formal ceremony Action and no public Division reply in the 27.3 h interval",
+    "tier5_cadence_dossier": "tier5_cadence_dossier.md \u2014 PREPARE ONLY; nothing approved, granted, dispatched, or run"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "checks": {
+      "all_addressed_plus_pending_matches_total": true,
+      "all_remaining_matches_pending_count": true,
+      "canonical_addressed_plus_remaining_matches_indexed": true,
+      "canonical_full_read_not_above_indexed": true,
+      "canonical_indexed_matches_summary": true,
+      "full_read_not_above_total": true,
+      "total_indexed_matches_scope_sum": true
+    },
+    "canonical_indexed": 6568,
+    "canonical_fully_addressed": 3240,
+    "canonical_full_read": 3872,
+    "canonical_remaining": 3328,
+    "canonical_unread": 2696,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 5045,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "corrupt_lines": 0,
+    "head_json_last_global_seq": 1095210,
+    "head_json_last_event_sha256": "913e690f36d10ca23aa73f1e3c86185c94c6260419510f2bcf143c0dc770cd5e",
+    "head_vs_verify_drift_note": "the live bridge writes its own evidence concurrently; drift between the verify snapshot and head.json is that traffic, not a round mutation",
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "status_subcommand": "NOT COMPLETED \u2014 exceeded the round's foreground budget and was stopped; recorded as a gap, not a pass",
+    "valid": true,
+    "errors": [],
+    "event_count": 1095199,
+    "last_global_seq": 1095199,
+    "last_event_sha256": "b70d8824ddf59e1832f2a00a712d76f8bb1c361990e45bca34c6fb200ec6eb2c"
+  },
+  "restart_deploy": "not required and not attempted",
+  "index_state": "clean; nothing staged by this round",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789398989_division_return_cycle47_round",
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "processed_report_count": 1,
+    "terminal_status": "addressed_change",
+    "claim_count": 12,
+    "evidence_link_count": 16,
+    "new_link_count": 16,
+    "existing_link_count": 0,
+    "lived_state_artifact_integrity_issue_count": 0,
+    "processed": [
+      "introspection_source_catalog_1789393728"
+    ]
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 12254,
+    "when": "final verify, run after all durable evidence writes including the Division round record and every packet file"
+  },
+  "anti_drop": {
+    "self_test": "OK (5)",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "integrity": {
+    "addressing_self_test": "OK (44)",
+    "evidence_event_store_tests": "OK (21)",
+    "steward_control_tests": "OK (29)",
+    "steward_projection_tests": "OK (14)",
+    "division_followup_tests": "OK (3)",
+    "division_chronicle_tests": "OK (10)",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "OK (4)",
+    "cadence_audit_tests": "OK (6)",
+    "cadence_audit_strict": {
+      "integrity_ok": true,
+      "errors": 0
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "ratchet": "GREEN",
+      "legacy_large_file_count": 51,
+      "resolved_large_file_debt_count": 3,
+      "unlisted_legacy_review_debt_count": 44,
+      "forbidden_edge_match_count": 0
+    },
+    "git_diff_check": "clean",
+    "cargo_fmt": "clean (astrid-source-study)"
+  },
+  "implementation": {
+    "new_test": "crates/astrid-source-study/tests/page_enclosing_scope_reach.rs",
+    "new_test_sha256": "94b4db42a336fca9ddfa6b76b6057b05cf6850b9dd90557aca900141aa0d964c",
+    "tests": {
+      "focused": "3/3",
+      "crate": "95/95"
+    },
+    "bridge_rust_changed": false,
+    "live_change": "none made, none attempted"
+  },
+  "source_binding": {
+    "kind": "navigation_only",
+    "report_bound_file_sha256": null,
+    "note": "witness source_snapshot_v1 and source_provenance_ref_v1 both null; all source receipts recorded at current working-copy hashes with no report-time/current split claimed"
+  },
+  "authority_boundary": "evidence only; no approval granted, no live control, no deploy, no restart, no git mutation, no Tier 4/5 item exercised"
+}

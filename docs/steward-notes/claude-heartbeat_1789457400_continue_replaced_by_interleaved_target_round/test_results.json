@@ -1,0 +1,70 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1789457400_continue_replaced_by_interleaved_target_round",
+  "environment": "cargo via /Users/v/.cargo/bin (not on the default PATH for this shell); python3 3.14",
+  "focused": [
+    {
+      "command": "cargo test -p astrid-source-study --test continue_never_recovers_reach",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "new": true,
+      "note": "continue_never_yields_a_recovery_input_in_any_reader_state; the_recovery_answer_belongs_to_a_named_target_not_to_continue"
+    },
+    {
+      "command": "cargo test -p astrid-source-study",
+      "result": "ok",
+      "passed": 106,
+      "failed": 0,
+      "note": "Whole crate, 20 binaries. 104 pre-existing unchanged plus the 2 new."
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "clean",
+      "note": "No reformatting needed; the new test file was written rustfmt-clean."
+    },
+    {
+      "command": "python3 scripts/source_study_recovery_loop_watch.py self-test",
+      "result": "ok",
+      "passed": 10,
+      "failed": 0,
+      "new": 2,
+      "note": "test_continue_spellings_cannot_be_the_request_a_recovery_answered; test_loop_on_continue_is_reported_but_not_blamed_on_continue"
+    },
+    {
+      "command": "python3 scripts/source_study_recovery_loop_watch.py scan --json",
+      "result": "ok",
+      "note": "Live rescan, 120 turns, 24 recovery inputs, 2 loops, alarm false. Both loops now attribution=another_request_replaced_it (previously both read as SELF_STUDY CONTINUE failing)."
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    }
+  ],
+  "stewardship_integrity": [
+    {"command": "python3 scripts/introspection_addressing_audit.py --self-test", "passed": 44, "failed": 0},
+    {"command": "python3 scripts/test_evidence_event_store.py", "passed": 21, "failed": 0},
+    {"command": "python3 scripts/test_steward_control.py", "passed": 29, "failed": 0},
+    {"command": "python3 scripts/test_steward_projection.py", "passed": 14, "failed": 0},
+    {"command": "python3 scripts/test_division_ceremony_followup.py", "passed": 3, "failed": 0},
+    {"command": "python3 scripts/test_division_ceremony_chronicle.py", "passed": 10, "failed": 0},
+    {"command": "python3 scripts/test_division_ceremony_projection.py", "result": "self-test ok"},
+    {"command": "python3 scripts/test_projection_cursors.py", "passed": 4, "failed": 0},
+    {"command": "python3 scripts/test_introspection_cadence_audit.py", "passed": 6, "failed": 0},
+    {"command": "python3 scripts/anti_drop_catalog.py --self-test", "passed": 5, "failed": 0},
+    {"command": "python3 scripts/anti_drop_catalog.py verify --json", "result": "100 guards, 0 gaps, 0 alarms"},
+    {"command": "python3 scripts/introspection_cadence_audit.py --strict --compact", "result": "integrity_ok true, errors []"},
+    {"command": "python3 scripts/domain_boundary_audit.py verify", "result": "valid true, violation_count 0, violation_kind_counts {} — ratchet GREEN; unlisted_legacy_review_debt_count 44 and resolved_large_file_debt_count 3 are pre-existing review debt, not violations"},
+    {"command": "python3 scripts/experiential_epistemics.py self-test --json", "result": "valid true"}
+  ],
+  "not_run_and_why": [
+    {
+      "command": "cargo test --workspace",
+      "reason": "Out of scope for the touched surface and far beyond the round budget. The only Rust change is one new integration test in astrid-source-study; the whole crate was run instead."
+    },
+    {
+      "command": "cargo clippy --workspace --all-features",
+      "reason": "Nothing in crate source changed — the only Rust addition is a tests/ file, which the crate test run compiles."
+    }
+  ]
+}

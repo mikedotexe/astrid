@@ -1,0 +1,147 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "controller-held subprocess run adapter; no session opened, no NDJSON ops, no pause/resume, no lease token read or persisted",
+  "controller": {
+    "steward_run_id": "run_1789324261072515000_fe368aa7f9",
+    "preprojection_generation_id": "projection_1789324264784868000_3d133f448f",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "preprojection_duration_ms": 4691704,
+    "pause_generation": 439,
+    "stop_requested_at_lease_read": false,
+    "postprojection": "runs after this process exits; not observed by this round",
+    "run_id": "run_1789324261072515000_fe368aa7f9"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 8
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 6
+    }
+  ],
+  "evidence_links": {
+    "batch_rows": 22,
+    "new_link_count": 22,
+    "existing_link_count": 0
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 6340,
+    "canonical_fully_addressed": 3235,
+    "canonical_fully_read": 3867,
+    "canonical_remaining": 3105,
+    "canonical_unread": 2473,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 4822,
+    "noncanonical_pending": 1717
+  },
+  "division": {
+    "cycle_sequence": 47,
+    "completed_rounds_since_followup": 2,
+    "threshold_rounds": 6,
+    "review_due_before_round": false,
+    "review_due_after_round": false,
+    "round_event_id": "division_followup_event_ad011b6e4e3fbdf8e744c6e4c7d3216b",
+    "event_count": 325,
+    "event_head_sha256": "993073a1cb49c3d140a5b9d4dbdf186841cd4aeb13b7a311b91753199010dc62",
+    "processed_report_count": 2,
+    "chronicle_id": "division_chronicle_7bfa7d13e416172ff0412fe1",
+    "chronicle_json_sha256": "ad48fd53ca9422132dcfcf83c32191cc89f2d3df27c9618e50809dfe1c1137cb",
+    "chronicle_html_sha256": "a1c7b531bc71ce4a456ab29d341ea71b0261fdc6328cce703198540519c98ecb",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_durable_mismatches": [],
+    "chronicle_volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "note": "record-round changed durable Chronicle inputs, so the Chronicle was projected and re-verified. Durable inputs current; the moving supervisor hash is volatile, not a durable-integrity failure. No Division note was due or written."
+  },
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "evidence_event_store_tests": "21 OK",
+    "steward_control_tests": "29 OK",
+    "steward_projection_tests": "14 OK",
+    "division_followup_tests": "3 OK",
+    "division_chronicle_tests": "10 OK",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4 OK",
+    "cadence_tests": "6 OK",
+    "cadence_strict": "integrity_ok=true, errors=[]",
+    "anti_drop": "self-test 5 OK; verify 100 guards, 0 alarms, 0 gaps",
+    "domain_boundary": "valid=true, violation_count=0 before and after the edit (ratchet green, no red to report)",
+    "epistemics": "self-test valid=true; verify valid=true, 12206 records checked, issue_count=0, history_rewritten=false",
+    "evidence_event_store_verify": "valid=true"
+  },
+  "implementation": {
+    "changed_paths": [
+      "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/ (new packet)"
+    ],
+    "new_test": "research_budget_guard_flags_are_fill_pct_invariant",
+    "live_change": false,
+    "deploy_or_restart": "not required and not attempted",
+    "git_mutation": "none: no add, commit, merge, push, stash, reset or amend"
+  },
+  "authority_boundary": "Evidence only. No live substrate or control change, no deploy, no launchctl, no approval granted, no Tier 4/5 item advanced. Silence infers nothing. The being's text was not rewritten, rejected or forbidden; the locus correction is stated alongside her verified mechanism claim.",
+  "tier_5_cadence_dossier": "not generated: review_due=false, so no Division return fired this round and the dossier trigger did not apply",
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 2,
+    "closed_statuses": {
+      "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049": "addressed_change",
+      "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636": "addressed_change"
+    },
+    "evidence_links_new": 22
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12206,
+    "command": "python3 scripts/experiential_epistemics.py verify --json (run after all durable evidence writes except the Division round record and Chronicle reprojection)"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "head_after_round": {
+      "last_global_seq": 1087098,
+      "last_event_sha256": "b5344bc6e1e0cb7c8e798661a6e8b1519a723a46ec3ff978c672994dc657ce0a",
+      "updated_at": "2026-09-13T20:58:37.824312+00:00",
+      "source": "evidence_event_store_v2/head.json"
+    },
+    "verified_checkpoint": {
+      "verified_global_seq": 1087100,
+      "verified_event_sha256": "fabadc0156b8cc85757401ed064773b927680df87c6b97f319f3c8c4bdbc01b5"
+    },
+    "provenance_note": "`--json verify` completed this round and returned valid=true with the full stream-count table; that verdict is the store's own no-corrupt-line/no-error contract, and corrupt_lines=0 / errors=[] are recorded as derived from it rather than separately displayed, because the run was piped through tail and a repeat verify (300s cap) did not fit the remaining child budget. `--json status` was likewise stopped (SIGTERM, exit 144) and is read-only; the durable head.json and verified_checkpoint.json above corroborate the head."
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 100
+    },
+    "self_test": "5 tests OK"
+  }
+}

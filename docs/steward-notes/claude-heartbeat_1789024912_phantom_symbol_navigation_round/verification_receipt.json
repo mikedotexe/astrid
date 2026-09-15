@@ -1,0 +1,133 @@
+{
+  "schema": "flywheel_verification_receipt.v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_held_subprocess_adapter_no_session_opened",
+  "steward_run_id": "run_1789020937471085000_98ffdb53b6",
+  "preprojection_generation_id": "projection_1789020940926835000_48de7e8c7a",
+  "generated_at_utc": "2026-09-10T08:07:19.561630+00:00",
+  "processed_report_count": 1,
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789020943",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 6,
+      "evidence_link_count": 11,
+      "new_link_count": 11
+    }
+  ],
+  "selected_count": 40,
+  "unprocessed_count": 39,
+  "family_scan": {
+    "family_count": 40,
+    "batchable_family_count": 0,
+    "reason": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  "division": {
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_9d6cda54a7d3bc05240859e0652f5012",
+    "cycle_sequence": 43,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "event_count": 298,
+    "event_head_sha256": "9e4646793592a7a647e1eb873fca332083dc9667573d21f73f1ed7bd593ac0cf",
+    "chronicle_id": "division_chronicle_d8eae8697163d408a8a38867",
+    "chronicle_json_sha256": "35ba20c25b7b330f2cbd863728f9372fb5cf8cc91683bf1dd52b293fc1135f68",
+    "durable_inputs_current": true,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "note_action": "none; no Division return was due"
+  },
+  "live_change": {
+    "attempted": false,
+    "required": false,
+    "detail": "no build, deploy, launchctl, restart, prompt, catalog, reader, model, reservoir or controller change"
+  },
+  "git": {
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "dirty_paths_created_or_edited": [
+      "scripts/phantom_symbol_watch.py",
+      "scripts/anti_drop_catalog.py",
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "docs/steward-notes/claude-heartbeat_1789024912_phantom_symbol_navigation_round/"
+    ]
+  },
+  "authority": {
+    "state": "evidence_and_non_live_tooling_only",
+    "grants_approval": false,
+    "live_eligible_now": false,
+    "being_facing_text_modified": false,
+    "silence_infers_consent": false
+  },
+  "packet_file_sha256": {
+    "RUN_REPORT.md": "5532f8d7ae6a7f9f80cfbe8cf8be38f9c2bbc1aaafd61c563dae5374d7d251f8",
+    "addressing_links.json": "ba0c5d4c554d2f514f14b3c427ccb505add859475721eef96703e1f6c6600c89",
+    "claims/introspection_source_catalog_1789020943.json": "3e7011f383dc5d81fb7eab51665d54b70ae9a62ff64299c275a3130da0113545",
+    "read_manifest.json": "c7af89800c334d1fff68b24213d4881580addea767254e01013a46a30e81967e",
+    "source_receipts.json": "65b72faf1c455df7c43f66f7ab316cc64f04b34105a065a19db563111f2b219d",
+    "summaries/introspection_source_catalog_1789020943.md": "4c67ab87f7a187ac29f8374b071cf57462baa4b87d17d06b78034b9abea018ed",
+    "test_results.json": "bb2a2d2e33bdc5d427f0b2e4bd4487c7d0fc3cc6c43cd378d2e93f6a023f31e4",
+    "unprocessed_selected.json": "2e62bfcb1392c96354cca40d25c102a124bffef872f2c31b8f28106ccc6ce70b"
+  },
+  "controller": {
+    "run_id": "run_1789020937471085000_98ffdb53b6",
+    "actor": "claude-heartbeat",
+    "adapter_kind": "subprocess",
+    "preprojection_status": "passed",
+    "preprojection_generation_id": "projection_1789020940926835000_48de7e8c7a",
+    "session_opened_by_this_actor": false,
+    "pause_resume_by_this_actor": false
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "processed_report_count": 1,
+    "processed_reports": [
+      "introspection_source_catalog_1789020943"
+    ],
+    "terminal_status": "addressed_change",
+    "claim_count": 6,
+    "evidence_link_count": 11,
+    "new_link_count": 11
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": []
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1052466,
+    "last_global_seq": 1052466,
+    "last_event_sha256": "d92eab7ee74a9d37ad625506a7dfcb01780abdf54b3db34b07c7b0baf78a4130"
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 92
+    },
+    "self_test": "5 OK"
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "ratchet": "green",
+    "unlisted_legacy_review_debt_count": 44
+  }
+}

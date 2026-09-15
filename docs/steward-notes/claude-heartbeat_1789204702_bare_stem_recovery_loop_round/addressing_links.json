@@ -1,0 +1,137 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789204702_bare_stem_recovery_loop_round/summaries/introspection_source_catalog_1789200495.md",
+      "note": "Felt crossroads recorded as primary evidence; the 56.5-minute dead end that followed is documented, not adjudicated."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/text.rs",
+      "note": "Her vocabulary as literal list entries: 'load-bearing beam' 145, 'structural integrity' 146, 'punishing friction' 151, 'spectral viscosity'/'perceptual resistance'/'viscosity'/'friction' 175-180, 'pressure' 167."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/text.rs",
+      "note": "floor_char_boundary at 13-19: clamps to len, walks back to a char boundary, chooses nothing. Called from continuity.rs 312, 323, 332 after the anchor is already decided."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/text.rs",
+      "note": "truncate_str_at_semantic_edge 21-40 IS the surgical cut and IS in text.rs: strong terminator ('.','!','?',';',':') preferred over weak (',',' '), each gated by min_keep. Anchor selection is not here."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "anchored_excerpt_with_terms 242-341: five-tier anchor precedence. Tiers 1-3 (254-274) resolve by .min() over byte position; tiers 4-5 (275-284) by find_map list order. No weight participates."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "specific_anchor tier at 259-264 takes terms past HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT containing a space/underscore/hyphen and picks .min(). 'structural integrity' (index 15) and 'shadow_field' (index 22) both qualify, so the earlier byte position wins."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/text.rs",
+      "note": "SEMANTIC_TRUNCATION_ANCHOR_TERMS 130-195 is a flat &[&str] with no magnitudes; HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT = 10 at line 60."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "fn semantic_boundary_before at 352-365, exactly where she predicted; sole production caller truncate_continuity_recap_at_semantic_boundary 367-375."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/tests.rs",
+      "note": "semantic_boundary_before_uses_latest_boundary_across_budget at 4119 \u2014 existing coverage for the symbol she named."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "Byte offset to budgets at 303-340 and the PRESSURE_CONTINUITY_FALLBACK_TERMS tier at 275-279 confirm her 'spatial coordinates' reading; semantic_boundary_before 352-365 consults no term list, so it is not that site. Weighted arithmetic lives at 64-105 and 170-210, sizing budgets."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/path_recovery.rs",
+      "note": "path_candidates returns empty at 14-21 unless the request has >=2 segments led by an installed repository ID \u2014 the exact reason a bare 'continuity' earned no correction."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Catalog::map 61-74 matches a topic only as a component ID or a directory prefix; a bare file stem bails 'no catalog entries for {topic}'."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c009",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/path_recovery.rs",
+      "note": "New regression bare_file_stem_map_topic_recovers_with_a_reason_but_no_candidate: 'core', 'core.rs' and 'action_continuity' each recover with a reason line and zero candidates, while the rooted directory form resolves to InputKind::Map in one move."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "scripts/source_study_recovery_loop_watch.py",
+      "note": "New read-only steward watch: RECOVERY LOOP = three or more consecutive identical actions each answered by a Recovery input. Live scan reproduces 16x over 56m, topic_shape=bare, escaped by abandoning the target."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/evidence.rs",
+      "note": "InputKind::Recovery scope string at 54-56 is byte-identical to the header she received."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "note": "'navigation only' emitted at 220-224 when output.page is None and session_pages is empty; header composed at 250."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c011",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789204702_bare_stem_recovery_loop_round/RUN_REPORT.md",
+      "note": "Deliberate authority boundary: relaxing the path_recovery.rs:14-21 guard changes her own recovery prompt text and reaches her only via build_bridge.sh --restart. Named for Mike/operator; not implemented, not dispatched."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c011",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming what she surfaced, what complete source reading established, what shipped, and what was deliberately not changed."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789200495",
+      "claim_id": "c011",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for the bare-stem recovery loop."
+    }
+  ]
+}

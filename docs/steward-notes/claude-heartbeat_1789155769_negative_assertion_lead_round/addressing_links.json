@@ -1,0 +1,130 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/source_search.rs",
+      "note": "Scanner replicated exactly (MAX_HITS/MAX_BYTES, path_role, collect_lines test-remainder): current catalog gives Implementation 5, Test 8, History 30 for 'multi-motif'."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789155769_negative_assertion_lead_round/summaries/introspection_source_catalog_1789151592.md",
+      "note": "Replication counts, file set, byte total and the mtime check showing every cited file predates her search."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "Line 765 is exact; #[cfg(test)] at 633 puts 633..824 in the test remainder, so the Test role label is correct by rule."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "String present at 765 inside the test module beginning at 633; 'within a test or example block' is precisely right."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "status_render_is_a_telemetry_formatter_not_a_motif_aggregator (751-773) asserts !report.contains(absent) over a list whose fifth element is the cited line 765."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "interpretation_risk_for_texts at 7742 assembles matched_terms; 8442-8461 renders 'Interpretation risk: multi-motif caution detected'; caution literal at 6081."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "interpretation_risk_terms at 548 is the motif-pattern matcher named as the detection end of the chain."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "The /// block at 749-758 answers her question directly and names owners in both directions; reachable via SELF_STUDY OPEN ... 749."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/source_search.rs",
+      "note": "Row construction at 139-147: single-line slice line[at-50 .. at+len+120] plus role label and OPEN hint; no polarity, no enclosing context."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "find() at 114-125 paginates those rows under the role-count header; preceding doc comments never travel with a match."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/source_search.rs",
+      "note": "collect_lines flips test_remainder at the first trim_start #[cfg(test)] line and never restores it - position-based, not scope-based."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "#[cfg(test)] at line 8 of a 414540-byte file, so 8..10187 report as Test and the Implementation role is unreachable after line 7."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c004",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the negative-assertion lead and the preserved contradiction."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "scripts/negative_assertion_lead_watch.py",
+      "note": "Read-only steward probe shipped for this exact gap: classifies the enclosing context of a cited line and reports the nearest preceding /// block the row drops."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "scripts/negative_assertion_lead_watch.py",
+      "note": "8 unit tests incl. test_negative_binder_array_is_flagged and test_live_worked_example_still_reads_as_negative; live scan over 60 artifacts returns ALARM on this report."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "scripts/negative_assertion_lead_watch.py",
+      "note": "in_test_remainder() mirrors collect_lines' position-based #[cfg(test)] rule so the classification blind spot is reproducible by a steward."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789151592",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789155769_negative_assertion_lead_round/source_receipts.json",
+      "note": "Receipts for source_search.rs, navigation.rs, catalog.rs, catalog.toml, core.rs, guards.rs and pressure_agency.rs read at round time."
+    }
+  ]
+}

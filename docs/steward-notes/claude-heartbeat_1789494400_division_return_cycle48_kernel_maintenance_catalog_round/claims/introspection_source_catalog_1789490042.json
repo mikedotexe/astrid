@@ -1,0 +1,51 @@
+{
+  "introspection_id": "introspection_source_catalog_1789490042",
+  "report_sha256": "a43053a5fe64a4426a0bc790c692dd6e3600ce0f43f24a992c9cc84bb881a57a",
+  "lived_state_witness_id": "lsw_d3ada5a312429a36fbac9ae5d6948e8ab1e61dc0a6aee15a10424710d93065c2",
+  "source_binding": "navigation only; source_snapshot_v1 and source_provenance_ref_v1 are both null, so there is no report-bound file SHA to compare. All source receipts are recorded at current working-copy hashes and labelled as current source.",
+  "variant_distinct_terms_addressed": [],
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "maintenance.rs is a high-integrity filesystem-backed state machine in which every maintenance action - generation transition and scheduled reflection - is governed by cryptographic and filesystem-level proofs.",
+      "disposition": "Verified against current source crates/astrid-kernel/src/maintenance.rs (864 lines, 30543 bytes, SHA 1b8c8385c944...). LeaseKind has exactly two variants, GenerationTransition and ScheduledReflection (lines 57-58), each bound to its own schema and on-disk lease file; every action path runs through lease validation plus hash and filesystem checks. Her architectural reading of the file is accurate as written.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Actions are tied to host_boot_id and nonces, with GID checks ensuring only authorized groups can manipulate lease files.",
+      "disposition": "Verified with one refinement she did not name. Boot identity: current_boot_id() gates reflection-lease validation (validate_reflection_lease, line 433). Nonce binding is exact: lease_id must equal 'lease-' + sha256(nonce)[..24] or the read bails (lines 426-429). Ownership is stricter than group-only: read_bound_lease expects uid 0 (line 341), the reflection lease additionally requires mode 0o440 AND gid == runtime_gid (line 365), and the transition lease requires mode 0o444 (line 363).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The system enforces mutual exclusivity between GenerationTransition and ScheduledReflection so the two critical operations never collide.",
+      "disposition": "Verified exactly, and it is hard exclusion rather than precedence. select_active_lease (lines 318-330) matches (Active, Active) first and bails with 'generation transition and scheduled reflection leases overlap'; only one Active lease with the other Absent or Expired yields a BoundLease. active_bound_lease reads both lease files before selecting, so overlap is detected rather than silently resolved.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "stable_read verifies inodes and devices during the read and atomic_owner_write uses sync_all and rename patterns, protecting against TOCTOU attacks and filesystem corruption.",
+      "disposition": "Verified. stable_read (line 592) re-checks metadata.dev() and metadata.ino() (lines 614-615) across the read. atomic_owner_write (line 631) calls file.sync_all() then fs::rename (lines 650-651). One detail strengthens her point beyond what she named: line 652 also opens the parent directory and sync_all()s it, so the rename itself is durable, not just the file bytes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The CoreAck structure provides a detailed receipt of why and how a resource was blocked, including process context and interaction status.",
+      "disposition": "Verified field by field at struct CoreAck (line 89). Why: lease_schema, lease_kind, lease_id, lease_nonce_sha256, lease_payload_sha256, generation_id, blocked_since_unix_ms, acknowledged_at_unix_ms, authority. Process context: pid, process_start_ticks. Interaction status: ipc_user_input_blocked, active_conversations, active_sessions, active_tools, active_llm_requests, drain_barrier_sequence. Constructed at line 492.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The previous attempt to open lib.rs failed because it was not in the catalog.",
+      "disposition": "Source contradicts the attributed cause; the obstacle was real. astrid/crates/astrid-kernel/src/lib.rs IS in the catalog twice: include 'crates/**' and the kernel component names that exact path (catalog.toml 6, 66). Catalog::resolve (catalog.rs 88-118) shows the real path for a bare 'lib.rs': the fallback tries astrid/lib.rs, spectral-bridge/lib.rs, minime/lib.rs, finds none, bails 'source not found; use ... an exact repository/path' - not resolve_id's coverage bail. Path form, not coverage.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Next step: map the astrid-kernel crate to find where the Baseline struct and the Capability system are defined, to see which maintenance tasks are permitted for a given capsule.",
+      "disposition": "Observed; two facts answer part of it now. Her form is what resolve() accepts: a leading known repository id ('astrid/') is split off before lookup (catalog.rs 101-105), exactly what a bare 'lib.rs' lacked. Baseline is at crates/astrid-kernel/src/capsule_runtime_health.rs:7 (BaselineEntry :13), private module declared lib.rs:15. No Capability struct, enum, or alias is declared in astrid-kernel, astrid-core, or astrid-types, so a kernel map surfaces Baseline but no Capability.",
+      "classification": "observed"
+    }
+  ]
+}

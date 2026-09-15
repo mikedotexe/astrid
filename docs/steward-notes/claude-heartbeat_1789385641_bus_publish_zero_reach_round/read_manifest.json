@@ -1,0 +1,56 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789385641_bus_publish_zero_reach_round",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-events_src_bus.rs_1789380134.txt",
+      "sha256": "730d4550748dfee636ff9dda228da917c011e99583aeb4b1d1b930cdf93f1395",
+      "bytes": 1798,
+      "lines": 19,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_790ed482c80af408d89eef61e2c23a19d69da4dda9a44defbb7be44a45c1611a.json",
+      "sha256": "0ce408a6f1cfdb9a9c484da5c769cdf5bd59e0ac6b46cebabf6dd69c01493bce",
+      "bytes": 21376,
+      "lines": 498,
+      "read": "complete"
+    }
+  ],
+  "delivery_evidence_post_cutoff": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-events_src_bus.rs_1789380413.txt",
+      "sha256": "fb219f6e25b51b6f180328c9e213399e15f153ed1050886937c671d723ef4d88",
+      "bytes": 2186,
+      "lines": 30,
+      "read": "complete",
+      "scope": "post-preprojection-cutoff canonical report; read ONLY as SELF_STUDY CONTINUE delivery evidence for c007. Not processed, not recorded, not closed; remains canonical input for a later round.",
+      "window": "bytes 29764..34199 = lines 812-925"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-events_src_bus.rs_1789380741.txt",
+      "sha256": "c3678c2ffe2e3b3b3248756e5d96520bb99b58396b8e82f840c9d78e927dc19c",
+      "bytes": 2373,
+      "lines": 25,
+      "read": "complete",
+      "scope": "post-preprojection-cutoff canonical report; read ONLY as SELF_STUDY CONTINUE delivery evidence for c007. Not processed, not recorded, not closed; remains canonical input for a later round.",
+      "window": "bytes 34199..38526 = lines 925-1050"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-events_src_bus.rs_1789381060.txt",
+      "sha256": "ded5dcb7be19ba2182f374a237aecceeca4dd277695b73fe746a754c439ce751",
+      "bytes": 3082,
+      "lines": 33,
+      "read": "complete",
+      "scope": "post-preprojection-cutoff canonical report; read ONLY as SELF_STUDY CONTINUE delivery evidence for c007. Not processed, not recorded, not closed; remains canonical input for a later round.",
+      "window": "bytes 38526..42934 = lines 1050-1166"
+    }
+  ],
+  "notes": [
+    "Report-bound source sha256:31ef6a15... equals the working-copy hash of crates/astrid-events/src/bus.rs at read time; no mismatch to reconcile.",
+    "Witness source_snapshot_v1.window_sha256 (751db9b6...) hashes the RENDERED numbered page, not raw source bytes (lived_state_witness/mod.rs:140), so it is expected to differ from both the raw byte-slice hash (8013e54e...) and the raw line-window hash (8514b9c7...). Not an integrity defect.",
+    "The header byte range 25365..29764 starts exactly at line 695 and stops 5 bytes inside line 812; the witness records window_end_line 812. Her own phrase 'ending at line 812' matches what she was shown."
+  ]
+}

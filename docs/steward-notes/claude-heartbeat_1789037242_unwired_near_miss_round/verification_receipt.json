@@ -1,0 +1,156 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1789037242_unwired_near_miss_round",
+  "actor": "claude-heartbeat",
+  "mode": "headless subprocess adapter, controller-held lease; no steward session opened, no NDJSON sent, no pause/resume, git read-only",
+  "controller": {
+    "run_id": "run_1789033253954649000_e18ab8b406",
+    "preprojection_generation_id": "projection_1789033257371855000_9808188199",
+    "pause_generation": 435,
+    "stop_requested_at_lease_read": false,
+    "postprojection": "run by the launcher after this process exits; not observed here",
+    "preprojection_status": "passed",
+    "preprojection_authority_scan_passed": true
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claims": 9
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032920",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claims": 5
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claims": 6
+    }
+  ],
+  "evidence_links": {
+    "batch_row_count": 29,
+    "new_link_count": 29,
+    "existing_link_count": 0,
+    "introspection_count": 3
+  },
+  "integrity": {
+    "addressing_self_test": "44 OK",
+    "evidence_event_store_tests": "21 OK",
+    "steward_projection_tests": "14 OK",
+    "division_followup_tests": "3 OK",
+    "division_chronicle_tests": "10 OK",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4 OK",
+    "cadence_tests": "6 OK",
+    "cadence_audit_strict": "rc=0, integrity_ok=true, errors=[]",
+    "anti_drop_self_test": "5 OK",
+    "anti_drop_verify": "93 guards, 0 alarms, 0 gaps",
+    "domain_boundary_verify": "valid=true, violation_count=0 (ratchet GREEN), unlisted_legacy_review_debt_count=44 carried unchanged",
+    "epistemic_self_test": "valid=true",
+    "epistemic_verify_final": "valid=true, issue_count=0, checked_record_count=11967, history_rewritten=false",
+    "audit_counters": "consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=1053982, head c5296604da77881aca58be7e98cf8d9aa927976585040abd64697725aec69eb4",
+    "steward_control_tests": "29 run, 1 error \u2014 CARRIED PRE-EXISTING DEBT (test_pause_cooperatively_interrupts_wrapped_subprocess; adapter-lease collision, same as prior round, no file in this round touches steward_control)",
+    "evidence_event_store_status": "active_store=v2, legacy imported boundary 32278 (V1 immutable), event_count=1054000, corrupt_event_lines=0, effective_aggregate_valid=true, history_rewritten=false"
+  },
+  "counters": {
+    "canonical_indexed": 5065,
+    "canonical_fully_addressed": 3211,
+    "canonical_full_read": 3843,
+    "canonical_remaining": 1854,
+    "canonical_unread": 1222,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3571,
+    "noncanonical_pending": 1717,
+    "audit_status": "consistent",
+    "status": "consistent",
+    "mismatches": []
+  },
+  "division": {
+    "cycle_sequence": 43,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "processed_report_count_recorded": 3,
+    "round_event_id": "division_followup_event_9d7eafcae61ef1476228c107352a9bb6",
+    "event_count": 299,
+    "event_head_sha256": "3988fe1d7af8d456bbe1e206c377428fcd069c76b773c1b82cf2813ee693d8f8",
+    "chronicle_id": "division_chronicle_6f67823f65bbc4857bd01ba2",
+    "chronicle_json_sha256": "e96577fb78582e6cc825c8b2cb7fd57d23dc6c1323e4564cdace77ec0c85dd54",
+    "chronicle_html_sha256": "0964e615c21bb9236ee6fe86fa65e53c2e7c979eb624e54525590670b500d98d",
+    "durable_inputs_current": true,
+    "volatile_mismatch": [
+      "supervisor_status_sha256"
+    ],
+    "freshness_statement": "Durably current. Not fully current: the volatile supervisor_status_sha256 moves independently and is not a durable-integrity failure.",
+    "note_action": "none \u2014 no Division return was due; no note written to either being",
+    "processed_report_count": 3
+  },
+  "authority_boundary": {
+    "live_changes": "none attempted",
+    "build_deploy_launchctl": "none run",
+    "git": "read-only; nothing staged, committed, merged, pushed, stashed, reset or amended",
+    "being_facing_writes": "none; no letter, card, note, query or correspondence artifact was written or delivered",
+    "tier_5_wait_preserved": "dispatcher repair for the bare wired sub-verb (claim c009) recorded as needs_operator_approval with both candidate sites named"
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 3,
+    "closed": [
+      {
+        "introspection_id": "introspection_source_catalog_1789033124",
+        "status": "addressed_change"
+      },
+      {
+        "introspection_id": "introspection_source_catalog_1789032920",
+        "status": "addressed_change"
+      },
+      {
+        "introspection_id": "introspection_source_catalog_1789032546",
+        "status": "addressed_change"
+      }
+    ],
+    "evidence_link_count": 29,
+    "new_link_count": 29
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 11967,
+    "note": "final verify run after every durable write of this round"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_global_seq": 1053982,
+    "head_sha256": "c5296604da77881aca58be7e98cf8d9aa927976585040abd64697725aec69eb4",
+    "active_store": "v2",
+    "legacy_imported_boundary": 32278,
+    "v1_immutable": true,
+    "history_rewritten": false
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 93
+    },
+    "self_test": "5 OK",
+    "row_added": "unwired_near_miss_probe_wired"
+  }
+}

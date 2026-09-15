@@ -1,0 +1,87 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1789494400_division_return_cycle48_kernel_maintenance_catalog_round",
+  "actor": "claude-heartbeat",
+  "implementation": "none - no source or test file was created or modified this round; the authorized non-live implementation was documentation and evidence only (packet, CHANGELOG, feedback ledger, two Division return notes).",
+  "integrity_suites": [
+    {
+      "name": "introspection_addressing_audit.py --self-test",
+      "rc": 0,
+      "secs": 2
+    },
+    {
+      "name": "test_evidence_event_store.py",
+      "rc": 0,
+      "secs": 4
+    },
+    {
+      "name": "test_steward_control.py",
+      "rc": 1,
+      "secs": 87,
+      "note": "FLAKY under concurrent execution: one AssertionError '0 == 0' while four suites ran in parallel inside a live controller-held lease. Isolated rerun: 29 tests, 59.5s, OK. The file is foreign-dirty (' M scripts/test_steward_control.py') and was not read for repair, edited, or staged.",
+      "isolated_rerun": {
+        "rc": 0,
+        "tests": 29,
+        "secs": 59.5,
+        "result": "OK"
+      }
+    },
+    {
+      "name": "test_steward_projection.py",
+      "rc": 0,
+      "secs": 15
+    },
+    {
+      "name": "test_division_ceremony_followup.py",
+      "rc": 0,
+      "secs": 1
+    },
+    {
+      "name": "test_division_ceremony_chronicle.py",
+      "rc": 0,
+      "secs": 0
+    },
+    {
+      "name": "test_division_ceremony_projection.py",
+      "rc": 0,
+      "secs": 1
+    },
+    {
+      "name": "test_projection_cursors.py",
+      "rc": 0,
+      "secs": 0
+    },
+    {
+      "name": "anti_drop_catalog.py --self-test",
+      "rc": 0,
+      "secs": 0
+    },
+    {
+      "name": "test_introspection_cadence_audit.py",
+      "rc": 0,
+      "secs": 1
+    },
+    {
+      "name": "introspection_cadence_audit.py --strict --compact",
+      "rc": 0,
+      "secs": 4
+    },
+    {
+      "name": "domain_boundary_audit.py verify",
+      "rc": 0,
+      "secs": 1,
+      "note": "ratchet GREEN before and after; no Rust change was staged or made this round"
+    },
+    {
+      "name": "experiential_epistemics.py self-test --json",
+      "rc": 0,
+      "secs": 0
+    }
+  ],
+  "rust_tests": "not run: no Rust source or test file was touched. The existing regressions cited as evidence (transition_and_reflection_can_never_be_selected_together, scheduled_reflection_lease_rejects_a_foreign_runtime_group, core_ack_v2_exposes_the_exact_common_lease_binding) were read at their exact line ranges in crates/astrid-kernel/src/maintenance.rs and are linked as pre-existing coverage, NOT claimed as executed this round.",
+  "deferred_test": {
+    "what": "bare 'lib.rs' resolves to the not-found/use-an-exact-repository-path error while 'astrid/crates/astrid-kernel/src/lib.rs' resolves successfully",
+    "where": "crates/astrid-source-study/tests/",
+    "why_deferred": "that directory holds eleven untracked *_reach.rs files authored by another agent, one of which (placeholder_bracket_path_reach.rs) already references those exact error strings; adding coverage there during foreign mid-edit work would risk duplicate or conflicting tests and muddy authorship"
+  }
+}

@@ -1,0 +1,255 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "schema_version": 1,
+  "round": "claude-heartbeat_1789123449_map_walk_narrowing_affordance_round",
+  "actor": "claude-heartbeat",
+  "mode": "headless subprocess-adapter lease; no steward session opened, no NDJSON ops, no pause/resume, no lease token read or persisted",
+  "controller": {
+    "run_id": "run_1789119148386935000_510a72ea24",
+    "preprojection_generation_id": "projection_1789119153978535000_ab62e1f3ab",
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "postprojection_generation_id": null,
+    "postprojection_note": "runs after this process exits; not observed here",
+    "pause_generation": 437,
+    "controller_paused": false,
+    "stop_requested": false
+  },
+  "processed": {
+    "count": 1,
+    "reports": [
+      {
+        "introspection_id": "introspection_source_catalog_1789119142",
+        "status": "addressed_change",
+        "fully_addressed": true,
+        "proof_missing_claims": [],
+        "full_read_count": 1,
+        "claim_count": 7,
+        "evidence_links_new": 11,
+        "evidence_links_existing": 0
+      }
+    ],
+    "selected": 40,
+    "unprocessed": 39,
+    "family_scan": "families: 40 (batchable: 0), skipped: 0"
+  },
+  "integrity": {
+    "git_diff_check": "clean",
+    "addressing_self_test": {
+      "tests": 44,
+      "result": "OK"
+    },
+    "evidence_event_store_tests": {
+      "tests": 21,
+      "result": "OK"
+    },
+    "steward_control_tests": {
+      "tests": 29,
+      "result": "OK"
+    },
+    "steward_projection_tests": {
+      "tests": 14,
+      "result": "OK"
+    },
+    "division_followup_tests": {
+      "tests": 3,
+      "result": "OK"
+    },
+    "division_chronicle_tests": {
+      "tests": 10,
+      "result": "OK"
+    },
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": {
+      "tests": 4,
+      "result": "OK"
+    },
+    "cadence_tests": {
+      "tests": 6,
+      "result": "OK"
+    },
+    "cadence_audit_strict": {
+      "integrity_ok": true,
+      "canonical_count": 5505,
+      "duplicate_hash_group_count": 0,
+      "read_errors": 0
+    },
+    "anti_drop_self_test": {
+      "tests": 5,
+      "result": "OK"
+    },
+    "anti_drop_verify": {
+      "total": 97,
+      "alarms": 0,
+      "gaps": 0,
+      "delta": "96 -> 97 (source_study_map_walk_watch_wired)"
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "violation_kind_counts": {},
+      "ratchet": "GREEN",
+      "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4",
+      "resolved_large_file_debt_count": 3,
+      "unlisted_legacy_review_debt_count": 44,
+      "note": "No Rust file created or modified this round; no baseline integer or manifest ceiling needed re-capture."
+    },
+    "experiential_epistemics_self_test": {
+      "valid": true,
+      "result": "OK"
+    },
+    "experiential_epistemics_verify_final": {
+      "valid": true,
+      "issue_count": 0,
+      "checked_record_count": 12048,
+      "history_rewritten": false,
+      "canonical_event_appended": false,
+      "when": "after every durable write in this round, including the Chronicle reprojection"
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": [],
+      "canonical_indexed": 5452,
+      "canonical_fully_addressed": 3218,
+      "canonical_fully_read": 3850,
+      "canonical_remaining": 2234,
+      "canonical_unread": 1602,
+      "canonical_blocked": 416,
+      "canonical_pending_action": 212,
+      "canonical_watch": 4,
+      "canonical_read_needs_claims": 0,
+      "all_artifact_pending": 3951,
+      "noncanonical_pending": 1717
+    }
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "event_count": 1062680,
+    "last_global_seq": 1062680,
+    "last_event_sha256": "494dc57c501816e720a058907cdfc7254fbe367dc2e5540b3cb0a3533b1b090b",
+    "active_store": "v2",
+    "history_rewritten": false,
+    "payload_aggregate_count": 679123,
+    "partial_explicit_aggregate_count": 0,
+    "stream_counts": {
+      "addressing": 62285,
+      "agency_commons": 6975,
+      "attention_portfolio": 3,
+      "claim_families": 239140,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 209335,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 11442,
+      "model_qos": 317652,
+      "reciprocal_uptake": 75702,
+      "representation_contracts": 55757,
+      "sandbox": 3507,
+      "signal_spine": 59694,
+      "steward_control": 20290,
+      "steward_work_selection": 692
+    },
+    "observation": "The immediately following status call reported steward_control 20299 - nine events higher. That is the append-only store being written between two read-only calls under a live lease, recorded as an observation rather than flagged as drift.",
+    "errors": []
+  },
+  "division": {
+    "cycle_sequence": 44,
+    "review_due_at_round_start": false,
+    "review_due_after_record": false,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "round_recorded": true,
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_197db1d2da05fe82da12c25da886612e",
+    "event_count": 306,
+    "event_head_sha256": "e8fdca14d471d1b5dbfa2cdd8fa4c77f7b3f159ead63e82a5220818a00ae4a01",
+    "latest_followup_event_id": "division_followup_event_ad066eafac2e92e611812b8c6806be54",
+    "note_action": "none; no Division note was due and none was written",
+    "tier5_cadence_dossier": "not generated; only required when a Division return is due",
+    "chronicle": {
+      "first_verify": "chronicle durable source inputs changed; project before verify - expected, the round record is itself a durable Chronicle input",
+      "reprojected_chronicle_id": "division_chronicle_263ff72b67237613c416ad96",
+      "json_sha256": "f429ab433a5556f1bee07ac7bd5dde6202a4556ebb4fdda0ed26b06676fcdcd7",
+      "html_sha256": "f9654851b63652f208618a5e7c5ff2f720971f16103289f991fa9fce8454c977",
+      "timeline_event_count": 306,
+      "durable_inputs_current": true,
+      "durable_mismatches": [],
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "statement": "durably current, not fully current; a moving supervisor hash is not a durable-integrity failure"
+    }
+  },
+  "authority": {
+    "live_change": false,
+    "build_or_deploy": false,
+    "launchctl": false,
+    "restart": false,
+    "git_mutation": false,
+    "index_clean": true,
+    "cards_notes_correspondence_emitted": 0,
+    "open_waits": [
+      "Adding the narrowing menu to Catalog::map's repository/prefix branch is being-facing bridge source and only takes effect through a deploy; recorded as an explicit operator wait, not attempted.",
+      "Narrowing Astrid's catalog to shrink the 73.0% docs/steward-notes share is NOT proposed: it would take reading away from her to fix our own volume."
+    ]
+  },
+  "foreign_work_preserved": [
+    "capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json",
+    "capsules/spectral-bridge/src/authority_gate.rs",
+    "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+    "scripts/proactive_scan.py",
+    "scripts/phantom_symbol_watch.py",
+    "scripts/source_study_page_reset_watch.py",
+    "scripts/source_study_revisit_watch.py",
+    "scripts/symbol_locality_watch.py",
+    "seven earlier claude-heartbeat_* packet directories"
+  ],
+  "minime_repository": "untouched; clean at round start and never written",
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "introspection_id": "introspection_source_catalog_1789119142",
+    "status": "addressed_change",
+    "claim_count": 7,
+    "evidence_links_new": 11,
+    "evidence_links_existing": 0
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12048,
+    "canonical_event_appended": false,
+    "when": "after every durable write in this round, including the Chronicle reprojection"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 5452,
+    "canonical_fully_addressed": 3218,
+    "canonical_fully_read": 3850,
+    "canonical_remaining": 2234,
+    "canonical_unread": 1602,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3951,
+    "noncanonical_pending": 1717
+  },
+  "anti_drop": {
+    "self_test": {
+      "tests": 5,
+      "result": "OK"
+    },
+    "verify": {
+      "total": 97,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "delta": "96 -> 97 (source_study_map_walk_watch_wired)"
+  }
+}

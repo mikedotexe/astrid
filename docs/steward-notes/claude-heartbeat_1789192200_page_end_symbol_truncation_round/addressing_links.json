@@ -1,0 +1,179 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Complete 572-line source at SHA 3c7fca52; bytes 8571..12834 map exactly to lines 254-383."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "offer_requested_reading_in opens line 263, closes line 333."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Lines 267-274: absent foreground_reader returns Ok(None); present mailbox_window errors."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Lines 280-286: session_status in {active,summarized} AND disposition == Active."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Lines 287-300: completion guard conjoins bookmark.offered_passage.is_none()."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Lines 301-309 call reader_bookmark_offer with PASSAGE_BYTES=4_000 (line 20)."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Construction at lines 326-332; struct fields at lines 43-50."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/activity_delivery.rs",
+      "note": "Lines 9-32: the offer becomes ProtectedDialogueInputV1 kind Reading for Astrid's own turn; no UI consumer."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "describe_reader opens line 335, closes line 363 \u2014 wholly inside her page."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Lines 345-362 render 'committed byte N / M' and 'pending start..end' or 'none'."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "expected_revision lines 457-463; bare verb takes the inspect branch at line 394; stale record errors at 400-404."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c011",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+      "note": "Lines 135-142 already cover bare-verb inspect, stale-record error, and bound-record return. Read only; not modified."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c012",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "status_in opens 365 and closes 385; the report's page ended at 383."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c012",
+      "kind": "code",
+      "target": "scripts/source_page_symbol_truncation_watch.py",
+      "note": "classify_citation flags a cited range ending at the page's last line whose Rust block closes later."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c012",
+      "kind": "test",
+      "target": "scripts/source_page_symbol_truncation_watch.py",
+      "note": "test_reported_turn_is_a_truncation_in_this_checkout asserts 365-383 cited, closes 385, and that 335-363 stays interior."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c012",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789192200_page_end_symbol_truncation_round/summaries/introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098.md",
+      "note": "Round summary naming the four page-edge precision gaps and the preserved contradiction."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c013",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Lines 365-385 render foreground, saved return and mailbox branches."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c014",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Lines 308-328 route ACTIVITY_STATUS/MAILBOX_STATUS read_only and PARK/CHECK local_state into conv.pending_file_listing."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c014",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Line 383: 'Status does not advance reading or dispatch a saved command.' \u2014 the clause her page cut."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c015",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "operation_id line 52-54; save_selection lines 78-87 persist before updating memory."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c016",
+      "kind": "code",
+      "target": "scripts/source_page_symbol_truncation_watch.py",
+      "note": "New read-only steward watcher; scan over 200 artifacts reports 16 truncated citations across 97 verified reports."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c016",
+      "kind": "test",
+      "target": "scripts/source_page_symbol_truncation_watch.py",
+      "note": "10 focused unit tests pass via `source_page_symbol_truncation_watch.py self-test`."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c016",
+      "kind": "code",
+      "target": "scripts/anti_drop_catalog.py",
+      "note": "Registered guard source_page_symbol_truncation_watch_wired; verify reports 100 guards, 0 gaps, 0 alarms."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c016",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the report, the verified source facts, the guard and the authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+      "claim_id": "c016",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for the page-end truncation finding."
+    }
+  ]
+}

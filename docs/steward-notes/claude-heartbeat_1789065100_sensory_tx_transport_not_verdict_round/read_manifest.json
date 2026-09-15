@@ -1,0 +1,31 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966.txt",
+      "sha256": "295ec91d438d65460be3559ed7186e0ad82c30074c0521e87d91098cd08e3301",
+      "bytes": 3714,
+      "lines": 36,
+      "read": "complete",
+      "scope": "every byte, 36 displayed lines",
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "lived_state_witness_id": "lsw_97026709956982f864b6c183cb00153c06c7a82bf3c6f1cc671c522d12fc0c0c",
+      "source_path_named_by_report": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "source_sha_named_by_report": "aa1bce2e4d5379db6c09120f35c4680ecae66f2cb2dcfca2bd78ad4291f06a9e",
+      "source_window_named_by_report": "bytes 4502..8995 (witness: lines 103-206 of 651)",
+      "source_hash_matches_working_copy": true,
+      "source_coverage": "complete: whole 651-line file read plus the complete implementation of the function the report asks about"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_97026709956982f864b6c183cb00153c06c7a82bf3c6f1cc671c522d12fc0c0c.json",
+      "sha256": "d015e27c4a26c353e384db218d9676ff6875126029901a41cd1088c8c034cd78",
+      "bytes": 21519,
+      "lines": 498,
+      "read": "complete",
+      "scope": "every byte, all 498 lines, all fields preserved"
+    }
+  ]
+}

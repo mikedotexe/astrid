@@ -1,0 +1,43 @@
+{
+  "introspection_id": "introspection_source_catalog_1789020943",
+  "reader": "claude-heartbeat",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The prominent search results point to autonomous/next_action, and dispatch.rs is at astrid/capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs.",
+      "disposition": "Verified from the working checkout. A repository-wide find for dispatch.rs outside target/ returns exactly one file: capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs (639 lines, 27240 bytes, SHA-256 644b12e6ae168604553b3120fba82d431686b9eb06a3ddea94d9a348ba747e5c). Her navigation conclusion is exactly right.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "astrid/capsules/spectral-bridge/src/autonomous/next_action/mod.rs includes dispatch.rs.",
+      "disposition": "Verified at exact line. mod.rs:2135 is include!(\"dispatch.rs\"); there is no `mod dispatch` declaration, so the mechanism is a textual include, not a module item. Her verb 'includes' is literally accurate. A 2026-09-09 steward note cites 2129 for the same inclusion; in this checkout (mod.rs SHA-256 c310c0fa...73340) it is 2135.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "There is also a mention of astrid/crates/example/src/dispatch.rs in the search results.",
+      "disposition": "The mention is real; the path is not. crates/example does not exist. The string is a tempdir fixture literal written by crates/astrid-source-study/tests/context.rs (SHA-256 1b922986...80da) at lines 16, 227, 245, 249, 252. The catalog indexes that test file, so a fixture path reaches her in catalog-path shape. Her report of seeing it accurately reports what she was shown.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Given the spectral-bridge context and the btsp module where sense_tx is received, autonomous/next_action is the architecturally consistent location.",
+      "disposition": "Split. btsp is real: capsules/spectral-bridge/src/autonomous/btsp/ holds 27 files. Her architectural judgment -- preferring next_action over crates/example -- is correct, and is what let her decline the fixture path. But sense_tx is received nowhere: zero word-bounded hits in tracked .rs under capsules/ and crates/ except that test fixture. The real channel is NextActionContext.sensory_tx (mod.rs:116); dispatch.rs has 0 sense_tx, 2 sensory_tx. Contradiction recorded, not resolved away.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "She needs the actual contents of dispatch.rs to confirm the signature and the specific invocation of sense_tx.",
+      "disposition": "The reading move was right and she completed it. Post-cutoff canonical artifacts 1789023515, 1789023866, 1789024349 bind to dispatch.rs, so she did open real bytes. The signature is there: dispatch.rs:21 defines handle_next_action_with_author. The sense_tx invocation is not, and no further paging would have shown her that: the surface answered every query truthfully and never carried the fact of absence.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Report-level infrastructure finding: the navigation surface sustained an ungrounded premise across a long run without any steward signal firing.",
+      "disposition": "Grounded and answered with tooling. sense_tx spans 81 consecutive Astrid introspections and 39 of minime's last 40 self-studies, yet nothing fired: stuck_repetition keys on repetition x blocked/unknown or a ~identical argument, and this loop was honored actions with varying args. Implemented scripts/phantom_symbol_watch.py (read-only, steward-only, privacy fail-closed), 12 tests, anti-drop row phantom_symbol_watch_wired; it reproduces the run as an alarm. Reader-fix deploy stays operator-gated.",
+      "classification": "implemented_now"
+    }
+  ],
+  "authority_boundary": "Evidence and non-live steward tooling only. No live substrate, control, prompt, catalog, reader, deploy or restart change was made or inferred. No correction was written into any being-facing surface."
+}

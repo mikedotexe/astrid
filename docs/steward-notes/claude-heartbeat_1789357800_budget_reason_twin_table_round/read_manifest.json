@@ -1,0 +1,44 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round": "claude-heartbeat_1789357800_budget_reason_twin_table_round",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592.txt",
+      "sha256": "ab84590c44ade75f4388780ac42141ebf6f2e13dd6162b6ee0183411b7c67a12",
+      "bytes": 2578,
+      "lines": 29,
+      "read": "complete",
+      "source_named_by_report": "astrid/capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "source_sha_named_by_report": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+      "report_window_bytes": "19632..24222",
+      "report_window_lines": "450..543",
+      "source_coverage": "report window partial (94 of 830 lines); steward read complete (1-830)",
+      "lived_state_witness_id": "lsw_4f5a30bb8b1b9babc09dfee71bb39b69f29db223c06238beda962de2d76e6211"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_4f5a30bb8b1b9babc09dfee71bb39b69f29db223c06238beda962de2d76e6211",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_4f5a30bb8b1b9babc09dfee71bb39b69f29db223c06238beda962de2d76e6211.json",
+      "sha256": "b1bbaacb6376e6c70ce1855e34b71b55c010a00bbf23f8121a3c8838f3510c3e",
+      "bytes": 21532,
+      "lines": 498,
+      "read": "complete",
+      "artifact_sha256_field": "ab84590c44ade75f4388780ac42141ebf6f2e13dd6162b6ee0183411b7c67a12",
+      "artifact_sha256_matches_report": true,
+      "source_snapshot_file_sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+      "source_snapshot_matches_working_copy": true,
+      "authority_state": "evidence_only",
+      "live_eligible_now": false,
+      "direct_causation_claimed": false,
+      "raw_prose_included": false
+    }
+  ],
+  "continuity_artifacts_read": [
+    "docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/RUN_REPORT.md",
+    "docs/steward-notes/claude-heartbeat_1789274597_page_walk_producer_reach_round/RUN_REPORT.md",
+    "the six preceding canonical guards.rs page reports (header Source revision + NEXT lines only, for the navigation measurement in c007)"
+  ]
+}

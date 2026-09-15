@@ -1,0 +1,42 @@
+{
+  "schema": "steward_round_read_manifest_v1",
+  "round": "claude-heartbeat_1789300900_map_topic_scope_reach_round",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789295290",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789295290.txt",
+      "sha256": "f1c5e5cbe4dc2de65152fde8a2ea6adb114cdb47b963278608a079d2991cfafa",
+      "bytes": 1734,
+      "lines": 18,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_52699b1c343a5316d883ed7d0f7b37768bf563f142b376c7fbd90d0b5610e9af",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_52699b1c343a5316d883ed7d0f7b37768bf563f142b376c7fbd90d0b5610e9af.json",
+      "sha256": "20bef4800726058d1b2b3de3205324c701b3e6d6d2bf95251f1761825ee4ea38",
+      "bytes": 18963,
+      "lines": 440,
+      "read": "complete",
+      "artifact_sha256_matches_report": true,
+      "source_snapshot_v1": null,
+      "source_provenance_ref_v1": null,
+      "note": "navigation-only turn: the witness carries no source snapshot, consistent with the report header 'Source revision: navigation only'"
+    }
+  ],
+  "report_bound_source": {
+    "binding": "source catalog (navigation only)",
+    "file_sha_to_compare": null,
+    "mismatch_handling": "not applicable - no report-bound file SHA exists this turn; every source below is recorded at its current working-copy hash"
+  },
+  "adjacent_evidence_read_complete": [
+    "docs/steward-notes/claude-heartbeat_1789263789_fill_pct_producer_suffix_reach_round/RUN_REPORT.md (continuity)",
+    "docs/steward-notes/claude-heartbeat_1789274597_page_walk_producer_reach_round/RUN_REPORT.md (continuity)",
+    "docs/steward-notes/claude-heartbeat_1789286900_scan_limit_catalog_reach_round/RUN_REPORT.md (continuity)",
+    "docs/steward-notes/ASTRID_INTROSPECTION_SOURCE_FIRST_FLYWHEEL_HANDOFF.md (operating law)",
+    "AGENTS.md (operating law)"
+  ],
+  "runtime_evidence_scope": "reader navigation records inspected for page counter, footer and first catalog entry only; no private writing and no response_json read"
+}

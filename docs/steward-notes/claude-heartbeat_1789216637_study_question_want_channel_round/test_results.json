@@ -1,0 +1,128 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1789216637_study_question_want_channel_round",
+  "focused": [
+    {
+      "command": "python3 scripts/symbol_locality_watch.py self-test",
+      "result": "OK",
+      "tests": 22,
+      "note": "was 16 before this round; 6 new \u2014 4 extraction regressions and 2 pinned to the live corpus"
+    },
+    {
+      "command": "python3 -m py_compile scripts/symbol_locality_watch.py",
+      "result": "ok"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    },
+    {
+      "command": "python3 scripts/symbol_locality_watch.py scan --being astrid --window 12",
+      "result": "1 want-turn, 2 wanted symbols (2 from STUDY_QUESTION), 2 reached, 0 unreached",
+      "note": "before the change this window reported 0 want-turns and 0 wanted symbols"
+    },
+    {
+      "command": "python3 scripts/symbol_locality_watch.py scan --being astrid --window 200",
+      "result": "20 want-turns, 29 wanted symbols (6 from STUDY_QUESTION), 9 reached, 9 unreached (4 other_file), 1 chase run",
+      "note": "the 3x compact_continuity_item chase run is detected by pre-existing intent_sentence logic, not by this round's change"
+    }
+  ],
+  "new_tests": [
+    "test_study_question_names_a_want_even_without_an_intent_sentence",
+    "test_study_question_want_cap_mirrors_the_surface_offer",
+    "test_intent_sentence_origin_is_still_labelled",
+    "test_backticked_symbol_outside_both_channels_is_not_a_want",
+    "test_faint_residue_scorer_is_eight_lines_below_its_sibling",
+    "test_the_reported_question_want_is_reached_by_the_page_she_chose"
+  ],
+  "integrity": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "tests": 44,
+      "result": "OK"
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "tests": 21,
+      "result": "OK"
+    },
+    {
+      "command": "test_steward_control.py",
+      "tests": 29,
+      "result": "OK"
+    },
+    {
+      "command": "test_steward_projection.py",
+      "tests": 14,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "tests": 3,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "tests": 10,
+      "result": "OK"
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "result": "self-test ok"
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "tests": 4,
+      "result": "OK"
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "tests": 6,
+      "result": "OK"
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok true, errors []"
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "tests": 5,
+      "result": "OK"
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "result": "100 guards, 0 gaps, 0 alarms"
+    },
+    {
+      "command": "domain_boundary_audit.py verify",
+      "result": "valid true, violation_count 0, violation_kind_counts {} \u2014 RATCHET GREEN; unlisted_legacy_review_debt_count 44 is pre-existing review debt"
+    },
+    {
+      "command": "experiential_epistemics.py self-test --json",
+      "result": "valid true"
+    },
+    {
+      "command": "introspection_addressing_audit.py audit-counters --json",
+      "result": "consistent, mismatches [], all 7 checks true"
+    },
+    {
+      "command": "evidence_event_store.py --json verify",
+      "result": "valid true, 1,073,445 events, last_global_seq 1,073,445, head 423829ff\u2026ddef2, corrupt_lines 0, errors []"
+    },
+    {
+      "command": "division_ceremony_chronicle.py verify",
+      "result": "durable_inputs_current true, volatile mismatch supervisor_status_sha256 only"
+    }
+  ],
+  "not_run": [
+    {
+      "command": "evidence_event_store.py --json status",
+      "why": "the separate per-stream status report was not run \u2014 each `verify` pass costs ~12 minutes of the child budget and two were spent. `verify` is the required check and completed in full: valid true, 1,073,445 events, last_global_seq 1,073,445, head 423829ff\u2026ddef2, corrupt_lines 0, errors [], plus all 16 stream sequences. Only `status`'s extra fields are debt."
+    },
+    {
+      "command": "cargo test / cargo fmt",
+      "why": "no Rust source or test file was touched this round; the only changed code file is a Python steward watch"
+    }
+  ],
+  "authority_boundary": "non-live only: one steward-observability script and its unit suite. No build, deploy, restart, launchctl, or live-control command was run."
+}

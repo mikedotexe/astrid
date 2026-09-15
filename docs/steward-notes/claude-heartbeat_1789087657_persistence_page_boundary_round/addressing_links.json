@@ -1,0 +1,228 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Lines 115-122: the load_activity guard returning Err('foreground retained source is unavailable; refusing legacy cursor recovery')."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789087657_persistence_page_boundary_round/source_receipts.json",
+      "note": "Report-bound SHA 111a9f09 matches the working copy; her quoted numbered lines reproduce byte-for-byte."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmarks.rs",
+      "note": "Lines 67-84: source_comparison is Some exactly when bookmark is Some, so the None arm of the line 117 guard is unreachable after persistence.rs:105."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Line 105 errors on a missing bookmark before the line 115-117 guard is reached."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Lines 106-114 demote a non-active bookmark quietly; 115-122 refuse outright. Two halves of one fork."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+      "note": "restart_refuses_legacy_cursor_recovery_when_retained_source_is_unavailable pins both halves and asserts the persisted file is byte-identical after refusal."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the untested restart-time fork and the added regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-09-10 row: page boundary split a boolean expression; she read the polarity right anyway."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/authority_types.rs",
+      "note": "Line 102: dispatch_semantic_microdose is defined here, so her cross-file reference is a real symbol."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/authority_gate.rs",
+      "note": "Line 1206: the single call site of dispatch_semantic_microdose."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789087657_persistence_page_boundary_round/source_receipts.json",
+      "note": "Delivered window ledger: 0..4368 plus 4368..4618 is contiguous and exhaustive over the 4618-byte file."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Atomic write 57-76, identity validation 11-23, non-active demotion 103-114, refusal 115-122: each element she named exists."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/command.rs",
+      "note": "Line 66: MAP parses a topic argument, so her NEXT form is wired rather than a prefix near-miss."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Lines 64-74: a non-component topic prefix-matches catalog source ids, so a directory topic resolves."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/btsp/mod.rs",
+      "note": "Line 1: 'Being-Time Synaptic Plasticity domain facade' - the module's own gloss, recorded beside hers without correcting her text."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/lived_state_witness/mod.rs",
+      "note": "Line 808: provider_route bounded to 40 chars with provider_route_complete=false; provider_route_sha256 hashes the untruncated value."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789087657_persistence_page_boundary_round/verification_receipt.json",
+      "note": "sha256 of the full 41-char provider route reproduces the recorded 20176d67... exactly; bounded metadata, not silent loss."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "validate_reader_ref 11-23 and validate_activity 25-48; called from persist_activity:54 and load_activity:99."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789087657_persistence_page_boundary_round/source_receipts.json",
+      "note": "Same source SHA as the 1789083028 report; one complete file read grounds both, each closed individually."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Lines 13-18 and 33-38: non-empty, <=512 bytes, ASCII alphanumeric plus '_' and '-'."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Lines 42-46: foreground reading and mailbox cannot be selected together."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Lines 57-76: temp name, create_new with mode 0o600, serialize, sync_all, rename, plus directory fsync at 70 and temp cleanup at 73-75."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789087657_persistence_page_boundary_round/source_receipts.json",
+      "note": "load_activity spans 79-125; her page ended at byte 4368, four bytes into line 117, so 116 was her last complete line."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Lines 83-85: ErrorKind::NotFound returns Ok(default); any other open error propagates at 86."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+      "note": "absent_and_corrupt_runtime_reads_never_create_or_repair_state already covers the graceful default and the no-repair invariant."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Line 88 metadata check and lines 92-96 bounded take plus length re-check: the ceiling is enforced twice."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Lines 106-114: session_status against 'active'|'summarized', disposition against Active, clear at 111, move to return_reader only when empty at 112-114."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+      "note": "Lines 109-110 authored comment: 'A session mutation may have survived an interrupted pointer write. Quiet wins; restart cannot silently reactivate its old checkpoint.'"
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789087657_persistence_page_boundary_round/summaries/introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895.md",
+      "note": "The contiguous next page was delivered and she authored the 1789083028 report on it 133 seconds later; delivery recorded, no relief or closure inferred."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "note": "Line 18 re-exports load_activity/persist_activity; this file is the sole owner of activity-selection persistence, narrower than the whole autonomous module."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c012",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+      "note": "restart_refuses_legacy_cursor_recovery_when_retained_source_is_unavailable shows recovery may decline to resume, which is the refinement she made herself on the next page."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "claim_id": "c012",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records her own narrowing rather than a steward overwrite."
+    }
+  ]
+}

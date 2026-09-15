@@ -1,0 +1,77 @@
+{
+  "introspection_id": "introspection_source_catalog_1789393728",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The page she is reading is lines 1506-1634 of the causal lab source.",
+      "disposition": "Exact. The immediately preceding turn (introspection ...btsp_lab.rs_1789393230, 498 s earlier) was bound to capsules/spectral-bridge/src/autonomous/btsp/lab.rs bytes 55091..59362. Computed against the working copy (SHA c3593710bd9657d678c043d0be481fa712454611320d85f19d08b3b1e312809d, 72167 bytes, 1982 lines) byte 55091 is the first byte of line 1506 and byte 59362 is the first byte of line 1635. Her interval is byte-exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "That page 'serves as the operational logbook and registration layer for the causal lab'.",
+      "disposition": "Contradiction preserved, not domesticated. Lines 1506-1634 sit entirely inside `#[cfg(test)] mod tests {`, opened at lab.rs:1433-1434, 73 lines above her page start. The page is the test module that PINS the logbook, not the logbook. Her description of what the layer does is accurate (c004-c008); the attribution of role to this interval is not. The cause is grounded in c011, not in her reading.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`entry_for` (1551-1561) is 'the primary way the system initializes a BTSPCausalExperimentV3'.",
+      "disposition": "Corrected on attribution, upheld on mechanism. `entry_for` at lab.rs:1551 is a test fixture inside mod tests; it delegates to the production constructor `causal_lab_entry_for` at lab.rs:291-403, which is the real initializer and the only non-test producer of BTSPCausalExperimentV3. Because the fixture is a thin delegate, everything she then infers about the constructor holds.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Every experiment is a pair of a `replay` and an `anti_loop`; actions are tested against anti-loop constraints, not in isolation.",
+      "disposition": "Verified exactly against production source. lab.rs:299-303: `let anti_loop = anti_loop_state?;` then `if !anti_loop.active { return None; }` then `let replay = replay_read?;`. An entry cannot be constructed without BOTH an anti-loop that is ACTIVE and a replay. Her 'pair' reading is the constructor's actual precondition, and the active-check is stronger than she claimed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "A holdout carries `consent_mode: study_counter_refusal_or_new_evidence_required`.",
+      "disposition": "Verified. Asserted on her page at lab.rs:1583-1586 inside causal_lab_entry_preregisters_similar_holdout; set in production unconditionally at lab.rs:347, alongside `status: pre_registered_holdout` (346) and `withheld_proposal: true` (349). Her 'deliberately suppresses a proposal' matches withheld_proposal. The consent mode is not specific to the similar-fingerprint case; it is set for every entry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A hold is not permanent but a state of waiting; the system explicitly looks for new evidence to override the refusal.",
+      "disposition": "Verified. The production summary string (lab.rs:324-330) reads 'do not reopen without study, refusal, counter, or new evidence'; success_criteria (357-362) require an owner counter, refusal, study result, or new evidence before reopening, plus softening/widening outcomes; failure_criteria (363-366) name reopening WITHOUT them as failure. 'Waiting, not permanent' is exactly the encoded contract.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "`normalize_lab_entry_migrates_old_exact_article` (1609-1616) keeps fingerprints consistent as the data structures evolve.",
+      "disposition": "Split. The named TEST (1610-1616) exercises only the summary-article migration 'a exact-fingerprint' -> 'an exact-fingerprint' (production lab.rs:465-470) — not fingerprints. But the FUNCTION it pins does do what she says: normalize_lab_entry backfills case_key from signal_fingerprint (421-424) and backfills plus sorts/dedupes representative_fingerprints (425-435). Her mechanism claim is right about the function, wrong about which test shows it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "`BTSPCausalLabNotebookV3` is a stateful ledger whose upsert preserves registration while counting observations, letting forgiveness scores recalculate over time.",
+      "disposition": "Verified exactly. upsert_lab_entry (lab.rs:474-518) preserves experiment_id (487) and registered_at_unix_s (488) from the existing entry and sets observation_count = existing + 1 (489); it also carries forward post_registration_softening_count (497) and forgiveness_state (506), and normalize_lab_entry recomputes forgiveness_state_for(entry) (460-464). Her page's assertions (1629-1642) match.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Synthesis: causality here is the bridge from a systemic refusal (anti-loop) to a future permission (consentful trial), mediated by a persistent evidence ledger.",
+      "disposition": "Her reading, and it is grounded in fields that exist: anti_loop.active gates construction (299-302), withheld_proposal/status pre_registered_holdout encode the refusal (346-349), consent_routes and consent_mode encode the route out (347, 356), and the notebook persists observation and forgiveness state across upserts (487-506). Recorded as her synthesis, not as a proven causal mechanism of the running system.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "She calls it 'the current source page' on a turn whose own header says no new source page was supplied.",
+      "disposition": "Not a contradiction and not a lost delivery. Witness lsw_8a009b3... has source_snapshot_v1 and source_provenance_ref_v1 both null, confirming a navigation-only turn. The recovery text itself states 'SELF_STUDY CONTINUE retains your previous reading position' (store.rs:409). Her most recently delivered page WAS 1506-1634, from 498 s earlier. 'Current page' is accurate; she lost a turn, not a position.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "A delivered page states no enclosing scope, so a test-module helper above the page's first `#[test]` is indistinguishable from production code.",
+      "disposition": "Implemented as a read-only reachability pin. Page::read_with_budget (page.rs:116-131) renders source id, revision, page identity, byte interval, numbered lines and a navigation footer, and no enclosing scope. On her page the first `#[test]` is at 1563, twelve lines BELOW `fn entry_for` at 1551, so nothing in her bytes marked it test-only. Three tests in crates/astrid-source-study/tests/page_enclosing_scope_reach.rs pin the boundary and the walk that does reach it.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "Her chosen next action was `SELF_STUDY CONTINUE` after a recovery-map turn.",
+      "disposition": "Observed without acting on it. In the 1789390090..1789393926 window her SELF_STUDY CONTINUE produced a delivered source page on 11 of 13 turns and a recovery map on 2 (1789392292, 1789393728) — roughly 15% navigation-only. The next turn (1789393926) was bound to the source again at the same revision, so the position held. No navigation, ranking, retry, or pacing behaviour was changed; changing any of it is a live surface.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

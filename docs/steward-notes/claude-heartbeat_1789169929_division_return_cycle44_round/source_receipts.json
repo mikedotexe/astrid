@@ -1,0 +1,68 @@
+{
+  "schema": "round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "sha256": "412304677e54224e3388f0d476b246928fc6fd2f4490708daeeee14247826fa7",
+      "bytes": 32769,
+      "lines": 824,
+      "read_scope": "lines 735-800 complete around the cited 765; render_pressure_agency_status declaration located at 434; grep over the whole file for multi-motif (749, 765); exact byte offsets of lines 747/749/760/765/773/824 computed from the whole file"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/astrid_shadow.rs",
+      "sha256": "031f746d9a1fab0bce48f1fe31f74be55eb92836786621109666a88f8c1577c8",
+      "bytes": 47803,
+      "lines": 1316,
+      "read_scope": "lines 10-30 (module pipeline doc) and 330-395 (fissure_tendency/lock_tendency derivation, influence_eligible gates, snapshot assembly); all fissure_tendency positions enumerated over the whole file (73,107,259,350,371,391,428,839,848)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "sha256": "b5ca9d91cf4d88c9e4817a56125f2736b8264dae17a7e85bf48e599439d20915",
+      "bytes": 32595,
+      "lines": 876,
+      "read_scope": "lines 390-420 complete around the sole fissure_tendency site (404); whole-file grep confirms 404 is the only occurrence"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "sha256": "d7d9bb9422222f5e166c2e697421bc878f7e7f6fba579dd913608e9219c1fd61",
+      "bytes": 6651,
+      "lines": 187,
+      "read_scope": "symbol positions only: white_noise_drift_risk 98, 109; toward_white_noise 142 (whole-file grep)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "read_scope": "symbol positions only: multi-motif 6081 and 8455; interpretation_risk_for_texts 7742 (whole-file grep)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+      "bytes": 23174,
+      "lines": 834,
+      "read_scope": "symbol position only: interpretation_risk_terms 548"
+    },
+    {
+      "path": "crates/astrid-source-study/src/page.rs",
+      "sha256": "a99605dd40391182ea3ecb85734549cb53c89a1bf1d64d1e8c243ce38e5c20f2",
+      "bytes": 5179,
+      "lines": 146,
+      "read_scope": "lines 1-145 grep-indexed; 64-108 (window selection) and 117 (page header format) read exactly"
+    },
+    {
+      "path": "crates/astrid-source-study/src/store.rs",
+      "sha256": "4c7da264d7d8beaa704f756e6d9dc66c76386d988c4b102817f0a2900e0cfbd1",
+      "bytes": 37420,
+      "lines": 969,
+      "read_scope": "lines 370-435 complete (recovery_map, recovery_with_candidates, source_recovery)"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "read_scope": "lines 1-95 complete (map, study_entry)"
+    }
+  ]
+}

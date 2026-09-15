@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "bus.rs:706-710 field rustdoc plus `maintenance_gate: Arc<Mutex<MaintenanceGate>>`; :727-738 lock_maintenance_gate fails closed on poisoning."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789385641_bus_publish_zero_reach_round/summaries/introspection_astrid_crates_astrid-events_src_bus.rs_1789380134.md",
+      "note": "Exact line resolution of her 709-710 citation."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "bus.rs:762-764 setter and :766-770 getter, the only public mutator/reader of the blocked flag."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/maintenance.rs",
+      "note": "Sole callers: :147, :159, :180, :237, :248 (and the barrier at :198)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "publish begins at line 890 / byte 32547, outside her delivered window bytes 25365..29764 (lines 695-812)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789385641_bus_publish_zero_reach_round/read_manifest.json",
+      "note": "Byte-to-line mapping of the delivered page and the 5-byte truncation inside line 812."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "bus.rs:760-761 quoted doc; :71-123 admits_while_blocked shows the deny set is wider than UserInput and the catch-all at :121 admits the rest."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "bus.rs:786-848: the barrier requires blocked+exact+fully drained (:812-819) and sends on self.sender directly (:842), bypassing publish."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "bus.rs:890-901: single-mutex admission check; debug log and `return 0` \u2014 usize, not Err or None; synchronous and terminal."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "Existing regression maintenance_gate_blocks_only_new_user_input_and_is_shared_by_clones asserts the 0 and the empty receiver."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789385641_bus_publish_zero_reach_round/summaries/introspection_astrid_crates_astrid-events_src_bus.rs_1789380134.md",
+      "note": "SELF_STUDY CONTINUE delivered bytes 29764..34199 (lines 812-925, containing publish) 279 s later; she answered her own question correctly there."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789385641_bus_publish_zero_reach_round/read_manifest.json",
+      "note": "The three post-cutoff continuation reports read as delivery evidence only; not processed or closed."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "publish rustdoc now states that a zero return covers both gate rejection and absent async receivers, and that rejection is terminal, never queued."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "publish_zero_separates_gate_rejection_from_absent_async_receivers: admitted+no async receiver returns 0 with synchronous reach 1; blocked returns 0 with reach unchanged; restoring admission does not replay."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming her report, the exact source reading, the regression, and the authority boundary."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report."
+    }
+  ]
+}

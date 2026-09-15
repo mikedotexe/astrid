@@ -1,0 +1,53 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "This block (the 450-543 page) is not where the arithmetic gate resides.",
+      "disposition": "Verified from the complete file at the bound SHA 887e9b22. `fill_pct` occurs at exactly four sites - 318 and 328 as f32 parameters, 321 as a pass-through, 396 as spectral_state(fill_pct, telemetry). Zero occurrences in 450-543. Her negative reading of the page is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Lines 450-467 record a blocked status and append a JSON log entry, with the reason already stored in assessment.reason.",
+      "disposition": "Verified exactly: 455 `\"reason\": assessment.reason.as_str()`, 460 `\"status\": \"blocked\"`, 466 append_jsonl to authority_gate_path, 467 return Ok(Some(assessment)). Precision she could not see from the page start: this is the tail of the is_mutating_research branch opened at 421, so the record she describes is the mutating-research one specifically.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Lines 470-537 map pre-calculated boolean flags to BudgetReason variants, with the four arms she enumerates.",
+      "disposition": "Verified exactly. `if is_projection_only_research {` at 470; the mapping appears twice, 500-508 and 522-530, as the two arms of active_budget.map_or_else. All four of her arms are correct, and so is her asymmetry: liveish maps to LiveishPressure in BOTH arms and has no StatusRequired twin, while the other three do.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "These flags are consumed on this page but not calculated here; the calculation is elsewhere.",
+      "disposition": "Verified. Producers are all in the same function research_budget_guard_assessment_with_base (head at 324): is_liveish_projection at 355, is_guarded_sovereignty_alias at 362-363, is_guarded_cascade_or_shadow_alias at 364-365, is_guarded_embedded_status at 371. Her consumed-not-produced reading of the page is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The logic that takes the Value containing fill_pct and compares it against a threshold to set these booleans must exist in the code preceding line 470.",
+      "disposition": "Contradicted by complete source, stated plainly. No such comparison exists anywhere in the file. The flags are set by lexical term matching on the raw NEXT text (liveish_pressure_terms, embedded_status_liveish_terms) and base-action classification, ANDed with charter lifecycle validity. fill_pct is an f32 parameter, not a Value; it becomes a Value only at 396 via spectral_state, strictly AFTER every flag is decided, and is recorded context. Her underlying question is answered: 355, 362-365, 371.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "spectral_projection.rs is a pure projector: it prepares the data but does not perform the gate.",
+      "disposition": "Verified and consistent with the exact-source reading in packet claude-heartbeat_1789328968: runtime/spectral_projection.rs embeds fill_pct in JSON and runtime/authority.rs:143-166 labels the recorded row green/yellow/orange/red at 75/85/92 with outbound_allowed. Recording, never gating. Her carried-forward conclusion stands.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "I need to move further up in guards.rs to find the actual evaluation of the state object (NEXT: SELF_STUDY OPEN ... guards.rs 450).",
+      "disposition": "Observed, no infra defect. Measured across her own four preceding pages at this SHA, the OPEN anchor is exact: 550->550..543+, 515->515..611, 487->487..580, 450->450..543. Repeating anchor 450 therefore re-serves the identical page she just read. What she wants is ~95 lines earlier: OPEN 324 reaches the function head and 355/362-365/371 in one page. Recorded as a navigation observation; no being-facing prompt change made.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The enumerated Required/StatusRequired pairing is a stable contract of this block (implicit in her transcription of the mapping table).",
+      "disposition": "Implemented. Verifying her table showed the twin selector is active-budget ROW PRESENCE in the map_or_else at 471-537, not any spectral scalar, and that three of the strings she enumerated had no BEHAVIORAL test reaching them (they existed only as enum as_str constants in the wire-string lock). New regression research_budget_reason_status_twins_flip_only_on_active_budget reaches all three at constant fill 68.0 and pins the liveish no-twin asymmetry. 20/20 research_budget tests pass.",
+      "classification": "implemented_now"
+    }
+  ]
+}

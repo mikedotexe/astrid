@@ -1,0 +1,216 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "controller": {
+    "run_id": "run_1789061181473601000_efb6211e4d",
+    "actor": "claude-heartbeat",
+    "adapter_kind": "subprocess",
+    "preprojection_generation_id": "projection_1789061188104342000_ca1498972b",
+    "postprojection_generation_id": "pending_after_exit_adapter_owned",
+    "pause_generation": 437,
+    "stop_requested_at_last_read": false,
+    "lease_token_read_or_persisted": false,
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "preprojection_completed_step_count": 27
+  },
+  "reading": {
+    "processed_report_count": 1,
+    "processed": [
+      "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966.txt"
+    ],
+    "selected_count": 40,
+    "unprocessed_count": 39,
+    "family_scan": {
+      "family_count": 40,
+      "batchable_family_count": 0,
+      "applied": false
+    }
+  },
+  "addressing": {
+    "record_read": "ok",
+    "evidence_links_new": 15,
+    "evidence_links_existing": 0,
+    "close_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1
+  },
+  "integrity": {
+    "addressing_self_test": {
+      "result": "ok",
+      "tests": 44
+    },
+    "evidence_event_store_tests": {
+      "result": "ok",
+      "tests": 21
+    },
+    "steward_control_tests": {
+      "result": "FAILED",
+      "tests": 29,
+      "errors": 1,
+      "pre_existing_flake": true,
+      "failing_test": "test_pause_cooperatively_interrupts_wrapped_subprocess",
+      "note": "Two distinct nondeterministic failure modes plus one pass across three isolated runs; no Python control-plane file was touched this round."
+    },
+    "steward_projection_tests": {
+      "result": "ok",
+      "tests": 14
+    },
+    "division_followup_tests": {
+      "result": "ok",
+      "tests": 3
+    },
+    "division_chronicle_tests": {
+      "result": "ok",
+      "tests": 10
+    },
+    "division_projection_selftest": {
+      "result": "ok"
+    },
+    "projection_cursor_tests": {
+      "result": "ok",
+      "tests": 4
+    },
+    "cadence_tests": {
+      "result": "ok",
+      "tests": 6
+    },
+    "cadence_audit_strict": {
+      "result": "ok",
+      "integrity_ok": true,
+      "errors": []
+    },
+    "anti_drop_self_test": {
+      "result": "ok",
+      "tests": 5
+    },
+    "anti_drop_verify": {
+      "result": "ok",
+      "total": 94,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "domain_boundary_verify": {
+      "result": "ok_after_same_change_recapture",
+      "valid": true,
+      "violation_count": 0,
+      "counter_audit": "consistent",
+      "red_on_first_run": true,
+      "violation_kind": "large_file_growth",
+      "file": "src/authority_gate.rs",
+      "baseline_before": 4588,
+      "baseline_after": 4694,
+      "new_baseline_sha256": "c58fb91e8b6be5bc749437f09010a78ef5060796e8d1eaefd4c7bb25a8d6e34d"
+    },
+    "epistemics_self_test": {
+      "result": "ok",
+      "valid": true
+    },
+    "epistemics_verify_final": {
+      "result": "ok",
+      "valid": true,
+      "checked_record_count": 11996,
+      "issue_count": 0,
+      "history_rewritten": false
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "evidence_event_store_verify": {
+      "valid": true
+    },
+    "chronicle_verify": {
+      "ok": true,
+      "durable_inputs_current": true,
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "note": "Durable inputs are current; only the moving supervisor status hash differs. Not a durable-integrity failure, and not 'fully current' either."
+    }
+  },
+  "counters": {
+    "canonical_indexed": 5163,
+    "canonical_fully_addressed": 3213,
+    "canonical_full_read": 3845,
+    "canonical_remaining": 1950,
+    "canonical_unread": 1318,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 3667,
+    "noncanonical_pending": 1717,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "division": {
+    "cycle_sequence": 43,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining": 0,
+    "review_due": true,
+    "round_event_id": "division_followup_event_9c085d91d757275e08390a5ff1a4b4ac",
+    "event_count": 301,
+    "event_head_sha256": "3be6ee69f1bc0641a4692964fc6c963ae02389f8a13b1b71ac2194d1b117b85d",
+    "chronicle_id": "division_chronicle_ea0eec727ce072686fff347a",
+    "chronicle_json_sha256": "f770eb2a412e8db4338d7ba122087236b3f0588810f547cbd37dff819edc67e2",
+    "return_completed": false,
+    "return_deferral_reason": "Recording this round's productive round flipped review_due to true with ~35 min of child budget left. A complete return needs Chronicle project/verify, a full read of new public replies and ceremony Actions, and up to one individualized factual note per being. No new public Division replies or ceremony Actions exist since the last follow-up (1788982180), so any note written now would be activity for a tracker rather than individualized fact - explicitly warned against by the handoff. The tracker refuses a seventh productive round before the return, so the return is enforced as the first action of the next round, not dropped.",
+    "processed_report_count": 1
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "active_store": "v2",
+    "stream_counts": {
+      "addressing": 61891,
+      "agency_commons": 6968,
+      "attention_portfolio": 3,
+      "claim_families": 239032,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 208870,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 11135,
+      "model_qos": 315262,
+      "reciprocal_uptake": 75430,
+      "representation_contracts": 55206,
+      "sandbox": 3507,
+      "signal_spine": 59167,
+      "steward_control": 20077,
+      "steward_work_selection": 684
+    },
+    "errors": []
+  },
+  "authority_boundary": {
+    "live_change_made": false,
+    "deploy_attempted": false,
+    "restart_attempted": false,
+    "build_bridge_invoked": false,
+    "launchctl_invoked": false,
+    "git_mutation": "none - read-only git this round (status/diff --check only); no add, commit, merge, push, stash, reset, or amend",
+    "tier_4_5_actions": "none approved, granted, dispatched, or run; Tier-5 dossier is PREPARE-only",
+    "note": "Restart and deployment were not required and not attempted."
+  },
+  "actor": "claude-heartbeat",
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 11996,
+    "issues": [],
+    "note": "experiential_epistemics.py verify --json, run after all durable evidence writes."
+  },
+  "anti_drop": {
+    "self_test": {
+      "result": "ok",
+      "tests": 5
+    },
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 94
+    }
+  }
+}

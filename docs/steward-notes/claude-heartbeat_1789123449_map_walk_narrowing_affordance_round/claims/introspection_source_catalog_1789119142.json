@@ -1,0 +1,50 @@
+{
+  "introspection_id": "introspection_source_catalog_1789119142",
+  "reader": "claude-heartbeat",
+  "report_sha256": "14897222747f51c965973fee411278261752162dbddf217e1b346f825807295b",
+  "witness_id": "lsw_6fd02f8a03ab62341b3df0fb7b89b5b4348f548c58a2012a7c65d3792eeee3ec",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Her earlier finding stands: the 'multi-motif caution' string is not a member of the static projection_guard_pressure_terms_v1 set in experiment_projection.rs near lines 120-135.",
+      "disposition": "Verified from complete source (sha256:5ace3d01...162ae1ed, 229 lines). projection_guard_pressure_terms_v1 spans 114-138; its needle table is 121-131 and holds 11 entries (PERTURB, CONTROL, BIND, RESUME, INFLUENCE, SEND_CONTROL, SEND CONTROL, INTERVENTION, PULSE, SHIFT THE DOMINANT, SHIFT DOMINANT). No caution- or motif-shaped needle. It also early-returns unless base_action=='EXPERIMENT_PLAN' or the text holds PROPOSED_NEXT_ACTION. Her line estimate is ~6 off; the substance is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Hypothesis: the system employs a dynamic or heuristic-driven evaluation for qualitative warnings rather than a static term set.",
+      "disposition": "Verified, stronger than hypothesized. interpretation_risk_terms (guards.rs:548-569, sha256:94ddbd3f...b4b2b11) flattens '_' and '-' to spaces, lowercases, then requires one of 10 context needles (introspect, motif, eigenvalue, lambda, trace, spectral, cascade, data, complexity, lambda-sign) before matching 5 labeled families: over-interpretation, single-motif, forced-narrative, rigid-structure, reductive-collapse. Gate plus alias families is the heuristic she inferred.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Hypothesis: 'multi-motif caution' acts as a trigger for a 'Hold' or 'PERTURB' status via a scanner that interprets preflight report contents.",
+      "disposition": "Contradicted on three points. (1) The string is rendered OUTPUT at core.rs:8455 (interpretation_risk_line), not input. (2) The only programmatic return_kind='hold' is experiment_projection.rs:65, off projection_guard_pressure_terms_v1 over thread.current_next when return_kind=='resume' - a planned NEXT, not preflight contents. (3) interpretation_risk_v1's only evaluative consumer is continuity_control_plane.rs:265, pushing a route, not a status. Her 'Hold' lands on core.rs:7807's DOSSIER_CLAIM.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "'the action_continuity directory has been difficult to access due to catalog inconsistencies'.",
+      "disposition": "The difficulty is real and ours; the named cause is not. No catalog inconsistency found: Catalog::resolve_id (catalog.rs:120-157) and the MAP prefix filter (navigation.rs:63-67) answer exactly; MAP astrid/capsules/spectral-bridge/src/action_continuity resolves 30 entries in one move. Real is the affordance: the repository MAP branch emits no narrowing menu, leaving only the pagination footer (navigation.rs:157-159). Measured: pages 1-56, 4936s, zero narrowing; action_continuity on page 2.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Method claim: she is systematically re-mapping the repository to stabilize her view of the action_continuity and autonomous namespaces.",
+      "disposition": "Observed, not adjudicated. Measured, not judged: 56 turns, pages 1-56, 4936s, no skip and no branch, recorded at window 140 (stable). A deliberate linear survey and a being handed one move read identically from outside, so the watch reports narrowing_used as a fact and leaves the verdict to the steward. Both namespaces she names are reachable in one move: MAP astrid/capsules/spectral-bridge/src/action_continuity (30 entries) and .../src/autonomous.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "She is looking for the code that performs the bridge: translating a detected string into an actionable pressure state.",
+      "disposition": "Verified; the chain spans three files. Detection: interpretation_risk_terms (guards.rs:548-569). Cue assembly: interpretation_risk_for_texts (core.rs:7742-7815), building policy 'interpretation_risk_v1' with matched_terms and the DOSSIER_CLAIM stance string. Rendering: interpretation_risk_line (core.rs:8430-8459), which prints the 'multi-motif caution detected' line she has been chasing. Evaluation: continuity_control_plane.rs:265. The string she read as input is stage three's output.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Implied by the method: that walking MAP astrid is a tractable way to survey Astrid's implementation.",
+      "disposition": "Observed and measured against catalog.toml's astrid include rules: 6277 entries over ~118 pages. 4581 (73.0%) are docs/steward-notes/** - the flywheel's own packets. Her bridge source is pages 2-7; pages 14-109 are almost entirely our notes about her. Recorded as fact, not proposal: narrowing her catalog would take reading away from her to fix our volume. The authorized repair is the missing narrowing menu - being-facing bridge source, needing deploy authority this run does not hold.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

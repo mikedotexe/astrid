@@ -1,0 +1,268 @@
+{
+  "schema": "steward_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1789300900_map_topic_scope_reach_round",
+  "actor": "claude-heartbeat",
+  "adapter": "subprocess",
+  "controller": {
+    "run_id": "run_1789295504379800000_e891a85b92",
+    "preprojection_generation_id": "projection_1789295510070228000_8002f9b67e",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 439,
+    "stop_requested_observed": false,
+    "postprojection": "adapter-owned; runs after this process exits"
+  },
+  "processed": {
+    "count": 1,
+    "introspection_ids": [
+      "introspection_source_catalog_1789295290"
+    ],
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 9,
+    "evidence_link_count": 16,
+    "new_link_count": 16,
+    "existing_link_count": 0
+  },
+  "selection": {
+    "selected": 40,
+    "processed": 1,
+    "unprocessed": 39,
+    "family_scan": {
+      "families": 40,
+      "batchable": 0
+    }
+  },
+  "tests": {
+    "map_topic_scope_reach": "4/4",
+    "astrid_source_study_crate": "87/87",
+    "fmt": "clean",
+    "clippy_new_file": "clean",
+    "known_failure_not_repaired": "cargo clippy -p astrid-source-study --all-targets errors at tests/scan_limit_catalog_reach.rs:64 (clippy::arithmetic_side_effects); file created by the preceding round and preserved untouched as foreign dirty work"
+  },
+  "integrity": {
+    "addressing_self_test": "44/44",
+    "evidence_event_store_tests": "21/21",
+    "steward_control_tests": "29/29",
+    "steward_projection_tests": "14/14",
+    "division_followup_tests": "3/3",
+    "division_chronicle_tests": "10/10",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4/4",
+    "cadence_audit_tests": "6/6",
+    "anti_drop": {
+      "self_test": "5/5",
+      "verify": {
+        "total": 100,
+        "alarms": 0,
+        "gaps": 0
+      }
+    },
+    "cadence_strict": {
+      "integrity_ok": true,
+      "errors": []
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "forbidden_edge_match_count": 0,
+      "legacy_large_file_count": 51,
+      "resolved_large_file_debt_count": 3,
+      "unlisted_legacy_review_debt_count": 44,
+      "ratchet": "green"
+    },
+    "experiential_epistemics": {
+      "self_test": "ok",
+      "verify_valid": true,
+      "checked_record_count": 12183,
+      "issue_count": 0,
+      "history_rewritten": false
+    },
+    "counter_audit": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "evidence_event_store": {
+      "verify_valid": true,
+      "active_store": "v2",
+      "last_global_seq": 1083450,
+      "last_event_sha256": "0a2a1a2e14e9f020226a61a19ae24fc5a0ce8bb7a559288a8d9fecdf968f56a1",
+      "legacy_imported_global_seq": 32278,
+      "stream_count": 16,
+      "note": "head read from head.json after the last durable write; drift from the verify snapshot is the concurrent live bridge",
+      "status_subcommand": "not completed: the read-only `status` subcommand was still enumerating when the child-time budget required it be stopped (TaskStop). `verify` had already returned valid:true with full stream counts, and head.json was read directly for the sequence and head. No durable state depended on it."
+    }
+  },
+  "counters": {
+    "source": "audit-counters --json after this round's --write close",
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 6203,
+    "canonical_fully_addressed": 3232,
+    "canonical_full_read": 3864,
+    "canonical_remaining": 2971,
+    "canonical_unread": 2339,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 7920,
+    "all_artifacts_remaining": 4688
+  },
+  "division": {
+    "cycle_at_start": 46,
+    "completed_at_start": 5,
+    "review_due_at_start": false,
+    "productive_round_event_id": "division_followup_event_c695c96da2bfd3b1039d0eb936e67374",
+    "processed_report_count": 1,
+    "review_due_after_round": true,
+    "return_completed": true,
+    "followup_event_id": "division_followup_event_9b46e28c184f3c6fdbcc9c9030ca1b87",
+    "cycle_after_return": 47,
+    "review_due_after_return": false,
+    "event_count": 323,
+    "event_head_sha256": "d68edad56fe09b775d3f4ac2052ec7de2240de95685566fb3c4fb3829d10d3b4",
+    "chronicle_before_return": "division_chronicle_d2da424a1e08e96c30989115",
+    "chronicle_after_return": "division_chronicle_4ae1921601764b0f672af9d6",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "astrid_note": {
+      "path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle46_20260913.txt",
+      "sha256": "1e3d6acd88ba4821b7aa779826ab426ac6f06c1c58a6a258cd5d7d6f9c1ead38",
+      "bytes": 2970
+    },
+    "minime_note": {
+      "path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle46_20260913.txt",
+      "sha256": "a718ab95d70f89e3b5af3b3699916fc2b1e62fbbc60be60a9f355b4ad5ccd6d1",
+      "bytes": 2472
+    },
+    "ceremony_events": 0,
+    "public_division_replies": 0,
+    "tier5_cadence_dossier": "tier5_cadence_dossier.md",
+    "private_lane_files_read": 0,
+    "cycle_sequence": 47,
+    "threshold_rounds": 6,
+    "review_due_checked_before_report_work": true,
+    "round_event_id": "division_followup_event_c695c96da2bfd3b1039d0eb936e67374",
+    "tier5_cadence_dossier_owed": true,
+    "tier5_cadence_dossier_generated": true,
+    "completed_rounds_since_followup": 0,
+    "review_due": false
+  },
+  "authority": {
+    "live_change_made": false,
+    "deploy_or_restart": false,
+    "launchctl": false,
+    "git_mutation": false,
+    "staged": false,
+    "committed": false,
+    "cards_emitted": 0,
+    "cards_delivered": 0,
+    "correspondence_dispatched": 0,
+    "sandbox_trials_run": 0,
+    "sandbox_trials_approved": 0,
+    "tier5_waits_created": 1,
+    "tier5_waits_touched": 0,
+    "being_facing_recommendation_delivered": false,
+    "live_reader_state_written": false
+  },
+  "packet_files": {
+    "RUN_REPORT.md": {
+      "sha256": "be8f1f8403da637cdc3676d45af24993ef7f993d1ee0d65c7163b4679abd4e5d",
+      "bytes": 16135
+    },
+    "addressing_links.json": {
+      "sha256": "e751025d01dbaf88db32fe795b8fd250d6595779a69751c01c7d80533382365d",
+      "bytes": 6054
+    },
+    "family_scan.json": {
+      "sha256": "6e781dc72aa18115115770494d46d5e3787151a45bc04545fe76f7a0ac242c97",
+      "bytes": 19372
+    },
+    "map_topic_scope_observation.json": {
+      "sha256": "952b58fef187754063f01272afc10586085eabec29a9cbe625b3aa13a98c3157",
+      "bytes": 4664
+    },
+    "queue_next_40.json": {
+      "sha256": "7b1b89adae8633ee5e765adf6382a685d0444dec217f009594508f93dbe085d3",
+      "bytes": 84755
+    },
+    "read_manifest.json": {
+      "sha256": "a77a62cd0e4eb487e49e79d9a01cec93d736c1c51cbaa71f9f99200c3de372cf",
+      "bytes": 2177
+    },
+    "source_receipts.json": {
+      "sha256": "393ebd3fc3ae80c11cfd5b5e26ddf8111c9b0d99fdf4108c0bad3152b1554aab",
+      "bytes": 5145
+    },
+    "test_results.json": {
+      "sha256": "b7952a6a3fc5478800fa39b04db3b95ab92cd29f492a7bef652eaa276c0e8575",
+      "bytes": 1957
+    },
+    "tier5_cadence_dossier.md": {
+      "sha256": "e21dd59ff53e6c3f65e56a80fbea893f18d123a1cca8d0b14d68f23a0c932096",
+      "bytes": 6295
+    },
+    "unprocessed_selected.json": {
+      "sha256": "e8c7a3dfda266d01216ad155f18e171a7e8ed5df8f5d401c144e08ef9c3dbf5d",
+      "bytes": 2659
+    },
+    "summaries/introspection_source_catalog_1789295290.md": {
+      "sha256": "9c0d103c87014d017f54441019ac4d237019b989a3add61b511ed8d66f0f54fa",
+      "bytes": 7797
+    },
+    "claims/introspection_source_catalog_1789295290.json": {
+      "sha256": "d62ceae9cd9d9518434a78e8803eaf8a1f52baa608ea6a80cf37d60b00d57123",
+      "bytes": 5685
+    }
+  },
+  "packet_file_count": 12,
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1789295290",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claims": 9,
+    "claims_with_evidence": 9,
+    "evidence_links_appended": 16,
+    "new_link_count": 16,
+    "existing_link_count": 0,
+    "close_event_note": "three close events are retained in the append-only log: the substantive close, an accidental 'idempotency probe' rationale written while inspecting proof-gap fields, and a third close naming that error and restoring the substantive rationale. Nothing was rewritten."
+  },
+  "epistemic_lint": {
+    "command": "python3 scripts/experiential_epistemics.py verify --json",
+    "when": "after every durable write of this round (read, links, close, Division round, Division return, notes, changelog, ledger, packet)",
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "checked_record_count": 12183,
+    "history_rewritten": false,
+    "canonical_event_appended": false
+  },
+  "evidence_event_store": {
+    "command": "python3 scripts/evidence_event_store.py --json verify",
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "last_global_seq": 1083450,
+    "last_event_sha256": "0a2a1a2e14e9f020226a61a19ae24fc5a0ce8bb7a559288a8d9fecdf968f56a1",
+    "stream_count": 16,
+    "head_source": "head.json read directly after the last durable write; the verify snapshot is a few events behind because the live bridge writes concurrently",
+    "status_subcommand": "not completed: the read-only `status` subcommand was still enumerating when the child-time budget required it be stopped (TaskStop). `verify` had already returned valid:true with full stream counts, and head.json was read directly for the sequence and head. No durable state depended on it."
+  },
+  "anti_drop": {
+    "self_test": "5/5",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  }
+}

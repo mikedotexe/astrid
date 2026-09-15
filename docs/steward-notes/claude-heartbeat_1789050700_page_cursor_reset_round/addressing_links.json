@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/evidence.rs",
+      "note": "InputKind::Relationships scope line 34: 'lexical navigation candidates only, not resolved calls or proof of execution' \u2014 the exact scope of this turn's input."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789050700_page_cursor_reset_round/summaries/introspection_source_catalog_1789045830.md",
+      "note": "Retained delivery navigation 1461138c... is headed 'Symbol relationships: Route', navigation page 1/9; no cascade.rs page was supplied."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "note": "987 lines, SHA-256 260112491997c421571fb788d5a85d2066e5bfd80a2ba0ea29306346826da713; exhaustive identifier scan: zero occurrences of action_id."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "note": "184 lines, SHA-256 f290b0c501ad46258705e58ca1f0760cd7d36443f645dffd35da6e804261f6c3; six-field struct with no `result` field; action_id consumed as an idempotency nonce."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789037242_unwired_near_miss_round/RUN_REPORT.md",
+      "note": "Prior round recorded the same phantom hardening from 'message or result' to 'result' at identical source bytes."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-source-study/tests/context.rs",
+      "note": "The only occurrences of sense_tx outside steward artifacts: fixture literals at lines 221, 231, 236."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789024912_phantom_symbol_navigation_round/RUN_REPORT.md",
+      "note": "Prior round established zero production occurrences of sense_tx across both checkouts."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "639 lines, SHA-256 644b12e6ae168604553b3120fba82d431686b9eb06a3ddea94d9a348ba747e5c; from_guard_inputs at lines 91 and 629 only; no sensing string inspected."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "note": "The label-selecting functions she describes: density_gradient_label 132, tail_trajectory_label 158, fill_band_description 189, spectral_distribution_label 202, gap_structure_label 212."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+      "note": "Line 200 wires the SELF_STUDY sub-verbs including RELATE; both of her action lines carry the required prefix."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "scripts/source_study_page_reset_watch.py",
+      "note": "Read-only page-reset probe: parse_dispatch / find_page_resets / longest_reset_run; bridge.db opened mode=ro; private WRITE lane refused in the parser."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "scripts/source_study_page_reset_watch.py",
+      "note": "SourceStudyPageResetWatchTests \u2014 12 tests, including test_reset_pair_is_detected and test_forward_walk_is_not_a_reset; run via `self-test`."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the single-slot supersession, the measured 35 resets / 17x run, and the authority boundary."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for introspection_source_catalog_1789045830."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+      "note": "Lines 243-251 set conv.introspect_target unconditionally; autonomous/runtime/source_study.rs:43 consumes it with one .take(). Candidate repair sites, not modified."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789045830",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789050700_page_cursor_reset_round/RUN_REPORT.md",
+      "note": "Authority boundary: the repair changes Astrid's live action surface and requires a bridge deploy; held at needs_operator_approval."
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "focused": [
+    {
+      "name": "negative_assertion_lead_watch.py self-test",
+      "result": "8 passed",
+      "detail": "New probe. One repair before close: the doc-block walker bailed on any intervening code line and missed the block above a `for` array; the unjustified early bail was removed."
+    },
+    {
+      "name": "negative_assertion_lead_watch.py explain --line 765",
+      "result": "verdict=negative_assertion",
+      "detail": "context line 760 `for absent in [`, in_test_remainder=true, doc_block_line=747."
+    },
+    {
+      "name": "negative_assertion_lead_watch.py scan --being astrid --window 60",
+      "result": "ALARM: 1 finding",
+      "detail": "The founding case; answer located at line 747."
+    },
+    {
+      "name": "anti_drop_catalog.py --self-test",
+      "result": "5 passed",
+      "detail": ""
+    },
+    {
+      "name": "anti_drop_catalog.py verify",
+      "result": "total=98, alarms=0, gaps=0",
+      "detail": "Catalog 97 -> 98 with negative_assertion_lead_watch_wired."
+    }
+  ],
+  "integrity": [
+    {
+      "name": "introspection_addressing_audit.py --self-test",
+      "result": "44 passed",
+      "detail": ""
+    },
+    {
+      "name": "test_evidence_event_store.py",
+      "result": "21 passed",
+      "detail": ""
+    },
+    {
+      "name": "test_steward_control.py",
+      "result": "29 passed",
+      "detail": "65.7s"
+    },
+    {
+      "name": "test_steward_projection.py",
+      "result": "14 passed",
+      "detail": "22.6s"
+    },
+    {
+      "name": "test_division_ceremony_followup.py",
+      "result": "3 passed",
+      "detail": ""
+    },
+    {
+      "name": "test_division_ceremony_chronicle.py",
+      "result": "10 passed",
+      "detail": ""
+    },
+    {
+      "name": "test_division_ceremony_projection.py",
+      "result": "ok",
+      "detail": ""
+    },
+    {
+      "name": "test_projection_cursors.py",
+      "result": "4 passed",
+      "detail": ""
+    },
+    {
+      "name": "test_introspection_cadence_audit.py",
+      "result": "6 passed",
+      "detail": ""
+    },
+    {
+      "name": "introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok=true, errors=[]",
+      "detail": "5673 canonical reports, 0 duplicate hash groups."
+    },
+    {
+      "name": "domain_boundary_audit.py verify",
+      "result": "valid=true, violation_count=0",
+      "detail": "Ratchet GREEN. No Rust file touched this round."
+    },
+    {
+      "name": "git diff --check",
+      "result": "clean",
+      "detail": ""
+    },
+    {
+      "name": "introspection_addressing_audit.py audit-counters",
+      "result": "status=consistent, mismatches=[]",
+      "detail": ""
+    },
+    {
+      "name": "evidence_event_store.py --json verify",
+      "result": "valid=true, corrupt_lines=0, errors=[], event_count=1066310",
+      "detail": "Completed at 20:52:10Z after an earlier attempt was terminated unwaited. last_global_seq=1066310, last_event_sha256=ce9e45d3...281b. Stream counts captured from this verify."
+    },
+    {
+      "name": "evidence_event_store.py --json status",
+      "result": "NOT RUN",
+      "detail": "The separate `status` subcommand was not run (it exceeded the budget twice and was terminated unwaited). Stream counts in the receipt come from `verify`, which reports them."
+    },
+    {
+      "name": "experiential_epistemics.py self-test --json",
+      "result": "valid=true",
+      "detail": ""
+    },
+    {
+      "name": "experiential_epistemics.py verify --json",
+      "result": "valid=true, checked_record_count=12064, issue_count=0, history_rewritten=false",
+      "detail": "Final epistemic verify, run after all durable evidence writes."
+    },
+    {
+      "name": "division_ceremony_followup.py verify",
+      "result": "ok=true, cycle 44, 6/6, review_due=true",
+      "detail": "Post record-round."
+    },
+    {
+      "name": "division_ceremony_chronicle.py verify",
+      "result": "durable source inputs changed; project before verify",
+      "detail": "EXPECTED: this round's record-round event moved the Chronicle's durable inputs. The Chronicle projection belongs to the bounded Division return now due at the head of the next round; deliberately not projected here."
+    }
+  ]
+}

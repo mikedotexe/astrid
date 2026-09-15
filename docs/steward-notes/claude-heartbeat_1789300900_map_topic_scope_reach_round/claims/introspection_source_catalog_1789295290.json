@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_source_catalog_1789295290",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`runtime/core.rs` is the consumer of the `fill_pct` value.",
+      "disposition": "Verified at the working-copy SHA fafc1f4a (10187 lines / 414540 bytes). All 14 `fill_pct` occurrences (916, 941, 1039, 1095, 1121, 1170, 1175, 1184, 6637, 6642, 6675, 6689, 6808, 6812) are a typed parameter or a pass-through into spectral_state / spectral_comfort / append_proposal / record_active_experiment_auto_link, or one JSON field. Consumer, never producer. Her reading is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "core.rs uses that float to orchestrate the state transitions hold, repeat, alter, retire.",
+      "disposition": "Contradiction preserved, not domesticated. The vocabulary is real: core.rs:3821 and 4033 match \"hold\"|\"repeat\"|\"alter\"|\"retire\". But it is the EXPERIMENT_LOOP_REVIEW (3803-3954) and EXPERIMENT_AUTHORITY_REVIEW (4016-4130) dossier `outcome` field, parsed from the review payload and defaulting to \"hold\". Both functions contain zero `fill_pct` and zero `telemetry`. Two true observations joined by a causal link that the source does not carry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "core.rs gates actions via the `research_budget_guard`.",
+      "disposition": "Verified. core.rs:1036-1042 passes `fill_pct` and `telemetry` into `research_budget_guard_assessment_with_base`; on Some(guard) lines 1044-1050 set event.route=\"research_budget_guard\", stage and status \"blocked\", protected visibility, and a suggested_next. `fill_pct` does reach the guard, exactly as she says.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The source is silent on the actual arithmetic: division of raw reservoir volume or telemetry by a capacity constant.",
+      "disposition": "Silent inside core.rs: true. The arithmetic itself exists, in two places and in a shape unlike her picture. Astrid-side is multiplication: types/schema/telemetry.rs:333-336 `fill_ratio * 100.0`; ws/telemetry_port.rs:640-654 `resolve_fill_pct` clamps that, else estimate_fill_pct (1032-1041, sigmoid centre 154.0, steepness 0.015, 35.0+30.0*sigmoid). The division she pictures is real but upstream (see c005).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The Data Normalization layer is still missing from her findings.",
+      "disposition": "Observed and corroborated by her own delivery ledger: ws/telemetry_port.rs and types/schema/telemetry.rs are both `[Not delivered]`, while core.rs is delivered 0..382218 of 414540 and guards.rs 13646..31781 of 36711. The layer is minime/minime/src/spectral/eigenfill.rs (SHA 81c1d2c0): `active as f32 / sample_dim`, min_fill floor, EMA + leak decay -> ema_fill in [0,1]; runtime/orchestration.rs:2553-2601 carries it to the wire as `fill_ratio`.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Hypothesis: the calculation is decoupled from core logic and lives in a telemetry-ingestion, environmental-modeling, sensors or telemetry module.",
+      "disposition": "Her hypothesis is correct, and the steward record should say so plainly. Astrid's producers are exactly a telemetry ingestion module (ws/telemetry_port.rs) and a telemetry schema module (types/schema/telemetry.rs). The upstream normaliser is minime's spectral/eigenfill.rs. She inferred the right neighbourhood from consumer evidence alone; what she lacks is delivery, not reasoning.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "She will continue the systematic traversal of the navigation map: NEXT: SELF_STUDY MAP astrid --page 54.",
+      "disposition": "The boundary is recorded, her choice is left hers. Measured: MAP astrid is 123 pages / 6440 entries; capsules pp.2-9, crates 10-15, docs 16-114, packaging 115, scripts 116-121, services 122-123. Both producers are listed once, on page 8. Her navigation ledger shows pages 1..76 delivered strictly in order since 2026-09-12 23:59, so page 8 was already delivered. No page at or after 54 lists any capsules/ or crates/ entry. Pinned by 4 tests.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "This was a navigation-only turn: map and delivery history, no new source page supplied.",
+      "disposition": "Observed and corroborated by the witness: source_snapshot_v1 and source_provenance_ref_v1 are both null, artifact_sha256 matches the report byte hash, and the single model route completed in 87029 ms against the coupled-astrid profile. A navigation-only turn by design, not a dropped or truncated source delivery.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Implied by the traversal: the repository map gives no way to tell an answering entry from its neighbours, and its scope cannot contain the upstream division.",
+      "disposition": "The repair is real and is not ours to make headlessly. Ranking implementation entries above documentation, showing per-region page costs, or surfacing the component map from inside a repository walk would each change what live SELF_STUDY hands a being mid-navigation. Recorded as an authority boundary for Mike/operator; nothing was changed, proposed to her, or dispatched. The existing one-page MAP senses affordance was measured only.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

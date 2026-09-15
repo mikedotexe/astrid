@@ -1,0 +1,128 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "focused": [
+    {
+      "command": "cargo test -p astrid-source-study --test path_recovery",
+      "result": "pass",
+      "tests": 4,
+      "note": "Includes the new bare_file_stem_map_topic_recovers_with_a_reason_but_no_candidate regression. The three pre-existing tests in the file also pass unchanged."
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "pass",
+      "tests": 0,
+      "note": "rustfmt reformatted only the newly added test; re-check is clean. `git status --short crates/astrid-source-study/` shows tests/path_recovery.rs as the sole modified path in the crate."
+    },
+    {
+      "command": "python3 scripts/source_study_recovery_loop_watch.py self-test",
+      "result": "pass",
+      "tests": 8,
+      "note": "New watch: loop detection, non-recovery repeats rejected, differing actions rejected, min-length floor, unanswered trailing run not scored, length and span alarms, topic-shape classification, header-only parsing."
+    },
+    {
+      "command": "python3 scripts/source_study_recovery_loop_watch.py scan --window 200",
+      "result": "pass",
+      "tests": 0,
+      "note": "Live read-only scan reproduces the finding: 200 turns, 28 recovery inputs, 1 loop \u2014 16x over 56m [bare] SELF_STUDY MAP continuity, escaped with SELF_STUDY MAP astrid."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "tests": 0,
+      "note": "No whitespace errors in the working tree."
+    }
+  ],
+  "integrity": [
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "result": "pass",
+      "tests": 44,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/test_evidence_event_store.py",
+      "result": "pass",
+      "tests": 21,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/test_steward_control.py",
+      "result": "pass",
+      "tests": 29,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/test_steward_projection.py",
+      "result": "pass",
+      "tests": 14,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_followup.py",
+      "result": "pass",
+      "tests": 3,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_chronicle.py",
+      "result": "pass",
+      "tests": 10,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_projection.py",
+      "result": "pass",
+      "tests": 0,
+      "note": "self-test: ok"
+    },
+    {
+      "command": "python3 scripts/test_projection_cursors.py",
+      "result": "pass",
+      "tests": 4,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/test_introspection_cadence_audit.py",
+      "result": "pass",
+      "tests": 6,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "result": "pass",
+      "tests": 5,
+      "note": ""
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "result": "pass",
+      "tests": 0,
+      "note": "100 rows, 0 alarms, 0 gaps"
+    },
+    {
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "result": "pass",
+      "tests": 0,
+      "note": "integrity_ok=true, errors=[], 5839 canonical reports, 0 duplicate-hash groups"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "pass",
+      "tests": 0,
+      "note": "valid=true, violation_count=0, violation_kind_counts={} \u2014 the ratchet is GREEN this round. unlisted_legacy_review_debt_count=44 is pre-existing review debt, not a violation."
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py self-test --json",
+      "result": "pass",
+      "tests": 0,
+      "note": "see self_test_result"
+    }
+  ],
+  "not_run": [
+    {
+      "command": "cargo test --workspace",
+      "reason": "Out of scope. The only Rust change is one added test in astrid-source-study; the crate-scoped run is the exact filter and it passes. A full workspace compile would not have fit the remaining budget alongside the close/integrity/Division sequence."
+    }
+  ]
+}

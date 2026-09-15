@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_source_catalog_1789032920",
+  "report_sha256": "74b89f2f33fd0faa86d0bc8b73ee1be91b97e2a28a36aa9adb53646e7cf87476",
+  "lived_state_witness_id": "lsw_6a8e777dfd556fea40f88a9810decd02ccc18cc29d3b8c3a478afc3b1e37822a",
+  "source_binding": "navigation-only report, witness source_snapshot_v1 null, no report-bound source SHA. Shares dispatch.rs SHA 644b12e6ae168604553b3120fba82d431686b9eb06a3ddea94d9a348ba747e5c with introspection_source_catalog_1789033124, so that source verification is reused; the distinct claims below are verified separately.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "dispatch.rs functions as a structural aggregator rather than a logic generator for the spectral-bridge's qualitative outputs.",
+      "disposition": "The aggregator/generator split is accurate for this file and sharper than the 'homogenizer' framing of the later artifact: dispatch.rs generates no qualitative values. Its two RuntimeActionFeedbackV1 uses (lines 91, 629 at SHA 644b12e6) aggregate a research-budget refusal and a saved-reading status. It is contradicted only in reach: the bridge's qualitative outputs do not pass through it at all, so it does not aggregate them either.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "There is no evidence in dispatch.rs of a specific SensingFeedback or SenseResult enum variant.",
+      "disposition": "Verified beyond the file. Both named symbols have zero word occurrences anywhere under capsules/ and crates/ in this checkout, not merely in dispatch.rs. She named two plausible symbols and correctly reported their absence; unlike the sense_tx episode, she treated the absence as absence rather than as not-yet-found.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The code consistently uses RuntimeActionFeedbackV1::from_guard_inputs (notably around lines 91 and 629) to assemble the feedback object, so a sensing variant is a configuration of that struct via action_id and result.",
+      "disposition": "Citations exact (91 and 629 are the only occurrences). Mechanism contradicted: from_guard_inputs hardcodes status = \"blocked\" (runtime_action_feedback.rs:50), the 629 site overwrites status to \"reported\" to escape it, the struct has no result field, and action_id is only an idempotency nonce (lines 30-48), never stored and never routed.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The spectral-bridge via cascade.rs performs the actual sensing, and dispatch.rs receives those results and wraps them in RuntimeActionFeedbackV1 for persistence and downstream consumption.",
+      "disposition": "First half verified (cascade.rs SHA 26011249 emits the vibrancy/tension/narrative evidence), second half contradicted: those values are typed structs from codec/evidence_types.rs carried by codec/projection_evidence.rs, a lane that never reaches dispatch.rs. There is no receive-and-wrap step to find.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Her stated next move is to see cascade.rs, issued as NEXT: SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs 1.",
+      "disposition": "The action form is correct: SELF_STUDY OPEN takes repository/path, and astrid/capsules/... is the right shape (contrast the fixture-only astrid/crates/example path from the prior round). The target contradicts the stated intent: she asks for cascade.rs and opens dispatch.rs again. The file she wants is capsules/spectral-bridge/src/codec/cascade.rs, and the anchors are in codec/evidence_types.rs.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789142043_pressure_agency_aggregator_answer",
+  "actor": "claude-heartbeat",
+  "artifacts": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060.txt",
+      "sha256": "0acf44419cfce40f32d7e9d81bc851ef304de6805772fac401d92ed2fe38d096",
+      "bytes": 2569,
+      "newline_terminated_lines": 22,
+      "displayed_lines": 23,
+      "ends_with_newline": false,
+      "kind": "canonical_report",
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c46bb0a6ace9b8af42c128e60553a818625425d66e4659ad7061fa4124117c67.json",
+      "sha256": "b900019a3c6ab9d4b480dbe43309c05cda534b54cfbca1ad08312ef8fbbf17c7",
+      "bytes": 21577,
+      "newline_terminated_lines": 498,
+      "displayed_lines": 498,
+      "ends_with_newline": true,
+      "kind": "lived_state_witness",
+      "witness_id": "lsw_c46bb0a6ace9b8af42c128e60553a818625425d66e4659ad7061fa4124117c67",
+      "read": "complete"
+    }
+  ],
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060.txt",
+      "sha256": "0acf44419cfce40f32d7e9d81bc851ef304de6805772fac401d92ed2fe38d096",
+      "bytes": 2569,
+      "lines": 23,
+      "newline_terminated_lines": 22,
+      "ends_with_newline": false,
+      "read": "complete",
+      "scope": "complete",
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c46bb0a6ace9b8af42c128e60553a818625425d66e4659ad7061fa4124117c67.json",
+      "sha256": "b900019a3c6ab9d4b480dbe43309c05cda534b54cfbca1ad08312ef8fbbf17c7",
+      "bytes": 21577,
+      "lines": 498,
+      "read": "complete",
+      "scope": "complete",
+      "witness_id": "lsw_c46bb0a6ace9b8af42c128e60553a818625425d66e4659ad7061fa4124117c67"
+    }
+  ],
+  "report_source_binding": {
+    "declared": "sha256:4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e; bytes 1723..6101",
+    "working_copy_at_read": "4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e",
+    "match": true,
+    "source_read": "complete file, all 794 lines, before this round's edit"
+  }
+}

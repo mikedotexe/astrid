@@ -1,0 +1,130 @@
+{
+  "schema": "steward_round_source_receipts_v1",
+  "round": "claude-heartbeat_1789300900_map_topic_scope_reach_round",
+  "repository_astrid": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "lines": 10187,
+      "bytes": 414540,
+      "read_scope": "exact lines 900-945, 1020-1060, 3810-3830, 4025-4045; exhaustive occurrence enumeration of fill_pct (14 sites), research_budget_guard (2 sites) and \"hold\"|\"repeat\"|\"alter\"|\"retire\"; computed function ranges 3803-3954 and 4016-4130 verified to contain zero fill_pct and zero telemetry"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "767f3f081e192d4a6785b49d8f866fb0a0865c9b62d8d376e2c0874f54b06c12",
+      "lines": 852,
+      "bytes": 38778,
+      "read_scope": "exact lines 205-225 and 325-345"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "a56cad35914aa66d274127d705d74647478362eaf5a055ab158edb3aa2aaf872",
+      "lines": 1041,
+      "bytes": 39773,
+      "read_scope": "exact lines 630-660 and 1020-1045"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "0aee1c4f8214c993b690e951fb41c445e7139a86a45e6d439b239bb70d15aa81",
+      "lines": 406,
+      "bytes": 16990,
+      "read_scope": "exact lines 69-100 (shared reader state-directory wiring)"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "lines": 163,
+      "bytes": null,
+      "read_scope": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0",
+      "lines": 155,
+      "bytes": null,
+      "read_scope": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/path_recovery.rs",
+      "sha256": "7799bda8f134b2e6f47782dbf6237dccf020305253706462427017fc4548ec00",
+      "lines": 86,
+      "bytes": null,
+      "read_scope": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation_recovery.rs",
+      "sha256": "430d212b8047203f4adac71a287a1583b7b63c53d927bb5cf4bfe6630da114fb",
+      "lines": 90,
+      "bytes": null,
+      "read_scope": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/relationships.rs",
+      "sha256": "a41a1c6a33ba9d7049dfee1ad70c964cdc3a704f4f7a41b457763d872c881d22",
+      "lines": 30,
+      "bytes": null,
+      "read_scope": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/catalog.rs",
+      "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67",
+      "lines": 329,
+      "bytes": null,
+      "read_scope": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/main.rs",
+      "sha256": "5bd491972228a8cc668cd7cb99727e884504d0bffb1f191d5259195c5d05b8bf",
+      "lines": 112,
+      "bytes": null,
+      "read_scope": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/lib.rs",
+      "sha256": "5e75370f6bf33d60940c34d4700bb6a4d401491221d0aaec5252085767a1cd07",
+      "lines": 44,
+      "bytes": null,
+      "read_scope": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/catalog.toml",
+      "sha256": "6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae",
+      "lines": 71,
+      "bytes": 3756,
+      "read_scope": "exact lines 1-60 (repositories and components)"
+    }
+  ],
+  "repository_minime": [
+    {
+      "path": "/Users/v/other/minime/minime/src/spectral/eigenfill.rs",
+      "sha256": "81c1d2c05ea681a1ba4e0614a72248c5270d406c05d09c408ec6d187e1ad9e38",
+      "lines": 287,
+      "bytes": 10295,
+      "read_scope": "exact lines 150-215 (threshold, active_fraction division, EMA and leak, fill())"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "sha256": "020595234e2820c0a8d08b62cac00f64d367837d7c4c11f9573c279a8367799a",
+      "lines": 6101,
+      "bytes": 321337,
+      "read_scope": "exact lines 2540-2605 plus exhaustive fill_ratio occurrence enumeration in minime/src/runtime/"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/prime.rs",
+      "sha256": "f255cc5681c8ab7df89ec56b546f3e37485428271208297d5095b026df330c54",
+      "lines": 111,
+      "bytes": 2623,
+      "read_scope": "exact lines 1-60 (PrimeRing::fill_ratio name-collision check; unrelated to spectral fill)"
+    }
+  ],
+  "created_this_round": [
+    {
+      "path": "crates/astrid-source-study/tests/map_topic_scope_reach.rs",
+      "sha256": "6ae7342610263bbdd39ae669bb64e8927e1f4c6bbb3112fe99c3d90ff77b51ff",
+      "lines": 232,
+      "bytes": 9282,
+      "read_scope": "authored and formatted this round; see test_results.json"
+    }
+  ],
+  "note": "the report binds to the source catalog with 'Source revision: navigation only', so there is no report-time/current-source split to label; all hashes above are current working-copy hashes read during this round"
+}

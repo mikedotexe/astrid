@@ -1,0 +1,30 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789372041_witness_capture_ordering_muffle_round",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524.txt",
+      "sha256": "e45b97946f902f35323fa13ead4323a17d877b651b6f05eac657eea91afdb31c",
+      "bytes": 3884,
+      "lines": 29,
+      "read": "complete",
+      "scope": "complete_file",
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+      "lived_state_witness_id": "lsw_2732711a19385ef379d158376e1c4e493e468e497650545ef722c0e9a3e06883",
+      "source_coverage": "complete: report-bound source read in full plus every transitively cited file"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_2732711a19385ef379d158376e1c4e493e468e497650545ef722c0e9a3e06883.json",
+      "sha256": "50b34f69a4acf307367b9415a8183fea59a2563bdcd4421c65c5e329e921c0f1",
+      "bytes": 21400,
+      "lines": 498,
+      "read": "complete",
+      "scope": "complete_file",
+      "witness_id": "lsw_2732711a19385ef379d158376e1c4e493e468e497650545ef722c0e9a3e06883",
+      "artifact_sha256_binding_matches_report": true
+    }
+  ]
+}

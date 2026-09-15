@@ -1,0 +1,68 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "report_bound_source_sha256": null,
+  "report_binding_note": "navigation-only turn; no source page supplied, so nothing to compare. Verified against the revision carried by her three delivered pages of this file (sha256:3a20e5ee...), which equals the working copy.",
+  "receipts": [
+    {
+      "path": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "sha256": "3a20e5eed609de9a8f36121dbe4adf31b4d325d5929b9b33f548605cf6074ef0",
+      "bytes": 7000,
+      "lines": 214,
+      "read": "complete",
+      "scope": "complete file, lines 1-214, read in full",
+      "git_state": "clean"
+    },
+    {
+      "path": "scripts/baselines/capsule_runtime_health.json",
+      "sha256": "dde94f50c0195704d7efcac3ed6500a875c5ea5666d2a154b68fd5ca673eba7a",
+      "bytes": 221,
+      "lines": 5,
+      "read": "complete",
+      "scope": "complete file, lines 1-5, read in full",
+      "git_state": "clean"
+    },
+    {
+      "path": "crates/astrid-kernel/src/kernel_router.rs",
+      "sha256": "108d69010a954284def0c0863c499d369196223da3aa163128f458d7d4ee72fd",
+      "bytes": 15177,
+      "lines": 388,
+      "read": "scoped",
+      "scope": "scoped: lines 180-225 (the sole summarize call site under KernelRequest::GetStatus); whole-repo grep confirms no other caller",
+      "git_state": "clean"
+    },
+    {
+      "path": "crates/astrid-cli/src/commands/daemon.rs",
+      "sha256": "ac337abfb82ff52247b3c76b402e392495a4e8cf46a413996fe5f3eeea907a38",
+      "bytes": 11433,
+      "lines": 332,
+      "read": "scoped",
+      "scope": "scoped: lines 245-285 (health counter rendering)",
+      "git_state": "clean"
+    },
+    {
+      "path": "scripts/capsule_runtime_health.py",
+      "sha256": "21230c215ca93c640547271fc9de6887b1ab403886efe393439c4556db249316",
+      "bytes": 13480,
+      "lines": 380,
+      "read": "scoped",
+      "scope": "scoped: lines 57-83 (load_baseline + accepted_legacy parity) and 179-209 (classification use)",
+      "git_state": "clean"
+    },
+    {
+      "path": "scripts/proactive_scan.py",
+      "sha256": "6386615a3d731f5f1fbb15460099c00d88352bf2f4b3f5f8430bfad318a638bf",
+      "bytes": 393873,
+      "lines": 8854,
+      "read": "scoped",
+      "scope": "scoped: probe_capsule_runtime_health lines 1466-1511 and registration line 5546; READ ONLY \u2014 file carries foreign dirty edits and was not modified",
+      "git_state": "dirty_foreign"
+    }
+  ],
+  "caller_enumeration": {
+    "query": "grep -rn 'capsule_runtime_health::summarize' --include=*.rs over the repository excluding target/",
+    "result": [
+      "crates/astrid-kernel/src/kernel_router.rs:200"
+    ],
+    "visibility": "pub(crate) fn summarize at capsule_runtime_health.rs:27 confines callers to the astrid-kernel crate"
+  }
+}

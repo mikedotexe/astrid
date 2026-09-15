@@ -1,0 +1,43 @@
+{
+  "schema": "steward_round_test_results_v1",
+  "commands": [
+    {
+      "command": "cargo test -p astrid-source-study --test map_topic_scope_reach",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "tests": [
+        "exhaustive_repository_map_walk_never_names_a_peer_repository_source",
+        "the_map_page_that_names_the_producer_carries_neither_its_bytes_nor_a_ranking_marker",
+        "the_peer_repository_map_names_the_upstream_division_file",
+        "the_senses_component_map_reaches_the_live_telemetry_port_on_one_page"
+      ]
+    },
+    {
+      "command": "cargo test -p astrid-source-study",
+      "result": "ok",
+      "passed": 87,
+      "failed": 0,
+      "note": "whole crate, all targets: 6+12+4+3+5+3+23+8+4+10+9"
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "cargo clippy -p astrid-source-study --test map_topic_scope_reach",
+      "result": "clean",
+      "note": "the file added this round is warning-free under workspace pedantic lints"
+    }
+  ],
+  "known_failure_not_repaired": {
+    "command": "cargo clippy -p astrid-source-study --all-targets",
+    "result": "error",
+    "location": "crates/astrid-source-study/tests/scan_limit_catalog_reach.rs:64",
+    "lint": "clippy::arithmetic_side_effects (denied)",
+    "expression": "\"[\\n\".to_owned() + &\"  {\\\"fill_pct\\\": 71.0},\\n\".repeat(1600) + \"]\\n\"",
+    "origin": "created by the preceding flywheel round, packet claude-heartbeat_1789286900_scan_limit_catalog_reach_round; untracked in the shared tree",
+    "why_not_repaired": "adapter-mode boundary: every dirty or unknown path is treated as foreign work and preserved untouched. Recorded as exact debt, not silently fixed.",
+    "first_safe_repair": "replace the `+` concatenation with a single format! or push_str chain in that test fixture, then rerun cargo clippy -p astrid-source-study --all-targets"
+  }
+}

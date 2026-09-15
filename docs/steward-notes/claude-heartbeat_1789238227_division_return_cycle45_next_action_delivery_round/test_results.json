@@ -1,0 +1,41 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "focused": [
+    {"command": "python3 scripts/source_delivery_coverage.py self-test", "result": "12 passed", "rc": 0,
+     "note": "New tool this round. Covers touching-window merge without a phantom gap, unreached tail vs interior hole, overlap not double-counted, multi-revision stitching, navigation-only and zero-width headers rejected, missing working copy yielding null not zero."},
+    {"command": "python3 scripts/source_delivery_coverage.py scan --filter next_action/", "result": "reproduced the report's partition", "rc": 0,
+     "note": "211 delivered pages / 5 sources / 2 whole at current revision / 3 stitched."}
+  ],
+  "integrity": [
+    {"command": "python3 scripts/introspection_addressing_audit.py --self-test", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/test_evidence_event_store.py", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/test_steward_projection.py", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_followup.py", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_chronicle.py", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_projection.py", "rc": 0, "result": "ok"},
+    {"command": "python3 scripts/test_projection_cursors.py", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/anti_drop_catalog.py --self-test", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/test_introspection_cadence_audit.py", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/introspection_cadence_audit.py --strict --compact", "rc": 0, "result": "integrity_ok true, 0 duplicate hash groups, 0 read errors"},
+    {"command": "python3 scripts/experiential_epistemics.py self-test --json", "rc": 0, "result": "OK"},
+    {"command": "python3 scripts/domain_boundary_audit.py verify", "rc": 0, "result": "valid true, violation_count 0 — ratchet GREEN"},
+    {"command": "python3 scripts/anti_drop_catalog.py verify --json", "rc": 0, "result": "100 rows, 0 gaps, 0 alarms"},
+    {"command": "python3 scripts/experiential_epistemics.py verify --json (final, after all durable writes)", "rc": 0, "result": "valid true, 12,143 records checked, 0 issues, history_rewritten false"},
+    {"command": "python3 scripts/introspection_addressing_audit.py audit-counters --json", "rc": 0, "result": "consistent, mismatches []"},
+    {"command": "python3 scripts/evidence_event_store.py --json verify", "rc": 0, "result": "valid true, 1,076,064 events, head 66e3c2c4d3f2c987c38cc87de61c8a67600fae5ce3863a828b3e21e2988b0c35, 0 corrupt lines"},
+    {"command": "python3 scripts/division_ceremony_followup.py verify", "rc": 0, "result": "ok true, cycle 46, 1/6 rounds, review_due false"},
+    {"command": "python3 scripts/division_ceremony_chronicle.py verify (after reproject)", "rc": 0, "result": "ok true, 317 events, durable_inputs_current true, sole volatile mismatch supervisor_status_sha256"},
+    {"command": "git diff --check", "rc": 0, "result": "clean"}
+  ],
+  "failures": [
+    {"command": "python3 scripts/test_steward_control.py", "rc": 1,
+     "result": "28 passed, 1 FAILED — test_pause_cooperatively_interrupts_wrapped_subprocess (line 737: assertNotEqual(return_code, 0) got 0 == 0)",
+     "attribution": "PRE-EXISTING AND FOREIGN, NOT REPAIRED. scripts/test_steward_control.py is dirty in the shared tree from another agent's in-flight work and was not touched by this round. The failing case asserts that a controller pause interrupts a wrapped subprocess with a nonzero return code — exercised while this very round is running inside the subprocess adapter, so a live-controller interaction is a plausible cause alongside the foreign edit.",
+     "debt": "Left for the owning agent. First safe command for whoever picks it up: python3 scripts/test_steward_control.py StewardControlTests.test_pause_cooperatively_interrupts_wrapped_subprocess, run with no controller lease active."}
+  ],
+  "not_run": [
+    {"command": "cargo test / cargo fmt", "reason": "no Rust source was changed this round; the only code written is Python steward tooling."},
+    {"command": "scripts/build_bridge.sh, deploy scripts, launchctl", "reason": "adapter-mode run holds no deploy or live-control authority; no live change was required or attempted."}
+  ]
+}

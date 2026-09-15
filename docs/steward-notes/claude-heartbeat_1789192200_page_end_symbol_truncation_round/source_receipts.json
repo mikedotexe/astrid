@@ -1,0 +1,20 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "round": "claude-heartbeat_1789192200_page_end_symbol_truncation_round",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "sha256": "3c7fca523107c8283159aa44b03c935e6ff2d5dfb87320b93a0c7c5f7ae4baf7",
+      "report_bound_sha256": "3c7fca523107c8283159aa44b03c935e6ff2d5dfb87320b93a0c7c5f7ae4baf7",
+      "binding_match": true,
+      "total_bytes": 19256,
+      "total_lines": 572,
+      "read_scope": "complete file (lines 1-572)",
+      "report_window_bytes": "8571..12834",
+      "report_window_lines": "254..383",
+      "report_window_sha256": "6a937ea4a552ea6d69ee029487d73046961b0d0a7987f01b91fada25b4cb14de",
+      "window_line_mapping_verified": true,
+      "note": "Working copy is clean and hashes identical to the report binding and to the witness source_snapshot_v1.file_sha256, so report-time and current-source conclusions coincide. The witness records source.window_sha256=1cc5c8e4..., which is not the raw window bytes (those hash to 6a937ea4...); the witness field is a rendered-window digest, and the byte interval independently verifies as lines 254-383. Recorded as a composition difference, not an integrity failure; the queue reports lived_state_artifact_integrity_issue_count=0."
+    }
+  ]
+}

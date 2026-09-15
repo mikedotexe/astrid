@@ -1,0 +1,98 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "report_bound_source": {
+    "declared": "source catalog",
+    "declared_revision": "navigation only",
+    "resolved": false,
+    "note": "The report binds no file and no byte interval. There is therefore no report SHA to compare against a working copy, and no report-time/current-source split to label. Every source below was read to ground a claim the report makes, and each is recorded at its current working-copy hash."
+  },
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/text.rs",
+      "sha256": "739ee26188e87527c449b7e77d668f0d9a0236a48ccc6abc76afa82a34453cd2",
+      "bytes": 7139,
+      "lines": 274,
+      "read": "complete",
+      "scope": "lines 1-274, complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "sha256": "c684be7643e522415be342f47861a58b3ef0de9b7eb7caf80cdd52b323cf0842",
+      "bytes": 23230,
+      "lines": 641,
+      "read": "complete",
+      "scope": "lines 1-641, complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "read": "complete",
+      "scope": "lines 1-163, complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/path_recovery.rs",
+      "sha256": "7799bda8f134b2e6f47782dbf6237dccf020305253706462427017fc4548ec00",
+      "bytes": 2984,
+      "lines": 86,
+      "read": "complete",
+      "scope": "lines 1-86, complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/catalog.rs",
+      "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67",
+      "bytes": 11498,
+      "lines": 329,
+      "read": "complete",
+      "scope": "lines 1-329, complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "sha256": "1842133fa5b3f88741fe42a347e27da36a29a3583397b7e6a91fe1ee86620405",
+      "bytes": 2889,
+      "lines": 62,
+      "read": "complete",
+      "scope": "lines 1-62, complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0",
+      "bytes": 5699,
+      "lines": 155,
+      "read": "complete",
+      "scope": "lines 1-155, complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/store.rs",
+      "sha256": "4c7da264d7d8beaa704f756e6d9dc66c76386d988c4b102817f0a2900e0cfbd1",
+      "bytes": 37420,
+      "lines": 969,
+      "read": "scoped",
+      "scope": "lines 395-430 and 455-580 (recovery_with_candidates, requested_source, source_recovery, the Map/Find/Open/Resume dispatch, prepare_relate, prepare_continue); remainder not read this round"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "0aee1c4f8214c993b690e951fb41c445e7139a86a45e6d439b239bb70d15aa81",
+      "bytes": 16990,
+      "lines": 406,
+      "read": "scoped",
+      "scope": "lines 200-290 (artifact header composition and the 'navigation only' revision label); remainder not read this round"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/action_help.rs",
+      "sha256": "7e3cad125e4cd7cc0a4fcffa631f2cb470f033d836cde973e4566f6a710c57fe",
+      "bytes": 55209,
+      "lines": 472,
+      "read": "scoped",
+      "scope": "line 169 only (the advertised recovery-map sentence)"
+    }
+  ],
+  "derived_facts": [
+    {
+      "fact": "SEMANTIC_TRUNCATION_ANCHOR_TERMS holds 64 entries; 'structural integrity' is index 15 and 'shadow_field' index 22.",
+      "method": "literal extraction of the const block from text.rs at the recorded hash",
+      "consequence": "both sit past HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT=10 (text.rs:60) and both are multi-token, so both resolve in the specific_anchor tier at continuity.rs:259-264 by .min() over byte position"
+    }
+  ]
+}

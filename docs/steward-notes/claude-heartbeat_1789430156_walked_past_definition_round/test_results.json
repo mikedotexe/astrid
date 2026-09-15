@@ -1,0 +1,28 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "runs": [
+    {
+      "command": "cargo test -p astrid-source-study --test walked_past_definition_reach",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "duration_s": 1.51,
+      "tests": [
+        "the_walk_delivers_the_definition_on_a_page_before_the_concluding_tests",
+        "continuing_from_the_final_page_cannot_return_the_walked_past_definition",
+        "identifier_search_reaches_the_definition_behind_the_cursor"
+      ]
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "ok",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "result": "ok",
+      "exit_code": 0
+    }
+  ]
+}

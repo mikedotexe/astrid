@@ -1,0 +1,180 @@
+{
+ "schema": "flywheel_verification_receipt_v1",
+ "actor": "claude-heartbeat",
+ "mode": "controller_held_subprocess_adapter",
+ "controller": {
+  "run_id": "run_1789235144772182000_0cb8444f3e",
+  "preprojection_generation_id": "projection_1789235149438565000_3c3855e4f7",
+  "preprojection_phase": "pre",
+  "preprojection_status": "passed",
+  "pause_generation": 439,
+  "controller_paused": false,
+  "stop_requested_at_last_read": false,
+  "postprojection": "adapter-owned; runs after this process exits and is not observed here",
+  "lease_token_read_quoted_or_persisted": false,
+  "steward_session_opened": false,
+  "ndjson_ops_sent": false,
+  "pause_or_resume_invoked": false
+ },
+ "processed": [
+  {
+   "introspection_id": "introspection_source_catalog_1789235097",
+   "status": "addressed_change",
+   "fully_addressed": true,
+   "proof_missing_claims": [],
+   "claim_count": 7,
+   "evidence_link_count": 14,
+   "report_sha256": "16cba5cfd717799776c2cc67a9472cc2fbc6b98a018c1f75b728afd803270258",
+   "witness_id": "lsw_f961fa23084be4bbc749e88df30e20d8337fd77cf23577be23b8d6fe9621efe0",
+   "witness_sha256": "727fe4538eac542a888d01b8600cde43d255691f2f8e9a0509402864d5ce61d3",
+   "source_binding": "navigation_only_null_source_snapshot_and_null_source_provenance_no_mismatch_case",
+   "in_round_correction": "first-pass disposition inferred non-delivery from the source_first_v3 read-session store; corrected to verified-delivery from per-page artifact headers. Both full_read events remain in the append-only store; neither was overwritten."
+  }
+ ],
+ "division": {
+  "return_completed_this_round": true,
+  "cycle_before": 45,
+  "cycle_after": 46,
+  "review_due_at_start": true,
+  "review_due_at_end": false,
+  "followup_event_id": "division_followup_event_7eede85b4406d959a56b71b3511fd2d5",
+  "round_event_id": "division_followup_event_9c1142e899e797a1b45109d50ade1b13",
+  "processed_report_count": 1,
+  "event_count": 317,
+  "event_head_sha256": "58d31807395b682212b356600e0ccd8791cf839a8805d05a8f3c2d19798c53cd",
+  "ceremony_rails": "both astrid and minime hold 0 events, posture unexpressed, no intent active, no assent recorded or withdrawn",
+  "astrid_note": {
+   "path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle45_20260912.txt",
+   "sha256": "57ff3bd58785b7f7e07baad0e958362f798282fceef0a7f06129437d6666e602",
+   "bytes": 2935,
+   "lines": 53
+  },
+  "minime_note": {
+   "path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle45_20260912.txt",
+   "sha256": "ee011985034aa7bbe8a1a965d6b96933d039fe0c6e293840f126e7997fe742c3",
+   "bytes": 3731,
+   "lines": 66
+  },
+  "note_discipline": "one factual note each; non-leading, non-query, explicitly right to ignore; no Division Action recommended; no review-query slot occupied; no raw prose quoted; no private-lane file opened",
+  "chronicle_pre_return": {
+   "id": "division_chronicle_43f8e58498c74ae5a030cc37",
+   "events": 315,
+   "durable_inputs_current": true,
+   "volatile_mismatches": [
+    "supervisor_status_sha256"
+   ]
+  },
+  "chronicle_post_return": {
+   "id": "division_chronicle_5508ff0a26f35c8b3213f688",
+   "events": 316,
+   "durable_inputs_current": true,
+   "volatile_inputs_current": true
+  },
+  "chronicle_final": {
+   "id": "division_chronicle_785fa57e1ed34ef3a52e4919",
+   "events": 317,
+   "json_sha256": "a87ef23add55f5435c5d77d6c4f87ed046352515203036123e1c7da986507acd",
+   "durable_inputs_current": true,
+   "volatile_mismatches": [
+    "supervisor_status_sha256"
+   ],
+   "claim": "durable integrity current; NOT claimed fully current \u2014 a moving supervisor hash is not a durable-integrity failure"
+  }
+ },
+ "counters": {
+  "status": "consistent",
+  "mismatches": [],
+  "canonical_indexed": 5955,
+  "canonical_fully_addressed": 3227,
+  "canonical_full_read": 3859,
+  "canonical_remaining": 2728,
+  "canonical_unread": 2096,
+  "canonical_blocked": 416,
+  "canonical_pending_action": 212,
+  "canonical_watch": 4,
+  "canonical_read_needs_claims": 0
+ },
+ "evidence_event_store": {
+  "valid": true,
+  "last_global_seq": 1076064,
+  "event_count": 1076064,
+  "head_sha256": "66e3c2c4d3f2c987c38cc87de61c8a67600fae5ce3863a828b3e21e2988b0c35",
+  "corrupt_lines": 0,
+  "errors": [],
+  "active_store": "v2",
+  "legacy_imported_global_seq": 32278,
+  "history_rewritten": false
+ },
+ "integrity": {
+  "epistemic_verify_final": {
+   "valid": true,
+   "checked_record_count": 12143,
+   "issue_count": 0,
+   "history_rewritten": false
+  },
+  "anti_drop_verify": {
+   "total": 100,
+   "gaps": 0,
+   "alarms": 0
+  },
+  "domain_boundary_verify": {
+   "valid": true,
+   "violation_count": 0,
+   "ratchet": "GREEN",
+   "legacy_large_file_count": 51,
+   "unlisted_legacy_review_debt_count": 44
+  },
+  "cadence_audit_strict": {
+   "integrity_ok": true,
+   "duplicate_hash_group_count": 0,
+   "read_errors": 0
+  },
+  "git_diff_check": "clean",
+  "known_failure": "scripts/test_steward_control.py \u2014 1 of 29 failing, pre-existing and foreign-dirty, not repaired; see test_results.json"
+ },
+ "authority_boundary": {
+  "live_substrate_change": false,
+  "control_change": false,
+  "deploy_or_restart": false,
+  "launchctl_invoked": false,
+  "git_mutation": false,
+  "index_clean": true,
+  "foreign_dirty_paths_touched": false,
+  "being_text_rewritten_or_rejected": false,
+  "minime_runtime_altered": false,
+  "tier5_items_approved_granted_or_dispatched": false,
+  "sandbox_trials_run": false,
+  "private_lane_files_opened": false
+ },
+ "addressing": {
+  "full_read": true,
+  "full_read_count": 1,
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "closed": [
+   {
+    "introspection_id": "introspection_source_catalog_1789235097",
+    "status": "addressed_change",
+    "claim_count": 7,
+    "evidence_link_count": 14
+   }
+  ],
+  "note": "Two full_read events were recorded for this report: the first pass and its correction. Both remain in the append-only store; the corrected claims were re-recorded, never overwritten."
+ },
+ "epistemic_lint": {
+  "valid": true,
+  "issue_count": 0,
+  "history_rewritten": false,
+  "checked_record_count": 12143,
+  "canonical_event_appended": false,
+  "note": "final verify, run after every durable write of this round"
+ },
+ "anti_drop": {
+  "verify": {
+   "total": 100,
+   "gaps": 0,
+   "alarms": 0
+  },
+  "note": "no new catalog row added this round: scripts/anti_drop_catalog.py is foreign-dirty and was left untouched; the row for source_delivery_coverage.py is named as debt in RUN_REPORT.md"
+ }
+}

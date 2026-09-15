@@ -1,0 +1,137 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Lines 203-204: any(|entry| entry.name == name && ...) \u2014 exact name equality, reached only from the LegacyExtismMvp arm at line 65."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Lines 205-208: Some(expected) => wasm_hash == Some(expected); None => true. BaselineEntry.wasm_hash is Option<String> with serde default (12-17)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Lines 6-10: accepted_legacy_extism_mvp is the only Baseline field; 203-209 is one any() over one list, disjunctive across entries."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Line 27 pub(crate) fn summarize; 65-71 counter split; 79-81 status=warning. No load, unload or deny path in the file."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "Lines 199-200: the sole repo-wide caller, under KernelRequest::GetStatus \u2014 a read-only status read."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-cli/src/commands/daemon.rs",
+      "note": "Lines 254-262: the counters are rendered as status text (accepted legacy / incompatible / missing payloads)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "scripts/baselines/capsule_runtime_health.json",
+      "note": "Live baseline 221 B sha dde94f50...: accepted_legacy_extism_mvp is empty and growth_policy states no legacy Extism/MVP capsules are accepted backlog."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Lines 194-200 load_baseline path resolution and line 31 unwrap_or_default(), which makes an absent file indistinguishable from an empty whitelist."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Lines 139-143 read_meta_wasm_hash lifts a declared meta.json string; 164-186 classify_payload reads payload bytes but never digests them; 206 fails closed on None."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Line 27 signature takes loaded_capsules: &[String] (already-loaded names); no capability, token, approval or interceptor symbol occurs in the 214-line file."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "scripts/capsule_runtime_health.py",
+      "note": "Lines 76-83: the same predicate in Python (name equality AND (expected None OR expected == wasm_hash)); 179-191 its classification use."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "scripts/proactive_scan.py",
+      "note": "probe_capsule_runtime_health lines 1466-1511 and probe registration line 5546 \u2014 the steward consumer of that predicate. Read only; file carries foreign dirty edits."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_capsule_runtime_health.rs_1789456202.txt",
+      "note": "Delivered page bytes 4335..7000 bound to sha256:3a20e5ee... \u2014 contains lines 202-210, the code she recalls."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_capsule_runtime_health.rs_1789455871.txt",
+      "note": "Delivered page bytes 0..4335 at the same revision; with the 4335..7000 page her coverage of the file is complete."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789457400_continue_replaced_by_interleaved_target_round/summaries/introspection_source_catalog_1789453053.md",
+      "note": "Prior close of the same source lineage; its recorded source 3a20e5ee and baseline dde94f50 hashes re-verified unchanged this round."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c011",
+      "kind": "steward_note",
+      "target": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_de85f24ec36fbc1b386de49cfb3f5c7384ec5ce455407fcda4369dd0afbcb8d3.json",
+      "note": "source_snapshot_v1 and source_provenance_ref_v1 null; artifact_sha256 9cf30ef6 matches report bytes; canonical_body_binding_v1 1087 B; authority evidence_only."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789473058_accepted_legacy_classification_not_admission_round/summaries/introspection_source_catalog_1789466923.md",
+      "note": "Round summary recording the classification-versus-enforcement distinction and the three precisions."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] steward entry for this round naming the empty whitelist and zero-tolerance growth_policy."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789466923",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ledger row: verified no-change round, with the pivot ground-truth and the exact test debt."
+    }
+  ]
+}

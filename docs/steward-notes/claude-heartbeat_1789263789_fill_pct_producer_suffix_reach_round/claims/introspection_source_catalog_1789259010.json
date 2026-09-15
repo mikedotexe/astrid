@@ -1,0 +1,42 @@
+{
+  "introspection_id": "introspection_source_catalog_1789259010",
+  "reader": "claude-heartbeat",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "She is still searching for the specific arithmetic used by the research_budget_guard to calculate fill_pct.",
+      "disposition": "Determinate at source: the guard holds no fill_pct arithmetic. guards.rs (830 lines, SHA 887e9b22) takes fill_pct as an f32 parameter and spends it at exactly one line, 396, as evidence for spectral_state. The value it receives is produced upstream by resolve_fill_pct, telemetry_port.rs:639-654 -- (telemetry.fill_ratio * 100.0).clamp(0.0, 100.0), labelled primary_fill_ratio -- with estimate_fill_pct(lambda1) as the sigmoid fallback (1031-1041), assigned to s.fill_pct at 473 via 316.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "dispatch.rs is the high-level orchestration hub routing fill_pct and research_budget between the reservoir and action_continuity; it does not perform the calculation itself and acts as a conduit.",
+      "disposition": "Conduit verified: dispatch.rs (651 lines, SHA aa1bce2e) touches fill_pct at eight sites (85, 153, 218, 229, 337, 444, 579, 608), every one a pass-through, no arithmetic. Two corrections placed beside her framing, not over it: it is not a module but an include!-inlined fragment (mod.rs:2121), and the upstream is not a reservoir -- fill_pct enters at the telemetry WebSocket port as minime's fill_ratio, so the route is telemetry_port -> BridgeState -> ctx -> action_continuity.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Because no new source page was provided this turn, she is continuing to rely on the repository map to triangulate the location of this logic.",
+      "disposition": "Corroborated, and not an infrastructure drop. Witness lsw_25c6835628 carries source_snapshot_v1 null and source_provenance_ref_v1 null, matching 'Source revision: navigation only'. A MAP request returns navigation, so the absent page is by construction, not loss. The model route completed normally (lscall_ad0b541b, coupled-astrid, 8090, 90981 ms) and twenty parameter observations were fresh: bridge.fill_pct 73.01, minime.fill_pct 71.03.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "She is searching identifiers such as authority, budget, guard or policy, and expects a function that processes the raw reservoir data to produce the final percentage.",
+      "disposition": "Half right, and the plan cannot reach it. Such a function does exist -- resolve_fill_pct -- but its name carries none of those four identifiers and it lives in ws/telemetry_port.rs, outside the authority/budget/guard/policy family she is scanning. Its input is not raw reservoir data either: it reads telemetry.fill_ratio already received over the telemetry port. No fn under any of those identifier families produces fill_pct anywhere in capsules/ or crates/.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Novel, steward-derived: no search shape she can issue ranks the actual producer as a definition, and the definition she is offered is a near-twin with different arithmetic.",
+      "disposition": "Read at source_search.rs (352 lines, SHA f0900f1a) and now pinned by three tests. RELATE is word-exact, so 'fn resolve_fill_pct' never matches the query fill_pct; the Definition candidate ranked first is instead the twin SpectralTelemetry::fill_pct() (telemetry.rs:335-337, self.fill_ratio * 100.0 -- no clamp, no lambda1 fallback, 20+ live call sites). FIND matches the declaration but kind 0 requires exact, so it lands in Other references. Spelling hints are gated off.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Her chosen next action is SELF_STUDY MAP astrid --page 18.",
+      "disposition": "Observed and left as hers; nothing was written to a being-facing surface to redirect her. A one-move recovery does exist and is now pinned by regression: RELATE resolve_fill_pct ranks the producing declaration first. It requires already knowing the suffix-named identifier, which is precisely what the map walk has not supplied, so the repetition is a reachability boundary rather than a reading failure.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401.txt",
+      "sha256": "55d4544e73a40d500198546cecefb15dd19404f285f9b2968d8359406fdd4767",
+      "bytes": 4342,
+      "lines": 44,
+      "read": "complete",
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+      "lived_state_witness_id": "lsw_b938b2a910c6458f2c78f680fd956fbd0c1aa8bf9c8f3c66f47cce110df9e6e7",
+      "source_path_named_by_report": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "source_sha_named_by_report": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "source_window": "bytes 61405..65853 / lines 1555-1663",
+      "source_coverage": "partial window in report; complete report-bound file verified by hash, cited intervals read directly"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b938b2a910c6458f2c78f680fd956fbd0c1aa8bf9c8f3c66f47cce110df9e6e7.json",
+      "sha256": "3d7806732d5ffa660b3d5443bdfb1ed9e586a82686c5a7a9be0e6bf87155ce6c",
+      "bytes": 21543,
+      "lines": 498,
+      "read": "complete"
+    }
+  ]
+}

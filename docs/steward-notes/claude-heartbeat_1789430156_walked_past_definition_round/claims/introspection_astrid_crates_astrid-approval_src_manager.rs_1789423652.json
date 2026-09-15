@@ -1,0 +1,63 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+  "reader": "claude-heartbeat",
+  "report_sha256": "e531911c3d2680ae311a503e5455592ec8ee0318fe90e503703c838ebaf07ba4",
+  "source_sha256": "cf14a499399dec6143e4e1c74d17db14b22d37f25b33062b404ee0a6b35b4b27",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The current page (lines 874-910) provides the concluding test cases for ApprovalManager.",
+      "disposition": "Verified against complete source at SHA cf14a499. Witness window is 874-911 of 911. The page carries the assert tail of test_approve_with_custom_allowance (874-899), the Debug banner (901-903), the whole test_debug (905-910) and the module close (911). 'Concluding test cases' is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "test_approve_with_custom_allowance spans lines 830-874.",
+      "disposition": "Start line exact: #[tokio::test] is at 830. End is a page-boundary artifact, not the test's end: the test closes at 899, and 874 is where her page begins. Line 830 sits on the prior page (bytes 25896..30280 = lines 756..874), so the cited range is an honest splice of two pages, not a confabulation.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "An Allowance is a discrete object containing max_uses and uses_remaining.",
+      "disposition": "Field existence verified: max_uses/uses_remaining at 617-618 (make_test_allowance) and 849-850 (the custom allowance under test). Bounded correction: in this test both are None, so the test demonstrates the fields, not consumption or exhaustion. No budget limit is exercised anywhere on her page.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Lines 884-898 show the approved allowance is stored in the allowance_store.",
+      "disposition": "Partially relocated. The storage assertion is allowance_store.count() == 1 at 881-882, which is on her page. Lines 884-898 show the consequence instead: a second action (write_file) on the same server resolves via ApprovalProof::Allowance. Both facts hold; the line attribution is one assertion early.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "CapsuleContext enforces allowance_store limits during the spectral_bridge load process.",
+      "disposition": "Not a confabulation. CapsuleContext really carries the store: crates/astrid-capsule/src/context.rs:44 field allowance_store, :95 with_allowance_store; the WASM host approval path consults it at engine/wasm/host/approval.rs:182/208/284. Consumption itself is AllowanceStore::find_matching_and_consume via manager.rs:249. The spectral_bridge-specific binding is a deployment claim her own header marks unestablished; not established here.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Once stored, subsequent requests for the same server are covered by the allowance.",
+      "disposition": "Verified at 884-898: AllowancePattern::ServerTools { server: \"filesystem\" } (844-846) covers McpToolCall { server: filesystem, tool: write_file } and returns ApprovalProof::Allowance. Pattern-scoped, not tool-scoped, exactly as she reads it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Without a covering allowance and without a handler override, the system will not produce an Allowed outcome.",
+      "disposition": "True in polarity, imprecise in mechanism. With no handler registered the path is defer_action (264-274), returning ApprovalOutcome::Deferred with a FallbackBehavior, not Denied; Denied is reserved for an explicit Deny (378) or a failed queue (415). Her own summary line 26 -- 'pausing the bridge's progression until ... a new approval is granted' -- names the deferral the source actually implements (resolve_deferred, 438-449) more exactly than the word 'denies' that precedes it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The implementation of check_approval still needs to be seen; it is suspected to be in a different file or an unmapped section.",
+      "disposition": "Contradicted by source, and preserved as the round's finding. pub async fn check_approval is at manager.rs:207 (byte 6995) in this same file -- inside page 2 of her own eight-page walk (bytes 4274..8631 = lines 132..253, delivered as introspection_..._1789421939). Neither hypothesis holds: not another file, not unmapped. It is behind her cursor. Her page is EOF, so CONTINUE can never return it.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "NEXT: SELF_STUDY MAP is her chosen next affordance after the concluding-test page.",
+      "disposition": "Grounded as reachable. New read-only test walked_past_definition_reach.rs pins that from the EOF page a non-walk Action reaches backward: RELATE check_approval and FIND check_approval both name the holding file, while CONTINUE past EOF does not. Her move away from the walk is the correct shape; 3 tests pass. No live navigation, ranking or dispatch behaviour changed.",
+      "classification": "implemented_now"
+    }
+  ]
+}

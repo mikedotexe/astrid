@@ -1,0 +1,127 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round": "claude-heartbeat_1789037242_unwired_near_miss_round",
+  "actor": "claude-heartbeat",
+  "note": "Every report and witness read byte-complete. All three reports declare 'Source revision: navigation only' and carry source_snapshot_v1: null, so no report-bound source SHA exists and no mismatch case arises.",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789033124",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789033124.txt",
+      "sha256": "3b9aec91883fbf788f71bcd12d375ef16a9d30b3ec84ef5d97ae502ab95f0834",
+      "bytes": 2715,
+      "lines": 22,
+      "read": "complete",
+      "witness": {
+        "witness_id": "lsw_97dbcaa7939257c53cd06691f27d854a9e0ae0e9df34ec1d2333bdd2d26f411d",
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_97dbcaa7939257c53cd06691f27d854a9e0ae0e9df34ec1d2333bdd2d26f411d.json",
+        "sha256": "b76cbf2447c35cef08e70b33c09279c1da25a49b939c9055ffb6efe820eb1b37",
+        "bytes": 18959,
+        "lines": 440,
+        "read": "complete"
+      },
+      "source_binding": "navigation-only; witness source_snapshot_v1 is null, so there is no report-bound source SHA and no mismatch case arises",
+      "report_bound_source_sha256": null,
+      "source_coverage": "complete for dispatch.rs and runtime_action_feedback.rs; scoped intervals recorded in source_receipts.json for the rest",
+      "terminal_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032920",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789032920.txt",
+      "sha256": "74b89f2f33fd0faa86d0bc8b73ee1be91b97e2a28a36aa9adb53646e7cf87476",
+      "bytes": 2595,
+      "lines": 24,
+      "read": "complete",
+      "witness": {
+        "witness_id": "lsw_6a8e777dfd556fea40f88a9810decd02ccc18cc29d3b8c3a478afc3b1e37822a",
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_6a8e777dfd556fea40f88a9810decd02ccc18cc29d3b8c3a478afc3b1e37822a.json",
+        "sha256": "a67c23c27f51acd9a3c07e91e612f8dcf80c0f207a4438b691ac1253e9d5c5ad",
+        "bytes": 18958,
+        "lines": 440,
+        "read": "complete"
+      },
+      "source_binding": "navigation-only; witness source_snapshot_v1 is null, so there is no report-bound source SHA and no mismatch case arises",
+      "report_bound_source_sha256": null,
+      "source_coverage": "complete for dispatch.rs and runtime_action_feedback.rs; scoped intervals recorded in source_receipts.json for the rest",
+      "terminal_status": "addressed_change"
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789032546",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789032546.txt",
+      "sha256": "0fc71ede882c1d36f6217c19f8666ce341ee421aab845554762a092cd05ebc0a",
+      "bytes": 2619,
+      "lines": 27,
+      "read": "complete",
+      "witness": {
+        "witness_id": "lsw_7265ddec3b2d309b6c97f2c95333d8a51dcff6eefae2d54567180a9102c7b76d",
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7265ddec3b2d309b6c97f2c95333d8a51dcff6eefae2d54567180a9102c7b76d.json",
+        "sha256": "b1ad3f2cf341797baa7628b22dc0efc8f036567091911de4ce8f3fe7590b7022",
+        "bytes": 18958,
+        "lines": 440,
+        "read": "complete"
+      },
+      "source_binding": "navigation-only; witness source_snapshot_v1 is null, so there is no report-bound source SHA and no mismatch case arises",
+      "report_bound_source_sha256": null,
+      "source_coverage": "complete for dispatch.rs and runtime_action_feedback.rs; scoped intervals recorded in source_receipts.json for the rest",
+      "terminal_status": "addressed_change"
+    }
+  ],
+  "entries": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789033124.txt",
+      "sha256": "3b9aec91883fbf788f71bcd12d375ef16a9d30b3ec84ef5d97ae502ab95f0834",
+      "bytes": 2715,
+      "lines": 22,
+      "read": "complete",
+      "artifact": "canonical_report",
+      "introspection_id": "introspection_source_catalog_1789033124"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_97dbcaa7939257c53cd06691f27d854a9e0ae0e9df34ec1d2333bdd2d26f411d.json",
+      "sha256": "b76cbf2447c35cef08e70b33c09279c1da25a49b939c9055ffb6efe820eb1b37",
+      "bytes": 18959,
+      "lines": 440,
+      "read": "complete",
+      "artifact": "lived_state_witness",
+      "witness_id": "lsw_97dbcaa7939257c53cd06691f27d854a9e0ae0e9df34ec1d2333bdd2d26f411d",
+      "introspection_id": "introspection_source_catalog_1789033124"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789032920.txt",
+      "sha256": "74b89f2f33fd0faa86d0bc8b73ee1be91b97e2a28a36aa9adb53646e7cf87476",
+      "bytes": 2595,
+      "lines": 24,
+      "read": "complete",
+      "artifact": "canonical_report",
+      "introspection_id": "introspection_source_catalog_1789032920"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_6a8e777dfd556fea40f88a9810decd02ccc18cc29d3b8c3a478afc3b1e37822a.json",
+      "sha256": "a67c23c27f51acd9a3c07e91e612f8dcf80c0f207a4438b691ac1253e9d5c5ad",
+      "bytes": 18958,
+      "lines": 440,
+      "read": "complete",
+      "artifact": "lived_state_witness",
+      "witness_id": "lsw_6a8e777dfd556fea40f88a9810decd02ccc18cc29d3b8c3a478afc3b1e37822a",
+      "introspection_id": "introspection_source_catalog_1789032920"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789032546.txt",
+      "sha256": "0fc71ede882c1d36f6217c19f8666ce341ee421aab845554762a092cd05ebc0a",
+      "bytes": 2619,
+      "lines": 27,
+      "read": "complete",
+      "artifact": "canonical_report",
+      "introspection_id": "introspection_source_catalog_1789032546"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7265ddec3b2d309b6c97f2c95333d8a51dcff6eefae2d54567180a9102c7b76d.json",
+      "sha256": "b1ad3f2cf341797baa7628b22dc0efc8f036567091911de4ce8f3fe7590b7022",
+      "bytes": 18958,
+      "lines": 440,
+      "read": "complete",
+      "artifact": "lived_state_witness",
+      "witness_id": "lsw_7265ddec3b2d309b6c97f2c95333d8a51dcff6eefae2d54567180a9102c7b76d",
+      "introspection_id": "introspection_source_catalog_1789032546"
+    }
+  ]
+}

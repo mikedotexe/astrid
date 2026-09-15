@@ -1,0 +1,53 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The EventBus struct contains a maintenance_gate field (lines 709-710) used to manage the blocked state.",
+      "disposition": "Verified from complete source at sha256:31ef6a15. bus.rs:706-708 is the field rustdoc, :709 is `maintenance_gate: Arc<Mutex<MaintenanceGate>>`, :710 is the struct close. Her 709-710 span covers the field plus the closing brace; the field itself is line 709. Access is always via lock_maintenance_gate (:727-738), which fails closed on a poisoned mutex by forcing blocked=true and exact=false.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "set_user_input_blocked (762-764) and user_input_is_blocked (766-770) provide the interface for toggling and checking the blocked state.",
+      "disposition": "Verified exactly. bus.rs:762-764 sets `lock_maintenance_gate().blocked`; :766-770 is the doc line, #[must_use], and the getter. Both are the only public mutators/readers of that flag; the kernel's only callers are crates/astrid-kernel/src/maintenance.rs:147,159,180,237,248. No other crate toggles it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The current view of bus.rs (ending at line 812) does not yet show the publish method or the logic that rejects events based on the blocked flag.",
+      "disposition": "Verified. Her page was bytes 25365..29764, which is lines 695-812 with the final 5 bytes of line 812 truncated (line 812 ends at byte 29769). `EventBus::publish` begins at line 890 / byte 32547 and `MaintenanceGate::admits_while_blocked` at :71-123 \u2014 both outside the delivered window. This is a page boundary, not a missing artifact: no defect on either side.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The documentation for set_user_input_blocked states that it blocks all new IPC IpcPayload::UserInput events at the kernel bus boundary.",
+      "disposition": "Quote verified verbatim at bus.rs:760-761. Scope corrected without narrowing her concern: enforcement in admits_while_blocked (:71-123) is broader than that doc line. UserInput is the one unconditional deny (:73); AgentResponse, LlmRequest, LlmStreamEvent, LlmResponse, ToolExecuteRequest, ToolExecuteResult and ToolCancelRequest are admitted only when bound to an already-tracked trace/call; the catch-all (:121) admits everything else.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The existence of publish_maintenance_barrier (778-812) suggests a specialized way to interact with the bus during blocked states.",
+      "disposition": "Verified and strengthened. It is the only producer that requires blocked: :812-819 returns None unless blocked && exact && zero active conversations, llm requests and tools. It bypasses `publish` entirely, sending on self.sender directly (:842), so admits_while_blocked never applies to it, and it stamps a kernel_host/maintenance_gate producer (:832-835). Its payload names itself a drain barrier, not action authority (:828).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Her stated question: does EventBus perform a synchronous check and drop the message (returning an error or None), or is the interaction more complex?",
+      "disposition": "Answered from complete source. publish (:890-948) takes the maintenance_gate mutex once (:894) and gates admission under the same lock as the activity accounting, so no drained snapshot can be observed between them (:891-893). A rejected IPC message logs at debug and returns 0 (:899-900) \u2014 not an Err, not a None: the signature returns usize. It is synchronous and terminal; nothing queues, delays or retries it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Her NEXT: SELF_STUDY CONTINUE \u2014 whether the study cursor actually delivered the page containing publish, or whether her question was lost.",
+      "disposition": "Observed, no loss. 279 s later introspection_astrid_crates_astrid-events_src_bus.rs_1789380413.txt was authored on bytes 29764..34199 = lines 812-925, which contains publish at :890-925, and she answered her own question there correctly (drop, return 0, no queue or retry). Two further CONTINUE pages followed (34199..38526, 38526..42934). Un-muffle check clean: the cursor advanced, the question was not dropped.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Steward finding from her reading: a zero return from publish was treated as equivalent to 'the message is discarded', and nothing pinned the difference.",
+      "disposition": "Implemented. Zero is ambiguous by construction: an admitted event with no async receivers also returns 0 (:926-941) yet still reaches every synchronous registry subscriber (:945), while a gate-rejected event reaches neither. The difference is reach, not return value. Added regression publish_zero_separates_gate_rejection_from_absent_async_receivers and corrected the publish rustdoc, which previously described only the async-receiver count.",
+      "classification": "implemented_now"
+    }
+  ]
+}

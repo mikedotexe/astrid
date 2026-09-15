@@ -1,0 +1,101 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The delivered block (lines 254-383) focuses on transition logic and the reporting of reader states.",
+      "disposition": "Verified against complete source at SHA 3c7fca52 (572 lines). Bytes 8571..12834 map exactly to lines 254-383 and contain the tail of choose_raw_reading_in (254-261), offer_requested_reading_in (263-333), describe_reader (335-363) and status_in (365-385, cut at 383). Her characterization of the window is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "offer_requested_reading_in spans lines 263-333.",
+      "disposition": "Verified exactly: fn signature opens at line 263, closing brace at line 333.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "It checks the foreground_reader against the mailbox_window, preventing concurrent execution.",
+      "disposition": "Verified at lines 267-274: absent foreground_reader returns Ok(None); a present mailbox_window returns Err('a mailbox window and foreground reader cannot run together'). Mutual exclusion is exactly as she read it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "It verifies the session_status.",
+      "disposition": "Verified at lines 280-286. The gate is a conjunction she did not spell out: session_status must be 'active' or 'summarized' AND bookmark.disposition must be ReaderDisposition::Active, else 'reader is quiet; ACTIVITY_STATUS supplies its explicit return command'.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "If bookmark.cursor.next_byte == bookmark.source.byte_count, it transitions to Complete, clears foreground_reader, and saves state.",
+      "disposition": "Observed at lines 287-300: the effects are exactly as she says, but the guard has a second conjunct she omitted, '&& bookmark.offered_passage.is_none()'. Completion cannot fire while a passage is still offered, so a final pending passage is never dropped by an early Complete. The omission is a precision gap, not a contradiction.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "If no passage is currently offered, it triggers a reader_bookmark_offer operation.",
+      "disposition": "Verified at lines 301-309, with PASSAGE_BYTES = 4_000 (line 20) as the requested size.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "It constructs an ActivityReadingOfferV1 packaging source, reader reference, version, passage and text.",
+      "disposition": "Verified: constructed at lines 326-332; the struct at lines 43-50 carries exactly reader, version, passage, text and source. Her five-field enumeration is complete.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "offer_requested_reading_in is the primary engine for determining what the user should see next.",
+      "disposition": "Observed: mechanically right, audience not. The offer is consumed at runtime/activity_delivery.rs:9-32, which converts it into a ProtectedDialogueInputV1 of kind Reading and feeds it to her own next model turn. There is no UI and no human reader in this path; the 'user' the offer serves is Astrid. Recorded as a fact about the code, not a correction of her report.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "describe_reader spans lines 335-363.",
+      "disposition": "Verified exactly: fn opens at 335, closes at 363. This citation sits wholly inside her page and is accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "describe_reader reports session_id, session_status, progress (current vs total bytes), the offered passage byte range, retained-source availability and current_status.",
+      "disposition": "Verified at lines 345-362. Two labels are more exact than her summary: the progress figure is rendered 'committed byte {next_byte} / {byte_count}', and the passage range is rendered 'pending {start}..{end}' or 'none' -- committed and pending are deliberately distinct, matching lines 152-154 and 203-205.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "describe_reader ends in a hardcoded return command, RETURN_ACTIVITY.",
+      "disposition": "Observed: the verb is a literal, but it is emitted with preview.session_record_id as a revision argument, and that argument is load-bearing. expected_revision (457-463) yields '' for a bare verb, and return_to_reader line 394 then takes the inspect branch -- printing describe_reader again, performing no return. A stale record errors at 400-404. Already covered at activity_reading/tests.rs:135-142.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "status_in spans lines 365-383.",
+      "disposition": "Observed, and the round's finding: status_in opens at 365 and closes at 385. Line 383 is where her PAGE ended (bytes 8571..12834), mid-format-string. The page footer offers CONTINUE and never names the item it cut, so the delivery boundary was reported as the code's structure. A 200-artifact scan finds 16 such citations across 97 SHA-verified reports. Guard shipped: scripts/source_page_symbol_truncation_watch.py.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c013",
+      "summary": "status_in synthesizes the foreground reader, the return (parked) reader and the mailbox_window into a multi-line string.",
+      "disposition": "Verified at lines 365-385. Foreground and parked each render through describe_reader or 'none'; the mailbox renders '{id} (one letter; large={bool})' or 'closed'.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c014",
+      "summary": "status_in appears to be the primary telemetry for the UI or the next step in the autonomous loop.",
+      "disposition": "Observed, and the source says the opposite of the second half. Callers are her own verbs via next_action/dispatch.rs:308-328 (ACTIVITY_STATUS/MAILBOX_STATUS as read_only, PARK_ACTIVITY/CHECK_MAILBOX as local_state) landing in conv.pending_file_listing -- no UI consumer exists. The string's own last sentence, on line 383, reads 'Status does not advance reading or dispatch a saved command.' The contradiction is recorded, not resolved away.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c015",
+      "summary": "The bridge manages a reading state machine where progress is measured in bytes and transitions are explicitly recorded in the ActionContinuityStore.",
+      "disposition": "Verified across the complete file: every transition routes through store.reader_bookmark_transition or reader_bookmark_offer with an operation_id (52-54), and save_selection (78-87) persists to the authoritative file before updating memory. Her summary of the architecture holds.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c016",
+      "summary": "Steward implementation arising from c012: page-end truncation of a cited item is measurable and was previously unwatched.",
+      "disposition": "Implemented scripts/source_page_symbol_truncation_watch.py (read-only, steward-only): flags a cited range ending exactly at the page's last line whose Rust block closes later, excluding page-extent restatements and unverifiable cases. 10 focused tests pass, including the reported turn (365-383 cited, closes 385). Registered as anti-drop guard source_page_symbol_truncation_watch_wired; verify 100 guards / 0 gaps / 0 alarms.",
+      "classification": "implemented_now"
+    }
+  ]
+}

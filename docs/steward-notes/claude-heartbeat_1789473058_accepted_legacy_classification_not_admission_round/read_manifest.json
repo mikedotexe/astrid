@@ -1,0 +1,58 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round_actor": "claude-heartbeat",
+  "steward_run_id": "run_1789467045605525000_7e8471b7e5",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789466923.txt",
+      "sha256": "9cf30ef6023da32bff5377a00d77651d323837ec687ae1527b96d18d42fe7bf5",
+      "bytes": 1664,
+      "lines": 22,
+      "read": "complete",
+      "scope": "entire file, every byte",
+      "introspection_id": "introspection_source_catalog_1789466923"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_de85f24ec36fbc1b386de49cfb3f5c7384ec5ce455407fcda4369dd0afbcb8d3.json",
+      "sha256": "40826d549bd187ef3356d2edbffdc99a05c41e417334629aef7bd9a2d8095f5c",
+      "bytes": 18970,
+      "lines": 440,
+      "read": "complete",
+      "scope": "entire file, every byte",
+      "witness_id": "lsw_de85f24ec36fbc1b386de49cfb3f5c7384ec5ce455407fcda4369dd0afbcb8d3"
+    }
+  ],
+  "continuity_artifacts": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789457400_continue_replaced_by_interleaved_target_round/summaries/introspection_source_catalog_1789453053.md",
+      "sha256": "fb903151ef24b7e7bbee63d0ea0cf13bbb6121c840f575f8de6ed43a8ec04f4b",
+      "bytes": 6172,
+      "lines": 101,
+      "read": "complete",
+      "scope": "duplicate-standard evidence: prior close of the same source lineage"
+    }
+  ],
+  "delivery_history_headers_read": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_capsule_runtime_health.rs_1789455871.txt",
+      "scope": "header + opening account (lines 1-14)",
+      "bound_revision": "sha256:3a20e5eed609de9a8f36121dbe4adf31b4d325d5929b9b33f548605cf6074ef0",
+      "interval": "bytes 0..4335"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_capsule_runtime_health.rs_1789456202.txt",
+      "scope": "header + opening account (lines 1-14)",
+      "bound_revision": "sha256:3a20e5eed609de9a8f36121dbe4adf31b4d325d5929b9b33f548605cf6074ef0",
+      "interval": "bytes 4335..7000"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_capsule_runtime_health.rs_1789456944.txt",
+      "scope": "header + opening account (lines 1-14)",
+      "bound_revision": "sha256:3a20e5eed609de9a8f36121dbe4adf31b4d325d5929b9b33f548605cf6074ef0",
+      "interval": "bytes 4315..7000"
+    }
+  ],
+  "notes": "Navigation-only report: witness source_snapshot_v1 and source_provenance_ref_v1 are null, so there is no report-bound source SHA. Source verification is anchored on the revision her own delivered pages were bound to."
+}

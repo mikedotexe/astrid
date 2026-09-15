@@ -1,0 +1,71 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-kernel_src_lib.rs_1789367524",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Lines 114-118 enforce a multi-threaded tokio runtime because the capsule system relies on block_in_place, which would panic on a current_thread runtime.",
+      "disposition": "Verified from complete source at the report-bound SHA d19f321c. lib.rs:114-119 is an assert! comparing Handle::current().runtime_flavor() to RuntimeFlavor::MultiThread, and the rustdoc at lib.rs:100-103 states the same reason. Her cited interval and her stated mechanism both match the bytes exactly.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Line 124 maintenance::initialize_gate is an architectural hook implying a gate that must be initialized before any actual work (like socket listening) can occur.",
+      "disposition": "Ordering verified, scope corrected. Verified: line 124 precedes socket::bind_session_socket at line 185, and maintenance.rs:126-128 states the gate is initialized before any native socket listener starts. Not supported: it is not a general work-gate. initialize_gate sets one boolean (maintenance.rs:147) and, with no maintenance lease configured, Paths::from_environment returns Ok(None) so blocked=false and nothing is gated at all. See c007.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Lines 135-140 point the home:// VFS scheme at a principal-specific directory rather than the .astrid root, preventing capsule access to global keys, databases, and config.",
+      "disposition": "Verified from complete source. lib.rs:138-140 resolves PrincipalId::default(), takes home.principal_home(&default_principal), and uses only principal_home.root() as home_root. The comment at lib.rs:136-137 states the exclusion explicitly. Her least-privilege reading matches the bytes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Capabilities are backed by a persistent key-value store rather than being ephemeral tokens, and line 160 notes fail-secure key rotation.",
+      "disposition": "Verified from complete source. lib.rs:143-147 opens SurrealKvStore at home.state_db_path(); lib.rs:161-166 builds CapabilityStore::with_kv_store over that same Arc<kv>, so persistence is shared, not separate. lib.rs:160 reads 'Key rotation invalidates persisted tokens (fail-secure by design)'. Exact on both points.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "SecureMcpClient (lines 168-173) integrates mcp_client, capabilities and audit_log, confirming every MCP interaction is mediated by both a capability check and an audit trail.",
+      "disposition": "Construction verified, generalization corrected. lib.rs:168-173 does wire all three plus session_id. But 'every interaction' overreaches her window: in secure.rs (SHA 534f332e), call_tool at 162 is capability-checked and audited and connect/disconnect at 265/299 are audited, while the read-only discovery paths list_tools (247-249) and get_tool (256-258) delegate straight to the inner client with neither check nor audit entry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Lines 175-179 establish an overlay VFS with workspace_root as lower and a temp directory as upper, so anything not committed remains in the temporary upper layer.",
+      "disposition": "Verified from complete source, and stronger than she stated. init_overlay_vfs (lib.rs:724-744) registers workspace_root as lower and a tempfile::TempDir as upper. OverlayVfs::commit (overlay.rs:88+, SHA f6d58e6a) copies only dirty upper entries down to lower. Because upper is a TempDir, uncommitted writes are not merely retained in temp, they are discarded when the handle drops.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "STUDY_QUESTION: how does maintenance::initialize_gate specifically interact with the event_bus to block or allow early bootstrap signals?",
+      "disposition": "Answered from exact source. It touches the bus through exactly one call, event_bus.set_user_input_blocked(blocked) (maintenance.rs:147); it never subscribes, publishes, or registers an interceptor. blocked is fail-closed on lease-file presence or unreadable config (maintenance.rs:130-146). Enforcement is in EventBus::publish (bus.rs:895-901). Crucially the gate is narrow, not a bootstrap gate: see c008.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Implied by her framing: the maintenance gate blocks or allows early bootstrap signals in general.",
+      "disposition": "Not supported; corrected without narrowing her underlying interest. MaintenanceGate::admits_while_blocked (bus.rs:71-123) denies only IpcPayload::UserInput unconditionally, admits continuation payloads bound to an already-tracked trace, and its catch-all arm at bus.rs:121 returns true. Every other IPC payload kind and every non-Ipc AstridEvent passes untouched. The gate blocks new user-input admission, not bootstrap signalling.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Steward-side finding from reading her lived-state witness, not a claim of hers: this report reaches the queue flagged lived_state_alignment=artifact_integrity_unavailable with one artifact-integrity issue.",
+      "disposition": "Ground-truthed as our infrastructure artifact, not a defect in her witness. All 17 recorded errors are parameter_observations[N].observed_at_unix_ms:after_authorship at exactly +1ms past authored_at_unix_ms 1789367524843. Corpus-wide, all 1129 recorded issues across 19238 errors are this single kind, largest delta 81ms. validation.py:952-957 compares with strict > and zero tolerance.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "The artifact_integrity_issues.jsonl stream had no steward-facing consumer, so a benign capture-ordering artifact and a genuine receipt-integrity failure were indistinguishable.",
+      "disposition": "Implemented a read-only consumer. scripts/lived_state_integrity_triage.py classifies each recorded issue as capture_ordering_artifact or substantive, never assuming benign when witness bytes are unreadable, with verify exiting nonzero on any substantive finding. Covered by 8 focused tests. Validation semantics, projected alignment, and the bridge-side producer are deliberately untouched; see c011.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "The underlying cause is the bridge witness producer stamping authored_at_unix_ms before capturing runtime scalars; fixing it at the source would clear all 1129 flags.",
+      "disposition": "Deliberate authority boundary, no change made. The producer is live bridge Rust and a repair would require a gated build and restart; relaxing validation.py's strict > instead would retroactively change projected alignment for 3976 witnesses. Both are reviewed decisions for an interactive window, not a headless heartbeat round. Recorded as debt with exact evidence; the new triage keeps the population visible meanwhile.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+ "schema": "flywheel_read_manifest_v1",
+ "reader": "claude-heartbeat",
+ "round": "claude-heartbeat_1789344573_bracket_placeholder_and_map_verb_reach_round",
+ "reports": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789339213.txt",
+   "sha256": "39e59a84ee0250a4a4cd999078224840f7c959996fb028c07bb14430156b79b3",
+   "bytes": 2108,
+   "lines": 25,
+   "read": "complete",
+   "introspection_id": "introspection_source_catalog_1789339213",
+   "source_binding": "source catalog / navigation only; no report-bound file SHA",
+   "lived_state_witness_id": "lsw_49f015707a1e8396cff0b0a8895e940261a9ca3eb61f66665f9d61c9d4719cd5"
+  }
+ ],
+ "witnesses": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_49f015707a1e8396cff0b0a8895e940261a9ca3eb61f66665f9d61c9d4719cd5.json",
+   "sha256": "1746bfc9cb7de02655cef138c9aa3b864ff95eb6da88beddb1bba3b2bce6c4b0",
+   "bytes": 18940,
+   "lines": 440,
+   "read": "complete",
+   "witness_id": "lsw_49f015707a1e8396cff0b0a8895e940261a9ca3eb61f66665f9d61c9d4719cd5",
+   "artifact_sha256_matches_report": true,
+   "source_snapshot_v1": null,
+   "source_provenance_ref_v1": null
+  }
+ ],
+ "continuity_artifacts_read": [
+  {
+   "path": "docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/RUN_REPORT.md",
+   "sha256": "8e7825a1375b2db3f8beaf0ec431bc1d3c3ca8f66cf45c35dd287afbe6dfa2a6",
+   "bytes": 12106,
+   "lines": 175,
+   "read": "lines 1-80",
+   "note": "Preceding round on the twin runtime/guards.rs pages: fill_pct is recorded, not gating."
+  },
+  {
+   "path": "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/RUN_REPORT.md",
+   "sha256": "be8f1f8403da637cdc3676d45af24993ef7f993d1ee0d65c7163b4679abd4e5d",
+   "bytes": 16135,
+   "lines": 216,
+   "read": "complete",
+   "note": "MAP topic-scope axis and the 123-page catalog measurement."
+  },
+  {
+   "path": "crates/astrid-source-study/tests/path_recovery.rs",
+   "sha256": "2c5ec57d29e269e32f418100cfacc36addce45ba4367d6110c57de49c6b39343",
+   "bytes": 9812,
+   "lines": 234,
+   "read": "complete",
+   "note": "Existing boundary tests; bare-stem MAP with topic 'action_continuity' already pinned there, so this round did not duplicate it."
+  }
+ ],
+ "runtime_evidence": {
+  "surface": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/navigation",
+  "scope": "per-turn record input_kind and the steward-generated recovery Reason line only; no request_json, no response_json, no private writing, no draft prose read",
+  "turns_inspected": 14,
+  "recovery_turns": [
+   "1789338769",
+   "1789338946",
+   "1789339213",
+   "1789339580",
+   "1789339782",
+   "1789340034",
+   "1789340218",
+   "1789341968"
+  ],
+  "map_topic_miss_turns": [
+   "1789338946",
+   "1789339782",
+   "1789340218"
+  ],
+  "bracket_wrapped_turns": [
+   "1789340034",
+   "1789341968"
+  ]
+ }
+}

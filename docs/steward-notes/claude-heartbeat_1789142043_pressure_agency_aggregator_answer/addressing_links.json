@@ -1,0 +1,123 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "Page bytes 1723..6101 = lines 64..178 at report-bound sha 4b670305; contains no aggregator."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "interpretation_risk_for_texts 7742-7827 assembles matched_terms at 7751-7761 and emits it at 7814."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "interpretation_risk_terms at 548+ is the natural-language motif table behind the context gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "handle_action dispatch 47-57 routes status verbs to handle_status (63-78) and handle_texture_status (80-95)."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "handle_status 63-78: render, pending_file_listing, read-only receipt 69-70, emphasis 74-76; no control send."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "handle_texture_request 97-164; needle list 108-125; steward_review_only_no_controller_mutation literal at 127."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "note": "white_noise_drift_risk 98,109 and active_spectral_drift 100,112; sole consumer toward_white_noise at 142."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "status_render_is_a_telemetry_formatter_not_a_motif_aggregator asserts both strings are absent from the status."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "PressureAgencyDisposition 33-37, classify_request_disposition 284-310; texture disposition strings 104-129."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "interpretation_risk_projection 7623-7655 builds its source set from ActionEvent text fields and recent files, not pressure-agency statuses."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "render_pressure_agency_status has two production callers, 64 and 175, both in this file; neither forwards the String."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "render_pressure_agency_status 434-471: band 474-512, telemetry lines 539-586, fill_target 587-612, consts 7-23, recommendation 522-537."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "note": "New focused regression pins the negative answer with a positive band/telemetry contrast."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the report, the exact-source answer, and the regression."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789142043_pressure_agency_aggregator_answer/symbol_locality_scan.json",
+      "note": "symbol_locality_watch scan: this turn scored same_file_out_of_page, want at 434, page 64..178, chase run length 2."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789142043_pressure_agency_aggregator_answer/revisit_scan.json",
+      "note": "source_study_revisit_watch scan: pressure_agency.rs bytes1723..6101 delivered twice from the identical OPEN 64 request."
+    }
+  ]
+}

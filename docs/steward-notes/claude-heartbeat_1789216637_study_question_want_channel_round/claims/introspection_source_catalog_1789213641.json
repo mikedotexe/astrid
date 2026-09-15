@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_source_catalog_1789213641",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`continuity_afterimage_signal_score` is defined as a function at astrid/capsules/spectral-bridge/src/autonomous/runtime/continuity.rs line 112: `fn continuity_afterimage_signal_score(text: &str) -> usize`.",
+      "disposition": "Exact. continuity.rs line 112 is byte-for-byte `fn continuity_afterimage_signal_score(text: &str) -> usize {` at working-copy SHA-256 c684be7643e5...23230 B / 641 lines, read complete. Body 113-118: lowercase the text, then count how many CONTINUITY_AFTERIMAGE_SIGNAL_TERMS entries occur as substrings. An unweighted term count, not arithmetic.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "It is used in a comparison at line 413: `continuity_afterimage_signal_score(item) >= CONTINUITY_TRAJECTORY_AFTERIMAGE_MIN_SCORE`.",
+      "disposition": "Exact, including the operator. Line 413 is that comparison verbatim, inside the `afterimage_items` filter (409-416), which skips CONTINUITY_TRAJECTORY_LIMIT items and takes CONTINUITY_TRAJECTORY_AFTERIMAGE_LIMIT. MIN_SCORE = 2 and AFTERIMAGE_LIMIT = 4 (runtime/text.rs:44-45). Admission is therefore two or more afterimage terms, at most four items.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "It is used to assign a value to a variable at line 439: `let afterimage_score = continuity_afterimage_signal_score(item);`.",
+      "disposition": "Exact. Line 439 is that binding verbatim. Its purpose is visible only at 440-442: the faint-residue band gate `afterimage_score > 0 && afterimage_score < CONTINUITY_TRAJECTORY_AFTERIMAGE_MIN_SCORE && continuity_faint_residue_signal_score(item) > 0`. The one scorer therefore both admits afterimages (>=2) and bounds the residue lane below itself (exactly 1).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "`continuity_faint_residue_signal_score` did not appear in the implementation text or any other category of the search results, and remains elusive in this specific set of results.",
+      "disposition": "True of the result set, and structurally guaranteed rather than informative. Her prior action was `SELF_STUDY FIND continuity_afterimage_signal_score`; navigation.rs:114-121 runs `search(query, false)` for exactly one literal query and titles the page `Literal source search: {query}`. A second symbol cannot appear unless it shares that substring. Her hedge 'in this specific set of results' states the scope correctly, and the report infers nothing about the tree.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Given that `continuity_afterimage_signal_score` sits early in continuity.rs (line 112), it is highly probable that `continuity_faint_residue_signal_score` is defined in the same vicinity, perhaps just a few lines above or below it.",
+      "disposition": "CONFIRMED from complete source. `fn continuity_faint_residue_signal_score(text: &str) -> usize` is continuity.rs line 120 \u2014 eight lines below 112, same file, same declaration block, with the paired weight-label functions immediately after (128 afterimage, 137 faint residue). Her inference from position was correct and specific. Recorded as observation only; no claim about how she reached it.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "STUDY_QUESTION: what is the implementation of `continuity_faint_residue_signal_score` and how does it differ from `continuity_afterimage_signal_score`?",
+      "disposition": "Answered from complete source. Same three-line shape: lowercase, count table terms as substrings. Differences: (1) table \u2014 AFTERIMAGE holds persistence words (afterimage, scar, pressure memory), FAINT_RESIDUE holds trace/absence words (ghost-pang, faint, subthreshold, lingering, absence, scent, residue) at text.rs:252-266; (2) role \u2014 residue is subordinate, admitted only where the afterimage score is exactly 1 (continuity.rs:440-442); (3) limits 4 vs 2, weights .50/.38/.29/.22 vs .16/.10.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Inspecting the context around line 112 is needed to understand the actual logic of the 'afterimage' calculation.",
+      "disposition": "Half confirmed; the other half contradicts the expectation and is preserved, not resolved. Line 112 does hold the whole calculation \u2014 but it is a term count, not arithmetic. No decay is computed anywhere: the weight ladders are hard-coded strings chosen by RANK (continuity.rs:128-142) and the residue render prints the literal `score=1/{MIN_SCORE}` (452-454). 'Decay' in this recap is positional ordering. Her expectation of weight arithmetic is not met here.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Reading this report against the steward watch family showed that a want named only in the structured `STUDY_QUESTION:` field is invisible to symbol_locality_watch, whose stated purpose is exactly to check whether the page a turn chooses reaches the symbol it said it wanted.",
+      "disposition": "Reproduced and fixed non-live. Before: `scan --being astrid --window 12` reported 0 wanted symbols over a window containing this turn, because WANT_RE needs an intent sentence and hers ('I need to inspect the context around line 112') carries no backticks. Want extraction now also reads the STUDY_QUESTION line with a take(2) cap mirroring notebook.rs:88-100, plus per-want origin labels and a reached counter. After: this turn reads 2/2 reached; window 200 gains 6 question-channel wants.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Resolving the second symbol required a further turn after this one (NEXT: SELF_STUDY OPEN .../continuity.rs 112).",
+      "disposition": "True, and not a surface muffle: no live change is proposed. The same prompt already offered the one-move answer \u2014 notebook.rs:88-100 takes the first two backticked identifiers of her question and, for the one the navigation header does not already cover, emits `SELF_STUDY RELATE continuity_faint_residue_signal_score`. Her chosen OPEN 112 reaches it anyway: the pager's own accounting gives page 112..235, so line 120 is delivered. She declined the cheap move for the richer one.",
+      "classification": "verified_existing"
+    }
+  ]
+}

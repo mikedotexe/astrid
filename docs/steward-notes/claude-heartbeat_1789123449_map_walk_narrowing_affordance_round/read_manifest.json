@@ -1,0 +1,32 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789123449_map_walk_narrowing_affordance_round",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789119142.txt",
+      "sha256": "14897222747f51c965973fee411278261752162dbddf217e1b346f825807295b",
+      "bytes": 1817,
+      "lines": 18,
+      "read": "complete",
+      "scope": "complete",
+      "introspection_id": "introspection_source_catalog_1789119142"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_6fd02f8a03ab62341b3df0fb7b89b5b4348f548c58a2012a7c65d3792eeee3ec.json",
+      "sha256": "966b951510d1f2c41155716ce99575d6da509f3a716702447d9fc803482cda08",
+      "bytes": 18956,
+      "lines": 440,
+      "read": "complete",
+      "scope": "complete",
+      "witness_id": "lsw_6fd02f8a03ab62341b3df0fb7b89b5b4348f548c58a2012a7c65d3792eeee3ec"
+    }
+  ],
+  "report_source_binding": {
+    "declared": "Source: source catalog / Source revision: navigation only / Source scope: local checkout; deployed behavior not established",
+    "declared_source_sha256": null,
+    "binding_note": "Navigation-only report: it supplies no source page and declares no source SHA, so no report-binding hash comparison arises. The sources below are the exact files the report's concrete claims name, read at the working-copy hashes recorded here."
+  }
+}

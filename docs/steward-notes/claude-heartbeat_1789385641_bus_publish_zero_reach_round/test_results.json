@@ -1,0 +1,122 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1789385641_bus_publish_zero_reach_round",
+  "rust": [
+    {
+      "command": "cargo fmt -p astrid-events -- --check",
+      "result": "clean (after one rustfmt pass on the new test)"
+    },
+    {
+      "command": "cargo test -p astrid-events --lib publish_zero_separates",
+      "result": "1 passed, 0 failed"
+    },
+    {
+      "command": "cargo test -p astrid-events --lib",
+      "result": "56 passed, 0 failed, 0 ignored (55 before this round)",
+      "rc": "RC=0"
+    }
+  ],
+  "stewardship": [
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "result": "44 tests OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/test_evidence_event_store.py",
+      "result": "OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/test_steward_control.py",
+      "result": "OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/test_steward_projection.py",
+      "result": "OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_followup.py",
+      "result": "OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_chronicle.py",
+      "result": "OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_projection.py",
+      "result": "self-test ok",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/test_projection_cursors.py",
+      "result": "OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/test_introspection_cadence_audit.py",
+      "result": "OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "result": "5 tests OK",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "result": "total 100 rows, alarms 0, gaps 0",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok true, errors [], 6539 canonical reports, 0 duplicate hash groups",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "RATCHET GREEN \u2014 violation_count 0, violation_kind_counts {}, status consistent, new_large_production_files_rejected true",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py self-test --json",
+      "result": "2 tests OK, valid true",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "result": "status consistent; all seven checks true",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "result": "valid true, 1093589 events, last_global_seq 1093589, corrupt_lines 0",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/evidence_event_store.py --json status",
+      "result": "active store v2, effective aggregate valid, corrupt event lines 0",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_followup.py verify",
+      "result": "ok true, cycle 47, 6/6 rounds, review_due true after this round's record",
+      "rc": "RC=0"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_chronicle.py verify",
+      "result": "EXPECTED STALE \u2014 'chronicle durable source inputs changed; project before verify'. Recording this round's Division event is itself a durable Chronicle input, so the Chronicle goes stale after every record-round and is reprojected as the FIRST step of the bounded Division return, which is now due. Not projected detached from that ceremony.",
+      "rc": "RC=1"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean",
+      "rc": "RC=0"
+    }
+  ],
+  "final_epistemic_verify": "recorded in verification_receipt.json (run after every durable write, including the Division round record)"
+}

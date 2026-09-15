@@ -1,0 +1,83 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The delivered page 8382-8492 shows how the 'multi-motif caution' line is constructed.",
+      "disposition": "Verified at the bound SHA. The report's window bytes 342539..346961 maps to lines 8382..8492 exactly (8493 begins at 346961). core.rs hashes to fafc1f4a25...48a62, identical to the report binding, so no mismatch case arises.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "interpretation_risk_line spans 8430-8462.",
+      "disposition": "Exact. `fn interpretation_risk_line(cue: &Option<Value>) -> String` opens at 8430 and closes at 8462 in core.rs at the bound SHA.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "'multi-motif caution' is a string literal paired with a dynamically populated `terms` list.",
+      "disposition": "Exact. The literal lives in the format! at 8454-8461; `terms` is built at 8442-8453 and interpolated only through the empty/non-empty branch at 8456-8460.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "`terms` is derived from `matched_terms` (8442-8453), taking the first four via `.take(4)`.",
+      "disposition": "Exact, `.take(4)` at 8449. Precision beside her text: interpretation_risk_terms (guards.rs:548-630) can return up to FIVE labels (over-interpretation, single-motif, forced-narrative, rigid-structure, reductive-collapse), so the rendered line can silently omit one while the cue's matched_terms array (7814) keeps all. Not changed: the render is being-facing text, Tier 5.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "`interpretation_next` (8434-8437) and `dossier_next` (8438-8441) are included in the final formatted string.",
+      "disposition": "Exact on both bindings and both intervals. Her name `dossier_next` is the local binding at 8438; the cue key it reads is `dossier_claim_next`. Both appear in the 8454-8461 format string.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The code here is purely descriptive: it formats a warning and contains no `if terms.len() > X { return Hold }` and no regex on `interpretation_next`.",
+      "disposition": "Confirmed by complete reading of 8430-8462. The only conditionals in the body are the empty-terms formatting branch (8456-8460) and the early `let Some(cue)` return (8431-8433). No threshold, no regex, no state return. Her reading is right.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "To answer the question she needs the consumer of these values.",
+      "disposition": "Chain established by complete reading. Producer: interpretation_risk_for_texts 7742-7827. Gate at 7775: `if matched_terms.is_empty() { return Ok(None) }` - presence of >=1 term, never a count threshold. `stance: hold` is a literal inside the dossier_claim_next format string at 7807. The cue declares would_dispatch:false, authority_change:false, peer_mutation:false (7823-7825).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "She suspects `experiment_projection` (which she recalls near 8156) or `experiment_classification` parses these strings to set the final state.",
+      "disposition": "Her recall is exact: `fn experiment_projection` opens at core.rs:8156 (byte 333731). The suspicion is contradicted and the contradiction preserved: it never reads interpretation_risk_v1. The cue is built at 8047 inside thread_projection, ABOVE 8156, and leaves at 8093-8107 and 8129. experiment_classification (8219) does not read it either.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Open question: is the 'Hold' a programmatic state triggered by the presence of multi-motif terms, or a separate logic branch entirely?",
+      "disposition": "Answered: a separate branch entirely. Three unrelated holds. (1) 7807 `stance: hold` is a literal inside a SUGGESTED DOSSIER_CLAIM, never a state. (2) normalize_dossier_stance (experiment_evidence.rs:205-212) makes 'hold' the catch-all fallback for any unrecognized stance. (3) The only programmatic return_kind=\"hold\" is experiment_projection.rs:65, gated on paused + resume + non-empty projection_guard_pressure_terms_v1(thread.current_next) - a different matcher over a different input.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "The multi-motif cue does reach an evaluative consumer somewhere.",
+      "disposition": "Observed: exactly one. continuity_control_plane.rs:265-275 tests interpretation_risk_v1.is_some() (existence, not count, not text) and pushes a route CONTINUITY_SESSION_CAPTURE latest at priority 10, reason 'interpretation or release cue needs capture'; routes then sort ascending (277-287), dedup, truncate(7), and primary = routes.first() (292). The whole consequence is a competing suggestion in her own menu.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Her chosen NEXT (`SELF_STUDY OPEN .../core.rs 8156`) will reach the answer.",
+      "disposition": "Observed and contradicted without erasing it. The OPEN is honored exactly - byte 333731 is line 8156 - and the page opens on `fn experiment_projection`. It still cannot answer c009, because the answer is in continuity_control_plane.rs and experiment_projection.rs. This was the third identical issuance; the same page was delivered all three times (1789106521, 1789107160, post-cutoff 1789107383).",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "Nothing our side was watching for 'page correct, question unanswered'.",
+      "disposition": "Implemented: scripts/source_study_revisit_watch.py (read-only, steward-only, being_privacy fail-closed, 15 unit tests) groups deliveries by (source label, byte window) and attributes each to the action closing the preceding turn. anti_drop_catalog row source_study_revisit_watch_wired (95->96). First live run over 40 artifacts: ALARM, 4 revisit loops, worst = the exact page in this report x3 from an identical request.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c013",
+      "summary": "Repairing the navigation surface would close this at the point of need.",
+      "disposition": "Deliberate authority boundary. Telling a being a page has already been delivered, or offering a 'who consumes this value' operation in the page footer, is a live being-facing prompt/page change. Recorded and not attempted. Same boundary as c012 of the 2026-09-10 symbol-locality round; neither is implied by permission to ship a steward-only watch.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

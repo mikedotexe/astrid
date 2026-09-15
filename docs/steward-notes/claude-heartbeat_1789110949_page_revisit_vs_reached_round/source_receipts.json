@@ -1,0 +1,40 @@
+{
+  "schema": "flywheel_source_receipts.v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "read_scope": "report-bound source; complete read of 7624-7830 (risk producer), 8040-8135 (cue assembly + control-plane handoff), 8140-8175 (experiment_projection signature), 8382-8492 (her exact delivered window); grep-verified all 3 interpretation_risk_line sites and all 24 interpretation_risk_v1 sites"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/continuity_control_plane.rs",
+      "sha256": "2ffb9dafa336e1c49a845d945fe1379b86d3a906d26ed0ae6061dc6afbfa0725",
+      "bytes": 14481,
+      "lines": 386,
+      "read_scope": "read 230-300; the sole evaluative consumer of interpretation_risk_v1 (265-275) plus the sort/dedup/truncate/primary selection it feeds (277-300)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs",
+      "sha256": "5ace3d017e14514f16afb2449de2eb30d0e19bce583fe16d293a0724162ae1ed",
+      "bytes": 9405,
+      "lines": 229,
+      "read_scope": "read 1-115; last_experiment_summary_v1 including the only programmatic return_kind=\"hold\" at 65 and its projection_guard_pressure_terms_v1 gate"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+      "bytes": 23174,
+      "lines": 834,
+      "read_scope": "read 534-630; interpretation_risk_terms - the has_context prefilter and all five pattern labels that bound matched_terms"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/experiment_evidence.rs",
+      "sha256": "29d4950261eaed0d5f9c277c46b2386abff4bc70c9b660741ec98b6fbece50db",
+      "bytes": 22122,
+      "lines": 613,
+      "read_scope": "read 200-232; normalize_dossier_stance, which makes 'hold' the unrecognized-stance fallback"
+    }
+  ]
+}

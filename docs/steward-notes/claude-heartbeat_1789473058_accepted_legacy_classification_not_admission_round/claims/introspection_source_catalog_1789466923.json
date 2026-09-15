@@ -1,0 +1,73 @@
+{
+  "introspection_id": "introspection_source_catalog_1789466923",
+  "reader": "claude-heartbeat",
+  "source_binding": "navigation-only turn; no report-bound source SHA. Verified against crates/astrid-kernel/src/capsule_runtime_health.rs sha256 3a20e5eed609de9a8f36121dbe4adf31b4d325d5929b9b33f548605cf6074ef0 — the same revision her delivered pages were bound to.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "accepted_legacy first checks whether the component exists in the accepted_legacy_extism_mvp whitelist to identify it as a known legacy entity.",
+      "disposition": "Verified against complete source at sha 3a20e5ee. Line 203-204: baseline.accepted_legacy_extism_mvp.iter().any(|entry| entry.name == name && ...). The name comparison is exact String==&str equality, no glob, version or normalization. Reached only from the PayloadKind::LegacyExtismMvp arm (line 65).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "If a cryptographic hash is provided in the Baseline for that component a strict match is required; if no hash is defined the whitelist entry alone suffices.",
+      "disposition": "Verified at lines 205-208: Some(expected) => wasm_hash == Some(expected) is exact equality; None => true accepts on name alone. BaselineEntry.wasm_hash is Option<String> with serde default (12-17), so an entry may legitimately omit it. Her tiering reading is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The logic follows a hierarchy: whitelist verification, then a separate Baseline-struct comparison.",
+      "disposition": "Precision, not a reversal. There is one list, not two surfaces: accepted_legacy_extism_mvp IS the only Baseline field (lines 6-10), so 'whitelist' and 'Baseline' name the same data. The two tests are one conjunctive predicate inside a single any() (203-209). Consequence her staged reading hides: any() is disjunctive across entries — a name-only duplicate entry anywhere in the list satisfies the predicate even when a same-named pinned entry mismatches.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "accepted_legacy acts as a tiered validation gate for legacy components, balancing system stability with security.",
+      "disposition": "Accurate as classification, overstated as enforcement. summarize is pub(crate) (line 27) with exactly one caller repo-wide: kernel_router.rs:199-200 under KernelRequest::GetStatus, a read-only status read. Its only effects are counters (accepted_legacy_extism_mvp vs actionable_incompatible, 65-71) and status=\"warning\" (79-81), rendered by astrid-cli daemon.rs:254-262. No path here blocks, unloads or denies a capsule. It reports a verdict; it does not impose one.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "This allows a nuanced deprecation strategy where high-risk components are pinned to specific versions while others transition more fluidly.",
+      "disposition": "The mechanism supports that strategy; the configured policy currently forbids it. The live data file her pages never showed — scripts/baselines/capsule_runtime_health.json, 221 B, sha dde94f50c019…673eba7a — holds accepted_legacy_extism_mvp: [] and growth_policy 'No legacy Extism/MVP astralis capsules are accepted backlog.' At this revision accepted_legacy returns false for every component; nothing transitions fluidly because nothing is whitelisted at all.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "A specific cryptographic hash provided in the Baseline pins a high-risk component to a specific version.",
+      "disposition": "Novel precision. The compared hash is declared, not recomputed: read_meta_wasm_hash (139-143) reads the wasm_hash string out of the capsule dir's meta.json, while classify_payload (164-186) reads the payload bytes but never digests them. So the pin binds meta.json's self-report, not the bytes on disk. It does fail closed: absent or unparseable meta.json yields None, which fails a pinned entry (206) while a name-only entry still passes (207).",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Ready to pivot to the broader architectural integration of these integrity checks with the capability system and capsule lifecycle management.",
+      "disposition": "Named so she does not hunt a link that is not there: at this revision capsule_runtime_health.rs has no integration to trace. It is crate-private, called once on the read-only GetStatus path, and takes loaded_capsules: &[String] — capsules ALREADY loaded — so it observes lifecycle output, not admission. No capability, token, approval or interceptor symbol appears in its 214 lines. Her NEXT: SELF_STUDY MAP kernel is the right shape; enforcement lives elsewhere (astrid-approval, astrid-capsule).",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Her established understanding of the accepted_legacy predicate describes the deployed check.",
+      "disposition": "Supported on both implementations. The steward-side twin scripts/capsule_runtime_health.py accepted_legacy (76-83) computes the same predicate — name equality AND (expected_hash is None OR expected_hash == wasm_hash) — and is the surface consumed by proactive_scan probe_capsule_runtime_health (1466-1511). Rust and Python agree, so her reading also describes what the steward probe reports.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The current map and the status of my study regarding capsule_runtime_health.rs are clear (asserted on a navigation-only turn with no page supplied).",
+      "disposition": "Grounded, not recalled from nothing. Her delivery history covers the whole file at the same SHA: bytes 0..4335 at introspection_..._capsule_runtime_health.rs_1789455871 and bytes 4335..7000 (containing lines 202-210) at _1789456202, re-delivered 4315..7000 at _1789456944, each bound to sha256:3a20e5ee… — identical to the working copy I read complete. The claim is backed by verified delivered bytes.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Fresh-pass lineage: this report re-states an understanding already addressed for the same source at the same revision.",
+      "disposition": "Duplicate evidence is exact: introspection_source_catalog_1789453053, closed in docs/steward-notes/claude-heartbeat_1789457400_continue_replaced_by_interleaved_target_round/, covered lines 202-210, the Baseline location, load_baseline and the empty whitelist. Both bindings re-verified current this round (source 3a20e5ee, baseline dde94f50 — the same hashes that packet recorded), so the earlier evidence still applies. c003/c004/c006/c007 are new and carry their own dispositions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Projection flags this report lived_state_alignment=artifact_integrity_unavailable with one gap.",
+      "disposition": "Reconciled as absent-snapshot, not byte contradiction. The witness has source_snapshot_v1: null and source_provenance_ref_v1: null because no source page was supplied this turn, which is what the flag reflects. Its byte bindings are intact: artifact_sha256 9cf30ef6… equals the report bytes I hashed, canonical_body_binding_v1 records 1087 bytes after the header separator, and artifact_authority_state_v1 is evidence_only with live_eligible_now false.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "recorded_by": "claude-heartbeat",
+  "sources": [
+    {
+      "path": "crates/astrid-source-study/src/source_search.rs",
+      "sha256": "f0900f1a4dda8e5b058bf7fa7d65b541a532e51e2b9b07c152d349e085a3de25",
+      "bytes": 13170,
+      "lines": 352,
+      "read": "complete",
+      "scope": "complete: 1-352"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "a56cad35914aa66d274127d705d74647478362eaf5a055ab158edb3aa2aaf872",
+      "bytes": 39773,
+      "lines": 1041,
+      "read": "scoped",
+      "scope": "scoped: 630-660 (resolve_fill_pct), 1025-1045 (estimate_fill_pct); plus exhaustive fill_pct assignment list (316, 421, 464, 473, 814, 935, 947, 970)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "767f3f081e192d4a6785b49d8f866fb0a0865c9b62d8d376e2c0874f54b06c12",
+      "bytes": 38778,
+      "lines": 852,
+      "read": "scoped",
+      "scope": "scoped: 320-350 (impl SpectralTelemetry, fn fill_pct at 335-337); plus exhaustive .fill_pct() call-site list (20+ sites across lambda_tail, sticky_mode, lambda_edge, spectral_viz, audio, codec/feedback, pressure_agency, protected_diagnostics, sovereignty, attractor, orchestration)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "sha256": "aa1bce2e4d5379db6c09120f35c4680ecae66f2cb2dcfca2bd78ad4291f06a9e",
+      "bytes": 27880,
+      "lines": 651,
+      "read": "scoped",
+      "scope": "scoped this round: all eight fill_pct sites with context (80-88, 150-158, 215-223, 226-234, 334-342, 441-449, 576-584, 605-613) and the research_budget lines 85-114; complete 1-651 read carried from packet claude-heartbeat_1789249785 at the identical SHA"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+      "bytes": 36711,
+      "lines": 830,
+      "read": "scoped",
+      "scope": "scoped: 310-332 (research_budget_guard_assessment signatures), 390-400 (the single fill_pct use at 396); exhaustive fill_pct occurrence list 318, 321, 328, 396"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+      "sha256": "efc3ee3a7c11752405dd3f736c5618b88ed14b65cad202c1a1d36a884c047ad1",
+      "bytes": 165334,
+      "lines": 4424,
+      "read": "scoped",
+      "scope": "scoped: 110-125 (struct NextActionContext, seven fields, fill_pct: f32)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "27c04bc9ee8212bfef5e7f5d20a8778540baab09b170d33549a60d26e15071a4",
+      "bytes": 307684,
+      "lines": 4962,
+      "read": "scoped",
+      "scope": "scoped: exhaustive fill_pct grep; 427-431 binds the loop's fill_pct from s.fill_pct (BridgeState), 206 and 461 separately use the telemetry.fill_pct() twin"
+    },
+    {
+      "path": "crates/astrid-source-study/src/relationships.rs",
+      "sha256": "a41a1c6a33ba9d7049dfee1ad70c964cdc3a704f4f7a41b457763d872c881d22",
+      "bytes": 1107,
+      "lines": 30,
+      "read": "scoped",
+      "scope": "scoped: 1-30 (RELATE -> search(symbol, exact=true))"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "read": "scoped",
+      "scope": "scoped: 105-140 (FIND -> search(query, exact=false))"
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789385641_bus_publish_zero_reach_round",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1789380206047022000_0217a6445d",
+    "preprojection_generation_id": "projection_1789380209904291000_b07151ee2a",
+    "preprojection_status": "passed",
+    "pause_generation": 439,
+    "stop_requested_observed": false,
+    "adapter_kind": "subprocess",
+    "lease_token_read_or_persisted": false
+  },
+  "processing": {
+    "selected_count": 40,
+    "processed_report_count": 1,
+    "unprocessed_count": 39,
+    "batchable_family_count": 0,
+    "processed": [
+      "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134"
+    ],
+    "post_cutoff_delivery_evidence_only": [
+      "introspection_astrid_crates_astrid-events_src_bus.rs_1789380413",
+      "introspection_astrid_crates_astrid-events_src_bus.rs_1789380741",
+      "introspection_astrid_crates_astrid-events_src_bus.rs_1789381060"
+    ]
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "processed_report_count": 1,
+    "terminal_status": "addressed_change",
+    "claim_count": 8,
+    "evidence_link_count": 16,
+    "processed": [
+      "introspection_astrid_crates_astrid-events_src_bus.rs_1789380134"
+    ]
+  },
+  "source_binding": {
+    "report_bound_source": "crates/astrid-events/src/bus.rs",
+    "report_bound_sha256": "31ef6a15bd62d60173f5c46a8d9806046bc5920cbbcee3e99bed2158305cb89f",
+    "working_copy_sha256": "31ef6a15bd62d60173f5c46a8d9806046bc5920cbbcee3e99bed2158305cb89f",
+    "head_sha256_matches": true,
+    "match": true,
+    "witness_artifact_sha256_matches_report": true,
+    "window_sha256_note": "the witness window_sha256 hashes the rendered numbered page (lived_state_witness/mod.rs:140), not raw source bytes; its difference from the raw hashes is expected, not an integrity issue"
+  },
+  "implementation": {
+    "paths": [
+      "crates/astrid-events/src/bus.rs"
+    ],
+    "kind": "one focused regression plus a publish rustdoc correction; no behavior change",
+    "tests": {
+      "cargo test -p astrid-events --lib": "56 passed, 0 failed",
+      "cargo fmt -p astrid-events -- --check": "clean"
+    }
+  },
+  "integrity": {
+    "addressing_self_test": "OK (44)",
+    "evidence_event_store_tests": "OK",
+    "steward_control": "OK",
+    "steward_projection": "OK",
+    "division_followup": "OK",
+    "division_chronicle_tests": "OK",
+    "division_projection": "self-test ok",
+    "projection_cursors": "OK",
+    "cadence_tests": "OK",
+    "cadence_strict": "integrity_ok=true errors=[] canonical=6539 duplicate_hash_groups=0",
+    "anti_drop_self_test": "OK (5)",
+    "anti_drop_verify": "total=100 alarms=0 gaps=0",
+    "domain_boundary_verify": "violation_count=0 kind_counts={} status=consistent (RATCHET GREEN)",
+    "epistemic_self_test": "OK valid=true",
+    "epistemic_verify_final": "valid=True checked_record_count=12246 issue_count=0 history_rewritten=False",
+    "audit_counters": "consistent",
+    "git_diff_check": "clean",
+    "evidence_event_store_verify": "valid=True corrupt_lines=0 event_count=1093589",
+    "chronicle_verify": "expected stale after record-round ('project before verify'); reprojection is the first step of the now-due Division return and was not run detached from it"
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 12246,
+    "when": "final verify, run after all durable evidence writes including the Division round record"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "checks": {
+      "all_addressed_plus_pending_matches_total": true,
+      "all_remaining_matches_pending_count": true,
+      "canonical_addressed_plus_remaining_matches_indexed": true,
+      "canonical_full_read_not_above_indexed": true,
+      "canonical_indexed_matches_summary": true,
+      "full_read_not_above_total": true,
+      "total_indexed_matches_scope_sum": true
+    },
+    "canonical_indexed": 6519,
+    "canonical_fully_addressed": 3239,
+    "canonical_full_read": 3871,
+    "canonical_remaining": 3280,
+    "canonical_unread": 2648,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifact_pending": 4997,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1093589,
+    "last_global_seq": 1093589,
+    "last_event_sha256": "b66ba0eb47a92a618f824381a8602431a1b8b76a8715a4796324e264b44197b7",
+    "active_store": "v2"
+  },
+  "anti_drop": {
+    "self_test": "OK (5)",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "division": {
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_2481fa79d3436583cacfaa74f171ccd0",
+    "cycle_sequence": 47,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due_at_round_start": false,
+    "review_due_after_record": true,
+    "tier5_cadence_dossier_required": false,
+    "tier5_cadence_dossier_reason": "review_due was false at round start; the dossier is required only when completing a Division return. The return and its dossier are now due and must open the next round.",
+    "event_count": 329,
+    "event_head_sha256": "dbbb545ccc111c060e9429450d3b3326260e5453bb77b72066fd59773edda00d",
+    "projection_generation_id": "projection_1789380209904291000_b07151ee2a",
+    "note_written": false,
+    "authority_state": "evidence_only"
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "build": false,
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "merged": false,
+    "note": "Evidence, documentation, and test only. Tier 4/5 items remain explicit waits. Three post-cutoff continuation reports were read as delivery evidence only and were not processed, recorded, or closed. Every dirty path outside this round's named edits was treated as foreign and left untouched."
+  },
+  "packet_files": {
+    "RUN_REPORT.md": {
+      "sha256": "efad761355b56a976369cdab06ad9b2e28d2ff9afe6ac8e35894cbe42caf286e",
+      "bytes": 12722
+    },
+    "addressing_links.json": {
+      "sha256": "deace8ccd0664677c3f73aab17c5fb017b4eb9b0d505da51ce1f3b611732c292",
+      "bytes": 5805
+    },
+    "claims/introspection_astrid_crates_astrid-events_src_bus.rs_1789380134.json": {
+      "sha256": "9bd15077d0f4dad9b6877a9292a7138008913be15441c1a28e80149dd3be8f83",
+      "bytes": 5417
+    },
+    "family_scan.json": {
+      "sha256": "8e3c5a6feea24dc61f45826a03c1864d3e35ab6b35ad49f572b3a5d4127e3c99",
+      "bytes": 21328
+    },
+    "read_manifest.json": {
+      "sha256": "ad22b02343c7c71d1680ae41647c1cfaaa719ecce30087e9174e2c0ca56537ca",
+      "bytes": 3180
+    },
+    "source_receipts.json": {
+      "sha256": "e959f28366c1ff8a601336e1be54b2dc1d5a345eb8f2fbbca0aac8b72c664c59",
+      "bytes": 2335
+    },
+    "summaries/introspection_astrid_crates_astrid-events_src_bus.rs_1789380134.md": {
+      "sha256": "936c03ec2f896dca56998df4ec89fcf8b719a439f2728ef143056b865e2ecf5f",
+      "bytes": 4380
+    },
+    "test_results.json": {
+      "sha256": "ad1a384e7db5a0f8fb05998b3486583a3c0509006207da2296b030a79bec3b91",
+      "bytes": 4070
+    },
+    "unprocessed_selected.json": {
+      "sha256": "f16c0a8d323124854d74446c002c239171870056897b4d8695e76d465aeb4f27",
+      "bytes": 3105
+    }
+  }
+}

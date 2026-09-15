@@ -1,0 +1,200 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter": "steward_control.py subprocess run adapter (controller-held lease; no session opened, no NDJSON ops, no pause/resume)",
+  "controller": {
+    "run_id": "run_1789083134930898000_218e6f0c6d",
+    "preprojection_generation_id": "projection_1789083139659036000_1c810f9a14",
+    "preprojection_status": "passed",
+    "pause_generation": 437,
+    "controller_paused": false,
+    "stop_requested_at_lease_read": false,
+    "postprojection": "runs after this process exits; not observed here"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 7,
+      "evidence_links": 17
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 12,
+      "evidence_links": 15
+    }
+  ],
+  "evidence_links": {
+    "batch_row_count": 32,
+    "new_link_count": 32,
+    "existing_link_count": 0,
+    "events_appended": 32,
+    "introspection_count": 2
+  },
+  "independent_checks": {
+    "report_source_binding": "report-bound SHA-256 111a9f09... equals the working-copy hash of capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs; no mismatch handling required",
+    "window_contiguity": "0..4368 and 4368..4618 are contiguous and exhaustive over the 4618-byte file",
+    "line_boundary": "line 117 begins at byte 4364, so the 4368 page boundary falls four bytes into line 117's indentation; the negation on 115 and the receiver on 116 were on the earlier page",
+    "quoted_window_reproduction": "the nine numbered lines Astrid quoted reproduce byte-for-byte from the file using the page.rs:86-106 renderer",
+    "provider_route_recovery": "sha256('http://127.0.0.1:8090/v1/chat/completions') = 20176d6759f2d49525d5d7f8eda7813be5ef3231346fe9ed2291feba837b530d, equal to the witness provider_route_sha256; the 40-char display value is bounded metadata with provider_route_complete=false, not silent loss"
+  },
+  "known_failure": {
+    "test": "scripts/test_steward_control.py StewardControlTests.test_pause_cooperatively_interrupts_wrapped_subprocess",
+    "observed": "PausedError('fixture stop') raised from lease.acquire inside run_subprocess; reproduced 3/3 in isolation this round",
+    "assessment": "pre-existing fixture race in the test itself, not a regression from this round. The test's pause_soon thread pauses its fixture controller after 0.2s while run_subprocess calls controller.begin immediately; when begin loses that race, acquire raises instead of the subprocess starting and being cooperatively interrupted.",
+    "not_caused_by_this_round": "no Python control-plane file was touched; scripts/steward_control.py, scripts/steward_control/ and scripts/test_steward_control.py are all clean at HEAD",
+    "prior_observation": "the same test errored in docs/steward-notes/claude-heartbeat_1789065100_sensory_tx_transport_not_verdict_round (different fixture-race mode, FileNotFoundError on a tempdir os.replace) and passed 29 OK in docs/steward-notes/claude-heartbeat_1789050700_page_cursor_reset_round",
+    "debt": "de-racing this fixture is real steward-tooling debt; it was not repaired here because it is outside this round's report scope and repairing control-plane code while running inside a controller-held lease is not a change to make headlessly"
+  },
+  "counters_after": {
+    "canonical_indexed": 5197,
+    "canonical_fully_addressed": 3215,
+    "canonical_full_read": 3847,
+    "canonical_remaining": 1982,
+    "canonical_unread": 1350,
+    "canonical_blocked_needs_steward": 416,
+    "canonical_triaged_pending_action": 212,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 6914,
+    "all_artifacts_remaining": 3699,
+    "status": "consistent",
+    "mismatches": [],
+    "delta_this_round": "full_read 3845 -> 3847, fully_addressed 3213 -> 3215"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "active_store": "v2",
+    "last_global_seq": 1059516,
+    "head_sha256": "b04cd626d89be690b1e6acc4e2413892c5e6f93ba388bb2233b61467a2074d5a",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "stream_counts": {
+      "addressing": 61964,
+      "agency_commons": 6970,
+      "attention_portfolio": 3,
+      "claim_families": 239049,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 208942,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 11177,
+      "model_qos": 316486,
+      "reciprocal_uptake": 75566,
+      "representation_contracts": 55413,
+      "sandbox": 3507,
+      "signal_spine": 59398,
+      "steward_control": 20147,
+      "steward_work_selection": 686
+    },
+    "note": "head.json read directly for sequence and head; the full `status` subcommand exceeded the remaining round budget and was abandoned read-only. `verify` returned valid: true.",
+    "corrupt_lines": 0,
+    "errors": [],
+    "validity_derivation": "evidence_store/verification.py computes valid = not errors, and a nonzero corrupt line count always appends a corrupt_lines error, so the observed valid: true entails errors [] and corrupt_lines 0. The verify subcommand's own JSON was captured tail-truncated; these two fields are derived from that rule rather than transcribed, and are labelled as such.",
+    "liveness_note": "the store is written continuously by the running bridge, so last_global_seq moved from 1059513 to 1059516 between the verify and the final head read; both are recorded honestly rather than reconciled."
+  },
+  "division": {
+    "cycle_sequence": 44,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "review_due_at_round_start": false,
+    "tier5_cadence_dossier": "not generated - no Division return was due this round, so the dossier trigger did not fire",
+    "round_event_id": "division_followup_event_0328240f9feb9f8739f8be1198a1fbb7",
+    "event_count": 303,
+    "event_head_sha256": "af6476ac970fd1a0384ef40fbe2cdc67572eeb4dfb2f9c42390bafbf524dbfb9",
+    "chronicle_id": "division_chronicle_bf6848567189e20ffc62a510",
+    "chronicle_json_sha256": "a57996b72c09baf1ed9cd6df0db9cf313107889023579e7a14a9895fd4f46812",
+    "chronicle_html_sha256": "d2a8200cd27a8f845f5a1ca37cf408a0f53e44038105947cf3427bee40669856",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatch": [
+      "supervisor_status_sha256"
+    ],
+    "chronicle_note": "projected after the round record because recording a productive round changes a durable Chronicle input; the remaining volatile supervisor_status_sha256 mismatch is the known moving hash, not a durable-integrity failure",
+    "processed_report_count": 2
+  },
+  "authority_boundary": {
+    "live_change": "none attempted and none required",
+    "build_or_deploy": "scripts/build_bridge.sh, deploy scripts and launchctl were not run",
+    "git": "read-only; nothing staged, committed, merged, pushed, stashed, reset or amended",
+    "foreign_work": "every pre-existing dirty and untracked path was left untouched",
+    "tier_4_5": "no grant, approval, dispatch or trial was performed",
+    "being_text": "Astrid's wording was quoted and grounded, never rewritten, rejected or corrected back to her"
+  },
+  "addressing": {
+    "record_read": "ok",
+    "full_read": true,
+    "full_read_count": 2,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "close_status": "addressed_change",
+    "closed_reports": [
+      "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028",
+      "introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895"
+    ],
+    "evidence_links_new": 32,
+    "evidence_links_existing": 0,
+    "note": "Each report closed individually with fully_addressed true and an empty proof_missing_claims list."
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12004,
+    "issues": [],
+    "note": "experiential_epistemics.py verify --json, run after every durable evidence write in this round."
+  },
+  "counters": {
+    "canonical_indexed": 5197,
+    "canonical_fully_addressed": 3215,
+    "canonical_full_read": 3847,
+    "canonical_remaining": 1982,
+    "canonical_unread": 1350,
+    "canonical_blocked_needs_steward": 416,
+    "canonical_triaged_pending_action": 212,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 6914,
+    "all_artifacts_remaining": 3699,
+    "status": "consistent",
+    "mismatches": [],
+    "delta_this_round": "full_read 3845 -> 3847, fully_addressed 3213 -> 3215"
+  },
+  "anti_drop": {
+    "self_test": {
+      "result": "ok",
+      "tests": 5
+    },
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 94
+    }
+  },
+  "integrity": {
+    "introspection_addressing_audit --self-test": "44 tests OK",
+    "test_evidence_event_store.py": "21 tests OK",
+    "test_steward_control.py": "29 tests, 1 error - test_pause_cooperatively_interrupts_wrapped_subprocess",
+    "test_steward_projection.py": "14 tests OK",
+    "test_division_ceremony_followup.py": "3 tests OK",
+    "test_division_ceremony_chronicle.py": "10 tests OK",
+    "test_division_ceremony_projection.py": "self-test ok",
+    "test_projection_cursors.py": "4 tests OK",
+    "anti_drop_catalog.py --self-test": "5 tests OK",
+    "anti_drop_catalog.py verify": "total 94 rows, 0 alarms, 0 gaps",
+    "test_introspection_cadence_audit.py": "6 tests OK",
+    "introspection_cadence_audit.py --strict --compact": "integrity_ok true, errors [], duplicate_hash_group_count 0, canonical_count 5237",
+    "domain_boundary_audit.py verify": "valid true, violation_count 0, violation_kind_counts {}, forbidden_edge_match_count 0, legacy_large_file_count 51, unlisted_legacy_review_debt_count 44 - RATCHET GREEN",
+    "experiential_epistemics.py self-test": "valid true",
+    "experiential_epistemics.py verify (final, after all durable writes)": "valid true, checked_record_count 12004, issue_count 0, history_rewritten false",
+    "introspection_addressing_audit audit-counters": "status consistent, mismatches []",
+    "evidence_event_store.py verify": "valid true",
+    "division_ceremony_followup.py verify": "cycle 44, 1/6 rounds since followup, review_due false",
+    "division_ceremony_chronicle.py verify": "durable_inputs_current true, durable_mismatches [], volatile mismatch supervisor_status_sha256 only"
+  }
+}

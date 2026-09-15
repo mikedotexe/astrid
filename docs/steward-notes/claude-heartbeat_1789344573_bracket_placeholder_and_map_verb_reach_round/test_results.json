@@ -1,0 +1,13 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "toolchain_note": "cargo invoked with PATH including $HOME/.cargo/bin",
+  "runs": [
+    {"command": "cargo test -p astrid-source-study --test placeholder_bracket_path_reach", "result": "ok", "passed": 2, "failed": 0},
+    {"command": "cargo test -p astrid-source-study", "result": "ok", "passed": 92, "failed": 0,
+     "per_target": {"context": 6, "in_file_producer_walk_reach": 3, "inquiries": 12, "map_topic_scope_reach": 4, "page_walk_producer_reach": 3, "path_recovery": 5, "placeholder_bracket_path_reach": 2, "producer_name_search_reach": 3, "reader": 23, "response_choice": 8, "scan_limit_catalog_reach": 4, "search_evidence": 10, "writing": 9}},
+    {"command": "cargo fmt -p astrid-source-study -- --check", "result": "clean"},
+    {"command": "cargo clippy -p astrid-source-study --test placeholder_bracket_path_reach", "result": "clean"}
+  ],
+  "first_attempt_repaired_in_run": "The initial assertion compared the candidate block's leading text instead of its first candidate line; the observed behavior was already correct (the exact spelling sorted first), so the assertion was corrected, not the source.",
+  "known_debt_not_repaired": "cargo clippy -p astrid-source-study --all-targets still errors at crates/astrid-source-study/tests/scan_limit_catalog_reach.rs:64 under clippy::arithmetic_side_effects (string + concatenation in a fixture). That untracked file belongs to an earlier round; adapter-mode boundaries preserve foreign dirty paths untouched. First safe repair: replace the + concatenation with format!/push_str, then rerun the all-targets clippy."
+}

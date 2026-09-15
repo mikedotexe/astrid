@@ -1,0 +1,137 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "Bound SHA fafc1f4a25...48a62 matches the working copy; bytes 342539..346961 are lines 8382..8492 exactly."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "fn interpretation_risk_line opens 8430, closes 8462."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "'multi-motif caution' literal in the format! at 8454-8461; terms built 8442-8453."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": ".take(4) at 8449; the cue's own matched_terms array is written unbounded at 7814."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "note": "interpretation_risk_terms 548-630 defines five labels, so .take(4) can omit one from the rendered line."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "interpretation_next 8434-8437; local dossier_next 8438-8441 reading cue key dossier_claim_next."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "Complete read of 8430-8462: only conditionals are the empty-terms branch 8456-8460 and the early return 8431-8433."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "Producer interpretation_risk_for_texts 7742-7827; empty-terms gate 7775; stance literal 7807; would_dispatch/authority_change/peer_mutation all false 7823-7825."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "fn experiment_projection at 8156; interpretation_risk_v1 built at 8047 in thread_projection and consumed at 8093-8107/8129 - never inside 8156's body."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs",
+      "note": "The only programmatic return_kind=\"hold\" is line 65, gated on paused+resume+projection_guard_pressure_terms_v1 (defined 114) over thread.current_next."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/experiment_evidence.rs",
+      "note": "normalize_dossier_stance 205-212 makes 'hold' the fallback for any unrecognized stance, not an escalation."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/continuity_control_plane.rs",
+      "note": "Sole evaluative consumer: 265-275 tests .is_some() and pushes a priority-10 CONTINUITY_SESSION_CAPTURE route; 277-300 sort/dedup/truncate(7)/primary."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c011",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789110949_page_revisit_vs_reached_round/revisit_scan.json",
+      "note": "Live scan: bytes333731..338108 delivered 3x from the identical request SELF_STUDY OPEN .../core.rs 8156; artifacts and timestamps recorded."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c012",
+      "kind": "code",
+      "target": "scripts/source_study_revisit_watch.py",
+      "note": "find_revisits groups deliveries by (source label, byte window) and attributes each to the action closing the preceding turn; read-only, being_privacy fail-closed."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c012",
+      "kind": "test",
+      "target": "scripts/source_study_revisit_watch.py",
+      "note": "test_same_request_same_page_is_a_loop plus 14 more; run: python3 scripts/source_study_revisit_watch.py self-test (15 OK)."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c012",
+      "kind": "code",
+      "target": "scripts/anti_drop_catalog.py",
+      "note": "Row source_study_revisit_watch_wired added; verify reports 96 guards, 0 alarms, 0 gaps."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c012",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming what she surfaced, what source reading established, and what shipped."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c012",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789107304",
+      "claim_id": "c013",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789110949_page_revisit_vs_reached_round/RUN_REPORT.md",
+      "note": "Authority boundary recorded: page-surface repair is a live being-facing change; not attempted, not implied by the steward-only watch."
+    }
+  ]
+}

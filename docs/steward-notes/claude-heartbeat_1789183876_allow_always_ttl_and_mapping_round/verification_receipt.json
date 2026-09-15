@@ -1,0 +1,112 @@
+{
+ "schema": "flywheel_round_verification_receipt_v1",
+ "actor": "claude-heartbeat",
+ "mode": "controller_subprocess_adapter",
+ "steward_run_id": "run_1789180098419612000_04d18eec43",
+ "preprojection_generation_id": "projection_1789180103446413000_c72c3f37eb",
+ "pause_generation": 439,
+ "stop_requested_observed": false,
+ "processed_report_count": 1,
+ "reports_closed": [
+  {
+   "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+   "status": "addressed_no_action",
+   "fully_addressed": true,
+   "proof_missing_claims": [],
+   "claim_count": 15,
+   "evidence_link_count": 22,
+   "new_link_count": 22
+  }
+ ],
+ "source_hash_match": true,
+ "division": {
+  "cycle_sequence": 45,
+  "completed_rounds_since_followup": 2,
+  "rounds_remaining_before_followup": 4,
+  "review_due_before_round": false,
+  "review_due_after_round": false,
+  "round_event_id": "division_followup_event_bad6b27ea60dfba6f6bf6f7580d649fb",
+  "event_count": 311,
+  "event_head_sha256": "0cb8406607cb3fa0602ec76739e0f4ef6b66b46fb5f2b40ce74d14d1b446fd8d",
+  "tier5_cadence_dossier": "not generated - review_due was false, so no Division return occurred and the dossier trigger did not fire",
+  "processed_report_count": 1
+ },
+ "integrity": {
+  "audit_counters": "consistent",
+  "counter_mismatches": [],
+  "anti_drop": {
+   "total": 99,
+   "alarms": 0,
+   "gaps": 0
+  },
+  "domain_boundary_ratchet": {
+   "valid": true,
+   "violation_count": 0,
+   "state": "green"
+  },
+  "experiential_epistemics": {
+   "valid": true,
+   "checked_record_count": 12082,
+   "issue_count": 0,
+   "history_rewritten": false
+  },
+  "cadence_audit": {
+   "integrity_ok": true,
+   "errors": []
+  },
+  "evidence_event_store_verify": "not completed - still running when the child budget expired; not claimed as passed"
+ },
+ "authority": {
+  "live_change_made": false,
+  "deploy_or_restart": "not required and not attempted",
+  "git_operations": "none - git was read-only for this actor",
+  "index_clean": true,
+  "foreign_work_untouched": true,
+  "grants_approval": false,
+  "live_eligible_now": false
+ },
+ "controller": {
+  "run_id": "run_1789180098419612000_04d18eec43",
+  "preprojection_generation_id": "projection_1789180103446413000_c72c3f37eb",
+  "preprojection_status": "passed",
+  "pause_generation": 439,
+  "stop_requested_observed": false
+ },
+ "addressing": {
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "full_read": true,
+  "full_read_count": 1,
+  "claim_count": 15,
+  "evidence_link_count": 22,
+  "status": "addressed_no_action"
+ },
+ "epistemic_lint": {
+  "valid": true,
+  "issue_count": 0,
+  "history_rewritten": false,
+  "checked_record_count": 12082
+ },
+ "counters": {
+  "status": "consistent",
+  "mismatches": []
+ },
+ "anti_drop": {
+  "verify": {
+   "alarms": 0,
+   "gaps": 0,
+   "total": 99
+  }
+ },
+ "evidence_event_store": {
+  "valid": null,
+  "corrupt_lines": null,
+  "errors": null,
+  "state": "NOT COMPLETED - verify was still running when the child budget expired; not claimed as passed"
+ },
+ "round_completion": {
+  "marker_written": false,
+  "reason": "evidence_event_store verify did not finish inside the child budget, so the completion contract could not be honestly satisfied. Report work itself is complete: 1 report closed with zero proof gaps, Division round recorded, packet written.",
+  "exit": "nonzero"
+ }
+}

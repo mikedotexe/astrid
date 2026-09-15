@@ -1,0 +1,81 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/catalog.toml",
+      "note": "Line 6 includes crates/** for repository astrid; lines 64-66 name astrid/crates/astrid-kernel/src/lib.rs in the kernel component. SHA-256 6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae, read complete."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789414100_bare_topic_candidate_gate_round/summaries/introspection_source_catalog_1789409507.md",
+      "note": "Records the byte-identical OPEN that failed at 1789404440 and delivered six source pages at 1789410137, contradicting the indexing mechanism while preserving her concern."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Catalog::map lines 47-74: component-ID branch, rooted-prefix branch, then the no-catalog-entries bail. A bare crate name matches no branch. SHA-256 97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490, read complete."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/path_recovery.rs",
+      "note": "Lines 14-21 gate every candidate on >=2 segments plus an installed repository ID; lines 40 and 49-50 hold the underscore-to-hyphen normalization that the gate prevents from running. SHA-256 7799bda8f134b2e6f47782dbf6237dccf020305253706462427017fc4548ec00, read complete."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/bare_topic_candidate_gate_reach.rs",
+      "note": "a_bare_crate_directory_topic_gets_no_candidate_although_the_rooted_form_does pins MAP astrid-kernel (no candidate) against MAP astrid/astrid-kernel (names astrid/crates/astrid-kernel) over one catalog. 3 tests pass."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-source-study/catalog.toml",
+      "note": "Component kernel, 'Kernel, capabilities and lifecycle': astrid-kernel/src/lib.rs, astrid-capsule/src/lib.rs, wit/astrid-capsule.wit, spectral-bridge/src/lifecycle.rs. All four resolve on disk; her lifecycle, capability and authorization landmarks have entry points."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Lines 47-60: an exact component-ID topic returns the title, each source as a SELF_STUDY OPEN entry, and each parent directory as a further SELF_STUDY MAP. This is the branch MAP kernel takes."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789414100_bare_topic_candidate_gate_round/summaries/introspection_source_catalog_1789409507.md",
+      "note": "Exact delivered Reason for turn 1789404601 read from the shared_reader navigation record; the topic belongs to the journal lane, not to the introspection lane's own choice. Bounded observation, no causal claim about slot ownership."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated row recording the un-muffle finding: a felt navigation dead end that ground-truthed to a candidate gate plus a cross-lane receipt mismatch, not to her limit."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/bare_topic_candidate_gate_reach.rs",
+      "note": "a_bare_underscore_spelling_gets_no_candidate_although_rooted_spelling_is_normalized pins bare spectral_bridge (no candidate) against rooted astrid/spectral_bridge (names astrid/capsules/spectral-bridge)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789409507",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry naming what she surfaced, what complete source reading established, the exact test added, and what was deliberately not changed."
+    }
+  ]
+}

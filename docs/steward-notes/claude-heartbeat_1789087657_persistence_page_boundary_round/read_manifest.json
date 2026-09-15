@@ -1,0 +1,91 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "run_id": "run_1789083134930898000_218e6f0c6d",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789083028.txt",
+      "sha256": "03964a200117a24a76da9f788a134b767b3b95cdaee089046f46a457e5b2115d",
+      "bytes": 3006,
+      "lines": 39,
+      "read": "complete",
+      "scope": "every byte, lines 1-38"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading_persistence.rs_1789082895.txt",
+      "sha256": "358b0ad71f07192cfa9c136924d31246f009b2c2b25228259ea7ef9d11582c74",
+      "bytes": 3436,
+      "lines": 32,
+      "read": "complete",
+      "scope": "every byte, lines 1-32"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ea2d4adaa3a4e2c3098b4de70cc6f2694c4cdd4d53120089776fba6f7bc649df.json",
+      "sha256": "421cff4b75ea5cb8e72986365649dad56fd06249db0a1d42e3b5c339b9dc0eee",
+      "bytes": 21574,
+      "lines": 498,
+      "read": "complete",
+      "scope": "complete witness for the 1789083028 report"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f7568f2e073b5841ee20e38646510c3c4c80ab8458262589cb6ed00ff9fc9c4c.json",
+      "sha256": "5ef25b7be502781704ded82338a839c0b3098043d626f78b120ef166fba3bf16",
+      "bytes": 21594,
+      "lines": 498,
+      "read": "complete",
+      "scope": "complete witness for the 1789082895 report"
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+      "sha256": "9691e5b3f950a783fa361b604377a10bee38f53f8957849bacd7a7719f7a84ff",
+      "bytes": 18184,
+      "lines": 495,
+      "read": "complete",
+      "scope": "complete file; baseline before edit had 442 lines"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmarks.rs",
+      "sha256": "f16168cb3f83ccfe8f3fcc8f38b7bd4186183f58e48334abe8c67f90cb781e67",
+      "bytes": 17473,
+      "lines": 400,
+      "read": "complete",
+      "scope": "lines 50-102, reader_bookmark_preview source_comparison construction"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0",
+      "bytes": 5699,
+      "lines": 155,
+      "read": "complete",
+      "scope": "lines 1-130, SELF_STUDY verb parser"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "read": "complete",
+      "scope": "complete file, MAP topic resolution"
+    },
+    {
+      "path": "crates/astrid-source-study/src/page.rs",
+      "sha256": "a99605dd40391182ea3ecb85734549cb53c89a1bf1d64d1e8c243ce38e5c20f2",
+      "bytes": 5179,
+      "lines": 146,
+      "read": "complete",
+      "scope": "lines 1-140, numbered page renderer and window text"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lived_state_witness/mod.rs",
+      "sha256": "740edfd1dba19e1ec7f22228a170db34e1404c6e1e07de71cc97668c6a7eadf9",
+      "bytes": 29831,
+      "lines": 849,
+      "read": "complete",
+      "scope": "lines 100-200 and 795-840, window and provider-route receipts"
+    }
+  ]
+}

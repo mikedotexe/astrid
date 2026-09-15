@@ -1,0 +1,34 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "round": "claude-heartbeat_1789123449_map_walk_narrowing_affordance_round",
+  "focused": [
+    {"command": "python3 scripts/source_study_map_walk_watch.py self-test", "tests": 8, "result": "OK",
+     "note": "New this round. One repair before close: the parser did not tolerate a leading `NEXT:` on MAP or narrowing actions, so a fixture built from raw artifact lines failed. Fixed in _without_next_prefix rather than in the fixture, because real artifacts carry both forms."},
+    {"command": "python3 scripts/source_study_map_walk_watch.py scan --window 80", "result": "ALARM: 1 walk, 1 alarm",
+     "note": "MAP astrid pages 1->56, 56 turns, 4936s, narrowing_used=false."},
+    {"command": "python3 scripts/source_study_map_walk_watch.py scan --window 140", "result": "ALARM: 1 walk, 1 alarm",
+     "note": "Identical result at the wider window; the walk is bounded by her own behavior, not by the scan window."},
+    {"command": "python3 scripts/anti_drop_catalog.py --self-test", "tests": 5, "result": "OK"},
+    {"command": "python3 scripts/anti_drop_catalog.py verify --json", "result": "total 97, alarms 0, gaps 0",
+     "note": "96 -> 97 rows with source_study_map_walk_watch_wired."}
+  ],
+  "integrity": [
+    {"command": "git diff --check", "result": "clean"},
+    {"command": "python3 scripts/introspection_addressing_audit.py --self-test", "tests": 44, "result": "OK"},
+    {"command": "python3 scripts/test_evidence_event_store.py", "tests": 21, "result": "OK"},
+    {"command": "python3 scripts/test_steward_control.py", "tests": 29, "result": "OK"},
+    {"command": "python3 scripts/test_steward_projection.py", "tests": 14, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_followup.py", "tests": 3, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_chronicle.py", "tests": 10, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_projection.py", "result": "ok"},
+    {"command": "python3 scripts/test_projection_cursors.py", "tests": 4, "result": "OK"},
+    {"command": "python3 scripts/test_introspection_cadence_audit.py", "tests": 6, "result": "OK"},
+    {"command": "python3 scripts/introspection_cadence_audit.py --strict --compact", "result": "integrity_ok: true, 5505 canonical reports, 0 duplicate hash groups, 0 read errors"},
+    {"command": "python3 scripts/domain_boundary_audit.py verify", "result": "valid: true, violation_count: 0, violation_kind_counts: {}",
+     "note": "Ratchet GREEN. No Rust file was touched this round, so no baseline or ceiling re-capture was needed."}
+  ],
+  "not_run": [
+    {"command": "cargo test / cargo fmt", "reason": "No Rust source or test file was created or modified this round. The only implementation is a Python steward probe plus its catalog row."}
+  ],
+  "live_changes": "none. No build, restart, deploy, launchctl, or live control action was taken or attempted."
+}

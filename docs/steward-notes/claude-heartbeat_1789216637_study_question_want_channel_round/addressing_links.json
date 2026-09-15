@@ -1,0 +1,144 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "Line 112 `fn continuity_afterimage_signal_score(text: &str) -> usize`; body 113-118 is an unweighted term count."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "Line 413 comparison verbatim inside the afterimage_items filter 409-416."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/text.rs",
+      "note": "CONTINUITY_TRAJECTORY_AFTERIMAGE_LIMIT = 4 and MIN_SCORE = 2 at lines 44-45."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "Line 439 binding; 440-442 show it gating the faint-residue band at exactly one afterimage term."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "find() at 114-121 runs search(query, false) once and titles the page `Literal source search: {query}`."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/source_search.rs",
+      "note": "Single `query: &str` throughout; exact=false matches line.contains(query), so a second symbol cannot appear."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "Line 120 `fn continuity_faint_residue_signal_score(text: &str) -> usize` \u2014 eight lines below 112, same declaration block."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "scripts/symbol_locality_watch.py",
+      "note": "test_faint_residue_scorer_is_eight_lines_below_its_sibling pins continuity.rs:120 against tracked production source."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/text.rs",
+      "note": "CONTINUITY_FAINT_RESIDUE_SIGNAL_TERMS 252-266 (13 trace/absence terms) vs the persistence table ending 251; LIMIT 2 at 49."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "Weight ladders 128-135 (4 rungs) vs 137-142 (2 rungs); residue render 446-462 reuses compact_continuity_afterimage."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/runtime/continuity.rs",
+      "note": "No decay arithmetic: ladders are rank-selected strings 128-142; residue prints literal score=1/{MIN_SCORE} at 452-454. The file's real arithmetic (598-641, 163-224) sizes byte budgets, not scores."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "scripts/symbol_locality_watch.py",
+      "note": "stated_wants now reads the STUDY_QUESTION channel with a take(2) cap mirroring notebook.rs:88-100, labels each want's origin, and reports reached_symbols."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "scripts/symbol_locality_watch.py",
+      "note": "Four new extraction regressions plus two real-corpus ones; self-test 22 passed (was 16)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789216637_study_question_want_channel_round/RUN_REPORT.md",
+      "note": "Before/after live scan numbers: window 12 went 0 -> 2 wanted symbols, both reached; window 200 gained 6 question-channel wants."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/notebook.rs",
+      "note": "study_choices 32-100 offered `SELF_STUDY RELATE continuity_faint_residue_signal_score` in this very turn's prompt; append_lookup_choice 289-303 picks that branch because the header names the other symbol."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/page.rs",
+      "note": "read_with_budget 64-110 starts the page at the requested line and fills the allowance: OPEN 112 delivers 112..235, which contains line 120."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c009",
+      "kind": "test",
+      "target": "scripts/symbol_locality_watch.py",
+      "note": "test_the_reported_question_want_is_reached_by_the_page_she_chose asserts the 112..235 span contains 120 and both wants classify `reached`."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789216637_study_question_want_channel_round/summaries/introspection_source_catalog_1789213641.md",
+      "note": "Full reading summary: three exact citations, the confirmed position hypothesis, her question answered from source, and the preserved contradiction."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the verification, the preserved contradiction, and the watch fix."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789213641",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for the report that caused the watch extension."
+    }
+  ]
+}

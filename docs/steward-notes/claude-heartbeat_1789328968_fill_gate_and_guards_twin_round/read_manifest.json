@@ -1,0 +1,52 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "steward_run_id": "run_1789324261072515000_fe368aa7f9",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049.txt",
+      "sha256": "46085683f2f232137d89ca5824af8f025aaa1e7d3fa6d777039a9993c772c0f6",
+      "bytes": 2357,
+      "read": "complete",
+      "scope": "every byte",
+      "lines_content": 24,
+      "lines_displayed_wc": 23
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789323636.txt",
+      "sha256": "b851e482d592f11fe3243082f03384ac923a8c686824c4c637ac17179a0a3dac",
+      "bytes": 2701,
+      "read": "complete",
+      "scope": "every byte",
+      "lines_content": 28,
+      "lines_displayed_wc": 27
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_54021cd92652747d1500c43bb3773846193a64d68b9999048490dabb0089989c.json",
+      "sha256": "998a65ccd2faef7f21c1083341f80f38e8b5ade56da379a9895136f05b37d313",
+      "bytes": 21542,
+      "read": "complete",
+      "scope": "every byte",
+      "lines_content": 498,
+      "lines_displayed_wc": 498
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_d811026f12ce4e773ee319e87cc44d6baefbe0126936b3ebbe8abeb713d1b19a.json",
+      "sha256": "a130287302393543135adadf23637a0bef0d4a4e7c82501f8233c5cebd239bb5",
+      "bytes": 21564,
+      "read": "complete",
+      "scope": "every byte",
+      "lines_content": 498,
+      "lines_displayed_wc": 498
+    }
+  ],
+  "queue_evidence": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789328968_fill_gate_and_guards_twin_round/family_scan.json",
+      "note": "introspection_family_scan over the canonical next --limit 40 queue; 40 families, 0 batchable, so single-report processing"
+    }
+  ],
+  "line_count_note": "lines_content counts the final unterminated line; lines_displayed_wc is `wc -l` (newline count). The two introspection files end without a trailing newline."
+}

@@ -1,0 +1,122 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "recorded_by": "claude-heartbeat",
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+      "sha256": "efc3ee3a7c11752405dd3f736c5618b88ed14b65cad202c1a1d36a884c047ad1",
+      "bytes": 165334,
+      "lines": 4424,
+      "read": "scoped",
+      "scope": "scoped: 1-60, 100-175, 2110-2125; plus exhaustive grep for struct/include/mod declarations"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "sha256": "aa1bce2e4d5379db6c09120f35c4680ecae66f2cb2dcfca2bd78ad4291f06a9e",
+      "bytes": 27880,
+      "lines": 651,
+      "read": "complete",
+      "scope": "complete: 1-651"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "sha256": "887e9b2214be8ed29b3840466a22704735feb17cef72d73ea90bac39d31cf70c",
+      "bytes": 36711,
+      "lines": 830,
+      "read": "scoped",
+      "scope": "scoped: 300-400; plus exhaustive fill_pct occurrence list (318, 321, 328, 396)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/command_dispatch.rs",
+      "sha256": "376d8be0f04680871a288fe68cdf39efb37eabdd8b3446db5b7915e697c1894d",
+      "bytes": 26669,
+      "lines": 668,
+      "read": "scoped",
+      "scope": "scoped: 640-680"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/spectral_projection.rs",
+      "sha256": "22170ae717c62547097bcd32fa01ef87670154a7ed6f0169a5e27237595f1cba",
+      "bytes": 11376,
+      "lines": 345,
+      "read": "scoped",
+      "scope": "scoped: 1-40"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types/schema/telemetry.rs",
+      "sha256": "767f3f081e192d4a6785b49d8f866fb0a0865c9b62d8d376e2c0874f54b06c12",
+      "bytes": 38778,
+      "lines": 852,
+      "read": "scoped",
+      "scope": "scoped: 335-343 (fn fill_pct)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "sha256": "a56cad35914aa66d274127d705d74647478362eaf5a055ab158edb3aa2aaf872",
+      "bytes": 39773,
+      "lines": 1041,
+      "read": "scoped",
+      "scope": "scoped: 640-654 (resolve_fill_pct), 1031-1041 (estimate_fill_pct)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+      "sha256": "27c04bc9ee8212bfef5e7f5d20a8778540baab09b170d33549a60d26e15071a4",
+      "bytes": 307684,
+      "lines": 4962,
+      "read": "scoped",
+      "scope": "scoped: 425-435, 4856-4864, 4911-4919; plus exhaustive fill_pct occurrence list"
+    },
+    {
+      "path": "crates/astrid-source-study/src/source_search.rs",
+      "sha256": "f0900f1a4dda8e5b058bf7fa7d65b541a532e51e2b9b07c152d349e085a3de25",
+      "bytes": 13170,
+      "lines": 352,
+      "read": "complete",
+      "scope": "complete: 1-352"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "read": "complete",
+      "scope": "complete: 1-163"
+    },
+    {
+      "path": "crates/astrid-source-study/src/relationships.rs",
+      "sha256": "a41a1c6a33ba9d7049dfee1ad70c964cdc3a704f4f7a41b457763d872c881d22",
+      "bytes": 1107,
+      "lines": 30,
+      "read": "complete",
+      "scope": "complete: 1-30"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0",
+      "bytes": 5699,
+      "lines": 155,
+      "read": "complete",
+      "scope": "complete: 1-155"
+    },
+    {
+      "path": "crates/astrid-source-study/catalog.toml",
+      "sha256": "6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae",
+      "bytes": 3756,
+      "lines": 71,
+      "read": "complete",
+      "scope": "complete: 1-71"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/search_evidence.rs",
+      "sha256": "0a7b7f519a78b164d1f94e73ee5eb8dac68c0da9e8bb43776ed2478b0bc9d2a2",
+      "bytes": 16298,
+      "lines": 449,
+      "read": "complete",
+      "scope": "complete: read fully before edit (350 lines), edited and reread (449 lines after rustfmt)"
+    }
+  ],
+  "notes": [
+    "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs read end to end: it contains zero `use` statements and no local definition, because next_action/mod.rs:2121 textually includes it.",
+    "crates/astrid-source-study/tests/search_evidence.rs is the only file this round modified; crates/astrid-source-study/tests/path_recovery.rs was already dirty from the 1789228022 round and its hash 2c5ec57d29e269e32f418100cfacc36addce45ba4367d6110c57de49c6b39343 is unchanged after `cargo fmt -p astrid-source-study`."
+  ]
+}

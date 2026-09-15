@@ -1,0 +1,23 @@
+{
+  "schema": "flywheel_test_results.v1",
+  "suites": [
+    {"name": "introspection_addressing_audit --self-test", "tests": 44, "result": "OK"},
+    {"name": "test_evidence_event_store.py", "tests": 21, "result": "OK"},
+    {"name": "test_steward_control.py", "tests": 29, "result": "FAILED (errors=1)", "note": "test_pause_cooperatively_interrupts_wrapped_subprocess errors inside steward_control/executor.py:23 at controller.begin() while this adapter run holds the lease. Pre-existing/environment-conditioned: no file this round touches steward_control. Recorded as debt, not repaired headlessly."},
+    {"name": "test_steward_projection.py", "tests": 14, "result": "OK"},
+    {"name": "test_division_ceremony_followup.py", "tests": 3, "result": "OK"},
+    {"name": "test_division_ceremony_chronicle.py", "tests": 10, "result": "OK"},
+    {"name": "test_division_ceremony_projection.py", "tests": 0, "result": "rc=0"},
+    {"name": "test_projection_cursors.py", "tests": 4, "result": "OK"},
+    {"name": "test_introspection_cadence_audit.py", "tests": 6, "result": "OK"},
+    {"name": "anti_drop_catalog.py --self-test", "tests": 5, "result": "OK"},
+    {"name": "anti_drop_catalog.py verify", "result": "92 guards, 0 alarms, 0 gaps"},
+    {"name": "phantom_symbol_watch.py self-test", "tests": 13, "result": "OK", "note": "New this round. Two intermediate failures were found and fixed: a leading-run rule that went blind the moment she broke out, and a self-reference bug where the tool's own docstring made its phantom classify as present_in_source."},
+    {"name": "experiential_epistemics.py self-test --json", "tests": 2, "result": "OK"},
+    {"name": "experiential_epistemics.py verify --json", "result": "valid=true, issue_count=0"},
+    {"name": "domain_boundary_audit.py verify", "result": "valid=true, violation_count=0 (ratchet GREEN)", "note": "unlisted_legacy_review_debt_count=44 carried, unchanged by this round."},
+    {"name": "introspection_cadence_audit.py --strict --compact", "result": "rc=0, integrity_ok=true, errors=[]"},
+    {"name": "introspection_addressing_audit.py audit-counters --json", "result": "consistent, mismatches=[]"}
+  ],
+  "live_change": "none attempted or required; no build, deploy, launchctl or restart"
+}

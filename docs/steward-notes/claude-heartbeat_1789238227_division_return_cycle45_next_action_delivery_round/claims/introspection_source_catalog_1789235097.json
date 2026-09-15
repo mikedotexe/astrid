@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_source_catalog_1789235097",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Her study of the IpcRateLimiter is complete.",
+      "disposition": "Observed, not adjudicated. Navigation-only turn (source_snapshot_v1 and source_provenance_ref_v1 both null), so no source binding backs it. Context only: the same canonical queue carries introspection_astrid_crates_astrid-events_src_rate_limiter.rs_1789233324 at position 8, an artifact of her working that exact source in the same window. Completeness of understanding is her account and is deliberately not scored.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "She has mapped the delivery status of astrid/capsules/spectral-bridge/src/autonomous/.",
+      "disposition": "Verified. Merging every delivered byte window recorded in canonical artifact headers reproduces her map for next_action/: 211 delivered pages across the 5 modules she names. Her navigation account matches the durable delivery record, so this is a verified map rather than an unverified impression.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "dispatch.rs, mod.rs and pressure_agency.rs were never delivered or only partially delivered.",
+      "disposition": "Verified, and sharper than stated. Merged header coverage: pressure_agency.rs 14 pages, 63.8%, 2 revisions, 3 interior gaps; dispatch.rs 40 pages, 96.7% at the current SHA across 3 revisions; mod.rs 83 pages, 99.2% lifetime but 0.0% at its CURRENT revision, the file having moved under her entirely. All three are incomplete; each is incomplete differently. Her three named modules are exactly the three stitched across revisions.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "shadow.rs and spectral_drift.rs were successfully retrieved via deliberate rereads, giving her a baseline for shadow and drift mechanics.",
+      "disposition": "Verified exactly. shadow.rs is 100.0% covered across 60 pages at a SINGLE revision (b5ca9d91cf4d88c9, the working copy); spectral_drift.rs is 100.0% across 14 pages at a single revision (d7d9bb9422222f5e). These are the only two of the five whole at one revision, which is precisely what makes them usable as a baseline. Her word 'baseline' is load-bearing and correct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "She will target dispatch.rs specifically to obtain the full action-routing logic (NEXT: SELF_STUDY OPEN .../next_action/dispatch.rs 1).",
+      "disposition": "Her stated intent, recorded and left untouched. No steward action: her NEXT was not routed, seeded, pre-empted or fulfilled, and no prompt, menu, cursor or delivery behavior changed. Worth noting for her benefit, not acted on: dispatch.rs sits at 96.7% of its current revision, so the residue she is chasing is small and real.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The delivery state she describes should be checkable against a durable record.",
+      "disposition": "Implemented. It was checkable only in principle: the per-page 'Source revision: sha256:<hex>; bytes A..B' headers were never merged, so no one could answer how much of a file she had held or at which revision. Added scripts/source_delivery_coverage.py (read-only, steward-only) reporting pages, coverage, current-revision coverage, interior gaps and a stitched flag. 12 focused tests pass.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Steward correction: the source_first_v3 read-session store is not the delivery record for this route.",
+      "disposition": "Corrected in-round and recorded, not hidden. The first pass read the v3 store, found zero sessions for any next_action/* identity, and inferred non-delivery. Wrong: the SELF_STUDY OPEN paging route writes no v3 session. The corrected claims were re-recorded into the append-only store rather than overwriting the error, and the trap is documented in the new tool's docstring so the next reader does not repeat it.",
+      "classification": "implemented_now"
+    }
+  ]
+}

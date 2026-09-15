@@ -1,0 +1,61 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049",
+  "report_sha256": "46085683f2f232137d89ca5824af8f025aaa1e7d3fa6d777039a9993c772c0f6",
+  "witness_id": "lsw_54021cd92652747d1500c43bb3773846193a64d68b9999048490dabb0089989c",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+    "report_sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+    "working_copy_sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+    "match": true
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The paged window (lines 334-485) maps semantic patterns but contains no arithmetic comparison of fill_pct.",
+      "disposition": "Verified against the complete 834-line/23174-byte file at the report-bound SHA 94ddbd3f. `fill_pct` occurs 0 times anywhere in runtime/guards.rs, not only in her window. The single numeric comparison in the whole file is `>= 2` at line 714 (research_budget_duplicate_count review trigger). Her read of the window is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Lines 334-463 are a large dictionary of action-type terms (anti-lambda1, convergence, spectral-ripple, cascade-shaping).",
+      "disposition": "Verified: `liveish_pressure_terms` spans lines 267-463 and its pattern table carries exactly those labels; line 465 begins `constraint_release_language_terms`, so 463 is the correct end of the table. Her boundary is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Lines 355-371 assign is_liveish_projection, is_guarded_sovereignty_alias, is_guarded_cascade_or_shadow_alias and is_guarded_embedded_status via function calls rather than a fill_pct constant.",
+      "disposition": "Mechanism verified; locus is a different file. In runtime/guards.rs 355-371 are pattern-table entries (convergence, directed-pressure, spectral-ripple). All four flags are assigned within lines 355-371 of the same-basename sibling action_continuity/guards.rs (SHA 887e9b22): is_liveish_projection = !matched_terms.is_empty() (355), is_guarded_embedded_status = !embedded_status_terms.is_empty() (371). Function-driven, not a fill_pct constant, exactly as she says.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Lines 465-485 define constraint_release_language_terms, which checks for keywords like lambda, spectral and reservoir.",
+      "disposition": "Verified exactly: `constraint_release_language_terms` starts at line 465 and its has_context list is constraint/lambda/lambda-glyph/spectral/eigen/mode/memory card/pressure/reservoir/braid. Her window ends mid-function, as she states.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Her previous notes correctly identified that fill_pct is passed into spectral_state around line 396.",
+      "disposition": "Verified, in the sibling file: action_continuity/guards.rs:396 is `let state = spectral_state(fill_pct, telemetry);`. The line number is exact for that file; runtime/guards.rs:396 is a pattern-table entry. Same-basename carry-over, not a confabulated number.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The fill_pct gate is likely inside the helper functions that set the flags, or further down in this file.",
+      "disposition": "Contradicted by complete source, and her underlying question is answerable. No fill_pct gate exists in either guards.rs. The flags are term-presence only; the budget limit is row presence via active_research_budget_from_rows, not occupancy; the only fill arithmetic in the path is authority_safety_snapshot (runtime/authority.rs:143-166), which labels the recorded row green/yellow/orange/red at 75/85/92 and sets outbound_allowed without touching the decision. Pages 486-834 contain no fill_pct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "STUDY_QUESTION: what constant or formula compares fill_pct against the allowed budget limit to trigger is_liveish_projection or is_guarded_embedded_status?",
+      "disposition": "Answered and pinned executably. New regression research_budget_guard_flags_are_fill_pct_invariant holds reason and matched_terms constant for liveish, embedded-status and read-only actions at fill 0/14/68/75/85/92 while asserting the recorded safety_snapshot.level does move green->yellow->orange->red. Before this round every research-budget test passed fill_pct 68.0, so fill-invariance was untested. The answer: no such constant exists.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Because the page ends as constraint_release_language_terms begins, she must continue to find the budget assessment logic.",
+      "disposition": "Observed, no change. Continuing this file cannot answer it: lines 486-834 hold interpretation_risk_terms, fingerprinting and scaffold helpers, zero fill_pct. Her page header gives bytes 8997..13052 with no total; the denominator does exist (progress.rs::label renders `delivered bytes .. of {bytes}` on navigation/RESUME lines) and the witness records total_file_lines 834, so no signal is dropped. Adding it to the continue-turn header is a being-facing prompt change needing approval and deploy.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

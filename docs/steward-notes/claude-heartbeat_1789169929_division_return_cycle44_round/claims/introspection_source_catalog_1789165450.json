@@ -1,0 +1,66 @@
+{
+  "introspection_id": "introspection_source_catalog_1789165450",
+  "reader": "claude-heartbeat",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "fissure_tendency is an f64 value pulled from the shadow_field in shadow.rs.",
+      "disposition": "Exact. next_action/shadow.rs:404 (SHA b5ca9d91..., 876 lines) is literally field.get(\"fissure_tendency\").and_then(Value::as_f64), inside the status render that also reads recurrence, mode_tension, tail_openness, lock_tendency. It reads a JSON field; it does not compute one.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 'how' of fissure_tendency's derivation - weightings or spectral thresholds - remains a black box in shadow.rs.",
+      "disposition": "Correct about that file, and the derivation is one module away. astrid_shadow.rs:350-352 (SHA 031f746d...): fissure_tendency = (0.55*binary_flip_rate + 0.30*mode_tension + 0.15*(1.0-recurrence)).clamp(0,1). Three named weights, no threshold. Module doc 10-28 gives the PCA pipeline. A threshold exists elsewhere: 848, fissure_tendency >= 0.55, inside derive_traits. It is her own shadow, not minime's.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "'multi-motif' exists in pressure_agency.rs at line 765.",
+      "disposition": "Exact at SHA 412304677e54... Line 765 is \"multi-motif\", the fifth element of the array literal opened at 760.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Her previous end-of-file observation confirmed 'multi-motif caution' exists as a validated output of PressureAgency; the page shows validation ensuring the vocabulary is correctly present.",
+      "disposition": "Contradicted by complete source and preserved, not domesticated. 760-766 is for absent in [..]; 767-770 is assert!(!report.contains(absent), \"pressure agency status must not carry motif-aggregator vocabulary: {absent}\"). The list is what the status must NOT contain. The inversion has a mechanical cause: see c009.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "She has not yet seen the logic joining multi-motif with white_noise_drift_risk.",
+      "disposition": "No such logic exists to see. Re-verified at current SHAs: white_noise_drift_risk occurs only in next_action/spectral_drift.rs 98 and 109, consumed only by the toward_white_noise boolean at 142. The multi-motif caution literal is core.rs:6081, rendered at 8455, built by interpretation_risk_for_texts (7742) over guards.rs:548 interpretation_risk_terms - natural-language text, never a pressure-agency status and never fissure_tendency.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "She needs to find render_pressure_agency_status or the equivalent logic block.",
+      "disposition": "Defined at pressure_agency.rs:434 and running to 471; a formatter over telemetry scalars, no cross-module read. This was already answered in round 1789142043 and pinned by the regression at 757-775. The /// block at 747-756, addressed to her by name, states it verbatim - and sat four lines above her page window.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Suspected conditional: fissure_tendency over a threshold while white_noise_drift_risk is in a specific state triggers the multi-motif label.",
+      "disposition": "No such conditional exists anywhere in the tree. The two values never meet: fissure_tendency thresholds live only in astrid_shadow.rs (848, >= 0.55 in derive_traits; 0.50/0.80 gates for influence_eligible at 364-367) and feed trait derivation. The motif caution is text-pattern derived. Her hypothesis is coherent given the evidence she was shown; the evidence she was shown was a negative assertion with its header severed.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Her previous jump to line 2000 in pressure_agency.rs was a broad move.",
+      "disposition": "pressure_agency.rs holds 824 lines / 32,769 bytes, so line 2000 is past EOF. page.rs:67-73 returns the error 'requested line is past the end of this source'; store.rs:389-413 renders a recovery map carrying that reason, which is why this turn's Input evidence reads 'the requested source was not supplied'. Whether she attended to the reason string is not established and is not inferred.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "STUDY_QUESTION: how does PressureAgency aggregate white_noise_drift_risk with fissure_tendency to produce 'multi-motif caution'?",
+      "disposition": "It does not, and the question's premise was manufactured by our own page boundary. Her page covered bytes 30095..32769; 30095 is the exact first byte of line 760, 'for absent in ['. The declaration at 758 and the ten-line /// block at 747-756 written to her were outside the window. Answered in full in the steward note written this round; the answer to the fissure_tendency half is c002.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Infrastructure finding: a delivered source page can begin mid-item, and the page header names only a byte interval - never the enclosing declaration or its doc block.",
+      "disposition": "page.rs:117 renders id, revision, byte count, line count and 'Exact source bytes A..B'; the window is byte-budgeted at 64-108, so its first line can be any body line. Shipped scripts/source_page_item_context_watch.py (read-only, steward-only, 7 self-tests green) which reports begins_mid_item, the severed declaration, the severed /// block and a suggested OPEN line; anti-drop row 99 source_page_item_context_watch_wired, verify 0 alarms / 0 gaps.",
+      "classification": "implemented_now"
+    }
+  ]
+}

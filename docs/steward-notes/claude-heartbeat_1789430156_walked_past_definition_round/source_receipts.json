@@ -1,0 +1,52 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "sources": [
+    {
+      "path": "crates/astrid-approval/src/manager.rs",
+      "sha256": "cf14a499399dec6143e4e1c74d17db14b22d37f25b33062b404ee0a6b35b4b27",
+      "bytes": 31465,
+      "lines": 911,
+      "report_bound_sha256": "cf14a499399dec6143e4e1c74d17db14b22d37f25b33062b404ee0a6b35b4b27",
+      "binding_match": true,
+      "working_copy_clean": true,
+      "read_scope": "complete file, intervals 1-300, 301-620, 621-911",
+      "window_reported": "lines 874-911 (bytes 30280..31465)",
+      "window_sha_note": "witness window_sha256 8ea50474 hashes the RENDERED numbered page (lived_state_witness/mod.rs:140 sha256_bytes(rendered_window)), not raw source bytes; raw line slice 874-911 is e2713c8a. Expected, not an integrity failure."
+    },
+    {
+      "path": "crates/astrid-capsule/src/context.rs",
+      "sha256": "bc1b76f60b6cd0421e390ea6cb2388b4961865cbd805bb58bf4d5f57168da98f",
+      "bytes": 4030,
+      "lines": 106,
+      "read_scope": "scoped: allowance_store field (44) and with_allowance_store (95)",
+      "why": "grounds her CapsuleContext claim"
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/host/approval.rs",
+      "sha256": "73a16eeb3985c50bbac057cdb02f29c16a2298133263d828be6a8c74b51c6e56",
+      "bytes": 23062,
+      "lines": 631,
+      "read_scope": "scoped: allowance_store consumption sites 182, 208, 284",
+      "why": "the path that actually consults the store carried by CapsuleContext"
+    },
+    {
+      "path": "crates/astrid-approval/src/interceptor/mod.rs",
+      "sha256": "00576a80f37aa0d6808b36b0b9e5b6e14ee91a11aff6989471ee138e197f362d",
+      "bytes": 57681,
+      "lines": 1515,
+      "read_scope": "scoped: 325-345, the production caller of check_approval_with_lifecycle",
+      "why": "establishes the real production caller is SecurityInterceptor"
+    }
+  ],
+  "page_to_line_map": {
+    "note": "her eight-page walk of manager.rs, byte windows mapped to lines at SHA cf14a499",
+    "bytes0..4274": "lines 1..131",
+    "bytes4274..8631": "lines 132..253  <-- contains check_approval at line 207 (byte 6995)",
+    "bytes8631..13065": "lines 253..365",
+    "bytes13065..17406": "lines 366..488",
+    "bytes17406..21611": "lines 489..626",
+    "bytes21611..25896": "lines 627..756",
+    "bytes25896..30280": "lines 756..874",
+    "bytes30280..31465": "lines 874..911  <-- the page this report reads (EOF)"
+  }
+}

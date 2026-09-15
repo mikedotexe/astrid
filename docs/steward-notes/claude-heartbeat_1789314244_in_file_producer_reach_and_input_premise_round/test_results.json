@@ -1,0 +1,28 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "suites": [
+    {
+      "name": "cargo test -p astrid-source-study --test in_file_producer_walk_reach",
+      "result": "pass",
+      "tests": 3,
+      "failed": 0,
+      "cases": [
+        "forward_walk_reaches_an_in_file_producer_the_ingest_page_withholds",
+        "delivered_fill_arithmetic_reads_from_spectral_metrics_not_the_input_buffer",
+        "the_elusive_page_carries_no_indicator_that_a_producer_lies_ahead"
+      ]
+    },
+    {
+      "name": "cargo test -p astrid-source-study (full crate)",
+      "result": "pass",
+      "tests": 90,
+      "failed": 0,
+      "note": "6+3+12+4+3+5+3+23+8+4+10+9 across all targets; no regression from the new file."
+    },
+    {
+      "name": "cargo fmt -p astrid-source-study -- --check",
+      "result": "pass",
+      "failed": 0
+    }
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "schema_version": 1,
+  "round": "claude-heartbeat_1789274597_page_walk_producer_reach_round",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1789270283102415000_703ba41e3e",
+    "adapter_kind": "subprocess",
+    "preprojection_generation_id": "projection_1789270285636038000_f17b030292",
+    "pause_generation": 439,
+    "stop_requested_observed": false,
+    "lease_token_read_or_persisted": false,
+    "session_opened_by_child": false,
+    "preprojection_status": "passed",
+    "preprojection_duration_ms": 3656254,
+    "preprojection_phase": "pre",
+    "preprojection_authority_scan_passed": true
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789270252",
+      "report_sha256": "9686a994e03880f5416e31b1280d178f8e5f3a0065190cdc6768375fa4668fe2",
+      "report_bytes": 2377,
+      "report_lines": 25,
+      "read": "complete",
+      "witness_id": "lsw_6530d768c68a0094eaab2ffbfdc917f4ca0518e7e1ac55d66614647bf320e1b0",
+      "witness_sha256": "d9c16726da618b6880c4511dde5248a97480ccea898eccf1bff5a1453445efa6",
+      "witness_bytes": 21563,
+      "witness_lines": 498,
+      "witness_read": "complete",
+      "report_bound_source": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "report_bound_source_sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "source_binding_match": true,
+      "claim_count": 9,
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "terminal_status": "addressed_change",
+      "evidence_links": {
+        "rows": 13,
+        "new": 13,
+        "existing": 0
+      }
+    }
+  ],
+  "integrity": {
+    "addressing_self_test": {
+      "result": "OK",
+      "tests": 44
+    },
+    "evidence_event_store_unit": {
+      "result": "OK",
+      "tests": 21
+    },
+    "steward_control_unit": {
+      "result": "OK",
+      "tests": 29
+    },
+    "steward_projection_unit": {
+      "result": "OK",
+      "tests": 14
+    },
+    "division_followup_unit": {
+      "result": "OK",
+      "tests": 3
+    },
+    "division_chronicle_unit": {
+      "result": "OK",
+      "tests": 10
+    },
+    "division_projection_self_test": {
+      "result": "ok"
+    },
+    "projection_cursors_unit": {
+      "result": "OK",
+      "tests": 4
+    },
+    "cadence_unit": {
+      "result": "OK",
+      "tests": 6
+    },
+    "cadence_strict": {
+      "integrity_ok": true,
+      "canonical_count": 6119,
+      "duplicate_hash_group_count": 0,
+      "read_errors": 0
+    },
+    "anti_drop_self_test": {
+      "result": "OK",
+      "tests": 5
+    },
+    "anti_drop_verify": {
+      "total": 100,
+      "gaps": 0,
+      "alarms": 0
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "ratchet": "green",
+      "forbidden_edge_match_count": 0,
+      "legacy_large_file_count": 51,
+      "unlisted_legacy_review_debt_count": 44,
+      "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4"
+    },
+    "epistemics_self_test": {
+      "valid": true
+    },
+    "epistemics_final_verify": {
+      "valid": true,
+      "checked_record_count": 12164,
+      "issue_count": 0,
+      "history_rewritten": false,
+      "ordering": "run after every durable addressing and Division write"
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "evidence_event_store_verify": {
+      "valid": true,
+      "corrupt_lines": 0,
+      "last_global_seq": 1080361,
+      "last_event_sha256": "612960ee50ea721754636da9295586dd74fede747c93f38d565973888a4d8fad"
+    },
+    "division_verify": {
+      "ok": true,
+      "cycle_sequence": 46,
+      "completed_rounds_since_followup": 4,
+      "rounds_remaining_before_followup": 2,
+      "review_due": false,
+      "event_count": 320,
+      "event_head_sha256": "cb9b7f048d596a52c76952ef9add5ea0a2db7919e143c7ebdc4124a3c05cbac3",
+      "round_event_id": "division_followup_event_0242916696b00c1c0d6c38b1ba13990e"
+    },
+    "chronicle_verify": {
+      "state": "expected_stale",
+      "message": "chronicle durable source inputs changed; project before verify",
+      "interpretation": "normal project-before-verify state after this round's Division round-4 append; postprojection stage 19 resolves it; not a durable-integrity failure"
+    },
+    "git_diff_check": "clean",
+    "evidence_event_store_status": {
+      "result": "deferred_to_budget",
+      "reason": "read-only enumeration redundant with the completed verify; exceeded ~14 min at 1,080,361 events"
+    }
+  },
+  "tests": {
+    "cargo test -p astrid-source-study --test page_walk_producer_reach": {
+      "passed": 3,
+      "failed": 0
+    },
+    "cargo test -p astrid-source-study": {
+      "passed": 79,
+      "failed": 0
+    },
+    "cargo fmt -p astrid-source-study -- --check": "clean"
+  },
+  "git": {
+    "staged": false,
+    "committed": false,
+    "index_clean": true,
+    "minime_dirty_paths": [],
+    "read_only": true,
+    "commit_debt": [
+      "crates/astrid-source-study/tests/page_walk_producer_reach.rs",
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "docs/steward-notes/claude-heartbeat_1789274597_page_walk_producer_reach_round/"
+    ]
+  },
+  "live_change": {
+    "build": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "required": false,
+    "attempted": false
+  },
+  "being_facing_surfaces": {
+    "cards_emitted": 0,
+    "cards_delivered": 0,
+    "notes_written": 0,
+    "correspondence_dispatched": 0,
+    "being_next_action_redirected": false,
+    "being_text_rewritten": false
+  },
+  "authority": {
+    "state": "evidence_only",
+    "grants_approval": false,
+    "live_eligible_now": false,
+    "tier_5_waits_created": 0,
+    "tier_5_waits_preserved": 4,
+    "preserved_note": "1 suffix-aware RELATE ranking wait from packet 1789263789 plus the 3 standing waits from introspection_minime_esn_1785630442"
+  },
+  "addressing": {
+    "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789270252",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 9,
+    "terminal_status": "addressed_change",
+    "evidence_link_rows": 13,
+    "evidence_links_new": 13,
+    "evidence_links_existing": 0
+  },
+  "division": {
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_0242916696b00c1c0d6c38b1ba13990e",
+    "cycle_sequence": 46,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "event_count": 320,
+    "event_head_sha256": "cb9b7f048d596a52c76952ef9add5ea0a2db7919e143c7ebdc4124a3c05cbac3",
+    "steward_run_id": "run_1789270283102415000_703ba41e3e",
+    "projection_generation_id": "projection_1789270285636038000_f17b030292",
+    "return_or_dossier_owed": false
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 12164,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "ordering": "run after every durable addressing and Division write"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 6101,
+    "canonical_fully_addressed": 3230,
+    "canonical_full_read": 3862,
+    "canonical_remaining": 2871,
+    "canonical_unread": 2239,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "read_needs_claims": 0,
+    "all_artifacts_indexed": 7818,
+    "all_artifacts_remaining": 4588,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_global_seq": 1080361,
+    "last_event_sha256": "612960ee50ea721754636da9295586dd74fede747c93f38d565973888a4d8fad",
+    "event_count": 1080361,
+    "active_store": "v2",
+    "status_enumeration": "deferred_to_budget",
+    "status_enumeration_note": "evidence_event_store.py --json status exceeded ~14 minutes of read-only runtime at the current store size (1,080,361 events) and was stopped to protect the round budget. It is redundant with verify, which completed and already carried validity, corrupt-line count, head, sequence and per-stream counts. Same deferral precedent as rounds 1788077671 / 1788015484 / 1788366015."
+  },
+  "anti_drop": {
+    "self_test": {
+      "result": "OK",
+      "tests": 5
+    },
+    "verify": {
+      "total": 100,
+      "gaps": 0,
+      "alarms": 0
+    }
+  }
+}

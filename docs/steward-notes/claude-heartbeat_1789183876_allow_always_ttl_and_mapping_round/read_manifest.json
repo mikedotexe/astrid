@@ -1,0 +1,42 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "steward_run_id": "run_1789180098419612000_04d18eec43",
+  "preprojection_generation_id": "projection_1789180103446413000_c72c3f37eb",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-approval_src_interceptor_capability.rs_1789179940.txt",
+      "sha256": "fe19e720626473052602e14ea551f39c801e408b0eded64f5908ae862b146bce",
+      "bytes": 3221,
+      "lines": 32,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_a1256b80e973e02547409c8700374dfe5ec9b298f3df5499caa801b87da70b16",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a1256b80e973e02547409c8700374dfe5ec9b298f3df5499caa801b87da70b16.json",
+      "sha256": "8b718e7591b13e1c9b2760604a1ae2f687c9b374355caa70c76117344006e3a1",
+      "bytes": 21495,
+      "lines": 498,
+      "read": "complete",
+      "recorded_fields": {
+        "window_start_line": 220,
+        "window_end_line": 276,
+        "total_file_lines": 276,
+        "file_sha256": "00e4e0f49c04179f63fa66f2fe69e084fb939bef7dfcb1e44443db7f0e93405b",
+        "window_sha256": "e8351b3d8ee1bb0c9a51b65ea7979e0ed2a027a18df73b279dcec2f3414f793a",
+        "authority_state": "evidence_only",
+        "live_eligible_now": false,
+        "direct_causation_claimed": false,
+        "bridge_fill_pct": 73.01446533203125,
+        "minime_fill_pct": 73.0278091430664,
+        "model_profile": "coupled-astrid",
+        "model_call_duration_ms": 84845,
+        "raw_introspection_prose_included": false
+      }
+    }
+  ],
+  "notes": "Witness telemetry and report prose kept separate; no scalar was read as felt state and no causation was inferred from co-occurring fill or eigenvalue values."
+}

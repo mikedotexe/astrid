@@ -1,0 +1,40 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "runs": [
+    {
+      "command": "cargo test -p astrid-source-study --test map_trailing_line_number_reach",
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "duration_s": 0.13,
+      "result": "ok"
+    },
+    {
+      "command": "cargo test -p astrid-source-study",
+      "passed": 78,
+      "failed": 0,
+      "ignored": 0,
+      "result": "ok",
+      "note": "15 binaries: 0+0+3+6+3+12+4+3+3+3+5+2+3+23+8 = 78 passed, 0 failed"
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    },
+    {
+      "command": "read-only reproduction: target/debug/astrid-source-study prepare, installation catalog, temp state dir",
+      "result": "OPEN <mcp.rs> 1 -> source_page; MAP <mcp.rs> 1 -> recovery, reason byte-identical to her live turn, no candidate block; MAP <mcp.rs> -> map",
+      "note": "temp state directories only; the live shared_reader state was never written"
+    }
+  ],
+  "not_run": [
+    {
+      "command": "cargo test -p spectral-bridge",
+      "reason": "no bridge source or test was changed this round; the bridge-side replacement-suggestion gap is recorded, not implemented"
+    }
+  ]
+}

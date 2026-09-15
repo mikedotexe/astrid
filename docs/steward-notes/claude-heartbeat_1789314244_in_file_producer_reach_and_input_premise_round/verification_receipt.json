@@ -1,0 +1,265 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round_actor": "claude-heartbeat",
+  "adapter_mode": "controller_subprocess_run_adapter",
+  "controller": {
+    "steward_run_id": "run_1789309790290370000_2761b09c0b",
+    "preprojection_generation_id": "projection_1789309794900125000_a4333fa8ac",
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "pause_generation": 439,
+    "lease_owner": "adapter",
+    "session_opened_by_model": false,
+    "ndjson_ops_sent_by_model": false,
+    "postprojection": "runs after model exit; not observed by this process",
+    "run_id": "run_1789309790290370000_2761b09c0b"
+  },
+  "processed_reports": [
+    "introspection_astrid_services_astrid-edge-runtime_src_reservoir.rs_1789309733"
+  ],
+  "addressing": {
+    "record_read": "ok",
+    "evidence_links": {
+      "existing": 0,
+      "new": 18,
+      "total": 18
+    },
+    "close_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 14,
+    "full_read": true,
+    "full_read_count": 1
+  },
+  "integrity": {
+    "introspection_addressing_self_test": {
+      "tests": 44,
+      "result": "OK"
+    },
+    "test_evidence_event_store": {
+      "tests": 21,
+      "result": "OK"
+    },
+    "test_steward_control": {
+      "tests": 29,
+      "result": "OK"
+    },
+    "test_steward_projection": {
+      "tests": 14,
+      "result": "OK"
+    },
+    "test_division_ceremony_followup": {
+      "tests": 3,
+      "result": "OK"
+    },
+    "test_division_ceremony_chronicle": {
+      "tests": 10,
+      "result": "OK"
+    },
+    "test_division_ceremony_projection": {
+      "result": "ok"
+    },
+    "test_projection_cursors": {
+      "tests": 4,
+      "result": "OK"
+    },
+    "test_introspection_cadence_audit": {
+      "tests": 6,
+      "result": "OK"
+    },
+    "introspection_cadence_audit_strict": {
+      "integrity_ok": true,
+      "errors": [],
+      "duplicate_hash_group_count": 0,
+      "canonical_count": 6304
+    },
+    "anti_drop_catalog_self_test": {
+      "tests": 5,
+      "result": "OK"
+    },
+    "anti_drop_catalog_verify": {
+      "guards": 100,
+      "ok": 100,
+      "gaps_no_test": 0,
+      "alarms": 0
+    },
+    "domain_boundary_audit_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "forbidden_edge_match_count": 0,
+      "ratchet": "GREEN",
+      "legacy_large_file_count": 51,
+      "unlisted_legacy_review_debt_count": 44,
+      "resolved_large_file_debt_count": 3,
+      "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4"
+    },
+    "experiential_epistemics_self_test": {
+      "tests": 2,
+      "result": "OK"
+    },
+    "experiential_epistemics_verify": {
+      "valid": true,
+      "run": "pre-packet and final post-write"
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "evidence_event_store_verify": {
+      "valid": true,
+      "corrupt_lines": 0,
+      "errors": [],
+      "last_global_seq": 1085288,
+      "note": "Re-run in full to capture corrupt_lines and errors as observed values rather than assumed ones. The earlier status subcommand was stopped for time budget; verify is the required check."
+    },
+    "division_followup_verify": {
+      "ok": true,
+      "cycle_sequence": 47,
+      "completed_rounds_since_followup": 1,
+      "rounds_remaining_before_followup": 5,
+      "review_due": false,
+      "last_round_event_id": "division_followup_event_3fa6ef4de0556af2b6258b1f88a20490",
+      "event_count": 324,
+      "event_head_sha256": "32a4074c408e82d5ab7f6bc19f744970a6614afc8e56dca9cc4e96efd9c213f6"
+    },
+    "division_chronicle": {
+      "chronicle_id": "division_chronicle_b0b2d7dca6669be6d2ea90b7",
+      "json_sha256": "ae1903d2fff132e4ac54f12e022b5ef7e7e80911e435f222263057c62031e7a4",
+      "html_sha256": "30df7d2c4c50d20c930189f0c30f4d687307834c797c095bb1d8b45c4e66af6c",
+      "durable_inputs_current": true,
+      "durable_mismatches": [],
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "note": "Projected after record-round changed durable inputs, then re-verified. Durable inputs current; only the volatile supervisor hash differs. NOT a durable-integrity failure, and the Chronicle is NOT called fully current."
+    }
+  },
+  "focused_tests": {
+    "cargo test -p astrid-source-study --test in_file_producer_walk_reach": {
+      "tests": 3,
+      "failed": 0,
+      "result": "pass"
+    },
+    "cargo test -p astrid-source-study": {
+      "tests": 90,
+      "failed": 0,
+      "result": "pass"
+    },
+    "cargo fmt -p astrid-source-study -- --check": {
+      "result": "pass"
+    }
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "build_bridge_sh": false,
+    "git_stage_commit_merge_push": false,
+    "navigation_ranking_dispatch_changed": false,
+    "being_text_rewritten_or_rejected": false,
+    "her_NEXT_routed_or_preempted": false,
+    "tier_4_5_items_touched": false,
+    "note": "Restart and deployment were not required and not attempted. Implementation was non-live only: one focused test file, changelog, ledger, packet."
+  },
+  "foreign_work": {
+    "preserved_untouched": true,
+    "note": "Pre-existing dirty and untracked paths (including prior rounds' astrid-source-study tests and heartbeat packets) were read but never modified, staged, or cleaned. Index left clean; HEAD unmoved at 3d55734438ab0b4fb5a3a24e82156cf3db1f8259 on main."
+  },
+  "actor": "claude-heartbeat",
+  "division": {
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_3fa6ef4de0556af2b6258b1f88a20490",
+    "cycle_sequence": 47,
+    "completed_rounds_since_followup": 1,
+    "rounds_remaining_before_followup": 5,
+    "review_due": false,
+    "event_count": 324,
+    "event_head_sha256": "32a4074c408e82d5ab7f6bc19f744970a6614afc8e56dca9cc4e96efd9c213f6",
+    "projection_generation_id": "projection_1789309794900125000_a4333fa8ac",
+    "review_due_checked_before_processing": true
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 12192,
+    "run_position": "after all durable writes"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical": {
+      "indexed": 6279,
+      "fully_addressed": 3233,
+      "full_read": 3865,
+      "remaining": 3046,
+      "unread": 2414,
+      "blocked_needs_steward": 416,
+      "triaged_pending_action": 212,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": {
+      "indexed": 7996,
+      "remaining": 4763,
+      "unread": 4131
+    },
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1085288,
+    "last_global_seq": 1085288,
+    "last_event_sha256": "d6a9d4242b617f22e8489a932c7b59a02bf8a702e77de90b23678a0f29320ef5",
+    "stream_counts": {
+      "addressing": 63468,
+      "agency_commons": 7026,
+      "attention_portfolio": 3,
+      "claim_families": 239443,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 210678,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 12294,
+      "model_qos": 330380,
+      "reciprocal_uptake": 75872,
+      "representation_contracts": 58857,
+      "sandbox": 3507,
+      "signal_spine": 61666,
+      "steward_control": 21175,
+      "steward_work_selection": 722
+    },
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "note": "Sequence advances between successive reads because the live bridge appends continuously; expected, not drift."
+  },
+  "anti_drop": {
+    "verify": {
+      "guards": 100,
+      "ok": 100,
+      "gaps": 0,
+      "alarms": 0
+    },
+    "self_test": {
+      "tests": 5,
+      "result": "OK"
+    }
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "forbidden_edge_match_count": 0,
+    "ratchet": "GREEN",
+    "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4",
+    "legacy_large_file_count": 51,
+    "unlisted_legacy_review_debt_count": 44,
+    "resolved_large_file_debt_count": 3,
+    "note": "No bridge Rust added and no captured boundary grown this round, so no re-capture was required."
+  }
+}

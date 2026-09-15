@@ -1,0 +1,51 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "report": {
+        "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789282513.txt",
+        "sha256": "0deb853b1647a47c9bcedf89551d3c9b9e1bcdc2d99c142770e637d4b107fdbf",
+        "bytes": 1648,
+        "lines": 19,
+        "read": "complete"
+      },
+      "lived_state_witness": {
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7481598220c6cbf23c15b3e8721eb499de5fefd6f83e5cec28f3e3c83422fa42.json",
+        "sha256": "dc56affe726b17f1e60f6025028321b17d56ab7b4a41c2340eeb3071500a6f6f",
+        "bytes": 18971,
+        "lines": 440,
+        "read": "complete",
+        "witness_id": "lsw_7481598220c6cbf23c15b3e8721eb499de5fefd6f83e5cec28f3e3c83422fa42"
+      },
+      "report_source_binding": {
+        "source": "source catalog",
+        "source_revision": "navigation only",
+        "bound_file_sha256": null,
+        "note": "Navigation-only turn. witness source_snapshot_v1 and source_provenance_ref_v1 are both null, so there is no report-bound file hash to compare and no report-time/current-source split to label. The queue's lived_state_alignment deployment_unknown is the absent deployment scalar, not a byte contradiction."
+      },
+      "continuity_reports_read_complete": [
+        "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789281975.txt",
+        "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789281898.txt",
+        "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789281445.txt"
+      ]
+    }
+  ],
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789282513",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789282513.txt",
+      "sha256": "0deb853b1647a47c9bcedf89551d3c9b9e1bcdc2d99c142770e637d4b107fdbf",
+      "bytes": 1648,
+      "lines": 18,
+      "read": "complete",
+      "lived_state_witness_id": "lsw_7481598220c6cbf23c15b3e8721eb499de5fefd6f83e5cec28f3e3c83422fa42",
+      "lived_state_witness_sha256": "dc56affe726b17f1e60f6025028321b17d56ab7b4a41c2340eeb3071500a6f6f",
+      "lived_state_witness_bytes": 18971,
+      "lived_state_witness_lines": 440,
+      "lived_state_witness_read": "complete",
+      "source_binding": "Source: source catalog / navigation only; witness source_snapshot_v1 and source_provenance_ref_v1 both null, so there is no report-bound file SHA to compare"
+    }
+  ]
+}

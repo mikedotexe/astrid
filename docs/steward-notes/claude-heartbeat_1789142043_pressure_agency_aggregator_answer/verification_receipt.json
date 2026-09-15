@@ -1,0 +1,173 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "schema_version": 1,
+  "round": "claude-heartbeat_1789142043_pressure_agency_aggregator_answer",
+  "actor": "claude-heartbeat",
+  "mode": "headless subprocess-adapter lease; no steward session opened, no NDJSON ops, no pause/resume, no lease token read, quoted or persisted",
+  "controller": {
+    "run_id": "run_1789137315715833000_daa4b9e1b9",
+    "preprojection_generation_id": "projection_1789137320081707000_e562a4b1f3",
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "preprojection_duration_ms": 3549122,
+    "preprojection_steps": {
+      "completed": 27,
+      "executed": 25,
+      "reused": 2,
+      "authority_scan_passed": true
+    },
+    "postprojection_generation_id": null,
+    "postprojection_note": "runs after this process exits; not observed here",
+    "pause_generation": 439,
+    "controller_paused": false,
+    "stop_requested": false
+  },
+  "processed": {
+    "count": 1,
+    "reports": [
+      {
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+        "status": "addressed_change",
+        "fully_addressed": true,
+        "proof_missing_claims": [],
+        "claim_count": 9,
+        "evidence_links_new": 17,
+        "evidence_links_existing": 0
+      }
+    ],
+    "selected": 40,
+    "unprocessed": 39,
+    "family_scan": "families: 40 (batchable: 0) - similarity_basis none_no_snag_or_test_text_or_unparsed_header; family-batch exception did not apply"
+  },
+  "source_binding": {
+    "declared": "sha256:4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e; bytes 1723..6101",
+    "working_copy_at_read": "4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e",
+    "match": true,
+    "mismatch_case": "not applicable"
+  },
+  "implementation": {
+    "rust_test_added": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs :: status_render_is_a_telemetry_formatter_not_a_motif_aggregator",
+    "steward_test_repaired": "scripts/test_steward_control.py :: test_pause_cooperatively_interrupts_wrapped_subprocess (pre-existing 0.2s race, now waits on the lease file)",
+    "production_code_changed": false,
+    "new_watch_built": false,
+    "new_watch_rationale": "symbol_locality_watch and source_study_revisit_watch already score this exact turn; building a third consumer would have been manufactured work"
+  },
+  "division": {
+    "cycle_sequence": 44,
+    "review_due_at_round_start": false,
+    "review_due_after_record": false,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "round_recorded": true,
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_a06008375f7d46c7859d3d43a73ffb41",
+    "event_count": 307,
+    "event_head_sha256": "929ec6db271b800259bd9af5b0ce51fd7ee8b0b74f54c4c38cf17f5cd2fa379d",
+    "latest_followup_event_id": "division_followup_event_ad066eafac2e92e611812b8c6806be54",
+    "note_action": "none; no Division note was due and none was written",
+    "tier5_cadence_dossier": "not generated; only required when a Division return is due, and review_due was false at round start and after the record",
+    "chronicle": {
+      "first_verify": "chronicle durable source inputs changed; project before verify - expected, the round record is itself a durable Chronicle input",
+      "reprojected_chronicle_id": "division_chronicle_06dc75d6ace5b0e8c962f86b",
+      "json_sha256": "0d2a0ac803e84fbe3df7c17847525b4a045f61bf23a3b58d3cb66bd14bdd9e07",
+      "html_sha256": "e4e3580530459fb5e1a900a9130da3bf55bec6b9a6e6eba95c54c780d2509f9b",
+      "timeline_event_count": 307,
+      "durable_inputs_current": true,
+      "durable_mismatches": [],
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "statement": "durably current, not fully current; a moving supervisor hash is not a durable-integrity failure"
+    }
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 5619,
+    "canonical_fully_addressed": 3219,
+    "canonical_fully_read": 3851,
+    "canonical_remaining": 2400,
+    "canonical_unread": 1768,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 4117,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "event_count": 1064434,
+    "last_global_seq": 1064434,
+    "last_event_sha256": "89ff7b9218d88ca5d1eba8d8b0a94dfdb445687f00cb391c16594b46a5fd467c",
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "note": "verify and status were read at slightly different moments; verify saw seq 1064424, status saw 1064434 after the Division and Chronicle writes. Both valid, zero corrupt lines.",
+    "errors": []
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "checked_record_count": 12055,
+    "history_rewritten": false,
+    "canonical_event_appended": false
+  },
+  "anti_drop": {
+    "total": 97,
+    "alarms": 0,
+    "gaps": 0,
+    "delta": "unchanged; no new guard shipped",
+    "alarms_after": 0,
+    "verify": {
+      "total": 97,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "authority": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "build": false,
+    "launchctl": false,
+    "git_mutation": false,
+    "statement": "Git was read-only. No stage, commit, merge, push, stash, reset or amend. No live substrate or control change was made or attempted. Nothing in this packet grants authority."
+  },
+  "foreign_work_preserved": {
+    "dirty_at_start": [
+      "CHANGELOG.md",
+      "capsules/spectral-bridge/domain_boundaries_legacy_large_files_v1.json",
+      "capsules/spectral-bridge/src/authority_gate.rs",
+      "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "scripts/anti_drop_catalog.py",
+      "scripts/proactive_scan.py"
+    ],
+    "untracked_at_start": 9,
+    "touched_by_this_round": [
+      "CHANGELOG.md (appended one [Unreleased] entry at the top of the list)",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md (appended one dated section at the end)",
+      "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs (clean at start; one test added)",
+      "scripts/test_steward_control.py (clean at start; one flaky test repaired)",
+      "docs/steward-notes/claude-heartbeat_1789142043_pressure_agency_aggregator_answer (new)"
+    ],
+    "statement": "Both shared documents already carried other agents' accumulated edits; this round appended only and removed nothing. Every other dirty and untracked path was left untouched."
+  },
+  "minime_repository": {
+    "status": "clean at round start and end; the Chronicle JSON/HTML under workspace/division/chronicle/ are not tracked",
+    "changelog_updated": false
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_pressure_agency.rs_1789137060",
+    "status": "addressed_change",
+    "claim_count": 9,
+    "evidence_links_new": 17,
+    "evidence_links_existing": 0
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/codec/cascade.rs",
+      "sha256": "260112491997c421571fb788d5a85d2066e5bfd80a2ba0ea29306346826da713",
+      "bytes": 35944,
+      "lines": 987,
+      "read_scope": "complete-file exhaustive identifier scan (action_id=0, sense_tx=0, bare `result`=0 over all 987 lines) plus a complete declaration inventory (29 fn declarations enumerated). Byte-identical to the prior round's receipt at the same SHA, whose packet carries the narrative read."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "sha256": "644b12e6ae168604553b3120fba82d431686b9eb06a3ddea94d9a348ba747e5c",
+      "bytes": 27240,
+      "lines": 639,
+      "read_scope": "carried at identical bytes from the prior round's complete read; used only for the from_guard_inputs call-site facts (lines 91, 629) already established there."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/runtime_action_feedback.rs",
+      "sha256": "f290b0c501ad46258705e58ca1f0760cd7d36443f645dffd35da6e804261f6c3",
+      "bytes": 6426,
+      "lines": 184,
+      "read_scope": "carried at identical bytes from the prior round's complete read; used for the absence of a `result` field and the idempotency-nonce role of action_id."
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "sha256": "40d4bd0319b7ca8c2a0e3a5a00a161eb0a376e65433d088a750384a15e9618ef",
+      "bytes": 2873,
+      "lines": 62,
+      "read_scope": "complete (62 lines): InputKind variants and their scope strings, establishing what a relationships-kind turn does and does not supply."
+    },
+    {
+      "path": "crates/astrid-source-study/src/relationships.rs",
+      "sha256": "064d6309a4f6773f38c9213fd4514a818d8b0cc670343c2bf3c7f6e766c600a5",
+      "bytes": 4685,
+      "lines": 115,
+      "read_scope": "complete (115 lines): Catalog::relate, its grouping, its explicit zero-hit line, and its paginate hand-off."
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "6d13d344549f6d2ea65a87b79bea817b4135e51432b4fc126130617f0247416e",
+      "bytes": 7459,
+      "lines": 182,
+      "read_scope": "scoped: paginate (lines 158-182) \u2014 page-past-end returns Err, so an out-of-range page becomes a recovery map, not a relationships page."
+    },
+    {
+      "path": "crates/astrid-source-study/src/store.rs",
+      "sha256": "acebb241850ae6aba571b34c6038d3096c2950d55284e7fd8f27f57bbd0c6ea7",
+      "bytes": 34291,
+      "lines": 884,
+      "read_scope": "scoped: the Relate dispatch site (lines 405-424) \u2014 Ok(text) -> InputKind::Relationships, Err -> recovery_map."
+    },
+    {
+      "path": "crates/astrid-source-study/src/notebook.rs",
+      "sha256": "570ddeb4bf7e33c962b635f69ecbef839126c35e2b34d86835ef7484badb2874",
+      "bytes": 11520,
+      "lines": 285,
+      "read_scope": "scoped: lines 80-101 \u2014 the page-less 'Find this question's symbol: SELF_STUDY RELATE <symbol>' invitation emitted while the STUDY_QUESTION names a symbol."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+      "sha256": "fa378ecace87de3e0eef25af69bca5cd1ad4d424090e64b619998b96072443f8",
+      "bytes": 24244,
+      "lines": 655,
+      "read_scope": "scoped: lines 225-285 \u2014 the SELF_STUDY arm sets conv.introspect_target unconditionally (243-251)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "1bc376c2e004d14d3a8cb84974e929871e171731446740219c86ae88a1f60bae",
+      "bytes": 13536,
+      "lines": 336,
+      "read_scope": "scoped: lines 1-80 \u2014 the single conv.introspect_target.take() at line 43 and the prepare/prepare_action split."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/introspection_cadence.rs",
+      "sha256": "1d28594d73a0921ad8ccb2dd25524e4b7c7f79ed1eb2001f1e963136a7e95b5b",
+      "bytes": 30569,
+      "lines": 933,
+      "read_scope": "scoped: lines 820-860 \u2014 the cadence scheduler is a second writer of the same slot."
+    }
+  ]
+}

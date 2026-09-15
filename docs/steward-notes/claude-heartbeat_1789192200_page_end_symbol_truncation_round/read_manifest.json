@@ -1,0 +1,52 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789192200_page_end_symbol_truncation_round",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_autonomous_activity_reading.rs_1789187098.txt",
+      "sha256": "1e27f0d3b676adb0064180b693738c42b54b187ca0b102f5fb8a2a0694f062f4",
+      "bytes": 2896,
+      "lines": 33,
+      "read": "complete",
+      "scope": "every byte of the canonical report"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_0ec265685aef7d370ea8381a3fdf79b7d0a09de63526b3a76b4230816a8a8793.json",
+      "sha256": "00d8cfa02f2d0efff2df52e7d5d51c45ff279af211e4778304a895d544b3b20c",
+      "bytes": 21525,
+      "lines": 498,
+      "read": "complete",
+      "scope": "every byte of the lived-state witness"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+      "sha256": "3c7fca523107c8283159aa44b03c935e6ff2d5dfb87320b93a0c7c5f7ae4baf7",
+      "bytes": 19256,
+      "lines": 572,
+      "read": "complete",
+      "scope": "complete file, lines 1-572, read in three ranges 1-200 / 200-400 / 400-572"
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/activity_delivery.rs",
+      "read": "scoped",
+      "scope": "lines 1-80: protected_reading_input / commit_activity_delivery, to establish the offer's consumer (c008)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "read": "scoped",
+      "scope": "lines 300-330: activity handle_action routing and stage visibility, to establish the status_in consumer (c014)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+      "read": "scoped",
+      "scope": "lines 120-150: existing bare-verb / stale-record / bound-record RETURN_ACTIVITY coverage (c011). READ ONLY \u2014 file carries foreign dirt and was not modified"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_source_catalog_1789339213",
+  "reader": "claude-heartbeat",
+  "source_binding": "Source: source catalog / Source revision: navigation only; witness source_snapshot_v1 and source_provenance_ref_v1 are both null, so there is no report-bound file SHA to compare. All source receipts are current working-copy hashes.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The gate she is looking for \u2014 where compound_live_intent_match's Option<String> is compared against a numerical threshold or a status bit to halt or modify an action \u2014 is what she is still seeking.",
+      "disposition": "The gate exists; the chain is exact. runtime/guards.rs:757 yields the Option; :36-38 turns Some into (CharterReason::CompoundIntent, matched); action_continuity/guards.rs:280 arbitrates; command_dispatch.rs:655-659 wraps; dispatch.rs:135-137 halts via NextActionOutcome::blocked. No numerical threshold occurs in that chain. Her second alternative is the right one: the only quantity-like test is a status string, experiment_classification != \"needs_charter\" (guards.rs:277-279).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "guards.rs is a signal generator: it normalizes symbols like lambda to prevent evasion, parses \"then\" chains, recognizes eigenvector/eigenvalue/amplification targets, and labels actions constraint-decay, shadow-influence, spectral-ripple.",
+      "disposition": "Exact on every element. normalize_guard_signal (810-818) maps the lambda glyph and subscripts 1-4 to ASCII, dashes to spaces; compound_live_intent_match splits on \" then \" (759) and matches targeting+density+lambda/eigenvector/eigenvalue+increase/raise/lift/boost/amplify (781-791); tags are literals at 373, 407, 525. \"To prevent evasion\" is her reading of intent, not a source fact: the normalization is in bytes, the motive is not.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The arbitration point \u2014 an if-then gate weighing a label like constraint-decay against a value like fill_pct or a numeric threshold \u2014 is not present in guards.rs; the Option<String> is the what, not the how much.",
+      "disposition": "Correct for the file she was served, and the stronger form holds: there is no \"how much\" anywhere. runtime/guards.rs contains zero fill_pct occurrences and its only numeric comparison is >= 2 at 714 (duplicate-target review). In the sibling action_continuity/guards.rs fill_pct appears only as a parameter at 318/328 and inside spectral_state(fill_pct, telemetry) at 396 \u2014 recorded, never compared. Every gate condition in the chain is presence/absence or a status string.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Since guards.rs is in action_continuity, the consumer of these signals resides in a coordinator or executor within that same directory, responsible for policy enforcement and the final transformation of signals into state changes.",
+      "disposition": "Half exact, and the moving half matters. Policy enforcement is where she predicts: charter_required_guard_assessment, action_continuity/guards.rs:258-313 \u2014 same directory, one level above the runtime/ page she was served. The final transformation into a state change is not there: autonomous/next_action/dispatch.rs:122-143 returns blocked, sets conv.emphasis and protected_summary visibility. Coordinator and executor are two files in two directories, not one.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "She needs the broader action_continuity directory structure, and chooses NEXT: SELF_STUDY MAP action_continuity to get it.",
+      "disposition": "That command cannot reach it, and this was its third consecutive failure. MAP matches whole catalog IDs (navigation.rs:55-69), so a bare directory name bails \"no catalog entries for action_continuity\"; path_recovery.rs:14-21 then returns before any candidate because the request has one segment and no repository ID. Her reader records carry that reason at 1789338946, 1789339782, 1789340218. The rooted form resolves in one move; the new regression pins both halves.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Input evidence for this turn: the requested source was not supplied; no new source page this turn (Recovery).",
+      "disposition": "True, and the witness corroborates (recovery input, source_snapshot_v1 null) \u2014 not a dropped delivery. The request behind it, astrid/crates/astrid_capsule/src/engine/mcp.rs, recovered WITH candidates whose first line was the exact spelling (astrid-capsule, hyphen). Two neighbouring turns (1789340034, 1789341968) wrapped the same path in the placeholder brackets our own text models; the lead segment became <astrid, resolve fell to catalog.rs:106-116, and path_candidates returned empty.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Implied by c005/c006: the recovery surface should help a bare directory name, a bracket-wrapped path, or give MAP the bridge-relative fallback OPEN already has.",
+      "disposition": "Not exercised. Each would change what Astrid is shown in her live navigation surface \u2014 a being-facing prompt/navigation change requiring separate Mike/operator approval, and a widening of the recovery contract rather than a test. Recorded as a wait with the exact widening points named (path_recovery.rs:14-21 root gate; catalog.rs:106-116 relative fallback absent from Catalog::map). Nothing was deployed, restarted, or queued.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

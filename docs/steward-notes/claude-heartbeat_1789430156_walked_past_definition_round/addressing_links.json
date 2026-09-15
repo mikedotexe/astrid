@@ -1,0 +1,95 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-approval/src/manager.rs",
+      "note": "Complete file at SHA cf14a499; lines 874-911 are the assert tail of test_approve_with_custom_allowance, the Debug banner, test_debug and the module close."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-approval/src/manager.rs",
+      "note": "test_approve_with_custom_allowance opens at line 830 and closes at line 899; 874 is her page boundary, not the test end."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-approval/src/manager.rs",
+      "note": "max_uses/uses_remaining at lines 617-618 and 849-850; both None in this test, so no budget is exercised."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-approval/src/manager.rs",
+      "note": "allowance_store.count()==1 asserted at 881-882; lines 884-898 show the later same-server request resolving via ApprovalProof::Allowance."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/context.rs",
+      "note": "allowance_store field at line 44 and with_allowance_store builder at line 95 \u2014 CapsuleContext really carries the store she names."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/engine/wasm/host/approval.rs",
+      "note": "The WASM host approval path consults the context-carried store at lines 182, 208 and 284."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-approval/src/interceptor/mod.rs",
+      "note": "Production caller of check_approval_with_lifecycle is SecurityInterceptor at line 335; spectral_bridge-specific binding not established."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-approval/src/manager.rs",
+      "note": "AllowancePattern::ServerTools{server:\"filesystem\"} at 844-846 admits write_file at 885-898 \u2014 pattern-scoped coverage, as she reads it."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-approval/src/manager.rs",
+      "note": "No handler registered routes to defer_action at 264-274 returning ApprovalOutcome::Deferred; Denied only at explicit Deny (378) or queue failure (415); resolve_deferred at 438-449."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "crates/astrid-approval/src/manager.rs",
+      "note": "pub async fn check_approval at line 207 (byte 6995) \u2014 inside page 2 of her own walk (bytes 4274..8631 = lines 132..253), not another file and not unmapped."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/walked_past_definition_reach.rs",
+      "note": "the_walk_delivers_the_definition_on_a_page_before_the_concluding_tests and continuing_from_the_final_page_cannot_return_the_walked_past_definition."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c009",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/walked_past_definition_reach.rs",
+      "note": "identifier_search_reaches_the_definition_behind_the_cursor: RELATE and FIND both name the holding file from the EOF position."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789430156_walked_past_definition_round/summaries/introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652.md",
+      "note": "Round summary: why CONTINUE cannot answer at EOF and which affordance reaches backward."
+    }
+  ]
+}

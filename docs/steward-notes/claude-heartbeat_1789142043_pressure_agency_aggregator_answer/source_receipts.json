@@ -1,0 +1,78 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "round": "claude-heartbeat_1789142043_pressure_agency_aggregator_answer",
+  "report_binding": {
+    "declared_by_report": "sha256:4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e; bytes 1723..6101",
+    "working_copy_sha256_at_read": "4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e",
+    "match": true,
+    "mismatch_handling": "not applicable; hashes identical at read time",
+    "witness_window": {
+      "start_line": 64,
+      "end_line": 179,
+      "total_file_lines": 794,
+      "window_sha256": "cd33487c100295905e7d13fe22de0663a80698dfd343749c042072164d8910dd",
+      "note": "window_sha256 hashes the RENDERED page (header/coverage/numbered body/footer), not raw source bytes; raw bytes 1723..6101 hash to b53af9ed369149f1c9ce6ddf282d04d50805f16e4a77ea9d0cd2e002bca75890. Recorded, not treated as a discrepancy."
+    }
+  },
+  "post_edit": {
+    "path": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+    "sha256_after_round_edit": "412304677e54224e3388f0d476b246928fc6fd2f4490708daeeee14247826fa7",
+    "bytes_after": 32769,
+    "lines_after": 824,
+    "edit": "added one #[cfg(test)] regression, status_render_is_a_telemetry_formatter_not_a_motif_aggregator; no production code path changed"
+  },
+  "sources": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs",
+      "sha256": "4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e",
+      "bytes": 31269,
+      "lines": 794,
+      "read_scope": "complete file read at lines 1-794 in six contiguous ranges (1-120, 120-260, 260-434, 434-520, 520-633, 633-794) BEFORE the round's edit",
+      "kind": "report_bound",
+      "sha256_at_read": "4b670305b31eec0698d445ded3b0f3c30c5fda0a2272d274bb86a416bd1d299e",
+      "bytes_at_read": 31269,
+      "lines_at_read": 794,
+      "note": "hash/bytes/lines are the values AT READ TIME, identical to the report binding. Post-round-edit values are in source_receipts.post_edit."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "sha256": "d7d9bb9422222f5e166c2e697421bc878f7e7f6fba579dd913608e9219c1fd61",
+      "bytes": 6651,
+      "lines": 187,
+      "read_scope": "scoped read lines 86-150; the only production sites of 'white_noise_drift_risk' (98,109) and 'active_spectral_drift' (100,112) and their sole consumer at 142",
+      "kind": "adjacent"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "read_scope": "scoped reads: interpretation_risk_for_texts 7742-7830 (matched_terms assembled 7751-7761, emitted 7814), interpretation_risk_projection 7623-7655 (its source set), render 8455",
+      "kind": "adjacent"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+      "bytes": 23174,
+      "lines": 834,
+      "read_scope": "scoped read lines 546-593: interpretation_risk_terms context gate and natural-language motif pattern table",
+      "kind": "adjacent"
+    },
+    {
+      "path": "scripts/symbol_locality_watch.py",
+      "sha256": "fe0d3f40e6e6a55a6bf382accf67b05510439a207a637b0f6fb95e2e0559544d",
+      "bytes": 24981,
+      "lines": 558,
+      "read_scope": "scoped read lines 1-140 (docstring + constants + CLI) plus executed scan",
+      "kind": "steward_tooling"
+    },
+    {
+      "path": "scripts/source_study_revisit_watch.py",
+      "sha256": "74b2129aec28261e162edc0fe22fca6e9774e6a4382ac784232679b3fc2780f2",
+      "bytes": 20904,
+      "lines": 485,
+      "read_scope": "scoped read lines 1-60 (docstring + CLI) plus executed scan",
+      "kind": "steward_tooling"
+    }
+  ]
+}

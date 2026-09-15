@@ -1,0 +1,63 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "report_bound_source": {
+    "binding": "Source: source catalog / Source revision: navigation only",
+    "report_bound_file_sha256": null,
+    "note": "Navigation-only turn: the report binds no file SHA and the witness carries source_snapshot_v1=null and source_provenance_ref_v1=null. Every receipt below is recorded at its current working-copy hash. No report-time vs current-source split is claimed."
+  },
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp/lab.rs",
+      "sha256": "c3593710bd9657d678c043d0be481fa712454611320d85f19d08b3b1e312809d",
+      "bytes": 72167,
+      "lines": 1982,
+      "read": "scoped",
+      "scope": "scoped: 283-290, 291-403 (causal_lab_entry_for complete), 405-472 (normalize_lab_notebook + normalize_lab_entry), 474-520 (upsert_lab_entry), 1433-1434 (mod tests opening), 1506-1660 (her page plus the two lines past its end). Byte/line mapping of 55091..59362 computed over the whole file."
+    },
+    {
+      "path": "crates/astrid-source-study/src/page.rs",
+      "sha256": "a99605dd40391182ea3ecb85734549cb53c89a1bf1d64d1e8c243ce38e5c20f2",
+      "bytes": 5179,
+      "lines": 146,
+      "read": "complete",
+      "scope": "complete, 146 lines"
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "sha256": "1842133fa5b3f88741fe42a347e27da36a29a3583397b7e6a91fe1ee86620405",
+      "bytes": 2889,
+      "lines": 62,
+      "read": "complete",
+      "scope": "complete, 62 lines"
+    },
+    {
+      "path": "crates/astrid-source-study/src/lib.rs",
+      "sha256": "5e75370f6bf33d60940c34d4700bb6a4d401491221d0aaec5252085767a1cd07",
+      "bytes": 1352,
+      "lines": 44,
+      "read": "complete",
+      "scope": "complete, 44 lines"
+    },
+    {
+      "path": "crates/astrid-source-study/src/store.rs",
+      "sha256": "4c7da264d7d8beaa704f756e6d9dc66c76386d988c4b102817f0a2900e0cfbd1",
+      "bytes": 37420,
+      "lines": 969,
+      "read": "scoped",
+      "scope": "scoped: 380-430 (recovery_map / recovery_with_candidates / source_recovery), 432-525 (prepare_parsed), 527-606 (prepare_relate, prepare_continue, offer_page), 608-615"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/page_walk_producer_reach.rs",
+      "sha256": "c5984bab3ff868e23d6cefba82afc30129430b751c3d7656ab7df01ae8fa5544",
+      "bytes": 7940,
+      "lines": 195,
+      "read": "complete",
+      "scope": "complete; read as the prior-round pattern this round's test follows"
+    }
+  ],
+  "continuity": [
+    "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/RUN_REPORT.md (complete)",
+    "docs/steward-notes/claude-heartbeat_1789300900_map_topic_scope_reach_round/tier5_cadence_dossier.md (opening section)",
+    "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle46_20260913.txt (complete)"
+  ]
+}

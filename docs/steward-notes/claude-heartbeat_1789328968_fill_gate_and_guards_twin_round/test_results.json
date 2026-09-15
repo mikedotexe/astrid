@@ -1,0 +1,134 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "steward_run_id": "run_1789324261072515000_fe368aa7f9",
+  "focused_rust": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml research_budget_guard_flags_are_fill_pct_invariant",
+      "result": "1 passed, 0 failed",
+      "note": "the new regression alone, 14.33s"
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml research_budget",
+      "result": "19 passed, 0 failed",
+      "note": "whole research-budget family including the new test, 42.25s"
+    }
+  ],
+  "lint": [
+    {
+      "command": "cargo fmt -- --check (capsules/spectral-bridge)",
+      "result": "clean"
+    },
+    {
+      "command": "cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --lib --tests --all-features",
+      "result": "no errors, no warnings"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid=true, violation_count=0, violation_kind_counts={}",
+      "note": "run before and after the test edit; ratchet green both times, 51 legacy large files, 44 unlisted review debt, manifest 578a39cf"
+    }
+  ],
+  "stewardship_suites": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "result": "44 tests OK"
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "result": "21 tests OK"
+    },
+    {
+      "command": "test_steward_control.py",
+      "result": "29 tests OK"
+    },
+    {
+      "command": "test_steward_projection.py",
+      "result": "14 tests OK"
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "result": "3 tests OK"
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "result": "10 tests OK"
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "result": "self-test ok"
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "result": "4 tests OK"
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "result": "6 tests OK"
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok=true, errors=[], configuration_valid=true, 6355 canonical reports, 0 duplicate hash groups"
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "result": "5 tests OK"
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "result": "100 guards, 0 alarms, 0 gaps"
+    },
+    {
+      "command": "experiential_epistemics.py self-test --json",
+      "result": "valid=true"
+    },
+    {
+      "command": "experiential_epistemics.py verify --json",
+      "result": "valid=true, checked_record_count=12206, issue_count=0, history_rewritten=false"
+    },
+    {
+      "command": "introspection_addressing_audit.py audit-counters --json",
+      "result": "status=consistent, mismatches=[]"
+    },
+    {
+      "command": "division_ceremony_followup.py verify",
+      "result": "ok=true, cycle 47, 2/6 rounds, review_due=false, event_count=325"
+    },
+    {
+      "command": "division_ceremony_chronicle.py project + verify",
+      "result": "durable_inputs_current=true, durable_mismatches=[], volatile_mismatches=[supervisor_status_sha256]",
+      "note": "record-round changed durable inputs, so the Chronicle was projected then re-verified; the moving supervisor hash is volatile, not a durable-integrity failure"
+    }
+  ],
+  "evidence_event_store": {
+    "command": "python3 scripts/evidence_event_store.py --json verify",
+    "result": "valid=true",
+    "stream_counts": {
+      "addressing": 63558,
+      "agency_commons": 7030,
+      "attention_portfolio": 3,
+      "claim_families": 239472,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 210795,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 12347,
+      "model_qos": 331428,
+      "reciprocal_uptake": 75872,
+      "representation_contracts": 59102,
+      "sandbox": 3507,
+      "signal_spine": 61811,
+      "steward_control": 21229,
+      "steward_work_selection": 724
+    },
+    "head_after_round": {
+      "last_global_seq": 1087098,
+      "last_event_sha256": "b5344bc6e1e0cb7c8e798661a6e8b1519a723a46ec3ff978c672994dc657ce0a",
+      "updated_at": "2026-09-13T20:58:37.824312+00:00",
+      "source": "evidence_event_store_v2/head.json"
+    },
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "status_command_note": "`--json status` was still walking the 1.087M-event store when the child budget required closing out; it was stopped (SIGTERM, exit 144) and is read-only. Integrity came from `verify` (valid=true) and the durable head file, not from `status`."
+  }
+}

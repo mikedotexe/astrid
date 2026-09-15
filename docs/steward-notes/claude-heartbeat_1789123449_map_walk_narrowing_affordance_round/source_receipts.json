@@ -1,0 +1,78 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "round": "claude-heartbeat_1789123449_map_walk_narrowing_affordance_round",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs",
+      "sha256": "5ace3d017e14514f16afb2449de2eb30d0e19bce583fe16d293a0724162ae1ed",
+      "bytes": 9405,
+      "lines": 229,
+      "read": "complete",
+      "scope": "complete",
+      "why": "c001/c003: projection_guard_pressure_terms_v1 (114-138, needles 121-131) and the sole return_kind='hold' (65)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs",
+      "sha256": "94ddbd3fbe9c3786f0c0a4c0a86b491d193ba5b16a2e5ca33bde90b90b4b2b11",
+      "bytes": 23174,
+      "lines": 834,
+      "read": "complete",
+      "scope": "complete",
+      "why": "c002/c006: interpretation_risk_terms (548-569), the context gate and the five pattern families"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/continuity_control_plane.rs",
+      "sha256": "2ffb9dafa336e1c49a845d945fe1379b86d3a906d26ed0ae6061dc6afbfa0725",
+      "bytes": 14481,
+      "lines": 386,
+      "read": "complete",
+      "scope": "complete",
+      "why": "c003/c006: the only evaluative consumer of interpretation_risk_v1 (265)"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490",
+      "bytes": 6187,
+      "lines": 163,
+      "read": "complete",
+      "scope": "complete",
+      "why": "c004/c005: Catalog::map component branch (48-58) vs repository/prefix branch (59-72); paginate_with_header footer (157-159)"
+    },
+    {
+      "path": "crates/astrid-source-study/src/catalog.rs",
+      "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67",
+      "bytes": 11498,
+      "lines": 329,
+      "read": "complete",
+      "scope": "complete",
+      "why": "c004/c007: resolve/resolve_id (84-157), sources() (160-193), blocked_path/source_path, alias table"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0",
+      "bytes": 5699,
+      "lines": 155,
+      "read": "complete",
+      "scope": "complete",
+      "why": "c004: MAP parsing and page_suffix, confirming MAP <topic> --page N is one command shape"
+    },
+    {
+      "path": "crates/astrid-source-study/catalog.toml",
+      "sha256": "6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae",
+      "bytes": 3756,
+      "lines": 71,
+      "read": "complete",
+      "scope": "complete",
+      "why": "c007: the astrid include rules the 6277-entry / 73.0% steward-notes measurement is computed against"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "read": "scoped: lines 6040-6100, 7220-7280, 7540-7660, 7700-7820, 8420-8470 (rendering, cue assembly, DOSSIER_CLAIM stance); file is 10187 lines / 414540 bytes",
+      "scope": "scoped: lines 6040-6100, 7220-7280, 7540-7660, 7700-7820, 8420-8470 (rendering, cue assembly, DOSSIER_CLAIM stance); file is 10187 lines / 414540 bytes",
+      "why": "c003/c006: interpretation_risk_line (8430-8459), interpretation_risk_for_texts (7742-7815), DOSSIER_CLAIM stance (7807)"
+    }
+  ]
+}

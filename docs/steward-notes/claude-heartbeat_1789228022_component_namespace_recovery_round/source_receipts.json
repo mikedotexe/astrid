@@ -1,0 +1,22 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "binding_note": "The report is bound to 'Source: source catalog' / 'Source revision: navigation only' and the witness carries source_snapshot_v1 = null and source_provenance_ref_v1 = null. There is no report-bound file SHA to compare against a working copy and no report-time/current-source split to label. Every source below was read to ground a claim the report makes, recorded at its current working-copy hash.",
+  "sources": [
+    {"path": "crates/astrid-source-study/catalog.toml", "sha256": "6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae", "bytes": 3756, "lines": 71, "scope": "complete", "grounds": "c005, c006 — [[components]] id = \"verification\" at 68-71 and its six sources"},
+    {"path": "crates/astrid-source-study/src/navigation.rs", "sha256": "97ef6c1a60f000a53813dd9bfbbdf318bc1c54d32a2eb729fbd97e7fa6f1a490", "bytes": 6187, "lines": 163, "scope": "complete", "grounds": "c004, c005, c008 — Catalog::map component branch 47-60, directory-prefix branch 61-74, bail 73, root menu 22-46, paginate 128-163"},
+    {"path": "crates/astrid-source-study/src/path_recovery.rs", "sha256": "7799bda8f134b2e6f47782dbf6237dccf020305253706462427017fc4548ec00", "bytes": 2984, "lines": 86, "scope": "complete", "grounds": "c007, c009 — rooted guard 14-21 and the final-segment directory filter 26-51"},
+    {"path": "crates/astrid-source-study/src/store.rs", "sha256": "4c7da264d7d8beaa704f756e6d9dc66c76386d988c4b102817f0a2900e0cfbd1", "bytes": 37420, "lines": 969, "scope": "scoped 126-186 (output) and 380-520 (recovery_map, recovery_with_candidates, prepare_parsed Map arm)", "grounds": "c003, c008 — recovery appends the full root map; output() bails rather than truncating"},
+    {"path": "crates/astrid-source-study/src/evidence.rs", "sha256": "1842133fa5b3f88741fe42a347e27da36a29a3583397b7e6a91fe1ee86620405", "bytes": 2889, "lines": 62, "scope": "complete", "grounds": "c003 — InputKind::Recovery scope text at 54-56, the exact header on her 29 turns"},
+    {"path": "crates/astrid-source-study/src/catalog.rs", "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67", "bytes": 11498, "lines": 329, "scope": "complete", "grounds": "c002, c006 — resolve/resolve_id/sources enumeration, include rules, alias table"},
+    {"path": "crates/astrid-source-study/src/navigation_recovery.rs", "sha256": "430d212b8047203f4adac71a287a1583b7b63c53d927bb5cf4bfe6630da114fb", "bytes": 3783, "lines": 90, "scope": "complete", "grounds": "c008 — the only other recovery surface; it fires on RELATE/SEARCH shape, never on a failed MAP topic"},
+    {"path": "crates/astrid-source-study/src/command.rs", "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0", "bytes": 5699, "lines": 155, "scope": "complete", "grounds": "c007 — MAP parse keeps the topic verbatim; no namespace disambiguation at parse time"},
+    {"path": "crates/astrid-source-study/src/lib.rs", "sha256": "5e75370f6bf33d60940c34d4700bb6a4d401491221d0aaec5252085767a1cd07", "bytes": 1352, "lines": 44, "scope": "complete", "grounds": "c008 — MAX_PAGE_BYTES 7000 and MAX_INPUT_BYTES 48000 budgets"},
+    {"path": "crates/astrid-source-study/src/notebook.rs", "sha256": "44ed9135603c76b43daa73ef9d5a10ce13de32ce638cdc0544a63c9c537abe93", "bytes": 12206, "lines": 303, "scope": "scoped 26-180 (study_choices and record)", "grounds": "c008 — the choices block prepended to every turn offers question-derived opens only, never a topic correction"},
+    {"path": "crates/astrid-source-study/tests/path_recovery.rs", "sha256_before": "c0e921e02247a86ad1be87ad0c2a0b98cdbe9524967b82be34b71b27836ddefd", "sha256_after": "2c5ec57d29e269e32f418100cfacc36addce45ba4367d6110c57de49c6b39343", "bytes_after": 9812, "lines_after": 234, "scope": "complete (read before edit, one test appended)", "grounds": "c007, c008, c009 — the new regression"}
+  ],
+  "filesystem_observations": [
+    {"check": "find -type d -name 'verification*' in both repositories", "result": "only .runtime/bridge-deployment/transactions/<id>/verification-recoveries, which is not a catalog path (blocked_path excludes dot directories)", "grounds": "c002, c005"},
+    {"check": "find -name 'context_alignment*' outside target/", "result": "no matches in either repository", "grounds": "c002"},
+    {"check": "ls capsules/spectral-bridge/src/autonomous/runtime/", "result": "33 files, no subdirectories; continuity.rs and text.rs present", "grounds": "c004, c006"}
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "recorded_by": "claude-heartbeat",
+  "adapter_mode": "steward_control_subprocess_run",
+  "controller": {
+    "run_id": "run_1789259107372203000_6770e2dcf0",
+    "steward_run_id": "run_1789259107372203000_6770e2dcf0",
+    "actor": "claude-heartbeat",
+    "adapter_kind": "subprocess",
+    "preprojection_status": "passed",
+    "preprojection_generation_id": "projection_1789259111222775000_664695f159",
+    "pause_generation": 439,
+    "lease_acquired_at": "2026-09-13T00:25:07.413577+00:00",
+    "postprojection": "runs after this process exits; adapter owns it",
+    "lease_token_read_or_persisted": false,
+    "stop_requested_observed": false
+  },
+  "addressing": {
+    "introspection_ids": [
+      "introspection_source_catalog_1789259010"
+    ],
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 6,
+    "evidence_links": {
+      "batch_rows": 14,
+      "new": 14,
+      "existing": 0
+    },
+    "self_test": "44 tests OK"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 6048,
+    "canonical_fully_addressed": 3229,
+    "canonical_full_read": 3861,
+    "canonical_remaining": 2819,
+    "canonical_unread": 2187,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 7765,
+    "all_artifacts_remaining": 4536,
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0
+  },
+  "epistemic_lint": {
+    "self_test": "OK",
+    "valid": true,
+    "checked_record_count": 12158,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "ran_after": "all durable evidence writes (record-read, link-evidence-batch, close, Division round)"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_global_seq": 1079055,
+    "last_event_sha256": "bfd9fb3f98e79f35cf22c8c977c87b5fa0997d3606e675ae6c022e7f6a28c547",
+    "event_count": 1079055,
+    "stream_count": 16,
+    "active_store": "v2",
+    "v1_immutable": true,
+    "unit_suite": "21 tests OK",
+    "stream_counts": {
+      "addressing": 63150,
+      "agency_commons": 7012,
+      "attention_portfolio": 3,
+      "claim_families": 239371,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 210357,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 12048,
+      "model_qos": 326879,
+      "reciprocal_uptake": 75774,
+      "representation_contracts": 57998,
+      "sandbox": 3507,
+      "signal_spine": 61119,
+      "steward_control": 20935,
+      "steward_work_selection": 714
+    },
+    "second_enumeration": {
+      "valid": true,
+      "corrupt_lines": 0,
+      "errors": [],
+      "last_global_seq": 1079064,
+      "note": "Read-only re-verify for the per-stream table, started after the authoritative post-write verify. The nine-event drift from 1079055 is concurrent live-bridge appending (lived_state_witness/model_qos), not a stewardship write; this process appended nothing after the Division round record."
+    }
+  },
+  "anti_drop": {
+    "self_test": "5 tests OK",
+    "verify": {
+      "total": 100,
+      "gaps": 0,
+      "alarms": 0
+    },
+    "gaps": 0,
+    "alarms_after": 0
+  },
+  "division": {
+    "cycle_sequence": 46,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "round_event_id": "division_followup_event_d7799ce25465b34ca96d7cc30752ef89",
+    "event_count": 319,
+    "event_head_sha256": "f71c8bdef8b4f274b3ccb88a18b2d0d2c5a177dd220299da276ec07d2999e7fb",
+    "verify": "ok",
+    "processed_report_count": 1,
+    "return_owed_this_round": false,
+    "tier5_cadence_dossier_owed": false
+  },
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": {
+      "total": 100,
+      "gaps": 0,
+      "alarms": 0
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "violation_kind_counts": {},
+      "manifest_sha256": "578a39cfab0c1d695c4f0d8efc8ab396f0088078e8e5b1128e13a593965d75d4",
+      "legacy_large_file_count": 51,
+      "unlisted_legacy_review_debt_count": 44,
+      "ratchet": "green \u2014 no red ratchet this round"
+    },
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "29 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "ok",
+    "test_projection_cursors": "4 tests OK",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "cadence_strict": {
+      "integrity_ok": true,
+      "canonical_count": 6074,
+      "duplicate_hash_group_count": 0,
+      "errors": 0
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "evidence_event_store_verify": {
+      "valid": true,
+      "corrupt_lines": 0,
+      "last_global_seq": 1079055,
+      "last_event_sha256": "bfd9fb3f98e79f35cf22c8c977c87b5fa0997d3606e675ae6c022e7f6a28c547",
+      "stream_count": 16
+    },
+    "experiential_epistemics": {
+      "self_test": "OK",
+      "valid": true,
+      "checked_record_count": 12158,
+      "issue_count": 0,
+      "history_rewritten": false
+    },
+    "division_chronicle_verify": "expected-stale: 'chronicle durable source inputs changed; project before verify' \u2014 project-before-verify from this round's round-3 append; postprojection stage 19 division_chronicle resolves it. Not a durable-integrity failure.",
+    "git_diff_check": "clean",
+    "index": "clean",
+    "cargo_fmt_astrid_source_study": "clean"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_source_catalog_1789259010",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "full_read": true,
+      "claim_count": 6,
+      "evidence_links": {
+        "batch_rows": 14,
+        "new": 14,
+        "existing": 0
+      }
+    }
+  ],
+  "authority": {
+    "live_change_attempted": false,
+    "deploy_or_restart_attempted": false,
+    "launchctl_used": false,
+    "build_bridge_used": false,
+    "git_mutation": "none \u2014 read-only; no stage, commit, merge, push, stash, reset or amend",
+    "being_facing_surface_written": false,
+    "tier_5_boundary_preserved": "suffix-aware producer ranking in RELATE would change what the live SELF_STUDY search returns to a being mid-navigation; left unimplemented and unapproved",
+    "silence_treated_as_consent": false
+  }
+}

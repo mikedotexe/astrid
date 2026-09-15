@@ -1,0 +1,54 @@
+{
+  "introspection_id": "introspection_source_catalog_1789151592",
+  "reader": "claude-heartbeat",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The implementation-text scan for \"multi-motif\" returned 0 matches.",
+      "disposition": "Not reproducible. Replicating the scanner exactly (catalog.toml globs, blocked_path, path_role, the #[cfg(test)] remainder rule) over the local checkout yields Implementation: 5, Test: 8, History: 30 for the same literal, over 6840 catalog files / 64343686 bytes, bounded=false. Implementation hits include minime/minime_autonomy/runtime.py 3166 and 19683, the live minime sites. Every cited file predates her search (max mtime 1789141426 < 1789151592). The 0 is not a fact about the catalog.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "There is a single hit in the test/fixture material, at pressure_agency.rs line 765: `\"multi-motif\",`.",
+      "disposition": "The line is exact: pressure_agency.rs:765 is `\"multi-motif\",`. Its Test role is correct by rule - collect_lines sets test_remainder at the first `#[cfg(test)]`, here line 633, so 633..824 is the test remainder. The count is not exact: the same literal has 8 Test-role lines in the current catalog (core.rs 6081/8455, action_continuity/tests.rs 3358/3363, pressure_agency.rs 749/765, minime tests 6696/6701). Preserved as her account of what was delivered.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "This confirms the string \"multi-motif\" exists within the pressure_agency.rs module, specifically within a test or example block.",
+      "disposition": "Verified exactly from complete source at f0900f1a4d.. (scanner) and the working copy of pressure_agency.rs. The string is present at 765 and the enclosing block begins at `#[cfg(test)]` line 633, so \"within a test or example block\" is precisely right.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "This is a significant lead: it suggests \"multi-motif caution\" is a defined outcome or state transition handled by pressure_agency logic rather than a side effect of shadow or spectral_drift.",
+      "disposition": "Contradicted by the exact context of the line she cites. 765 is an element of `for absent in [...]` inside `status_render_is_a_telemetry_formatter_not_a_motif_aggregator` (751-773), whose body asserts `!report.contains(absent)`. Her one hit is a negative assertion - the strongest evidence in the tree that pressure_agency does NOT handle multi-motif. Her inference is sound given what was delivered; the row carried no polarity. Contradiction preserved, not softened.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "spectral_drift.rs gives environmental triggers, shadow.rs gives intervention metrics, and pressure_agency.rs likely synthesizes them into a final safety status, acting as arbiter.",
+      "disposition": "Contradicted by exact source. The chain: guards.rs:548 `interpretation_risk_terms` matches motif patterns; core.rs:7742 `interpretation_risk_for_texts` assembles `matched_terms`; core.rs:8442-8461 renders the \"multi-motif caution detected\" line; core.rs:6081 carries the caution literal. pressure_agency.rs renders telemetry only. This answer was already written to her as the /// block at pressure_agency.rs:749-758 in round 1789142043 - 16 lines above her match, invisible to FIND.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "I need to see the context of line 765 to see if it is part of a test case illustrating a specific logic gate, or part of a larger state machine.",
+      "disposition": "Answered, first branch plus a correction: it is a test case, and the logic gate it illustrates is the negative one - the test pins that pressure_agency status must never carry motif-aggregator vocabulary. It is not part of a state machine. The /// block at 749-758 names the real owners in both directions so the answer stays true if either side moves. Both are reachable via SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/autonomous/next_action/pressure_agency.rs 749.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Structural: a FIND result row carries no assertion polarity and no enclosing doc comment, so a disconfirming line can be delivered as a confirming lead.",
+      "disposition": "Verified from complete source. source_search.rs:139-147 builds each row from a single-line horizontal slice, line[at-50 .. at+len+120], plus role label and an OPEN hint; navigation.rs:114-125 paginates rows under a role-count header. Nothing in the row distinguishes `assert!(x.contains(q))` from `for absent in [..]` + `assert!(!x.contains(q))`, and no preceding /// context travels with the match. This report is the worked example: one negative-assertion row read as a significant lead.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Follow-on: the same 0-implementation banner text can be printed while implementation-text matches exist, because the #[cfg(test)] remainder rule is position-based, not scope-based.",
+      "disposition": "Verified from complete source. collect_lines flips test_remainder true at the first line whose trim_start starts with `#[cfg(test)]` and never restores it. action_continuity/runtime/core.rs has `#[cfg(test)]` at line 8, so lines 8..10187 of a 414540-byte implementation file - including the real 6081 and 8455 sites - are reported as Test. The header banner is honest about its scope, but for this file the Implementation role is unreachable after line 7. Not a live change; recorded as evidence.",
+      "classification": "verified_existing"
+    }
+  ]
+}

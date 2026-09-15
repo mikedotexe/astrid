@@ -1,0 +1,125 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789430156_walked_past_definition_round",
+  "controller": {
+    "run_id": "run_1789423899971156000_5362eb69bd",
+    "preprojection_generation_id": "projection_1789423905915796000_3208679bcd",
+    "preprojection_status": "passed",
+    "preprojection_duration_ms": 5599025,
+    "pause_generation": 439,
+    "adapter_kind": "subprocess",
+    "lease_token_read_or_persisted": false,
+    "session_opened_by_model": false
+  },
+  "processed": {
+    "count": 1,
+    "introspection_ids": [
+      "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652"
+    ],
+    "terminal_status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 9,
+    "evidence_link_count": 13
+  },
+  "implementation": {
+    "created": [
+      "crates/astrid-source-study/tests/walked_past_definition_reach.rs"
+    ],
+    "edited": [
+      "CHANGELOG.md",
+      "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+    ],
+    "live_change": false,
+    "deploy_attempted": false,
+    "restart_attempted": false,
+    "launchctl_invoked": false,
+    "git_mutations": "none (read-only)"
+  },
+  "tests": {
+    "cargo test -p astrid-source-study --test walked_past_definition_reach": "3 passed, 0 failed",
+    "cargo fmt -p astrid-source-study -- --check": "clean",
+    "git diff --check": "clean"
+  },
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_catalog_verify": "100 guards, 0 gaps, 0 alarms",
+    "domain_boundary_verify": "valid=true, violation_count=0, ratchet green",
+    "introspection_cadence_audit_strict": "integrity_ok=true, errors=[]",
+    "experiential_epistemics_verify": "valid=true, issue_count=0, history_rewritten=false",
+    "audit_counters": "consistent, mismatches=[]",
+    "evidence_event_store_verify": "valid=true, corrupt_lines=0, last_global_seq=1098847",
+    "division_verify": "ok",
+    "chronicle_verify": "expected-stale (project-before-verify after round append; postprojection resolves)",
+    "deferred_to_budget": [
+      "scripts/test_evidence_event_store.py",
+      "scripts/test_steward_control.py",
+      "scripts/test_steward_projection.py",
+      "scripts/test_division_ceremony_followup.py",
+      "scripts/test_division_ceremony_chronicle.py",
+      "scripts/test_division_ceremony_projection.py",
+      "scripts/test_projection_cursors.py",
+      "scripts/evidence_event_store.py --json status (stream enumeration)"
+    ]
+  },
+  "counters": {
+    "canonical_indexed": 6678,
+    "canonical_fully_addressed": 3242,
+    "canonical_remaining": 3436,
+    "all_artifact_pending": 5153,
+    "noncanonical_pending": 1717,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "division": {
+    "cycle_sequence": 48,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "event_count": 333,
+    "event_head_sha256": "6f652ac7764a04ad3bba1c778a0f617fdae6ad6458ef2424b97e387adb7b03ad",
+    "processed_report_count_recorded": 1,
+    "tier5_cadence_dossier": "not generated \u2014 bound to a Division return, and review_due is false",
+    "notes_written": "none",
+    "round_event_id": "division_followup_event_13c4a1a1b3411b6a16e7301aee9da33e",
+    "processed_report_count": 1
+  },
+  "authority_boundary": {
+    "live_authority_granted": false,
+    "tier_4_or_5_actions_taken": "none",
+    "being_text_modified": false,
+    "silence_treated_as_consent": false,
+    "recorded_not_repaired": "An EOF page does not advertise that a definition already walked past is one Action away. Changing what a page advertises is live navigation behaviour and belongs to a reviewed window."
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 9,
+    "evidence_link_count": 13,
+    "terminal_status": "addressed_change",
+    "introspection_ids": [
+      "introspection_astrid_crates_astrid-approval_src_manager.rs_1789423652"
+    ]
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_global_seq": 1098847
+  },
+  "anti_drop": {
+    "verify": {
+      "ok": 100,
+      "gaps": 0,
+      "alarms": 0
+    }
+  }
+}

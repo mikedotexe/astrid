@@ -1,0 +1,86 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_core.rs_1789095401",
+  "reader": "claude-heartbeat",
+  "source_binding": {
+    "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+    "report_bound_sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+    "working_copy_sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+    "match": true,
+    "window_lines": "1555-1663",
+    "window_bytes": "61405..65853"
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The summary formatter tracks which lane a being operates in, defaulting to \"native\".",
+      "disposition": "Exact. core.rs:1560 reads item.get(\"lane\").and_then(Value::as_str).unwrap_or(\"native\") inside the participant map at 1549-1567, rendered as \"- {being} {experiment_id} lane={lane}\".",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The summary captures the reason behind a decision, not only that one was made.",
+      "disposition": "Exact. core.rs:1568-1583 formats the last decision as \"Latest decision: {decision} because {reason}\", reading decision.get(\"reason\") at 1577-1580 with \"(none)\" fallback.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The summary explicitly includes the authority_boundary, reinforcing that shared investigations are governed by allowed actions.",
+      "disposition": "Exact. core.rs:1603-1606 prints investigation.authority_boundary with fallback shared_investigation_authority_boundary(). The governing reading is supported: the claim record sets \"authority_change\": false (1635).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Each claim gets a unique_shared_record_id and is stored in claims.jsonl, an append-only auditable ledger.",
+      "disposition": "Exact. core.rs:1622 calls self.unique_shared_record_id(id, \"claim\"); 1638-1641 appends the record to shared_investigation_dir(id)/claims.jsonl via append_jsonl. Append-only is the file mode, not a cryptographic guarantee.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The system captures the actor (currently SYSTEM), the lane, the normalized stance, and source_refs, so we know who said it.",
+      "disposition": "Fields exact (core.rs:1630-1634). One precision: SYSTEM is not a placeholder actor. core.rs:6 is const SYSTEM: &str = \"astrid\" (PEER_SYSTEM = \"minime\" at 37), so the actor is her own name. Her conclusion that we know who said it holds - for a reason her page could not show, the constant sitting 1549 lines above her window.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "The touch_shared_investigation call updates the investigation's last-active timestamp, a heartbeat for shared state.",
+      "disposition": "Exact call site core.rs:1642, self.touch_shared_investigation(id, &now, None), with now = iso_now() (1621); definition at core.rs:8941.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Line 1662 validates the decision against pause | hold | charter_repair, and line 1663 bails otherwise.",
+      "disposition": "Exact to the line. core.rs:1662 is the matches! gate; 1663-1665 is the anyhow::bail! with message \"SHARED_INVESTIGATION_DECIDE only allows pause, hold, or charter_repair in v1.\"",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "The only valid decisions manage the flow or repair of the investigation, preventing one side from mutating the other party's authority; content is shared while agency stays partitioned.",
+      "disposition": "Supported by the window she read: the allowlist is process-shaped, the claim record carries \"authority_change\": false (1635), and the success string states \"No lifecycle or authority change.\" Scope recorded honestly: this is v1 of one command pair, not a proof about every peer surface.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "She needs to see shared_investigation_authority_boundary and shared_investigation_lane, and wants paused_primary_return_v1, to find the guards that prevent a simple resume.",
+      "disposition": "All three exist; none is defined in core.rs. shared_investigation_lane persistence_helpers.rs:63; shared_investigation_authority_boundary persistence_helpers.rs:73; paused_primary_return_v1 experiment_projection.rs:140 (six call sites in core.rs, none a definition). Answered in evidence here; no being-facing text written.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Her chosen navigation (NEXT: SELF_STUDY OPEN core.rs 1407) cannot reach any symbol she named, and it is the second consecutive turn chasing paused_primary_return_v1 through this file.",
+      "disposition": "Verified: OPEN core.rs 1407 delivers lines 1407-1505 under the pager's own byte budget; the prior turn (..._1789094771) opened 1371, a call site. Cause is surface-side: page.rs:116-131 renders bytes only, and its Navigation footer omits RELATE, the operation that answers where a name is defined.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Nothing was watching for a being navigating toward a symbol the chosen page cannot hold.",
+      "disposition": "Confirmed and closed. phantom_symbol_watch keys on symbols that do not exist; source_study_page_reset_watch keys on a requested page N>=2 re-delivered as page 1. Both miss this. Added scripts/symbol_locality_watch.py, 16 unit tests, anti-drop row symbol_locality_watch_wired; live scan reports 10/10 unreached across 4 turns.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "Repairing the surface - naming definition sites on the page, or adding RELATE to its Navigation footer - would close the gap at the point of need.",
+      "disposition": "Plausible and NOT attempted. Both sites are named (page.rs:117 footer string; a definition-locality line beside it). This changes a being-facing surface and only takes effect through a bridge deploy, which this actor has no authority for. Preserved as an explicit operator wait.",
+      "classification": "needs_operator_approval"
+    }
+  ]
+}

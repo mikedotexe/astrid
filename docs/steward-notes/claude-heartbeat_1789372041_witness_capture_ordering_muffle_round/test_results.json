@@ -1,0 +1,104 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "focused": [
+    {
+      "command": "cd scripts && python3 test_lived_state_integrity_triage.py",
+      "tests": 8,
+      "result": "OK",
+      "note": "new focused regressions for the triage consumer shipped this round"
+    },
+    {
+      "command": "python3 scripts/lived_state_integrity_triage.py report",
+      "result": "1129 recorded / 1129 capture_ordering_artifact / 0 substantive / max delta 81ms / 1.5s",
+      "note": "live corpus run"
+    }
+  ],
+  "integrity": [
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "tests": 44,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/test_evidence_event_store.py",
+      "tests": 21,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/test_steward_control.py",
+      "tests": 29,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/test_steward_projection.py",
+      "tests": 14,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_followup.py",
+      "tests": 3,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_chronicle.py",
+      "tests": 10,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_projection.py",
+      "result": "self-test: ok"
+    },
+    {
+      "command": "python3 scripts/test_projection_cursors.py",
+      "tests": 4,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/test_introspection_cadence_audit.py",
+      "tests": 6,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "tests": 5,
+      "result": "OK"
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "result": "total=100 alarms=0 gaps=0"
+    },
+    {
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok=true errors=[]"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid=true violation_count=0 (ratchet GREEN); unlisted_legacy_review_debt_count=44 pre-existing"
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py self-test --json",
+      "result": "OK valid=true"
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py verify --json",
+      "result": "valid=true checked_record_count=12235 issue_count=0 history_rewritten=false",
+      "note": "final epistemic verify, run after all durable writes"
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "result": "status=consistent"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    },
+    {
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "result": "valid=true corrupt_lines=0 errors=[] event_count=1092077 last_global_seq=1092077",
+      "note": "~22 min at current store size; blocked on to completion, not assumed"
+    }
+  ],
+  "rust": [],
+  "rust_note": "No Rust source was changed this round; the implementation is Python steward tooling only. cargo tests not required and not claimed.",
+  "incomplete": []
+}

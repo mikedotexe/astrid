@@ -1,0 +1,63 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "note": "The report is a Recovery turn and binds no source page, so there is no report-bound SHA to compare. These are the sources her claims name, hashed from the working copy at read time. The working copy hash of mcp.rs matches the revision her live bookmark recorded (a1110a9b…), so her cited 142-173 window is the same bytes.",
+  "sources": [
+    {
+      "path": "crates/astrid-capsule/src/engine/mcp.rs",
+      "sha256": "a1110a9b81d65b41b46f312b854acab4d60e540c14e479dca27b0e86edec92ff",
+      "bytes": 11912,
+      "lines": 289,
+      "read_scope": "complete (1-145, 145-289)",
+      "binding_match": "matches the revision recorded in her live reader bookmark for this file"
+    },
+    {
+      "path": "crates/astrid-mcp/src/secure.rs",
+      "sha256": "534f332e8089da794ad7297d371ce87d23a217fc69524cf62661fcb87b388a5e",
+      "bytes": 23636,
+      "lines": 691,
+      "read_scope": "scoped: 40-110 (struct SecureMcpClient, new, check_authorization head) plus symbol index for allowance_store/connect_dynamic"
+    },
+    {
+      "path": "crates/astrid-capsule/src/context.rs",
+      "sha256": "bc1b76f60b6cd0421e390ea6cb2388b4961865cbd805bb58bf4d5f57168da98f",
+      "bytes": 4030,
+      "lines": 106,
+      "read_scope": "scoped: declaration at 22, allowance_store at 44, default at 73, with_allowance_store at 95-96"
+    },
+    {
+      "path": "crates/astrid-capsule/src/loader.rs",
+      "sha256": "c948b7e0c02b08cdcabf61a18bb039c8fd5ef4be977aeef6b8150fee1b0b2ad4",
+      "bytes": 2954,
+      "lines": 79,
+      "read_scope": "complete (1-79)"
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "read_scope": "scoped: Command enum 1-17, parse 18-103, page_suffix 141-155"
+    },
+    {
+      "path": "crates/astrid-source-study/src/store.rs",
+      "read_scope": "scoped: recovery_map/recovery_with_candidates/requested_source/source_recovery 370-440, prepare_parsed command arms 440-560"
+    },
+    {
+      "path": "crates/astrid-source-study/src/path_recovery.rs",
+      "read_scope": "complete (1-86)"
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "read_scope": "scoped: topic resolution and bail 40-90"
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "read_scope": "complete (1-62)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/study_navigation.rs",
+      "read_scope": "scoped: request_target 5-36, handle_request 102-190"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "read_scope": "scoped: uses_shared_source_study/shared_study_command/prepare_shared_study_target 1-130"
+    }
+  ]
+}

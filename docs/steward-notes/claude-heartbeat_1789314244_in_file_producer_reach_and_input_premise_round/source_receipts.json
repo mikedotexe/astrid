@@ -1,0 +1,16 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "services/astrid-edge-runtime/src/reservoir.rs",
+      "sha256": "1709aa170d414a69651860bfaacdc1560e2987233a4f69476ba3f0c9b3179987",
+      "report_binding_sha256": "1709aa170d414a69651860bfaacdc1560e2987233a4f69476ba3f0c9b3179987",
+      "hash_match": true,
+      "total_lines": 1839,
+      "total_bytes": 73266,
+      "read_scope": "complete file inspected; exact intervals transcribed: 37-38, 43-44, 63-66, 74, 211-212, 260-280, 295-334, 349-452, 558, 587-614, 640-643, 651, 686-716, 732-750, 782-796, 810-820, 829-882, 1075, 1133-1150, 1201-1204, 1293, 1379-1391, 1474-1597, 1722-1739",
+      "window_hash_note": "witness window_sha256=512e688c...a051 is sha256 of the RENDERED numbered page (lived_state_witness/mod.rs:140), not of raw source bytes. Raw lines 372-480 hash 20dfdf92...9373 and raw bytes 12975..17435 hash db2c3d6e...9fc6. The divergence is expected preimage difference, NOT a source-integrity failure.",
+      "byte_vs_line_note": "declared byte window 12975..17435 begins 40 bytes inside line 372; the rendered page snaps to whole lines 372-480 (line 372 starts at byte 12935, line 481 at byte 17435)."
+    }
+  ]
+}

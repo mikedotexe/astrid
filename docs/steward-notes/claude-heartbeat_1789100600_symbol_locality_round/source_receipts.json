@@ -1,0 +1,75 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "read_scope": "report-bound file; hash matched report binding exactly. Read lines 1-40 (SYSTEM/PEER_SYSTEM consts), the complete bound window 1540-1670, and line 1400-1420 (prior-turn OPEN landing). Definition sites for every cited symbol resolved across the whole file by exact-declaration match."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/persistence_helpers.rs",
+      "sha256": "791ac2e4df46a9e91b5c3e4021bac289ddf826f4c70ada7db8fcc711bbd1f600",
+      "bytes": 4652,
+      "lines": 155,
+      "read_scope": "Definition sites for shared_investigation_lane (63) and shared_investigation_authority_boundary (73); also local_participant_for_investigation (84) and parse_shared_investigation_decision (93)."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs",
+      "sha256": "5ace3d017e14514f16afb2449de2eb30d0e19bce583fe16d293a0724162ae1ed",
+      "bytes": 9405,
+      "lines": 229,
+      "read_scope": "Definition site for paused_primary_return_v1 (140)."
+    },
+    {
+      "path": "crates/astrid-source-study/src/page.rs",
+      "sha256": "a99605dd40391182ea3ecb85734549cb53c89a1bf1d64d1e8c243ce38e5c20f2",
+      "bytes": 5179,
+      "lines": 146,
+      "read_scope": "Complete file, 146 lines. Page::read_with_budget byte accounting (86-110) and the rendered header/footer template including the Navigation line (116-131)."
+    },
+    {
+      "path": "crates/astrid-source-study/src/relationships.rs",
+      "sha256": "a41a1c6a33ba9d7049dfee1ad70c964cdc3a704f4f7a41b457763d872c881d22",
+      "bytes": 1107,
+      "lines": 30,
+      "read_scope": "Complete file, 30 lines. Catalog::relate and valid_symbol - the RELATE operation absent from the page footer."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "1bc376c2e004d14d3a8cb84974e929871e171731446740219c86ae88a1f60bae",
+      "bytes": 13536,
+      "lines": 336,
+      "read_scope": "Lines 1-140: the SELF_STUDY lane that builds the page and binds source_snapshot_v1 from page.text."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lived_state_witness/mod.rs",
+      "sha256": "740edfd1dba19e1ec7f22228a170db34e1404c6e1e07de71cc97668c6a7eadf9",
+      "bytes": 29831,
+      "lines": 849,
+      "read_scope": "Lines 100-200: source_snapshot_v1, confirming window_sha256 hashes the RENDERED page, not raw file bytes."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/introspect.rs",
+      "sha256": "bdcd0ac0133c2ffdf838685bc6f61d0156cf40f9304be3bd3dbb3417a73e85f7",
+      "bytes": 60011,
+      "lines": 1669,
+      "read_scope": "Lines 1200-1275: the INTROSPECT renderer (within_file_xrefs / cross_file_xrefs), establishing that its xrefs point outward from definitions in the window, and that this SELF_STUDY page is a different renderer with none."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm/provider/prompt_contracts.rs",
+      "sha256": "3b90c65d54e7fb38dc8ef4861f2c036f7b69f28b42599ce3cbd21452e9827902",
+      "bytes": 40680,
+      "lines": 393,
+      "read_scope": "Lines 28 and 75: RELATE present in her global prompt contract."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+      "sha256": "3da2cd5678ac24ad3d4ddcc735b4a409be4212133220f79e95c78555339f01ea",
+      "bytes": 163938,
+      "lines": 4390,
+      "read_scope": "Line 201: RELATE in the wired SELF_STUDY sub-verb list."
+    }
+  ]
+}

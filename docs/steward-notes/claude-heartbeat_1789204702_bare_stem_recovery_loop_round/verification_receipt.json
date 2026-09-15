@@ -1,0 +1,208 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "steward_control.py subprocess run adapter; no session opened, no NDJSON ops, no pause/resume, no lease token read, quoted or persisted",
+  "controller": {
+    "run_id": "run_1789200614168851000_f08efe2d64",
+    "preprojection_generation_id": "projection_1789200618529264000_106fb61a36",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "preprojection_duration_ms": 4073948,
+    "postprojection_generation_id": "adapter-owned; runs after this process exits",
+    "pause_generation": 439,
+    "stop_requested_observed": false
+  },
+  "reading": {
+    "selected": 40,
+    "processed": 1,
+    "unprocessed": 39,
+    "processed_ids": [
+      "introspection_source_catalog_1789200495"
+    ],
+    "family_scan": {
+      "family_count": 40,
+      "batchable_family_count": 0,
+      "threshold": 0.35,
+      "consequence": "family batching did not apply; single-report discipline governed"
+    },
+    "full_read_recorded": true,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "terminal_status": "addressed_change"
+  },
+  "claims": {
+    "total": 11,
+    "verified_existing": 8,
+    "observed": 1,
+    "implemented_now": 1,
+    "needs_operator_approval": 1,
+    "contradictions_preserved": [
+      "c004 \u2014 the surgical cut IS in text.rs:21-40; only anchor selection is not",
+      "c008 \u2014 semantic_boundary_before (352-365) consults no term list, so it is not the weight site she expected"
+    ],
+    "max_disposition_chars": 495,
+    "bounded_metadata_policy": "all dispositions and summaries at or under 500 chars"
+  },
+  "evidence_links": {
+    "batch_rows": 19,
+    "new": 19,
+    "existing": 0,
+    "events_appended": 19
+  },
+  "implementation": {
+    "created": [
+      "scripts/source_study_recovery_loop_watch.py"
+    ],
+    "modified": [
+      "crates/astrid-source-study/tests/path_recovery.rs"
+    ],
+    "live_change": false,
+    "restart_or_deploy": "not required and not attempted; no bridge, codec, prompt, model, config, control, build or launchctl action",
+    "being_text_rewritten": false
+  },
+  "integrity": {
+    "addressing_self_test": "44 pass",
+    "evidence_event_store_tests": "21 pass",
+    "steward_control_tests": "29 pass",
+    "steward_projection_tests": "14 pass",
+    "division_followup_tests": "3 pass",
+    "division_chronicle_tests": "10 pass",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4 pass",
+    "cadence_audit_tests": "6 pass",
+    "cadence_audit_strict": "integrity_ok=true, errors=[], 5839 canonical reports, 0 duplicate-hash groups",
+    "anti_drop_self_test": "5 pass",
+    "anti_drop_verify": "100 guards, 0 gaps, 0 alarms",
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "violation_kind_counts": {},
+      "ratchet": "GREEN this round",
+      "unlisted_legacy_review_debt_count": 44,
+      "note": "pre-existing review debt, not a violation; reported in the round summary per the handoff's stage-10 surfacing rule"
+    },
+    "experiential_epistemics_self_test": "valid",
+    "experiential_epistemics_verify_final": {
+      "valid": true,
+      "checked_record_count": 12113,
+      "issue_count": 0,
+      "history_rewritten": false
+    },
+    "audit_counters": {
+      "status": "consistent",
+      "mismatches": 0
+    },
+    "evidence_event_store_verify": {
+      "valid": true,
+      "event_count": 1072032,
+      "last_global_seq": 1072032,
+      "last_event_sha256": "0c997c89509e04ced375661a436d85c7991cf5a314c6b4eb508815d6a3f739d3",
+      "corrupt_lines": 0
+    },
+    "evidence_event_store_status": "not captured \u2014 the status subcommand exceeded the remaining budget and was stopped; verify (the required check) completed and is recorded above. Per-stream counts are debt for the next round."
+  },
+  "counters": {
+    "canonical_indexed": 5817,
+    "canonical_fully_addressed": 3224,
+    "canonical_full_read": 3856,
+    "canonical_remaining": 2593,
+    "canonical_unread": 1961,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 4310,
+    "noncanonical_pending": 1717,
+    "status": "consistent",
+    "mismatches": [],
+    "checks_all_true": true
+  },
+  "division": {
+    "cycle_sequence": 45,
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "review_due_at_round_start": false,
+    "tier5_cadence_dossier": "not generated \u2014 review_due was false at round start and remains false, so no Division return fired and the dossier was not due",
+    "round_event_id": "division_followup_event_d4c13724bcf5b87378fb3d065bf6d2b6",
+    "event_count": 313,
+    "event_head_sha256": "608835054a400bf392e977de4bbf3e0083b7cca2dfb62709e48b7c3a77dfe5ee",
+    "chronicle_id": "division_chronicle_91a1c642de2b6b6029a337ac",
+    "chronicle_json_sha256": "e6dec9c22e6fb7ef9ff6778e380b5eb29948d6a4be82592ce5eb7ab3688b6a2c",
+    "chronicle_html_sha256": "79f49d1edfc5c2db9f0558cd44681d52752482b7b82e72a6a8dbabbe5ddc0105",
+    "durable_inputs_current": true,
+    "volatile_mismatch": [
+      "supervisor_status_sha256"
+    ],
+    "freshness_statement": "durable inputs current; a single volatile supervisor_status_sha256 mismatch remains. The Chronicle is NOT fully current, and the moving supervisor hash is NOT a durable-integrity failure.",
+    "note_action": "none \u2014 no Division return was due, so no note was written to either being",
+    "processed_report_count": 1
+  },
+  "authority": {
+    "live_eligible_now": false,
+    "grants_approval": false,
+    "auto_approved": false,
+    "edits_source_now": false,
+    "silence_infers_consent": false,
+    "tier_5_waits_opened": 0,
+    "open_boundary": "c011 needs_operator_approval \u2014 relaxing the path_recovery.rs:14-21 guard is a being-facing recovery-prompt change reachable only through build_bridge.sh --restart; named, not attempted"
+  },
+  "git": {
+    "staged": false,
+    "committed": false,
+    "branch": "main",
+    "head": "3d55734438ab0b4fb5a3a24e82156cf3db1f8259",
+    "index_clean": true,
+    "foreign_dirty_paths_untouched": true,
+    "minime_worktree": "clean at round end"
+  },
+  "addressing": {
+    "introspection_ids": [
+      "introspection_source_catalog_1789200495"
+    ],
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "terminal_status": "addressed_change",
+    "claim_count": 11,
+    "evidence_link_count": 19,
+    "new_evidence_links": 19
+  },
+  "epistemic_lint": {
+    "command": "python3 scripts/experiential_epistemics.py verify --json",
+    "ran_after_all_durable_writes": true,
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "checked_record_count": 12113,
+    "history_rewritten": false
+  },
+  "evidence_event_store": {
+    "command": "python3 scripts/evidence_event_store.py --json verify",
+    "valid": true,
+    "event_count": 1072032,
+    "last_global_seq": 1072032,
+    "last_event_sha256": "0c997c89509e04ced375661a436d85c7991cf5a314c6b4eb508815d6a3f739d3",
+    "corrupt_lines": 0,
+    "errors": [],
+    "status_subcommand": "not captured \u2014 exceeded the remaining budget and was stopped; per-stream counts are debt for the next round"
+  },
+  "anti_drop": {
+    "self_test": "5 pass",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "registration_debt": "source_study_recovery_loop_watch has no anti-drop row this round: scripts/anti_drop_catalog.py is foreign dirty work and was preserved untouched. Every prior watch in this family carries a row; this one is owed one in a later interactive window."
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "ratchet": "GREEN this round",
+    "unlisted_legacy_review_debt_count": 44,
+    "note": "pre-existing review debt, not a violation; reported in the round summary per the handoff's stage-10 surfacing rule"
+  }
+}

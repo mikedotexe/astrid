@@ -1,0 +1,36 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789235097",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789235097.txt",
+      "sha256": "16cba5cfd717799776c2cc67a9472cc2fbc6b98a018c1f75b728afd803270258",
+      "bytes": 1599,
+      "lines": 18,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_f961fa23084be4bbc749e88df30e20d8337fd77cf23577be23b8d6fe9621efe0",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f961fa23084be4bbc749e88df30e20d8337fd77cf23577be23b8d6fe9621efe0.json",
+      "sha256": "727fe4538eac542a888d01b8600cde43d255691f2f8e9a0509402864d5ce61d3",
+      "bytes": 18970,
+      "lines": 440,
+      "read": "complete",
+      "source_snapshot_v1": null,
+      "source_provenance_ref_v1": null,
+      "artifact_authority_state_v1": {
+        "state": "evidence_only",
+        "witness_only": true,
+        "live_eligible_now": false,
+        "grants_approval": false,
+        "edits_source_now": false
+      },
+      "direct_causation_claimed": false,
+      "raw_introspection_prose_included": false
+    }
+  ],
+  "source_binding": "navigation_only_no_report_bound_source_sha_no_mismatch_case_possible"
+}

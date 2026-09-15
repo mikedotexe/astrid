@@ -1,0 +1,35 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789246606.txt",
+      "sha256": "4d944f90cfd170fe6b08fd0c974fd723430ec372ff9343259aebad8c236fb8dc",
+      "bytes": 1792,
+      "lines": 18,
+      "read": "complete",
+      "scope": "entire file",
+      "introspection_id": "introspection_source_catalog_1789246606"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ff7b0fd427c8cc859e78af64fdedbca6734ee94a65af9ee205401d1b85fc11e1.json",
+      "sha256": "ffed19fbb3dfc4fa3ee17a21b8ba0c4517033e36c9f62b947cb90417c388bf47",
+      "bytes": 18968,
+      "lines": 440,
+      "read": "complete",
+      "scope": "entire file",
+      "witness_id": "lsw_ff7b0fd427c8cc859e78af64fdedbca6734ee94a65af9ee205401d1b85fc11e1"
+    }
+  ],
+  "source_binding": {
+    "report_declared_source": "source catalog",
+    "report_declared_revision": "navigation only",
+    "report_bound_source_sha256": null,
+    "witness_source_snapshot_v1": null,
+    "witness_source_provenance_ref_v1": null,
+    "mismatch_case": "not_applicable_no_report_bound_source_sha",
+    "note": "Navigation-only report. No report-bound file SHA exists to compare, so no report-time/current-source split is claimed. Every source below is recorded at its current working-copy hash."
+  }
+}

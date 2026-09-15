@@ -1,0 +1,73 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "report_bound_source": {
+    "status": "absent_by_kind",
+    "detail": "The report is bound to `Source: source catalog` / `Source revision: navigation only`, and the witness carries source_snapshot_v1: null. There is no report-bound file SHA to compare against a working copy, so no report-time/current-source split is labelled. The source she names was bound at sha256:3a20e5eed609de9a8f36121dbe4adf31b4d325d5929b9b33f548605cf6074ef0 by her own prior page (1789452200); the working copy hashes identically, so report-time and current source coincide."
+  },
+  "sources": [
+    {
+      "path": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "sha256": "3a20e5eed609de9a8f36121dbe4adf31b4d325d5929b9b33f548605cf6074ef0",
+      "bytes": 7000,
+      "lines": 214,
+      "read_scope": "complete (1-214)",
+      "grounds": ["c001", "c003", "c004", "c005", "c006", "c007", "c008", "c009"]
+    },
+    {
+      "path": "scripts/baselines/capsule_runtime_health.json",
+      "sha256": "dde94f50c0195704d7efcac3ed6500a875c5ea5666d2a154b68fd5ca673eba7a",
+      "bytes": 221,
+      "lines": 5,
+      "read_scope": "complete",
+      "grounds": ["c009"]
+    },
+    {
+      "path": "crates/astrid-source-study/src/command.rs",
+      "sha256": "8d1b487ab5abaa0a4b3db669771fc9112bbabde87e42fd857f4d7b3a841756f0",
+      "bytes": 5699,
+      "lines": 155,
+      "read_scope": "1-145 of 155 (Command enum, parse, parse_replacement, page_suffix head); remainder is the page-suffix numeric parser",
+      "grounds": ["c011", "c012"]
+    },
+    {
+      "path": "crates/astrid-source-study/src/store.rs",
+      "sha256": "4c7da264d7d8beaa704f756e6d9dc66c76386d988c4b102817f0a2900e0cfbd1",
+      "bytes": 37420,
+      "lines": 969,
+      "read_scope": "scoped: 370-430 (prepare/prepare_action/recovery_map/recovery_with_candidates/requested_source/source_recovery), 432-525 (prepare_parsed dispatch), 527-606 (prepare_relate/prepare_continue/offer_page), 608-628 (delivered head)",
+      "grounds": ["c010", "c011", "c012"]
+    },
+    {
+      "path": "crates/astrid-source-study/src/path_recovery.rs",
+      "sha256": "7799bda8f134b2e6f47782dbf6237dccf020305253706462427017fc4548ec00",
+      "bytes": 2984,
+      "lines": 86,
+      "read_scope": "complete (1-86)",
+      "grounds": ["c013", "c014"]
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "sha256": "1842133fa5b3f88741fe42a347e27da36a29a3583397b7e6a91fe1ee86620405",
+      "bytes": 2889,
+      "lines": 62,
+      "read_scope": "complete (1-62)",
+      "grounds": ["c002", "c010", "c012"]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "0aee1c4f8214c993b690e951fb41c445e7139a86a45e6d439b239bb70d15aa81",
+      "bytes": 16990,
+      "lines": 406,
+      "read_scope": "scoped: 1-300 (uses_shared_source_study, shared_study_command, prepare_shared_study_target, run_shared_source_study, artifact header construction)",
+      "grounds": ["c002", "c010"]
+    },
+    {
+      "path": "crates/astrid-source-study/tests/bare_topic_candidate_gate_reach.rs",
+      "sha256": "c6b74efcb0834171ee500f9e178e0399c221336a989bfaba9ddd50ba2ce54599",
+      "bytes": 7679,
+      "lines": 191,
+      "read_scope": "complete (1-191)",
+      "grounds": ["c013"]
+    }
+  ]
+}

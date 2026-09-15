@@ -1,0 +1,124 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "round": "claude-heartbeat_1789037242_unwired_near_miss_round",
+  "rust_tests_run": false,
+  "rust_note": "No Rust source changed this round; no cargo build or test was run and none was required. Bridge source facts were established by complete/scoped reading plus grep receipts at recorded SHAs.",
+  "tests": [
+    {
+      "name": "UnwiredNearMissTests (new)",
+      "cmd": "python3 -c \"import unittest, proactive_scan as ps; ...loadTestsFromTestCase(ps.UnwiredNearMissTests)\"",
+      "result": "OK",
+      "count": 6,
+      "note": "covers source-derived verb list, markdown-artifact stripping, non-near-miss actions, no double-prefixing, repeated-warn naming the exact repair, clean history"
+    },
+    {
+      "name": "anti_drop_catalog --self-test",
+      "cmd": "python3 scripts/anti_drop_catalog.py --self-test",
+      "result": "OK",
+      "count": 5
+    },
+    {
+      "name": "anti_drop_catalog verify",
+      "cmd": "python3 scripts/anti_drop_catalog.py verify --json",
+      "result": "93 guards, 0 alarms, 0 gaps",
+      "count": 93
+    },
+    {
+      "name": "introspection_addressing_audit --self-test",
+      "cmd": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "result": "OK",
+      "count": 44
+    },
+    {
+      "name": "test_evidence_event_store",
+      "cmd": "python3 scripts/test_evidence_event_store.py",
+      "result": "OK",
+      "count": 21
+    },
+    {
+      "name": "test_steward_projection",
+      "cmd": "python3 scripts/test_steward_projection.py",
+      "result": "OK",
+      "count": 14
+    },
+    {
+      "name": "test_division_ceremony_followup",
+      "cmd": "python3 scripts/test_division_ceremony_followup.py",
+      "result": "OK",
+      "count": 3
+    },
+    {
+      "name": "test_division_ceremony_chronicle",
+      "cmd": "python3 scripts/test_division_ceremony_chronicle.py",
+      "result": "OK",
+      "count": 10
+    },
+    {
+      "name": "test_division_ceremony_projection",
+      "cmd": "python3 scripts/test_division_ceremony_projection.py",
+      "result": "ok",
+      "count": null
+    },
+    {
+      "name": "test_projection_cursors",
+      "cmd": "python3 scripts/test_projection_cursors.py",
+      "result": "OK",
+      "count": 4
+    },
+    {
+      "name": "test_introspection_cadence_audit",
+      "cmd": "python3 scripts/test_introspection_cadence_audit.py",
+      "result": "OK",
+      "count": 6
+    },
+    {
+      "name": "introspection_cadence_audit --strict --compact",
+      "cmd": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "result": "rc=0, integrity_ok=true, errors=[]",
+      "count": null
+    },
+    {
+      "name": "domain_boundary_audit verify",
+      "cmd": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid=true, violation_count=0 (ratchet GREEN); unlisted_legacy_review_debt_count=44 carried unchanged",
+      "count": 0
+    },
+    {
+      "name": "experiential_epistemics self-test",
+      "cmd": "python3 scripts/experiential_epistemics.py self-test --json",
+      "result": "valid=true",
+      "count": null
+    },
+    {
+      "name": "experiential_epistemics verify (final, after durable writes)",
+      "cmd": "python3 scripts/experiential_epistemics.py verify --json",
+      "result": "valid=true, issue_count=0, checked_record_count=11967, history_rewritten=false",
+      "count": 11967
+    },
+    {
+      "name": "phantom_symbol_watch self-test (prior round's tool, re-run)",
+      "cmd": "python3 scripts/phantom_symbol_watch.py self-test",
+      "result": "OK",
+      "count": 13
+    },
+    {
+      "name": "introspection_addressing_audit audit-counters",
+      "cmd": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "result": "consistent, mismatches=[]",
+      "count": null
+    },
+    {
+      "name": "evidence_event_store verify",
+      "cmd": "python3 scripts/evidence_event_store.py --json verify",
+      "result": "valid=true, corrupt_lines=0, last_global_seq=1053982",
+      "count": 1053982
+    },
+    {
+      "name": "test_steward_control",
+      "cmd": "python3 scripts/test_steward_control.py",
+      "result": "FAILED (errors=1) \u2014 CARRIED DEBT",
+      "count": 29,
+      "note": "test_pause_cooperatively_interrupts_wrapped_subprocess raises PausedError('fixture stop') at run_subprocess. Same pre-existing failure recorded by the prior round. It exercises the pause/subprocess adapter while THIS controller-held adapter run owns the lease. No file in this round touches steward_control; not repaired headlessly."
+    }
+  ]
+}

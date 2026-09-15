@@ -1,0 +1,109 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Lines 85-120: research_budget_guard_for_next returns Ok(Some(guard)) at 87 and the block at 112; metadata.get(\"reason\") at 96 and 108 feeds feedback and log only."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/command_dispatch.rs",
+      "note": "research_budget_guard_for_next lines 661-668 delegates the decision to ActionContinuityStore::research_budget_guard_assessment."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "note": "research_budget_guard_assessment_with_base lines 324-468: active_research_budget with budget_id at 398, and class-based gating at 384-394."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Lines 122-143: charter_required_guard_for_next; conv.emphasis set at 126; blocked returned at 135."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Lines 145-178: request_id slice 146-150, execute_semantic_microdose call 151-156 with ctx.sensory_tx at 155, handled/blocked on record_type at 159-169."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Lines 180-209: peer-experiment refusal at 193-201 and experiment-control refusal at 202-209."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/authority_gate.rs",
+      "note": "sensory_tx is a real threaded parameter at lines 855 and 871; the short form sense_tx does not occur anywhere in capsules/spectral-bridge/src."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/authority_types.rs",
+      "note": "dispatch_semantic_microdose lines 102-111 uses sensory_tx only for try_send; it is a write-only tokio mpsc Sender."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/authority_gate.rs",
+      "note": "Line 1135 SafetyLevel::from_fill(fill) is the sensory-derived gate; sensory_tx is never read by any gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/authority_gate.rs",
+      "note": "Line 1206 is the single use of sensory_tx, after every block decision (883-1152) is already final; a failed send returns Err at 1227."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+      "note": "Lines 171-176: the Err arm turns a delivery failure into a blocked outcome, which is the only way the channel touches the verdict."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/authority_gate.rs",
+      "note": "dead_sensory_channel_does_not_change_the_authority_verdict and dead_sensory_channel_fails_delivery_without_recording_execution pin both halves of the answer."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the answered STUDY_QUESTION and the two regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789065100_sensory_tx_transport_not_verdict_round/summaries/introspection_astrid_capsules_spectral-bridge_src_autonomous_next_action_dispatch.rs_1789060966.md",
+      "note": "Preserves the contradiction between the STUDY_NOTE hypothesis and source without rewriting her text."
+    }
+  ]
+}
