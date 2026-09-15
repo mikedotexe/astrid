@@ -15,6 +15,14 @@ impl Reader {
             input_kind
         };
         let evidence_scope = input_kind.scope().to_string();
+        if let Some(page) = &page {
+            text.push_str(&crate::coverage::render(
+                state.progress.as_ref().unwrap_or(&Progress::new()),
+                page,
+                &self.catalog,
+                true,
+            ));
+        }
         let question_id = page
             .as_ref()
             .map_or_else(|| state.questions.active.clone(), |p| p.question_id.clone());
@@ -44,19 +52,10 @@ impl Reader {
         if let Some(choice) = &state.last_choice {
             suffix.push_str(&choice.render(false));
         }
-        let notebook_budget = crate::MAX_INPUT_BYTES.saturating_sub(
-            text.len()
-                .saturating_add(suffix.len())
-                .saturating_add(crate::STUDY_PROMPT.len())
-                .saturating_add(32),
-        );
+        let notebook_budget = remaining_input_budget(text.len().saturating_add(suffix.len()));
         text.push_str(&notebook.render_with_budget(notebook_budget)?);
         text.push_str(&suffix);
-        let available = crate::MAX_INPUT_BYTES.saturating_sub(
-            text.len()
-                .saturating_add(crate::STUDY_PROMPT.len())
-                .saturating_add(32),
-        );
+        let available = remaining_input_budget(text.len());
         if receipt.len() <= available {
             text.insert_str(receipt_position, &receipt);
         } else if let Some(headline) = receipt.lines().next() {
@@ -74,6 +73,7 @@ impl Reader {
             bail!("complete study input exceeds the shared provider budget; bookmark unchanged");
         }
         let mut output = StudyOutput {
+            require_complete_input: true,
             input_kind,
             evidence_scope,
             system_prompt: crate::STUDY_PROMPT.into(),
@@ -86,6 +86,11 @@ impl Reader {
             navigation_id: None,
         };
         if output.page.is_none() {
+            // A deliberately intervening navigation can carry a new question or
+            // finding. Keep the pending source bytes, but refresh its framing on
+            // resume. Retain the old complete input for late delivery verification
+            // and choice provenance. Uninterrupted retries stay byte-exact.
+            state.pending_page_context_stale = true;
             state.sequence = state
                 .sequence
                 .checked_add(1)
@@ -96,6 +101,7 @@ impl Reader {
             )));
             state.pending_navigation = Some(output.clone());
         } else {
+            state.pending_page_context_stale = false;
             state.pending_page_output = Some(output.clone());
         }
         remember_offer(state, &output, navigation_offer);
@@ -138,6 +144,14 @@ impl Reader {
             ),
         }
     }
+}
+
+fn remaining_input_budget(text_bytes: usize) -> usize {
+    crate::MAX_INPUT_BYTES.saturating_sub(
+        text_bytes
+            .saturating_add(crate::STUDY_PROMPT.len())
+            .saturating_add(32),
+    )
 }
 
 fn remember_offer(

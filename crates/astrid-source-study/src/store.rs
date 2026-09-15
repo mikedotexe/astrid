@@ -21,6 +21,10 @@ pub struct StudyOutput {
     pub input_kind: InputKind,
     #[serde(default)]
     pub evidence_scope: String,
+    /// New offers protect scope, coverage and notebook framing as well as source.
+    /// Old pending inputs omit this field and retain their original wire contract.
+    #[serde(default)]
+    pub require_complete_input: bool,
     pub system_prompt: String,
     #[serde(default = "default_input_budget")]
     pub input_budget_bytes: usize,
@@ -47,6 +51,19 @@ impl StudyOutput {
     /// Rejects shortened input or an incomplete provider response.
     pub fn verify_delivery(&self, request: &str, response: &str) -> Result<()> {
         verify_text(&self.text, request, response)
+    }
+
+    fn verify_source_delivery(&self, page_id: &str, request: &str, response: &str) -> Result<()> {
+        if self.require_complete_input
+            || self.question_id.is_some()
+            || self.system_prompt == crate::STUDY_PROMPT
+        {
+            if self.page.as_ref().is_none_or(|page| page.id != page_id) {
+                bail!("complete source input does not match its page identity");
+            }
+            self.verify_delivery(request, response)?;
+        }
+        Ok(())
     }
 }
 impl Page {
@@ -75,6 +92,8 @@ struct State {
     pending: Option<Page>,
     #[serde(default)]
     pending_page_output: Option<StudyOutput>,
+    #[serde(default)]
+    pending_page_context_stale: bool,
     current: Option<String>,
     bookmarks: BTreeMap<String, Page>,
     receipts: BTreeMap<String, DeliveryReceipt>,
@@ -107,6 +126,28 @@ pub struct Reader {
     catalog: Catalog,
     directory: PathBuf,
     runtime: Option<crate::trace::RuntimeRecords>,
+}
+
+fn pending_context_is_current(state: &State, page: &Page) -> bool {
+    !state.pending_page_context_stale
+        && state
+            .choice_sequences
+            .get(&page.id)
+            .is_none_or(|sequence| *sequence >= state.sequence)
+}
+
+fn retained_pending_output(state: &State, page: &Page) -> Option<StudyOutput> {
+    state
+        .pending_page_output
+        .as_ref()
+        .filter(|output| {
+            pending_context_is_current(state, page)
+                && output
+                    .page
+                    .as_ref()
+                    .is_some_and(|saved| saved.id == page.id)
+        })
+        .cloned()
 }
 
 impl Reader {
@@ -157,6 +198,10 @@ impl Reader {
                 bail!("retained study wire identity mismatch");
             }
             verify_wire(&page, request, response)?;
+            if let Some(output) = value.get("output").filter(|output| !output.is_null()) {
+                let output: StudyOutput = serde_json::from_value(output.clone())?;
+                output.verify_source_delivery(&page.id, request, response)?;
+            }
             if state
                 .bookmarks
                 .get(&page.source)
@@ -396,6 +441,9 @@ impl Reader {
                     .filter(|page| page.source == source.id)
                 {
                     let page = page.clone();
+                    if let Some(output) = retained_pending_output(&state, &page) {
+                        return Ok(output);
+                    }
                     return self.output(
                         &mut state,
                         page.text.clone(),
@@ -406,8 +454,17 @@ impl Reader {
                 if let Some(last) = state.bookmarks.get(&source.id) {
                     if last.eof {
                         Page::read(&source, Some(&last.end), 1, Some(&last.revision.sha256))?;
-                        return self.output(&mut state, format!(
-                            "End of {}. Use SELF_STUDY OPEN {} 1 to reread or SELF_STUDY MAP to choose another source.", source.id, source.id), None, InputKind::EndOfFile);
+                        let text = format!(
+                            "End of {}.{}",
+                            source.id,
+                            crate::coverage::render(
+                                state.progress.as_ref().unwrap_or(&Progress::new()),
+                                last,
+                                &self.catalog,
+                                false
+                            )
+                        );
+                        return self.output(&mut state, text, None, InputKind::EndOfFile);
                     }
                     Page::read(&source, Some(&last.end), 1, Some(&last.revision.sha256))?
                 } else {
@@ -444,6 +501,9 @@ impl Reader {
             return Ok(output);
         }
         if let Some(page) = state.pending.clone() {
+            if let Some(output) = retained_pending_output(state, &page) {
+                return Ok(output);
+            }
             return self.output(state, page.text.clone(), Some(page), InputKind::SourcePage);
         }
         let Some(last) = state
@@ -461,7 +521,7 @@ impl Reader {
                 1,
                 Some(&last.revision.sha256),
             )?;
-            let text = format!(
+            let mut text = format!(
                 "End of {} at revision {}. {} Choose SELF_STUDY MAP, FIND, or OPEN to deliberately reread.",
                 last.source,
                 last.revision.sha256,
@@ -474,6 +534,12 @@ impl Reader {
                         progress::SourceProgress::label
                     )
             );
+            text.push_str(&crate::coverage::render(
+                state.progress.as_ref().unwrap_or(&Progress::new()),
+                last,
+                &self.catalog,
+                false,
+            ));
             return self.output(state, text, None, InputKind::EndOfFile);
         }
         let page = Page::read(
@@ -514,11 +580,28 @@ impl Reader {
         let _lock = self.lock()?;
         let mut state = self.load()?;
         self.hydrate(&mut state)?;
+        if state
+            .pending
+            .as_ref()
+            .is_some_and(|page| page.id == page_id)
+            && let Some(output) = &state.pending_page_output
+        {
+            output.verify_source_delivery(page_id, request_json, response_json)?;
+        }
         if let Some(receipt) = state.receipts.get(page_id).cloned() {
             if receipt.request_sha256 != digest(request_json)
                 || receipt.response_sha256 != digest(response_json)
             {
                 bail!("source page was already delivered with different wire evidence");
+            }
+            let raw = fs::read(&receipt.artifact_path)?;
+            if digest(&raw) != receipt.artifact_sha256 {
+                bail!("retained study receipt hash mismatch");
+            }
+            let artifact: Value = serde_json::from_slice(&raw)?;
+            if let Some(output) = artifact.get("output").filter(|value| !value.is_null()) {
+                let output: StudyOutput = serde_json::from_value(output.clone())?;
+                output.verify_source_delivery(page_id, request_json, response_json)?;
             }
             if state
                 .pending
@@ -533,13 +616,6 @@ impl Reader {
                 self.save(&state)?;
             }
             return Ok(receipt);
-        }
-        if let Some(output) = state
-            .pending_page_output
-            .as_ref()
-            .filter(|o| o.question_id.is_some() && o.page.as_ref().is_some_and(|p| p.id == page_id))
-        {
-            output.verify_delivery(request_json, response_json)?;
         }
         let page = state
             .pending
@@ -621,9 +697,25 @@ impl Reader {
                 bail!("retained source delivery artifact was modified");
             }
             let recorded: Page = serde_json::from_value(artifact["page"].clone())?;
-            if &recorded != page {
+            let mut pending_identity = page.clone();
+            let mut recorded_identity = recorded.clone();
+            pending_identity.source_locations.clear();
+            recorded_identity.source_locations.clear();
+            if recorded_identity != pending_identity
+                || (!page.source_locations.is_empty()
+                    && !recorded.source_locations.is_empty()
+                    && page.source_locations != recorded.source_locations)
+            {
                 bail!("retained source delivery page mismatch");
             }
+            // An old helper can omit additive lexical metadata while preserving
+            // the exact page. Reuse retained metadata only after wire verification.
+            let recovered_page = if recorded.source_locations.is_empty() {
+                page.clone()
+            } else {
+                recorded
+            };
+            let page = &recovered_page;
             let request = artifact["request_json"]
                 .as_str()
                 .context("retained request")?;
@@ -631,12 +723,12 @@ impl Reader {
                 .as_str()
                 .context("retained response")?;
             verify_wire(page, request, response)?;
-            if let Some(output) = state
-                .pending_page_output
-                .as_ref()
-                .filter(|o| o.question_id.is_some())
-            {
-                output.verify_delivery(request, response)?;
+            if let Some(output) = &state.pending_page_output {
+                output.verify_source_delivery(&page.id, request, response)?;
+            }
+            if let Some(output) = artifact.get("output").filter(|value| !value.is_null()) {
+                let output: StudyOutput = serde_json::from_value(output.clone())?;
+                output.verify_source_delivery(&page.id, request, response)?;
             }
             let receipt = DeliveryReceipt {
                 page_id: page.id.clone(),
@@ -743,9 +835,11 @@ impl Reader {
                 ..State::default()
             });
         }
-        let state: State = serde_json::from_slice(&fs::read(path)?).context(
+        let mut value: Value = serde_json::from_slice(&fs::read(path)?).context(
             "source-study state is unreadable; preserving it instead of resetting progress",
         )?;
+        crate::notebook_persistence::restore(&self.directory, &mut value)?;
+        let state: State = serde_json::from_value(value)?;
         if !(1..=SCHEMA_VERSION).contains(&state.version) {
             bail!("unsupported source-study checkpoint version");
         }
@@ -755,6 +849,7 @@ impl Reader {
         atomic_write(&self.directory.join("reader-v1.json"), &{
             let mut value = serde_json::to_value(state)?;
             value["version"] = SCHEMA_VERSION.into();
+            crate::notebook_persistence::save(&self.directory, &value)?;
             serde_json::to_vec_pretty(&value)?
         })
     }
@@ -787,16 +882,23 @@ pub(crate) fn verify_text(text: &str, request_json: &str, response_json: &str) -
     if completion.is_none_or(|text| text.trim().is_empty())
         || response.get("error").is_some()
         || response.get("done") == Some(&Value::Bool(false))
-        || response
-            .get("done_reason")
-            .is_some_and(|reason| reason == "length")
+        || response.get("done_reason").is_some_and(incomplete_finish)
         || response
             .pointer("/choices/0/finish_reason")
-            .is_some_and(|reason| reason == "length" || reason == "content_filter")
+            .is_some_and(incomplete_finish)
     {
         bail!("provider did not retain a completed generation; bookmark unchanged");
     }
     Ok(())
+}
+
+fn incomplete_finish(reason: &Value) -> bool {
+    reason.as_str().is_some_and(|reason| {
+        matches!(
+            reason,
+            "length" | "content_filter" | "error" | "failed" | "cancelled" | "canceled" | "timeout"
+        )
+    })
 }
 
 pub(crate) fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {

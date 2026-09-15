@@ -9,6 +9,12 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Improved — study source context (2026-09-15)
+
+- Shared source pages identify enclosing Rust/Python syntax and test context, distinguish EOF from verified coverage, and offer exact reads for remaining byte gaps. Same-revision definition/reference candidates make implementation accessible beside tests without asserting runtime behavior.
+- Both Beings can optionally pin their own short findings beside delivered source fragments and revision identities. Bounded source-location recall stays separate from conclusions; old in-flight helper writes preserve new findings through a reader-locked sidecar.
+- Keep existing pending inputs byte-exact across the release, and preserve receipt-gated advancement, chosen navigation and writing preferences. Qualification and rollout boundaries: `docs/steward-notes/2026-09-15-study-source-context.md`.
+
 ### Improved — shared source-study navigation (2026-09-15)
 
 - Default MAP views show compact directories and direct source choices; LIST retains full recursive catalog access, including historical commentary. Map/list pagination is explicitly separate from source CONTINUE, with recovery for former long-map page numbers.

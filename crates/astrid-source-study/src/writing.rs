@@ -293,6 +293,7 @@ impl Writer {
         let output = StudyOutput {
             input_kind: InputKind::PrivateWriting,
             evidence_scope: InputKind::PrivateWriting.scope().into(),
+            require_complete_input: true,
             system_prompt: PROMPT.into(),
             input_budget_bytes: crate::MAX_INPUT_BYTES,
             context_tokens: crate::CONTEXT_TOKENS,

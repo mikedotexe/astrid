@@ -232,6 +232,9 @@ dependencies = [
  "serde_json",
  "sha2",
  "toml 0.8.23",
+ "tree-sitter",
+ "tree-sitter-python",
+ "tree-sitter-rust",
 ]
 
 [[package]]

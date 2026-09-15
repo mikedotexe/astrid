@@ -1,3 +1,4 @@
+use crate::notebook_findings::Findings;
 use crate::{Catalog, Page, digest};
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
@@ -9,6 +10,8 @@ pub(crate) struct Notebook {
     previous: Option<Entry>,
     #[serde(default)]
     recent: Vec<Entry>,
+    #[serde(default, skip_serializing_if = "Findings::is_empty")]
+    source_findings: Findings,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -131,6 +134,14 @@ impl Notebook {
     }
 
     pub(crate) fn record(&mut self, response: &str, text: &str, page: Option<&Page>) {
+        self.record_pages(response, text, page.map_or(&[], std::slice::from_ref));
+    }
+
+    /// The caller verifies complete delivery before recording any source or words.
+    /// All pages of a verified session can support independently authored findings.
+    pub(crate) fn record_pages(&mut self, response: &str, text: &str, pages: &[Page]) {
+        self.source_findings.record(response, text, pages);
+        let page = pages.last();
         let origin = page.map_or_else(
             || "source navigation".into(),
             |p| {
@@ -158,6 +169,8 @@ impl Notebook {
                 self.note = update(value, &entry, 1600);
             } else if directive && let Some(value) = line.strip_prefix("STUDY_QUESTION:") {
                 self.question = update(value, &entry, 500);
+            } else if directive && crate::notebook_findings::is_directive(line) {
+                // The source-findings receipt reports accepted and rejected updates.
             } else if !directive || !line.starts_with("NEXT:") {
                 prose.push(original);
             }
@@ -211,9 +224,13 @@ impl Notebook {
     /// Rendering never edits the durable notebook. Oldest whole accounts are
     /// omitted before the latest account becomes an explicitly marked excerpt.
     pub(crate) fn render_with_budget(&self, max_total_bytes: usize) -> anyhow::Result<String> {
-        const HEADER: &str = "\n\nRECALLED ACCOUNT — your study notebook contains recent visible responses and your saved findings, not source supplied this turn or verified code facts. Recent accounts are oldest first; previous is the latest. complete=false marks an excerpt, never a full answer. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. A reopen link marks the page behind that account; the question's link is where it was asked, not a known answer location. Reopen checks current source; resume continues the bookmark. Missing fields mean no note was saved.\n";
+        const HEADER: &str = "\n\nRECALLED ACCOUNT — your study notebook contains recent visible responses and your saved findings, not source supplied this turn or verified code facts. Recent accounts are oldest first; previous is the latest. complete=false marks an excerpt, never a full answer. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. A reopen link marks the page behind that account; the question's link is where it was asked, not a known answer location. Reopen checks current source; resume continues the bookmark. Missing fields mean no note was saved. source_findings.authored contains your unverified conclusions; each anchor preserves an actually supplied numbered line fragment, its original revision and page identity. supplied_locations are bounded lexical source-location recall, not answers or code supplied this turn. A fragment may omit surrounding scope. OPEN checks current checkout, which may differ from the saved revision.\n";
         const FOOTER: &str = "\nEnd of study notebook.\n";
-        if self.note.is_none() && self.question.is_none() && self.previous.is_none() {
+        if self.note.is_none()
+            && self.question.is_none()
+            && self.previous.is_none()
+            && self.source_findings.is_empty()
+        {
             return Ok(String::new());
         }
         let Some(json_budget) =
@@ -235,6 +252,9 @@ impl Notebook {
                 view.recent.remove(0);
                 continue;
             }
+            if view.source_findings.omit_oldest_location() {
+                continue;
+            }
             if let Some(previous) = &mut view.previous {
                 if previous.text.len() > 64 {
                     previous.text = bounded(&previous.text, (previous.text.len() / 2).max(64));
@@ -251,11 +271,11 @@ impl Notebook {
                     continue;
                 }
             }
-            // Preserve the chosen note and question in full. If even their
+            // Preserve authored findings, the chosen note and question in full. If even their
             // minimum framing cannot fit, report failure rather than silently
             // replacing them with null or clipping serialized JSON.
             anyhow::bail!(
-                "saved study note, question and minimum account exceed the remaining input budget; notebook unchanged"
+                "saved study findings, note, question and minimum account exceed the remaining input budget; notebook unchanged"
             );
         }
     }
@@ -416,5 +436,34 @@ mod budget_tests {
         assert!(notebook.render_with_budget(100).is_err());
         assert_eq!(serde_json::to_value(&notebook).unwrap(), stored);
         assert_eq!(Notebook::default().render_with_budget(0).unwrap(), "");
+    }
+
+    #[test]
+    fn a_tight_budget_omits_location_recall_but_preserves_the_authored_finding() {
+        let page: crate::Page = serde_json::from_value(serde_json::json!({
+            "id":"fixture", "source":"astrid/crates/demo/src/lib.rs",
+            "revision":{"sha256":"frozen-revision", "bytes":22, "lines":1},
+            "start":{"byte":0, "line":1}, "end":{"byte":22, "line":2}, "eof":true,
+            "text":"     1 | pub fn candidate() {}\n",
+            "source_locations":[{"line":1,"name":"candidate","kind":"function"}]
+        }))
+        .unwrap();
+        let mut notebook = Notebook::default();
+        notebook.record(
+            "fixture-response",
+            &format!("STUDY_NOTE: Keep this note.\nSTUDY_QUESTION: Keep this question.\nSTUDY_FINDING: astrid/crates/demo/src/lib.rs:1 | {}", "A".repeat(600)),
+            Some(&page),
+        );
+        let stored = serde_json::to_value(&notebook).unwrap();
+        let limit = notebook.render().len().saturating_sub(128);
+        let compact = notebook.render_with_budget(limit).unwrap();
+        assert!(compact.len() <= limit);
+        assert!(compact.contains("\"omitted_locations_for_input_budget\":1"));
+        assert!(compact.contains(&"A".repeat(600)));
+        assert!(compact.contains("Keep this note."));
+        assert!(compact.contains("Keep this question."));
+        assert_eq!(serde_json::to_value(&notebook).unwrap(), stored);
+        assert!(notebook.render_with_budget(100).is_err());
+        assert_eq!(serde_json::to_value(&notebook).unwrap(), stored);
     }
 }

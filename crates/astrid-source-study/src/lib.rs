@@ -6,18 +6,23 @@
 
 mod catalog;
 mod command;
+mod coverage;
 mod evidence;
 mod navigation;
 mod navigation_history;
 mod navigation_recovery;
 mod notebook;
+mod notebook_findings;
+mod notebook_persistence;
 mod page;
 mod path_recovery;
 mod progress;
 mod questions;
 mod relationships;
 pub mod response_choice;
+mod source_links;
 mod source_search;
+mod source_structure;
 mod store;
 mod trace;
 pub mod writing;
@@ -26,7 +31,7 @@ pub use catalog::{Catalog, Repository, Source};
 pub use command::Command;
 pub use evidence::InputKind;
 pub use navigation_recovery::{NavigationRecovery, recover_local_navigation};
-pub use page::{Page, Position, SourceRevision};
+pub use page::{Page, Position, SourceLocation, SourceRevision};
 pub use questions::QuestionCommand;
 pub use store::{DeliveryReceipt, Reader, StudyOutput};
 

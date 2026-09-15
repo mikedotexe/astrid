@@ -4538,3 +4538,22 @@ Source, tests, migration limits and eventual rollout identities belong in
 `docs/steward-notes/2026-09-15-study-navigation.md`; availability and later natural
 understanding remain different observations. No forced revision or new model,
 sampling, journal-length or sensory policy follows from this change.
+
+
+### 2026-09-15 — Astrid — source scope, missing coverage and concrete evidence anchors
+
+The sealed 100-study survey found a maintenance EOF page inside a serialization
+test, followed by a whole-file conclusion despite 3,452 undelivered opening bytes.
+Capsule-health pages also elicited broader security claims than their diagnostic
+implementation established. The retained report separates these grounded
+account/source mismatches from production defects and from freely chosen rereads.
+See `reservoir-llm-research/analyses/2026-09-15-astrid-study-survey.md`, HSS-23;
+its source probes and exact delivered revisions ground the cited intervals.
+
+The user authorized the shared reader repair: enclosing syntax/test labels,
+receipt-gated coverage and exact missing-region choices; optional source-linked
+Being-authored findings; and same-file implementation/reference candidates beside
+tests. No host rewrites their conclusions or executes suggested navigation.
+Implementation, validation obligations and deployment boundaries are recorded in
+[the source-context account](2026-09-15-study-source-context.md). Live status belongs
+to the subsequent activation receipts, not this implementation entry.

@@ -33,7 +33,15 @@ impl Reader {
             page.text = page.text.replace(&page.id, &id);
             page.id = id;
             page.question_id.clone_from(&state.questions.active);
+        }
+        for page in &pages {
             text.push_str(&page.text);
+            text.push_str(&crate::coverage::render_pages(
+                state.progress.as_ref().unwrap_or(&Progress::new()),
+                page,
+                &self.catalog,
+                &pages,
+            ));
             text.push('\n');
         }
         let kind = if pages.iter().all(|page| page.start.byte == page.end.byte) {

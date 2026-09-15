@@ -37,6 +37,24 @@ pub(crate) fn record(progress: &mut Progress, page: &Page) {
 }
 
 impl SourceProgress {
+    /// Missing intervals in this revision, independent of the current bookmark.
+    pub(crate) fn gaps(&self) -> Vec<(usize, usize)> {
+        let mut cursor = 0;
+        let mut missing = Vec::new();
+        for &(start, end) in &self.ranges {
+            let start = start.min(self.revision.bytes);
+            let end = end.min(self.revision.bytes);
+            if start > cursor {
+                missing.push((cursor, start));
+            }
+            cursor = cursor.max(end);
+        }
+        if cursor < self.revision.bytes {
+            missing.push((cursor, self.revision.bytes));
+        }
+        missing
+    }
+
     pub(crate) fn label(&self) -> String {
         let complete = self.ranges.as_slice() == [(0, self.revision.bytes)];
         let ranges = self

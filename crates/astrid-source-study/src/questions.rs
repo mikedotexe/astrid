@@ -158,12 +158,11 @@ impl Questions {
         text: &str,
         pages: &[Page],
     ) {
-        let last = pages.last();
         if let Some(id) = id {
             let Some(inquiry) = self.entries.get_mut(id) else {
                 return;
             };
-            inquiry.notebook.record(response, text, last);
+            inquiry.notebook.record_pages(response, text, pages);
             if let Some(question) = inquiry.notebook.question_text() {
                 inquiry.question = question.into();
             }
@@ -186,9 +185,9 @@ impl Questions {
         } else if self.active.is_some() {
             self.unthreaded
                 .get_or_insert_with(Notebook::default)
-                .record(response, text, last);
+                .record_pages(response, text, pages);
         } else {
-            global.record(response, text, last);
+            global.record_pages(response, text, pages);
         }
     }
     pub(crate) fn notebook_for<'a>(

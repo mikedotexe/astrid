@@ -27,7 +27,8 @@ fn response() -> String {
 #[test]
 fn prepare_and_failed_delivery_do_not_advance() {
     let (_temp, _, reader) = setup(&"hello\n".repeat(3000));
-    let first = reader.prepare(open()).unwrap().page.unwrap();
+    let first_output = reader.prepare(open()).unwrap();
+    let first = first_output.page.as_ref().unwrap().clone();
     assert_eq!(
         reader.prepare(Command::Continue).unwrap().page.unwrap(),
         first
@@ -41,7 +42,7 @@ fn prepare_and_failed_delivery_do_not_advance() {
         reader
             .delivered(
                 &first.id,
-                &wire(&first.text),
+                &wire(&first_output.text),
                 r#"{"message":{"content":"partial"},"done":false}"#
             )
             .is_err()
@@ -62,7 +63,8 @@ fn every_byte_of_long_utf8_file_is_reachable_and_eof_stops() {
         })
     );
     let (_temp, _, reader) = setup(&text);
-    let mut page = reader.prepare(open()).unwrap().page.unwrap();
+    let mut output = reader.prepare(open()).unwrap();
+    let mut page = output.page.as_ref().unwrap().clone();
     let mut end = 0;
     loop {
         assert_eq!(page.start.byte, end);
@@ -70,7 +72,7 @@ fn every_byte_of_long_utf8_file_is_reachable_and_eof_stops() {
         assert!(text.is_char_boundary(page.end.byte));
         end = page.end.byte;
         let receipt = reader
-            .delivered(&page.id, &wire(&page.text), &response())
+            .delivered(&page.id, &wire(&output.text), &response())
             .unwrap();
         assert!(receipt.artifact_path.is_file());
         let next = reader.prepare(Command::Continue).unwrap();
@@ -78,21 +80,23 @@ fn every_byte_of_long_utf8_file_is_reachable_and_eof_stops() {
             assert!(next.page.is_none());
             break;
         }
-        page = next.page.unwrap();
+        page = next.page.as_ref().unwrap().clone();
+        output = next;
     }
     assert_eq!(end, text.len());
 }
 #[test]
 fn source_changes_are_explicit_and_restart_keeps_pending() {
     let (temp, catalog, reader) = setup(&"before\n".repeat(3000));
-    let first = reader.prepare(open()).unwrap().page.unwrap();
+    let first_output = reader.prepare(open()).unwrap();
+    let first = first_output.page.as_ref().unwrap().clone();
     let restarted = Reader::new(catalog.clone(), temp.path().join("reader"));
     assert_eq!(
         restarted.prepare(Command::Continue).unwrap().page.unwrap(),
         first
     );
     reader
-        .delivered(&first.id, &wire(&first.text), &response())
+        .delivered(&first.id, &wire(&first_output.text), &response())
         .unwrap();
     fs::write(
         catalog.resolve(SOURCE).unwrap().path,
@@ -209,11 +213,12 @@ fn cli_and_library_have_identical_catalog_and_page() {
 #[test]
 fn durable_receipt_recovers_checkpoint_crash_and_explicit_reread_is_fresh() {
     let (temp, catalog, reader) = setup(&"row\n".repeat(3000));
-    let first = reader.prepare(open()).unwrap().page.unwrap();
+    let first_output = reader.prepare(open()).unwrap();
+    let first = first_output.page.as_ref().unwrap().clone();
     let checkpoint = temp.path().join("reader/reader-v1.json");
     let before = fs::read(&checkpoint).unwrap();
     reader
-        .delivered(&first.id, &wire(&first.text), &response())
+        .delivered(&first.id, &wire(&first_output.text), &response())
         .unwrap();
     // Simulate the receipt reaching disk immediately before a checkpoint crash.
     fs::write(&checkpoint, before).unwrap();
@@ -278,10 +283,11 @@ fn catalog_covers_kernel_interfaces_shaders_build_files_and_sibling_implementati
 #[test]
 fn changed_revision_at_eof_is_not_silently_treated_as_finished() {
     let (_temp, catalog, reader) = setup("short\n");
-    let first = reader.prepare(open()).unwrap().page.unwrap();
+    let first_output = reader.prepare(open()).unwrap();
+    let first = first_output.page.as_ref().unwrap().clone();
     assert!(first.eof);
     reader
-        .delivered(&first.id, &wire(&first.text), &response())
+        .delivered(&first.id, &wire(&first_output.text), &response())
         .unwrap();
     fs::write(
         catalog.resolve(SOURCE).unwrap().path,
@@ -317,24 +323,27 @@ fn map_source(reader: &Reader) -> String {
 #[test]
 fn maps_distinguish_pending_partial_complete_reread_and_changed_revision() {
     let (_temp, catalog, reader) = setup(&"row\n".repeat(3000));
-    let mut page = reader.prepare(open()).unwrap().page.unwrap();
+    let mut output = reader.prepare(open()).unwrap();
+    let mut page = output.page.as_ref().unwrap().clone();
     assert!(map_source(&reader).contains("Not delivered"));
     reader
-        .delivered(&page.id, &wire(&page.text), &response())
+        .delivered(&page.id, &wire(&output.text), &response())
         .unwrap();
     let map = map_source(&reader);
     assert!(map.contains("Partial delivery"));
     assert!(map.contains(&format!("SELF_STUDY RESUME {SOURCE}")));
     while !page.eof {
-        page = reader.prepare(Command::Continue).unwrap().page.unwrap();
+        output = reader.prepare(Command::Continue).unwrap();
+        page = output.page.as_ref().unwrap().clone();
         reader
-            .delivered(&page.id, &wire(&page.text), &response())
+            .delivered(&page.id, &wire(&output.text), &response())
             .unwrap();
     }
     assert!(map_source(&reader).contains("Deliberate reread — Complete delivery"));
-    let reread = reader.prepare(open()).unwrap().page.unwrap();
+    let reread_output = reader.prepare(open()).unwrap();
+    let reread = reread_output.page.as_ref().unwrap().clone();
     reader
-        .delivered(&reread.id, &wire(&reread.text), &response())
+        .delivered(&reread.id, &wire(&reread_output.text), &response())
         .unwrap();
     assert!(map_source(&reader).contains("Complete delivery"));
     fs::write(catalog.resolve(SOURCE).unwrap().path, "changed\n").unwrap();
@@ -344,17 +353,16 @@ fn maps_distinguish_pending_partial_complete_reread_and_changed_revision() {
 #[test]
 fn opening_only_the_final_lines_is_not_complete_coverage() {
     let (_temp, _, reader) = setup(&"row\n".repeat(3000));
-    let page = reader
+    let output = reader
         .prepare(Command::Open {
             source: SOURCE.into(),
             line: 2999,
         })
-        .unwrap()
-        .page
         .unwrap();
+    let page = output.page.as_ref().unwrap();
     assert!(page.eof);
     reader
-        .delivered(&page.id, &wire(&page.text), &response())
+        .delivered(&page.id, &wire(&output.text), &response())
         .unwrap();
     let map = map_source(&reader);
     assert!(map.contains("Read missing earlier bytes — Partial delivery"));
@@ -364,7 +372,8 @@ fn opening_only_the_final_lines_is_not_complete_coverage() {
 #[test]
 fn verified_notes_survive_restart_navigation_and_continuation_only() {
     let (temp, catalog, reader) = setup(&"row\n".repeat(3000));
-    let page = reader.prepare(open()).unwrap().page.unwrap();
+    let output = reader.prepare(open()).unwrap();
+    let page = output.page.as_ref().unwrap().clone();
     let reply = json!({"message":{"content":"The first page defines the bus.\nSTUDY_NOTE: Follow the bus across modules.\nSTUDY_QUESTION: Who subscribes?\nNEXT: SELF_STUDY CONTINUE"},"done":true}).to_string();
     assert!(
         reader
@@ -373,7 +382,7 @@ fn verified_notes_survive_restart_navigation_and_continuation_only() {
     );
     assert!(!map_source(&reader).contains("Who subscribes?"));
     reader
-        .delivered(&page.id, &wire(&page.text), &reply)
+        .delivered(&page.id, &wire(&output.text), &reply)
         .unwrap();
     let restarted = Reader::new(catalog, temp.path().join("reader"));
     let next = restarted.prepare(Command::Continue).unwrap();
@@ -413,10 +422,11 @@ fn verified_notes_survive_restart_navigation_and_continuation_only() {
 #[test]
 fn notes_are_bounded_visible_optional_and_clearable() {
     let (_temp, _, reader) = setup("short\n");
-    let page = reader.prepare(open()).unwrap().page.unwrap();
+    let output = reader.prepare(open()).unwrap();
+    let page = output.page.as_ref().unwrap().clone();
     let reply = json!({"message":{"content":format!("<think>hidden deliberation</think>\nSTUDY_NOTE: {}\nSTUDY_QUESTION: why?\nNEXT: SELF_STUDY MAP", "🦀".repeat(3000))},"done":true}).to_string();
     reader
-        .delivered(&page.id, &wire(&page.text), &reply)
+        .delivered(&page.id, &wire(&output.text), &reply)
         .unwrap();
     let map = reader
         .prepare(Command::Map {
@@ -443,11 +453,12 @@ fn notes_are_bounded_visible_optional_and_clearable() {
 #[test]
 fn legacy_shared_receipts_migrate_coverage_and_last_words_without_resetting_pending() {
     let (temp, catalog, reader) = setup(&"row\n".repeat(3000));
-    let first = reader.prepare(open()).unwrap().page.unwrap();
+    let first_output = reader.prepare(open()).unwrap();
+    let first = first_output.page.as_ref().unwrap().clone();
     let reply =
         json!({"message":{"content":"I want to trace the event bus."},"done":true}).to_string();
     reader
-        .delivered(&first.id, &wire(&first.text), &reply)
+        .delivered(&first.id, &wire(&first_output.text), &reply)
         .unwrap();
     let pending = reader.prepare(Command::Continue).unwrap().page.unwrap();
     let checkpoint = temp.path().join("reader/reader-v1.json");
