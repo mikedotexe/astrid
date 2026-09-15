@@ -5654,3 +5654,21 @@ checks the last-page boundary. No suggested command is executed for either Being
 and no source bookmark or chosen direction is changed. The implementation is in
 the isolated `astrid-format` worktree; full qualification, integration and live
 activation of this follow-on are pending in this entry.
+
+
+## 2026-09-15 — Integrating the accumulated feedback work without restoring repaired limits
+
+Mike requested a decisive Git stabilization after overlapping source, tests and
+research records were found. The pass retained the dated steward reports and
+current regression assertions, and archived six complete historical reader test
+files. Five contain negative expectations that conflict with the navigation/source-context
+releases already on main; the sixth preserves a malformed fixture repaired for current checks. The archive records original hashes and replacement
+coverage at `docs/steward-notes/archived-reader-probes-20260915/README.md`.
+
+The read-only diagnostic scripts are now maintained source. The near-miss scan
+had inherited a stale dispatcher path and inferred absent feedback from old
+unwired-action rows; it now reads the shared matcher and reports that feedback
+remains unestablished without its delivery receipt. No historical journal was
+changed, no new study was induced, and this integration introduces no new
+Being-facing runtime behavior. Current qualification and repository disposition
+are recorded in the September 15 Git stabilization account.

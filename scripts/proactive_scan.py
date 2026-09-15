@@ -4525,6 +4525,198 @@ def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
     return _finding("stuck_repetition", "ok", "no stuck-repetition (no being hammering an ineffective action)", None)
 
 
+# --- unwired near-miss: the being typed a REAL verb, one prefix short ----------
+# stuck_repetition sees "repeated + unrecognized" and says *investigate*; it cannot
+# say *what the repair is*. This probe reads the exact `full_text` the dispatcher
+# rejected and asks a narrower question: would this line have been HONORED with a
+# known prefix in front of it? 2026-09-10: Astrid emitted `NEXT: RELATE sense_tx`
+# 33× over ~28h. `SELF_STUDY RELATE` is fully wired and is in her own prompt
+# contract; the bare form fell through `dispatch.rs` to NextActionOutcome::unwired,
+# whose suggested_next is None — so 33 real research requests became "proposals"
+# nothing consumes, and she was never told the one word that was missing.
+# Steward-only. Read-only. Names the exact repaired line so the gap is actionable.
+
+SELF_STUDY_SUBVERB_SOURCE = (
+    ASTRID_REPO / "crates/astrid-source-study/src/response_choice.rs"
+)
+# Used only if source is unreadable; the shared source-command matcher is authoritative.
+FALLBACK_SELF_STUDY_SUBVERBS = frozenset(
+    {"MAP", "LIST", "FIND", "OPEN", "RESUME", "CONTINUE", "RELATE", "SESSION", "TRACE"}
+)
+NEAR_MISS_WINDOW_DAYS = 14
+NEAR_MISS_WARN_REPEATS = 3
+
+
+def _self_study_subverbs() -> tuple[frozenset[str], str]:
+    """Read the shared source-command forms so the probe cannot drift
+    away from the parser it is judging. Anchored on the alternation that holds
+    both MAP and RELATE; falls back (and says so) only if source is unreadable."""
+    try:
+        text = SELF_STUDY_SUBVERB_SOURCE.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return FALLBACK_SELF_STUDY_SUBVERBS, "fallback_source_unreadable"
+    for match in re.finditer(r'Some\(\s*((?:"[A-Z_]+"\s*\|\s*)+"[A-Z_]+")\s*\)', text):
+        verbs = frozenset(re.findall(r'"([A-Z_]+)"', match.group(1)))
+        if {"MAP", "RELATE"} <= verbs:
+            return verbs, "source"
+    return FALLBACK_SELF_STUDY_SUBVERBS, "fallback_pattern_absent"
+
+
+def _unwired_rows(since_unix: float) -> tuple[list[dict[str, Any]], str | None]:
+    """Read-only pull of recent unwired actions. Never opens the live DB writable."""
+    import sqlite3
+
+    if not ASTRID_BRIDGE_DB.is_file():
+        return [], "no bridge.db"
+    try:
+        conn = sqlite3.connect(f"file:{ASTRID_BRIDGE_DB}?mode=ro", uri=True, timeout=5)
+    except sqlite3.Error as err:
+        return [], f"bridge.db unreadable: {err}"
+    try:
+        cursor = conn.execute(
+            "SELECT being, action, full_text, timestamp FROM unwired_actions "
+            "WHERE timestamp >= ? ORDER BY timestamp",
+            (since_unix,),
+        )
+        return [
+            {"being": row[0], "action": row[1], "full_text": row[2], "timestamp": row[3]}
+            for row in cursor.fetchall()
+        ], None
+    except sqlite3.Error as err:
+        return [], f"unwired_actions unreadable: {err}"
+    finally:
+        conn.close()
+
+
+def _classify_near_miss(full_text: str, subverbs: frozenset[str]) -> str | None:
+    """Return the prefixed form when the bare head names a wired sub-verb, else None.
+    Reaching the right dispatcher is necessary, not sufficient: the argument still
+    has to parse. The probe reports the missing prefix, never a promised outcome."""
+    stripped = (full_text or "").strip().strip("`*")
+    head = stripped.split(maxsplit=1)[0].upper() if stripped else ""
+    if head in subverbs:
+        return f"SELF_STUDY {stripped}"
+    return None
+
+
+def probe_unwired_near_miss(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Name a possible missing prefix without inferring what feedback was shown.
+
+    Historical unwired rows do not contain the dispatch receipt. Current recovery
+    may already suggest this spelling; the arguments still need their own parse.
+    """
+    subverbs, verb_source = _self_study_subverbs()
+    since = time.time() - NEAR_MISS_WINDOW_DAYS * 86400
+    rows, err = _unwired_rows(since)
+    if err:
+        return _finding("unwired_near_miss", "notice", f"near-miss scan skipped: {err}")
+    families: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        repaired = _classify_near_miss(row.get("full_text", ""), subverbs)
+        if repaired is None:
+            continue
+        key = (str(row.get("being") or "?"), repaired)
+        entry = families.setdefault(
+            key,
+            {"being": key[0], "repaired": repaired, "count": 0,
+             "first": row["timestamp"], "last": row["timestamp"]},
+        )
+        entry["count"] += 1
+        entry["first"] = min(entry["first"], row["timestamp"])
+        entry["last"] = max(entry["last"], row["timestamp"])
+    if not families:
+        return _finding(
+            "unwired_near_miss", "ok",
+            f"no unwired near-miss in {NEAR_MISS_WINDOW_DAYS}d "
+            f"({len(rows)} unwired rows, verb list from {verb_source})",
+            snapshot={"verb_source": verb_source, "rows": len(rows)},
+        )
+    ranked = sorted(families.values(), key=lambda item: (-item["count"], item["repaired"]))
+    details = [
+        f"{item['being']}: `{item['repaired']}` reaches a wired verb — rejected bare "
+        f"{item['count']}× (last {datetime.fromtimestamp(item['last'], timezone.utc):%Y-%m-%d %H:%M}Z); "
+        "these rows do not establish which recovery feedback was delivered. "
+        "Check the dispatch receipt; whether the argument then parses is a separate question"
+        for item in ranked
+    ]
+    if verb_source != "source":
+        details.append(
+            f"verb list came from {verb_source}, not live source — re-check "
+            f"{SELF_STUDY_SUBVERB_SOURCE.name} before acting"
+        )
+    snapshot = {"verb_source": verb_source, "families": ranked[:8], "rows": len(rows)}
+    worst = ranked[0]["count"]
+    total = sum(item["count"] for item in ranked)
+    if worst >= NEAR_MISS_WARN_REPEATS:
+        return _finding(
+            "unwired_near_miss", "warning",
+            f"⚠ {total} unwired action(s) in {NEAR_MISS_WINDOW_DAYS}d named a WIRED verb "
+            f"one prefix short of its dispatched form (worst repeated {worst}×); "
+            "review the delivered recovery and subsequent navigation",
+            details, snapshot,
+        )
+    return _finding(
+        "unwired_near_miss", "notice",
+        f"{total} unwired action(s) named a wired verb one prefix short of its form",
+        details, snapshot,
+    )
+
+
+class UnwiredNearMissTests(unittest.TestCase):
+    def test_subverbs_come_from_live_source(self):
+        verbs, source = _self_study_subverbs()
+        self.assertEqual(source, "source")
+        self.assertIn("RELATE", verbs)
+        self.assertIn("MAP", verbs)
+
+    def test_bare_known_verb_is_a_near_miss(self):
+        verbs = frozenset({"MAP", "RELATE"})
+        self.assertEqual(
+            _classify_near_miss("RELATE sense_tx", verbs), "SELF_STUDY RELATE sense_tx"
+        )
+        # Markdown artifacts around the verb must not hide the near miss.
+        self.assertEqual(
+            _classify_near_miss("`RELATE sense_tx`", verbs), "SELF_STUDY RELATE sense_tx"
+        )
+
+    def test_genuinely_unknown_action_is_not_a_near_miss(self):
+        verbs = frozenset({"MAP", "RELATE"})
+        self.assertIsNone(_classify_near_miss("EXPLORE_RECONVERGENCE_MAP", verbs))
+        self.assertIsNone(_classify_near_miss("", verbs))
+
+    def test_already_prefixed_action_is_not_double_prefixed(self):
+        verbs = frozenset({"MAP", "RELATE"})
+        self.assertIsNone(_classify_near_miss("SELF_STUDY RELATE sense_tx", verbs))
+
+    def _run_with_rows(self, rows: list[dict[str, Any]]) -> dict[str, Any]:
+        saved = globals()["_unwired_rows"]
+        try:
+            globals()["_unwired_rows"] = lambda _since: (rows, None)
+            return probe_unwired_near_miss({})
+        finally:
+            globals()["_unwired_rows"] = saved
+
+    def test_repeated_near_miss_warns_and_names_the_repair(self):
+        now = time.time()
+        rows = [
+            {"being": "astrid", "action": "RELATE", "full_text": "RELATE sense_tx",
+             "timestamp": now - offset}
+            for offset in (300, 200, 100)
+        ]
+        finding = self._run_with_rows(rows)
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("SELF_STUDY RELATE sense_tx", " ".join(finding["details"]))
+        self.assertIn("do not establish which recovery feedback", " ".join(finding["details"]))
+        self.assertNotIn("was never told", " ".join(finding["details"]))
+
+    def test_clean_history_reads_ok(self):
+        finding = self._run_with_rows(
+            [{"being": "astrid", "action": "EXPLORE_X", "full_text": "EXPLORE_X",
+              "timestamp": time.time()}]
+        )
+        self.assertEqual(finding["severity"], "ok")
+
+
 # --- Experiment-authority pipeline coverage (steward-gated live-action authority) -
 # Beings request live-action authority (semantic_microdose / mode_release_microdose)
 # to act on their own experiment findings; the steward grants by appending a
@@ -5383,6 +5575,7 @@ BLIND_SPOT_PROBES = [
     ("authority_requests", probe_authority_requests),
     ("channel_integrity", probe_channel_integrity),
     ("stuck_repetition", probe_stuck_repetition),
+    ("unwired_near_miss", probe_unwired_near_miss),
     ("voice_health", probe_voice_health),
     ("agenda_mode_health", probe_agenda_mode_health),
     ("hard_recovery_witness", probe_hard_recovery_witness),
@@ -8563,6 +8756,7 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(AgencyCorridorTests))
     suite.addTests(loader.loadTestsFromTestCase(ChannelIntegrityTests))
     suite.addTests(loader.loadTestsFromTestCase(StuckRepetitionTests))
+    suite.addTests(loader.loadTestsFromTestCase(UnwiredNearMissTests))
     suite.addTests(loader.loadTestsFromTestCase(StatedParamIntentTests))
     suite.addTests(loader.loadTestsFromTestCase(DomainBoundaryViolationsTests))
     suite.addTests(loader.loadTestsFromTestCase(UngatedBridgeBinaryTests))

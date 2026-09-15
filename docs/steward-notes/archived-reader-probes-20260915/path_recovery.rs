@@ -131,6 +131,51 @@ fn unavailable_private_traversal_and_unrelated_targets_get_no_path_candidates() 
     }
 }
 
+/// A bare file stem is the most natural way to name a file you have been reading, and it
+/// is exactly the form `path_candidates` refuses to help with: `src/path_recovery.rs:14-21`
+/// returns empty unless the request already has two or more segments whose first segment
+/// is an installed repository ID. `MAP <stem>` therefore recovers with a reason line and
+/// the root component menu, and no candidate at all — even when a catalog file of that
+/// exact stem exists and a rooted form would have resolved in one move.
+#[test]
+fn bare_file_stem_map_topic_recovers_with_a_reason_but_no_candidate() {
+    let (_temp, reader) = setup();
+    let directory = "astrid/crates/demo/src/action_continuity/runtime";
+    for topic in ["core", "core.rs", "action_continuity"] {
+        let recovery = reader
+            .prepare_action(&format!("SELF_STUDY MAP {topic}"))
+            .unwrap();
+        assert_eq!(recovery.input_kind, InputKind::Recovery);
+        assert!(recovery.page.is_none());
+        // The being is told *that* the topic missed, and with which word.
+        assert!(
+            recovery
+                .text
+                .contains(&format!("no catalog entries for {topic}")),
+            "recovery for {topic:?} should name the topic it could not resolve"
+        );
+        // She is not told *which* exact entry she meant: no candidate block is emitted.
+        assert!(
+            !recovery.text.contains("candidates, not opened"),
+            "bare stem {topic:?} currently yields zero path candidates"
+        );
+        assert!(
+            !recovery.text.contains(directory),
+            "the reachable rooted form is not offered anywhere in the {topic:?} recovery"
+        );
+    }
+    // The target was reachable the whole time through its rooted directory form.
+    let reached = reader
+        .prepare_action(&format!("SELF_STUDY MAP {directory}"))
+        .unwrap();
+    assert_eq!(reached.input_kind, InputKind::Map);
+    assert!(
+        reached
+            .text
+            .contains(&format!("SELF_STUDY OPEN {TARGET} 1"))
+    );
+}
+
 /// `SELF_STUDY MAP <topic>` accepts three different namespaces — component IDs, repository
 /// IDs, and rooted directory prefixes — and the recovery reason cannot tell them apart. A
 /// rooted path whose final segment is a *component ID* is the worst case: `Catalog::map`

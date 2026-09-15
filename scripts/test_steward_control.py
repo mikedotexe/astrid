@@ -700,12 +700,23 @@ class StewardControlTests(unittest.TestCase):
 
     def test_pause_cooperatively_interrupts_wrapped_subprocess(self) -> None:
         self.resume()
+        lease_held = threading.Event()
 
-        def pause_soon() -> None:
-            time.sleep(0.2)
+        def pause_once_lease_is_held() -> None:
+            # The pause has to land AFTER begin() has taken the lease. A fixed
+            # 0.2s sleep raced begin()'s own verification work: under load the
+            # pause won, begin() raised PausedError, and the test failed without
+            # ever exercising the cooperative interrupt it is named for. Waiting
+            # on the lease file makes the ordering explicit instead of hopeful.
+            deadline = time.monotonic() + 10.0
+            while time.monotonic() < deadline:
+                if self.controller.leases.lease() is not None:
+                    lease_held.set()
+                    break
+                time.sleep(0.01)
             self.controller.pause(actor="test", reason="fixture stop")
 
-        thread = threading.Thread(target=pause_soon)
+        thread = threading.Thread(target=pause_once_lease_is_held)
         thread.start()
         return_code, result = run_subprocess(
             self.controller,
@@ -721,7 +732,8 @@ class StewardControlTests(unittest.TestCase):
             ],
             max_secs=10,
         )
-        thread.join(timeout=2)
+        thread.join(timeout=12)
+        self.assertTrue(lease_held.is_set(), "pause raced begin() instead of the run")
         self.assertNotEqual(return_code, 0)
         self.assertEqual(result["receipt"]["outcome"], "cancelled")
         self.assertTrue(self.controller.status()["state"]["paused"])

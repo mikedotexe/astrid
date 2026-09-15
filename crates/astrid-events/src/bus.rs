@@ -886,7 +886,17 @@ impl EventBus {
     /// This method broadcasts the event to all async subscribers and
     /// notifies all synchronous subscribers in the registry.
     ///
-    /// Returns the number of async receivers that received the event.
+    /// Returns the number of async receivers that received the event. A zero
+    /// return is ambiguous by construction: it is returned both when the
+    /// maintenance gate rejects a new IPC message and when an admitted event
+    /// simply has no async receivers. The two differ in reach, not in return
+    /// value — a gate-rejected event reaches neither async receivers nor the
+    /// synchronous registry, while an admitted event with no async receivers
+    /// still notifies every synchronous subscriber. The rejection is
+    /// synchronous and terminal at the bus boundary: the event is dropped,
+    /// never queued, delayed, or retried. This count is not an admission receipt.
+    /// A separate [`Self::user_input_is_blocked`] read can race with publication
+    /// and does not establish whether this particular event was admitted.
     pub fn publish(&self, mut event: AstridEvent) -> usize {
         // Gate admission and record the corresponding activity transition
         // under one mutex. The immutable updater can therefore never observe
@@ -1221,6 +1231,50 @@ mod tests {
         assert!(receiver.recv().await.is_some());
         bus.set_user_input_blocked(false);
         assert!(!clone.user_input_is_blocked());
+    }
+
+    #[tokio::test]
+    async fn publish_zero_separates_gate_rejection_from_absent_async_receivers() {
+        use crate::subscriber::FilterSubscriber;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        // No async subscriber exists, so every publish below returns zero.
+        let bus = EventBus::new();
+        let delivered = Arc::new(AtomicUsize::new(0));
+        let counter = Arc::clone(&delivered);
+        bus.registry().register(Arc::new(FilterSubscriber::new(
+            "maintenance_reach",
+            move |_| {
+                counter.fetch_add(1, Ordering::SeqCst);
+            },
+        )));
+
+        let user_input = || AstridEvent::Ipc {
+            metadata: EventMetadata::new("test"),
+            message: IpcMessage::new(
+                "user.v1.input",
+                IpcPayload::UserInput {
+                    text: "text".to_string(),
+                    session_id: "session".to_string(),
+                    context: None,
+                },
+                uuid::Uuid::new_v4(),
+            ),
+        };
+
+        // Admitted with no async receivers: zero, yet synchronous reach is real.
+        assert_eq!(bus.publish(user_input()), 0);
+        assert_eq!(delivered.load(Ordering::SeqCst), 1);
+
+        // Rejected by the maintenance gate: the same zero, and no reach at all.
+        bus.set_user_input_blocked(true);
+        assert_eq!(bus.publish(user_input()), 0);
+        assert_eq!(delivered.load(Ordering::SeqCst), 1);
+
+        // Admission is restored without a queued replay of the dropped event.
+        bus.set_user_input_blocked(false);
+        assert_eq!(bus.publish(user_input()), 0);
+        assert_eq!(delivered.load(Ordering::SeqCst), 2);
     }
 
     #[tokio::test]

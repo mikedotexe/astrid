@@ -2,6 +2,7 @@ use astrid_source_study::{Catalog, Command, InputKind, Reader, recover_local_nav
 use serde_json::json;
 use std::{
     collections::BTreeMap,
+    fmt::Write as _,
     fs,
     io::Write as _,
     process::{Command as Process, Stdio},
@@ -347,4 +348,103 @@ fn explicit_replace_is_one_modifier_for_ordinary_study_operations() {
     ] {
         assert!(Command::parse(action).is_err(), "{action}");
     }
+}
+
+#[test]
+fn a_visibility_restricted_lifetime_generic_definition_outranks_its_signature_references() {
+    // Astrid, introspection_source_catalog_1789246606: the structural definition
+    // "has remained elusive in my previous scans (appearing mostly as function
+    // signatures)". The real shape is `pub(super) struct X<'a> {` — a visibility
+    // prefix and a lifetime generic — carried through many `ctx: X<'_>` signatures.
+    let symbol = ["Lattice", "Context"].concat();
+    let mut module = format!(
+        "pub(super) struct {symbol}<'a> {{\n    pub burst_count: &'a mut u32,\n    pub fill_pct: f32,\n}}\n"
+    );
+    for index in 0..40 {
+        writeln!(module,
+            "fn handler_{index}(ctx: {symbol}<'_>) -> u32 {{ ctx.burst_count.wrapping_add({index}) }}"
+        ).unwrap();
+    }
+    module.push_str("include!(\"dispatch.rs\");\n");
+    let (_temp, reader) = reader(&[
+        ("capsules/demo/src/next_action/mod.rs", module),
+        (
+            "capsules/demo/src/next_action/dispatch.rs",
+            format!("fn dispatch(ctx: {symbol}<'_>) -> f32 {{ ctx.fill_pct }}\n"),
+        ),
+    ]);
+    let result = reader
+        .prepare_action(&format!("SELF_STUDY RELATE {symbol}"))
+        .unwrap();
+    assert_eq!(result.input_kind, InputKind::Relationships);
+    let definition = "[Implementation text] SELF_STUDY OPEN astrid/capsules/demo/src/next_action/mod.rs 1 — line 1:";
+    assert!(
+        result.text.contains("Definition candidates"),
+        "{}",
+        result.text
+    );
+    assert!(result.text.contains(definition), "{}", result.text);
+    // The one definition must not drown in its 41 signature references: the
+    // declaration-like row is emitted before any other-reference row, and lands
+    // on the first navigation page rather than behind a --page hop.
+    let definition_at = result.text.find(definition).unwrap();
+    let other_at = result.text.find("Other references").unwrap();
+    assert!(definition_at < other_at, "{}", result.text);
+    assert!(
+        result
+            .text
+            .contains("Implementation text: 42 matching lines (42 Rust), 0 path matches.")
+    );
+    // The included fragment is a reference site, never a second definition.
+    assert!(
+        result
+            .text
+            .contains("SELF_STUDY OPEN astrid/capsules/demo/src/next_action/dispatch.rs 1")
+    );
+    assert_eq!(result.text.matches("Definition candidates").count(), 1);
+}
+
+#[test]
+fn a_literal_fragment_name_finds_both_the_fragment_and_its_include_site() {
+    // An `include!("dispatch.rs")` fragment carries no imports and no local
+    // definitions of its own; the enclosing module holds both. The literal
+    // search returns the fragment path *and* the including line, so the trail
+    // back to the enclosing module is one move, not an inference.
+    let symbol = ["Lattice", "Holder"].concat();
+    let (_temp, reader) = reader(&[
+        (
+            "capsules/demo/src/next_action/mod.rs",
+            format!(
+                "pub(super) struct {symbol}<'a> {{ pub fill_pct: f32 }}\ninclude!(\"dispatch.rs\");\n"
+            ),
+        ),
+        (
+            "capsules/demo/src/next_action/dispatch.rs",
+            format!("fn dispatch(ctx: {symbol}<'_>) -> f32 {{ ctx.fill_pct }}\n"),
+        ),
+    ]);
+    let result = reader
+        .prepare_action("SELF_STUDY FIND dispatch.rs")
+        .unwrap();
+    assert!(
+        result.text.contains(
+            "SELF_STUDY OPEN astrid/capsules/demo/src/next_action/dispatch.rs 1 [path match]"
+        ),
+        "{}",
+        result.text
+    );
+    assert!(
+        result.text.contains(
+            "SELF_STUDY OPEN astrid/capsules/demo/src/next_action/mod.rs 2 — line 2: include!(\"dispatch.rs\");"
+        ),
+        "{}",
+        result.text
+    );
+    assert!(
+        result
+            .text
+            .contains("Implementation text: 1 matching lines (1 Rust), 1 path matches.")
+    );
+    // Lexical location is not a resolved module graph.
+    assert!(result.text.contains("not a compiler"));
 }

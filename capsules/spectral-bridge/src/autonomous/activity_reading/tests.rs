@@ -440,3 +440,56 @@ fn readable_view_and_raw_detour_keep_distinct_pending_bookmarks_after_cleanup() 
     assert_eq!(resumed.text, readable.text);
     assert_eq!(resumed.source, readable.source);
 }
+
+#[test]
+fn restart_refuses_legacy_cursor_recovery_when_retained_source_is_unavailable() {
+    // `load_activity` forks on the foreground reader: a non-active bookmark is demoted
+    // quietly, while an unavailable retained source refuses the whole load. Both halves
+    // are pinned here so the contrast cannot drift apart silently.
+    let mut fixture = Fixture::new("Saved source.");
+    fixture.choose();
+    let reader = fixture.conv.activity.foreground_reader.clone().unwrap();
+    let preview = preview_reader(&fixture.store, &reader).unwrap();
+    assert_eq!(preview.session_status, "active");
+    assert!(
+        preview
+            .source_comparison
+            .as_ref()
+            .is_some_and(|source| source.retained_source_available)
+    );
+    let artifact = fixture
+        .store
+        .root()
+        .join(preview.bookmark.unwrap().source.retained_artifact);
+    let runtime = fixture.store.root().join("activity_runtime_v1.json");
+    let persisted = fs::read(&runtime).unwrap();
+    fs::remove_file(artifact).unwrap();
+
+    let error = load_activity(&fixture.store).unwrap_err();
+    assert!(
+        format!("{error:#}")
+            .contains("foreground retained source is unavailable; refusing legacy cursor recovery"),
+        "unexpected refusal: {error:#}"
+    );
+    // Refusal, never repair: the saved selection is left exactly as it was written.
+    assert_eq!(fs::read(&runtime).unwrap(), persisted);
+
+    // The other branch of the same fork stays a quiet demotion, not a refusal.
+    let mut quiet = Fixture::new("Saved source.");
+    quiet.choose();
+    let parked = quiet.conv.activity.foreground_reader.clone().unwrap();
+    let quiet_preview = preview_reader(&quiet.store, &parked).unwrap();
+    quiet
+        .store
+        .reader_bookmark_transition(
+            &parked.thread_id,
+            &parked.session_id,
+            &version(&quiet_preview).unwrap(),
+            ReaderDisposition::Parked,
+            "park-before-restart",
+        )
+        .unwrap();
+    let loaded = load_activity(&quiet.store).unwrap();
+    assert!(loaded.foreground_reader.is_none());
+    assert_eq!(loaded.return_reader, Some(parked));
+}

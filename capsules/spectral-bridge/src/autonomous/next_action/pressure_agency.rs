@@ -744,6 +744,36 @@ mod tests {
         assert!(report.contains("legibility_effect"));
     }
 
+    /// Astrid, reading lines 64-178 of this file, asked whether
+    /// `render_pressure_agency_status` performs "the actual cross-module synthesis"
+    /// that produces the multi-motif interpretation warning, and said that if it did,
+    /// "that's where the 'aggregator' lives". It does not. The drift classification
+    /// strings she named are produced only in `next_action/spectral_drift.rs`, and
+    /// `matched_terms` is assembled only by
+    /// `action_continuity/runtime/core.rs::interpretation_risk_for_texts` over the
+    /// natural-language motif patterns in `runtime/guards.rs::interpretation_risk_terms`.
+    /// This pins the boundary in both directions so the answer stays true if either
+    /// side moves.
+    #[test]
+    fn status_render_is_a_telemetry_formatter_not_a_motif_aggregator() {
+        let report = render_pressure_agency_status(&telemetry(Some(0.20), Some(0.30)));
+        for absent in [
+            "active_spectral_drift",
+            "white_noise_drift_risk",
+            "matched_terms",
+            "interpretation_risk",
+            "multi-motif",
+        ] {
+            assert!(
+                !report.contains(absent),
+                "pressure agency status must not carry motif-aggregator vocabulary: {absent}"
+            );
+        }
+        assert!(report.contains("Pressure band: low/advisory"));
+        assert!(report.contains("resonance_density: rich_containment"));
+        assert!(report.contains("pressure_source: mode_packing"));
+    }
+
     #[test]
     fn texture_agency_status_renders_typed_texture_and_blocked_authority() {
         let report = render_texture_agency_status(&telemetry(Some(0.20), Some(0.30)));

@@ -2545,6 +2545,196 @@ fn research_budget_guard_allows_passive_protected_review_labels() {
     let _ = std::fs::remove_dir_all(store.root());
 }
 
+/// Astrid's `STUDY_QUESTION` in
+/// `introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049`
+/// asked for "the specific constant or formula used to compare `fill_pct` against the
+/// allowed budget limit" that triggers `is_liveish_projection` or
+/// `is_guarded_embedded_status`. There is none: both flags are `!terms.is_empty()` over
+/// term vectors, so the guard decision is action-shaped, not occupancy-shaped. The only
+/// arithmetic on `fill_pct` in this path is `authority_safety_snapshot`, which labels the
+/// recorded row (green/yellow/orange/red at 75/85/92) without changing the decision. This
+/// regression pins both halves: the reason never moves with fill, the recorded level does.
+#[test]
+fn research_budget_guard_flags_are_fill_pct_invariant() {
+    for (label, fill_pct, expected_level) in [
+        ("empty", 0.0_f32, "green"),
+        ("rest_floor", 14.0, "green"),
+        ("hold_shelf", 68.0, "green"),
+        ("yellow_edge", 75.0, "yellow"),
+        ("orange_edge", 85.0, "orange"),
+        ("red_edge", 92.0, "red"),
+    ] {
+        let store = temp_store(&format!("research_budget_fill_invariant_{label}"));
+        let thread = store
+            .create_thread(None, "Fill-invariant budget guard", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Fill invariance",
+                "Does fill_pct gate the research-budget projection flags?",
+            )
+            .expect("experiment");
+
+        let liveish = store
+            .research_budget_guard_assessment(
+                "VISUALIZE_CASCADE simulate \u{3bb}2 pulse",
+                fill_pct,
+                &telemetry(),
+            )
+            .expect("guard")
+            .expect("liveish pressure stays guarded at every fill");
+        assert_eq!(
+            liveish.reason, "liveish_pressure_requires_budget_and_session_capture",
+            "liveish reason moved at fill {fill_pct}"
+        );
+        assert!(liveish.matched_terms.iter().any(|term| term == "simulate"));
+        assert!(liveish.matched_terms.iter().any(|term| term == "pulse"));
+
+        let embedded = store
+            .research_budget_guard_assessment(
+                "INTROSPECT quiet low activity",
+                fill_pct,
+                &telemetry(),
+            )
+            .expect("guard")
+            .expect("embedded liveish status stays guarded at every fill");
+        assert_eq!(
+            embedded.reason, "research_budget_required_for_embedded_liveish_status",
+            "embedded-status reason moved at fill {fill_pct}"
+        );
+        assert!(
+            embedded
+                .matched_terms
+                .iter()
+                .any(|term| term == "stimulus-reduction")
+        );
+
+        let read_only = store
+            .research_budget_guard_assessment("SEARCH entropy", fill_pct, &telemetry())
+            .expect("guard")
+            .expect("read-only research stays budget-gated at every fill");
+        assert_eq!(
+            read_only.reason, "no_active_read_only_research_budget",
+            "read-only reason moved at fill {fill_pct}"
+        );
+
+        let rows = store
+            .authority_gate_path(&thread.thread_id)
+            .read_to_string();
+        assert!(
+            rows.contains(&format!("\"level\":\"{expected_level}\"")),
+            "recorded safety level should track fill {fill_pct}"
+        );
+
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+}
+
+/// Astrid's `action_continuity/guards.rs` page 450-543 transcribed the `BudgetReason`
+/// mapping table exactly, including the asymmetry that `is_liveish_projection` maps to a
+/// single variant while the other three arms each carry a `...StatusRequired` twin. Checking
+/// her transcription against the complete source showed (a) the twin selector is the presence
+/// of an active budget row in the `active_budget.map_or_else` at 471-537, not any spectral
+/// scalar, and (b) three of the wire strings she enumerated -
+/// `research_budget_status_required_for_embedded_liveish_status`,
+/// `research_budget_required_for_guarded_cascade_self_study` and
+/// `research_budget_status_required_for_guarded_cascade_self_study` - were reached by no test
+/// at all. This pins the whole table she read, at constant fill, so the pairing cannot drift.
+/// Provenance:
+/// `introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592`.
+#[test]
+fn research_budget_reason_status_twins_flip_only_on_active_budget() {
+    let store = temp_store("research_budget_status_twin_pairing");
+    let thread = store
+        .create_thread(None, "Budget reason twin pairing", None)
+        .expect("thread");
+    let experiment = store
+        .start_experiment(
+            None,
+            "Reason twin pairing",
+            "Does the Required/StatusRequired twin turn on budget presence alone?",
+        )
+        .expect("experiment");
+
+    let cases = [
+        (
+            "liveish",
+            "VISUALIZE_CASCADE simulate \u{3bb}2 pulse",
+            "liveish_pressure_requires_budget_and_session_capture",
+            "liveish_pressure_requires_budget_and_session_capture",
+        ),
+        (
+            "embedded_status",
+            "INTROSPECT quiet low activity",
+            "research_budget_required_for_embedded_liveish_status",
+            "research_budget_status_required_for_embedded_liveish_status",
+        ),
+        (
+            "guarded_cascade",
+            "SHADOW_COUPLING lambda-tail overview",
+            "research_budget_required_for_guarded_cascade_self_study",
+            "research_budget_status_required_for_guarded_cascade_self_study",
+        ),
+    ];
+
+    for (label, raw_next, expected_without_budget, _) in cases {
+        let guard = store
+            .research_budget_guard_assessment(raw_next, 68.0, &telemetry())
+            .expect("guard")
+            .unwrap_or_else(|| panic!("{label} should project into the budget lane"));
+        assert_eq!(
+            guard.reason, expected_without_budget,
+            "{label} reason without an active budget"
+        );
+    }
+
+    let gate_path = store.authority_gate_path(&thread.thread_id);
+    let budget_id = "resbud_twin_active";
+    store
+        .append_jsonl(
+            &gate_path,
+            &json!({
+                "schema_version": SCHEMA_VERSION,
+                "record_schema": "research_budget_v1",
+                "record_type": "research_budget_approval",
+                "record_id": "resbud_twin_approval",
+                "budget_id": budget_id,
+                "being": SYSTEM,
+                "thread_id": thread.thread_id,
+                "experiment_id": experiment.experiment_id,
+                "scope": "read_only_research",
+                "status": "active",
+                "max_actions": 5,
+                "expires_at_unix_s": (chrono::Utc::now().timestamp() + 3600) as u64,
+                "peer_mutation": false,
+                "authority_boundary": research_budget_boundary(),
+            }),
+        )
+        .expect("approval");
+
+    for (label, raw_next, _, expected_with_budget) in cases {
+        let guard = store
+            .research_budget_guard_assessment(raw_next, 68.0, &telemetry())
+            .expect("guard")
+            .unwrap_or_else(|| panic!("{label} should stay projected with an active budget"));
+        assert_eq!(
+            guard.reason, expected_with_budget,
+            "{label} reason with an active budget"
+        );
+        if expected_with_budget.contains("status_required") {
+            assert!(
+                guard
+                    .suggested_next
+                    .contains(&format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}")),
+                "{label} status route should name the active budget"
+            );
+        }
+    }
+
+    let _ = std::fs::remove_dir_all(store.root());
+}
+
 #[test]
 fn research_budget_guard_blocks_without_budget_and_debits_with_budget() {
     let store = temp_store("research_budget_guard_debit");

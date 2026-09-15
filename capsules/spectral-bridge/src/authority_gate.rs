@@ -4585,4 +4585,110 @@ mod tests {
         assert_eq!(blocked["reason"], "safety_not_green_or_yellow");
         assert!(rx.try_recv().is_err());
     }
+    // introspection_astrid_..._dispatch.rs_1789060966 asked how
+    // execute_semantic_microdose "utilizes sensory_tx to determine if an action
+    // is blocked or handled". It does not. sensory_tx is an outbound
+    // mpsc::Sender reached only after every gate has already passed; a dead
+    // channel cannot change an authority verdict, and can only fail delivery.
+    #[test]
+    fn dead_sensory_channel_does_not_change_the_authority_verdict() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_request(
+            &astrid,
+            "authreq_dead_channel_scope",
+            EXECUTABLE_SCOPE,
+            true,
+        );
+        let mut approval = approve_from_paths(
+            ApproveAuthorityRequest {
+                request_id: "authreq_dead_channel_scope".to_string(),
+                steward: None,
+                note: None,
+                ttl_secs: Some(60),
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        approval["record_id"] = json!("dead_channel_scope_approval");
+        approval["token_id"] = json!("dead_channel_scope_token");
+        approval["scope"] = json!(MODE_RELEASE_SCOPE);
+        append_jsonl(&gate, &approval).unwrap();
+
+        // The receiver is dropped before the call, so any try_send would fail.
+        let (tx, rx) = mpsc::channel::<SensoryMsg>(1);
+        drop(rx);
+
+        let blocked = execute_semantic_microdose_from_paths(
+            "authreq_dead_channel_scope",
+            Some(67.0),
+            Some(66.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+
+        // Same verdict and same reason as the live-channel scope-mismatch case:
+        // the transport state contributed nothing to the decision.
+        assert_eq!(blocked["record_type"], "blocked");
+        assert_eq!(blocked["reason"], "token_scope_mismatch");
+    }
+
+    // The converse boundary: once every gate has passed, a dead channel is a
+    // delivery failure (Err), never a "blocked" authority verdict, and it must
+    // not leave an execution_result claiming the microdose was sent.
+    #[test]
+    fn dead_sensory_channel_fails_delivery_without_recording_execution() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_correspondence_microdose_request(&astrid, "authreq_dead_channel_delivery");
+        let approval = approve_from_paths(
+            ApproveAuthorityRequest {
+                request_id: "authreq_dead_channel_delivery".to_string(),
+                steward: Some("test".to_string()),
+                note: Some("one-shot direct address".to_string()),
+                ttl_secs: Some(60),
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        assert_eq!(approval["record_type"], "steward_approval");
+
+        let (tx, rx) = mpsc::channel::<SensoryMsg>(1);
+        drop(rx);
+
+        let error = execute_semantic_microdose_from_paths(
+            "authreq_dead_channel_delivery",
+            Some(67.0),
+            Some(66.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap_err();
+        assert!(
+            error.to_string().contains("semantic microdose send failed"),
+            "expected a delivery failure, got: {error:#}"
+        );
+
+        let rows = read_jsonl(&gate);
+        assert!(
+            !rows.iter().any(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("execution_result")
+            }),
+            "a failed send must not record an execution_result"
+        );
+        // The reservation is released rather than left dangling or reported sent.
+        assert!(rows.iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("dispatch_outcome")
+                && row.get("outcome").and_then(Value::as_str) == Some("released")
+        }));
+    }
 }

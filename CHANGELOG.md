@@ -9,6 +9,13 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Maintained — shared-tree stabilization (2026-09-15)
+
+- Integrate the accumulated read-only study-navigation, delivery-coverage and lived-state integrity diagnostics, with their tests. The near-miss scan reads the shared source-command matcher and distinguishes a recorded rejected spelling from evidence of which recovery feedback was delivered.
+- Retain current reader/authority/activity regressions and preserve superseded negative reader probes byte-for-byte outside active test discovery. Fixture repairs honor complete-input delivery and strict lint; they do not restore old navigation limitations.
+- Clarify that EventBus's zero receiver count is not an admission receipt; a separate gate-state read can race. Keep the authority file's documented legacy size inventory aligned with the 106 added test lines; production logic and module ownership do not grow.
+- Preserve dated steward packets and the feedback ledger as historical evidence. This maintenance pass makes no Being-facing runtime change and does not restart or replace the live bridge, Minime, or coupled model.
+
 ### Fixed — study pagination separator (2026-09-15)
 
 - Keep FIND/RELATE pagination footers on a separate line from appended navigation receipts. A natural Astrid input had joined `--page 3` to `NAVIGATION RECEIPT`; she still chose a valid command. The shared formatter now terminates both next-page and final-page footers, with a regression that follows the displayed commands through a multipage search. Follow-on qualification and rollout remain separate from the earlier source-context release.
