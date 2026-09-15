@@ -1,4 +1,4 @@
-use astrid_source_study::{Catalog, Reader, StudyOutput};
+use astrid_source_study::{Catalog, Command, Reader, StudyOutput};
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, fs};
 
@@ -39,6 +39,49 @@ fn accept(reader: &Reader, output: &StudyOutput, text: &str) {
 
 const MAP: &str = "SELF_STUDY MAP astrid/crates/events/src";
 const NAMED: &str = "I could read `publisher.rs` and `consumer.rs` to check my explanation.\nNEXT: SELF_STUDY MAP astrid/crates/events/src";
+
+#[test]
+fn paginated_search_commands_stay_separate_from_navigation_receipts() {
+    let (_tmp, catalog, reader) = setup();
+    let source = catalog
+        .resolve("astrid/crates/events/src/publisher.rs")
+        .unwrap()
+        .path;
+    fs::write(source, "fn owner_inquiry() {}\n".repeat(100)).unwrap();
+    for _ in 0..3 {
+        let output = reader.prepare_action(MAP).unwrap();
+        accept(&reader, &output, NAMED);
+    }
+
+    for action in [
+        "SELF_STUDY RELATE owner_inquiry",
+        "SELF_STUDY FIND owner_inquiry",
+    ] {
+        let mut output = reader.prepare_action(action).unwrap();
+        let mut followed_next = false;
+        let mut reached_end = false;
+        for _ in 0..20 {
+            let mut lines = output.text.lines();
+            let footer = lines
+                .find(|line| line.starts_with("Navigation page "))
+                .unwrap();
+            assert!(
+                lines.next().unwrap().starts_with("NAVIGATION RECEIPT —"),
+                "the receipt must not alter the displayed pagination command: {footer}"
+            );
+            let Some((_, next)) = footer.split_once(" Next: ") else {
+                reached_end = true;
+                break;
+            };
+            assert!(Command::parse(next).is_ok(), "invalid next command: {next}");
+            let next = next.to_owned();
+            output = reader.prepare_action(&next).unwrap();
+            followed_next = true;
+        }
+        assert!(followed_next, "fixture must exercise a next-page footer");
+        assert!(reached_end, "final-page footer must remain separated too");
+    }
+}
 
 #[test]
 fn verified_navigation_offers_named_sources_and_optional_comparison_without_redirecting() {

@@ -298,6 +298,7 @@ pub(crate) fn paginate_with_header(
     if page < pages.len() {
         write!(text, " Next: {command} --page {}", page.saturating_add(1))?;
     }
+    text.push('\n');
     Ok(text)
 }
 

@@ -4557,3 +4557,29 @@ tests. No host rewrites their conclusions or executes suggested navigation.
 Implementation, validation obligations and deployment boundaries are recorded in
 [the source-context account](2026-09-15-study-source-context.md). Live status belongs
 to the subsequent activation receipts, not this implementation entry.
+
+### 2026-09-15 — Astrid — pagination command joined to the navigation receipt (Unreleased)
+
+The first selected natural Astrid response after the source-context rollout exposed
+an interface formatting defect in its exact offered input: `SELF_STUDY RELATE
+owner_inquiry --page 3NAVIGATION RECEIPT`. The generic pagination footer omitted a
+terminating newline, and the framing layer inserted the receipt directly afterward.
+Astrid nevertheless wrote the valid `SELF_STUDY RELATE owner_inquiry --page 3`;
+this is our input-formatting error, not an established failure of her navigation.
+
+Provenance: input `1843e0ce476de963a9eac9932c855093bf4ae504dca2d026f0dc98bee1f39379`,
+receipt `0b267aefca4179b2408d24b9be9590f16ae0df8cbd19ab1c6827ac17e27d2414.json`,
+retained under
+`/Users/v/other/worktrees/study-source-context-20260915/evidence/natural/records/astrid/navigation/`.
+The observed completion clock is the receipt mtime, 2026-09-15 20:45:11.219105 UTC;
+the exact preparation time remains unverified. The input is bound to the released
+source-context prompt; this correction is a separate follow-on.
+
+The smallest shared repair appends one newline after both next-page and final-page
+FIND/RELATE footers. The public-reader regression
+`paginated_search_commands_stay_separate_from_navigation_receipts` reproduces the
+concatenation before the fix, parses and follows each displayed continuation, and
+checks the last-page boundary. No suggested command is executed for either Being,
+and no source bookmark or chosen direction is changed. The implementation is in
+the isolated `astrid-format` worktree; full qualification, integration and live
+activation of this follow-on are pending in this entry.

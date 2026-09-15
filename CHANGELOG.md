@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed — study pagination separator (2026-09-15)
+
+- Keep FIND/RELATE pagination footers on a separate line from appended navigation receipts. A natural Astrid input had joined `--page 3` to `NAVIGATION RECEIPT`; she still chose a valid command. The shared formatter now terminates both next-page and final-page footers, with a regression that follows the displayed commands through a multipage search. Follow-on qualification and rollout remain separate from the earlier source-context release.
+
 ### Improved — study source context (2026-09-15)
 
 - Shared source pages identify enclosing Rust/Python syntax and test context, distinguish EOF from verified coverage, and offer exact reads for remaining byte gaps. Same-revision definition/reference candidates make implementation accessible beside tests without asserting runtime behavior.
