@@ -19,12 +19,6 @@ impl Catalog {
             .collect()
     }
 
-    /// Exact public source IDs matching a safe spelling, basename or file stem.
-    /// Multiple results remain choices; none is resolved or opened implicitly.
-    pub(crate) fn candidate_sources(&self, requested: &str) -> Vec<String> {
-        self.catalog_candidates(requested, false)
-    }
-
     fn catalog_candidates(&self, requested: &str, directory: bool) -> Vec<String> {
         let requested = requested.strip_suffix('/').unwrap_or(requested);
         if !safe_reference(requested) {

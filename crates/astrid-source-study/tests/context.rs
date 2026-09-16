@@ -229,7 +229,7 @@ fn navigation_question_names_exact_sibling_source_before_recycling_old_pages() {
     let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
     assert!(map.page.is_none());
     assert!(map.text.contains(
-        "Open a source named in this question (exact catalog path; no source bytes are supplied until you choose it): SELF_STUDY OPEN astrid/crates/example/src/dispatch.rs 1"
+        "Filename candidate beside the source where your question was saved (catalog path verified; relevance unverified; no source bytes supplied until chosen): SELF_STUDY OPEN astrid/crates/example/src/dispatch.rs 1"
     ));
     assert!(
         map.text

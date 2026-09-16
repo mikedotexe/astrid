@@ -436,7 +436,9 @@ fn notes_are_bounded_visible_optional_and_clearable() {
         .unwrap();
     assert!(!map.text.contains("hidden deliberation"));
     assert!(map.text.contains("excerpt truncated"));
-    assert!(map.text.len() + map.system_prompt.len() < 16000);
+    // The optional readable checkpoint can add at most 6,000 bytes to the
+    // previously bounded notebook view; authored state is still bounded/clearable.
+    assert!(map.text.len() + map.system_prompt.len() < 22_000);
     let clear = json!({"message":{"content":"STUDY_NOTE: -\nSTUDY_QUESTION: -\nNEXT: SELF_STUDY CONTINUE"},"done":true}).to_string();
     reader
         .navigation_delivered(

@@ -208,7 +208,7 @@ impl Questions {
             return String::new();
         };
         let mut out = format!(
-            "\nACTIVE STUDY QUESTION {id} — your inquiry, not a verified conclusion.\nQuestion: {}\nYou may pursue, revise, resolve or park it. Browsing elsewhere is allowed.\n",
+            "\nACTIVE STUDY QUESTION {id} — your inquiry, not a verified conclusion.\nSaved inquiry question: {}\nYou may pursue, revise, resolve or park it. Browsing elsewhere is allowed.\nOptional: SELF_STUDY QUESTION PARK {id} | SELF_STUDY QUESTION HOME\nPARK records a pause; HOME returns to unthreaded browsing. Neither declares an answer.\n",
             q.question
         );
         if !q.finding.is_empty() {

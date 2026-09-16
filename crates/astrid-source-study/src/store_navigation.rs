@@ -42,13 +42,15 @@ impl Reader {
         let receipt = state
             .navigation_history
             .render(&key, input_kind, &self.catalog);
-        text.insert_str(
-            0,
-            &notebook.study_choices(&self.catalog, page.as_ref(), &text),
-        );
+        // Keep fresh source ahead of recalled interpretations. The optional
+        // checkpoint uses this input's notebook, including late inquiry ownership.
+        let choices = notebook.study_choices(&self.catalog, page.as_ref(), &text);
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         let receipt_position = text.len();
-        let mut suffix = state.questions.render_context(question_id.as_deref());
+        text.push('\n');
+        text.push_str(&state.questions.render_context(question_id.as_deref()));
+        text.push_str(&choices);
+        let mut suffix = String::new();
         if let Some(choice) = &state.last_choice {
             suffix.push_str(&choice.render(false));
         }

@@ -1,4 +1,5 @@
 use crate::notebook_findings::Findings;
+use crate::question_sources::source_reference;
 use crate::{Catalog, Page, digest};
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
@@ -37,13 +38,9 @@ impl Notebook {
         page: Option<&Page>,
         navigation: &str,
     ) -> String {
-        let mut out = String::new();
-        let mut question_sources = Vec::new();
+        let mut out = self.checkpoint_context();
+        let mut has_question_source = false;
         if let Some(question) = self.question_text() {
-            let _ = writeln!(
-                out,
-                "YOUR CURRENT QUESTION — {question}\nIf this reading changes your answer, you can save the finding with STUDY_NOTE: and revise STUDY_QUESTION: (or use - to clear it). These are optional; your prose can develop the answer freely."
-            );
             let quoted = inquiry_terms(question);
             let context_sources = page
                 .map(|page| page.source.as_str())
@@ -57,39 +54,15 @@ impl Notebook {
                         .filter_map(source_from_reopen),
                 )
                 .collect::<Vec<_>>();
-            for reference in quoted
-                .iter()
-                .copied()
-                .filter(|value| source_reference(value))
-            {
-                let direct = catalog.resolve(reference).ok().into_iter();
-                let sibling = context_sources.iter().filter_map(|context| {
-                    let (parent, _) = context.rsplit_once('/')?;
-                    catalog.resolve(&format!("{parent}/{reference}")).ok()
-                });
-                let candidates = catalog.candidate_sources(reference).into_iter();
-                for source in direct
-                    .map(|source| source.id)
-                    .chain(sibling.map(|source| source.id))
-                    .chain(candidates)
-                {
-                    if !question_sources.contains(&source) {
-                        question_sources.push(source);
-                    }
-                    if question_sources.len() == 2 {
-                        break;
-                    }
-                }
-                if question_sources.len() == 2 {
-                    break;
-                }
-            }
-            for source in &question_sources {
-                let _ = writeln!(
-                    out,
-                    "Open a source named in this question (exact catalog path; no source bytes are supplied until you choose it): SELF_STUDY OPEN {source} 1"
-                );
-            }
+            let (source_choices, has_source) = crate::question_sources::render_choices(
+                catalog,
+                question,
+                &quoted,
+                self.question.as_ref().and_then(source_from_reopen),
+                &context_sources,
+            );
+            out.push_str(&source_choices);
+            has_question_source = has_source;
             for term in quoted
                 .into_iter()
                 .filter(|term| {
@@ -115,7 +88,7 @@ impl Notebook {
                 break;
             }
         }
-        if targets.len() == 2 && question_sources.is_empty() {
+        if targets.len() == 2 && !has_question_source {
             let _ = writeln!(
                 out,
                 "Compare recent source locations in one turn (current checkout, smaller pages): SELF_STUDY SESSION {} | {}",
@@ -131,6 +104,55 @@ impl Notebook {
 
     pub(crate) fn question_text(&self) -> Option<&str> {
         self.question.as_ref().map(|e| e.text.as_str())
+    }
+
+    /// Render existing authored state together without synthesizing conclusions,
+    /// classifying their truth, or changing the inquiry's status or scheduling.
+    fn checkpoint_context(&self) -> String {
+        const MAX_CHECKPOINT_BYTES: usize = 6_000;
+        const FOOTER: &str = "You can distinguish what you have established from what remains an assumption, including places already checked. Your findings remain yours to retain, qualify or revise.\n";
+        if self.question.is_none() && self.note.is_none() && !self.source_findings.has_authored() {
+            return String::new();
+        }
+        let mut out = String::from(
+            "OPTIONAL STUDY CHECK-IN — fresh source or navigation is above; recalled words are below. You may take stock, keep reading, revise or park a question, or choose another activity. No answer or change of direction is required.\n",
+        );
+        if let Some(question) = &self.question {
+            let _ = writeln!(
+                out,
+                "YOUR CURRENT QUESTION — {}\nThis is your saved inquiry, not evidence that its premise is true. STUDY_QUESTION: can revise it; - clears this notebook field without resolving an inquiry.",
+                question.text,
+            );
+        }
+        if let Some(note) = &self.note {
+            let preview = format!(
+                "YOUR SAVED NOTE — recalled account, not independently verified: {:?}\nRecorded with {}. This origin does not establish the note's claims. STUDY_NOTE: replaces it in your own words; - clears it.",
+                note.text, note.origin,
+            );
+            // Full authored words remain protected in the notebook. Omit an
+            // overlarge duplicate preview as a whole, never a misleading prefix.
+            if out
+                .len()
+                .saturating_add(preview.len())
+                .saturating_add(FOOTER.len())
+                .saturating_add(500)
+                <= MAX_CHECKPOINT_BYTES
+            {
+                out.push_str(&preview);
+                out.push('\n');
+            } else {
+                out.push_str("YOUR SAVED NOTE — retained whole in the notebook below; the duplicate preview is omitted for input space. It remains your unverified account.\n");
+            }
+        }
+        if self.source_findings.has_authored() {
+            out.push_str(&self.source_findings.render_authored(
+                MAX_CHECKPOINT_BYTES.saturating_sub(out.len().saturating_add(FOOTER.len())),
+            ));
+        } else {
+            out.push_str("No source-linked finding is saved in this notebook. Your prose can remain freeform; STUDY_FINDING: can optionally keep a concrete conclusion beside a supplied source line.\n");
+        }
+        out.push_str(FOOTER);
+        out
     }
 
     pub(crate) fn record(&mut self, response: &str, text: &str, page: Option<&Page>) {
@@ -168,7 +190,12 @@ impl Notebook {
             if directive && let Some(value) = line.strip_prefix("STUDY_NOTE:") {
                 self.note = update(value, &entry, 1600);
             } else if directive && let Some(value) = line.strip_prefix("STUDY_QUESTION:") {
-                self.question = update(value, &entry, 500);
+                // Repeating an unchanged question while browsing elsewhere must
+                // not transfer its source provenance to the detour. A deliberate
+                // rewording or clear remains a new authored update.
+                if self.question_text() != Some(value.trim()) {
+                    self.question = update(value, &entry, 500);
+                }
             } else if directive && crate::notebook_findings::is_directive(line) {
                 // The source-findings receipt reports accepted and rejected updates.
             } else if !directive || !line.starts_with("NEXT:") {
@@ -286,16 +313,6 @@ fn source_from_reopen(entry: &Entry) -> Option<&str> {
     let (source, line) = rest.rsplit_once(' ')?;
     line.parse::<usize>().ok()?;
     Some(source)
-}
-
-fn source_reference(value: &str) -> bool {
-    !value
-        .bytes()
-        .any(|byte| byte.is_ascii_whitespace() || matches!(byte, b'|' | b'"' | b'\'' | b'<' | b'>'))
-        && (value.contains('/')
-            || [".rs", ".py", ".md", ".toml", ".json", ".txt"]
-                .iter()
-                .any(|suffix| value.ends_with(suffix)))
 }
 
 fn update(value: &str, entry: &impl Fn(&str, usize) -> Entry, limit: usize) -> Option<Entry> {

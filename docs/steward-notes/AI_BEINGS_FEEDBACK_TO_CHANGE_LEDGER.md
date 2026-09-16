@@ -5672,3 +5672,24 @@ remains unestablished without its delivery receipt. No historical journal was
 changed, no new study was induced, and this integration introduces no new
 Being-facing runtime behavior. Current qualification and repository disposition
 are recorded in the September 15 Git stabilization account.
+
+## 2026-09-16 — Minime — sustained study with narrowing context
+
+The read-only September 2–16 comparison found actual source-study writing rising
+from 179/749 prose files on September 5–6 to 1,827/1,848 on September 12–14.
+All latest 120 studies pursued the maintenance/input-gate question and chose
+another study; all stopped normally below their output allowance. Useful local
+corrections did not consistently constrain later explanations. Supplied hints
+also offered unrelated prime-esn and rascii `lib.rs` paths for an Astrid Kernel
+question. The source and prompt history support a reinforcing mechanism, not a
+single-release causal claim or a reason to force novelty. The research account
+is `reservoir-llm-research/analyses/2026-09-16-minime-study-variety.md`.
+
+Mike approved shared repairs: repository/context-aware question hints, visible
+voluntary nonstudy choices, and existing source-linked findings beside unresolved
+questions. The implementation retains chosen navigation and Being-authored
+interpretations. It does not classify a finding as true, reset a live notebook,
+change scheduling, import another task's schema-4 work, or impose a word count.
+See [the implementation and rollout account](2026-09-16-study-direction.md).
+Deterministic carriage tests and subsequent natural understanding are distinct
+outcomes; board mirroring remains pending.

@@ -17,6 +17,7 @@ mod notebook_persistence;
 mod page;
 mod path_recovery;
 mod progress;
+mod question_sources;
 mod questions;
 mod relationships;
 pub mod response_choice;

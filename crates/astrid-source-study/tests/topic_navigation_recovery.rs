@@ -197,7 +197,7 @@ fn quoted_events_and_identifiers_offer_distinct_safe_lookups_with_actual_literal
 }
 
 #[test]
-fn an_unquoted_dotted_event_and_named_file_can_be_reached_from_a_map() {
+fn an_unquoted_event_lookup_reaches_source_without_guessing_an_unanchored_filename() {
     let (_temp, reader) = setup();
     let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
     accept(
@@ -209,9 +209,17 @@ fn an_unquoted_dotted_event_and_named_file_can_be_reached_from_a_map() {
     assert!(next.text.contains(&format!("SELF_STUDY FIND {EVENT}")));
     assert!(
         next.text
-            .contains("SELF_STUDY OPEN astrid/crates/demo/src/event_consumer.rs 1")
+            .contains("Source reference `event_consumer.rs` has no verified contextual match")
     );
     assert!(next.page.is_none());
+    let found = reader
+        .prepare_action(&format!("SELF_STUDY FIND {EVENT}"))
+        .unwrap();
+    assert!(
+        found
+            .text
+            .contains("SELF_STUDY OPEN astrid/crates/demo/src/event_consumer.rs 1")
+    );
 }
 
 #[test]

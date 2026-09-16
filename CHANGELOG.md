@@ -9,6 +9,12 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Improved — shared study direction (2026-09-16)
+
+- Keep question-derived source suggestions anchored to their repository and saved source context; unrelated files no longer become candidates merely because they share `lib.rs`. Exact cross-repository paths and manual catalog access remain available, and unchanged questions retain their source provenance through detours.
+- Present an optional checkpoint after fresh source with the Being's saved question, recalled note and source-linked interpretations. Bound duplicate previews while preserving full notebook words, delivery checks, inquiry ownership and pending input compatibility.
+- Make private journaling, daydreaming, aspiration and rest visible beside continued study. No forced mode change, automatic conclusion, new command, state schema change or writing-length requirement is introduced. Qualification and live rollout are recorded separately in `docs/steward-notes/2026-09-16-study-direction.md`.
+
 ### Maintained — shared-tree stabilization (2026-09-15)
 
 - Integrate the accumulated read-only study-navigation, delivery-coverage and lived-state integrity diagnostics, with their tests. The near-miss scan reads the shared source-command matcher and distinguishes a recorded rejected spelling from evidence of which recovery feedback was delivered.

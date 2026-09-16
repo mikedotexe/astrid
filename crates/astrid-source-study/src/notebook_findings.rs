@@ -2,6 +2,7 @@
 //! An anchor proves delivery of a fragment, never the correctness of its interpretation.
 use crate::{Page, digest};
 use serde::{Deserialize, Serialize};
+use std::fmt::Write as _;
 
 const MAX_FINDINGS: usize = 6;
 const MAX_LOCATIONS: usize = 6;
@@ -46,6 +47,70 @@ pub(crate) fn is_directive(line: &str) -> bool {
 }
 
 impl Findings {
+    /// A readable view of authored words beside their retained evidence. This
+    /// never promotes an interpretation to fact or reads a newer source revision.
+    pub(crate) fn render_authored(&self, max_bytes: usize) -> String {
+        if self.authored.is_empty() {
+            return String::new();
+        }
+        let mut out = String::from(
+            "YOUR SOURCE-LINKED FINDINGS — your saved interpretations, not independently verified facts. These fragments were supplied earlier; surrounding code may matter and the current checkout may differ. Keep, revise or remove a finding as you choose.\n",
+        );
+        let omitted = |count| {
+            format!(
+                "{count} additional finding(s) remain whole in the full notebook below; this preview omits them to leave room for source and recent responses.\n"
+            )
+        };
+        let omission_reserve = omitted(self.authored.len()).len();
+        if out.len().saturating_add(omission_reserve) > max_bytes {
+            let notice = omitted(self.authored.len());
+            return if notice.len() <= max_bytes {
+                notice
+            } else {
+                String::new()
+            };
+        }
+        let mut shown = 0_usize;
+        for finding in &self.authored {
+            let anchor = &finding.anchor;
+            let mut row = String::new();
+            let _ = writeln!(
+                row,
+                "{} — your words: {:?}\nRetained fragment {}:{} (sha256:{}{}): {:?}\nReopen current source: {}",
+                finding.id,
+                finding.words,
+                anchor.source,
+                anchor.line,
+                anchor.revision_sha256,
+                if anchor.fragment_truncated {
+                    "; fragment excerpt"
+                } else {
+                    ""
+                },
+                anchor.delivered_line_fragment,
+                anchor.reopen_current_checkout,
+            );
+            if out
+                .len()
+                .saturating_add(row.len())
+                .saturating_add(omission_reserve)
+                > max_bytes
+            {
+                break;
+            }
+            out.push_str(&row);
+            shown = shown.saturating_add(1);
+        }
+        if shown < self.authored.len() {
+            out.push_str(&omitted(self.authored.len().saturating_sub(shown)));
+        }
+        out
+    }
+
+    pub(crate) fn has_authored(&self) -> bool {
+        !self.authored.is_empty()
+    }
+
     pub(crate) fn is_empty(&self) -> bool {
         self.authored.is_empty()
             && self.supplied_locations.is_empty()
