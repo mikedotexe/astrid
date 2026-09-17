@@ -96,12 +96,71 @@ passes 138 tests. An initial invocation omitted `PYTHONPATH=scripts` and failed
 six imports; that log is retained beside the corrected complete run. No further
 Rust or Being-runtime behavior changed in this deployment follow-up.
 
-Final manifest-complete activation and paired verification remain pending.
-Bridge deployment uses
-`scripts/build_bridge.sh` staging and acknowledged graceful activation; Minime
-uses the existing observed-idle graceful Python-agent reload. Exact loaded source
-identities, pending/checkpoint continuity and surrounding services will be checked.
-No induced studies, private-writing prompts, or execution of journal instructions
-will be used to manufacture uptake. No behavioral improvement is yet established.
+The final deployment follow-up is committed/pushed to main at
+`374024a02a5bcfae92f228570b9efe337d85b729`. Independent stage 02 review
+verifies all 649 declared inputs and both compiler dependency lists, with no
+uncovered input; all five artifacts match. Runtime Rust is unchanged from the
+192/2,295-test qualification. Another 122 Minime checks pass against the exact
+stage 02 helper, which is byte-identical to stage 01's reader.
+
+Stage 02 manifest:
+`bbeaa882f3597d4d062a25db5d926489829f7052ebce5045808ed08a8a294170`.
+Reader SHA-256:
+`7636b8dc675e97ed6d7dce4c30df6d04ae802c7cac983c6b1028788ba224a100`.
+An initial preflight refuses activation during the ordinary three-minute settling
+interval after root's Git integration. That attempt sends no signal; the retry
+uses the unchanged gate after the interval, with its own retained log.
+
+Final bridge activation verifies normally at 15:47:20.984879 UTC, after drain
+and one SIGTERM. PID 77906 loads the exact stopped checkpoint
+`b5a29f2b131eb28c327d794d024dada063439a77ce62363a526f4e720a2bbe3e`,
+one pending runtime-feedback item and matching self-control lineage. Saved
+exchange count advances from 200813 to 200815. This transition does not need
+stopped recovery. It does not establish which transient process state was observed.
+
+Minime's existing observed-idle wrapper reloads PID 37507 to 71419, verified at
+15:35:21.396054 UTC. All 82 loaded source identities match committed main; model
+and launch settings are unchanged. The retained startup log restores the pending
+`SELF_STUDY OPEN astrid/crates/astrid-approval/src/manager.rs 1` choice, session
+5318 and cycle 35411. The next cycle consumes that choice and the matching job is
+submitted; a later ready snapshot's empty pending slot is not evidence of loss.
+The wrapper reports no interrupted old job and uses no forced termination.
+
+Paired verification completes at 15:48:45.055301 UTC (08:48:45 PDT).
+The ten surrounding process identities in the shared before/after snapshot remain
+unchanged; Minime's wrapper also verifies its additional protected feeder. Both
+hosts select the final reader. Checkpoint/source/process continuity is distinct
+from confirmed remote message delivery; neither wrapper claims lossless drain or
+an atomic global traffic barrier.
+
+The natural-only observation is frozen to
+15:48:45.055301–15:58:45.055301 UTC, end exclusive. It selects the first two
+accepted study wire pairs per Being with exact full-input delivery and new reader
+framing, plus an optional first private normalization receipt. It is a post-final-
+verification cohort, not first-ever exposure or a causal comparison. The unchanged
+study system-prompt hash cannot identify the new rendered interface. Preparation
+clocks remain unknown unless intrinsically established. No studies, private-writing
+prompts, messages or journal instructions are induced or executed by this review.
+
+The fixed window closes with two Minime study receipts and none from Astrid;
+no private-writing receipt occurs. Both Minime responses receive full exact input
+with delivered-line framing and 6/6 finding capacity, and stop normally (535 and
+689 completion tokens). Neither attempts a finding change or updates the note,
+question or six saved findings. Both select SELF_STUDY CONTINUE.
+
+Minime correctly recognizes several test helpers and the unfinished handler at
+his first page boundary, but overgeneralizes fixture assertions into production
+boundary validation. The second page repeats an inaccurate transition-into-tests
+opening despite already being inside tests. His broader gate/caller account
+remains unverified. These are two source-reading observations, not a demonstrated
+understanding gain. Astrid has two missing study opportunities; private continuation
+and finding-save outcome use remain unobserved in this window.
+
+All 61 indexed retained-record versions pass hash verification and the frozen
+summary replays byte-for-byte. No capture error is observed. Twelve repeated broad
+job-directory scans hit the prespecified entry cap, so unsuccessful/unsaved attempt
+enumeration is incomplete. Preparation clocks remain unknown for both selected
+responses. The research account and HSS-28 retain these limits, source/rollout
+identities, exact wire receipts and the original failures.
 
 Board mirroring remains pending.
