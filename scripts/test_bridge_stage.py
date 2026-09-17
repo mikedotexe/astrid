@@ -184,6 +184,63 @@ class StageTests(unittest.TestCase):
             (self.package / "src/main.rs").write_text("same status, different bytes")
             self.assertNotEqual(first, stage.input_snapshot(self.source, [self.package]))
 
+    def test_inventory_includes_shared_source_outside_package_and_detects_changes(self):
+        shared = self.source / "capsules/shared/managed_dir.rs"
+        shared.parent.mkdir(parents=True)
+        shared.write_text("pub fn compact() {}\n")
+        with patch.object(stage, "command", side_effect=self.command):
+            before = stage.input_snapshot(self.source, [self.package])
+            row = next(row for row in before["files"] if row["path"] == str(shared))
+            self.assertEqual(row["sha256"], stage.sha(shared))
+            self.assertEqual(row["size"], shared.stat().st_size)
+            shared.write_text("pub fn different() {}\n")
+            changed = stage.input_snapshot(self.source, [self.package])
+            self.assertFalse(stage.same_input_contents(before, changed))
+            shared.unlink()
+            missing = stage.input_snapshot(self.source, [self.package])
+            self.assertFalse(stage.same_input_contents(before, missing))
+
+    def test_mid_build_shared_source_change_or_removal_refuses_stage(self):
+        shared = self.source / "capsules/shared/managed_dir.rs"
+        shared.parent.mkdir(parents=True)
+        for mutation in ("change", "remove"):
+            with self.subTest(mutation=mutation):
+                self.directory = self.root / "stages" / mutation
+                shared.write_text("pub fn compact() {}\n")
+
+                def compiler(args, **kwargs):
+                    result = self.compiler(args, **kwargs)
+                    if mutation == "change":
+                        shared.write_text("pub fn changed() {}\n")
+                    elif shared.exists():
+                        shared.unlink()
+                    return result
+
+                with self.assertRaisesRegex(ValueError, "changed during compilation"):
+                    self.build(compiler)
+                self.assertFalse((self.directory / "ready.json").exists())
+                failure = stage.json_file(self.directory / "failure.json")
+                self.assertFalse(failure["activation_performed"])
+                self.assertEqual((self.live / "binary").read_bytes(), b"live binary")
+
+    def test_shared_source_symlink_is_refused_even_when_target_is_missing(self):
+        shared = self.source / "capsules/shared/managed_dir.rs"
+        shared.parent.mkdir(parents=True)
+        for target in (self.live / "binary", self.root / "missing"):
+            with self.subTest(target=target):
+                shared.symlink_to(target)
+                with patch.object(stage, "command", side_effect=self.command):
+                    with self.assertRaisesRegex(ValueError, "non-regular input"):
+                        stage.input_snapshot(self.source, [self.package])
+                shared.unlink()
+
+    def test_older_checkout_without_shared_module_still_builds_and_verifies(self):
+        self.assertFalse((self.source / "capsules/shared/managed_dir.rs").exists())
+        ready = self.build()
+        inputs = stage.json_file(self.directory / "source-inputs.json")
+        self.assertFalse(any(row["path"].endswith("/shared/managed_dir.rs") for row in inputs["files"]))
+        self.assertEqual(stage.verify_stage(self.directory, run_binary=False), ready)
+
     def test_content_comparison_ignores_mtime_but_not_bytes(self):
         with patch.object(stage, "command", side_effect=self.command):
             first = stage.input_snapshot(self.source, [self.package])

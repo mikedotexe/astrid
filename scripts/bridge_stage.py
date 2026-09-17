@@ -26,6 +26,9 @@ TOOLS = ("scripts/build_bridge.sh", "scripts/bridge_stage.py", "scripts/bridge_a
          "scripts/environment_receipts.py", "scripts/deploy_preflight.py", "scripts/steward_mutex.py",
          "scripts/capture_stack_receipt.sh", "scripts/minime_runtime_binding.py",
          *(f"scripts/{name}" for name in HELPERS.values()))
+# Reviewed #[path] source outside the Cargo package trees. Older checkouts may
+# predate this shared module; once present it must survive the build unchanged.
+SHARED_SOURCES = ("capsules/shared/managed_dir.rs",)
 ARTIFACTS = {"spectral-bridge": "spectral-bridge-server", "source-study-reader": "helpers/astrid-source-study",
              **{name:f"helpers/{path}" for name,path in HELPERS.items()}}
 
@@ -85,6 +88,8 @@ def host_target(source: Path) -> str:
 
 def input_snapshot(source: Path, packages: list[Path]) -> dict:
     files = {source / name for name in TOOLS}
+    files.update(source / name for name in SHARED_SOURCES
+                 if (source / name).exists() or (source / name).is_symlink())
     # The shared reader executable inherits the root workspace configuration.
     files.update(source / name for name in ("Cargo.toml", "Cargo.lock") if (source / name).exists())
     # Retained releases predating this operator helper have no such input.

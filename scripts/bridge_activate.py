@@ -345,18 +345,26 @@ class LaunchdBridge(StoppedTransitionMixin):
                 os.kill(pid, 0)
             except ProcessLookupError:
                 return False
+            status_output, status_returncode = None, None
             if identity[0] == initial["started_at"]:
                 status = subprocess.run(["ps", "-p", str(pid), "-o", "lstart=", "-o", "stat="],
                     capture_output=True, text=True, check=False, timeout=5)
+                status_output, status_returncode = status.stdout.strip(), status.returncode
                 fields = status.stdout.strip().rsplit(None, 1)
                 if (status.returncode == 0 and len(fields) == 2
-                        and fields[0] == initial["started_at"] and fields[1].startswith("Z")):
+                        and fields[0] == initial["started_at"]
+                        and (fields[1].startswith("Z") or "E" in fields[1][1:])):
+                    # macOS ps uses an additional E flag while trying to exit,
+                    # before the dead-process Z state. Neither proves absence.
                     return True  # Wait for confirmed kernel absence; never signal again.
             try:
                 os.kill(pid, 0)
             except ProcessLookupError:
                 return False
-            raise RuntimeError("old PID was reused during transition")
+            raise RuntimeError("old PID was reused during transition; "
+                f"observed_started_at={repr(identity[0])[:128]}; "
+                f"observed_binary={repr(identity[1])[:384]}; "
+                f"status_returncode={status_returncode}; status_output={repr(status_output)[:256]}")
         return True
 
     def snapshot_and_handoff(self, actor: str, ack: str) -> None:

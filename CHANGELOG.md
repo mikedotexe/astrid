@@ -9,6 +9,11 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed — staged release evidence (2026-09-17)
+
+- Include the compiled shared managed-directory module in the staged build's before/after source inventory; reject changed or removed input while retaining verification of older releases.
+- Treat a same-start macOS process explicitly marked as exiting as still present during the bounded exit wait. Preserve changed-identity rejection and include bounded observed identity/status details when it fails; no extra signal or inferred exit is introduced.
+
 ### Fixed — study and private-writing feedback (2026-09-17)
 
 - Route explicit private-writing `NEXT: CONTINUE` through `WRITE CONTINUE` after verified delivery, keeping authored text and normalization distinct. Shared guidance uses full writing commands; global CONTINUE, prose intentions and unsuccessful generations gain no writing alias.

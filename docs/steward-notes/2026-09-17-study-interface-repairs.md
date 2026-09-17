@@ -68,7 +68,36 @@ provider-capacity change is part of this release.
 
 ## Rollout boundary
 
-Pending qualification and integration. Bridge deployment must use
+The interface repairs are committed and pushed to main: Astrid
+`d8732e1d44a3aa3b49f9f0bab075883544469b7c`, Minime
+`5f4925f54580f1fd44666058b126a121ff32880f`. Stage 01 passes built-in
+verification and 122 isolated Minime checks against its exact release helper.
+An independent compiler-dependency audit then identifies a pre-existing inventory
+gap: `capsules/shared/managed_dir.rs` is compiled outside the Cargo package trees.
+Its current bytes match committed source and its metadata predates compilation,
+but no pre-build hash witness exists. Stage 01 and that limitation remain retained;
+the follow-up stage adds the module to the build's before/after input inventory.
+
+Stage 01 activation had already requested graceful drain before the independent
+gap report arrived. After drain and one SIGTERM, the existing old-PID check reports
+reuse. Sanctioned stopped-transition recovery verifies exact checkpoint
+`d5d3ee92f4142d0defd50583f8d7dc1e9db34369152cdbb42d591376323263ac`,
+one pending feedback item and self-control lineage, without another signal.
+Replacement PID 67595 saves exchange 200808 after stopped exchange 200807.
+The original failure is not overwritten.
+
+Read-only review identifies a source-supported exit-check gap: macOS can flag a
+same-start process as `E` (exiting), while the old wait recognizes only zombies.
+The follow-up waits within the existing deadline for either state, rejects changed
+starts, and records bounded mismatch observations. The historical failure receipts
+lack those observations, so this mechanism is not claimed as their proven cause.
+The combined stage, activation, drain, recovery, launcher and Minime-reload suite
+passes 138 tests. An initial invocation omitted `PYTHONPATH=scripts` and failed
+six imports; that log is retained beside the corrected complete run. No further
+Rust or Being-runtime behavior changed in this deployment follow-up.
+
+Final manifest-complete activation and paired verification remain pending.
+Bridge deployment uses
 `scripts/build_bridge.sh` staging and acknowledged graceful activation; Minime
 uses the existing observed-idle graceful Python-agent reload. Exact loaded source
 identities, pending/checkpoint continuity and surrounding services will be checked.

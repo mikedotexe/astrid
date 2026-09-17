@@ -127,6 +127,23 @@ class ActivationTests(unittest.TestCase):
         self.assertNotIn("snapshot_and_handoff", backend.events)
         self.assertNotIn("select_release", backend.events)
 
+    def test_exiting_process_wait_remains_bounded_with_one_signal_and_hold_retained(self):
+        backend = Backend(legacy=False)
+        initial = {"drain_supported":True, "started_at":"old", "binary":"/old"}
+        with patch.object(backend, "inspect", return_value=initial), \
+             patch.object(backend, "old_exists", side_effect=lambda pid, state: activation.LaunchdBridge.old_exists(backend, pid, state)), \
+             patch.object(activation.os, "kill") as kill, \
+             patch.object(activation.drain, "process_identity", return_value=("old", "<exiting>")), \
+             patch.object(activation.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "old UE\n")):
+            with self.assertRaisesRegex(RuntimeError, "no force"):
+                self.run_activation(backend, legacy_ack="")
+            self.assertTrue(all(call.args == (12345, 0) for call in kill.call_args_list))
+        self.assertEqual([event for event in backend.events if event.startswith("SIG")], ["SIGTERM"])
+        self.assertNotIn("snapshot_and_handoff", backend.events)
+        self.assertNotIn("select_release", backend.events)
+        self.assertEqual(backend.events[-1], "retain_hold")
+        self.assertFalse(backend.receipts[-1]["activation_performed"])
+
     def test_identity_change_does_not_signal(self):
         backend = Backend(fail="assert_old")
         with self.assertRaisesRegex(RuntimeError, "injected assert_old"):
@@ -230,6 +247,49 @@ class TransactionFilesTests(unittest.TestCase):
              patch.object(activation.drain, "process_identity", return_value=("old", "(zombie)")), \
              patch.object(activation.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "old Z+\n")):
             self.assertTrue(self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"}))
+
+    def test_same_start_exiting_flag_waits_for_kernel_absence_without_signaling(self):
+        for state in ("UE", "SE", "RE+"):
+            with self.subTest(state=state), \
+                 patch.object(activation.os, "kill") as kill, \
+                 patch.object(activation.drain, "process_identity", return_value=("old", "<exiting>")), \
+                 patch.object(activation.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, f"old {state}\n")):
+                self.assertTrue(self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"}))
+                self.assertTrue(kill.call_args_list)
+                self.assertTrue(all(call.args == (12345, 0) for call in kill.call_args_list))
+
+    def test_different_start_never_uses_exiting_state_to_approve_wait(self):
+        with patch.object(activation.os, "kill"), \
+             patch.object(activation.drain, "process_identity", return_value=("new", "<exiting>")), \
+             patch.object(activation.subprocess, "run") as status:
+            with self.assertRaisesRegex(RuntimeError, "reused"):
+                self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"})
+            status.assert_not_called()
+
+    def test_exiting_probe_requires_matching_start_and_successful_ps(self):
+        for result in (subprocess.CompletedProcess([], 0, "new UE\n"),
+                       subprocess.CompletedProcess([], 1, "old UE\n"),
+                       subprocess.CompletedProcess([], 0, "old E\n")):
+            with self.subTest(result=result), \
+                 patch.object(activation.os, "kill"), \
+                 patch.object(activation.drain, "process_identity", return_value=("old", "<exiting>")), \
+                 patch.object(activation.subprocess, "run", return_value=result):
+                with self.assertRaisesRegex(RuntimeError, "reused"):
+                    self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"})
+
+    def test_reuse_error_preserves_bounded_observed_identity_and_status(self):
+        with patch.object(activation.os, "kill"), \
+             patch.object(activation.drain, "process_identity", return_value=("old", "/changed\n" + "x" * 5000)), \
+             patch.object(activation.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "old S\n")):
+            with self.assertRaisesRegex(RuntimeError, "reused") as raised:
+                self.backend.old_exists(12345, {"started_at":"old", "binary":"/old"})
+            message = str(raised.exception)
+            self.assertIn("observed_started_at='old'", message)
+            self.assertIn("observed_binary='/changed\\n", message)
+            self.assertIn("status_output='old S'", message)
+            self.assertIn("status_returncode=0", message)
+            self.assertLess(len(message), 1200)
+            self.assertNotIn("\n", message)
 
     def test_same_start_live_changed_executable_is_rejected(self):
         with patch.object(activation.os, "kill"), \
