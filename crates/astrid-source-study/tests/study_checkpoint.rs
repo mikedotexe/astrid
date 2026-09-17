@@ -348,8 +348,7 @@ fn omitting_only_the_check_in_cannot_earn_source_or_navigation_delivery_credit()
     }
 }
 
-#[test]
-fn escaped_maximum_authored_fields_fit_source_and_session_without_losing_saved_words() {
+fn maximum_source_setup() -> (tempfile::TempDir, Reader, String) {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path().join("astrid");
     let relative = format!(
@@ -376,6 +375,12 @@ fn escaped_maximum_authored_fields_fit_source_and_session_without_losing_saved_w
         Catalog::new(BTreeMap::from([("astrid".into(), root)])).unwrap(),
         temp.path().join("reader"),
     );
+    (temp, reader, source)
+}
+
+#[test]
+fn escaped_maximum_authored_fields_fit_source_and_session_without_losing_saved_words() {
+    let (temp, reader, source) = maximum_source_setup();
     let first = open(&reader, &source);
     let words = "\\\"".repeat(300);
     let note = "\\\"".repeat(800);
@@ -409,6 +414,21 @@ fn escaped_maximum_authored_fields_fit_source_and_session_without_losing_saved_w
             &format!("Account {turn}: {}", "p".repeat(7200)),
         );
     }
+    // Maximum-length exact recovery paths make a large batch of rejected
+    // receipts. Their duplicate preview may omit whole results, but must retain
+    // visible recovery and finding actions alongside the unchanged saved words.
+    let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    let mut rejected = String::new();
+    for line in 9_001..=9_006 {
+        writeln!(
+            rejected,
+            "STUDY_FINDING: {source}:{line} | An unseen claim."
+        )
+        .unwrap();
+    }
+    accept(&reader, &map, &rejected);
+    let updates = state(&temp)["notebook"]["source_findings"]["updates"].clone();
+    assert_eq!(updates.as_array().unwrap().len(), 6);
     for action in [
         format!("SELF_STUDY OPEN {source} 1"),
         format!("SELF_STUDY SESSION OPEN {source} 1 | OPEN {source} 100"),
@@ -419,7 +439,16 @@ fn escaped_maximum_authored_fields_fit_source_and_session_without_losing_saved_w
         let checkpoint_start = output.text.find(CHECK_IN).unwrap();
         let checkpoint_end = output.text.find(CHECK_IN_END).unwrap() + CHECK_IN_END.len();
         let checkpoint = &output.text[checkpoint_start..checkpoint_end];
-        assert!(checkpoint.len() <= 6000);
+        assert!(checkpoint.len() <= 4500);
+        assert!(checkpoint.contains("6/6 retained; 0 available"));
+        assert!(checkpoint.contains("Finding not saved"));
+        assert!(checkpoint.contains(&format!("SELF_STUDY OPEN {source} 9006")));
+        assert!(checkpoint.contains("earlier result(s) remain whole"));
+        assert!(checkpoint.contains(&format!("STUDY_FINDING: {source}:1 | your revised words")));
+        assert!(checkpoint.contains(&format!(
+            "STUDY_FINDING_DROP: {}",
+            authored[0]["id"].as_str().unwrap()
+        )));
         assert!(checkpoint.contains("additional finding(s) remain whole in the full notebook"));
         for page in output.page.iter().chain(output.session_pages.iter()) {
             let end = output.text.find(&page.text).unwrap() + page.text.len();
@@ -442,10 +471,12 @@ fn escaped_maximum_authored_fields_fit_source_and_session_without_losing_saved_w
         assert_eq!(rendered["note"]["text"], note);
         assert_eq!(rendered["question"]["text"], question);
         assert_eq!(&rendered["source_findings"]["authored"], authored);
+        assert_eq!(rendered["source_findings"]["updates"], updates);
         let durable = state(&temp)["notebook"].clone();
         assert_eq!(durable["note"], saved["note"]);
         assert_eq!(durable["question"], saved["question"]);
         assert_eq!(&durable["source_findings"]["authored"], authored);
+        assert_eq!(durable["source_findings"]["updates"], updates);
         accept(&reader, &output, "No authored update is chosen.");
     }
 }

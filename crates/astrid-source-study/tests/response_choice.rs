@@ -57,6 +57,7 @@ fn shared_fixture_scanner_and_inspector_contract() {
         .unwrap();
         for field in [
             "selected_next",
+            "normalized_next",
             "selection_kind",
             "earlier_source_command",
             "recovery_commands",
@@ -64,6 +65,62 @@ fn shared_fixture_scanner_and_inspector_contract() {
             assert_eq!(feedback[field], case[field], "{} {field}", case["name"]);
         }
     }
+}
+
+#[test]
+fn private_continue_keeps_authored_choice_and_requires_verified_delivery() {
+    for action in ["CONTINUE", "continue"] {
+        let temp = tempfile::tempdir().unwrap();
+        let writer = Writer::new(temp.path().into());
+        let first = writer.prepare("WRITE START a developing thought").unwrap();
+        assert!(first.system_prompt.contains("NEXT: WRITE CONTINUE"));
+        let (request, response) = wire(&first, &format!("First passage.\nNEXT: {action}"));
+        assert!(
+            writer
+                .delivered(
+                    first.navigation_id.as_deref().unwrap(),
+                    &request,
+                    &response.replace("stop", "length"),
+                )
+                .is_err()
+        );
+        assert_eq!(writer.prepare("WRITE CONTINUE").unwrap(), first);
+        let receipt = writer
+            .delivered(first.navigation_id.as_deref().unwrap(), &request, &response)
+            .unwrap();
+        let feedback = receipt.choice_feedback.unwrap();
+        assert_eq!(feedback.selected_next.as_deref(), Some(action));
+        assert_eq!(feedback.normalized_next.as_deref(), Some("WRITE CONTINUE"));
+        assert!(feedback.recovery_commands.is_empty());
+        assert!(
+            feedback
+                .explanation
+                .as_ref()
+                .unwrap()
+                .contains("not proof of queueing")
+        );
+        let state: Value =
+            serde_json::from_slice(&fs::read(temp.path().join("drafts-v1.json")).unwrap()).unwrap();
+        assert_eq!(state["drafts"]["d1"]["parts"], json!(["First passage."]));
+        assert_eq!(state["drafts"]["d1"]["revision"], json!(1));
+        assert!(state["pending"].is_null());
+        let next = writer.prepare("WRITE CONTINUE").unwrap();
+        assert_eq!(receipt_in(&next.text).feedback, feedback);
+        assert!(next.text.contains("First passage."));
+        assert_eq!(inspect_response(&next.text, true).selected_next, None);
+    }
+}
+
+#[test]
+fn legacy_choice_receipt_needs_no_migration_or_assumed_normalization() {
+    let legacy = json!({
+        "input_id":"writing-1", "request_sha256":"request", "response_sha256":"response",
+        "feedback": {"selected_next":"CONTINUE", "selection_kind":"explicit_next",
+            "earlier_source_command":null, "recovery_commands":[], "explanation":null}
+    });
+    let receipt: ChoiceReceipt = serde_json::from_value(legacy.clone()).unwrap();
+    assert_eq!(receipt.feedback.normalized_next, None);
+    assert_eq!(serde_json::to_value(receipt).unwrap(), legacy);
 }
 
 #[test]

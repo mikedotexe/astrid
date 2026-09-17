@@ -492,5 +492,130 @@
     "selection_kind": null,
     "earlier_source_command": null,
     "recovery_commands": []
+  },
+  {
+    "name": "private_continue",
+    "text": "NEXT: CONTINUE",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "CONTINUE",
+    "normalized_next": "WRITE CONTINUE",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_lowercase_continue",
+    "text": "next: continue",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "continue",
+    "normalized_next": "WRITE CONTINUE",
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "global_continue",
+    "text": "NEXT: CONTINUE",
+    "private_writing": false,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "CONTINUE",
+    "normalized_next": null,
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_continue_arguments",
+    "text": "NEXT: CONTINUE the draft",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": "CONTINUE the draft",
+    "normalized_next": null,
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_bare_continue",
+    "text": "CONTINUE",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": null,
+    "normalized_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_continue_prose",
+    "text": "I want to continue this draft.",
+    "private_writing": true,
+    "eligible_indices": [
+      0
+    ],
+    "selected_next": null,
+    "normalized_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_continue_quote",
+    "text": "> NEXT: CONTINUE",
+    "private_writing": true,
+    "eligible_indices": [],
+    "selected_next": null,
+    "normalized_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_continue_fence",
+    "text": "```\nNEXT: CONTINUE\n```",
+    "private_writing": true,
+    "eligible_indices": [],
+    "selected_next": null,
+    "normalized_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_continue_superseded",
+    "text": "NEXT: CONTINUE\nNEXT: REST",
+    "private_writing": true,
+    "eligible_indices": [
+      0,
+      1
+    ],
+    "selected_next": "REST",
+    "normalized_next": null,
+    "selection_kind": "explicit_next",
+    "earlier_source_command": null,
+    "recovery_commands": []
+  },
+  {
+    "name": "private_continue_hidden",
+    "text": "<think>\nNEXT: CONTINUE\n</think>",
+    "private_writing": true,
+    "eligible_indices": [],
+    "selected_next": null,
+    "normalized_next": null,
+    "selection_kind": null,
+    "earlier_source_command": null,
+    "recovery_commands": []
   }
 ]

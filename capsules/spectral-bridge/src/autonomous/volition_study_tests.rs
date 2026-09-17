@@ -7,17 +7,37 @@ use std::collections::BTreeMap;
 
 #[test]
 fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next() {
-    for (request, action) in [
-        ("SELF_STUDY OPEN astrid/Cargo.toml 1", "SELF_STUDY CONTINUE"),
-        ("SELF_STUDY MAP", "SELF_STUDY MAP astrid"),
-        ("WRITE START trace a question", "WRITE CONTINUE"),
-        ("WRITE PROFILE EXTENDED", "WRITE START develop the answer"),
+    for (request, action, expected_dispatch) in [
+        (
+            "SELF_STUDY OPEN astrid/Cargo.toml 1",
+            "SELF_STUDY CONTINUE",
+            "SELF_STUDY CONTINUE",
+        ),
+        (
+            "SELF_STUDY MAP",
+            "SELF_STUDY MAP astrid",
+            "SELF_STUDY MAP astrid",
+        ),
+        (
+            "WRITE START trace a question",
+            "WRITE CONTINUE",
+            "WRITE CONTINUE",
+        ),
+        ("WRITE START trace a question", "CONTINUE", "WRITE CONTINUE"),
+        ("WRITE START trace a question", "continue", "WRITE CONTINUE"),
+        (
+            "WRITE PROFILE EXTENDED",
+            "WRITE START develop the answer",
+            "WRITE START develop the answer",
+        ),
         (
             "SELF_STUDY FIND package",
+            "SELF_STUDY RESUME astrid/Cargo.toml",
             "SELF_STUDY RESUME astrid/Cargo.toml",
         ),
         (
             "SELF_STUDY of the spectral tuning mechanisms",
+            "SELF_STUDY MAP",
             "SELF_STUDY MAP",
         ),
     ] {
@@ -50,8 +70,10 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
         } else {
             runtime::source_study_completion_mode(delivery.is_ok(), written.is_ok())
         };
-        let chosen = next_action::parse_next_action(&text).unwrap();
-        assert_eq!(chosen, action);
+        let authored = next_action::parse_next_action(&text).unwrap();
+        assert_eq!(authored, action);
+        let chosen = next_action::normalized_private_writing_next(mode, &text).unwrap_or(authored);
+        assert_eq!(chosen, expected_dispatch);
         let root = temp.path().join("volition");
         let start =
             begin_astrid_next_at_root(&root, &text, "study-turn", mode, chosen, 50_000).unwrap();
@@ -165,6 +187,10 @@ fn failed_carriage_is_ineligible_and_study_authorship_does_not_grant_elevated_au
     let temp = tempfile::tempdir().unwrap();
     for (delivered, written) in [(false, false), (false, true), (true, false)] {
         let mode = runtime::source_study_completion_mode(delivered, written);
+        assert_eq!(
+            next_action::normalized_private_writing_next(mode, "NEXT: CONTINUE"),
+            None
+        );
         assert!(
             begin_astrid_next_at_root(
                 temp.path(),
@@ -188,5 +214,49 @@ fn failed_carriage_is_ineligible_and_study_authorship_does_not_grant_elevated_au
         )
         .unwrap();
         assert!(start.dispatch_block_reason().is_some(), "{action}");
+    }
+}
+
+#[test]
+fn incomplete_private_delivery_keeps_pending_draft_and_cannot_normalize_continuation() {
+    for response in [
+        json!({"message":{"content":"An unfinished thought.\nNEXT: CONTINUE"},"done":true,"done_reason":"length"}),
+        json!({"message":{"content":"An unfinished thought.\nNEXT: CONTINUE"},"done":false}),
+    ] {
+        let temp = tempfile::tempdir().unwrap();
+        let source_root = temp.path().join("astrid");
+        fs::create_dir_all(&source_root).unwrap();
+        let reader = Reader::new(
+            Catalog::new(BTreeMap::from([("astrid".into(), source_root)])).unwrap(),
+            temp.path().join("reader"),
+        );
+        let offer = reader
+            .prepare_action("WRITE START develop this thought")
+            .unwrap();
+        let wire = json!({"messages":[{"role":"user","content":offer.text}]}).to_string();
+        let delivered = reader.navigation_delivered(
+            offer.navigation_id.as_deref().unwrap(),
+            &wire,
+            &response.to_string(),
+        );
+        assert!(delivered.is_err());
+        let retry = reader.prepare_action("WRITE CONTINUE").unwrap();
+        assert_eq!(retry.navigation_id, offer.navigation_id);
+        let mode = runtime::source_study_completion_mode(delivered.is_ok(), true);
+        assert_eq!(
+            next_action::normalized_private_writing_next(mode, "NEXT: CONTINUE"),
+            None
+        );
+        assert!(
+            begin_astrid_next_at_root(
+                &temp.path().join("volition"),
+                "NEXT: CONTINUE",
+                "incomplete-writing",
+                mode,
+                "WRITE CONTINUE",
+                60_000,
+            )
+            .is_err()
+        );
     }
 }

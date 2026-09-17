@@ -4783,7 +4783,16 @@ pub fn spawn_autonomous_loop(
                         );
                         save_astrid_journal(&notice, "private_writing_notice", fill_pct);
                     }
-                    let selected_next_action = response_next_action.as_deref()
+                    let writing_continuation = next_action::normalized_private_writing_next(mode_name, &response_text);
+                    if writing_continuation.is_some() {
+                        let feedback = astrid_source_study::response_choice::inspect_response(&response_text, true);
+                        let notice = format!(
+                            "Runtime writing-choice feedback (reference only): {} Normalized command will pass through the ordinary action checks; this notice does not establish dispatch or completion.",
+                            serde_json::to_string(&feedback).expect("choice feedback serializes")
+                        );
+                        save_astrid_journal(&notice, "private_writing_notice", fill_pct);
+                    }
+                    let selected_next_action = writing_continuation.or(response_next_action.as_deref())
                         .filter(|_| finish_recovery.is_none());
                     if let Some(next_action) = selected_next_action {
                         let canonical_next_action = canonicalize_next_action_text(next_action);
@@ -4879,7 +4888,7 @@ pub fn spawn_autonomous_loop(
                         }
                         if let Err(err) = crate::action_continuity::record_astrid_next_action(
                             db.as_ref(),
-                            next_action,
+                            response_next_action.as_deref().unwrap_or(next_action),
                             &canonical_next_action,
                             &effective_next_action,
                             &next_outcome,

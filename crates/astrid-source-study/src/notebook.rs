@@ -109,14 +109,21 @@ impl Notebook {
     /// Render existing authored state together without synthesizing conclusions,
     /// classifying their truth, or changing the inquiry's status or scheduling.
     fn checkpoint_context(&self) -> String {
-        const MAX_CHECKPOINT_BYTES: usize = 6_000;
+        // Leave room for maximum durable fields and exact-path failure receipts
+        // inside the shared whole-input budget; this section duplicates recall.
+        const MAX_CHECKPOINT_BYTES: usize = 4_500;
         const FOOTER: &str = "You can distinguish what you have established from what remains an assumption, including places already checked. Your findings remain yours to retain, qualify or revise.\n";
-        if self.question.is_none() && self.note.is_none() && !self.source_findings.has_authored() {
+        if self.question.is_none()
+            && self.note.is_none()
+            && !self.source_findings.has_authored()
+            && !self.source_findings.has_updates()
+        {
             return String::new();
         }
         let mut out = String::from(
             "OPTIONAL STUDY CHECK-IN — fresh source or navigation is above; recalled words are below. You may take stock, keep reading, revise or park a question, or choose another activity. No answer or change of direction is required.\n",
         );
+        out.push_str(&self.source_findings.render_updates(1_200));
         if let Some(question) = &self.question {
             let _ = writeln!(
                 out,
@@ -135,7 +142,13 @@ impl Notebook {
                 .len()
                 .saturating_add(preview.len())
                 .saturating_add(FOOTER.len())
-                .saturating_add(500)
+                // Leave a finding's identity and exact optional replacement/drop
+                // commands visible before duplicating a long saved note.
+                .saturating_add(if self.source_findings.has_authored() {
+                    1_800
+                } else {
+                    500
+                })
                 <= MAX_CHECKPOINT_BYTES
             {
                 out.push_str(&preview);

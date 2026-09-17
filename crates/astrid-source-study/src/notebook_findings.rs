@@ -47,6 +47,45 @@ pub(crate) fn is_directive(line: &str) -> bool {
 }
 
 impl Findings {
+    /// Keep the latest explicit update visible across ordinary study responses.
+    /// Rendering only omits whole duplicate results; durable receipts stay intact.
+    pub(crate) fn render_updates(&self, max_bytes: usize) -> String {
+        let mut out = format!(
+            "FINDING CAPACITY — {}/{} retained; {} available. Saving at an existing cited location replaces that finding; nothing is evicted automatically.\n",
+            self.authored.len(),
+            MAX_FINDINGS,
+            MAX_FINDINGS.saturating_sub(self.authored.len()),
+        );
+        if self.updates.is_empty() {
+            return out;
+        }
+        out.push_str("LATEST FINDING SAVE/REMOVE RESULTS — from your most recent explicit update, retained until another finding update. Newest result first. These report storage, not whether a conclusion is correct.\n");
+        let omitted = |count| {
+            format!(
+                "{count} earlier result(s) remain whole in source_findings.updates in the full notebook below.\n"
+            )
+        };
+        let omission_reserve = omitted(self.updates.len()).len();
+        let mut shown = 0_usize;
+        for (index, update) in self.updates.iter().enumerate().rev() {
+            let row = format!("Result {}: {update}\n", index.saturating_add(1));
+            if out
+                .len()
+                .saturating_add(row.len())
+                .saturating_add(omission_reserve)
+                > max_bytes
+            {
+                break;
+            }
+            out.push_str(&row);
+            shown = shown.saturating_add(1);
+        }
+        if shown < self.updates.len() {
+            out.push_str(&omitted(self.updates.len().saturating_sub(shown)));
+        }
+        out
+    }
+
     /// A readable view of authored words beside their retained evidence. This
     /// never promotes an interpretation to fact or reads a newer source revision.
     pub(crate) fn render_authored(&self, max_bytes: usize) -> String {
@@ -76,8 +115,7 @@ impl Findings {
             let mut row = String::new();
             let _ = writeln!(
                 row,
-                "{} — your words: {:?}\nRetained fragment {}:{} (sha256:{}{}): {:?}\nReopen current source: {}",
-                finding.id,
+                "Your words: {:?}\nRetained fragment {}:{} (sha256:{}{}): {:?}\nReopen current source: {}\nOptional replacement (supply your own revised words): STUDY_FINDING: {}:{} | your revised words\nOptional removal: STUDY_FINDING_DROP: {}",
                 finding.words,
                 anchor.source,
                 anchor.line,
@@ -89,6 +127,9 @@ impl Findings {
                 },
                 anchor.delivered_line_fragment,
                 anchor.reopen_current_checkout,
+                anchor.source,
+                anchor.line,
+                finding.id,
             );
             if out
                 .len()
@@ -96,7 +137,25 @@ impl Findings {
                 .saturating_add(omission_reserve)
                 > max_bytes
             {
-                break;
+                // Preserve exact optional actions even when a duplicate of the
+                // whole authored words and fragment would crowd out the notebook.
+                row = format!(
+                    "Finding at {}:{} — your whole words and retained fragment remain in the full notebook below; their duplicate preview is omitted for input space.\nReopen current source: {}\nOptional replacement (supply your own revised words): STUDY_FINDING: {}:{} | your revised words\nOptional removal: STUDY_FINDING_DROP: {}\n",
+                    anchor.source,
+                    anchor.line,
+                    anchor.reopen_current_checkout,
+                    anchor.source,
+                    anchor.line,
+                    finding.id,
+                );
+                if out
+                    .len()
+                    .saturating_add(row.len())
+                    .saturating_add(omission_reserve)
+                    > max_bytes
+                {
+                    break;
+                }
             }
             out.push_str(&row);
             shown = shown.saturating_add(1);
@@ -109,6 +168,10 @@ impl Findings {
 
     pub(crate) fn has_authored(&self) -> bool {
         !self.authored.is_empty()
+    }
+
+    pub(crate) fn has_updates(&self) -> bool {
+        !self.updates.is_empty()
     }
 
     pub(crate) fn is_empty(&self) -> bool {
@@ -131,13 +194,15 @@ impl Findings {
     }
 
     pub(crate) fn record(&mut self, response: &str, text: &str, pages: &[Page]) {
-        self.updates.clear();
         let lines = supplied_lines(pages);
         let mut count = 0_usize;
         for line in crate::response_choice::eligible_lines(text) {
             let line = line.trim();
             if !is_directive(line) {
                 continue;
+            }
+            if count == 0 {
+                self.updates.clear();
             }
             count = count.saturating_add(1);
             if count > MAX_UPDATES {
@@ -209,15 +274,21 @@ impl Findings {
                 .chain(self.authored.iter().map(|finding| &finding.anchor))
                 .find(|anchor| anchor.source == source && anchor.line == line)
                 .cloned(),
-            _ => return "Finding not saved: multiple supplied fragments match this source line. Reopen it in one page to choose an unambiguous anchor.".into(),
+            _ => {
+                return format!(
+                    "Finding not saved: multiple supplied fragments match this source line. To choose an unambiguous anchor, optionally reopen one page: SELF_STUDY OPEN {source} {line}"
+                );
+            },
         };
         let Some(anchor) = anchor else {
-            return "Finding not saved: that numbered line is not in this input's source pages or this inquiry's retained source anchors. Reopen the exact source line first; search/map mentions and recalled prose are not source anchors.".into();
+            return format!(
+                "Finding not saved: that numbered line is not in this input's source pages or this inquiry's retained source anchors. Search/map mentions and recalled prose are not source anchors. To supply the line, optionally use: SELF_STUDY OPEN {source} {line}"
+            );
         };
         let id = format!("f{}", digest(format!("{source}:{line}")));
         let existing = self.authored.iter().position(|finding| finding.id == id);
         if existing.is_none() && self.authored.len() >= MAX_FINDINGS {
-            return "Finding not saved: six authored findings are retained in this inquiry. Use STUDY_FINDING_DROP: <the displayed finding ID> to remove one, or update an existing cited location. Nothing was evicted.".into();
+            return "Finding not saved: six authored findings are retained in this inquiry. Nothing was evicted. You may keep them all, replace a finding at its existing cited location, or remove one using its exact optional command below before trying a new location again.".into();
         }
         let finding = Finding {
             id: id.clone(),
@@ -230,8 +301,13 @@ impl Findings {
         } else {
             self.authored.push(finding);
         }
+        let operation = if existing.is_some() {
+            "Updated"
+        } else {
+            "Saved"
+        };
         format!(
-            "Saved {id}: your authored conclusion beside a delivered source fragment; correctness is not verified."
+            "{operation} {id}: your authored conclusion beside a delivered source fragment; correctness is not verified."
         )
     }
 

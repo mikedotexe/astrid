@@ -119,7 +119,7 @@ impl Outline {
         budget: usize,
     ) -> String {
         let mut output = format!(
-            "SOURCE SCOPE — {}; origin: same SOURCE and sha256 above. Syntax only; runtime behavior unverified.\n",
+            "SOURCE SCOPE at page start — {}; origin: same SOURCE and sha256 above. Syntax only; runtime behavior unverified.\n",
             self.parser.unwrap_or("no syntax parser")
         );
         if !self.complete {
@@ -175,6 +175,33 @@ impl Outline {
             );
         }
         output
+    }
+
+    /// A delivered page can stop inside a different declaration from the one
+    /// named at its start. Its last line is not that declaration's closing line.
+    pub(crate) fn page_end_text(&self, start: usize, end: usize, budget: usize) -> String {
+        if !self.complete || start == end {
+            return String::new();
+        }
+        let scopes = self.enclosing(end.saturating_sub(1));
+        let Some(declaration) = scopes
+            .last()
+            .filter(|declaration| end < declaration.end_byte)
+        else {
+            return String::new();
+        };
+        let row = format!(
+            "\nPAGE END SCOPE — {} {} continues beyond this page (declaration lines {}–{}). Syntax span is metadata, not delivered coverage.\n",
+            declaration.kind,
+            bounded_label(&declaration.qualified_name, 80),
+            declaration.start_line,
+            declaration.end_line
+        );
+        if row.len() <= budget {
+            row
+        } else {
+            "\nPAGE END SCOPE — enclosing declaration continues beyond this page; its closing source is not delivered here.\n".into()
+        }
     }
 
     fn visit(

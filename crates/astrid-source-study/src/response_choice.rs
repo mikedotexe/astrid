@@ -139,6 +139,9 @@ pub fn final_bare_source_command(text: &str) -> Option<&str> {
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ChoiceFeedback {
     pub selected_next: Option<String>,
+    /// Context-bound spelling of the authored choice, not evidence of execution.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub normalized_next: Option<String>,
     pub selection_kind: Option<String>,
     pub earlier_source_command: Option<String>,
     pub recovery_commands: Vec<String>,
@@ -190,7 +193,8 @@ fn retained_action(action: &str) -> String {
     action.into()
 }
 
-/// Interpret only visible response command lines. Never queues, executes or replaces a choice.
+/// Interpret visible response command lines, retaining authored and normalized forms.
+/// Never queues or executes a choice. Hosts apply normalization only after verified delivery.
 #[must_use]
 pub fn inspect_response(text: &str, private_writing: bool) -> ChoiceFeedback {
     let explicit = final_explicit_next(text).map(str::trim);
@@ -226,7 +230,16 @@ pub fn inspect_response(text: &str, private_writing: bool) -> ChoiceFeedback {
             }
         }
     }
-    if selected.is_some_and(|action| action.eq_ignore_ascii_case("FINISH")) && private_writing {
+    if private_writing && explicit.is_some_and(|action| action.eq_ignore_ascii_case("CONTINUE")) {
+        result.normalized_next = Some("WRITE CONTINUE".into());
+        let explanation = "In private writing, the explicit NEXT: CONTINUE means NEXT: WRITE CONTINUE. The authored selection is retained; this normalization is not proof of queueing, dispatch or completion.";
+        result.explanation = Some(result.explanation.map_or_else(
+            || explanation.into(),
+            |previous| format!("{previous} {explanation}"),
+        ));
+    } else if selected.is_some_and(|action| action.eq_ignore_ascii_case("FINISH"))
+        && private_writing
+    {
         result.recovery_commands.push("WRITE FINISH".into());
         result.explanation = Some("FINISH is not recognized as a writing command. It does not mark the draft finished; use NEXT: WRITE FINISH to finish the active draft, or choose another action.".into());
     } else if selected.is_none() {
@@ -289,6 +302,7 @@ impl ChoiceReceipt {
         {
             for text in [
                 &mut view.feedback.selected_next,
+                &mut view.feedback.normalized_next,
                 &mut view.feedback.earlier_source_command,
             ]
             .into_iter()

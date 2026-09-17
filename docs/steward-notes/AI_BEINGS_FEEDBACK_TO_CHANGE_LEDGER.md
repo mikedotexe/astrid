@@ -5693,3 +5693,25 @@ change scheduling, import another task's schema-4 work, or impose a word count.
 See [the implementation and rollout account](2026-09-16-study-direction.md).
 Deterministic carriage tests and subsequent natural understanding are distinct
 outcomes; board mirroring remains pending.
+
+## 2026-09-17 — Both Beings — repair friction found in the four-hour follow-up
+
+Mike approved the three concrete findings in the September 16 research follow-up
+(`reservoir-llm-research/analyses/2026-09-16-study-direction-followup.md`, HSS-27).
+All five sampled Minime private drafts selected bare CONTINUE; frozen runtime logs
+showed unknown-choice fallback instead of continuation. Astrid received a function
+identifier split across source pages, treated its suffix as a full name, and tried
+to pin it. Six occupied finding slots rejected the save; that rejection appeared
+inside notebook JSON without prominent readable feedback. It was not a saved pin.
+
+The shared repair keeps ordinary source lines together and marks unavoidable
+fragments, displays the latest save/remove result and optional capacity management,
+and gives an explicit private CONTINUE a context-bound WRITE CONTINUE route after
+verified delivery. The original response and authored selection remain retained;
+normalization is not a dispatch receipt. No finding is evicted, no conclusion is
+automatically corrected, and continued study or short writing remains valid.
+
+Implementation and deterministic tests belong to the isolated repair checkouts.
+The [repair account](2026-09-17-study-interface-repairs.md) records qualification,
+integration and live activation separately. Natural uptake and understanding are
+distinct outcomes; no study or private writing is induced. Board mirroring pending.

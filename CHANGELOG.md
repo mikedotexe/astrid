@@ -9,6 +9,13 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed — study and private-writing feedback (2026-09-17)
+
+- Route explicit private-writing `NEXT: CONTINUE` through `WRITE CONTINUE` after verified delivery, keeping authored text and normalization distinct. Shared guidance uses full writing commands; global CONTINUE, prose intentions and unsuccessful generations gain no writing alias.
+- Keep ordinary source lines intact across pages. Explicitly mark exceptional long-line fragments and old mid-line cursors, distinguish delivered line intervals from declaration spans, and retain exact byte coverage and continuation.
+- Show the latest finding-save/remove outcomes and current capacity beside the study check-in, with exact optional drop/replacement recovery. Keep all authored findings until their owner changes them; failures do not silently discard receipt feedback.
+- Qualification, integration and graceful activation are recorded separately in `docs/steward-notes/2026-09-17-study-interface-repairs.md`.
+
 ### Improved — shared study direction (2026-09-16)
 
 - Keep question-derived source suggestions anchored to their repository and saved source context; unrelated files no longer become candidates merely because they share `lib.rs`. Exact cross-repository paths and manual catalog access remain available, and unchanged questions retain their source provenance through detours.
