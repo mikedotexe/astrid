@@ -20,6 +20,18 @@ struct Request {
 #[derive(Deserialize)]
 #[serde(tag = "operation", rename_all = "snake_case")]
 enum Operation {
+    PreparationRevision,
+    PrepareOnce {
+        request_id: String,
+        expected_revision: String,
+        action: String,
+    },
+    Activity {
+        request_id: String,
+        expected_revision: Option<u64>,
+        now_ms: u64,
+        request: astrid_source_study::ActivityRequest,
+    },
     AnalyzeResponse {
         text: String,
         #[serde(default)]
@@ -77,6 +89,29 @@ fn run() -> Result<serde_json::Value> {
         reader = reader.with_runtime_workspace(workspace, &being);
     }
     match request.operation {
+        Operation::PreparationRevision => {
+            Ok(serde_json::json!({"revision": reader.preparation_revision()?}))
+        },
+        Operation::PrepareOnce {
+            request_id,
+            expected_revision,
+            action,
+        } => Ok(serde_json::to_value(reader.prepare_once(
+            &request_id,
+            &expected_revision,
+            &action,
+        )?)?),
+        Operation::Activity {
+            request_id,
+            expected_revision,
+            now_ms,
+            request,
+        } => Ok(serde_json::to_value(reader.activity(
+            &request_id,
+            expected_revision,
+            now_ms,
+            request,
+        )?)?),
         Operation::AnalyzeResponse { .. } | Operation::RecoverNavigation { .. } => {
             unreachable!("handled before constructing a reader")
         },

@@ -205,18 +205,23 @@ fn valid_owner(owner: &str) -> bool {
 
 fn read(directory: &Path) -> Result<Option<Sidecar>> {
     let path = directory.join(FILE);
-    let metadata = match fs::symlink_metadata(&path) {
-        Ok(metadata) => metadata,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-        Err(error) => return Err(error.into()),
+    let bytes = if let Some(bytes) = crate::preparation::staged(&path) {
+        bytes
+    } else {
+        let metadata = match fs::symlink_metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(error.into()),
+        };
+        if !metadata.file_type().is_file() || metadata.len() > MAX_BYTES {
+            bail!("source findings sidecar is nonregular or oversized; preserving checkpoint");
+        }
+        let mut bytes = Vec::new();
+        fs::File::open(&path)?
+            .take(MAX_BYTES.saturating_add(1))
+            .read_to_end(&mut bytes)?;
+        bytes
     };
-    if !metadata.file_type().is_file() || metadata.len() > MAX_BYTES {
-        bail!("source findings sidecar is nonregular or oversized; preserving checkpoint");
-    }
-    let mut bytes = Vec::new();
-    fs::File::open(&path)?
-        .take(MAX_BYTES.saturating_add(1))
-        .read_to_end(&mut bytes)?;
     if u64::try_from(bytes.len()).unwrap_or(u64::MAX) > MAX_BYTES {
         bail!("source findings sidecar grew beyond its bound; preserving checkpoint");
     }

@@ -206,10 +206,12 @@ READ_MORE — Continue reading the last browsed page or file.
 Syntax: NEXT: READ_MORE
 Notes: For a selected saved-text activity, prepares the next exact retained passage; bytes advance only after a completed model turn. A parked reader stays quiet until RETURN_ACTIVITY. Legacy saved text begins conservatively at byte 0 when converted; PDF and CODEX retain their separate legacy paging.",
 
+        "ACTIVITY_FOCUS" | "END_ACTIVITY_FOCUS" => astrid_source_study::focus::GUIDANCE,
+
         "ACTIVITY_STATUS" | "MAILBOX_STATUS" => "\
 ACTIVITY_STATUS / MAILBOX_STATUS — Inspect the current reader, saved return, and mailbox window without advancing them.
 Syntax: NEXT: ACTIVITY_STATUS
-Status supplies the current exact RETURN_ACTIVITY revision. Arriving letters do not replace a chosen reader.",
+Status supplies current native draft/question focus and exact RETURN_ACTIVITY revisions, plus saved reading. Arriving letters do not replace chosen work.",
 
         "PARK_ACTIVITY" => "\
 PARK_ACTIVITY — Save the current reader as quiet, retaining committed bytes and any pending passage.

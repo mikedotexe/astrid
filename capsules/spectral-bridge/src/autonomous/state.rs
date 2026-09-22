@@ -1008,6 +1008,8 @@ pub(in crate::autonomous) enum IntrospectOffsetV2 {
 pub(in crate::autonomous) struct IntrospectTargetV2 {
     pub label: String,
     pub offset: IntrospectOffsetV2,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub operation_id: Option<String>,
 }
 
 impl IntrospectTargetV2 {
@@ -1016,6 +1018,7 @@ impl IntrospectTargetV2 {
         Self {
             label,
             offset: IntrospectOffsetV2::Auto,
+            operation_id: None,
         }
     }
 
@@ -1024,6 +1027,7 @@ impl IntrospectTargetV2 {
         Self {
             label,
             offset: IntrospectOffsetV2::Exact(offset),
+            operation_id: None,
         }
     }
 }
@@ -1039,12 +1043,22 @@ impl<'de> Deserialize<'de> for IntrospectTargetV2 {
             V2 {
                 label: String,
                 offset: IntrospectOffsetV2,
+                #[serde(default)]
+                operation_id: Option<String>,
             },
             Legacy((String, usize)),
         }
 
         match Representation::deserialize(deserializer)? {
-            Representation::V2 { label, offset } => Ok(Self { label, offset }),
+            Representation::V2 {
+                label,
+                offset,
+                operation_id,
+            } => Ok(Self {
+                label,
+                offset,
+                operation_id,
+            }),
             Representation::Legacy((label, offset)) => Ok(Self::exact(label, offset)),
         }
     }

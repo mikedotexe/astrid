@@ -343,6 +343,7 @@ mod tests {
         let (sensory_tx, _sensory_rx) = mpsc::channel(1);
         let mut burst_count = 0;
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,

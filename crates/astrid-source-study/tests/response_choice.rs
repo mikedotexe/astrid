@@ -100,7 +100,7 @@ fn private_continue_keeps_authored_choice_and_requires_verified_delivery() {
                 .contains("not proof of queueing")
         );
         let state: Value =
-            serde_json::from_slice(&fs::read(temp.path().join("drafts-v1.json")).unwrap()).unwrap();
+            serde_json::from_slice(&fs::read(temp.path().join("drafts-v2.json")).unwrap()).unwrap();
         assert_eq!(state["drafts"]["d1"]["parts"], json!(["First passage."]));
         assert_eq!(state["drafts"]["d1"]["revision"], json!(1));
         assert!(state["pending"].is_null());
@@ -286,7 +286,7 @@ fn private_finish_recovery_is_specific_and_does_not_finish_draft() {
         let next = writer.prepare("WRITE CONTINUE").unwrap();
         assert_eq!(receipt_in(&next.text).feedback, feedback);
         let state: Value =
-            serde_json::from_slice(&fs::read(temp.path().join("drafts-v1.json")).unwrap()).unwrap();
+            serde_json::from_slice(&fs::read(temp.path().join("drafts-v2.json")).unwrap()).unwrap();
         assert_eq!(state["drafts"]["d1"]["finished"], json!(false));
     }
 }

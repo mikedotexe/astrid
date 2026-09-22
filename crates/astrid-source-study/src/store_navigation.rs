@@ -175,13 +175,13 @@ fn study_context(
         let recall = notebook.render_with_budget(remaining_input_budget(
             fixed_bytes.saturating_add(choices.len()),
         ));
-        match recall {
-            Ok(recall) => return Ok(format!("{choices}{recall}")),
-            Err(error) if preview_budget == 0 => return Err(error),
-            Err(_) => {},
+        if let Ok(recall) = recall {
+            return Ok(format!("{choices}{recall}"));
         }
     }
-    unreachable!("the final preview budget always returns")
+    // At the boundary, optional generated navigation suggestions also yield.
+    // Full authored recall and the delivered source are never shortened here.
+    notebook.render_with_budget(remaining_input_budget(fixed_bytes))
 }
 
 fn remember_offer(

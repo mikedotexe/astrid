@@ -8,7 +8,7 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
-from restart_minime_agent import LaunchdAgent, job_receipt, reload_agent
+from restart_minime_agent import LaunchdAgent, job_receipt, qualified_inputs, reload_agent
 
 
 class Backend:
@@ -72,6 +72,22 @@ class Backend:
 
 
 class ReloadTests(unittest.TestCase):
+    def test_wrong_qualified_inventory_never_signals(self):
+        backend = Backend()
+        with self.assertRaisesRegex(RuntimeError, "qualified inputs"):
+            reload_agent(backend, 10, expected_inputs={"runtime.py": "qualified"})
+        self.assertEqual(backend.signals, [])
+        self.assertEqual(backend.observations, 0)
+
+    def test_null_or_malformed_qualified_inventory_is_not_an_opt_out(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "receipt.json"
+            for inputs in (None, {}, [], {"runtime.py": "bad"}):
+                path.write_text(json.dumps({"schema": "minime_launch_source_reconciliation_v1",
+                                            "selected_inputs": inputs}))
+                with self.assertRaisesRegex(ValueError, "invalid qualified"):
+                    qualified_inputs(path)
+
     def test_waits_for_quiet_and_only_signals_agent_once(self):
         backend = Backend()
         backend.active_until = 3

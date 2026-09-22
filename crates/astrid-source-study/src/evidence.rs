@@ -10,6 +10,7 @@ pub enum InputKind {
     Relationships,
     Questions,
     RuntimeTrace,
+    Geometry,
     Map,
     Search,
     EndOfFile,
@@ -24,6 +25,9 @@ impl InputKind {
     #[must_use]
     pub fn scope(self) -> &'static str {
         match self {
+            Self::Geometry => {
+                "Chosen geometry evidence: frozen ESN activation observations and authored hypotheses, not covariance eigenvectors, verified causes, or felt-state measurements. No control changes or experiments were executed."
+            },
             Self::PrivateWriting => {
                 "Private writing: your developing draft and any stored evidence or references, not newly supplied source or verified facts. This writing is saved locally; sharing is a separate choice."
             },

@@ -1,13 +1,19 @@
 use crate::notebook::Notebook;
 use crate::questions::Questions;
+#[path = "store_focus.rs"]
+mod activity;
+#[path = "store_cursors.rs"]
+mod cursors;
+#[path = "store_geometry.rs"]
+mod geometry;
 #[path = "store_navigation.rs"]
 mod navigation;
 #[path = "store_sessions.rs"]
 mod sessions;
 use crate::progress::{self, Progress};
 use crate::{Catalog, Command, InputKind, Page, SCHEMA_VERSION, digest};
+pub use activity::{Request as ActivityRequest, Response as ActivityResponse};
 use anyhow::{Context as _, Result, bail};
-use fs2::FileExt as _;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -108,6 +114,10 @@ struct State {
     #[serde(default)]
     questions: Questions,
     #[serde(default)]
+    reading_contexts: BTreeMap<String, cursors::ReadingCursor>,
+    #[serde(default)]
+    cursor_owner: Option<String>,
+    #[serde(default)]
     pending_session: Option<StudyOutput>,
     #[serde(default)]
     last_input: Option<DeliveryReceipt>,
@@ -121,11 +131,13 @@ struct State {
     navigation_history: crate::navigation_history::NavigationHistory,
     #[serde(default)]
     navigation_offers: BTreeMap<String, crate::navigation_history::NavigationOffer>,
+    #[serde(default)]
+    prepared_actions: BTreeMap<String, String>,
 }
 pub struct Reader {
-    catalog: Catalog,
-    directory: PathBuf,
-    runtime: Option<crate::trace::RuntimeRecords>,
+    pub(crate) catalog: Catalog,
+    pub(crate) directory: PathBuf,
+    pub(crate) runtime: Option<crate::trace::RuntimeRecords>,
 }
 
 fn pending_context_is_current(state: &State, page: &Page) -> bool {
@@ -242,7 +254,7 @@ impl Reader {
             );
         }
         let _lock = self.lock()?;
-        let mut state = self.load()?;
+        let mut state = self.load_for_delivery(navigation_id)?;
         self.hydrate(&mut state)?;
         if let Some(receipt) = &state.last_navigation
             && receipt.page_id == navigation_id
@@ -379,6 +391,28 @@ impl Reader {
 
     fn prepare_parsed(&self, command: Result<Command>) -> Result<StudyOutput> {
         let _lock = self.lock()?;
+        let identity = command
+            .as_ref()
+            .ok()
+            .map(serde_json::to_vec)
+            .transpose()?
+            .map(digest);
+        let output = self.prepare_parsed_locked(command)?;
+        if let Some(identity) = identity {
+            let id = output
+                .page
+                .as_ref()
+                .map(|p| &p.id)
+                .or(output.navigation_id.as_ref())
+                .context("prepared input identity missing")?;
+            let mut state = self.load()?;
+            state.prepared_actions.insert(id.clone(), identity);
+            self.save(&state)?;
+        }
+        Ok(output)
+    }
+
+    fn prepare_parsed_locked(&self, command: Result<Command>) -> Result<StudyOutput> {
         let mut state = self.load()?;
         self.hydrate(&mut state)?;
         self.recover(&mut state)?;
@@ -387,8 +421,9 @@ impl Reader {
             Err(error) => return self.recovery_map(&mut state, &error),
         };
         let page = match command {
+            Command::Geometry { request } => return self.prepare_geometry(&mut state, request),
             Command::Question(command) => {
-                let text = match state.questions.apply(command, &mut state.notebook) {
+                let text = match state.apply_question(command) {
                     Ok(text) => text,
                     Err(error) => return self.recovery_map(&mut state, &error),
                 };
@@ -578,7 +613,7 @@ impl Reader {
         response_json: &str,
     ) -> Result<DeliveryReceipt> {
         let _lock = self.lock()?;
-        let mut state = self.load()?;
+        let mut state = self.load_for_delivery(page_id)?;
         self.hydrate(&mut state)?;
         if state
             .pending
@@ -811,43 +846,37 @@ impl Reader {
         Ok(())
     }
 
-    fn lock(&self) -> Result<File> {
-        fs::create_dir_all(&self.directory)?;
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt as _;
-            fs::set_permissions(&self.directory, fs::Permissions::from_mode(0o700))?;
-        }
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(self.directory.join("reader.lock"))?;
-        file.lock_exclusive()?;
-        Ok(file)
+    fn lock(&self) -> Result<crate::owner_transaction::OwnerTransaction> {
+        crate::owner_transaction::OwnerTransaction::acquire(&self.directory)
     }
     fn load(&self) -> Result<State> {
         let path = self.directory.join("reader-v1.json");
-        if !path.exists() {
+        if !crate::preparation::exists(&path) {
             return Ok(State {
                 version: SCHEMA_VERSION,
                 ..State::default()
             });
         }
-        let mut value: Value = serde_json::from_slice(&fs::read(path)?).context(
+        let mut value: Value = serde_json::from_slice(&crate::preparation::read(path)?).context(
             "source-study state is unreadable; preserving it instead of resetting progress",
         )?;
         crate::notebook_persistence::restore(&self.directory, &mut value)?;
-        let state: State = serde_json::from_value(value)?;
+        let legacy_cursor = value.get("reading_contexts").is_none();
+        let mut state: State = serde_json::from_value(value)?;
+        if legacy_cursor {
+            state.migrate_cursors();
+        }
         if !(1..=SCHEMA_VERSION).contains(&state.version) {
             bail!("unsupported source-study checkpoint version");
         }
+        state.questions.validate_geometry()?;
         Ok(state)
     }
     fn save(&self, state: &State) -> Result<()> {
         atomic_write(&self.directory.join("reader-v1.json"), &{
-            let mut value = serde_json::to_value(state)?;
+            let mut snapshot: State = serde_json::from_value(serde_json::to_value(state)?)?;
+            snapshot.retain_and_align_cursor();
+            let mut value = serde_json::to_value(&snapshot)?;
             value["version"] = SCHEMA_VERSION.into();
             crate::notebook_persistence::save(&self.directory, &value)?;
             serde_json::to_vec_pretty(&value)?
@@ -902,6 +931,13 @@ fn incomplete_finish(reason: &Value) -> bool {
 }
 
 pub(crate) fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
+    if crate::preparation::capture(path, bytes)? {
+        return Ok(());
+    }
+    atomic_write_direct(path, bytes)
+}
+
+pub(crate) fn atomic_write_direct(path: &Path, bytes: &[u8]) -> Result<()> {
     let temp = path.with_extension(format!("{}.tmp", std::process::id()));
     let mut options = OpenOptions::new();
     options.write(true).create(true).truncate(true);

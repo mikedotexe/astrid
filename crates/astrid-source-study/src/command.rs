@@ -14,6 +14,7 @@ pub enum Command {
     Question(crate::QuestionCommand),
     Session { targets: Vec<(String, usize)> },
     Trace { target: String },
+    Geometry { request: serde_json::Value },
 }
 
 impl Command {
@@ -28,6 +29,9 @@ impl Command {
             return Self::parse_replacement(rest);
         }
         match verb.to_ascii_uppercase().as_str() {
+            "GEOMETRY" => Ok(Self::Geometry {
+                request: serde_json::from_str(rest)?,
+            }),
             "" | "CONTINUE" => Ok(Self::Continue),
             "QUESTION" => Ok(Self::Question(crate::QuestionCommand::parse(rest)?)),
             "RELATE" => {

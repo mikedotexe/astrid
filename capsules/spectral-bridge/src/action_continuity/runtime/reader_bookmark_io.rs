@@ -165,6 +165,7 @@ pub(super) struct ReaderSessionLog {
     pub path: PathBuf,
     pub latest: Option<Value>,
     pub prior_operation: Option<Value>,
+    _owner: astrid_source_study::owner_transaction::OwnerTransaction,
 }
 
 impl ReaderSessionLog {
@@ -174,6 +175,7 @@ impl ReaderSessionLog {
         session: &str,
         operation: Option<&str>,
     ) -> Result<Option<Self>> {
+        let owner = store.reader_owner_transaction()?;
         identifier(thread)?;
         identifier(session)?;
         if let Some(operation) = operation {
@@ -235,6 +237,7 @@ impl ReaderSessionLog {
             path,
             latest,
             prior_operation,
+            _owner: owner,
         }))
     }
 

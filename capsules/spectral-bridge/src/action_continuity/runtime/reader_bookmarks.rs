@@ -48,6 +48,12 @@ fn reader_is_active(record: &Value) -> bool {
 }
 
 impl ActionContinuityStore {
+    /// Synchronous owner lock shared with source study, drafts and activity selection.
+    pub(crate) fn reader_owner_transaction(&self) -> Result<astrid_source_study::owner_transaction::OwnerTransaction> {
+        let workspace = self.root.parent().context("activity workspace missing")?;
+        astrid_source_study::owner_transaction::OwnerTransaction::acquire(
+            &workspace.join("diagnostics/source_first_v3/shared_reader"))
+    }
     /// Read the selected session across its complete log without creating a thread,
     /// changing foreground, advancing a cursor, or scheduling a return.
     pub fn reader_bookmark_preview(

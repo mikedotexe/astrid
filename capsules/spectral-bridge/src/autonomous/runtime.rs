@@ -19,6 +19,8 @@
 
 #![allow(clippy::arithmetic_side_effects)]
 
+#[path = "activity_focus.rs"]
+pub(crate) mod activity_focus;
 #[path = "activity_reading.rs"]
 pub(crate) mod activity_reading;
 #[path = "btsp/mod.rs"]
@@ -37,6 +39,8 @@ mod deployment_startup;
 mod durable_inbox;
 #[path = "runtime/exchange_pause.rs"]
 mod exchange_pause;
+#[path = "study_handoff.rs"]
+pub(crate) mod study_handoff;
 pub use deployment_startup::{apply_deployment_startup, inspect_deployment_inputs};
 #[path = "division_ceremony.rs"]
 mod division_ceremony;

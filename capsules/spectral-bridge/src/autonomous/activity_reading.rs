@@ -21,9 +21,17 @@ const PASSAGE_BYTES: usize = 4_000;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub(crate) struct ActivityRuntimeV1 {
+    #[serde(default)]
+    pub selection_revision: u64,
     pub foreground_reader: Option<ReaderActivityRefV1>,
     pub return_reader: Option<ReaderActivityRefV1>,
     pub mailbox_window: Option<MailboxWindowV1>,
+    /// Reference only; the shared native store owns its budget and authored input.
+    #[serde(default)]
+    pub native_focus_window: Option<String>,
+    /// Job identities only; exact requests and inputs stay in the owner store.
+    #[serde(default)]
+    pub study_handoff: super::study_handoff::HandoffState,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -81,8 +89,7 @@ fn save_selection(
     next: ActivityRuntimeV1,
 ) -> Result<()> {
     // Update memory only after the selection reaches its authoritative file.
-    persist_activity(store, &next)?;
-    conv.activity = next;
+    conv.activity = persist_activity(store, &next)?;
     Ok(())
 }
 
@@ -136,6 +143,7 @@ pub(super) fn choose_saved_text_in(
     source: &Path,
     label: &str,
 ) -> Result<String> {
+    let _lock = store.reader_owner_transaction()?;
     let source = source
         .canonicalize()
         .context("resolving chosen saved text")?;
@@ -146,7 +154,7 @@ pub(super) fn choose_saved_text_in(
                 && bookmark.disposition == ReaderDisposition::Active
         }) {
             let session_id = reader.session_id.clone();
-            persist_activity(store, &conv.activity)?;
+            conv.activity = persist_activity(store, &conv.activity)?;
             clear_superseded_reading_intents(conv);
             return Ok(format!(
                 "[Continuing saved reading session {} from its committed byte position. Pending bytes remain pending until a completed model turn.]",
@@ -205,7 +213,7 @@ pub(super) fn choose_saved_text_in(
     ))
 }
 
-fn clear_superseded_reading_intents(conv: &mut ConversationState) {
+pub(super) fn clear_superseded_reading_intents(conv: &mut ConversationState) {
     conv.last_read_path = None;
     conv.last_read_offset = 0;
     conv.last_read_meaning_summary = None;
@@ -380,7 +388,8 @@ fn status_in(store: &ActionContinuityStore, activity: &ActivityRuntimeV1) -> Res
         |window| format!("{} (one letter; large={})", window.id, window.large),
     );
     Ok(format!(
-        "Foreground: {foreground}\nSaved return: {parked}\nMailbox: {mailbox}\nStatus does not advance reading or dispatch a saved command."
+        "Foreground: {foreground}\nSaved return: {parked}\nMailbox: {mailbox}\n{}\nStatus does not advance reading or dispatch a saved command.",
+        activity.study_handoff.status()
     ))
 }
 
@@ -481,9 +490,26 @@ pub(super) fn handle_action_in(
     base: &str,
     original: &str,
 ) -> Option<Result<String>> {
+    if !matches!(
+        base,
+        "ACTIVITY_STATUS"
+            | "MAILBOX_STATUS"
+            | "PARK_ACTIVITY"
+            | "CHECK_MAILBOX"
+            | "RETURN_ACTIVITY"
+            | "CONTINUITY_SESSION_RESUME"
+    ) {
+        return None;
+    }
+    let _lock = match store.reader_owner_transaction() {
+        Ok(lock) => lock,
+        Err(error) => return Some(Err(error)),
+    };
     let raw = super::next_action::strip_action(original, base);
     match base {
-        "ACTIVITY_STATUS" | "MAILBOX_STATUS" => Some(status_in(store, &conv.activity)),
+        "ACTIVITY_STATUS" | "MAILBOX_STATUS" => {
+            Some(load_activity(store).and_then(|activity| status_in(store, &activity)))
+        },
         "PARK_ACTIVITY" => Some((|| {
             let next = park_selection(store, &conv.activity)?;
             save_selection(store, conv, next)?;

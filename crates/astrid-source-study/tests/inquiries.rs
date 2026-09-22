@@ -93,7 +93,7 @@ fn inquiries_restore_notes_park_resolve_and_retain_source_references() {
         state(&temp)["questions"]["entries"]["q2"]["finding"],
         "A test covers the write."
     );
-    assert_eq!(state(&temp)["version"], 3);
+    assert_eq!(state(&temp)["version"], astrid_source_study::SCHEMA_VERSION);
 }
 #[test]
 fn delayed_source_completion_updates_its_original_question_only() {
@@ -107,13 +107,9 @@ fn delayed_source_completion_updates_its_original_question_only() {
     let second = reader
         .prepare_action("SELF_STUDY QUESTION NEW Second question?")
         .unwrap();
-    let resumed = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
-    assert_eq!(resumed.question_id, page.question_id);
-    assert!(resumed.text.contains("ACTIVE STUDY QUESTION q1"));
-    assert!(!resumed.text.contains("Second question?"));
     accept(
         &reader,
-        &resumed,
+        &page,
         "STUDY_NOTE: Answer belonging to the first question.",
     );
     let s = state(&temp);
@@ -128,12 +124,67 @@ fn delayed_source_completion_updates_its_original_question_only() {
         state(&temp)["notebook"]["note"]["text"],
         "Second question still receives its response."
     );
+    let second_reading = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert_eq!(second_reading.question_id.as_deref(), Some("q2"));
+    assert!(second_reading.page.is_none());
     let first = reader.prepare_action("SELF_STUDY QUESTION q1").unwrap();
     assert!(
         first
             .text
             .contains("Answer belonging to the first question.")
     );
+}
+
+#[test]
+fn questions_restore_their_own_source_position_and_pending_delivery() {
+    let (temp, reader) = setup();
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW First?")
+        .unwrap();
+    let first = reader
+        .prepare_action(&format!("SELF_STUDY OPEN {SOURCE} 1"))
+        .unwrap();
+    accept(
+        &reader,
+        &first,
+        "STUDY_NOTE: First finding remains uncertain.",
+    );
+    let pending = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    reader
+        .prepare_action("SELF_STUDY QUESTION PARK q1")
+        .unwrap();
+    let unthreaded = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert!(unthreaded.page.is_none());
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW Second?")
+        .unwrap();
+    let second = reader
+        .prepare_action(&format!("SELF_STUDY OPEN {SOURCE} 500"))
+        .unwrap();
+    accept(&reader, &second, "STUDY_NOTE: Independent second finding.");
+    let progress_before = state(&temp)["progress"].clone();
+    let return_first = reader.prepare_action("SELF_STUDY QUESTION q1").unwrap();
+    assert!(
+        return_first
+            .text
+            .contains("First finding remains uncertain.")
+    );
+    let resumed = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert_eq!(resumed.page, pending.page);
+    accept(&reader, &resumed, "STUDY_NOTE: Revised first finding.");
+    assert!(
+        state(&temp)["receipts"]
+            .get(second.page.as_ref().unwrap().id.as_str())
+            .is_some()
+    );
+    assert_ne!(state(&temp)["progress"], progress_before);
+    reader.prepare_action("SELF_STUDY QUESTION q2").unwrap();
+    let resumed_second = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert_eq!(
+        resumed_second.page.as_ref().unwrap().start,
+        second.page.as_ref().unwrap().end
+    );
+    assert!(resumed_second.text.contains("Independent second finding."));
 }
 #[test]
 fn inquiry_delivery_requires_the_complete_question_context() {

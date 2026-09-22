@@ -8,14 +8,18 @@ mod catalog;
 mod command;
 mod coverage;
 mod evidence;
+pub mod focus;
+mod geometry;
 mod navigation;
 mod navigation_history;
 mod navigation_recovery;
 mod notebook;
 mod notebook_findings;
 mod notebook_persistence;
+pub mod owner_transaction;
 mod page;
 mod path_recovery;
+mod preparation;
 mod progress;
 mod question_sources;
 mod questions;
@@ -35,11 +39,11 @@ pub use evidence::InputKind;
 pub use navigation_recovery::{NavigationRecovery, recover_local_navigation};
 pub use page::{Page, Position, SourceLocation, SourceRevision};
 pub use questions::QuestionCommand;
-pub use store::{DeliveryReceipt, Reader, StudyOutput};
+pub use store::{ActivityRequest, ActivityResponse, DeliveryReceipt, Reader, StudyOutput};
 
 pub const STUDY_PROMPT: &str = include_str!("../prompt.txt");
 
-pub const SCHEMA_VERSION: u32 = 3;
+pub const SCHEMA_VERSION: u32 = 6;
 /// Whole system + reference input, shared by every provider adapter.
 pub const MAX_INPUT_BYTES: usize = 48_000;
 /// Byte-safe room for the protected input, framing and 8,192 output tokens.

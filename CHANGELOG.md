@@ -53,6 +53,58 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 - Add optional two-source STUDY_RELATION findings for authored flow claims, shared-file neighborhoods, and hypotheses. Both anchors require verified delivery; no authored connection becomes verified causation. Preserve replacement, removal, inquiry ownership and exact revisions.
 - Keep authored findings and both anchors whole under input pressure: shorten repeated guidance and reduce duplicate check-in previews before rejecting an oversized input. The complete input limit remains 48,000 bytes.
 - Paired Minime work exempts verified public source studies/navigation from the agency-vernacular notice and clarifies sensory-source comments without changing reservoir math. Implementation, test limitations and pending rollout: `docs/steward-notes/2026-09-17-source-study-evidence-and-relations.md`.
+- The following September 20-21 candidate and qualification entries are historical stages of the now-activated paired release. The successful transition, exact source inventories, process identities and checkpoint continuity are recorded in `docs/steward-notes/2026-09-21-paired-continuity-rollout.md`.
+- Git consolidation is separate from activation. No additional restart, reservoir-policy change, real-model experiment or automation resumption is needed to archive the deployed source. Existing immutable release receipts retain their original pre-commit identities.
+
+### Deployment - paired reader admission guard (2026-09-21)
+
+- Hold Minime replacement admission across the old agent's verified exit and the sanctioned bridge drain/activation. Install only the seven explicitly reconciled agent/launcher paths, retain original source bytes and per-file receipts, and preserve foreign source and native authored state.
+- Fail closed on changed source, lost hold ownership, interrupted jobs, unknown process identity or unqualified bridge replacement. Do not force a stop, restore authored backups, restart protected services or resume automations. Qualification and actual outcome: `docs/steward-notes/2026-09-21-paired-continuity-rollout.md`.
+
+### Fixed - ordinary study crash handoff (2026-09-21)
+
+- Commit ordinary source/private study choices before queue acknowledgement, freeze exact native preparation and use a one-use provider claim with operation-specific delivery retention. Recover verified native delivery without repeating generation or automatically dispatching NEXT; uncertain outcomes remain explicit recovery debt.
+- Add activity selector v3 with exact legacy archives and downgrade refusal, cross-process claim/retry tests, fresh authoritative status, and collision checks before protected focus. Preserve prior journals, native questions and private drafts.
+- Candidate only, not deployed. Verification, historical failed attempts, migration boundaries and rollout debt: `docs/steward-notes/2026-09-21-ordinary-study-crash-handoff.md`.
+
+### Fixed - interruption and launch-source qualification (2026-09-21)
+
+- Discard only spent native protected-slot targets after bridge restart, preventing stale host checkpoints from blocking an authored continuation or replaying exhausted work outside protection. Preserve independent choices and fail quietly on uncertain provider completion.
+- Reconcile the six-file Minime agent overlay with exact canonical launch inputs, preserving the already-live visual service. Add read-only source-freezing evidence and optional expected-input checking to the sanctioned agent restart wrapper; mismatch fails before any signal.
+- Qualify real Minime accepted-worker drain and stop-before-admission behavior, with synthetic exact-response/NEXT and private-public boundary checks. Full bridge suite: 2,287 passed, one ignored. Candidate only; unprotected queued-study crash handoff still gates paired activation. Evidence: `docs/steward-notes/2026-09-21-scheduler-interruption-and-launch-reconciliation.md`.
+
+### Fixed - preparation retry boundaries (2026-09-21)
+
+- Add owner-bound `prepare_once` with durable host operation IDs, first-admission revision checks, exact-output replay and conflict refusal. Commit reader, findings and draft after-images with a bounded fsynced redo journal; recover under the shared owner lock without overwriting newer state. Reader schema 6 and private-draft schema 3 refuse older writers.
+- Carry Astrid's existing authored/operator dispatch identities through activity metadata and queued study targets, including distinct multi-action segments. Protected presentation uses its durable window/slot identity. Minime source/private preparation now requires its existing action-event ID.
+- Add synthetic interruption, concurrent process, owner, stale revision and adapter retry regressions. Rebuild/migration qualification and remaining scheduler/source-selection gates: `docs/steward-notes/2026-09-21-preparation-retry-qualification.md`. No live activation or automation resumption is implied.
+
+### Qualification - paired geometry and continuity release (2026-09-21)
+
+- Add a repeatable offline qualification driver for staged bridge/helper identities, read-only Python snapshots, actual old/new reader migrations, downgrade refusal and both-owner geometry delivery. Reject changed source inputs and preserve prior attempt artifacts.
+- Qualify schema-3 to schema-5 migration with exact pending inputs, authored notes and private drafts. Reproduce the remaining general-preparation retry gap without live-state writes; keep activation gated on durable operation identities and scheduler crash qualification. Evidence: `docs/steward-notes/2026-09-21-geometry-paired-release-qualification.md`.
+
+### In Development - question-owned geometry (2026-09-21)
+
+- Add shared typed GEOMETRY capture, prediction, comparison, revision, status, retrieval and explicit local export within existing owner questions. Freeze bounded native ESN activation intervals; retain clocks/gaps and exact authored words; never infer causation, eigenspace meaning or felt improvement.
+- Preserve geometry JSON as data through NEXT parsing and action chaining. Use factual geometry input labels, complete delivery receipts, schema-5 downgrade refusal, cross-process transactions, retry identities and fail-closed history validation. Parked questions stay quiet.
+- Add a compatible, independently validated Geometry bookmarks view to the isolated Reservoir Scope research candidate. No live activation. Scope, witnesses, tests and rollout debt: `docs/steward-notes/2026-09-21-geometry-bookmarks-and-observatory.md`.
+- Repair a qualification test race by waiting for the exact accepted capture file rather than its parent directory; production capture behavior and the existing p95 performance bound are unchanged.
+
+### In Development - protected-attention runtime integration (2026-09-21)
+
+- Connect both runtime adapters to the shared attention contract: protect selected generation, defer ordinary mailbox admission, preserve eligible authored NEXT across loss of an in-memory queue, and recover completion only from verified native receipts. A durable one-use invocation claim prevents uncertain work from being generated twice; metadata consumes no generation allowance.
+- Put native reader/draft operations and Astrid's saved-reading selection under the owner transaction lock. Version the authoritative selector, reject stale cached writers and downgrade attempts, and preserve the existing selection when a new focus request is rejected.
+- Carry forward the qualified live source-relation sidecar, source-use labels and consumer navigation. Preserve complete authored notebook words when optional navigation previews yield to the unchanged input budget.
+- Qualification remains incomplete: general preparation-operation identities, complete bridge scheduler/crash tests and paired migration/activation remain required. No service restart or automation resumption. Evidence: `docs/steward-notes/2026-09-21-protected-attention-runtime-integration.md`.
+
+### In Development - voluntary continuity (2026-09-20)
+
+- Keep source-reading positions and pending deliveries scoped to their own study questions; do not restore another question's progress or global delivery counters on return.
+- Add a shared, owner-scoped focus state machine and typed helper API with four-job/fifteen-minute ceilings, exact-operation retries, receipt-bound completion, quiet recovery and revision-bound return references. This is a tested integration foundation, not yet a live scheduling or mailbox-protection feature.
+- Preserve private draft delivery references across detours, retain optional stopping-point notes, and reject older writers with a versioned draft checkpoint and retained legacy bytes. Existing input limits and explicit overflow errors remain.
+- Stop forwarding automatic recurrence/diversity advice into Astrid's dialogue and future emphasis. Keep authored NEXT, diagnostic observations, safety and authorization checks unchanged.
+- Record the implementation, outstanding adapter/scheduler integration and separate offline study preregistration in `docs/steward-notes/2026-09-20-voluntary-continuity-implementation.md`. No deployment or real-model experiment is included in this tranche.
 
 ### Fixed — staged release evidence (2026-09-17)
 

@@ -68,7 +68,7 @@ fn full_draft_survives_restart_retry_revision_branch_and_finish() {
     assert!(resume.text.contains("Current question: Which branch?"));
     assert!(!resume.text.contains("Alternative account."));
     let state: Value =
-        serde_json::from_slice(&fs::read(temp.path().join("drafts-v1.json")).unwrap()).unwrap();
+        serde_json::from_slice(&fs::read(temp.path().join("drafts-v2.json")).unwrap()).unwrap();
     assert_eq!(state["drafts"]["d2"]["parent"], "d1");
     let earlier = fs::read_to_string(
         temp.path()
@@ -78,7 +78,7 @@ fn full_draft_survives_restart_retry_revision_branch_and_finish() {
     assert!(earlier.contains("CONCLUSION_AT_END"));
 }
 #[test]
-fn missing_truncated_stale_and_conflicting_deliveries_never_advance_draft() {
+fn incomplete_and_conflicting_deliveries_fail_but_a_detour_retains_pending_work() {
     let temp = tempfile::tempdir().unwrap();
     let writer = Writer::new(temp.path().into());
     let first = writer.prepare("WRITE START a question").unwrap();
@@ -96,7 +96,7 @@ fn missing_truncated_stale_and_conflicting_deliveries_never_advance_draft() {
     );
     assert_eq!(writer.prepare("WRITE CONTINUE").unwrap(), first);
     let second = writer.prepare("WRITE START another question").unwrap();
-    assert!(writer.delivered(id, &request, &response).is_err());
+    writer.delivered(id, &request, &response).unwrap();
     accept(&writer, &second, "NEXT: WRITE CONTINUE");
     let next = writer.prepare("WRITE CONTINUE").unwrap();
     assert!(next.text.contains("revision 0"));
@@ -107,6 +107,68 @@ fn missing_truncated_stale_and_conflicting_deliveries_never_advance_draft() {
             .delivered(second.navigation_id.as_deref().unwrap(), &req, &res)
             .is_err()
     );
+}
+
+#[test]
+fn late_revision_cannot_replace_newer_work_or_overwrite_a_crash_artifact() {
+    let temp = tempfile::tempdir().unwrap();
+    let writer = Writer::new(temp.path().into());
+    let initial = writer.prepare("WRITE START a question").unwrap();
+    accept(&writer, &initial, "Earlier account.");
+    let late = writer.prepare("WRITE REVISE earlier direction").unwrap();
+    let current = writer.prepare("WRITE RESUME d1").unwrap();
+    accept(&writer, &current, "Newer authored passage.");
+    let checkpoint = temp.path().join("drafts-v2.json");
+    let before = fs::read(&checkpoint).unwrap();
+    let (request, response) = wire(&late, "Old replacement must not win.");
+    assert!(
+        writer
+            .delivered(late.navigation_id.as_deref().unwrap(), &request, &response)
+            .is_err()
+    );
+    assert_eq!(fs::read(&checkpoint).unwrap(), before);
+
+    let offered = writer.prepare("WRITE CONTINUE").unwrap();
+    let pending_checkpoint = fs::read(&checkpoint).unwrap();
+    accept(&writer, &offered, "The accepted response.");
+    let id = offered.navigation_id.as_deref().unwrap();
+    let artifact = temp.path().join(format!("{id}.json"));
+    let retained = fs::read(&artifact).unwrap();
+    // Model the artifact-fsync / checkpoint-rename crash boundary.
+    fs::write(&checkpoint, &pending_checkpoint).unwrap();
+    let (request, response) = wire(&offered, "A conflicting retried response.");
+    assert!(writer.delivered(id, &request, &response).is_err());
+    assert_eq!(fs::read(&artifact).unwrap(), retained);
+    assert_eq!(fs::read(&checkpoint).unwrap(), pending_checkpoint);
+    accept(&writer, &offered, "The accepted response.");
+    let resumed = Writer::new(temp.path().into())
+        .prepare("WRITE CONTINUE")
+        .unwrap();
+    assert_eq!(resumed.text.matches("The accepted response.").count(), 1);
+    assert!(resumed.text.contains("Newer authored passage."));
+}
+
+#[test]
+fn replaced_downgrade_guard_is_a_visible_failure_not_a_reset() {
+    let temp = tempfile::tempdir().unwrap();
+    let writer = Writer::new(temp.path().into());
+    let initial = writer.prepare("WRITE START preserved draft").unwrap();
+    accept(&writer, &initial, "Exact current prose.");
+    let path = temp.path().join("drafts-v2.json");
+    let before = fs::read(&path).unwrap();
+    let legacy = temp.path().join("drafts-v1.json");
+    let unexpected =
+        b"{\"sequence\":0,\"active\":null,\"drafts\":{},\"pending\":null,\"receipts\":{}}";
+    fs::write(&legacy, unexpected).unwrap();
+    assert!(
+        writer
+            .prepare("WRITE START must not reset")
+            .unwrap_err()
+            .to_string()
+            .contains("legacy writer changed")
+    );
+    assert_eq!(fs::read(&path).unwrap(), before);
+    assert_eq!(fs::read(&legacy).unwrap(), unexpected);
 }
 #[test]
 fn explicit_preference_roundtrips_and_reader_routes_the_same_private_store() {
@@ -146,7 +208,7 @@ fn capacity_error_is_explicit_and_keeps_full_prior_draft() {
     let writer = Writer::new(temp.path().into());
     let out = writer.prepare("WRITE START long").unwrap();
     accept(&writer, &out, &"x".repeat(48_000));
-    let before = fs::read(temp.path().join("drafts-v1.json")).unwrap();
+    let before = fs::read(temp.path().join("drafts-v2.json")).unwrap();
     assert!(
         writer
             .prepare("WRITE CONTINUE")
@@ -155,7 +217,7 @@ fn capacity_error_is_explicit_and_keeps_full_prior_draft() {
             .contains("no text was shortened")
     );
     assert_eq!(
-        fs::read(temp.path().join("drafts-v1.json")).unwrap(),
+        fs::read(temp.path().join("drafts-v2.json")).unwrap(),
         before
     );
     let read = writer.prepare("WRITE READ d1 6").unwrap();
@@ -196,7 +258,7 @@ fn fresh_start_and_parentless_branch_do_not_import_study_accounts() {
         }
         accept(&writer, &start, "A short passage without a required NEXT.");
         assert_eq!(fs::read(&checkpoint).unwrap(), before);
-        let writing_checkpoint = directory.join("writing/drafts-v1.json");
+        let writing_checkpoint = directory.join("writing/drafts-v2.json");
         let state: Value = serde_json::from_slice(&fs::read(&writing_checkpoint).unwrap()).unwrap();
         assert_eq!(state["drafts"]["d1"]["evidence"], "");
         assert_eq!(state["drafts"]["d1"]["question"], "");
@@ -241,7 +303,7 @@ fn clearing_evidence_preserves_branch_prose_question_and_parent() {
             .contains("CHOSEN_REFERENCE with an unresolved inference")
     );
     accept(&writer, &branch, "An alternative passage.");
-    let checkpoint = temp.path().join("drafts-v1.json");
+    let checkpoint = temp.path().join("drafts-v2.json");
     let before: Value = serde_json::from_slice(&fs::read(&checkpoint).unwrap()).unwrap();
     let clear = writer.prepare("WRITE EVIDENCE").unwrap();
     accept(&writer, &clear, "NEXT: WRITE CONTINUE");
@@ -261,7 +323,7 @@ fn clearing_evidence_preserves_branch_prose_question_and_parent() {
 }
 
 #[test]
-fn legacy_draft_context_and_pending_input_survive_without_migration() {
+fn legacy_draft_context_and_pending_input_survive_guarded_migration() {
     let temp = tempfile::tempdir().unwrap();
     let legacy: StudyOutput = serde_json::from_value(json!({
         "input_kind": "private_writing",
@@ -296,7 +358,21 @@ fn legacy_draft_context_and_pending_input_survive_without_migration() {
     let before = fs::read(&checkpoint).unwrap();
     let writer = Writer::new(temp.path().into());
     assert_eq!(writer.prepare("WRITE CONTINUE").unwrap(), legacy);
-    assert_eq!(fs::read(&checkpoint).unwrap(), before);
+    let archives: Vec<_> = fs::read_dir(temp.path())
+        .unwrap()
+        .map(Result::unwrap)
+        .filter(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with("legacy-drafts-")
+        })
+        .collect();
+    assert_eq!(archives.len(), 1);
+    assert_eq!(fs::read(archives[0].path()).unwrap(), before);
+    let guard: Value = serde_json::from_slice(&fs::read(&checkpoint).unwrap()).unwrap();
+    assert_eq!(guard["requires_private_writing_schema"], 2);
+    assert!(guard.get("sequence").is_none()); // Required by the old writer: downgrade fails closed.
     accept(&writer, &legacy, "A later delivered passage.");
     let delivery: Value =
         serde_json::from_slice(&fs::read(temp.path().join("writing-7.json")).unwrap()).unwrap();
@@ -317,7 +393,8 @@ fn legacy_draft_context_and_pending_input_survive_without_migration() {
     let fresh = writer.prepare("WRITE START unrelated topic").unwrap();
     assert!(!fresh.text.contains("LEGACY_EVIDENCE"));
     assert!(!fresh.text.contains("Original prose."));
-    let state: Value = serde_json::from_slice(&fs::read(checkpoint).unwrap()).unwrap();
+    let state: Value =
+        serde_json::from_slice(&fs::read(temp.path().join("drafts-v2.json")).unwrap()).unwrap();
     assert_eq!(
         state["drafts"]["d1"]["evidence"],
         state["drafts"]["d2"]["evidence"]
@@ -373,7 +450,7 @@ fn draft_preserves_quoted_fenced_and_indented_next_examples() {
         let start = writer.prepare("WRITE START command examples").unwrap();
         accept(&writer, &start, response);
         let state: Value =
-            serde_json::from_slice(&fs::read(temp.path().join("drafts-v1.json")).unwrap()).unwrap();
+            serde_json::from_slice(&fs::read(temp.path().join("drafts-v2.json")).unwrap()).unwrap();
         assert_eq!(state["drafts"]["d1"]["parts"], json!([expected]));
         assert_eq!(state["drafts"]["d1"]["finished"], false);
     }

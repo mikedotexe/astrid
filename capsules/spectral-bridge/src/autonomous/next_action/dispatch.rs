@@ -59,6 +59,7 @@ fn handle_next_action_with_author(
 
     if let Some(token) = unresolved_angle_placeholder(&original)
         && base_action != "AFTERIMAGE_KEEP"
+        && !astrid_source_study::response_choice::is_geometry_action(&original)
         && !action_continuity::can_repair_experiment_intent_placeholder(
             base_action.as_str(),
             &original,
@@ -211,6 +212,7 @@ fn handle_next_action_with_author(
             conv,
             &inner_action,
             NextActionContext {
+                operation_id: ctx.operation_id,
                 burst_count: ctx.burst_count,
                 db: ctx.db,
                 sensory_tx: ctx.sensory_tx,
@@ -305,7 +307,8 @@ fn handle_next_action_with_author(
         };
     }
 
-    if let Some(result) = super::activity_reading::handle_action(conv, &base_action, &original) {
+    if let Some(result) = super::activity_focus::handle_action(conv, &base_action, &original, ctx.operation_id)
+        .or_else(|| super::activity_reading::handle_action(conv, &base_action, &original)) {
         let outcome = match result {
             Ok(message) => {
                 conv.pending_file_listing = Some(message.clone());
@@ -326,6 +329,11 @@ fn handle_next_action_with_author(
             },
         };
         return outcome;
+    }
+
+    if let Err(error) = super::activity_focus::observe_choice(conv, &original) {
+        return NextActionOutcome::blocked("activity", format!("Activity choice retained for review: {error:#}"))
+            .with_stage_visibility("blocked", "protected_summary");
     }
 
     if let Some(result) = action_continuity::handle_thread_next_action(
@@ -489,7 +497,11 @@ fn handle_next_action_with_author(
             .with_stage_visibility(stage, visibility);
     }
 
-    if let Some(mut outcome) = study_navigation::handle_request(conv, &base_action, &original) {
+    if let Some(mut outcome) = study_navigation::handle_durable_request(conv, &base_action, &original, ctx.operation_id) {
+        if outcome.handled && let Some(target) = &mut conv.introspect_target
+            && target.operation_id.is_none() {
+            target.operation_id = ctx.operation_id.map(str::to_owned);
+        }
         if outcome.handled && let Some(activity) = record_activity_choice(conv, &base_action) {
             // The source choice is already retained. Failure to park a separate
             // foreground reading must not falsely report that choice as blocked.

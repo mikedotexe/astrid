@@ -184,7 +184,7 @@ fn schema_two_checkpoint_migrates_without_claiming_legacy_excerpt_is_complete() 
     let output = reader.prepare_action("SELF_STUDY MAP").unwrap();
     assert_eq!(notebook(&output)["previous"]["complete"], false);
     let state: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
-    assert_eq!(state["version"], 3);
+    assert_eq!(state["version"], astrid_source_study::SCHEMA_VERSION);
     assert_eq!(state["bookmarks"], bookmarks);
 }
 

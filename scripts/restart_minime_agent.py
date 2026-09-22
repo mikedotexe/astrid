@@ -54,6 +54,17 @@ def read_json(path):
     return value
 
 
+def qualified_inputs(path):
+    value = read_json(path)
+    inputs = value.get("selected_inputs")
+    if (value.get("schema") != "minime_launch_source_reconciliation_v1"
+            or not isinstance(inputs, dict) or not inputs or len(inputs) > 2000
+            or any(not isinstance(key, str) or not isinstance(digest, str)
+                   or not re.fullmatch(r"[0-9a-f]{64}", digest) for key, digest in inputs.items())):
+        raise ValueError("invalid qualified launch-source receipt")
+    return inputs
+
+
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
@@ -235,11 +246,14 @@ class LaunchdAgent:
 
 
 def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
-                 now=time.monotonic, sleep=time.sleep, emit=lambda event: None):
+                 now=time.monotonic, sleep=time.sleep, emit=lambda event: None,
+                 expected_inputs=None, handoff=None):
     if expected_pid <= 0 or not 30 <= timeout_s <= 1800 or not 10 <= quiet_s <= 30:
         raise ValueError("invalid bounded reload request")
     backend.validate()
     inputs, config, protected = backend.inputs(), backend.config(), backend.protected()
+    if expected_inputs is not None and inputs != expected_inputs:
+        raise RuntimeError("canonical launch sources differ from qualified inputs; no signal sent")
     old_start = backend.identity(expected_pid)
     if not old_start or backend.pid() != expected_pid:
         raise RuntimeError("agent identity changed before reload")
@@ -281,6 +295,15 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
         raise RuntimeError("idle boundary moved; no signal sent")
     if backend.pid() != expected_pid or backend.identity(expected_pid) != old_start:
         raise RuntimeError("PID changed at signal boundary")
+    if handoff is not None:
+        handoff.begin(backend, inputs, config, protected, emit)
+        # Hold installation is I/O; repeat the actual admission boundary checks.
+        boundary = backend.observe(expected_pid)
+        if (not boundary["quiet"] or any(boundary[k] != final[k] for k in
+                ("source_checked_at", "job_index_sha256", "continuity"))
+                or backend.pid() != expected_pid
+                or backend.identity(expected_pid) != old_start):
+            raise RuntimeError("idle boundary moved after launch hold; no signal sent")
     # Retain evidence before any signal, including failures after this point.
     emit({"phase": "signal_boundary", "observation": final,
           "atomic_traffic_quiescence_claimed": False})
@@ -291,6 +314,12 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
         if backend.protected() != protected:
             raise RuntimeError("protected process changed during reload; no further signal sent")
         if backend.identity(expected_pid) != old_start:
+            if handoff is not None:
+                if backend.identity(expected_pid) is not None:
+                    raise RuntimeError("old PID reused during paired handoff")
+                protected = handoff.transition(backend, protected, emit)
+                handoff = None
+                deadline = now() + timeout_s
             new_pid = backend.pid()
             if new_pid and new_pid != expected_pid and backend.ready(new_pid, inputs):
                 if backend.inputs() != inputs or backend.config() != config:
@@ -323,6 +352,8 @@ def main():
     parser.add_argument("--ack", required=True)
     parser.add_argument("--receipt", required=True, type=Path)
     parser.add_argument("--timeout-secs", default=900, type=int)
+    parser.add_argument("--expected-inputs", type=Path,
+                        help="reconciliation receipt whose selected_inputs must match canonical launch sources")
     args = parser.parse_args()
     if not args.ack.strip():
         parser.error("nonempty acknowledgement required")
@@ -337,7 +368,9 @@ def main():
                 "phase", "recorded_at", "outcome", "old_pid", "new_pid", "signal", "error"}}), flush=True)
         try:
             result = reload_agent(LaunchdAgent(args.pause_generation, args.ack),
-                                  args.expected_pid, timeout_s=args.timeout_secs, emit=emit)
+                                  args.expected_pid, timeout_s=args.timeout_secs, emit=emit,
+                                  expected_inputs=(qualified_inputs(args.expected_inputs)
+                                                   if args.expected_inputs else None))
             emit(result)
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
             emit({"outcome": "failed", "error": str(error), "forced_termination": False})
