@@ -336,6 +336,70 @@ fn read_astrid_shadow_v3_from_default_dir() -> Option<serde_json::Value> {
     serde_json::from_str(&text).ok()
 }
 
+/// Presentation only: preserve wire values and the existing source precedence.
+pub(crate) fn spectral_participation_description(telemetry: &SpectralTelemetry) -> String {
+    let (source, selected_values): (&str, Option<&[f32]>) = if telemetry
+        .spectral_denominator_v1
+        .is_some()
+    {
+        (
+            "spectral_denominator_v1; reported summary; contributing spectrum not identified by this record",
+            None,
+        )
+    } else if let Some(fingerprint) = &telemetry.spectral_fingerprint_v1 {
+        (
+            "spectral_fingerprint_v1.eigenvalues; locally derived from 8 fingerprint slots",
+            Some(&fingerprint.eigenvalues),
+        )
+    } else if telemetry.typed_fingerprint().is_some() {
+        (
+            "spectral_fingerprint[0..8]; locally derived from 8 legacy fingerprint slots",
+            telemetry
+                .spectral_fingerprint
+                .as_deref()
+                .and_then(|slots| slots.get(..8)),
+        )
+    } else {
+        (
+            "telemetry.eigenvalues; locally derived from the supplied spectrum",
+            Some(&telemetry.eigenvalues),
+        )
+    };
+    if selected_values.is_some_and(|values| values.iter().any(|value| !value.is_finite())) {
+        return format!(
+            "Spectral participation [source: {source}]: unavailable; selected spectrum \
+             contains nonfinite values. No sanitized partial ratio is presented."
+        );
+    }
+    let Some(metrics) = telemetry.denominator_metrics() else {
+        return "Spectral participation: unavailable; no denominator or spectrum supplied."
+            .to_string();
+    };
+    // A zero/invalid summary is not evidence that dimensions are missing. Do not
+    // replace a selected reported summary with a different fallback silently.
+    if metrics.active_mode_capacity == 0
+        || !metrics.effective_dimensionality.is_finite()
+        || metrics.effective_dimensionality <= 0.0
+        || !metrics.distinguishability_loss.is_finite()
+        || !(0.0..=1.0).contains(&metrics.distinguishability_loss)
+    {
+        return format!(
+            "Spectral participation [source: {source}]: unavailable from zero or invalid \
+             weight summary; no missing-dimension conclusion."
+        );
+    }
+    format!(
+        "Spectral participation [source: {source}]: effective mode count {:.2} / {} counted modes; \
+         legacy field distinguishability_loss={} ({:.0}%; normalized-participation complement). \
+         This describes spectral weight distribution, not missing dimensions, ESN node coverage, \
+         geometric direction, authorship, or felt state. No preferred value is implied.",
+        metrics.effective_dimensionality,
+        metrics.active_mode_capacity,
+        metrics.distinguishability_loss,
+        metrics.distinguishability_loss * 100.0,
+    )
+}
+
 /// Interpret spectral telemetry as a natural language description
 /// of the spectral runtime state.
 #[must_use]
@@ -367,24 +431,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
             )
         },
     );
-    let denominator_clause = telemetry.denominator_metrics().map_or_else(String::new, |metrics| {
-        format!(
-            " Denominator Sequence: effective dimensionality {:.2}/{}; relative spectral dimensionality deficit {:.0}%{} \
-             (telemetry field distinguishability_loss: 1 - effective_dimensionality / active_mode_capacity; \
-             a spectral dimensionality ratio, not a measurement of authorship or self/other boundaries).",
-            metrics.effective_dimensionality,
-            metrics.active_mode_capacity,
-            metrics.distinguishability_loss * 100.0,
-            if metrics.lambda1_energy_share > 0.0 {
-                format!(
-                    ", λ1 spectral-energy share {:.0}%",
-                    metrics.lambda1_energy_share * 100.0
-                )
-            } else {
-                String::new()
-            },
-        )
-    });
+    let denominator_clause = format!(" {}", spectral_participation_description(telemetry));
     let transition_clause = telemetry
         .transition_event_view()
         .map(|transition| {

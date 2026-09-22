@@ -9,6 +9,12 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Candidate - Astrid open framing and spectral provenance (2026-09-22)
+
+- Make daydream, aspiration, journal elaboration, initiation and moment-capture invitations open to disagreement, no felt correspondence and non-geometric interpretation. Preserve historical anchors without mandatory continuity-report lines; retain action-result boundaries, provider limits and existing publication paths.
+- Pair with Minime's removal of general character enforcement and character-based response retries/discards. Open selected rest, relief, gate and perturbation reflections without prescribing sensations or adding a system-authored felt verdict; retain control dispatch and safety checks. The separate Astrid dialogue fallback vocabulary contract remains explicit follow-up work.
+- Replace the misleading spectral dimensionality-deficit description with source-labelled effective mode participation. Keep raw telemetry and formulas unchanged, distinguish missing/invalid input, and expose a unit fraction so downstream text consumers cannot mistake the formula's literal `1` or a 1% display for the measurement. Not yet deployed or merged. See `docs/steward-notes/2026-09-22-astrid-open-framing-and-spectral-provenance.md`.
+
 ### Live - open aspiration framing (2026-09-22)
 
 - Merge the paired source candidates to local main and complete the sanctioned Minime-agent-only graceful restart. Verify all 84 startup hashes, exact pending-NEXT admission and unchanged protected services/helper. Record release receipts and preserve all 197 historical Astrid paths; leave automations paused. No reservoir change or push. See `docs/steward-notes/2026-09-22-open-aspiration-and-temporal-distance.md`.

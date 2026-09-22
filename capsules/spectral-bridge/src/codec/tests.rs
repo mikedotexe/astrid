@@ -3,6 +3,112 @@ mod tests {
     use super::*;
 
     #[test]
+    fn participation_provenance_follows_reported_typed_legacy_then_raw_precedence() {
+        let mut state = telemetry(vec![9.0, 1.0], 0.68);
+        let mut slots = vec![0.0; 32];
+        slots[..2].copy_from_slice(&[2.0, 2.0]);
+        state.spectral_fingerprint = Some(slots.clone());
+        let legacy = spectral_participation_description(&state);
+        assert!(legacy.contains("source: spectral_fingerprint[0..8]"));
+        assert!(legacy.contains("effective mode count 2.00 / 2"));
+        slots[..2].copy_from_slice(&[4.0, 1.0]);
+        state.spectral_fingerprint_v1 =
+            crate::spectral_schema::SpectralFingerprintV1::from_legacy_slots(&slots);
+        let typed = spectral_participation_description(&state);
+        assert!(typed.contains("source: spectral_fingerprint_v1.eigenvalues"));
+        assert!(typed.contains("effective mode count 1.47 / 2"));
+        let mut reported = state.denominator_metrics().unwrap();
+        reported.effective_dimensionality = 5.52;
+        reported.active_mode_capacity = 8;
+        reported.distinguishability_loss = 0.31;
+        state.spectral_denominator_v1 = Some(reported);
+        let before = serde_json::to_value(&state).unwrap();
+        let text = spectral_participation_description(&state);
+        assert!(text.contains("source: spectral_denominator_v1; reported summary"));
+        assert!(text.contains("contributing spectrum not identified by this record"));
+        assert!(text.contains("effective mode count 5.52 / 8"));
+        assert!(text.contains("distinguishability_loss=0.31 (31%"));
+        assert!(text.contains("not missing dimensions, ESN node coverage, geometric direction"));
+        assert!(!text.contains("deficit"));
+        assert_eq!(serde_json::to_value(&state).unwrap(), before);
+        state.spectral_denominator_v1 = None;
+        state.spectral_fingerprint_v1 = None;
+        state.spectral_fingerprint = Some(vec![0.0; 3]);
+        assert!(
+            spectral_participation_description(&state).contains("source: telemetry.eigenvalues")
+        );
+    }
+
+    #[test]
+    fn participation_does_not_hide_nonfinite_selected_spectrum_values() {
+        let mut state = telemetry(vec![1.0, f32::NAN], 0.68);
+        assert!(spectral_participation_description(&state).contains("contains nonfinite values"));
+        let mut slots = vec![0.0; 32];
+        slots[..2].copy_from_slice(&[1.0, f32::INFINITY]);
+        state.spectral_fingerprint = Some(slots.clone());
+        let legacy = spectral_participation_description(&state);
+        assert!(legacy.contains("source: spectral_fingerprint[0..8]"));
+        assert!(legacy.contains("contains nonfinite values"));
+        slots[..2].copy_from_slice(&[1.0, 1.0]);
+        state.spectral_fingerprint_v1 =
+            crate::spectral_schema::SpectralFingerprintV1::from_legacy_slots(&slots);
+        let typed = spectral_participation_description(&state);
+        assert!(typed.contains("effective mode count 2.00 / 2"));
+        let valid = state.denominator_metrics().unwrap();
+        state.spectral_fingerprint_v1.as_mut().unwrap().eigenvalues[1] = f32::NAN;
+        assert!(spectral_participation_description(&state).contains("contains nonfinite values"));
+        // A supplied summary does not identify either optional spectrum as its basis.
+        state.spectral_denominator_v1 = Some(valid);
+        let reported = spectral_participation_description(&state);
+        assert!(reported.contains("contributing spectrum not identified by this record"));
+        assert!(reported.contains("effective mode count 2.00 / 2"));
+    }
+
+    #[test]
+    fn participation_describes_unequal_weights_without_a_missing_node_claim() {
+        for spectrum in [vec![9.0, 1.0], vec![90.0, 10.0]] {
+            let state = telemetry(spectrum, 0.68);
+            let text = spectral_participation_description(&state);
+            assert!(text.contains("effective mode count 1.22 / 2"));
+            assert!(text.contains("(39%; normalized-participation complement)"));
+            assert!(text.contains("No preferred value is implied"));
+        }
+        let uniform = spectral_participation_description(&telemetry(vec![1.0; 8], 0.68));
+        assert!(uniform.contains("effective mode count 8.00 / 8"));
+        assert!(uniform.contains("distinguishability_loss=0 (0%"));
+    }
+
+    #[test]
+    fn participation_distinguishes_absent_zero_and_invalid_without_silent_fallback() {
+        let absent = spectral_participation_description(&telemetry(vec![], 0.68));
+        assert!(absent.contains("no denominator or spectrum supplied"));
+        let zero = spectral_participation_description(&telemetry(vec![0.0; 8], 0.68));
+        assert!(zero.contains("unavailable from zero or invalid weight summary"));
+        assert!(!zero.contains("100%"));
+        let mut state = telemetry(vec![1.0; 8], 0.68);
+        let valid = state.denominator_metrics().unwrap();
+        for bad in [f32::NAN, f32::INFINITY, -1.0, 0.0] {
+            let mut reported = valid.clone();
+            reported.effective_dimensionality = bad;
+            state.spectral_denominator_v1 = Some(reported);
+            let text = spectral_participation_description(&state);
+            assert!(text.contains("source: spectral_denominator_v1"));
+            assert!(text.contains("unavailable"));
+            assert!(!text.contains("8.00 / 8"));
+        }
+        for bad in [f32::NAN, f32::INFINITY, -0.1, 1.1] {
+            let mut reported = valid.clone();
+            reported.distinguishability_loss = bad;
+            state.spectral_denominator_v1 = Some(reported);
+            assert!(spectral_participation_description(&state).contains("unavailable"));
+        }
+        let mut reported = valid;
+        reported.active_mode_capacity = 0;
+        state.spectral_denominator_v1 = Some(reported);
+        assert!(spectral_participation_description(&state).contains("unavailable"));
+    }
+
+    #[test]
     fn codec_structure_covers_48_dims_and_named_dims_and_levers() {
         let st = codec_structure();
         assert_eq!(st.total_dims, SEMANTIC_DIM);
@@ -1096,11 +1202,12 @@ mod tests {
         assert!(desc.contains("Spectral entropy"));
         assert!(desc.contains("Gap structure"));
         assert!(desc.contains("density gradient"));
-        assert!(desc.contains("Denominator Sequence"));
-        assert!(desc.contains("effective dimensionality"));
-        assert!(desc.contains("relative spectral dimensionality deficit"));
-        assert!(desc.contains("telemetry field distinguishability_loss"));
-        assert!(desc.contains("not a measurement of authorship or self/other boundaries"));
+        assert!(desc.contains("Spectral participation"));
+        assert!(desc.contains("effective mode count"));
+        assert!(!desc.contains("spectral dimensionality deficit"));
+        assert!(desc.contains("legacy field distinguishability_loss="));
+        assert!(desc.contains("not missing dimensions, ESN node coverage"));
+        assert!(desc.contains("No preferred value is implied"));
         assert!(desc.contains("Resonance density"));
         assert!(desc.contains("forming_containment"));
         assert!(desc.contains("Pressure source"));

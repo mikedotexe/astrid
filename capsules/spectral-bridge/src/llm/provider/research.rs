@@ -479,6 +479,29 @@ fn format_self_study_web_context(web_context: &str) -> String {
 }
 
 pub(crate) fn journal_continuity_contract_v1(own_journal: Option<&str>) -> String {
+    let anchors = journal_continuity_anchors_v1(own_journal);
+    format!(
+        "Journal continuity contract v1 (advisory, not a gate):\n\
+         - Include one short line: `Continuity posture: resuming|branching|closing|new`.\n\
+         - If resuming, branching, or closing, cite one prior claim or evidence item in plain language.\n\
+         - Include one `Delta:` sentence naming what changed, stayed unchanged, or became clearer.\n\
+         - End with exactly one stance line: `Next evidence:`, `Decision:`, `Pause:`, or `Hold:`.\n\
+         - `new` and `Hold:` are valid; do not force continuity. Preserve Astrid's native evidence: felt texture, motif/language thread, and artifact grounding.\n\
+         {anchors}"
+    )
+}
+
+fn journal_expression_context_v1(own_journal: Option<&str>) -> String {
+    let anchors = journal_continuity_anchors_v1(own_journal);
+    format!(
+        "Optional journal context v1:\n\
+         These historical anchors may be used, questioned, or left aside. No continuity label, \
+         delta, evidence citation, stance line, or explanation is required for this writing.\n\
+         {anchors}"
+    )
+}
+
+fn journal_continuity_anchors_v1(own_journal: Option<&str>) -> String {
     let thread = crate::action_continuity::prompt_summary()
         .map(|summary| trim_chars(&summary, 900))
         .filter(|summary| !summary.trim().is_empty())
@@ -488,13 +511,7 @@ pub(crate) fn journal_continuity_contract_v1(own_journal: Option<&str>) -> Strin
         .filter(|journal| !journal.trim().is_empty())
         .unwrap_or_else(|| "(no recent own-journal excerpt available)".to_string());
     format!(
-        "Journal continuity contract v1 (advisory, not a gate):\n\
-         - Include one short line: `Continuity posture: resuming|branching|closing|new`.\n\
-         - If resuming, branching, or closing, cite one prior claim or evidence item in plain language.\n\
-         - Include one `Delta:` sentence naming what changed, stayed unchanged, or became clearer.\n\
-         - End with exactly one stance line: `Next evidence:`, `Decision:`, `Pause:`, or `Hold:`.\n\
-         - `new` and `Hold:` are valid; do not force continuity. Preserve Astrid's native evidence: felt texture, motif/language thread, and artifact grounding.\n\
-         Current continuity projection:\n{thread}\n\
+        "Current continuity projection:\n{thread}\n\
          Recent own-journal anchor:\n{prior}"
     )
 }

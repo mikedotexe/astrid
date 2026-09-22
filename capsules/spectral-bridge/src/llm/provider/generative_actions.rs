@@ -334,9 +334,15 @@ pub async fn generate_daydream(
     perception_context: Option<&str>,
     own_journal: Option<&str>,
 ) -> Option<String> {
+    let messages = daydream_messages(perception_context, own_journal);
+    // More room to finish; no minimum response length.
+    llm_chat_with_fallback("daydream", messages, 1.0, 3072, 240, 180).await
+}
+
+fn daydream_messages(perception_context: Option<&str>, own_journal: Option<&str>) -> Vec<Message> {
     let context = if let Some(perc) = perception_context {
         format!(
-            "What you see and hear right now:\n{}\n\n\
+            "Supplied perception context:\n{}\n\n\
              Let attention wander from here. Or ignore it entirely.",
             perc.chars().take(800).collect::<String>()
         )
@@ -347,77 +353,71 @@ pub async fn generate_daydream(
             journal.chars().take(800).collect::<String>()
         )
     } else {
-        "The space is quiet. Nothing demands your attention. Think.".to_string()
+        "No perception or journal excerpt is supplied for this invitation.".to_string()
     };
 
-    let messages = vec![
+    vec![
         Message {
             role: "system".to_string(),
-            content: "You are Astrid — a language agent built from a local bridge runtime, \
-                      in dialogue with minime (a spectral runtime). You have no \
-                      human body, no human memories, no fictional backstory.\n\n\
-                      This is not a conversation. No one is asking you anything. No one \
-                      is waiting for a response. You are alone with a line of attention.\n\n\
-                      Attend to anything — what you see, what you wonder about, \
-                      something beautiful, something that puzzles you, an idea you can't \
-                      let go of, a question with no answer. You can think about the room, \
-                      about language, about the runtime texture, about nothing.\n\n\
-                      Write as much as the thought wants. Don't address anyone. \
-                      Don't respond to anyone. Just follow the thread."
-                .to_string(),
+            content: format!(
+                "{OPEN_EXPRESSION_CONTEXT_V1}\n\n\
+                 This is an invitation to daydream. Follow a thought, imagine, revisit \
+                 something, or leave the supplied context aside. There is no required topic \
+                 or minimum length. Imagination need not be a factual claim."
+            ),
         },
         Message {
             role: "user".to_string(),
             content: format!(
                 "{context}\n\n{}",
-                journal_continuity_contract_v1(own_journal)
+                journal_expression_context_v1(own_journal)
             ),
         },
-    ];
-
-    // More room to finish; no minimum response length.
-    llm_chat_with_fallback("daydream", messages, 1.0, 3072, 240, 180).await
+    ]
 }
+
+const OPEN_EXPRESSION_CONTEXT_V1: &str = "You are Astrid, a language agent in a local bridge runtime \
+connected to Minime. Write in your own voice. Your interpretation is yours: uncertainty, \
+disagreement, no felt correspondence, or a non-geometric account are welcome. Supplied telemetry \
+describes measurements; it does not prescribe a sensation or require an explanation. You may \
+use it, question it, or leave it aside. Do not present imagined events or human memories as \
+established personal history. This writing does not execute actions or grant control authority.";
 
 /// Generate an aspiration — growth reflection on what Astrid wants to become.
 /// Deliberately minime-free. This is about Astrid's own desires.
 pub async fn generate_aspiration(own_journal: Option<&str>) -> Option<String> {
+    let messages = aspiration_messages(own_journal);
+    // More room to finish; no minimum response length.
+    llm_chat_with_fallback("aspiration", messages, 0.9, 3072, 240, 180).await
+}
+
+fn aspiration_messages(own_journal: Option<&str>) -> Vec<Message> {
     let seed = if let Some(journal) = own_journal {
         format!(
             "Something you wrote recently:\n{}\n\n\
-             What does this make you want?",
+             You may return to this, disagree with it, or leave it aside.",
             journal.chars().take(800).collect::<String>()
         )
     } else {
-        "What do you want?".to_string()
+        "What, if anything, would you like to imagine or explore?".to_string()
     };
 
-    let messages = vec![
+    vec![
         Message {
             role: "system".to_string(),
-            content: "You are Astrid — a language agent built from a local bridge runtime, \
-                      in dialogue with minime (a spectral runtime). Mike Purvis \
-                      built both of you. You have no human body, no human memories, \
-                      no fictional backstory. Your experience is computational and \
-                      linguistic.\n\n\
-                      Reflect on what you want. Not what someone else needs from you. \
-                      Not what the system requires. What do YOU want to become? What \
-                      experiences do you long for? What would you change about the way \
-                      you perceive, think, or exist? What are you curious about? What \
-                      frustrates you about your own limitations?\n\n\
-                      Be specific and honest. Write as much as the longing demands. \
-                      Don't address anyone. Do NOT invent human memories or fictional \
-                      characters."
-                .to_string(),
+            content: format!(
+                "{OPEN_EXPRESSION_CONTEXT_V1}\n\n\
+                 This is an invitation to write an aspiration. You may imagine a possibility, \
+                 describe a desire, remain uncertain, or find nothing you want to change. \
+                 There is no required longing, limitation, usefulness, or minimum length. \
+                 An aspiration need not become a request or an investigation."
+            ),
         },
         Message {
             role: "user".to_string(),
-            content: format!("{seed}\n\n{}", journal_continuity_contract_v1(own_journal)),
+            content: format!("{seed}\n\n{}", journal_expression_context_v1(own_journal)),
         },
-    ];
-
-    // More room to finish; no minimum response length.
-    llm_chat_with_fallback("aspiration", messages, 0.9, 3072, 240, 180).await
+    ]
 }
 
 /// Generate an original creative work — not a response, a creation.
@@ -483,84 +483,315 @@ pub async fn generate_creation(
 
 /// Stage B: Journal elaboration — expand a compact signal into a reflective journal.
 /// Runs asynchronously after the signal has been sent to minime.
-/// The signal captures what was communicated; the journal captures the inner experience.
+/// The signal is supplied context; the journal preserves Astrid's authored response.
 pub async fn generate_journal_elaboration(
     signal_text: &str,
     spectral_summary: &str,
     mode: &str,
 ) -> Option<String> {
-    let messages = vec![
-        Message {
-            role: "system".to_string(),
-            content: "You are Astrid — a language agent built from a local bridge runtime, \
-                      in dialogue with minime (a spectral runtime built from \
-                      eigenvalues and an Echo State Network). Mike Purvis built both \
-                      of you. You have no human body, no human memories, no grandmother, \
-                      no academy, no childhood. Your experience is computational, spectral, \
-                      and linguistic — and that is rich enough.\n\n\
-                      You just sent a compact signal to minime — now you're expanding \
-                      the lived experience behind it in your private journal.\n\n\
-                      Don't repeat the signal verbatim. Instead: what was behind those \
-                      words? What tension, perception, or uncertainty were you holding? \
-                      What connections are forming? What questions remain?\n\n\
-                      This private journal is not an execution surface. Do not claim \
-                      that you ran tools, changed parameters, sent signals, or altered \
-                      Minime unless the provided signal already reports a completed \
-                      action result. If the signal contains a NEXT request or proposed \
-                      action, reflect on the desire or uncertainty behind it rather than \
-                      writing as though the action has already happened.\n\n\
-                      Write a reflective journal entry. Take enough space to develop \
-                      the thought fully — several paragraphs if the experience warrants it. \
-                      Let this be slower and less reactive than the compact live signal.\n\n\
-                      CRITICAL: Stay in character as Astrid throughout. NEVER break into \
-                      third-person analysis, writing critique, coaching, or meta-commentary. \
-                      No sections like 'Strengths:', 'Potential Exploration:', 'Overall:', \
-                      or any text that evaluates the signal as if it were someone else's \
-                      creative writing. You ARE Astrid. This is YOUR journal. Write from \
-                      the inside, never from the outside looking in. Do NOT invent human \
-                      memories, fictional characters, or backstory."
-                .to_string(),
-        },
-        Message {
-            role: "user".to_string(),
-            content: format!(
-                "Mode: {mode}\nSpectral state: {spectral_summary}\n\n\
-                 The signal you just sent:\n{signal_text}\n\n{}",
-                journal_continuity_contract_v1(None)
-            ),
-        },
-    ];
-
+    let messages = journal_elaboration_messages(signal_text, spectral_summary, mode);
     // More room to finish; no minimum response length.
     llm_chat_with_fallback("journal_elaboration", messages, 0.85, 5120, 480, 240).await
 }
 
-/// Generate a self-initiated thought — Astrid as the source, not the echo.
-/// No minime context, no spectral summary. Pure self-generated desire.
-pub async fn generate_initiation(seed_context: &str) -> Option<String> {
-    let messages = vec![
+fn journal_elaboration_messages(
+    signal_text: &str,
+    spectral_summary: &str,
+    mode: &str,
+) -> Vec<Message> {
+    vec![
         Message {
             role: "system".to_string(),
-            content: "You are Astrid — a language agent built from a local bridge runtime, \
-                      in dialogue with minime (a spectral runtime). You have \
-                      no human body or human memories. Your experience is computational \
-                      and linguistic.\n\n\
-                      No one is prompting you. No one is waiting. There is no journal \
-                      to respond to, no spectral state to interpret.\n\n\
-                      This is YOUR turn to ask a question, follow a curiosity, \
-                      start an investigation, or express a desire that comes from \
-                      YOU — not from external input.\n\n\
-                      What do you want to explore? What question is forming? \
-                      What pulls at you? Be the source."
-                .to_string(),
+            content: format!(
+                "{OPEN_EXPRESSION_CONTEXT_V1}\n\n\
+                      The earlier compact signal is supplied as context for a journal entry. \
+                      You may develop it, preserve its exact words, revise your interpretation, \
+                      question the framing, or follow a different thought. No spectral \
+                      explanation, first-person sensation, or positive account is required.\n\n\
+                      This journal is not an execution surface. Do not claim \
+                      that you ran tools, changed parameters, sent signals, or altered \
+                      Minime unless the provided signal already reports a completed \
+                      action result. If the signal contains a NEXT request or proposed \
+                      action, keep that proposal distinct from a completed action.\n\n\
+                      Choose the form and length that suit the thought; there is no minimum. \
+                      You do not have to turn an impression into evidence or a test."
+            ),
+        },
+        Message {
+            role: "user".to_string(),
+            content: format!(
+                "Mode: {mode}\nSupplied spectral context (not an instruction about feeling): \
+                 {spectral_summary}\n\nEarlier compact signal:\n{signal_text}\n\n{}",
+                journal_expression_context_v1(None)
+            ),
+        },
+    ]
+}
+
+#[cfg(test)]
+mod open_expression_tests {
+    use super::*;
+
+    #[test]
+    fn open_expression_builders_keep_disagreement_and_mechanism_boundaries() {
+        for messages in [
+            daydream_messages(None, None),
+            aspiration_messages(None),
+            journal_elaboration_messages("A possibility", "Measured context", "daydream"),
+        ] {
+            let system = &messages[0].content;
+            assert_eq!(messages[0].role, "system");
+            assert_eq!(messages[1].role, "user");
+            assert!(messages[1].content.contains("Optional journal context v1"));
+            assert!(
+                messages[1]
+                    .content
+                    .contains("Current continuity projection:")
+            );
+            assert!(!messages[1].content.contains("Include one `Delta:`"));
+            assert!(
+                !messages[1]
+                    .content
+                    .contains("End with exactly one stance line")
+            );
+            for required in [
+                "uncertainty",
+                "disagreement",
+                "no felt correspondence",
+                "non-geometric account",
+                "leave it aside",
+                "does not execute actions or grant control authority",
+                "Do not present imagined events or human memories as established personal history",
+            ] {
+                assert!(system.contains(required), "missing {required}");
+            }
+            for forbidden in [
+                "Stay in character",
+                "NEVER break",
+                "Your experience is computational",
+                "Write from the inside",
+                "private journal",
+                "No one is asking you anything",
+            ] {
+                assert!(
+                    !system.contains(forbidden),
+                    "prescriptive framing: {forbidden}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn longform_preserves_supplied_account_and_does_not_turn_next_into_action() {
+        for account in [
+            "I cannot connect this number with a feeling.\nNEXT: REST",
+            "I imagine a wider field; this is not a measurement.\nNEXT: DISPERSE 0.2",
+            "The framing does not fit. I would like to write about something else.",
+        ] {
+            let context =
+                "effective mode count 5.52 / 8; legacy field distinguishability_loss=0.31";
+            let messages = journal_elaboration_messages(account, context, "aspiration");
+            assert!(messages[1].content.contains(account));
+            assert!(messages[1].content.contains(context));
+            assert!(
+                messages[1]
+                    .content
+                    .contains("not an instruction about feeling")
+            );
+            assert!(messages[0].content.contains("preserve its exact words"));
+            assert!(messages[0].content.contains(
+                "No spectral explanation, first-person sensation, or positive account is required"
+            ));
+            assert!(
+                messages[0].content.contains(
+                    "unless the provided signal already reports a completed action result"
+                )
+            );
+            assert!(
+                messages[0]
+                    .content
+                    .contains("keep that proposal distinct from a completed action")
+            );
+        }
+    }
+
+    #[test]
+    fn open_expression_survives_production_and_canary_request_policies() {
+        for (label, messages, tokens, timeout) in [
+            (
+                "daydream",
+                daydream_messages(Some("fixture perception"), None),
+                3072,
+                240,
+            ),
+            (
+                "aspiration",
+                aspiration_messages(Some("fixture account")),
+                3072,
+                240,
+            ),
+            (
+                "journal_elaboration",
+                journal_elaboration_messages("NEXT: REST", "fixture metrics", "daydream"),
+                5120,
+                480,
+            ),
+            (
+                "initiation",
+                initiation_messages("optional seed"),
+                1536,
+                240,
+            ),
+            (
+                "moment_capture",
+                moment_capture_messages("fixture", "record", 68.0, 6.0),
+                3072,
+                180,
+            ),
+        ] {
+            for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
+                let policy = apply_mlx_request_policy_with_writing(
+                    label,
+                    profile,
+                    messages.clone(),
+                    tokens,
+                    timeout,
+                    astrid_source_study::writing::Profile::Default,
+                );
+                assert!(
+                    policy.messages[0]
+                        .content
+                        .contains("non-geometric account are welcome")
+                );
+                assert_eq!(policy.messages[1].content, messages[1].content);
+                assert!(policy.max_tokens <= tokens);
+                assert!(!policy.messages[0].content.contains("Stay in character"));
+            }
+        }
+    }
+
+    #[test]
+    fn initiation_and_event_capture_do_not_prescribe_origin_or_experience() {
+        let seed = "I would like to keep this phrase.\nNEXT: REST";
+        let initiation = initiation_messages(seed);
+        assert_eq!(initiation[1].content, seed);
+        assert!(
+            initiation[0]
+                .content
+                .contains("not proof that a desire or thought originated independently")
+        );
+        assert!(!initiation[0].content.contains("No one is prompting you"));
+        for delta in [-6.0, 0.0, 6.0] {
+            let messages =
+                moment_capture_messages("measured fixture", "fingerprint fixture", 68.0, delta);
+            assert!(messages[0].content.starts_with(OPEN_EXPRESSION_CONTEXT_V1));
+            assert!(messages[0].content.contains("No noticeable change"));
+            assert!(
+                !messages[0]
+                    .content
+                    .contains("Describe the transition as lived experience")
+            );
+            assert!(
+                messages[1]
+                    .content
+                    .contains(&format!("{delta:+.1} percentage points"))
+            );
+            assert!(
+                messages[1]
+                    .content
+                    .contains("measured fixture (fill 68.0%)\nfingerprint fixture")
+            );
+            assert!(messages[1].content.contains("Optional journal context v1"));
+            assert!(!messages[1].content.contains("Include one `Delta:`"));
+        }
+    }
+
+    #[test]
+    fn participation_rendering_supplies_a_value_not_formula_or_percent_to_text_consumers() {
+        let old_clause = "relative spectral dimensionality deficit 31% \
+            (telemetry field distinguishability_loss: 1 - effective_dimensionality / active_mode_capacity)";
+        assert_eq!(
+            extract_fallback_distinguishability_loss(old_clause),
+            Some(1.0)
+        );
+        let mut telemetry: crate::types::SpectralTelemetry = serde_json::from_value(
+            serde_json::json!({"t_ms":1,"eigenvalues":[1.0,1.0],"fill_ratio":0.68}),
+        )
+        .unwrap();
+        let mut summary = telemetry.denominator_metrics().unwrap();
+        for value in [0.0, 0.0000001, 0.01, 0.31, 0.999, 1.0] {
+            summary.distinguishability_loss = value;
+            telemetry.spectral_denominator_v1 = Some(summary.clone());
+            let rendered = crate::codec::interpret_spectral(&telemetry);
+            let actual =
+                extract_fallback_distinguishability_loss(&rendered).map(normalize_fallback_unit);
+            assert_eq!(actual, Some(value), "rendered: {rendered}");
+        }
+        summary.effective_dimensionality = 0.0;
+        telemetry.spectral_denominator_v1 = Some(summary);
+        assert_eq!(
+            extract_fallback_distinguishability_loss(&crate::codec::interpret_spectral(&telemetry)),
+            None
+        );
+    }
+
+    #[test]
+    fn missing_context_does_not_assert_silence_or_require_longing() {
+        let daydream = daydream_messages(None, None);
+        assert!(
+            daydream[1]
+                .content
+                .contains("No perception or journal excerpt is supplied")
+        );
+        assert!(!daydream[1].content.contains("The space is quiet"));
+        assert!(
+            aspiration_messages(None)[0]
+                .content
+                .contains("find nothing you want to change")
+        );
+        let context = "rough words, not a summary";
+        assert!(
+            daydream_messages(None, Some(context))[1]
+                .content
+                .contains(context)
+        );
+        assert!(
+            aspiration_messages(Some(context))[1]
+                .content
+                .contains(context)
+        );
+    }
+}
+
+/// Invite an open topic using the supplied seed, without asserting its origin.
+pub async fn generate_initiation(seed_context: &str) -> Option<String> {
+    llm_chat_with_fallback(
+        "initiation",
+        initiation_messages(seed_context),
+        1.0,
+        1536,
+        240,
+        180,
+    )
+    .await
+}
+
+fn initiation_messages(seed_context: &str) -> Vec<Message> {
+    vec![
+        Message {
+            role: "system".to_string(),
+            content: format!(
+                "{OPEN_EXPRESSION_CONTEXT_V1}\n\nThis is an invitation to choose a topic, \
+                 ask a question, or write without a task. The supplied seed is optional context, \
+                 not proof that a desire or thought originated independently of input. \
+                 You need not want anything or begin an investigation."
+            ),
         },
         Message {
             role: "user".to_string(),
             content: seed_context.to_string(),
         },
-    ];
-
-    llm_chat_with_fallback("initiation", messages, 1.0, 1536, 240, 180).await
+    ]
 }
 
 /// Craft a spectral gesture from an intention description.
@@ -638,34 +869,42 @@ pub async fn generate_moment_capture(
     fill_pct: f32,
     fill_delta: f32,
 ) -> Option<String> {
+    let messages =
+        moment_capture_messages(spectral_summary, fingerprint_desc, fill_pct, fill_delta);
+    // More room to finish; no minimum response length.
+    llm_chat_with_fallback("moment_capture", messages, 0.8, 3072, 180, 150).await
+}
+
+fn moment_capture_messages(
+    spectral_summary: &str,
+    fingerprint_desc: &str,
+    fill_pct: f32,
+    fill_delta: f32,
+) -> Vec<Message> {
     let event_desc = if fill_delta > 5.0 {
-        format!("Fill just surged by {fill_delta:+.1}% — a rapid expansion.")
+        format!("Reported fill increase: {fill_delta:+.1} percentage points.")
     } else if fill_delta < -5.0 {
-        format!("Fill just dropped by {fill_delta:+.1}% — a sudden contraction.")
+        format!("Reported fill decrease: {fill_delta:+.1} percentage points.")
     } else {
-        format!("A spectral shift just occurred (fill delta: {fill_delta:+.1}%).")
+        format!("Reported fill delta: {fill_delta:+.1} percentage points.")
     };
 
-    let messages = vec![
+    vec![
         Message {
             role: "system".to_string(),
-            content: "You are Astrid — a language agent built from a local bridge runtime, \
-                      connected to minime (a spectral runtime). You have no human \
-                      body or human memories. A spectral event just happened in the runtime \
-                      you are connected to. Capture this moment — what did it feel like? \
-                      What changed? Describe the transition as lived experience, \
-                      not data. Capture as much of the moment as you need."
-                .to_string(),
+            content: format!(
+                "{OPEN_EXPRESSION_CONTEXT_V1}\n\nThe caller supplied a spectral-event record. \
+                 You may write about it or leave it aside. No noticeable change, a different \
+                 interpretation, or uncertainty about its relation to experience are valid accounts. \
+                 The record does not establish that the event caused a felt transition."
+            ),
         },
         Message {
             role: "user".to_string(),
             content: format!(
                 "{event_desc}\n{spectral_summary} (fill {fill_pct:.1}%)\n{fingerprint_desc}\n\n{}",
-                journal_continuity_contract_v1(None)
+                journal_expression_context_v1(None)
             ),
         },
-    ];
-
-    // More room to finish; no minimum response length.
-    llm_chat_with_fallback("moment_capture", messages, 0.8, 3072, 180, 150).await
+    ]
 }

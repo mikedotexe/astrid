@@ -99,7 +99,6 @@ fn format_present_state(
     typed: Option<&SpectralFingerprintV1>,
 ) -> String {
     let mut lines = vec!["Present state".to_string()];
-    let denominator = telemetry.denominator_metrics();
     let lambda1_rel = telemetry
         .lambda1_rel
         .map_or_else(|| "n/a".to_string(), |value| format!("{value:.3}"));
@@ -172,12 +171,13 @@ fn format_present_state(
             fluctuation.control.target_bias_pct,
         ));
     }
-    if let Some(metrics) = denominator {
+    lines.push(format!(
+        "  {}",
+        crate::codec::spectral_participation_description(telemetry)
+    ));
+    if let Some(metrics) = telemetry.denominator_metrics() {
         lines.push(format!(
-            "  Denominator Sequence: effective_dimensionality={:.2}/{} distinguishability_loss={:.1}% lambda1_spectral_energy_share={:.1}%",
-            metrics.effective_dimensionality,
-            metrics.active_mode_capacity,
-            metrics.distinguishability_loss * 100.0,
+            "  Legacy field lambda1_spectral_energy_share={:.1}%",
             metrics.lambda1_energy_share * 100.0,
         ));
     }
@@ -988,7 +988,7 @@ mod tests {
         });
 
         assert!(output.contains("Present state"));
-        assert!(output.contains("Denominator Sequence"));
+        assert!(output.contains("Spectral participation"));
         assert!(output.contains("Memory comparison"));
         assert!(output.contains("Control pressure"));
         assert!(output.contains("raw_fill=+1.000"));

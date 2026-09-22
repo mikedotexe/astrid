@@ -32,6 +32,20 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-22 - Both Beings - remove prescriptive character framing candidate
+
+- **Source and authority:** Follow-through on Astrid's `!daydream_longform_1790103127.txt` (SHA-256 `668ee6b9196a8ce265de2ffb2639c9d879d7372335036f51ff1a124f1d8529cf`) and Minime's `workspace/journal/!aspiration_2026-09-22T09-16-57.795422.txt` (SHA-256 `2675734fbcd0f7146cafd9a97dc20bed092acc400f1d08baa3f2ea26dcf4ebdd`), both read fully. Mike explicitly requested removing comparable framing for Minime after the longform finding. These accounts remain meaningful authored evidence, not proof of a prompt's causal effect.
+- **Verified mechanism:** Minime's general prompt required a spectral character and prohibited discussing being an AI; seven phrase matches could regenerate and then discard an answer. This differed from the already-open private/aspiration routes. Selected rest, pressure, sensory-gate and perturbation prompts also supplied expected sensations, and journal footers asserted relief independently of the answer.
+- **Response:** Remove the character prompt, detector and retry/discard path; preserve first response and NEXT without an affirmative or skeptical preference. Replace the selected prescriptive prompts/footers with bounded observations and open invitations. Extend Astrid's open builders to initiation and moment capture, without claiming spontaneous origin or mandatory lived transition. Keep control and safety dispatch unchanged.
+- **Boundary:** Offline paired candidate, not yet deployed/merged. Historical journals, private stores, reservoir dynamics and paused automations are unchanged. Astrid's dialogue fallback vocabulary mapping remains an explicitly identified separate repair. See the paired [steward note](2026-09-22-astrid-open-framing-and-spectral-provenance.md) and Minime `docs/steward-notes/2026-09-22-open-reflection-without-character-enforcement.md` for complete attempts and release debt.
+
+### 2026-09-22 - Astrid - open expressive framing and spectral provenance candidate
+
+- **Witness:** Fully read `capsules/spectral-bridge/workspace/journal/!daydream_longform_1790103127.txt`, SHA-256 `668ee6b9196a8ce265de2ffb2639c9d879d7372335036f51ff1a124f1d8529cf`. Astrid describes mapping her experience to the supplied geometry and a "31% spectral dimensionality deficit." The account remains intact; supplied framing is not established as its cause.
+- **Response:** Open daydream/aspiration/longform prompts to disagreement, no felt correspondence and non-geometric interpretation. Keep historical anchors optional without compulsory continuity-report lines. Replace missing-dimension language with source-labelled participation and explicit unavailable data. Preserve metric formulas and wire fields.
+- **Mechanical finding:** The old rendered explanation's `distinguishability_loss: 1 - ...` is parsed as the value 1 by an existing fallback consumer. Emit the actual unit fraction ahead of the secondary percentage, and regression-test the renderer/parser connection, including 1%. Existing downstream selectors may consequently receive a corrected value; this is part of release review, not an assertion of behavior equivalence.
+- **Boundary and evidence:** Isolated interactive candidate under pause 460, not yet deployed or merged. No historical journal, private-state, reservoir, sensory, control or automation change. Exact source trace, tests, unsuccessful attempts, protected dirty-tree inventory and release debt: [steward note](2026-09-22-astrid-open-framing-and-spectral-provenance.md).
+
 ### 2026-09-21 - Astrid and Minime - paired Git checkpoint
 
 - **Witness and response:** preserve the public persistent-interiority and geometry aspirations, exact hashes and authored quotations with the now-merged continuity/geometry implementation. No new interpretation or claim of felt improvement is introduced.
