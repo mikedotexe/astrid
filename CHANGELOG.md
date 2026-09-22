@@ -12,6 +12,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 ### Fixed - native daemon WASM shutdown (2026-09-22)
 
 - Make long-running WASM guests observe cancellation at epoch checks and join their worker before removing the ticker. Preserve ordinary interceptor timeouts and run-loop lifetime; failed or timed-out joins are errors, not successful unloads. Isolated deployment qualification reproduced a CLI guest looping after kernel shutdown, which otherwise prevented the daemon process from exiting. No bridge, reservoir, or model change.
+- Activate the qualified native daemon after an explicitly approved bounded legacy teardown and verified stopped-state backup. Recover KV sequence 95, verify all seven capsules and the exact loaded executable, and preserve all eleven protected service identities. The old process did not exit gracefully; repaired-candidate shutdown passed in isolation. Source, tests, migration and rollout receipts: `docs/steward-notes/2026-09-22-native-kernel-rollout.md`. No push or automation resume.
 
 ### Fixed - kernel management rejection delivery (2026-09-22)
 
