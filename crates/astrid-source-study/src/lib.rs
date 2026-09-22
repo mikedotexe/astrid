@@ -22,6 +22,7 @@ mod questions;
 mod relationships;
 pub mod response_choice;
 mod source_links;
+mod source_provenance;
 mod source_search;
 mod source_structure;
 mod store;

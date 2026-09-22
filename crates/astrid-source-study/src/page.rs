@@ -83,6 +83,7 @@ impl Page {
             start.byte,
             if budget < MAX_PAGE_BYTES { 550 } else { 850 },
         );
+        let use_evidence = crate::source_provenance::render(&outline, &source.id, start.byte, 650);
         let links_budget = if budget < MAX_PAGE_BYTES { 400 } else { 700 };
         let footer =
             "More source follows; CONTINUE resumes at the exact next byte after verified delivery.";
@@ -91,7 +92,7 @@ impl Page {
         // optional source links before choosing the immutable source interval.
         let header = |id: &str, end: usize, line_interval: &str| {
             format!(
-                "SOURCE {}\nRevision sha256:{}; {} bytes; {} lines. Local checkout source; deployment and understanding are not established.\nPage {}\nExact source bytes {}..{} (end exclusive). {}\n\n{}\n",
+                "SOURCE {}\nRevision sha256:{}; {} bytes; {} lines. Local checkout source; deployment and understanding are not established.\nPage {}\nExact source bytes {}..{} (end exclusive). {}\n\n{}{}\n",
                 source.id,
                 revision.sha256,
                 revision.bytes,
@@ -100,7 +101,8 @@ impl Page {
                 start.byte,
                 end,
                 line_interval,
-                scope
+                scope,
+                use_evidence
             )
         };
         // Both line bounds fit within the extent even when a saved cursor is

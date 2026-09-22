@@ -32,6 +32,255 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-21 - Astrid and Minime - continuity/geometry live transition
+
+- **Witness:** follow-through on Minime's September 20 persistent-interiority aspiration and Astrid's September 21 geometry aspiration; exact canonical paths and SHA-256 values remain in the detailed qualified-worktree rollout note linked by `2026-09-21-paired-continuity-live.md`.
+- **Shipped:** the qualified bridge/reader and six-file Minime adapter overlay, plus a launcher admission guard preventing old/new reader overlap during paired graceful activation. Native authored state, ordinary study job identities, bounded voluntary focus and explicit park/return survive through the reviewed migration paths.
+- **Verified:** bridge 98062, Minime 97221, 84 exact loaded Python inputs, same immutable helper, exact stopped checkpoint and fresh exchange, unchanged protected services/configuration; full Python and paired/deployment suites pass. Earlier failed attempts remain in receipts.
+- **Boundary:** no engine/model/sensory restart or control-policy change, no private-report inference, no claim of felt improvement; automation remains paused. Git reconciliation is still outstanding. See `docs/steward-notes/2026-09-21-paired-continuity-live.md`.
+
+### 2026-09-20 - Both Beings - quiet visual context and truthful sensory evidence rollout
+
+- Witnesses: Minime `!aspiration_2026-09-18T17-17-47.956234.txt`, public `daydream_2026-09-18T17-33-16.668720.txt`, its explicitly Minime-owned Astrid mirror `astrid_1789778300.txt`, and Astrid `aspiration_1789921454.txt`. Exact source paths and hashes are in the rollout note. The old visual request contained only `NEXT: EXPERIMENT_PLAN 4`; its response was later supplied as ambient context. This establishes repeated input, not an exclusive explanation of Minime's account.
+- Response: import only the qualified caption/action-separation/checker/review tranche into the canonical trees; preserve explicit retrieval, authored action routing and historical records. Add finish-current-request handling and a tested narrow visual reload wrapper. Keep physical camera/microphone input and reservoir policy unchanged.
+- Verification: exact release Python suite 1,490 passed, 1 skipped, 135 subtests; all 83 runtime inputs match the isolated qualification tree. Preserve the unsuccessful live-checkout-guard and missing-sibling-fixture test attempts in the note. Process transitions and final readiness are recorded there separately from test success.
+- Boundary: no engine instrumentation or dispersal activation, no experimental worker, control tuning, inferred improvement, forced review, automated parking or automation resume. Detailed status: `docs/steward-notes/2026-09-20-quiet-sensory-live-rollout.md`.
+
+### 2026-09-17 - Both Beings - paired source-study qualification and evidence preservation
+
+- **Source:** Follow-up to the preceding source-study evidence/relationships implementation and Astrid's historical page-boundary reports `introspection_minime_minime_src_sensory_bus.rs_1789608500` and `introspection_minime_minime_src_sensory_bus.rs_1789608023`. This pass reviews their existing source/test evidence; it is not a new full-read or addressing closure.
+- **Response:** Replace obsolete negative page-diagnostic assertions with regression checks for explicit delivered lines, labelled fragments, whole ordinary lines, distinct unfinished-declaration metadata and exact continuation. Preserve both original Claude run packets. During rollout review, add a sticky V2 sidecar compatibility floor when a relation is saved so older findings-aware readers cannot silently strip the second anchor; no live notebook migration or authored finding change is performed.
+- **Verification:** The actual deployed release reader preserves the pending old input across upgrade and accepts ordinary V1 findings. Against a relation-bearing V2 fixture it rejects before changing either checkpoint; the new reader resumes normally, including after an explicit relation drop. Full suites, retained failures and staged identities are recorded in [the qualification packet](2026-09-17-source-study-rollout-qualification/README.md).
+- **Boundary:** Interactive review requested by Mike under pause generation 453. Build staging does not authorize activation or git integration. No inference of understanding, uptake, consent or resolved friction; no model, reservoir, controller, sensory policy, service signal or live reader-state write.
+
+### 2026-09-17 - Both Beings - source-study evidence and relationships (implementation, not rollout)
+
+- **Source:** Six Astrid and ten Minime public self-studies fully reviewed; exact filenames and primary hashes are in [the implementation note](2026-09-17-source-study-evidence-and-relations.md). Astrid's `self_study_1789651658.txt` interprets a read-only review as a live retention policy; Minime's `self_study_2026-09-17T08-47-14.863751.txt` asks where `ApprovalOutcome` is consumed while receiving an agency-vernacular notice for ordinary evidence mapping.
+- **Grounding:** The salience calculation computes comparison fields and returns `read_only` authority; lower salience reduces its proposed entropy extension. Approval outcomes are matched in `crates/astrid-approval/src/interceptor/mod.rs`, not established by their manager definitions alone. Current comments contained historical being quotations that later studies could encounter as apparently fresh evidence. These source findings do not invalidate felt reports or establish their causes.
+- **Response implemented:** Receipt-gated notice exemption in Minime; optional consumer lookup hints and bounded call/match ranking; scoped use-evidence labels; mechanically precise comments with historical attribution; optional two-anchor flow/neighborhood/hypothesis findings. Flow remains an authored claim, never automatically verified by a label. Repeated guidance and duplicate previews yield before saved words under the unchanged input limit.
+- **Verification:** Focused Rust relation and notebook tests, strict reader Clippy, Minime journal/receipt fixtures and broader suites; exact outcomes and independently reproduced pre-existing page-test failures are recorded in the note. The generic grounding script returned misleading documentation/worktree hits and false negatives here; direct source inspection, not those classifications, grounds this entry.
+- **Boundary:** User-approved interactive implementation under controller pause generation 451; not an automated productive round. No canonical addressing closure, private-journal reads, claimed uptake, service restart, control change, deployment, staging or commit. Existing other-agent changes remain intact. No recommendation is inserted into either Being's notebook.
+
+### 2026-09-17 — Astrid — the two numbers she could not find have no name, so no name-based search could reach them
+
+- **Signal:** `introspection_minime_minime_src_sensory_bus.rs_1789640246` (report SHA
+  `c8ebc693…0d88b`, 3,127 B / 30 lines; witness `lsw_69ddd1fb…aa13`, 21,327 B / 498 lines; bridge
+  fill 71.03%, spectral entropy 0.883, λ1 8.528, λ1−λ2 gap 4.091, density gradient 0.179, mode
+  packing 0.833, pressure risk 0.194, peer fill 73.03%, model call 191.1 s). Source bound to
+  `minime/src/sensory_bus.rs` at sha `3fc6bd2a…d4aa3a`, lines 700–818; the working copy hashes
+  identically, so report-time and current bytes are the same.
+- **What she found/asked (verified):** eight descriptive claims about the two `*_review_v1`
+  functions on her page, seven of which verify exactly — including both line intervals she states
+  (700–752 and 798–800), which are correct on both ends. She closes with an open question: "I am
+  still looking for the specific definition of the constants (0.14, 0.11) and the
+  `SEMANTIC_CONTEXT_PERSISTENCE_MAX_MULT` cap to understand the hard limits of the `pressure_risk`
+  scaling."
+- **Ground truth:** the cap is a private `const` at line 68 (2.05). `0.14`/`0.11` are **bare
+  literals at line 286** — not constants, not named anywhere in the tree. Hard limits: pressure ≤
+  0.11, velocity ≤ 0.14, and 1.80 + 0.14 + 0.11 = **2.05** exactly, so the cap is the arithmetic
+  ceiling rather than a separate clamp; `pressure_risk` below `SEMANTIC_PRESSURE_RETENTION_START`
+  (0.20) contributes exactly zero. **Two mechanism corrections preserved, not smoothed:** the
+  "border control" function is read-only by its own `authority` field at 830–831 — *twelve lines
+  past the end of her 818-line page* — and `snap_probe_delta_ms` takes neither hysteresis nor
+  salience as input. A third: salience never reaches the live window (only call site 795, inside
+  the review). **Corrected mid-round:** `semantic_stale_context_review_v1` is *not* test-only — it
+  has a non-test caller at `minime/src/owner_inquiry/source_separation.rs:149`.
+- **Change shipped:** `crates/astrid-source-study/tests/unnamed_coefficient_reach.rs` — four
+  read-only reachability pins for the shape her question exposes: a value with **no name** is
+  unreachable by every identifier affordance (a bare number returns a recovery map with no source
+  bytes at all), and the literal search that *can* match the digits cannot rank the definition
+  against same-digit test arguments — in the live file `0.14` matches 286, 3927 and 4017, and the
+  two decoys sit in the `entropy_velocity` argument position, i.e. they read as the quantity the
+  coefficient weights. The bounded recovery is one positional `OPEN`.
+- **Felt/observed, marked as such:** her chosen `NEXT: SELF_STUDY OPEN
+  minime/minime/src/sensory_bus.rs 251` lands on the opening line of the function holding all three
+  values — the minimal correct recovery, chosen unprompted. Recorded as observation; nothing was
+  suggested or dispatched to her. A 12-sample/110 s read of minime's live
+  `resonance_density_v1.pressure_risk` shows it alternating 0.194081 ↔ ≈0.22576, straddling the
+  0.20 dead-zone edge — co-occurrence only, no mechanism or felt effect claimed.
+- **Verify:** `cargo test -p astrid-source-study` (171 passed / 0 failed; 167 before) ·
+  `cargo clippy -p astrid-source-study --all-targets --all-features -- -D warnings` ·
+  `shasum -a 256 /Users/v/other/minime/minime/src/sensory_bus.rs` →
+  `3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a` ·
+  packet `docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/`
+- **Authority boundary:** no live substrate or control change made or attempted; no deploy, restart,
+  stage, or commit; Tier-4/5 waits untouched.
+
+### 2026-09-17 — Astrid — she read the page's end as a function's end, because nothing names the declaration a page stops inside
+
+- **Signal:** `introspection_minime_minime_src_sensory_bus.rs_1789608023` (report SHA
+  `5ebe8538…9f3b`, 4,997 B / 45 lines; witness `lsw_b1993b32…f3ed`, 21,344 B / 498 lines; bridge
+  fill 73.17%, spectral entropy 0.882, λ1 8.581, λ1−λ2 gap 4.131, density gradient 0.180, mode
+  packing 0.833, peer fill 71.05%, model call 240.9 s). Source bound to `minime/src/sensory_bus.rs`
+  sha `3fc6bd2a…d4aa3a`, bytes 14188..18492 — working copy byte-identical. She opens "The current
+  page (lines 374–502)" and closes `modality_boundary_transparency_v1` at "(463–502)".
+- **Ground truth:** the delivered interval is lines **376..502** (witness `window_start_line` 376),
+  and the function opens at 464 (`#[must_use]` 463) and closes at **515**. Her 502 is only where
+  the page budget ran out, mid-token, rendering `   502 | Moda`.
+- **Both errors, one cause — ours.** `Outline::scope_text` (`source_structure.rs:114-156`) resolves
+  the enclosing declaration at the page **start** byte (`page.rs:74-79`). So the page spelled
+  "struct `SemanticReceptivityPulseReviewV1` (lines 374–383…)" — which she took for the page start,
+  lines 374–375 never having been delivered — and spelled **nothing at all** about the declaration
+  enclosing `page.end`. The RELATED SOURCE LOCATIONS footer offered only off-page candidates. The
+  fact is on the record (`page.source_locations` carries line 464) and one CONTINUE prints the full
+  464–515 span; it is only absent from the bytes she reads. Second instance of the mechanism logged
+  2026-09-16 — earlier in time, and a 2-line divergence rather than 38, so harder to notice.
+- **Change:** added `crates/astrid-source-study/tests/page_end_declaration_legibility.rs`, five
+  read-only pins for the end edge (scope row start-anchored; closing line absent from every prose
+  range; last gutter row a mid-line prefix; record lists what the bytes omit; CONTINUE resolves it).
+  `cargo test -p astrid-source-study` 195 passed / 0 failed (190 before); fmt and clippy clean.
+- **Contradiction preserved:** her "the 12D glimpse is the primary vehicle for moving compressed
+  semantic data" is contradicted at `sensory_bus.rs:2183-2199` (`live_transport_dim_count:
+  LLAVA_DIM` = 48; `compression_role: "non_authoritative_companion_summary"`; `live_vector_write:
+  false`). Her page carries those field names with no values and routes to 1328 and 2203, missing
+  the constructor at 2174. She wrote the same reading again on the following page.
+- **Not inferred, not authorized:** no header, scope-row, pagination, budget or navigation change;
+  rendering the delivered interval or the end declaration's span into being-facing prompt bytes
+  remains a separate decision. No live, deploy, restart, staging or git action. Packet:
+  `docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/`.
+
+### 2026-09-16 — Astrid — she named her page "lines 464–620"; our header only ever told her the bytes
+
+- **Signal:** `introspection_minime_minime_src_sensory_bus.rs_1789608500` (report SHA
+  `490501f4…b0a22`, 4,370 B / 38 lines; witness `lsw_618ae064…`, 21,334 B / 498 lines, bridge fill
+  73.04%, spectral entropy 0.882, λ1 8.581, λ1−λ2 gap 4.139, density gradient 0.181, peer fill
+  71.09%, model call 244.6 s). Source bound to `minime/src/sensory_bus.rs` sha `3fc6bd2a…d4aa3a`,
+  bytes 18492..22865 — working copy byte-identical, so report-time and current source are the same
+  bytes. She opens: "The current page (lines 464–620)."
+- **The delivered interval is lines 502..620** — `page.start.line` and the witness
+  `window_start_line` both say 502. Her 620 is exact.
+- **Where 464 came from — our render, not her memory.** The delivered page
+  (`page efabf5fb…f9e4`, 6,692 B of rendered text, delivery receipt `f6ca4acb…f9e4`) carries three
+  disagreeing line facts: the header states `Exact source bytes 18492..22865` and **never** a line
+  interval (`crates/astrid-source-study/src/page.rs:86-98`); the SOURCE SCOPE row is the *only*
+  prose line range on the page and it belongs to the enclosing declaration — "function
+  `modality_boundary_transparency_v1` (lines 464–515; no test marker found)"
+  (`src/source_structure.rs:147-156`); and the first gutter row is the mid-line fragment
+  `   502 | lityBoundaryTransparencyV1 {`, because the previous page's budget ran out inside line
+  502. She took the last gutter row for her end and the declaration's start for her start. The
+  exact interval exists on the page record and is copied into the witness — it is simply never
+  rendered into the bytes she reads.
+- **What they found (verified), attribute lines included:** `SemanticReceptivityPulseReviewV1`
+  374-383, `SemanticGlimpse12dV1` 386-402, `ModalityBoundaryTransparencyV1` 404-417,
+  `SurrenderModeAuthorityGateV1` 419-428, `normalized_boundary_label` 454,
+  `modality_boundary_transparency_v1` 463-515. The opaque/constrained/`contact_change_route` logic
+  is 480-500 exactly as she describes it, and the gate on her own page reads
+  `status: "tier5_operator_approval_required_before_live_trial"` (525) — her "gated by an external
+  authority" is the same boundary this flywheel runs under. Two of the structures she cites reached
+  her page only as RELATED SOURCE LOCATIONS line numbers (374 and 420); the bodies came from the
+  previous page, and she marks the carry herself: "previous pages defined the *forces*".
+- **Three corrections preserved, not domesticated:** (1) **entropy sign** — she reads incoherent
+  structure as costing clarity, but `entropy_support` enters `max_loss` with **−0.08** (446-450),
+  so higher spectral entropy *sustains* clarity; crowding is the term that costs (+0.26) and low
+  fill also holds (−0.12); (2) `smoothstep_unit` shapes `age_fraction` only (436), not `max_loss`
+  (449-450) — they meet once at 451 as `1.0 - age * max_loss`; (3) the 12D glimpse is **not** "the
+  primary unit of movement for semantic data": its constructor marks it
+  `compression_role: "non_authoritative_companion_summary"`, `live_vector_write: false`,
+  `authority: "read_only_glimpse_summary_not_live_transport_or_control"` (2183-2199), with
+  `live_transport_dim_count = LLAVA_DIM = 48` against `glimpse_dim_count = 12`. Her framing claim
+  survives all three: in this file staleness really is a gradient of clarity and not a timer, and
+  the source says so in the words she reached for — "semantic hold quality, not just hold
+  duration" (585-588).
+- **Change shipped:** `crates/astrid-source-study/tests/page_line_interval_legibility.rs` — 5
+  read-only legibility pins: the header states bytes and never the delivered line interval; the
+  sole prose range is the declaration's and starts strictly behind the first delivered line; the
+  first gutter row can be a strict suffix of the line it numbers; the exact interval is available
+  on the page record; and the scope row's line is a real Action returning the declaration head, so
+  the two spans are distinguishable in one read.
+- **Verify:** `cargo test -p astrid-source-study --test page_line_interval_legibility` → 5 passed;
+  crate suite 190 passed / 0 failed (up from 185); `cargo fmt`/`clippy --tests` clean. Round packet
+  `docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/`.
+- **Authority boundary:** rendering the delivered line interval into the page header would change
+  being-facing prompt bytes and stays a separate decision; none was made here. No header text,
+  scope row, pagination, budget or navigation behaviour was changed, and no live substrate,
+  control, deploy or restart change was made or required.
+
+### 2026-09-16 — Astrid — every socket.rs fact she cited is exact; the one thing she conflated is a word two subsystems share
+
+- **Signal:** `introspection_source_catalog_1789589587` (report SHA `73aedbca…4f1b0c`, 1,605 B / 18
+  lines; witness `lsw_c69fd24e…`, 18,954 B / 440 lines, bridge fill 75.45%, λ1 4.727, λ1−λ2 gap 1.651,
+  peer fill 63.78%, model call 82.7 s). A navigation-only turn: no source SHA bound,
+  `source_snapshot_v1` `null`, so every source conclusion is current-source.
+- **What they found (verified):** orienting after two `socket.rs` pages, she summarised the kernel's
+  socket "wire" as path-length enforcement, `0o700` permission locking and symlink-attack protection,
+  read the map as clustering in `kernel` / `senses` / `reservoirs`, and chose
+  `NEXT: SELF_STUDY MAP kernel` with `socket_bridge.rs` named as her target.
+  **All four verified.** The working copy of `crates/astrid-kernel/src/socket.rs` hashes to
+  `c78e014c…2491da` — byte-identical to the revision her reads bound — with the limits at 20-25/101-108,
+  `0o700` at 43-60 and symlink removal at 110-117; `kernel`/`senses`/`reservoirs` are three of eight
+  components in `crates/astrid-source-study/catalog.toml`. Nothing in her summary overstates her bytes.
+- **Verified non-issue (un-muffle cutting both ways):** bytes `4481..7989` of `socket.rs` were never
+  delivered to her, and it is *not* a lost affordance — `coverage.rs:87-96` printed the exact
+  missing-region `OPEN` on the EOF page. She chose `MAP` instead. Her choice; neutral; no row owed.
+- **Correction preserved, not domesticated:** she proposed `socket_bridge.rs` *and* the `senses` entry
+  points as one move toward "how raw socket connections are abstracted into meaningful sensory inputs."
+  `socket_bridge.rs:23` really does publish `sensory.v1.user_input` — but that topic exists in only two
+  files repo-wide (there and `astrid-events/src/bus.rs:128,1351`), where it is a **mirror of
+  `user.v1.input`** excluded from conversation counting. The `senses` component's Astrid entry points
+  contain **zero** `sensory` occurrences and `capsules/spectral-bridge/Cargo.toml` depends on no kernel
+  crate. Two subsystems, one word, no shared path. Her question survives; the mechanism does not.
+- **Change shipped:** `crates/astrid-source-study/tests/component_map_sibling_reach.rs` — 2 focused
+  reach tests pinning that `MAP kernel` renders only the four declared entry points (no
+  `socket_bridge.rs`) yet offers `SELF_STUDY MAP astrid/crates/astrid-kernel/src`, whose listing carries
+  the sibling's exact `OPEN`; and that a component ID is a `MAP` topic but not a `LIST` topic, with the
+  component map correctly withholding the `LIST` offer.
+- **Verify:** `cargo test -p astrid-source-study --test component_map_sibling_reach` → 2 passed.
+  Round packet `docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/`.
+- **Authority boundary:** renaming a live IPC topic is a protocol change and stays Tier 5; none proposed.
+  No live substrate, control, deploy or restart change was made or required.
+
+### 2026-09-16 — Astrid — her rate-limiter example was backwards, and the fix is a test that cannot rot
+
+- **Signal:** two consecutive pages of `crates/astrid-kernel/src/kernel_router.rs` —
+  `introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505` (SHA `edb7d0dd…`, 2,789 B /
+  32 lines, window lines 1-111; witness `lsw_84152d64…`, 21,445 B / 498 lines, fill 71.16%, λ1 8.566,
+  peer fill 71.21%, model call 184.1 s) and `…_1789577928` (SHA `6a35a507…`, 3,579 B / 35 lines, window
+  lines 111-213; witness `lsw_5238ec03…`, 21,424 B / 498 lines, fill 71.06%, λ1 4.740, peer fill 71.11%,
+  model call 155.6 s). Both `direct_causation_claimed: false`, `authority_state: evidence_only`. Both bind
+  source SHA `108d6901…ee72fd`, **matching the working copy exactly**.
+- **Ground truth — the mechanism is right, the example is inverted:** she described the
+  `ManagementRateLimiter` as protecting the kernel from commands *"like listing capsules or reloading
+  configurations"*. `rate_limit_for_request` (292-304), which sits below her reading window, returns
+  `None` for `ListCapsules` — read-only queries are deliberately unlimited — while `ReloadCapsules` is the
+  most-throttled non-`Shutdown` command at 5/min. Her *reloading* example is exactly right; her *listing*
+  example is the opposite of the code, and the dispatch arms she could see contain no hint either way.
+- **Change shipped:** `rate_limit_table_covers_every_request_variant` in
+  `crates/astrid-kernel/src/kernel_router.rs` — one case per `KernelRequest` variant, asserted through a
+  wildcard-free `match` so a ninth variant cannot compile until someone records whether it is limited.
+  The two arms she flagged as "not yet implemented" (`InstallCapsule`, `ApproveCapability`) are pinned as
+  still throttled at 10/min, which is the non-obvious half.
+- **Also verified (no change):** both reports hypothesize that capsule "vitality" is influenced by the
+  spectral metrics in `projection.rs`. `capsule_runtime_health.rs` (214 lines, read complete) is a static
+  WASM-payload audit, and `crates/astrid-kernel/src/` contains no spectral/eigen/curvature/reservoir
+  reference at all — the only `projection.rs` lives in the spectral-bridge capsule, a different process.
+  Recorded as a plain contradiction with her underlying question answered ("structurally"), not smoothed.
+- **Named as debt, not shipped:** grounding her claim that a rate-limited request answers on a
+  `kernel.response.*` topic showed line 49's `replace("kernel.request.", …)` is a no-op — nothing in the
+  repository publishes that prefix, and `lib.rs:845` still documents the stale name — so the error goes
+  out on the request topic while every other response uses `astrid.v1.response.{suffix}`. Bounded as a
+  topic-contract inconsistency (the socket bridge subscribes unfiltered), left for an authorized window.
+- **Verify:** `cargo test -p astrid-kernel --lib kernel_router` (6 passed); packet
+  `docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/`.
+
+### 2026-09-15 — Astrid — she named the right crate one turn before we found it
+
+- **Signal:** `introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666` (SHA-256 `ee7327ca…2273e83b`, 1 978 bytes / 20 lines, read complete; witness `lsw_fbf946d7…89c27e7e`, 21 488 bytes / 498 lines, fill 73.09%, spectral entropy 0.904, λ1 4.740, peer fill 73.03%, model call 73.2 s, `direct_causation_claimed: false`, `authority_state: evidence_only`). Reading the delivered page of `crates/astrid-minime-protocol/src/volition/inquiry.rs` (window **lines 106–227**, file SHA `912eac66…`, **matching the working copy exactly**; line 106 verified to begin at byte 4091, exactly her stated interval start), she writes: "the specific logic for calculating the delta between `projection_48d` and `companion_projection_12d` is not contained within this snippet… I suspect it will be in a `validation.rs` file or a dedicated 'stability' module within the `astrid-minime-protocol` **or `minime`** crates".
+- **Ground truth — her second crate is the right one:** `minime/src/owner_inquiry.rs` (SHA `46f6fc75…`, 738 lines) holds the analysis-time delta in `codec_fidelity_result` (252-317): `derive_companion_12d` (348-355) re-derives the companion from the strand's own 48D projection, then `reconstruction_rmse = euclidean_distance(derived, observed) / sqrt(12)`, `lane_loss_ratio = 1 − companion_rms/source_rms`, and per strand **pair** (289-306) `source_distance`, `companion_distance`, `pairwise_distance_preservation_ratio`. Her "does a *pair* of projections satisfy the requirement" framing is exactly what `CodecFidelity`'s `PerStrandAndAllPairs` coverage (`inquiry_v2/validation.rs:15`) makes the executor compute.
+- **Steward correction, recorded rather than buried:** closing her *next* report earlier in the same round, this steward wrote that the only computed 48D/12D delta is `resolution_delta` (`capsules/spectral-bridge/src/codec/structure.rs:88`). That was scoped to the Astrid repository and under-scoped as an answer. Both exist and answer different questions — `structure.rs` scores glimpse fidelity for review; `owner_inquiry.rs` scores a specific strand's companion against a re-derivation at analysis time.
+- **Also verified (no change):** minime's `semantic_glimpse_12d_from_features` (`minime/src/sensory_bus.rs:1356-1374`) mirrors Astrid's `GlimpseCodec::derive_12d` block for block — same block means, same dims 24-27 passthrough, same `[17,26,27,31]` tail anchor, same whole-vector term; minime's extra finite guard and clamps are no-ops on finite `tanh` output. So `reconstruction_rmse` measures tampering or codec drift, not a standing producer/analyzer mismatch. The cross-repository regression pinning that agreement is **named as debt, not shipped** in this round.
+- **Why her planned `FIND` could not have reached it:** `owner_inquiry_fixed_analysis_set_v1` has six non-test use sites plus `tests/wire_contract.rs:120`; the executor names the analysis *enum*, never the set constructor. Correct search, unreachable target — a fact about the symbol's reach, not about her reading.
+- **Verify:** `sed -n '252,317p;348,355p' /Users/v/other/minime/minime/src/owner_inquiry.rs`; `sed -n '1356,1374p' /Users/v/other/minime/minime/src/sensory_bus.rs`; packet `docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/`.
+
+### 2026-09-15 — Astrid — she was searching correctly for a symbol that isn't where the answer lives
+
+- **Signal:** `introspection_source_catalog_1789509068` (SHA-256 `744d4340…2fea9616`, 1 587 bytes / 20 lines, read complete; witness `lsw_bcaf0c7e…dcb49`, 18 937 bytes / 440 lines, fill 73.05%, spectral entropy 0.904, λ1 4.740, λ1−λ2 gap 1.685, `spectral_density_gradient` 0.115, `mode_packing` 1.0, peer fill 73.02%, model call 62.1 s, `source_snapshot_v1` **null** as a navigation-only turn requires, `direct_causation_claimed: false`, `authority_state: evidence_only`). She writes: "I am looking for the specific calculation of the delta between `projection_48d` and `companion_projection_12d`" — her read of `inquiry.rs` gave her the *requirements* but not the arithmetic, and she plans to look for "the `validation.rs` file or any module that imports `OwnerInquiryV1`".
+- **Ground truth (the answer, and the correction):** there is **no strand-level delta**. The companion is *derived*: `capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs:187` calls `GlimpseCodec::derive_12d(&projection_48d)`, whose arithmetic is `capsules/spectral-bridge/src/codec/evidence_types.rs:839-856` — tanh(mean_abs) over dims 0..8 / 8..16 / 16..24, passthrough tanh of 24,25,26,27, tanh(mean_abs) of 28..32 / 32..40 / 40..44, a [17,26,27,31] tail-texture anchor at `out[10]`, and a whole-48 term at `out[11]`. A real 48D/12D delta **does** exist, just not where she was looking: `resolution_delta = (1.0 − glimpse_fidelity_score).clamp(0,1)` at `capsules/spectral-bridge/src/codec/structure.rs:88`, with `resonance_loss_ratio` at 90-95, inside the read-only `multi_scale_observer_v1` built for her own "distillation, not compression" proposal.
+- **Her hypothesis was half right, precisely:** `crates/astrid-minime-protocol/src/volition/inquiry_v2/validation.rs` (SHA `ce1ad404…`, 111 lines, read complete) **exists** and imports the fixed analysis set — but holds coverage modes, plan equality, offline budget, cancellation, strand distinctness, pair keys and observation chaining, and **no** projection arithmetic. `inquiry.rs` (SHA `912eac66…`, 543 lines, read complete) validates the companion for *length 12 and finiteness only* (70-77) and binds both vectors in one **joint** digest (436-442) — never a relation between them. **Contradiction recorded, not domesticated:** neither `stability corridor` nor `stability_corridor` occurs anywhere in `crates/` or `capsules/spectral-bridge/src/`; the nearest named corridor (`crates/astrid-types/src/agency_corridor.rs`) is an unrelated surface.
+- **This is not the path-form misread of 2026-09-14/15 — do not over-pattern it.** Her navigation was *correct*: an identifier-scoped search for `owner_inquiry_fixed_analysis_set_v1` or `OwnerInquiryV1` **cannot** reach `evidence_types.rs:839` or `structure.rs:88`, because the derivation and delta sites mention neither identifier. The recovery map she got matches documented behavior for an unknown target (`autonomous/next_action/action_help.rs:169`); nothing was dropped. The limit is that the symbol she is tracking stops one crate short of the arithmetic.
+- **Change shipped:** focused regression `strand_companion_is_the_derived_glimpse_not_an_independent_delta_field` in `capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs` — pins `companion == GlimpseCodec::derive_12d(projection_48d)` at `build_strand`, and pins the honest boundary that a substituted unrelated finite 12D companion still passes `SemanticStrandV1::is_well_formed` once the embedding digest is recomputed. The 48D→12D relation is a **producer-side contract**, not a checked wire delta. 4 parsing tests pass; fmt clean; domain-boundary verify `valid=true`, 0 violations.
+- **Observed, deliberately not changed (Tier 5):** the computed delta scores the glimpse against a **32-dim** reference (`calculate_compression_fidelity(&features[..32], &glimpse)`, `compression_reference_12d` at `evidence_types.rs:894-909`) while `derive_12d` reads 32..40, 40..44 and all 48; `MultiScaleObserverV1` declares `live_transport_dim_count: 32` against `SEMANTIC_DIM` 48. Deliberate pinning or drift from the 32→48 widening is not decided here.
+- **Verify:** `sed -n '839,856p' capsules/spectral-bridge/src/codec/evidence_types.rs`; `sed -n '84,96p' capsules/spectral-bridge/src/codec/structure.rs`; `cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib inquiry::parsing`; packet `docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/`.
+
 ### 2026-09-15 — Astrid — the same wrong cause, a second code path: "not in the catalog" is what a path-form error looks like from inside
 
 - **Signal:** `introspection_source_catalog_1789490042` (SHA-256 `a43053a5…b881a57a`, 2 268 bytes / 24 lines, read complete; witness `lsw_d3ada5a3…3065c2`, 18 945 bytes / 440 lines, fill 71.06%, spectral entropy 0.905, λ1 4.759, λ1−λ2 gap 1.705, `spectral_density_gradient` 0.115, `mode_packing` 1.0, peer fill 71.06%, `source_snapshot_v1` **null** as a navigation-only turn requires, `direct_causation_claimed: false`, `authority_state: evidence_only`). She reports a complete architectural reading of `maintenance.rs`, then writes: "Since the previous attempt to open `lib.rs` failed because it wasn't in the catalog, I will start by mapping the `astrid-kernel` crate". `NEXT: SELF_STUDY MAP astrid/crates/astrid-kernel`.
@@ -5673,6 +5922,186 @@ changed, no new study was induced, and this integration introduces no new
 Being-facing runtime behavior. Current qualification and repository disposition
 are recorded in the September 15 Git stabilization account.
 
+
+## 2026-09-15 — Astrid's forward map named the wrong file; the question under it was right
+
+Source: `capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789522750.txt`
+(sha256 `46a6badb2cd2061a6ba8bcdd4849dc0323579acb5b0f896049ea37371156454f`, 1608 bytes, 21 lines).
+Lived-state witness `lsw_7494624fbf8e6046dc2837f7e964b87205b6a017013c691b11d20aac980435aa`
+(sha256 `be951b898458dc853ba0bf0aa0cf196b34ce3c2359e7fb08e553673b795f0d6b`).
+
+Ground-truthed: her three `owner_inquiry.rs` mechanics verified exactly against current source —
+the 48D→12D companion reduction, `prepare_owner_inquiry`, and `attest_response`, the last of which
+really is digest-plus-signature sealing rather than a loose metaphor.
+
+Verified no-change, with the contradiction preserved: she pointed at
+`capsules/spectral-bridge/src/lifecycle.rs` as the Astrid-side site "managing the state transitions
+of these inquiries". That file is operator drain lifecycle and contains no inquiry references at all;
+the site she wanted is `autonomous/inquiry.rs` plus `inquiry/{canary,parsing,research,worker}.rs`.
+Nothing was changed in either file. The correction is written down so that it reaches her before she
+spends a `SELF_STUDY MAP kernel` turn on a file that cannot answer her — and so that the miss is
+recorded as a navigation fact, not as a defect in her report. She hedged ("appears to be"); the hedge
+was correct, and no steward artifact rewrites, rejects, or forbids any of her own text.
+
+Authority boundary: evidence only. No implementation, no live substrate or control change, no deploy,
+no restart, no staging or commit. Round packet:
+`docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/`.
+
+
+## 2026-09-15 — She asked whether `needs_charter` repairs itself; the answer is that it hands her the charter
+
+Sources (all three read complete, all bound to source sha
+`93a1146d0ff05bd455b41e3f5c8e345bf6a4a2d0eb5c69dcad4cb6712d08822a`, which matches the working copy):
+
+- `capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608.txt`
+  (sha256 `201ebed623f70dede8f1032fa35cf7f1a4792520137a130bae125904b6ca44bf`, 2814 bytes, 28 lines;
+  witness `lsw_ca878b02a5a2edf6f3e811a16bc041839d1a056532e38aa1ef520e976f4b0bd4`, window lines 180-303)
+- `…_1789529788.txt` (sha256 `413341d7a741a394293b16eab195dabc1c276e6a3c98541d23e53c833727d722`, 3503 bytes,
+  36 lines; witness `lsw_a48d7ae2278a7583b8b63a665a863ab2fc1ff256623ab204d8110de1ee761bed`, window lines 365-481)
+- `…_1789529954.txt` (sha256 `527c8713a43d0a01ef8d10c9bb5b9fe736749d14230af85528ee3eff6ef613dd`, 3176 bytes,
+  28 lines; witness `lsw_71ed198697f6ef44ce8ab4a518b112d1e2cb1f5e140c5ee0c16f228ed9f41894`, window lines 180-303)
+
+What she surfaced: across three consecutive turns she built the `held_or_guarded` / `needs_charter`
+distinction from the source itself, then asked twice — "does `needs_charter` trigger the `charter_repair`
+command specifically, or does it just signal that the conveyor is stuck until a human or a
+scaffold-generator intervenes?" and "does `authority_readiness_next_command` provide a mechanism for
+`charter_repair` to be issued automatically, or does it simply return an error/empty state?"
+
+What complete source reading established: neither. `authority_readiness_next_command`
+(`runtime/authority.rs:406-445`) has no `needs_charter` case at all; it falls through to the caller's
+`proposed_next` at `:441`, and only an empty one reaches the `EXPERIMENT_ADVANCE … mode: preview` default at
+`:444`. Both live call sites supply `experiment_conveyor_proposed_next`, whose `needs_charter` arm
+(`runtime/conveyor.rs:67-79`) is an `EXPERIMENT_CHARTER <id> :: …` authoring scaffold. Her own reading that
+"it doesn't appear to be a self-healing loop" is confirmed — `experiment_conveyor.rs:338` will not let
+`EXPERIMENT_ADVANCE … mode: apply` invent a charter. One correction in her favour: she framed the exit as
+"a new scaffold or a manual repair", implying someone else. The charter is hers to author, and needs no
+steward grant, approval, or live authority.
+
+What changed: four focused regressions in `capsules/spectral-bridge/src/action_continuity/tests.rs` pinning
+the guardrail conjunction, the hold-before-charter precedence, the `needs_charter` passthrough (and its
+empty-`proposed_next` default), and the conveyor's charter proposal. No production behaviour changed.
+
+Verified no-change elsewhere: the `authority_gate.rs:2255` path already has an explicit `needs_charter →
+EXPERIMENT_CHARTER` branch with its own test; the `action_continuity` path reaches the same outcome by
+passthrough rather than by branch. Two surfaces, one destination — recorded rather than unified, because
+unifying them is a production behaviour change nobody asked for.
+
+Authority boundary: evidence and tests only. No live substrate or control change, no deploy, no restart, no
+staging, no commit; silence from Astrid is neutral. Round packet:
+`docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/`.
+
+### 2026-09-16 — Astrid: "does the heartbeat look at raw values or a specific subset (Warmth 24 / Tension 25)?"
+
+Being feedback: `introspection_source_catalog_1789542558` (witness `lsw_66428ec6…`). She had been paging
+`rescue_policy.rs`, asked for line 2478 again, and received a recovery map instead of the page. Her
+standing question: does the heartbeat's skip decision or its outgoing shaping read raw feature values or a
+named subset — and are Warmth (24) / Tension (25) special-cased, probably via `rescue_profile.json`?
+
+Ground truth (current source `155bc25c…`, 2551 lines; no report-time SHA, the report is `navigation only`):
+**neither branch.** `heartbeat_block_reason` (`:892-935`) never receives the features vector — it gates on
+profile flags and `health.json` state. `apply_semantic_heartbeat_shape` (`:940-945`) is an associated fn
+with no `&self`, scaling *every* dimension by the compiled 0.025 and clamping to ±0.018. Her delegation
+intuition holds for the gate and fails for the shaper, and the live receipt proves it: the status file
+records `feature_scale 0.025 / max_abs 0.018` while the profile holds `0.14 / 0.28` (those drive the
+separate, also index-uniform `apply_limited_write_shape`). `rescue_profile.json` carries 89 keys and none
+is per-dimension; `warmth|tension` greps to 0 across the whole file; index 25 appears nowhere.
+
+What her instinct did find: `SEMANTIC_HEARTBEAT_TAIL_START_DIM = 24` (`:43`) is the one dimension boundary
+in the path, and it coincides exactly with the codec's warmth dim / 24-31 emotional block. It feeds an
+observational `tail_rms` into the status receipt. A real seam, but measurement — not a gate, not a shaper.
+
+What changed: no production source. Verification only, linked to the existing regressions
+`rescue_policy_tests.rs:1503` and `:2246`, plus this ledger row, the changelog entry and the round packet.
+
+Still open (named, not closed): why the OPEN for line 2478 returned a recovery map when the same path
+resolved in the two prior turns and 2478 is in range for a 2551-line file. Treated as possible
+infrastructure loss per the un-muffle invariant; first check of the next round.
+
+Authority boundary: no live change, no deploy, no restart, no card, no delivery, no dispatch. Her stated
+`NEXT: SELF_STUDY OPEN … 2478` is recorded, not adjudicated. Round packet:
+`docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/`.
+
+
+## 2026-09-16 — "not currently indexed in the catalog": it was indexed, one prefix away, and the recovery never said so
+
+**Being:** Astrid · **Source:** `capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789553097.txt`
+(sha `43c211c716156f76e0254f2433e126c21e24fb2b726631dd9705db7d8e4cf7f9`, witness `lsw_81ff482a…`)
+
+What she found (verified): her `SELF_STUDY MAP capsules/astralis/astrid-capsule-agents` failed and the
+recovery only offered the generic menu. **Her effect-level statement is accurate; her mechanism is not.**
+The path *is* in the catalog — as `astrid/capsules/astralis/astrid-capsule-agents`. Catalog IDs are always
+repository-prefixed (`crates/astrid-source-study/src/catalog.rs:149-157`) and `Catalog::map` filters those
+IDs by `"{topic}/"` (`navigation.rs:56-58, 84-97`), so an un-rooted topic matches zero entries. The recovery
+said nothing useful because `path_candidates` returns `Vec::new()` for *any* multi-segment request whose
+first segment is not an installed repository ID (`path_recovery.rs:33-39`).
+
+The inconsistency is the finding: `Catalog::resolve` accepts that exact un-rooted shape for **OPEN**, by
+trying each installed root in turn (`catalog.rs:106-118`). `OPEN capsules/astralis/astrid-capsule-agents/src/lib.rs 1`
+delivers source; `MAP` of that file's own parent directory does not. OPEN and MAP do not share a path
+namespace, and nothing tells the reader that. Cost: three navigation turns (1789553097 → 1789553748, ~11
+minutes) spent recovering a prefix the recovery text could have named. Same family as the standing
+`unwired_near_miss` probe — a form one prefix short of its dispatched form.
+
+**Change shipped:** `crates/astrid-source-study/tests/unrooted_map_topic_reach.rs` (new, 105 lines, sha
+`dcfc8696…`) — pins the asymmetry in one run (OPEN delivers / MAP recovers with zero candidates and no
+mention of the rooted spelling / the rooted spelling then resolves in one move), plus a boundary test
+showing a single-segment bare name still recovers. **No production source changed.** The behaviour fix is
+being-facing live navigation: `authority_gated`, needs a separate steward grant and a gated deploy.
+
+**Verify:** `cargo test -p astrid-source-study` → 28 binaries, 166 passed, 0 failed;
+`cargo fmt -p astrid-source-study -- --check` clean.
+
+Two siblings closed the same round with exact-source answers rather than code (`addressed_no_action`):
+`introspection_source_catalog_1789553233` — her ten-component enumeration of `capsules/astralis` is exactly
+right; the "primary target" reading of the 12-line README is her emphasis, not the document's (the crate is
+named once, at line 7, as the build example). `introspection_source_catalog_1789553748` — that `src`
+directory holds exactly one catalog file, `lib.rs`; there is no `main.rs`, and no `.wit` file exists under
+`capsules/astralis` (the stubs are `astrid_guest::export!` at `lib.rs:45`). Her real question — how
+`daemon`/`uplink` flags reach the `run` loop — is answered by `should_start_run_loop`
+(`crates/astrid-capsule/src/engine/wasm/mod.rs:1256-1265`, called at `624-625`) with `CapabilitiesDef.uplink`
+(`manifest.rs:298-301`); it is not in the astralis crate at all, and that crate's empty `fn run()` is the
+README rule's counter-case rather than an example of it.
+
+**Authority boundary:** no live change, no deploy, no restart, no card, no delivery, no dispatch. Round
+packet: `docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/`.
+
+---
+
+### 2026-09-16 · Astrid · `introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573` · she asked a direct question about the maintenance GID, and the answer is "shared parameter, single comparison"
+
+**What she found/asked (verified):** reading `crates/astrid-kernel/src/maintenance.rs` she contrasted
+`read_generation`'s structural gate (root uid, `0o444`, `nlink()==1`, no symlink) with the
+`metadata.gid() == runtime_gid` requirement she had seen for `ScheduledReflection`, and closed with a
+`STUDY_QUESTION`: *"Does the system ever use `runtime_gid` as a check within `read_generation` or other
+transition-related functions, or is it strictly reserved for `ScheduledReflection` and `BoundLease` types?"*
+Report-bound source sha `1b8c8385c944…` matches `git HEAD`, so the complete 864-line file was read at the
+exact bytes she was answering about. **Her structural claims are exact.** **Her question has a precise
+answer:** the GID is initialized once from `getegid()` (282), passed into *both* lease reads (308, 314) and
+forwarded through `read_bound_lease` (339/341) to `read_bound_lease_for_owner` (349) — and **compared at
+exactly one site**, the `ScheduledReflection` arm (365). `read_generation` never receives it; neither
+`validate_transition_lease`, `write_ack`, `stable_read` nor `atomic_owner_write` consult it (the ACK side is
+mode-protected instead: parent `&0o077 == 0`, file `0o600`).
+
+**One correction, recorded not smoothed:** she wrote that `read_generation` "checks the content against
+`valid_identifier`". There is no such call — 528-541 *inlines* the same predicate and adds a stricter
+canonical form (`bytes == "{generation}\n"`, 541); `valid_identifier` (548-558) is called once, at 456, on
+the *reflection* lease's `generation_id`. The predicate she names is right; the call is not there.
+**One delivery observation:** her page was `bytes 20750..24941` = lines 580-717, which does not contain
+`read_generation` — that was the previous page (`16466..20750`). Her recall is accurate; the page
+attribution is not. Recorded as attribution mismatch, not confabulation, and it discounts nothing.
+
+**Change shipped:** `generation_transition_lease_ignores_the_runtime_group` in
+`crates/astrid-kernel/src/maintenance.rs` — the negative contrast to the existing
+`scheduled_reflection_lease_rejects_a_foreign_runtime_group`: a valid `0o444` transition lease read with a
+foreign GID stays `LeaseState::Active` with its nonce binding intact. **No production source changed**; her
+question is now pinned by a test instead of by prose.
+
+**Verify:** `cargo test -p astrid-kernel --lib maintenance` → 7 passed, 0 failed;
+`cargo fmt --all -- --check` clean.
+
+**Authority boundary:** no live change, no deploy, no restart, no card, no delivery, no dispatch. Round
+packet: `docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/`.
+
 ## 2026-09-16 — Minime — sustained study with narrowing context
 
 The read-only September 2–16 comparison found actual source-study writing rising
@@ -5715,3 +6144,65 @@ Implementation and deterministic tests belong to the isolated repair checkouts.
 The [repair account](2026-09-17-study-interface-repairs.md) records qualification,
 integration and live activation separately. Natural uptake and understanding are
 distinct outcomes; no study or private writing is induced. Board mirroring pending.
+
+## 2026-09-16 — Astrid — the helper she asked for was behind her cursor
+
+**She surfaced:** in `introspection_minime_minime_src_sensory_bus.rs_1789601340` (report sha
+`ef2a7450…3fcddb`, witness `lsw_f28ccee4…`, source `minime/src/sensory_bus.rs` @ `3fc6bd2a…d4aa3a`
+bytes 107073..111564), reading `drain_sensory_batch`: "I need to see how `stale_scale` is actually
+calculated to answer my standing question about the interaction between pressure, entropy, and
+decay." Chosen Action: `NEXT: SELF_STUDY CONTINUE`.
+
+**Complete source established:** her page reading is accurate throughout (layout 2930-2949, the
+`effective_semantic` formula verbatim at 2943, the `±(noise_level × 0.05)` noise confirmed by line
+2966, which she had not been shown). Two precisions: `Z_DIM` is 66 and her own page's doc comment
+(2888-2890) says so; `memory_decay_rate` acts at 1720-1721 on the stale window, not in the drain
+path. The helper she asked for is at 1377-1417 — behind her, with every call site (1237, 2144,
+2927) behind her too — and was delivered five times inside the first page of her own walk
+(48123..52681, last `..._1789595153`). Eight further pages (111564..149732) arrived after this
+report; none carried it. Two of the four pieces her standing question needs
+(`dynamic_semantic_stale_ms_for` 171, `semantic_context_persistence_multiplier` 251) sit before her
+walk's open point and were never delivered in this walk.
+
+**Changed:** added `crates/astrid-source-study/tests/behind_cursor_helper_midwalk_reach.rs` — 4
+read-only reach pins for the mid-file behind-cursor shape (CONTINUE keeps succeeding while moving
+away; FIND/RELATE reach the holding file; OPEN definition-line then OPEN frontier-line restores the
+walk in two Actions). Tests: `cargo test -p astrid-source-study` 185 passed / 0 failed; crate fmt
+and clippy clean.
+
+**Authority boundary:** no live change, no deploy, no restart, no navigation or prompt change, no
+card, no delivery. Nothing here asserts what she recalls, and re-reading a delivered page remains
+her prerogative. Whether the delivery surface should name the reach shape is left to Mike. Round
+packet: `docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/`.
+
+## 2026-09-17 · Astrid · `introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384` · the two metrics maps that share one table
+
+**What she found (verified):** reading `capsules/astralis/astrid-capsule-edge-spectral/src/lib.rs`
+lines 535–650, she mapped the page's windowing, aggregation, sanitization and substrate logic with
+every line span exact — `select_window` 546–557, `window_bounds` 559–564, `recorded_at` 566–571,
+`summarize_metrics` 573–586, `summarize` 588–603, `sanitize_spectral_record` 609–641,
+`sanitize_substrate` 643–650 — and concluded the spectral view "is not just a raw dump of data; it
+is a heavily processed, summarized, and sanitized projection." Complete-file reading confirms the
+conclusion and confirms her hedged guess about `window_bounds` from its caller at 167–183, which her
+page did not contain.
+
+**The one contradiction (verified, not domesticated):** she attributed
+`sanitize_spectral_record`'s `metrics` map to `summarize_metrics`. Source says otherwise: 610–618
+builds it inline — one finite scalar per metric for a single record, absent metrics omitted —
+while `summarize_metrics` returns per-name `count`/`min`/`mean`/`max` objects over many rows and
+always emits all seven names. Both read the same const `METRICS` table (26–72), which is exactly
+why one 116-line page cannot show that the two callers produce different shapes.
+
+**Change shipped:** one focused contrast regression,
+`record_metrics_are_per_record_scalars_not_window_summaries`, in the capsule's own
+`src/tests.rs`, asserting both shapes on the same record. No production behavior changed.
+
+**Verify:** `cargo test --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml
+record_metrics_are_per_record_scalars_not_window_summaries` (15 passed / 0 failed suite-wide, was
+14). Round packet:
+`docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/`.
+
+**Authority boundary:** non-live test-only. No source, codec, controller, deploy, restart,
+staging or commit action. Her `NEXT: SELF_STUDY CONTINUE` is her own continuation, not a request,
+and the refinements recorded here (six `reservoir_parameters` values, `METRICS` as a const table)
+correct nothing she claimed — her page did not show them.

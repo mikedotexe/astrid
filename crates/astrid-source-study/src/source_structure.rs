@@ -25,6 +25,7 @@ pub(crate) struct Declaration {
     pub name_start_byte: usize,
     pub name_end_byte: usize,
     pub name_line: usize,
+    pub review_only_line: Option<usize>,
 }
 
 #[derive(Clone, Debug)]
@@ -33,6 +34,8 @@ pub(crate) struct Reference {
     pub start_byte: usize,
     pub end_byte: usize,
     pub line: usize,
+    pub usage: &'static str,
+    pub test_context: bool,
 }
 
 struct Region {
@@ -224,7 +227,16 @@ impl Outline {
             self.regions.push(Region {
                 start: node.start_byte(),
                 end: node.end_byte(),
-                label,
+                label: if label == "a comment"
+                    && node
+                        .utf8_text(text.as_bytes())
+                        .unwrap_or_default()
+                        .contains("Historical being report")
+                {
+                    "historical being-report commentary (attributed earlier account)"
+                } else {
+                    label
+                },
             });
             return;
         }
@@ -269,6 +281,7 @@ impl Outline {
                     .child_by_field_name("name")
                     .map_or(node.start_position().row, |n| n.start_position().row)
                     .saturating_add(1),
+                review_only_line: review_only_marker(node, text),
             });
         } else if is_reference(node) {
             if self.references.len() >= MAX_REFERENCES {
@@ -283,6 +296,8 @@ impl Outline {
                 start_byte: node.start_byte(),
                 end_byte: node.end_byte(),
                 line: node.start_position().row.saturating_add(1),
+                usage: reference_usage(node),
+                test_context: test_context.is_some(),
             });
         }
         let mut cursor = node.walk();
@@ -296,6 +311,64 @@ impl Outline {
             );
         }
     }
+}
+
+fn review_only_marker(node: Node<'_>, text: &str) -> Option<usize> {
+    let mut previous = node.prev_named_sibling();
+    for _ in 0..32 {
+        let item = previous?;
+        if !matches!(
+            item.kind(),
+            "line_comment" | "block_comment" | "comment" | "attribute_item"
+        ) {
+            break;
+        }
+        if matches!(item.kind(), "line_comment" | "block_comment" | "comment")
+            && item
+                .utf8_text(text.as_bytes())
+                .ok()?
+                .contains("Source-study scope: review-only.")
+        {
+            return Some(item.start_position().row.saturating_add(1));
+        }
+        previous = item.prev_named_sibling();
+    }
+    None
+}
+
+fn reference_usage(node: Node<'_>) -> &'static str {
+    let mut ancestor = node.parent();
+    for _ in 0..12 {
+        let Some(parent) = ancestor else { break };
+        if matches!(parent.kind(), "call_expression" | "call") {
+            return if parent
+                .child_by_field_name("function")
+                .is_some_and(|callee| {
+                    callee.start_byte() <= node.start_byte() && node.end_byte() <= callee.end_byte()
+                }) {
+                "call"
+            } else {
+                "reference"
+            };
+        }
+        if parent.kind() == "match_arm" {
+            return if parent
+                .child_by_field_name("pattern")
+                .is_some_and(|pattern| {
+                    pattern.start_byte() <= node.start_byte()
+                        && node.end_byte() <= pattern.end_byte()
+                }) {
+                "match"
+            } else {
+                "reference"
+            };
+        }
+        if declaration_kind(parent.kind()).is_some() {
+            break;
+        }
+        ancestor = parent.parent();
+    }
+    "reference"
 }
 
 fn declaration_kind(kind: &str) -> Option<&'static str> {

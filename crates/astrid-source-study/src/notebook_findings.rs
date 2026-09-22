@@ -25,6 +25,69 @@ struct Finding {
     words: String,
     response_sha256: String,
     anchor: Anchor,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    relation: Option<Relation>,
+}
+
+impl Finding {
+    fn replacement_command(&self) -> String {
+        self.relation.as_ref().map_or_else(
+            || {
+                format!(
+                    "STUDY_FINDING: {}:{} | your revised words",
+                    self.anchor.source, self.anchor.line
+                )
+            },
+            |relation| {
+                format!(
+                    "STUDY_RELATION: {} | {}:{} | {}:{} | your revised words",
+                    relation.kind.command(),
+                    self.anchor.source,
+                    self.anchor.line,
+                    relation.other.source,
+                    relation.other.line
+                )
+            },
+        )
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct Relation {
+    kind: RelationKind,
+    other: Anchor,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum RelationKind {
+    Flow,
+    Neighborhood,
+    Hypothesis,
+}
+
+impl RelationKind {
+    fn command(self) -> &'static str {
+        match self {
+            Self::Flow => "flow",
+            Self::Neighborhood => "neighborhood",
+            Self::Hypothesis => "hypothesis",
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Flow => {
+                "Authored call/data-flow claim; source delivery verified, relation unverified"
+            },
+            Self::Neighborhood => {
+                "Same-file neighborhood verified; meaning and causal connection remain authored"
+            },
+            Self::Hypothesis => {
+                "Authored hypothesis; both source anchors supplied, connection unverified"
+            },
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -43,10 +106,18 @@ struct Anchor {
 }
 
 pub(crate) fn is_directive(line: &str) -> bool {
-    line.starts_with("STUDY_FINDING:") || line.starts_with("STUDY_FINDING_DROP:")
+    line.starts_with("STUDY_FINDING:")
+        || line.starts_with("STUDY_FINDING_DROP:")
+        || line.starts_with("STUDY_RELATION:")
 }
 
 impl Findings {
+    pub(crate) fn has_relations(&self) -> bool {
+        self.authored
+            .iter()
+            .any(|finding| finding.relation.is_some())
+    }
+
     /// Keep the latest explicit update visible across ordinary study responses.
     /// Rendering only omits whole duplicate results; durable receipts stay intact.
     pub(crate) fn render_updates(&self, max_bytes: usize) -> String {
@@ -112,10 +183,23 @@ impl Findings {
         let mut shown = 0_usize;
         for finding in &self.authored {
             let anchor = &finding.anchor;
+            let replacement = finding.replacement_command();
             let mut row = String::new();
+            if let Some(relation) = &finding.relation {
+                let _ = writeln!(
+                    row,
+                    "{}\nOther retained fragment {}:{} (sha256:{}): {:?}\nReopen: {}",
+                    relation.kind.label(),
+                    relation.other.source,
+                    relation.other.line,
+                    relation.other.revision_sha256,
+                    relation.other.delivered_line_fragment,
+                    relation.other.reopen_current_checkout
+                );
+            }
             let _ = writeln!(
                 row,
-                "Your words: {:?}\nRetained fragment {}:{} (sha256:{}{}): {:?}\nReopen current source: {}\nOptional replacement (supply your own revised words): STUDY_FINDING: {}:{} | your revised words\nOptional removal: STUDY_FINDING_DROP: {}",
+                "Your words: {:?}\nRetained fragment {}:{} (sha256:{}{}): {:?}\nReopen current source: {}\nOptional replacement (supply your own revised words): {}\nOptional removal: STUDY_FINDING_DROP: {}",
                 finding.words,
                 anchor.source,
                 anchor.line,
@@ -127,8 +211,7 @@ impl Findings {
                 },
                 anchor.delivered_line_fragment,
                 anchor.reopen_current_checkout,
-                anchor.source,
-                anchor.line,
+                replacement,
                 finding.id,
             );
             if out
@@ -140,14 +223,18 @@ impl Findings {
                 // Preserve exact optional actions even when a duplicate of the
                 // whole authored words and fragment would crowd out the notebook.
                 row = format!(
-                    "Finding at {}:{} — your whole words and retained fragment remain in the full notebook below; their duplicate preview is omitted for input space.\nReopen current source: {}\nOptional replacement (supply your own revised words): STUDY_FINDING: {}:{} | your revised words\nOptional removal: STUDY_FINDING_DROP: {}\n",
-                    anchor.source,
-                    anchor.line,
-                    anchor.reopen_current_checkout,
-                    anchor.source,
-                    anchor.line,
-                    finding.id,
+                    "Finding {} — preview omitted; whole words and fragment remain in the notebook below.\nReopen current source: {}\nOptional replacement: {}\nOptional removal: STUDY_FINDING_DROP: {}\n",
+                    finding.id, anchor.reopen_current_checkout, replacement, finding.id,
                 );
+                if let Some(relation) = &finding.relation {
+                    let _ = writeln!(
+                        row,
+                        "{}; other anchor {}:{} retained in full notebook.",
+                        relation.kind.label(),
+                        relation.other.source,
+                        relation.other.line
+                    );
+                }
                 if out
                     .len()
                     .saturating_add(row.len())
@@ -210,7 +297,9 @@ impl Findings {
                 break;
             }
             let feedback = if let Some(value) = line.strip_prefix("STUDY_FINDING:") {
-                self.save(value.trim(), &digest(response), &lines)
+                self.save(value.trim(), &digest(response), &lines, None)
+            } else if let Some(value) = line.strip_prefix("STUDY_RELATION:") {
+                self.save_relation(value.trim(), &digest(response), &lines)
             } else {
                 self.remove(line.trim_start_matches("STUDY_FINDING_DROP:").trim())
             };
@@ -248,7 +337,44 @@ impl Findings {
         }
     }
 
-    fn save(&mut self, value: &str, response_hash: &str, lines: &[(&Page, usize, &str)]) -> String {
+    fn save_relation(
+        &mut self,
+        value: &str,
+        response_hash: &str,
+        lines: &[(&Page, usize, &str)],
+    ) -> String {
+        let fields = value.splitn(4, '|').map(str::trim).collect::<Vec<_>>();
+        let [kind, first, second, words] = fields.as_slice() else {
+            return "Relation not saved. Use STUDY_RELATION: hypothesis | repository/path:line | repository/path:line | your words. The first field may be flow, neighborhood, or hypothesis; both anchors must have been supplied.".into();
+        };
+        let kind = match *kind {
+            "flow" => RelationKind::Flow,
+            "neighborhood" => RelationKind::Neighborhood,
+            "hypothesis" => RelationKind::Hypothesis,
+            _ => return "Relation not saved: choose flow, neighborhood, or hypothesis. No relation is automatically verified by its label.".into(),
+        };
+        let Some((source, line)) = parse_citation(second) else {
+            return "Relation not saved: second source citation is invalid.".into();
+        };
+        let other = match self.resolve_anchor(source, line, lines) {
+            Ok(anchor) => anchor,
+            Err(feedback) => return feedback,
+        };
+        self.save(
+            &format!("{first} | {words}"),
+            response_hash,
+            lines,
+            Some(Relation { kind, other }),
+        )
+    }
+
+    fn save(
+        &mut self,
+        value: &str,
+        response_hash: &str,
+        lines: &[(&Page, usize, &str)],
+        relation: Option<Relation>,
+    ) -> String {
         let Some((citation, words)) = value.split_once('|') else {
             return "Finding not saved. Use STUDY_FINDING: repository/path:line | your words (up to 600 bytes); cite a supplied numbered source line.".into();
         };
@@ -260,31 +386,17 @@ impl Findings {
         {
             return "Finding not saved: provide your words on one line, from 1 to 600 bytes. Your previous finding remains unchanged.".into();
         }
-        let direct: Vec<_> = lines
-            .iter()
-            .filter(|(page, number, _)| page.source == source && *number == line)
-            .collect();
-        // Two selected fragments/revisions of one line require an explicit reread;
-        // never silently choose which fragment an ambiguous citation meant.
-        let anchor = match direct.as_slice() {
-            [(page, number, fragment)] => Some(Anchor::from_line(page, *number, fragment)),
-            [] => self
-                .supplied_locations
-                .iter()
-                .chain(self.authored.iter().map(|finding| &finding.anchor))
-                .find(|anchor| anchor.source == source && anchor.line == line)
-                .cloned(),
-            _ => {
-                return format!(
-                    "Finding not saved: multiple supplied fragments match this source line. To choose an unambiguous anchor, optionally reopen one page: SELF_STUDY OPEN {source} {line}"
-                );
-            },
+        let anchor = match self.resolve_anchor(source, line, lines) {
+            Ok(anchor) => anchor,
+            Err(feedback) => return feedback,
         };
-        let Some(anchor) = anchor else {
-            return format!(
-                "Finding not saved: that numbered line is not in this input's source pages or this inquiry's retained source anchors. Search/map mentions and recalled prose are not source anchors. To supply the line, optionally use: SELF_STUDY OPEN {source} {line}"
-            );
-        };
+        if let Some(relation) = &relation
+            && matches!(relation.kind, RelationKind::Neighborhood)
+            && (anchor.source != relation.other.source
+                || anchor.revision_sha256 != relation.other.revision_sha256)
+        {
+            return "Relation not saved: neighborhood requires two supplied anchors from the same file revision. Cross-file or cross-revision connections can be authored as flow or hypothesis.".into();
+        }
         let id = format!("f{}", digest(format!("{source}:{line}")));
         let existing = self.authored.iter().position(|finding| finding.id == id);
         if existing.is_none() && self.authored.len() >= MAX_FINDINGS {
@@ -295,6 +407,7 @@ impl Findings {
             words: words.into(),
             response_sha256: response_hash.into(),
             anchor,
+            relation,
         };
         if let Some(index) = existing {
             self.authored[index] = finding;
@@ -307,8 +420,45 @@ impl Findings {
             "Saved"
         };
         format!(
-            "{operation} {id}: your authored conclusion beside a delivered source fragment; correctness is not verified."
+            "{operation} {id}: your authored conclusion beside delivered source; correctness is not verified. Any flow/hypothesis relation remains unverified."
         )
+    }
+
+    fn resolve_anchor(
+        &self,
+        source: &str,
+        line: usize,
+        lines: &[(&Page, usize, &str)],
+    ) -> Result<Anchor, String> {
+        let direct: Vec<_> = lines
+            .iter()
+            .filter(|(page, number, _)| page.source == source && *number == line)
+            .collect();
+        // Two selected fragments/revisions of one line require an explicit reread;
+        // never silently choose which fragment an ambiguous citation meant.
+        let anchor = match direct.as_slice() {
+            [(page, number, fragment)] => Some(Anchor::from_line(page, *number, fragment)),
+            [] => self
+                .supplied_locations
+                .iter()
+                .chain(self.authored.iter().map(|finding| &finding.anchor))
+                .chain(self.authored.iter().filter_map(|finding| {
+                    finding.relation.as_ref().map(|relation| &relation.other)
+                }))
+                .find(|anchor| anchor.source == source && anchor.line == line)
+                .cloned(),
+            _ => {
+                return Err(format!(
+                    "Finding not saved: multiple supplied fragments match this source line. To choose an unambiguous anchor, optionally reopen one page: SELF_STUDY OPEN {source} {line}"
+                ));
+            },
+        };
+        let Some(anchor) = anchor else {
+            return Err(format!(
+                "Finding not saved: that numbered line is not in this input's source pages or this inquiry's retained source anchors. Search/map mentions and recalled prose are not source anchors. To supply the line, optionally use: SELF_STUDY OPEN {source} {line}"
+            ));
+        };
+        Ok(anchor)
     }
 
     fn remove(&mut self, id: &str) -> String {

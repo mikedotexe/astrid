@@ -8,6 +8,7 @@ use std::{collections::BTreeMap, fs, io::Read as _, path::Path};
 
 const FILE: &str = "source-findings-v1.json";
 const SCHEMA: &str = "source_findings_sidecar_v1";
+const RELATIONS_SCHEMA: &str = "source_findings_sidecar_v2";
 const MAX_BYTES: u64 = 4 * 1024 * 1024;
 
 #[derive(Serialize, Deserialize)]
@@ -81,11 +82,13 @@ pub(crate) fn restore(directory: &Path, state: &mut Value) -> Result<()> {
 }
 
 /// Persist the new findings before replacing reader-v1.json, under the same lock.
-/// An older writer cannot erase this file. A failed subsequent reader save leaves
-/// these receipt-gated findings authoritative, including explicit removals.
+/// Pre-findings writers leave this file alone. Findings-aware older readers
+/// reject the v2 schema before rewriting relation-bearing checkpoints.
+/// A failed subsequent reader save leaves these findings authoritative.
 pub(crate) fn save(directory: &Path, state: &Value) -> Result<()> {
     let notebooks = extract(state)?;
-    if let Some(previous) = read(directory)?
+    let previous = read(directory)?;
+    if let Some(previous) = &previous
         && previous
             .notebooks
             .iter()
@@ -93,8 +96,21 @@ pub(crate) fn save(directory: &Path, state: &Value) -> Result<()> {
     {
         bail!("source findings inquiry disappeared; preserving both checkpoints");
     }
+    // Keep the compatibility floor after explicit removal/replacement: an old
+    // in-flight writer must not overwrite newer removal results on rollback.
+    let mut requires_relations = previous
+        .as_ref()
+        .is_some_and(|sidecar| sidecar.schema == RELATIONS_SCHEMA);
+    for value in notebooks.values().filter(|value| !value.is_null()) {
+        requires_relations |= serde_json::from_value::<Findings>(value.clone())?.has_relations();
+    }
     let sidecar = Sidecar {
-        schema: SCHEMA.into(),
+        schema: if requires_relations {
+            RELATIONS_SCHEMA
+        } else {
+            SCHEMA
+        }
+        .into(),
         notebooks,
     };
     let bytes = serde_json::to_vec_pretty(&sidecar)?;
@@ -206,7 +222,7 @@ fn read(directory: &Path) -> Result<Option<Sidecar>> {
     }
     let sidecar: Sidecar = serde_json::from_slice(&bytes)
         .context("source findings sidecar is unreadable; preserving checkpoint")?;
-    if sidecar.schema != SCHEMA
+    if ![SCHEMA, RELATIONS_SCHEMA].contains(&sidecar.schema.as_str())
         || sidecar.notebooks.len() > 33
         || !sidecar.notebooks.contains_key("home")
     {
