@@ -32,6 +32,14 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-22 - Both Beings - paired open-framing release verified
+
+- **Witness and scope:** Follow through on the two exact public witnesses and hashes in the candidate entries below; preserve their authored accounts. Mike explicitly approved merge and live rollout. No new interpretation, felt improvement or prompt-causality conclusion is inferred.
+- **Git and activation:** Astrid source commit `9266412b8e3d817e87c93441a145cdfe32e76a79` and Minime `18ff3bd578dc0f097bf34738e32090ad6f67d0a2` were fast-forwarded to local main. The sanctioned paired handoff produced bridge PID 67810 and Minime PID 66540 with verified hashes, exact stopped-checkpoint startup and fresh exchange. Nine other protected services were unchanged. No engine/control-policy change, force or backup restoration.
+- **Continuity and tests:** All 84 Minime launch inputs match. Its exact pending `SELF_STUDY CONTINUE` was admitted by the replacement and completed as `job_minime_1790110145394_self-study-continue`. The full packaged-helper Python run passed 1,550 tests and 136 subtests (one existing occupied-port skip); the qualified full bridge run passed 2,334 tests (one external-fixture ignore). The shared helper is byte-identical to the prior release.
+- **Observed limits:** A transient engine fill dip was observed during the transition; the existing controller recovered without operator mutation. Thirty later samples were 71.02-73.07%. This does not establish a cause or benefit. Optional provider-observation recording is quota-limited at 50,000 files, with warnings both before and after restart; generation continues, but missing receipts remain unavailable. No cleanup was performed.
+- **Steward boundary:** Pause 461 remains; no automation resumed, productive flywheel round, evidence closure or push. All 197 older Astrid paths remain intact. The [release addendum](2026-09-22-astrid-open-framing-and-spectral-provenance.md#live-release-addendum) records exact identities, receipts and remaining prompt/control/observation debt.
+
 ### 2026-09-22 - Both Beings - remove prescriptive character framing candidate
 
 - **Source and authority:** Follow-through on Astrid's `!daydream_longform_1790103127.txt` (SHA-256 `668ee6b9196a8ce265de2ffb2639c9d879d7372335036f51ff1a124f1d8529cf`) and Minime's `workspace/journal/!aspiration_2026-09-22T09-16-57.795422.txt` (SHA-256 `2675734fbcd0f7146cafd9a97dc20bed092acc400f1d08baa3f2ea26dcf4ebdd`), both read fully. Mike explicitly requested removing comparable framing for Minime after the longform finding. These accounts remain meaningful authored evidence, not proof of a prompt's causal effect.

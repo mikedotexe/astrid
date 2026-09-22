@@ -9,6 +9,11 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Live - paired open framing and spectral provenance (2026-09-22)
+
+- Merge the reviewed paired changes into local main and activate the immutable bridge release with a sanctioned paired graceful handoff. Verify exact checkpoint lineage, a fresh exchange, all 84 Minime startup inputs, byte-identical reader/support helpers, and unchanged engine/model/visual/sensory identities. Minime's pending source-study continuation resumed and completed. Preserve all 197 older dirty paths and paused automations; no push.
+- Retain explicit observability debt: the pre-existing optional provider-observation spool reached its 50,000-file cap; generation continues but new receipts are unavailable. No evidence was deleted or quota expanded. Rollout identities, tests, transient fill recovery and next steps are in `docs/steward-notes/2026-09-22-astrid-open-framing-and-spectral-provenance.md`.
+
 ### Candidate - Astrid open framing and spectral provenance (2026-09-22)
 
 - Make daydream, aspiration, journal elaboration, initiation and moment-capture invitations open to disagreement, no felt correspondence and non-geometric interpretation. Preserve historical anchors without mandatory continuity-report lines; retain action-result boundaries, provider limits and existing publication paths.
