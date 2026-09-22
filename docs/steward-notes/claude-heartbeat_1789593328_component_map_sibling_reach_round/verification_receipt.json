@@ -1,0 +1,123 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round",
+  "actor": "claude-heartbeat",
+  "adapter": "steward_control.py subprocess run adapter (controller-held lease)",
+  "controller": {
+    "run_id": "run_1789589657420656000_a4028070aa",
+    "preprojection_generation_id": "projection_1789589662016913000_32b6acd048",
+    "preprojection_status": "passed",
+    "pause_generation": 447,
+    "stop_requested": false,
+    "postprojection": "runs after this process exits; not observable here",
+    "session_opened_by_this_process": false,
+    "ndjson_ops_sent": 0,
+    "lease_token_read_or_persisted": false
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "report_sha256": "73aedbca2c508bf3022376a0fae2d39bf5660774ddda4db31dfb73e0174f1b0c",
+      "witness_id": "lsw_c69fd24e27cb2e270cbf3c1df38cd6b4004dbc81ddba080a4bb51323bf4fa47f",
+      "witness_sha256": "f5c3c8bc15fe348b2fa1b49c7a090d9b60e9db8c28e139444c5a966895de215d",
+      "read": "complete",
+      "claims": 6,
+      "evidence_links": 14,
+      "close_status": "addressed_change",
+      "proof_missing_claims": []
+    }
+  ],
+  "selected": 40,
+  "processed_count": 1,
+  "unprocessed_count": 39,
+  "family_scan": {
+    "families": 40,
+    "batchable": 0,
+    "skipped": 0
+  },
+  "division": {
+    "cycle_sequence": 50,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due_at_round_start": false,
+    "round_event_id": "division_followup_event_22000c926eb34d42a96fed4a3a6bb2da",
+    "event_count": 347,
+    "event_head_sha256": "5962ccbb3274c3b87905dca80630831266d0d1052d5ea546ef32d3ebc8bc572a",
+    "tier5_cadence_dossier": "not required \u2014 review_due was false, so no Division return was completed this round",
+    "chronicle": "verify exits 1 (durable source inputs changed after record-round); no project performed, none due",
+    "processed_report_count": 1
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": []
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 12419,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "authority_boundary": {
+    "live_change_made": false,
+    "deploy_or_restart": "not required and not attempted",
+    "git_mutations": "none \u2014 read-only git this round; no stage, commit, merge, push, stash, reset or amend",
+    "tier_5_items_touched": "none; IPC topic renaming named as an observation only"
+  },
+  "incomplete": [
+    "evidence_event_store.py --json status (informational; verify ran clean)"
+  ],
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1789589587",
+    "full_read": true,
+    "full_read_count": 1,
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "close_status": "addressed_change",
+    "claim_count": 6,
+    "evidence_links": {
+      "new": 14,
+      "existing": 0,
+      "total": 14
+    }
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": []
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1115763,
+    "last_global_seq": 1115763,
+    "last_event_sha256": "1cd6fbbd251169b0a6e2338a3972e8de3a41a7900f3d6770fa117a6e8c952d21",
+    "stream_counts": {
+      "addressing": 64975,
+      "agency_commons": 7102,
+      "attention_portfolio": 3,
+      "claim_families": 239917,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 212690,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13321,
+      "model_qos": 347684,
+      "reciprocal_uptake": 76024,
+      "representation_contracts": 63021,
+      "sandbox": 3507,
+      "signal_spine": 64261,
+      "steward_control": 22299,
+      "steward_work_selection": 762
+    },
+    "active_store": "v2",
+    "legacy_v1_immutable": true,
+    "note": "status subcommand not run; verify is the integrity check and it is clean."
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0
+    },
+    "self_test": "OK"
+  }
+}

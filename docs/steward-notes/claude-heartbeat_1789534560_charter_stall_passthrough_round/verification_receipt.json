@@ -1,0 +1,148 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round",
+  "recorded_at_unix": 1789536860,
+  "controller": {
+    "run_id": "run_1789530018427505000_7271a64ad2",
+    "adapter_kind": "subprocess",
+    "preprojection_generation_id": "projection_1789530022751147000_77d2c503e1",
+    "preprojection_status": "passed",
+    "preprojection_phase": "pre",
+    "preprojection_duration_ms": 3971957,
+    "pause_generation": 445,
+    "stop_requested_at_last_observation": false,
+    "lease_ownership": "controller-held subprocess adapter; no session opened, no NDJSON ops sent, no lease token read or persisted",
+    "postprojection": "runs after this process exits; not observed here"
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 3,
+    "closed": [
+      {
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+        "status": "addressed_change",
+        "claims": 9
+      },
+      {
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+        "status": "addressed_change",
+        "claims": 7
+      },
+      {
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+        "status": "addressed_change",
+        "claims": 6
+      }
+    ],
+    "evidence_links": {
+      "batch_row_count": 44,
+      "new_link_count": 44,
+      "existing_link_count": 0,
+      "events_appended": 44,
+      "introspection_count": 3
+    }
+  },
+  "division": {
+    "cycle_sequence": 49,
+    "processed_report_count": 3,
+    "round_event_id": "division_followup_event_ea7f3de6565d1633e2bb33e2d822892b",
+    "completed_rounds_since_followup": 4,
+    "rounds_remaining_before_followup": 2,
+    "review_due": false,
+    "event_count": 341,
+    "event_head_sha256": "55a22f4279744e54a308f1f736263bbf8666a80795e4bfa9c022e0200901ebc1",
+    "chronicle": {
+      "reprojected": true,
+      "chronicle_id": "division_chronicle_54128d3fad53445312998854",
+      "json_sha256": "9f299d1b39db10d613e545742ce5bf812ba0a03456078b96fadf3e7adaf0198f",
+      "html_sha256": "60ac5e64d2359fd1261bb95031e27c164da5381040980230524c042bc282d84f",
+      "durable_inputs_current": true,
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "note": "Durable inputs are current; the only mismatch is the volatile supervisor status hash. The Chronicle is not called fully current, and the moving supervisor hash is not called a durable-integrity failure."
+    }
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12346,
+    "ordering_note": "run after every addressing, ledger, changelog and packet-evidence write; only RUN_REPORT.md and this receipt were written afterwards"
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 7080,
+    "canonical_fully_addressed": 3252,
+    "canonical_full_read": 3884,
+    "canonical_remaining": 3828,
+    "canonical_unread": 3196,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 5545,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_global_seq": 1110323,
+    "last_event_sha256": "9c6045e76ced21dad28ce9417b216f5912bda6960dc237b19c9e4d77891d3271",
+    "event_count": 1110323,
+    "verify_duration_secs": 559,
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "status_snapshot_note": "A later --json status (taken ~9 minutes after verify) reported seq 1110334 with corrupt_lines 0 and errors []; the store is live and 11 steward_control events were appended in between. The scalars above are the ones this round actually observed from verify.",
+    "stream_counts": {
+      "addressing": 64635,
+      "agency_commons": 7086,
+      "attention_portfolio": 3,
+      "claim_families": 239766,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 212028,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13119,
+      "model_qos": 345004,
+      "reciprocal_uptake": 76014,
+      "representation_contracts": 62368,
+      "sandbox": 3507,
+      "signal_spine": 63837,
+      "steward_control": 22007,
+      "steward_work_selection": 752
+    }
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 100
+    },
+    "self_test": "OK (5 tests)"
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "unlisted_legacy_review_debt_count": 44,
+    "note": "Ratchet GREEN. The only Rust touched is a test file matched by test_path_markers, so no baseline integer or manifest ceiling needed re-capture."
+  },
+  "cadence_audit": {
+    "integrity_ok": true,
+    "errors": [],
+    "canonical_count": 7104
+  },
+  "live_surface": {
+    "restart_required": false,
+    "deploy_attempted": false,
+    "launchctl_invoked": false,
+    "note": "No live substrate or control change was made, required, or attempted. Git was read-only for the whole run."
+  },
+  "authority_boundary": "Evidence and non-live tests only. No Tier 4 grant, no Tier 5 operator approval, no dispatch, no correspondence delivery, no card delivery. Astrid's silence is neutral."
+}

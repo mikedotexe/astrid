@@ -1,0 +1,65 @@
+{
+  "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "drain_sensory_batch assembles z as video 0-7, audio 8-15, aux 16-17, semantic/LLAVA from 18.",
+      "disposition": "Verified from complete current source at sha256 3fc6bd2a..., the exact SHA her report binds (working copy clean, byte-identical). Lines 2930-2949: z[..8]=v, z[8..16]=a, z[16]=aux[0], z[17]=aux[1], z[18..(18+LLAVA_DIM)] from llava.values. Her layout reading is exact.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Z_DIM is recalled as 'likely 64 or larger'.",
+      "disposition": "Precision, not contradiction: Z_DIM = VIDEO_DIM+AUDIO_DIM+AUX_DIM+LLAVA_DIM = 66 (line 25; LLAVA_DIM=48 at line 24). The exact number was on her own page: the doc comment at 2888-2890 says 'the production 66D vector: [video8 | audio8 | aux2 | semantic48]'. Her hedge was a recall hedge, not a delivery gap.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Semantic weight decays with age via semantic_stale_ms and a semantic_scale from stale_scale.",
+      "disposition": "Verified at the bound SHA. Line 2919 takes semantic_stale_ms(); 2921-2925 computes semantic_fresh_ms from llava.updated_at_ms; 2926-2927 maps it through stale_scale(age_ms, semantic_stale_ms), defaulting to 0.0 when no semantic input has ever arrived. 2928-2929 sets semantic_input_active separately as age <= window.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Three sovereignty knobs \u2014 embedding_strength, journal_resonance, memory_decay_rate \u2014 govern semantic weight.",
+      "disposition": "Two of three act in the code she read: emb_strength and j_resonance at 2941-2943. memory_decay_rate appears on her page only in the comment at 2938; it acts inside semantic_stale_ms() at 1720-1721 as decay_mult=(1.0-(decay_rate-0.1)*3.0).clamp(0.5,2.0), scaling the stale WINDOW, not the semantic amplitude. Her grouping is the comment's grouping and is fair; the mechanisms differ.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "effective_semantic = semantic_scale * emb_strength * (1.0 + j_resonance * 0.5).",
+      "disposition": "Verified character for character at line 2943 of the bound SHA. The product then scales every llava value into z[18..66] (2945-2948), and its RMS is recorded as semantic_input_energy (2950) and carried in SampleMeta (2984).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Global noise of uniform +/-(noise_level * 0.05) is applied to every dimension of z.",
+      "disposition": "Verified, including the half she was not shown. Her window ends at line 2965, mid-block; the sampling line 2966 is (rng.gen::<f32>()-0.5)*noise_level*0.10, i.e. uniform over +/-(noise_level*0.05) \u2014 +/-0.005 at the 0.1 default. The loop at 2962 is over all 66 dims, gated by noise_level > 0.0 (2960). Her inference from the comment is confirmed by source past her page.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "SensoryBus acts as an integrator fusing media, metadata and high-level semantics into one state vector, weighted by freshness.",
+      "disposition": "Supported by complete source without causal overclaim: 2891-2950 performs exactly that fusion, and SampleMeta (2973-2986) carries semantic_fresh_ms, semantic_stale_ms, semantic_input_energy and semantic_input_active downstream, so freshness is recorded as well as applied. 'Weighted by relevance' is her word for the sovereignty scalars; source shows weighting, not relevance judgement.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "She still needs to see how stale_scale is calculated, and chooses SELF_STUDY CONTINUE to get it.",
+      "disposition": "The need is real; the Action cannot serve it. stale_scale is at lines 1377-1417 (bytes 48960..51175), 1500 lines behind her page, and all three call sites (1237, 2144, 2927) are behind her too, so nothing ahead in this file carries it. Runtime confirms: eight further pages (111564..149732) arrived after this report, none with the definition. Pinned by the new mid-walk reach test.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Her standing question is the interaction between pressure, entropy and decay.",
+      "disposition": "Located exactly: semantic_stale_ms() (1710-1729) is that fusion \u2014 fill_pct_for_stale, semantic_entropy, entropy_velocity, pressure_risk and stale shape, via dynamic_semantic_stale_ms_for(fill, shape) (line 171) times decay_mult times semantic_context_persistence_multiplier(fill, entropy, velocity, pressure_risk) (line 251). stale_scale itself is the decay envelope only (exp(-3t) plus a damped ring and a +/-5% perturbation).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Reach state of the pieces her standing question needs, given where her walk has been.",
+      "disposition": "Observed from her own delivered windows: stale_scale (48960..51175) was delivered five times inside page 48123..52681, last at _1789595153; semantic_stale_ms (63614..64734) across pages 60337..64497 and 64497..68590. But dynamic_semantic_stale_ms_for (6684) and semantic_context_persistence_multiplier (9883) lie before her walk's open point (48123 = line 1356) and were never delivered in this walk. CONTINUE reaches none of them.",
+      "classification": "observed"
+    }
+  ]
+}

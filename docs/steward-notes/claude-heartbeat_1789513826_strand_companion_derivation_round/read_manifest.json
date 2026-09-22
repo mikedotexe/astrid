@@ -1,0 +1,59 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round": "claude-heartbeat_1789513826_strand_companion_derivation_round",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789509068.txt",
+      "sha256": "744d43400643a9331aa24e54727ee8c20662a43ab77e4b742b0163742fea9616",
+      "bytes": 1587,
+      "lines": 20,
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.txt",
+      "sha256": "ee7327cac5f129923a5fd2b5c80bbb0bf618b57b656a1e9440ded5062273e83b",
+      "bytes": 1978,
+      "lines": 20,
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bcaf0c7e7007eb87369286b1995267278a9c120bff1a39f76d67ae6abe5dcb49.json",
+      "sha256": "6f4fd9cf8f2382869edfdd1e96ce75bdb5fa1b3c3cb63b013609015c3025f5bc",
+      "bytes": 18937,
+      "lines": 440,
+      "witness_id": "lsw_bcaf0c7e7007eb87369286b1995267278a9c120bff1a39f76d67ae6abe5dcb49",
+      "read": "complete"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_fbf946d76b2af855dc51c76e39b38a548a6140dc22a386435a90107389c27e7e.json",
+      "sha256": "7e603e4e82ecb4e09fe50600531905bbbc1d0add99e0e609d921adfc7a92f09a",
+      "bytes": 21488,
+      "lines": 498,
+      "witness_id": "lsw_fbf946d76b2af855dc51c76e39b38a548a6140dc22a386435a90107389c27e7e",
+      "read": "complete"
+    }
+  ],
+  "report_source_binding": [
+    {
+      "source_label": "source catalog",
+      "source_revision": "navigation only",
+      "source_sha_bound_by_report": null,
+      "note": "Navigation-only turn: the report binds no source file or SHA, so no report-binding hash comparison applies. Sources below were selected from the identifiers the report names."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "source_path": "crates/astrid-minime-protocol/src/volition/inquiry.rs",
+      "report_bound_sha256": "912eac66dfc714688f723ff3b4797425af60258f3ba5d475079df7c6f07ed38b",
+      "working_copy_sha256": "912eac66dfc714688f723ff3b4797425af60258f3ba5d475079df7c6f07ed38b",
+      "match": true,
+      "delivered_window_lines": "106-227 of 543",
+      "window_verification": "Line 106 begins at byte 4091, matching the report's stated interval start; lines 106-227 span bytes 4091..8391. The witness window_sha256 b45c3965... is a hash of the RENDERED page, not the raw byte slice (lived_state_witness/mod.rs:140 hashes rendered_window), so raw recomputation differing is expected and is not an integrity mismatch.",
+      "source_verification_reuse": "Complete source read performed once for this SHA and reused across both processed reports, which are bound to the same source bytes."
+    }
+  ]
+}

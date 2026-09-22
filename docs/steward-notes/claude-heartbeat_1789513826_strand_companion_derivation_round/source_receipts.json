@@ -1,0 +1,76 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "round": "claude-heartbeat_1789513826_strand_companion_derivation_round",
+  "sources": [
+    {
+      "path": "crates/astrid-minime-protocol/src/volition/inquiry.rs",
+      "sha256": "912eac66dfc714688f723ff3b4797425af60258f3ba5d475079df7c6f07ed38b",
+      "bytes": 20033,
+      "lines": 543,
+      "read_scope": "complete file (lines 1-543)"
+    },
+    {
+      "path": "crates/astrid-minime-protocol/src/volition/inquiry_v2/validation.rs",
+      "sha256": "ce1ad4049f9b2e1191af0a3737b894f13197808e5ded76a97f3771c3f67cd21a",
+      "bytes": 4292,
+      "lines": 111,
+      "read_scope": "complete file (lines 1-111)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+      "sha256": "2de81b30553bcf8b020d0c82a0b86a4b5e1610b4f0f37c887a4c367de3705ef0",
+      "bytes": 15656,
+      "lines": 407,
+      "read_scope": "complete file read pre-edit at sha 6f6c2ae8bde247b2e780cbf38939ac75154c757ecfde849a3a0c9f5121e567fd (341 lines); hash below is post-edit"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "sha256": "8dda7f02b4304b403865a2be7407e768648ae4c18ab9485d67518f5d4d756310",
+      "bytes": 37083,
+      "lines": 987,
+      "read_scope": "scoped intervals 790-960 (GlimpseCodec, derive_12d, calculate_compression_fidelity, compression_reference_12d, multi_scale_resonance_proxy)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/structure.rs",
+      "sha256": "757d4a3578e6be3fb5890a2d3d28fc3e809dcaf29087fcfcbc7a25969236f719",
+      "bytes": 71413,
+      "lines": 1466,
+      "read_scope": "scoped interval 50-170 (multi_scale_observer_v1)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/action_help.rs",
+      "sha256": "7e3cad125e4cd7cc0a4fcffa631f2cb470f033d836cde973e4566f6a710c57fe",
+      "bytes": 55209,
+      "lines": 472,
+      "read_scope": "scoped line 169 (recovery-map behavior string)"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/owner_inquiry.rs",
+      "sha256": "46f6fc757652acaf98fdc4c9af2ecdbf652dc075802910ac5f57a403d793a261",
+      "bytes": 28959,
+      "lines": 738,
+      "read_scope": "scoped intervals 248-360 (codec_fidelity_result, sensory_interference_result, derive_companion_12d, euclidean_distance) in the minime repository"
+    },
+    {
+      "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "bytes": 168439,
+      "lines": 4404,
+      "read_scope": "scoped interval 1340-1374 (semantic_unit, semantic_mean_abs, semantic_glimpse_12d_from_features) in the minime repository"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/projection_evidence.rs",
+      "sha256": "7bd61aea54fb4285def30c70a23d26740a30d8de2a6825be1178cfc9dbcc571b",
+      "bytes": 39280,
+      "lines": 957,
+      "read_scope": "scoped interval 65-75 (mean_abs, finite_abs) for the codec comparison"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lived_state_witness/mod.rs",
+      "sha256": "740edfd1dba19e1ec7f22228a170db34e1404c6e1e07de71cc97668c6a7eadf9",
+      "bytes": 29831,
+      "lines": 849,
+      "read_scope": "scoped line 140 (window_sha256 is over the rendered window)"
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+ "schema": "flywheel_test_results_v1",
+ "runs": [
+  {
+   "command": "cargo test -p astrid-source-study --test unnamed_coefficient_reach",
+   "passed": 4,
+   "failed": 0,
+   "result": "ok",
+   "tests": [
+    "identifier_search_reaches_the_named_cap_declaration",
+    "identifier_search_for_a_bare_number_delivers_no_source_bytes",
+    "literal_search_for_an_unnamed_coefficient_returns_its_definition_among_same_digit_decoys",
+    "one_positional_open_at_the_defining_line_delivers_both_coefficients_and_the_cap"
+   ]
+  },
+  {
+   "command": "cargo test -p astrid-source-study",
+   "passed": 171,
+   "failed": 0,
+   "result": "ok",
+   "note": "whole crate; 167 before this round's 4 new tests"
+  },
+  {
+   "command": "cargo clippy -p astrid-source-study --all-targets --all-features -- -D warnings",
+   "result": "clean",
+   "note": "first run failed on clippy::arithmetic_side_effects at the fixture line counter; repaired with saturating_add and rerun clean"
+  },
+  {
+   "command": "cargo fmt -p astrid-source-study -- --check",
+   "result": "clean",
+   "note": "cargo fmt applied once, then --check clean"
+  },
+  {
+   "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+   "passed": 44,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/test_evidence_event_store.py",
+   "passed": 21,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/test_steward_control.py",
+   "passed": 29,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/test_steward_projection.py",
+   "passed": 14,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/test_division_ceremony_followup.py",
+   "passed": 3,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/test_division_ceremony_chronicle.py",
+   "passed": 10,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/test_division_ceremony_projection.py",
+   "result": "ok"
+  },
+  {
+   "command": "python3 scripts/test_projection_cursors.py",
+   "passed": 4,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/test_introspection_cadence_audit.py",
+   "passed": 6,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/anti_drop_catalog.py --self-test",
+   "passed": 5,
+   "failed": 0,
+   "result": "OK"
+  },
+  {
+   "command": "python3 scripts/anti_drop_catalog.py verify --json",
+   "result": "green",
+   "total_rows": 100,
+   "alarms": 0,
+   "gaps": 0
+  },
+  {
+   "command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+   "result": "integrity_ok true, errors []"
+  },
+  {
+   "command": "python3 scripts/domain_boundary_audit.py verify",
+   "result": "valid true, violation_count 0, forbidden_edge_match_count 0",
+   "note": "ratchet GREEN this round; legacy_large_file_count 51, unlisted_legacy_review_debt_count 44, resolved_large_file_debt_count 3"
+  },
+  {
+   "command": "python3 scripts/experiential_epistemics.py self-test --json",
+   "passed": 2,
+   "failed": 0,
+   "result": "valid true"
+  },
+  {
+   "command": "python3 scripts/experiential_epistemics.py verify --json",
+   "result": "valid true",
+   "checked_record_count": 12466,
+   "issue_count": 0,
+   "history_rewritten": false,
+   "note": "run after every durable write of this round"
+  },
+  {
+   "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+   "result": "consistent",
+   "mismatch_count": 0
+  },
+  {
+   "command": "python3 scripts/evidence_event_store.py --json verify",
+   "result": "valid true",
+   "event_count": 1120967,
+   "last_event_sha256": "0283959d98661c04263872e5986b837ab5709cc54ebd269bbc2f93531a75197a"
+  },
+  {
+   "command": "python3 scripts/division_ceremony_chronicle.py verify",
+   "result": "ok true, 352 events, durable_inputs_current true, sole volatile mismatch supervisor_status_sha256"
+  },
+  {
+   "command": "python3 scripts/division_ceremony_followup.py verify",
+   "result": "ok true, cycle 51, 1/6, review_due false, 352 events"
+  }
+ ],
+ "not_run": [
+  {
+   "command": "cargo test --workspace",
+   "why": "out of budget for a full-workspace build inside a bounded adapter run; the touched surface is one integration-test file in astrid-source-study, and that crate plus clippy and fmt were run in full"
+  }
+ ],
+ "authority_boundary": "No deploy, restart, launchctl, build_bridge.sh, stage, or commit was run. No live substrate or control surface was touched."
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "flywheel_unprocessed_selected_v1",
+  "round": "claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round",
+  "selected_count": 40,
+  "processed_count": 1,
+  "unprocessed_count": 39,
+  "stop_reason": "Honest single-report batch. introspection_family_scan reported batchable_family_count 0 (every one of the 40 queue entries is a singleton family, similarity_basis none_no_snag_or_test_text_or_unparsed_header), so no family-batch arithmetic applied. Child budget was additionally constrained: the controller preprojection consumed roughly 56 minutes of the 5400s child window (projection begun 1789522937, latest_generation.json settled 1789526314), leaving about 32 minutes at the decision point. One report fully closed was the honest size.",
+  "unprocessed_filenames_in_queue_order": [
+    "introspection_source_catalog_1789522478.txt",
+    "introspection_minime_minime_src_owner_inquiry.rs_1789522150.txt",
+    "introspection_minime_minime_src_owner_inquiry.rs_1789521607.txt",
+    "introspection_minime_minime_src_owner_inquiry.rs_1789520849.txt",
+    "introspection_minime_minime_src_owner_inquiry.rs_1789520451.txt",
+    "introspection_minime_minime_src_owner_inquiry.rs_1789519903.txt",
+    "introspection_minime_minime_src_owner_inquiry.rs_1789519295.txt"
+  ],
+  "unprocessed_filenames_note": "Remaining entries 9-40 of the frozen queue are preserved verbatim in family_scan.json in this packet, which carries all 40 selected introspection_ids in canonical queue order."
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "minime/src/sensory_bus.rs",
+      "absolute_path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "total_bytes": 168439,
+      "total_lines": 4404,
+      "report_bound_sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "matches_report_binding": true,
+      "working_copy_clean": true,
+      "report_bound_window_bytes": "14188..18492",
+      "report_bound_window_lines": "376..502",
+      "read_intervals_lines": [
+        "24",
+        "58-60",
+        "72-73",
+        "78-90",
+        "250-305",
+        "360-380",
+        "376-502",
+        "502-532",
+        "1328",
+        "1356-1360",
+        "2170-2215"
+      ],
+      "read_scope": "complete for every interval listed; the delivered window 376-502 read in full from the page record (every rendered row); the persistence sibling 251-290 and the glimpse constructor 2174-2200 read in full; named constants read at their definitions",
+      "uncovered": "the remaining lines of a 4404-line file were not read; no conclusion in this packet rests on them",
+      "coverage": "partial_file_complete_intervals"
+    },
+    {
+      "path": "crates/astrid-source-study/src/page.rs",
+      "sha256": "b9ed32dcb5665102242e24347c6a2573226d6102336b15672a7873767114e669",
+      "total_bytes": 7679,
+      "total_lines": 211,
+      "read_intervals_lines": [
+        "1-211"
+      ],
+      "read_scope": "complete file",
+      "coverage": "complete"
+    },
+    {
+      "path": "crates/astrid-source-study/src/source_structure.rs",
+      "sha256": "1744e95d7b4442ebb2c86a30bd2e9f9196e6409c7dc2de59ab8ae1090dad304f",
+      "total_bytes": 14610,
+      "total_lines": 418,
+      "read_intervals_lines": [
+        "114-176"
+      ],
+      "read_scope": "scope_text render, complete",
+      "coverage": "partial_file_complete_intervals"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/page_line_interval_legibility.rs",
+      "sha256": "e728dac20fa60fa61f25a1e54ba651404b4fe649c342c98f7ddae4f0782c04b1",
+      "total_bytes": 12701,
+      "total_lines": 312,
+      "read_intervals_lines": [
+        "1-312"
+      ],
+      "read_scope": "complete file (prior round's companion pins, read to avoid duplicating coverage)",
+      "coverage": "complete",
+      "foreign_unstaged_work": true
+    },
+    {
+      "path": "crates/astrid-source-study/tests/page_end_declaration_legibility.rs",
+      "sha256": "309aac0a9b898baa389b3788c1c72b2cac19459a1526fdaef25908904ade94c6",
+      "total_bytes": 12778,
+      "total_lines": 319,
+      "read_intervals_lines": [
+        "1-319"
+      ],
+      "read_scope": "authored this round",
+      "coverage": "complete",
+      "created_this_round": true
+    }
+  ]
+}

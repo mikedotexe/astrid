@@ -1,0 +1,173 @@
+{
+  "schema": "flywheel_addressing_links_v1",
+  "links": [
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/page.rs",
+      "note": "Header renders \"Exact source bytes {start}..{end}\" and never a line interval; scope anchored on page.start.byte (74-79)."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/page_end_declaration_legibility.rs",
+      "note": "the_scope_row_names_the_start_declaration_and_not_the_end_declaration pins the start-anchored scope row."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/RUN_REPORT.md",
+      "note": "Same mechanism pinned one page later; this report is the earlier instance (2-line divergence vs 38)."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Four ReviewV1 packets at 307, 323, 338, 358 are on the previous page; her page holds only the 376-383 tail of 374."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "struct SemanticReceptivityPulseReviewV1 374-383; semantic_input_energy 377, semantic_scale 378, raw_to_admitted_gap 379."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "get_glimpse_12d constructor 2174-2200: live_transport_dim_count = LLAVA_DIM = 48 (line 24); compression_role non_authoritative_companion_summary; live_vector_write false."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789608500.json",
+      "note": "Identical transport reading contradicted on the next page; two pages showed her the field names without the values."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "ModalityBoundaryTransparencyV1 405-417; opaque 480-483; constrained 484-488; status 489-495; contact_change_route 496-500."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "SurrenderModeAuthorityGateV1 420-428; constructor 517-528 sets requires_operator_approval true, runnable_now false, tier5_operator_approval_required_before_live_trial."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "semantic_degradation_clarity_factor 430-452; low_fill_hold 443-445 (-0.12); entropy_support 446-448 (-0.08); constants 58, 60, 72, 73."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "smoothstep_unit 81-84 applied to age_fraction at 436; gradient_load 440-442; max_loss 449-450; product at 451."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "semantic_context_persistence_multiplier 251-290; entropy_support identical at 272-274 and 446-448; fill_support 275-277 rises with high fill."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "normalized_boundary_label 454-461 manufactures \"unknown\" at 456-458; opaque test compares against it at 480-483."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/source_structure.rs",
+      "note": "scope_text 114-156 resolves enclosing() at the page start anchor only; no end-anchored resolution exists."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c011",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/page_end_declaration_legibility.rs",
+      "note": "Five read-only pins: end declaration unnamed in prose, closing line absent, last gutter row a mid-line prefix, record lists it, CONTINUE spells the full span."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "modality_boundary_transparency_v1 opens 464 (#[must_use] 463) and closes 515; her page stopped mid-token at 502."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c011",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] steward entry recording the page-end legibility pins."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c011",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c012",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Returned packet sets live_control_write false (512) and read_only_boundary_metadata authority (513); the route is a label, not enforcement."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c013",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Previous page 251-376 holds the persistence multipliers 251-290 and 293-304 plus four Review packets."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c014",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "max_loss 449-450: +0.26*gradient_load, -0.08*entropy_support; clarity 451 scales loss by age, so age_fraction 0 yields 1.0."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c015",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/RUN_REPORT.md",
+      "note": "\"hold quality, not just hold duration\" recorded at sensory_bus.rs 585-620 in the adjacent round."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c016",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/read_manifest.json",
+      "note": "Delivered-page record 2f4091d1... eof false, all four navigation verbs offered; next page 18492..22865 delivered 477 s later as _1789608500."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "claim_id": "c017",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/read_manifest.json",
+      "note": "Report/witness/body/source hashes recorded and matched; artifact_integrity_unavailable is an absent alignment scalar, not a byte contradiction."
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter": "subprocess (controller-held lease; no steward session opened, no NDJSON op sent, no lease token read/quoted/persisted)",
+  "controller": {
+    "run_id": "run_1789542675231808000_216d456d78",
+    "preprojection_generation_id": "projection_1789542678122543000_fb32a6f2e8",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "postprojection": "runs after this process exits; not observed here",
+    "pause_generation": 445,
+    "stop_requested": false
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "full_read": true,
+      "claim_count": 9,
+      "evidence_links_new": 17,
+      "evidence_links_existing": 0
+    }
+  ],
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 7129,
+    "canonical_fully_addressed": 3253,
+    "canonical_remaining": 3876,
+    "all_artifact_pending": 5593,
+    "noncanonical_pending": 1717,
+    "note": "read/unread/blocked/watch sub-counters were not separately captured this round"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "verified_global_seq": 1111509,
+    "verified_event_sha256": "05356dc38c681d6cda994452b1f03ca0c0fbeac79bb0ba430d1c7fd92054856d",
+    "provenance": "`valid: true` was observed directly from `evidence_event_store.py --json verify`. corrupt_lines=0 and errors=[] are asserted from the verify contract (a store with corrupt lines or errors cannot return valid:true); the full JSON body was truncated by a 600s foreground timeout and a re-run did not finish inside the child budget. verified_global_seq/sha read from verified_checkpoint.json. `--json status` was not observed and is the next session's first safe command."
+  },
+  "epistemics": {
+    "valid": true,
+    "checked_record_count": 12368,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "division": {
+    "cycle_sequence": 49,
+    "processed_report_count": 1,
+    "round_event_id": "division_followup_event_d8b513c926e20ba11e3019c915ebc14c",
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due": false,
+    "event_count": 342,
+    "event_head_sha256": "324c96478b44b7b446d2d81249b26226d3b6a0a465940937c5a301d9a0e27452",
+    "chronicle_id": "division_chronicle_255f0c7152d9271e61dff090",
+    "chronicle_json_sha256": "2ae9631ef7ac1905eb32dcae933859b46279b559337ee615b0722fa2557c8a24",
+    "chronicle_html_sha256": "2c73132e8385f60174c59c34cf41f1bee43cb94fff90d0b32df5866597835032",
+    "durable_inputs_current": true,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "note_action": "none \u2014 no Division note was due or written"
+  },
+  "domain_boundary_ratchet": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "colour": "green",
+    "unlisted_legacy_review_debt_count": 44
+  },
+  "authority_boundary": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "launchctl": false,
+    "git_staged": false,
+    "git_committed": false,
+    "cards_or_notes_delivered": false,
+    "correspondence_dispatched": false,
+    "tier_4_5_items_touched": false,
+    "note": "The three standing Tier-5 waits from introspection_minime_esn_1785630442 remain untouched with live_authority_granted=false. Astrid's stated NEXT was recorded, not adjudicated."
+  },
+  "addressing": {
+    "introspection_id": "introspection_source_catalog_1789542558",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "claim_count": 9,
+    "evidence_links_new": 17,
+    "evidence_links_existing": 0,
+    "link_count": 17,
+    "batch_row_count": 17
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "history_rewritten": false,
+    "checked_record_count": 12368,
+    "ran": "after all durable evidence writes"
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total": 100,
+      "verdict": "ok",
+      "problems": []
+    }
+  }
+}

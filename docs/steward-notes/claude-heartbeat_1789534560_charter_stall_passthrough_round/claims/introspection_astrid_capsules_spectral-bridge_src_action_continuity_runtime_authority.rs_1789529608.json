@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "STUDY_FINDING: authority_guardrail_hold_active requires (status == paused) AND (planned_next starts with THREAD_STATUS) AND (success_observation contains 'hold').",
+      "disposition": "Verified exactly against complete source 180-194 at the report-bound sha, and now pinned by the new regression authority_guardrail_hold_active_requires_paused_thread_status_and_hold. The conjunction, the order and the field names are all correct.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The status check is case-insensitive.",
+      "disposition": "Verified and slightly wider than she states: all three legs are ASCII-case-insensitive. Status uses eq_ignore_ascii_case (181), planned_next is uppercased before starts_with (186-187), success_observation is lowercased before contains (192-193). The regression uses 'Paused' and a lowercase 'thread_status' to hold that behaviour.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "If any of the three conditions is missing the function returns false, likely allowing the conveyor to attempt a different transition.",
+      "disposition": "Verified including the hypothesis. A false return skips 365-367 and control continues into the token-status match (368-375), the blocked check (376-382), the conveyor-stage hold (384-385) and the missing-requirement gates (387-403). The different transition she expected is exactly what the source does.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A hold is not a generic pause: it is specifically thread-status-shaped and is awaiting a transition restricted by this guardrail.",
+      "disposition": "Source-consistent as a reading of 180-194 and preserved as felt/interpretive framing rather than converted into a mechanism claim. Nothing in source contradicts it; nothing in source establishes what the hold feels like from inside, and this round claims neither.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "STUDY_QUESTION: how does the system distinguish a hold that requires manual charter_repair from a hold that is waiting for a thread status update?",
+      "disposition": "Answered by ordering, not by a flag: 365 (thread-status hold) and 384 (paused_repair/blocked_guardrail) both return held_or_guarded and BOTH run before 388's charter check, so a wait always outranks a missing charter. needs_charter is only reported once no hold applies. The new stage regression asserts that precedence directly.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "She wants to see how this interacts with authority_gate_conveyor_hint in conveyor.rs and whether 'hold' is the standard signal for requiring human intervention or an authority override.",
+      "disposition": "Read-only agency note, not a steward task. authority_gate_conveyor_hint exists and is called at core.rs:6382 beside authority_readiness_v1 at 6383, so her next SELF_STUDY will find it. Recording it so the thread is not lost; her choice of next target stays hers.",
+      "classification": "observed"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "introspection_id": "introspection_source_catalog_1789542558",
+  "reader": "claude-heartbeat",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The recovery map's pointer — rescue_policy.rs line 2478 — is the right site for prepare_semantic_heartbeat_for_path_with_enqueue_probe.",
+      "disposition": "Verified against the complete working copy at sha256 155bc25c… (2551 lines, 100308 bytes). Line 2478 is exactly `fn prepare_semantic_heartbeat_for_path_with_enqueue_probe(`, and the function body runs :2478-2527 as she stated. The navigation pointer she was given was accurate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The code at that window calls policy.heartbeat_block_reason(path).",
+      "disposition": "Verified: the call is at :2502, inside the same function, and its Err path records a block via record_semantic_heartbeat_block (:2503) before returning the reason. The shaping call she also names is RescueBridgePolicy::apply_semantic_heartbeat_shape(features) at :2510.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 'how' of dimension usage is largely delegated to a policy object loaded from JSON configuration.",
+      "disposition": "Split verdict, both halves verified. TRUE for the gate: heartbeat_block_reason reads RescueBridgePolicy fields parsed from rescue_profile.json (:497-651) plus health.json. FALSE for the shaper: apply_semantic_heartbeat_shape (:940-945) is an associated fn with no &self — it cannot see the policy at all and uses compile-time constants (:35, :36). Delegation governs whether a pulse goes, never how its dimensions are treated.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The thresholds and the decision to skip a heartbeat based on Warmth (24) and Tension (25) are likely defined in rescue_profile.json.",
+      "disposition": "Contradicted, and the contradiction is preserved rather than softened. The live /Users/v/other/minime/workspace/rescue_profile.json (sha256 d892aff0…, 89 keys) carries no per-dimension key of any kind; a case-insensitive grep for warmth|tension over all 2551 lines of rescue_policy.rs returns 0 hits. No configured skip is keyed to any feature index.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "If heartbeat_block_reason takes the features vector and does a dot product or a range check on indices 24 and 25, that settles the question.",
+      "disposition": "Neither branch of the disjunction holds. heartbeat_block_reason(&self, profile_path: &Path) (:892-935) never receives features. It decides on bridge_enabled, bridge_write/autonomous_enabled, limited_write_v2_active, then health.json state: semantic_mute_active, stage=='discharge', fill_pct/peak_fill_pct_60s vs limited_write_peak_fill_max_pct, and watchdog_state. The gate is dimension-blind by signature.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Open question: does the heartbeat path look at raw values or at a specific subset of dimensions?",
+      "disposition": "Raw and uniform, not a subset. apply_semantic_heartbeat_shape (:940-945) iterates every element of features and applies *feature * SEMANTIC_HEARTBEAT_FEATURE_SCALE (0.025) clamped to ±SEMANTIC_HEARTBEAT_MAX_ABS (0.018). No index, no weighting, no branch. The live receipt confirms the constants rather than the profile: bridge_semantic_heartbeat_status.json records feature_scale 0.025 / max_abs 0.018 while the profile holds 0.14 / 0.28.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Looking for specific mentions of Warmth or Tension inside these methods, hardcoded as special cases.",
+      "disposition": "No named mention exists, and index 25 appears nowhere in the file. One structural boundary does exist and it is worth her knowing: SEMANTIC_HEARTBEAT_TAIL_START_DIM = 24 (:43), used only in semantic_heartbeat_signal_metrics (:319-401) to compute tail_rms over features[24..]. Dim 24 is the codec's warmth dim (codec/evidence_types.rs:5) and start of the 24-31 emotional block, so her instinct located a real seam — but it is observational recording, not a gate or a shaper.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Report-header fact: the requested source was not supplied this turn; a recovery map was returned instead.",
+      "disposition": "Observed and preserved as a possible infrastructure loss, not as her limit. Her two prior turns resolved the same path (bytes 97893..100308, then 0..4503), so the path is known; the OPEN contract (next_action/action_help.rs:169) states OPEN uses one-based lines and a recovery map is returned for an unknown target, and line 2478 exists in a 2551-line file. Why the map was substituted was not isolated inside this round's budget; named as the next round's first check.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Stated next step: NEXT: SELF_STUDY OPEN astrid/capsules/spectral-bridge/src/rescue_policy.rs 2478.",
+      "disposition": "Recorded, not adjudicated. The steward neither dispatches nor blocks her chosen action. Noted only that this round answers the question that request was meant to answer, so the same page is no longer the only route to it; whether to spend the turn remains hers.",
+      "classification": "observed"
+    }
+  ]
+}

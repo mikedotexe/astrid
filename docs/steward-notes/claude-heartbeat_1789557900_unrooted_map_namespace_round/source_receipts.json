@@ -1,0 +1,118 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "source_binding": "No processed report bound a source SHA (all three are 'Source revision: navigation only'). Every receipt below is current source read this round and is labelled current-source, never report-time.",
+  "receipts": [
+    {
+      "path": "crates/astrid-source-study/src/catalog.rs",
+      "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67",
+      "total_bytes": 11498,
+      "total_lines": 329,
+      "read_scope": "complete (1-329)",
+      "why": "Catalog::resolve's un-rooted acceptance (106-118), resolve_id's repository-prefixed IDs (121-158), sources() enumeration (163-194)."
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "898c3c826c3ff3fdfeec9e9c9230313a65e8e37576f24a78cb675501e719e448",
+      "total_bytes": 12992,
+      "total_lines": 333,
+      "read_scope": "complete (1-333)",
+      "why": "Catalog::map topic routing (7-61) and directory_entries' prefix filter (84-136)."
+    },
+    {
+      "path": "crates/astrid-source-study/src/path_recovery.rs",
+      "sha256": "82443b4cd6faf0ce3623913369c10e487c488644833a6c540efef592f373b1ba",
+      "total_bytes": 5139,
+      "total_lines": 133,
+      "read_scope": "complete (1-133)",
+      "why": "catalog_candidates' early return for multi-segment non-repository requests (33-39) and the anti-broadening filter (73)."
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation_recovery.rs",
+      "sha256": "430d212b8047203f4adac71a287a1583b7b63c53d927bb5cf4bfe6630da114fb",
+      "total_bytes": 3783,
+      "total_lines": 90,
+      "read_scope": "complete (1-90)",
+      "why": "Confirms local-navigation recovery is suggestion-only; not the surface that failed here."
+    },
+    {
+      "path": "crates/astrid-source-study/src/evidence.rs",
+      "sha256": "1842133fa5b3f88741fe42a347e27da36a29a3583397b7e6a91fe1ee86620405",
+      "total_bytes": 2889,
+      "total_lines": 62,
+      "read_scope": "complete (1-62)",
+      "why": "InputKind::Recovery's scope line is generic; the failure reason lives in the retained navigation record, not the introspection."
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
+      "sha256": "6d359ed537996290bc447be4236ed0819254820e2393dcb615b3994247713664",
+      "total_bytes": 74146,
+      "total_lines": 1770,
+      "read_scope": "scoped: 610-632, 1252-1268",
+      "why": "should_start_run_loop and its call site \u2014 the daemon/uplink gate her question named."
+    },
+    {
+      "path": "crates/astrid-capsule/src/manifest.rs",
+      "sha256": "13418c3ea06e8900b8c7c4088b585419cde7824978878f13c536bf2c288cc856",
+      "total_bytes": 21414,
+      "total_lines": 554,
+      "read_scope": "scoped: 290-305",
+      "why": "CapabilitiesDef.uplink and its documented effect on the WASM execution timeout."
+    },
+    {
+      "path": "capsules/astralis/README.md",
+      "sha256": "1020a79b6c5f708e6dd6ff49ac9aa09a0244d22b20f2683f326dff18f4c3572d",
+      "total_bytes": 423,
+      "total_lines": 12,
+      "read_scope": "complete (1-12)",
+      "why": "The complete file behind her 'primary target' and 'WIT stubs' claims."
+    },
+    {
+      "path": "capsules/astralis/astrid-capsule-agents/Capsule.toml",
+      "sha256": "2c0df48db5847147b2fd2ed309113504ac13bd839ee118b2833774ff2a44af97",
+      "total_bytes": 671,
+      "total_lines": 23,
+      "read_scope": "complete (1-23)",
+      "why": "Declares no daemon/uplink behavior; type = executable."
+    },
+    {
+      "path": "capsules/astralis/astrid-capsule-agents/src/lib.rs",
+      "sha256": "c04aa14ea4445f314f05171f96806c3d8cf74021307675904b8d5b0147e69465",
+      "total_bytes": 1605,
+      "total_lines": 58,
+      "read_scope": "complete (1-58)",
+      "why": "The single catalog file in the directory she mapped; empty fn run() at 13; astrid_guest::export! at 45."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+      "sha256": "0aee1c4f8214c993b690e951fb41c445e7139a86a45e6d439b239bb70d15aa81",
+      "total_bytes": 16990,
+      "total_lines": 406,
+      "read_scope": "scoped: 60-92, 313-325",
+      "why": "Where the bridge builds the shared Reader and its store path."
+    },
+    {
+      "path": "crates/astrid-source-study/tests/path_recovery.rs",
+      "sha256": "474447d5bcadaa3856ed46f7e82d937202d7b00e2593a6c48482ae5cfdc87616",
+      "total_bytes": 7736,
+      "total_lines": 189,
+      "read_scope": "complete (1-189)",
+      "why": "Existing coverage, checked for overlap before adding the new regression."
+    },
+    {
+      "path": "crates/astrid-source-study/tests/topic_navigation_recovery.rs",
+      "sha256": "1cac27b11caff93bfb82f84b9e7038a9ec5e97e6984c373053241e71d7d389ff",
+      "total_bytes": 9979,
+      "total_lines": 267,
+      "read_scope": "scoped: 1-100, 128-155",
+      "why": "Existing coverage of bare-name and unknown-repository recovery; neither covers the un-rooted multi-segment case."
+    },
+    {
+      "path": "crates/astrid-source-study/tests/unrooted_map_topic_reach.rs",
+      "sha256": "dcfc869658e0e6de1dcac40d66be788f582640a64dd841b108b930968605ede2",
+      "total_bytes": 4554,
+      "total_lines": 105,
+      "read_scope": "complete (1-105) \u2014 created this round",
+      "why": "The new regression."
+    }
+  ]
+}

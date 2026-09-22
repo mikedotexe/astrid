@@ -1,0 +1,67 @@
+{
+  "schema": "introspection_flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "steward_run_id": "run_1789627757397193000_9c8d2289b6",
+  "preprojection_generation_id": "projection_1789627761019743000_98eb1e9373",
+  "reports": [
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_1789608023.txt",
+      "sha256": "5ebe8538418e5281e50a2d2c5a96d78879255f80d785fd5145b4f4c5297a9f3b",
+      "bytes": 4997,
+      "lines": 46,
+      "read": "complete",
+      "source_path_named_by_report": "minime/minime/src/sensory_bus.rs",
+      "source_sha256_named_by_report": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "source_window_bytes": "14188..18492",
+      "source_window_lines_delivered": "376..502",
+      "report_stated_page_lines": "374-502",
+      "source_coverage": "partial_file_complete_intervals",
+      "lived_state_witness_id": "lsw_b1993b32e0ffc9a5e7c821216e1dea0de319ff973f69413b7c755fc2a7fdf3ed"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_b1993b32e0ffc9a5e7c821216e1dea0de319ff973f69413b7c755fc2a7fdf3ed",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b1993b32e0ffc9a5e7c821216e1dea0de319ff973f69413b7c755fc2a7fdf3ed.json",
+      "sha256": "5351a0a0c1a92a2d67fba91d55c2bed768d55d59357d48373e04245bc40579db",
+      "bytes": 21344,
+      "lines": 498,
+      "read": "complete",
+      "window_start_line": 376,
+      "window_end_line": 502,
+      "artifact_sha256_matches_report": true,
+      "canonical_body_sha256": "6212859a247a9ca877f43d526ab5489568a5b53d7492f44eb556f71a41257142",
+      "canonical_body_bytes": 4298,
+      "canonical_body_equals_model_response_sha256": true
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "kind": "delivered_page_record",
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/deliveries/2f4091d1b129eff3ad3ad37c1e407c301a3b015b63495cb9efcba917179b83b7/0233425f909ae91afc652fe4859b4e69a05c8a4437ad1b4bec5e487f4a71aeed.json",
+      "sha256": "0233425f909ae91afc652fe4859b4e69a05c8a4437ad1b4bec5e487f4a71aeed",
+      "bytes": 115917,
+      "lines": 117,
+      "read": "complete",
+      "note": "page 2f4091d1b129...b83b7; 6,683 B rendered page and 35,348 B output.text both read in full; eof false"
+    },
+    {
+      "kind": "report_bound_source",
+      "path": "minime/src/sensory_bus.rs",
+      "absolute_path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "bytes": 168439,
+      "lines": 4404,
+      "read": "partial_file_complete_intervals",
+      "note": "intervals enumerated in source_receipts.json; binding match, working copy clean"
+    },
+    {
+      "kind": "steward_note",
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/",
+      "read": "complete",
+      "note": "prior round on the next page of the same walk; RUN_REPORT.md, claims and source_receipts.json read to avoid duplicating coverage"
+    }
+  ],
+  "authority_boundary": "reading receipts only; no approval, live-control, deploy, staging or git authority is created or implied"
+}

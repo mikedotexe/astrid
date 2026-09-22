@@ -1,0 +1,171 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_adapter",
+  "controller": {
+    "steward_run_id": "run_1789614473762300000_8f47ea633c",
+    "preprojection_generation_id": "projection_1789614478197882000_bcd163fdc1",
+    "preprojection_status": "passed",
+    "preprojection_completed_steps": 27,
+    "preprojection_authority_scan_passed": true,
+    "postprojection_generation_id": "runs after this process exits; not observable from inside the round",
+    "pause_generation": 447,
+    "stop_requested_observed": false,
+    "lease_token_read_or_persisted": false,
+    "session_opened_by_model": false,
+    "ndjson_ops_sent_by_model": false,
+    "pause_or_resume_by_model": false,
+    "run_id": "run_1789614473762300000_8f47ea633c"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 14,
+      "evidence_links_new": 19,
+      "evidence_links_existing": 0,
+      "events_appended": 19
+    }
+  ],
+  "addressing_counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "all_checks_true": true,
+    "canonical_indexed": 7323,
+    "canonical_fully_addressed": 3262,
+    "canonical_full_read": 3894,
+    "canonical_remaining": 4061,
+    "canonical_unread": 3429,
+    "canonical_blocked_needs_steward": 416,
+    "canonical_triaged_pending_action": 212,
+    "canonical_triaged_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 5778,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "event_count": 1118601,
+    "last_global_seq": 1118601,
+    "last_event_sha256": "31f486c09dfb87f3eeb3a72ed1e8db3c5f3e3dca990bc0dc9c85a0e5a86e6843",
+    "errors": [],
+    "stream_counts": {
+      "addressing": 65068,
+      "agency_commons": 7111,
+      "attention_portfolio": 3,
+      "claim_families": 239951,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 212834,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13367,
+      "model_qos": 348861,
+      "reciprocal_uptake": 76824,
+      "representation_contracts": 63274,
+      "sandbox": 3507,
+      "signal_spine": 64444,
+      "steward_control": 22394,
+      "steward_work_selection": 766
+    },
+    "status_subcommand": "not completed \u2014 `evidence_event_store.py --json status` exceeded the remaining headless budget and was stopped; `verify` (the check this round is required to run) completed green and is recorded above"
+  },
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "evidence_event_store_tests": "21 tests OK",
+    "steward_control_tests": "29 tests OK",
+    "steward_projection_tests": "14 tests OK",
+    "division_followup_tests": "3 tests OK",
+    "division_chronicle_tests": "10 tests OK",
+    "division_projection_self_test": "ok",
+    "projection_cursor_tests": "4 tests OK",
+    "cadence_audit_tests": "6 tests OK",
+    "cadence_audit_strict": "integrity_ok true, errors [], canonical_count 7323, duplicate_hash_group_count 0",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "100 rows, 0 alarms, 0 gaps, 0 non-ok",
+    "domain_boundary_verify": "valid true, violation_count 0, forbidden_edge_match_count 0 \u2014 ratchet GREEN, no re-capture required",
+    "experiential_epistemics_self_test": "OK, valid true",
+    "experiential_epistemics_verify_final": "valid true, 12435 records checked, 0 issues, history_rewritten false"
+  },
+  "division": {
+    "cycle_sequence": 50,
+    "completed_rounds_since_followup": 5,
+    "rounds_remaining_before_followup": 1,
+    "review_due_before_round": false,
+    "review_due_after_round": false,
+    "round_event_id": "division_followup_event_71e826a739761280535d6210d266dd36",
+    "event_count": 349,
+    "event_head_sha256": "4c49aeb3fae226010e4cf4430f184bbe345b5454ee4959d81d33bdb5fe78752c",
+    "processed_report_count": 1,
+    "tier5_cadence_dossier": "not generated \u2014 review_due was false, so no Division return was completed this round and the dossier is not owed",
+    "note_action": "none written; no Division return was due"
+  },
+  "chronicle": {
+    "chronicle_id": "division_chronicle_2d2b1bb29d18783fc7c1ee2a",
+    "json_sha256": "dac3e0fc7107f425e77b2498dba39c2ae513cfe2371e404017bd35fb48bc768f",
+    "html_sha256": "6b0356d7ede75e1fba3d66c765267c78c897b4958ba9027e065bb00e0675472f",
+    "timeline_event_count": 348,
+    "durable_inputs_current": true,
+    "volatile_inputs_current": false,
+    "volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "durable_mismatches": [],
+    "reported_exactly": "durable inputs current; one volatile mismatch (supervisor_status_sha256) \u2014 not a durable-integrity failure, and the Chronicle is therefore not claimed fully current"
+  },
+  "authority_boundary": {
+    "live_substrate_or_control_change": "none made, attempted, or needed",
+    "restart_or_deploy": "not required and not attempted; build_bridge.sh, deploy scripts and launchctl were never run",
+    "git": "read-only throughout \u2014 nothing staged, committed, merged, pushed, stashed, reset or amended",
+    "foreign_dirty_paths": "left untouched: CHANGELOG.md and the feedback ledger were appended to at the [Unreleased]/Ledger anchors only; capsules/spectral-bridge/src/action_continuity/tests.rs, capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs, crates/astrid-kernel/src/kernel_router.rs, crates/astrid-kernel/src/maintenance.rs and all nine prior round packets were not read for edit and not modified",
+    "tier_4_or_5_items": "none created and none discharged; the report itself names an operator-approval gate in source (sensory_bus.rs:517-528), which this round only verified and did not act on",
+    "cards_notes_correspondence": "none emitted, none delivered"
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "introspection_ids": [
+      "introspection_minime_minime_src_sensory_bus.rs_1789608500"
+    ],
+    "terminal_status": "addressed_change",
+    "claim_count": 14,
+    "evidence_links_new": 19,
+    "evidence_links_existing": 0
+  },
+  "epistemic_lint": {
+    "command": "python3 scripts/experiential_epistemics.py verify --json",
+    "run_after_all_durable_writes": true,
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "checked_record_count": 12435,
+    "history_rewritten": false
+  },
+  "counters": {
+    "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+    "status": "consistent",
+    "mismatches": [],
+    "all_checks_true": true
+  },
+  "anti_drop": {
+    "self_test": "5 tests OK",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0,
+      "non_ok_rows": 0
+    }
+  },
+  "domain_boundary": {
+    "command": "python3 scripts/domain_boundary_audit.py verify",
+    "valid": true,
+    "violation_count": 0,
+    "forbidden_edge_match_count": 0,
+    "ratchet": "green",
+    "recapture_required": false
+  }
+}

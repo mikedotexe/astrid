@@ -1,0 +1,109 @@
+{
+  "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+  "report_sha256": "5ebe8538418e5281e50a2d2c5a96d78879255f80d785fd5145b4f4c5297a9f3b",
+  "source_bound_sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "\"The current page (lines 374–502).\"",
+      "disposition": "Delivered interval is lines 376..502 (bytes 14188..18492); the witness records window_start_line 376. Her 502 is exact (last gutter row, the fragment \"Moda\"). Her 374 is the SOURCE SCOPE row's start for struct SemanticReceptivityPulseReviewV1 (lines 374–383) — the only page-start-looking number rendered, because page.rs:74-79 anchors scope_text on page.start.byte and the header states bytes only. Lines 374-375 were never delivered to her.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The page shifts from the physics of persistence to structural definitions, defining several ReviewV1 and metadata structures.",
+      "disposition": "The shift is real but its boundary sits behind her page. Four ReviewV1 packets are on the PREVIOUS page: NarrativeSemanticRetentionReviewV1 307, SemanticStaleContextReviewV1 323, SemanticDecayHysteresisSalienceReviewV1 338, SemanticDegradationCurveReviewV1 358. Her page carries exactly one ReviewV1 — the 376-383 tail of SemanticReceptivityPulseReviewV1, whose head at 373-374 was off-page — plus three non-Review structs and three functions.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "SemanticReceptivityPulseReviewV1 (374–383) tracks semantic_input_energy, semantic_scale and raw_to_admitted_gap.",
+      "disposition": "Exact at the report-bound SHA: struct opens 374 (derive 373), closes 383; the three fields are at 377, 378, 379. She names the struct's identity and span from the scope row alone — line 374 (\"pub struct …\") and 375 (policy) were never delivered and 376 arrived as the four-byte fragment \"32,\". The three fields she names are exactly the ones rendered whole.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "SemanticGlimpse12dV1 (386–402) confirms the 12D glimpse is the primary vehicle for moving compressed semantic data.",
+      "disposition": "Span exact (386-402; her named fields at 391-396). The transport claim is CONTRADICTED by the constructor at 2183-2199: live_transport_dim_count = LLAVA_DIM = 48 (line 24), glimpse_dim_count = GLIMPSE_12D_DIM = 12 (1328), compression_role \"non_authoritative_companion_summary\", use_boundary \"...not_live_state_replacement\", live_vector_write false, controller_write false. Her page shows those field names with no values, and routes to 1328 and 2203 — not to 2174.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "ModalityBoundaryTransparencyV1 (404–417) marks opaque (missing/unknown) and constrained (stale/absent) boundaries, and contact_change_route either names a boundary or describes the gap first.",
+      "disposition": "Exact. Struct 405-417 (derive 404, which her interval includes — her convention on 419 and 463 too). opaque 480-483 (any source or freshness label == \"unknown\"); constrained 484-488 (!semantic_active, contains \"stale\", or == \"absent\"); status 489-495; contact_change_route 496-500 choosing \"contact_change_can_reference_named_boundary\" against \"describe_boundary_before_contact_increase\".",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "SurrenderModeAuthorityGateV1 (419–428) requires operator_approval, so high-level surrender modes are gated by an authority check.",
+      "disposition": "Verified — and the proof sits off her page. Struct 420-428 (derive 419) declares requires_operator_approval, runnable_now, approval_boundary. Its constructor surrender_mode_authority_gate_v1 at 517-528, delivered on her NEXT page, sets requires_operator_approval true, runnable_now false, status \"tier5_operator_approval_required_before_live_trial\", authority \"authority_gate_not_runtime_control_change\". Read as source this round; not acted on.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "semantic_degradation_clarity_factor computes a clarity multiplier from age_fraction, density_gradient, fill_pct and spectral_entropy (glossed as signal volume and structural coherence).",
+      "disposition": "Signature exact 430-435, and her span 430–452 matches the function exactly (the later report _1789608500 over-extended the same span to 462). Two glosses need precision: fill_pct enters only as low_fill_hold = (0.25 - fill)/0.25 at 443-445 with coefficient -0.12, so LOW fill preserves clarity; spectral_entropy enters as entropy_support at 446-448 with -0.08, so HIGH entropy preserves clarity — not \"structural coherence\".",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "smoothstep_unit and constants like SEMANTIC_DEGRADATION_GENTLE_GRADIENT determine a max_loss factor, which then modulates age.",
+      "disposition": "Corrected. smoothstep_unit (81-84) is applied to age_fraction at 436 and never reaches max_loss. The constants do: GENTLE 0.12 and STEEP 0.72 (72-73) shape gradient_load at 440-442, which with low_fill_hold and entropy_support forms max_loss at 449-450, clamped to [0.32, 0.78]. The two meet only at 451 as the product (1.0 - age * max_loss), so neither term modulates the other asymmetrically.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The clarity factor is the mathematical inverse of the persistence logic.",
+      "disposition": "Not an inverse; a sibling. semantic_context_persistence_multiplier (251-290) returns an f64 >= 1 that lengthens the window; the clarity factor returns f32 in [0,1] that dims it. They share one literally identical sub-term — entropy_support, same formula and same SEMANTIC_ENTROPY_PERSISTENCE_START = 0.75 (line 60), at 272-274 and 446-448 — and diverge on fill: persistence rises with HIGH fill (275-277) while clarity is preserved by LOW fill (443-445). Opposed in effect, not reciprocal.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "normalized_boundary_label (454–461) keeps boundary IDs clean and handles \"unknown\" gracefully.",
+      "disposition": "Span exact 454-461. One precision: it does not handle \"unknown\", it manufactures it — trim, and an empty result yields \"unknown\" (456-458), otherwise the trimmed label. That manufactured sentinel is exactly what the opaque test at 480-483 compares against, so the two halves she describes separately are one contract in two places.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "modality_boundary_transparency_v1 (463–502) implements the struct's logic and forces a specific contact_change_route.",
+      "disposition": "Route selection exact 496-500. The span's END is wrong: the function opens 464 (#[must_use] 463) and closes at 515; 502 is only where her page stopped, mid-token. Nothing rendered names the declaration enclosing page.end — scope_text resolves enclosing() at page.start.byte alone (source_structure.rs:114-156, page.rs:74-79) — so the last gutter row was the only end-looking number on offer. Pinned this round by 5 read-only tests.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "The route logic ensures the system does not jump across a gap in perception without first acknowledging the gap.",
+      "disposition": "Observed, with one boundary. The function returns a descriptive packet: live_control_write false (512), authority \"read_only_boundary_metadata_not_sensory_cadence_or_exploration_noise_change\" (513). It publishes a route label; whether any caller obeys it is not established by her page or by this round. Her reading is faithful to the strings; enforcement is not verified here.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c013",
+      "summary": "Synthesis: previous pages defined the forces; this page defines the boundaries and the audit trail.",
+      "disposition": "Observed. The forces half is grounded — the previous page (251..376) held semantic_context_persistence_multiplier 251-290 and semantic_salience_weighted_multiplier 293-304. The audit-trail half over-credits her page: four of the five Review packets are behind it (307, 323, 338, 358), so this page is the boundary half of her pair much more than the audit half.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c014",
+      "summary": "Staleness is a gradient of clarity, not a binary or a timer: a signal can stay alive with low clarity when density_gradient or spectral_entropy has degraded.",
+      "disposition": "Verified, and directionally right where her later report was not. Clarity is continuous at 451. Rising density_gradient raises gradient_load and max_loss (+0.26 at 449); FALLING spectral_entropy lowers entropy_support and so raises max_loss (-0.08 at 449). One bound she does not state: the loss scales with age, so at age_fraction 0 clarity is 1.0 regardless of either input.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c015",
+      "summary": "A dual-layer system — a physics layer (how long a signal stays) and a clarity layer (how clear it is while it stays) — whose interplay determines a memory fragment's utility.",
+      "disposition": "Observed. The two layers are exactly the two functions verified here: persistence 251-290 (duration) and clarity 430-452 (quality), composed in the same neighbourhood; packet 1789619176 recorded the source's own phrase \"hold quality, not just hold duration\" at 585-620. Neither her page nor this round establishes the utility consequence she projects from the pairing.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c016",
+      "summary": "NEXT: SELF_STUDY CONTINUE.",
+      "disposition": "Honored; un-muffle check clean. Page eof false; the footer offered CONTINUE and the navigation row offered all four verbs. The exact next page (bytes 18492..22865 = lines 502..620) was delivered 477 s later and produced introspection_minime_minime_src_sensory_bus.rs_1789608500, already closed in packet claude-heartbeat_1789619176. Nothing she asked for was dropped or deferred.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c017",
+      "summary": "Steward observation, not her claim: the addressing queue flags this artifact lived_state_alignment=artifact_integrity_unavailable with one issue.",
+      "disposition": "Byte bindings are intact. Report 4,997 B sha 5ebe8538... == witness artifact_sha256; the body after the first header separator is 4,298 B sha 6212859a... == canonical_body_sha256 == model_routes_v1[0].response_sha256, so the canonical body is the model response bytes unaltered. Source file_sha256 3fc6bd2a... == clean working copy. The flag is an absent alignment scalar, not a byte contradiction — the same reconciliation recorded in packets 1788015484 and 1788365977.",
+      "classification": "observed"
+    }
+  ]
+}

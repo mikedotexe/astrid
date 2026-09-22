@@ -1,0 +1,202 @@
+{
+  "schema": "introspection_flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_adapter",
+  "controller": {
+    "run_id": "run_1789627757397193000_9c8d2289b6",
+    "steward_run_id": "run_1789627757397193000_9c8d2289b6",
+    "preprojection_generation_id": "projection_1789627761019743000_98eb1e9373",
+    "preprojection_status": "passed",
+    "preprojection_completed_steps": 27,
+    "preprojection_authority_scan_passed": true,
+    "postprojection_generation_id": "runs after this process exits; not observable from inside the round",
+    "pause_generation": 447,
+    "stop_requested_observed": false,
+    "session_opened": false,
+    "ndjson_ops_sent": false,
+    "lease_token_read_or_persisted": false,
+    "preprojection_wall_note": "lease acquired 06:49:17Z; model child's first command 07:41:34Z (~51 min), far outside the handoff's stated 6-9 minutes"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608023",
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 17,
+      "evidence_links_new": 24,
+      "evidence_links_existing": 0
+    }
+  ],
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "introspection_ids": [
+      "introspection_minime_minime_src_sensory_bus.rs_1789608023"
+    ],
+    "terminal_status": "addressed_change",
+    "claim_count": 17,
+    "evidence_links_new": 24,
+    "evidence_links_existing": 0,
+    "selected_count": 40,
+    "processed_count": 1,
+    "unprocessed_count": 39,
+    "family_scan": {
+      "family_count": 40,
+      "batchable_family_count": 0,
+      "note": "every queue item is a distinct window of one sequential walk"
+    },
+    "process_note": "close was invoked three times: grounded rationale, a proof-state read-back that appended a placeholder rationale, then a re-close restoring the grounded rationale. Terminal state is one addressed_change."
+  },
+  "addressing_counters": {
+    "canonical": {
+      "indexed": 7323,
+      "fully_addressed": 3263,
+      "full_read": 3895,
+      "remaining": 4060,
+      "unread": 3428,
+      "blocked_needs_steward": 416,
+      "triaged_pending_action": 212,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": {
+      "indexed": 9040,
+      "remaining": 5777
+    },
+    "noncanonical_pending": 1717,
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0
+  },
+  "counters": {
+    "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+    "status": "consistent",
+    "mismatches": [],
+    "all_checks_true": true
+  },
+  "epistemic_lint": {
+    "command": "python3 scripts/experiential_epistemics.py verify --json",
+    "run_after_all_durable_writes": true,
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "checked_record_count": 12449,
+    "history_rewritten": false,
+    "self_test": {
+      "valid": true
+    }
+  },
+  "anti_drop": {
+    "self_test": "5 tests OK",
+    "verify": {
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "domain_boundary": {
+    "command": "python3 scripts/domain_boundary_audit.py verify",
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "stable_facade_count": 6,
+    "unlisted_legacy_review_debt_count": 44,
+    "ratchet": "GREEN",
+    "note": "round touched only a new test file; no boundary re-capture required; the legacy review debt is unchanged and pre-existing"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1119895,
+    "last_global_seq": 1119895,
+    "last_event_sha256": "43083164ec8a4a2e48f5be520aa81837d6947342991e4ab6d28ae365688491b3",
+    "stream_counts": {
+      "addressing": 65098,
+      "agency_commons": 7115,
+      "attention_portfolio": 3,
+      "claim_families": 239980,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 212952,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13367,
+      "model_qos": 349626,
+      "reciprocal_uptake": 76830,
+      "representation_contracts": 63390,
+      "sandbox": 3507,
+      "signal_spine": 64585,
+      "steward_control": 22477,
+      "steward_work_selection": 768
+    },
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "verify_wall_seconds": 777,
+    "note": "the status enumeration named as exact debt by the 2026-09-16 round was completed here"
+  },
+  "division": {
+    "cycle_sequence": 50,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due_before_round": false,
+    "review_due_after_round": true,
+    "round_event_id": "division_followup_event_41e72ca2bb78c7acd648839f7c082ebf",
+    "event_count": 350,
+    "event_head_sha256": "21b1972f9237faa6e132995866ea91b4fd03ec115337f58b46f707880f7d4741",
+    "processed_report_count": 1,
+    "projection_generation_id": "projection_1789627761019743000_98eb1e9373",
+    "tier5_cadence_dossier": "not owed this round (review_due was false at round start); owed by the next tracker-enforced session together with the bounded return",
+    "note_action": "none; no Division return was due at round start"
+  },
+  "chronicle": {
+    "command": "python3 scripts/division_ceremony_chronicle.py verify",
+    "result": "chronicle durable source inputs changed; project before verify",
+    "interpretation": "expected project-before-verify condition after the round-record append; resolved by the postprojection. The Chronicle is NOT claimed current and this is not a durable-integrity failure."
+  },
+  "integrity": {
+    "introspection_addressing_audit --self-test": "44 tests OK",
+    "test_evidence_event_store.py": "21 tests OK",
+    "test_steward_control.py": "29 tests OK",
+    "test_steward_projection.py": "14 tests OK",
+    "test_division_ceremony_followup.py": "3 tests OK",
+    "test_division_ceremony_chronicle.py": "10 tests OK",
+    "test_division_ceremony_projection.py": "self-test ok",
+    "test_projection_cursors.py": "4 tests OK",
+    "test_introspection_cadence_audit.py": "6 tests OK",
+    "introspection_cadence_audit --strict": {
+      "integrity_ok": true,
+      "duplicate_hash_group_count": 0,
+      "canonical_count": 7323,
+      "errors": []
+    },
+    "git diff --check": "clean",
+    "cargo test -p astrid-source-study --test page_end_declaration_legibility": "5 passed / 0 failed",
+    "cargo test -p astrid-source-study": "195 passed / 0 failed (190 before)",
+    "cargo fmt -p astrid-source-study -- --check": "clean",
+    "cargo clippy -p astrid-source-study --tests": "clean"
+  },
+  "live_surface": {
+    "restart_required": false,
+    "deploy_attempted": false,
+    "launchctl_used": false,
+    "build_bridge_used": false,
+    "note": "no live substrate or control change; being-facing prompt bytes unchanged"
+  },
+  "git": {
+    "staged": false,
+    "committed": false,
+    "branch": "main",
+    "index_clean": true,
+    "note": "git read-only for the whole round; exact commit debt named in RUN_REPORT.md; foreign dirty paths preserved untouched"
+  },
+  "authority_boundary": {
+    "state": "evidence_only",
+    "grants_approval": false,
+    "live_eligible_now": false,
+    "tier4_or_5_items_created": 0,
+    "tier4_or_5_items_discharged": 0,
+    "note": "rendering the delivered line interval or the end declaration's span into being-facing prompt bytes remains a separate decision, not made here"
+  }
+}

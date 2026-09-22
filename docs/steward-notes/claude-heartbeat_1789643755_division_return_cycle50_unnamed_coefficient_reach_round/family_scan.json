@@ -1,0 +1,690 @@
+{
+ "schema": "introspection_family_scan_v1",
+ "threshold": 0.35,
+ "family_count": 40,
+ "batchable_family_count": 0,
+ "families": [
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes25797..30171",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789639889",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789639889",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789639625",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes27208..31510",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789639625",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789639301",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes22865..27208",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789639301",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789638539",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes18492..22865",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789638539",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789637852",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes14188..18492",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789637852",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789637427",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes9883..14188",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789637427",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789637013",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes62174..66485",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789637013",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789636682",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes57841..62174",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789636682",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789636292",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes53230..57841",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789636292",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789635811",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes48654..53230",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789635811",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789635374",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes44544..48654",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789635374",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789634965",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes40120..44544",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789634965",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789634512",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes35582..40120",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789634512",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789634108",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes31510..35582",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789634108",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789633723",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes27208..31510",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789633723",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789633254",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes22865..27208",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789633254",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789632964",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789632964",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789607615",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes9883..14188",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789607615",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789607293",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes64479..68572",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789607293",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789606869",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes60319..64479",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789606869",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789606560",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789606560",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789606211",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes153937..158136",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789606211",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789605830",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes149732..153937",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789605830",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789605181",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes145390..149732",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789605181",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789604676",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes141126..145390",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789604676",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789604325",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes136846..141126",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789604325",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789603882",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes132651..136846",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789603882",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789603515",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes128368..132651",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789603515",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789603103",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes124128..128368",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789603103",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789602688",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes119943..124128",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789602688",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789602305",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes115663..119943",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789602305",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789601886",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes111564..115663",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601886",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789601004",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes102876..107073",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601004",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789600462",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes98573..102876",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789600462",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789600099",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes94242..98573",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789600099",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789599727",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes89943..94242",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789599727",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789599295",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes85612..89943",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789599295",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789598839",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes81235..85612",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789598839",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_src_sensory_bus.rs_1789598366",
+   "source_label": "minime/minime/src/sensory_bus.rs",
+   "source_path": "",
+   "window": "bytes76840..81235",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789598366",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  }
+ ],
+ "skipped": [],
+ "authority_boundary": "evidence routing only: a family is a candidate batch, not a disposition; every member still requires its own complete read, per-report claims naming its variant_distinct_terms, and its own close"
+}

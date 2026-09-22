@@ -5246,3 +5246,165 @@ impl ReadPath for PathBuf {
         std::fs::read_to_string(self).expect("read")
     }
 }
+
+fn charter_stage_experiment(
+    status: &str,
+    planned_next: Option<&str>,
+    success_observation: Option<&str>,
+) -> ExperimentRecord {
+    ExperimentRecord {
+        schema_version: SCHEMA_VERSION,
+        experiment_id: "exp_charter_stage".to_string(),
+        thread_id: "thr_charter_stage".to_string(),
+        title: "charter stage".to_string(),
+        question: "how does the readiness surface separate a hold from a missing charter?"
+            .to_string(),
+        hypothesis: None,
+        status: status.to_string(),
+        authority_envelope: "existing gates only".to_string(),
+        planned_next: planned_next.map(ToString::to_string),
+        success_observation: success_observation.map(ToString::to_string),
+        created_at: "2026-09-15T00:00:00Z".to_string(),
+        updated_at: "2026-09-15T00:00:00Z".to_string(),
+        peer_review_refs: Vec::new(),
+        parent_experiment_id: None,
+        branch_origin: None,
+        branch_refs: Vec::new(),
+        motif_allowance_v1: None,
+        charter_v1: None,
+        evidence_v1: None,
+        workbench_candidates_v1: None,
+    }
+}
+
+#[test]
+fn authority_guardrail_hold_active_requires_paused_thread_status_and_hold() {
+    let held = charter_stage_experiment(
+        "Paused",
+        Some("thread_status current"),
+        Some("Waiting on HOLD before the next step"),
+    );
+    assert!(authority_guardrail_hold_active(&held));
+
+    let wrong_status = charter_stage_experiment(
+        "active",
+        Some("THREAD_STATUS current"),
+        Some("waiting on hold"),
+    );
+    assert!(!authority_guardrail_hold_active(&wrong_status));
+
+    let wrong_planned_next =
+        charter_stage_experiment("paused", Some("EXPERIMENT_REHEARSE current"), Some("hold"));
+    assert!(!authority_guardrail_hold_active(&wrong_planned_next));
+
+    let no_hold_observation = charter_stage_experiment(
+        "paused",
+        Some("THREAD_STATUS current"),
+        Some("waiting on the next reading window"),
+    );
+    assert!(!authority_guardrail_hold_active(&no_hold_observation));
+
+    let no_observation = charter_stage_experiment("paused", Some("THREAD_STATUS current"), None);
+    assert!(!authority_guardrail_hold_active(&no_observation));
+}
+
+#[test]
+fn authority_readiness_stage_separates_held_or_guarded_from_needs_charter() {
+    let missing_charter = [json!("lifecycle_valid_charter")];
+
+    let held = charter_stage_experiment(
+        "paused",
+        Some("THREAD_STATUS current"),
+        Some("hold until the window reopens"),
+    );
+    assert_eq!(
+        authority_readiness_stage(&held, "needs_charter", &missing_charter, None, "none"),
+        "held_or_guarded",
+        "an active guardrail hold outranks a missing charter"
+    );
+
+    let plain = charter_stage_experiment("active", Some("EXPERIMENT_REHEARSE current"), None);
+    assert_eq!(
+        authority_readiness_stage(&plain, "needs_rehearsal", &missing_charter, None, "none"),
+        "needs_charter",
+        "a missing lifecycle_valid_charter reaches needs_charter even from another conveyor stage"
+    );
+    assert_eq!(
+        authority_readiness_stage(&plain, "needs_charter", &[], None, "none"),
+        "needs_charter",
+        "the conveyor stage alone also reaches needs_charter"
+    );
+    assert_eq!(
+        authority_readiness_stage(&plain, "paused_repair", &missing_charter, None, "none"),
+        "held_or_guarded"
+    );
+    assert_eq!(
+        authority_readiness_stage(&plain, "blocked_guardrail", &missing_charter, None, "none"),
+        "held_or_guarded"
+    );
+}
+
+#[test]
+fn needs_charter_next_command_passes_through_the_charter_scaffold() {
+    let charter_scaffold = "EXPERIMENT_CHARTER exp_charter_stage :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ...; stop_criteria: ...";
+
+    assert_eq!(
+        authority_readiness_next_command(
+            "exp_charter_stage",
+            "needs_charter",
+            charter_scaffold,
+            "",
+            None,
+        ),
+        charter_scaffold,
+        "needs_charter has no branch of its own: it neither issues charter_repair automatically \
+         nor returns empty, it defers to the caller's proposed_next"
+    );
+
+    assert_eq!(
+        authority_readiness_next_command("exp_charter_stage", "needs_charter", "", "", None),
+        "EXPERIMENT_ADVANCE exp_charter_stage :: mode: preview",
+        "only an empty proposed_next falls back to the generic conveyor preview"
+    );
+
+    assert_eq!(
+        authority_readiness_next_command(
+            "exp_charter_stage",
+            "needs_artifact_grounding",
+            charter_scaffold,
+            "",
+            None,
+        ),
+        "EXPERIMENT_EVIDENCE exp_charter_stage :: artifact_grounding: <absolute artifact ref>",
+        "a stage that does own a branch outranks proposed_next"
+    );
+}
+
+#[test]
+fn conveyor_needs_charter_proposed_next_is_a_charter_command() {
+    let thread: ResearchThread = serde_json::from_value(json!({
+        "schema_version": SCHEMA_VERSION,
+        "thread_id": "thr_charter_stage",
+        "title": "charter stage",
+        "status": "active",
+        "system_origin": "astrid",
+        "created_at": "2026-09-15T00:00:00Z",
+        "updated_at": "2026-09-15T00:00:00Z",
+        "current_next": Value::Null,
+        "why_return": "verify the needs_charter passthrough",
+        "privacy_default": "summary",
+        "compression_flags": [],
+        "peer_refs": [],
+        "active_experiment_id": "exp_charter_stage",
+    }))
+    .expect("thread fixture");
+    let experiment = charter_stage_experiment("active", Some("EXPERIMENT_REHEARSE current"), None);
+    let proposed =
+        experiment_conveyor_proposed_next(&thread, &experiment, &[], "needs_charter", None);
+    assert_eq!(
+        base_action(&proposed),
+        "EXPERIMENT_CHARTER",
+        "the needs_charter conveyor stage proposes a charter command, so the passthrough above \
+         delivers a charter pointer and not EXPERIMENT_ADVANCE: {proposed}"
+    );
+}

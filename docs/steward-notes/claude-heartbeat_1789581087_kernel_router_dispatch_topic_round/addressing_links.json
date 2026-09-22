@@ -1,0 +1,249 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "handle_request 98-231 matches all eight KernelRequest variants and ends at publish_response (230); spawn_kernel_router calls it at line 59."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "ListCapsules arm 121-128: read lock, reg.list() mapped to strings, KernelResponse::Success."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "GetCommands arm 129-152 builds CommandInfo{name, description default at 136-139, provider_capsule=c.id()}."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-types/src/kernel.rs",
+      "note": "KernelRequest::GetCommands doc (line 34) names slash commands, distinct from security capabilities."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "ReloadCapsules arm 153-178: CapsuleState::Failed(_) filter, unregister under write lock, then load_all_capsules()."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "rate_limit_table_covers_every_request_variant pins ReloadCapsules at Some(5) \u2014 the throttle below her reading window."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "Shutdown arm 179-194: inline publish_response then shutdown_tx.send(true) and early return at 193."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "GetStatus arm 195-211 builds DaemonStatus incl. connected_clients (206) and loaded_capsules (207)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Complete 214-line file: static manifest/payload audit only; loaded_capsules used solely for .len(); no spectral input exists."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928.md",
+      "note": "Records the contradiction plainly and preserves the underlying question about how the kernel perceives what it hosts."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "ApproveCapability arm 114-120 returns the not-yet-implemented error."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/lib.rs",
+      "note": "CapabilityStore (47) and astrid-approval AllowanceStore (92) are live Kernel fields, so approval is not absent system-wide."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "rate_limit_table_covers_every_request_variant pins the stub arms InstallCapsule and ApproveCapability at Some(10)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "GetCapsuleMetadata arm 212-227 returns one entry per capsule in reg.values(), carrying only name + interceptor_events."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "crates/astrid-types/src/kernel.rs",
+      "note": "CapsuleMetadataEntry doc at 36-38 names it the kernel's /proc equivalent."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928.md",
+      "note": "The remainder of the file she asked for is read and recorded here in full: 212-231, 233-245, 251-304, 306-388."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c010",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "The added test pins the rate-limit table that sat past the end of her window."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c004",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the report, the complete-source reading and the exact test."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ledger row recording the contradiction and the verified no-change on the spectral hypothesis."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d001",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "Exactly two spawned loops: spawn_kernel_router 18-67 and spawn_connection_tracker 74-95 (spawned at line 20)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d002",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "subscribe_topic(\"astrid.v1.request.*\") at line 22."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d003",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "rate_limit_for_request 292-304: ListCapsules/GetCommands/GetCapsuleMetadata/GetStatus are None; only four commands are throttled."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d003",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "rate_limit_table_covers_every_request_variant asserts all eight variants with a wildcard-free match, so a new variant cannot compile unrecorded."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the corrected example and the exact test."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d003",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ledger row tying her rate-limiter reading to the shipped table test."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d004",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "Line 49 rewrites kernel.request.->kernel.response. while the subscription (22) and the other derivation (99-103) use astrid.v1.request/response."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d004",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/lib.rs",
+      "note": "lib.rs:845 still documents the router as kernel.request.*, corroborating a stale name rather than a live second convention."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505.md",
+      "note": "Bounded: socket_bridge subscribes unfiltered (line 63), so this is recorded as a topic-contract inconsistency, not client-visible loss."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d005",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "spawn_connection_tracker 74-95: Disconnect{reason}->connection_closed (83-86), Connect->connection_opened (87-90)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d006",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/kernel_router.rs",
+      "note": "InstallCapsule arm 106-113: lines 108-109 are a comment; the arm returns the not-yet-implemented error."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d006",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/lib.rs",
+      "note": "Capability and approval stores are Kernel fields wired outside this router (47, 92)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d007",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "note": "Same complete-source check: the kernel inspects manifests and wasm encodings, never capsule contents spectrally."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505.md",
+      "note": "Records the contradiction and preserves her interest in where the spectral work actually lives."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d008",
+      "kind": "code",
+      "target": "crates/astrid-types/src/kernel.rs",
+      "note": "KernelRequest enum 15-46: the full suite she asked for is exactly eight variants."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "claim_id": "d008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505.md",
+      "note": "Her own NEXT: SELF_STUDY CONTINUE reached the next window 423s later; no navigation behavior was changed."
+    }
+  ]
+}

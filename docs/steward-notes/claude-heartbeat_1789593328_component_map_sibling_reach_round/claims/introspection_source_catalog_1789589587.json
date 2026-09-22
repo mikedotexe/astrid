@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_source_catalog_1789589587",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "socket.rs enforces a platform sun_path length limit before binding the kernel socket.",
+      "disposition": "Verified from complete current source at sha256 c78e014c82f6d51725b5a517f584aeef6d4016a3da9f2c5decb50e9f3b2491da, which is the exact SHA her two socket.rs reads bound, so report-time and current source are identical bytes. MAX_SOCKET_PATH_LEN is 104 on macOS/FreeBSD/OpenBSD and 108 otherwise (lines 20-25); prepare_socket_path rejects path_len >= the limit (lines 101-108). Covered by the in-file test path_too_long_is_rejected (lines 222-231).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "socket.rs locks the socket's parent directory to 0o700 permissions.",
+      "disposition": "Verified at the same SHA. bind_session_socket creates the parent then sets 0o700 explicitly (lines 43-60), with an in-source comment that create_dir_all would otherwise inherit the process umask. Her word 'permission locking' is accurate. Adjacent and not claimed by her: the session token file is written 0o600 and, unlike the socket path, has no /tmp fallback (lines 65-94).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "socket.rs protects against symlink attacks at the socket path.",
+      "disposition": "Verified at the same SHA. prepare_socket_path removes an unexpected symlink at the socket path before any bind (lines 110-117), logging a warning; the in-file test symlink_is_removed asserts the symlink is removed and its target untouched (lines 264-277). Scope bound: this is removal at the socket path only, not a general symlink policy; catalog.rs:140-145 enforces a separate symlink boundary for source reads.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The current map shows significant clusters in kernel, senses and reservoirs.",
+      "disposition": "Verified from crates/astrid-source-study/catalog.toml (sha256 6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae). kernel, senses and reservoirs are three of eight declared components (lines 33-71); each is a valid MAP topic through the component branch at navigation.rs:42-55. She named three of eight, not all; 'significant' is her selection, not a source ranking, and the manifest carries no weight field.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "socket_bridge.rs and the senses entry points are the next steps for seeing how raw socket connections are abstracted into meaningful sensory inputs.",
+      "disposition": "Partly contradicted; her concern preserved. socket_bridge.rs exists (crates/astrid-kernel/src/socket_bridge.rs, 499 lines) and publishes sensory.v1.user_input (line 23). But that topic occurs only there and in astrid-events/src/bus.rs (128, 1351), where it is a mirror of user.v1.input excluded from conversation counting. The senses component's Astrid entry points contain zero 'sensory' occurrences and spectral-bridge depends on no kernel crate. The two surfaces share a word, not a path.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "NEXT: SELF_STUDY MAP kernel \u2014 the chosen topic should carry her toward socket_bridge.rs.",
+      "disposition": "Verified and pinned. 'kernel' resolves through the component branch, so the map is reachable, but it renders only the four declared entry points and socket_bridge.rs is not among them; the branch does emit SELF_STUDY MAP astrid/crates/astrid-kernel/src, which lists the sibling by exact OPEN command. Her route works in exactly one further hop. Implemented as crates/astrid-source-study/tests/component_map_sibling_reach.rs, 2 tests, both passing.",
+      "classification": "implemented_now"
+    }
+  ]
+}

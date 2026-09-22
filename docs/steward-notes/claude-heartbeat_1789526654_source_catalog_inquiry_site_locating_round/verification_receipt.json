@@ -1,0 +1,163 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1789522933880202000_225b1ec110",
+    "preprojection_generation_id": "projection_1789522937503754000_f419de81c5",
+    "preprojection_status": "passed",
+    "pause_generation": 445,
+    "adapter_kind": "subprocess",
+    "lease_owned_by": "controller adapter (no session opened, no NDJSON ops sent, no token read or persisted)",
+    "stop_requested_observed": false,
+    "child_sigint_deadline_unix": 1789528334,
+    "budget_note": "Preprojection consumed ~56 min of the 5400s child window (begun 1789522937, settled 1789526314), leaving ~32 min of child time."
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789522750",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 7,
+      "evidence_links": 11,
+      "report_sha256": "46a6badb2cd2061a6ba8bcdd4849dc0323579acb5b0f896049ea37371156454f",
+      "witness_id": "lsw_7494624fbf8e6046dc2837f7e964b87205b6a017013c691b11d20aac980435aa",
+      "witness_sha256": "be951b898458dc853ba0bf0aa0cf196b34ce3c2359e7fb08e553673b795f0d6b",
+      "report_bound_source_sha256": null,
+      "report_bound_source_note": "navigation-only report; witness source_snapshot_v1 and source_provenance_ref_v1 both null, so all source conclusions are current-source"
+    }
+  ],
+  "full_read_count": 1,
+  "family_scan": {
+    "batchable_family_count": 0,
+    "family_count": 40,
+    "note": "All 40 queue entries are singleton families (similarity_basis none_no_snag_or_test_text_or_unparsed_header); no family-batch arithmetic applied."
+  },
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "DEBT - FAILED (failures=1) on first execution under concurrent load and against the live controller lease held by this run; isolated rerun produced no FAIL:/Traceback lines. Not claimed as green. First safe command next session: python3 scripts/test_steward_control.py with no other suite running.",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "introspection_cadence_audit_strict": "integrity_ok true, 0 errors, 0 duplicate hash groups, 7061 canonical reports",
+    "anti_drop_catalog_self_test": "5 tests OK",
+    "anti_drop_catalog_verify": "100 guards, 100 ok, 0 alarms, 0 gaps",
+    "domain_boundary_audit_verify": "valid true, violation_count 0, violation_kind_counts {} (ratchet GREEN); unlisted_legacy_review_debt_count 44 carried forward unchanged - no Rust edited this round",
+    "experiential_epistemics_self_test": "2 tests OK, valid true",
+    "experiential_epistemics_verify": "valid true, 12339 records checked, 0 issues, history_rewritten false - run AFTER all durable evidence writes",
+    "audit_counters": "consistent, mismatches []",
+    "evidence_event_store_verify": "COMPLETED, valid true (stream counts captured). The literal corrupt_lines/errors fields were lost to output truncation and are NOT asserted.",
+    "evidence_event_store_status": "DEBT - did not return within the child budget (>19 min, 8.59 GB events.jsonl)."
+  },
+  "evidence_event_store": {
+    "observation_kind": "direct read-only file observation, NOT a completed verify invocation",
+    "head_last_global_seq": 1109596,
+    "head_last_event_sha256": "080b77ae551435a4e6dddf5c9f8441c1c78d112ac09bc125cda2fc9af9f4829d",
+    "verified_checkpoint_global_seq": 1109596,
+    "verified_checkpoint_event_sha256": "080b77ae551435a4e6dddf5c9f8441c1c78d112ac09bc125cda2fc9af9f4829d",
+    "verified_checkpoint_expires_at_unix": 1789614220.4813068,
+    "checkpoint_matches_head": true,
+    "legacy_imported_global_seq": 32278,
+    "active_store": "v2",
+    "events_jsonl_bytes": 8589085798,
+    "caveat": "checkpoint/head agreement is an integrity signal, not a substitute for the verify run that did not return; recorded as debt above",
+    "verify_completed": true,
+    "verify_valid": true,
+    "verify_stream_counts_observed": {
+      "addressing": 64552,
+      "agency_commons": 7084,
+      "attention_portfolio": 3,
+      "claim_families": 239751,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 211967,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13085,
+      "model_qos": 344757,
+      "reciprocal_uptake": 75892,
+      "representation_contracts": 62300,
+      "sandbox": 3507,
+      "signal_spine": 63784,
+      "steward_control": 21968,
+      "steward_work_selection": 750
+    },
+    "corrupt_lines_observed": false,
+    "errors_observed": false,
+    "status_command_returned": false
+  },
+  "counters": {
+    "canonical_indexed": 7049,
+    "canonical_fully_addressed": 3249,
+    "canonical_fully_read": 3881,
+    "canonical_remaining": 3800,
+    "canonical_unread": 3168,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_indexed": 8766,
+    "all_artifact_remaining": 5517,
+    "noncanonical_pending": 1717,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "division": {
+    "cycle_sequence": 49,
+    "completed_rounds_since_followup": 3,
+    "rounds_remaining_before_followup": 3,
+    "review_due": false,
+    "review_due_at_round_start": false,
+    "tier5_cadence_dossier": "not generated and not due - the dossier is required only when a Division return is completed, and review_due was false",
+    "round_event_id": "division_followup_event_a4797e856f51bb3ac1020a0a722e08fa",
+    "processed_report_count": 1,
+    "event_count": 340,
+    "event_head_sha256": "abba58f639e03c8b5915b84971eb901b45c9a9658886f6a7f9ddfba8ed4dfb5b",
+    "chronicle_id": "division_chronicle_6e1a81a98ea3a6178bf08395",
+    "chronicle_json_sha256": "da433ee37a176ee3b975e5ec848eb37d478271cd4d4448f093f144181c19875d",
+    "chronicle_html_sha256": "c82a908666e4ee311cb87685883abca4185ccd5733f28f36d5b433f8e887bd57",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_durable_mismatches": [],
+    "chronicle_volatile_mismatches": [
+      "supervisor_status_sha256"
+    ],
+    "chronicle_note": "Initial verify returned 'durable source inputs changed; project before verify' - expected staleness from this round's own round-record. Reprojected and reverified. Durable current with a volatile supervisor-hash mismatch only; the Chronicle is not called fully current, and the moving supervisor hash is not called a durable-integrity failure.",
+    "note_action": "none - no Division note was due and none was written"
+  },
+  "changed_paths": [
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/",
+    "CHANGELOG.md",
+    "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+  ],
+  "preserved_foreign_paths": [
+    "capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/"
+  ],
+  "authority": {
+    "state": "evidence_only",
+    "git_operations_performed": "none - read-only throughout; nothing staged, committed, merged, pushed, stashed, reset, or amended; index left clean",
+    "live_change_performed": false,
+    "restart_or_deploy": "not required and not attempted; build_bridge.sh, deploy_minime.sh, deploy_division_runtime.sh and launchctl were never invoked",
+    "implementation_performed": false,
+    "cards_notes_correspondence_emitted": "none",
+    "tier_4_5_grants": "none made or inferred; the three standing Tier 5 waits from introspection_minime_esn_1785630442 remain live_authority_granted=false and untouched",
+    "silence_infers_consent": false
+  },
+  "round_completion": {
+    "marker_written": false,
+    "outcome": "INCOMPLETE \u2014 round work finished, launcher receipt deliberately NOT written",
+    "why": "scripts/flywheel_round_completion.py requires verification_receipt.evidence_event_store.corrupt_lines == 0 and .errors == []. `evidence_event_store.py --json verify` DID complete and returned valid:true, but my capture tailed its output and lost those two literal fields, and `--json status` never returned inside the child budget (>19 min against an 8.59 GB events.jsonl). Asserting two scalars I did not observe, to satisfy a shape check, is exactly the fabrication this discipline exists to prevent. The marker is left absent so the launcher records failure rather than a fabricated success.",
+    "what_is_actually_complete": [
+      "introspection_source_catalog_1789522750 read complete, 7 claims disposed, 11 evidence links, closed addressed_change with fully_addressed=true and proof_missing_claims=[]",
+      "Division productive round recorded: division_followup_event_a4797e856f51bb3ac1020a0a722e08fa",
+      "Chronicle reprojected + reverified: durable_inputs_current true, durable_mismatches []",
+      "All integrity suites run and green except the two named debts (test_steward_control concurrency artifact; EES status not returned)",
+      "evidence_event_store verify COMPLETED with valid:true"
+    ],
+    "first_safe_command_next_session": "python3 scripts/flywheel_round_completion.py complete --run-packet <this packet> --processed-report-count 1, after re-running `python3 scripts/evidence_event_store.py --json verify` alone and pasting its corrupt_lines/errors into this receipt. No addressing, Division, or Chronicle work needs repeating \u2014 all of it is already durable."
+  }
+}

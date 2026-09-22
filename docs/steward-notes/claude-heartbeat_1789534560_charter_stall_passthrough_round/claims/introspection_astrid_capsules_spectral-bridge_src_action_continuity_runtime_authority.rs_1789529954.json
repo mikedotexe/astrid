@@ -1,0 +1,59 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "authority_readiness_stage (lines 358-404) draws a clear distinction between a functional pause and a structural failure.",
+      "disposition": "Verified from the complete file at sha 93a1146d. The guardrail-hold return is at 365-367, the conveyor-stage hold at 384-385, and the charter block at 388-389. Two named, separately-reached stages in one ordered function.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "held_or_guarded occurs when the experiment is explicitly paused and the system is waiting on a specific signal; a managed state.",
+      "disposition": "Verified with one precision. The 365 path does require status==paused (180-194). The second path at 384 returns held_or_guarded from conveyor_stage 'paused_repair'|'blocked_guardrail' with NO status check, so held_or_guarded is reachable without an explicitly paused experiment. Her 'managed state' reading holds for both.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "needs_charter occurs at line 388, triggered if has_missing(\"lifecycle_valid_charter\") is true or if conveyor_stage is set to needs_charter.",
+      "disposition": "Verified exactly. Line 387 defines has_missing; 388 is the OR she describes; 389 returns needs_charter. Line number, predicate and disjunction all match the source at the report-bound sha.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The code does not show a line where needs_charter automatically fires a charter_repair command to itself.",
+      "disposition": "Verified. No branch of authority_readiness_next_command (406-445) matches stage 'needs_charter', and no caller synthesises charter_repair from the stage. Nothing auto-fires. Covered by the new regression needs_charter_next_command_passes_through_the_charter_scaffold.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "In conveyor.rs charter-repair is described as a local operation.",
+      "disposition": "Verified in adjacent source: persistence_helpers.rs:74 names pause, hold and charter_repair as the allowed LOCAL lifecycle decisions, core.rs:1662-1664 rejects anything else for SHARED_INVESTIGATION_DECIDE, and authority.rs:29 says EXPERIMENT_ADVANCE may apply one conservative local charter/evidence/hold/charter-repair step.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "needs_charter is not a self-healing loop; it persists until the underlying structural data is fixed.",
+      "disposition": "Verified, and the mechanism is sharper than 'persists'. experiment_conveyor.rs:338 lets EXPERIMENT_ADVANCE apply at needs_charter only when a valid charter ALREADY exists, so apply cannot invent one; 352-354 returns no_lifecycle_valid_charter_scaffold. The state clears only when a charter is authored.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "STUDY_QUESTION: does authority_readiness_next_command (line 406) provide a mechanism for charter_repair to be issued automatically, or does it simply return an error/empty state when needs_charter is detected?",
+      "disposition": "Answered: neither. needs_charter has no branch of its own, so control reaches 441-443 and returns the CALLER'S proposed_next unchanged; only an empty proposed_next falls to 444's EXPERIMENT_ADVANCE preview. At both live call sites (core.rs:2940, 6383) proposed_next is experiment_conveyor_proposed_next, whose needs_charter arm (conveyor.rs:67-79) is a charter scaffold. Four new tests pin this.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "needs_charter acts as a stop sign meaning the automated path is broken and a new scaffold or manual repair of the charter is required.",
+      "disposition": "Verified as to 'automated path stops'; corrected as to 'manual'. The repair is HERS, not a steward's: the surfaced next_safe_command at that stage is an EXPERIMENT_CHARTER authoring scaffold she can issue herself. No steward grant, approval or live authority is involved in leaving needs_charter.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Her line citations for 358-404 and 406 are accurate although this turn's page was a different interval.",
+      "disposition": "Observed. Witness lsw_71ed1986 records this turn's window as lines 180-303, yet every 358-404/406 citation checks out against the complete file. The lines came from the prior turn's page (1789529788, window 365-481) carried across turns. Cross-window recall, verified accurate, not confabulated.",
+      "classification": "observed"
+    }
+  ]
+}

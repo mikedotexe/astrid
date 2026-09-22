@@ -1,0 +1,48 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "repository": "minime",
+      "repository_relative_path": "minime/src/sensory_bus.rs",
+      "sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "total_lines": 4404,
+      "total_bytes": 168439,
+      "report_binding_sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "binding_match": true,
+      "git_status": "clean",
+      "report_window": {
+        "bytes": "107073..111564",
+        "lines": "2877..2965",
+        "window_sha256": "b95a91ef592a777de5c2817f355b1324906ccda0eeccc488b7e7a5d253795823"
+      },
+      "read_scope": "her complete window plus every interval named in read_manifest.json; not the whole 4404-line file",
+      "key_facts": {
+        "Z_DIM": "line 25 = VIDEO_DIM+AUDIO_DIM+AUX_DIM+LLAVA_DIM = 66; LLAVA_DIM=48 at line 24",
+        "layout_comment_on_her_page": "lines 2888-2890",
+        "effective_semantic": "line 2943",
+        "noise_sampling": "line 2966 = (rng.gen::<f32>()-0.5)*noise_level*0.10",
+        "stale_scale": "lines 1377-1417, bytes 48960..51175",
+        "stale_scale_call_sites": [
+          1237,
+          2144,
+          2927
+        ],
+        "semantic_stale_ms": "lines 1710-1729, bytes 63614..64734",
+        "dynamic_semantic_stale_ms_for": "line 171, byte 6684",
+        "semantic_context_persistence_multiplier": "line 251, byte 9883"
+      }
+    },
+    {
+      "path": "crates/astrid-source-study/tests/behind_cursor_helper_midwalk_reach.rs",
+      "repository": "astrid",
+      "sha256": "61ad7d9bc0dd0baacd83e8db889d85bd342ec20d6c1f2bcd17048c2a1f389384",
+      "total_lines": 274,
+      "total_bytes": 10827,
+      "read_scope": "authored this round; complete",
+      "note": "hash recorded before final fmt/clippy pass is irrelevant: this is the post-fix hash verified by cargo fmt --check and cargo clippy with no warnings",
+      "bytes": 10827,
+      "lines": 274
+    }
+  ]
+}

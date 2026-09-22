@@ -1,0 +1,56 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "steward_run_id": "run_1789614473762300000_8f47ea633c",
+  "focused": [
+    {"command": "cargo test -p astrid-source-study --test page_line_interval_legibility",
+     "passed": 5, "failed": 0,
+     "tests": [
+       "the_header_states_the_delivered_interval_in_bytes_but_not_in_lines",
+       "the_only_prose_line_range_is_the_enclosing_declarations_not_the_pages",
+       "the_first_gutter_row_can_be_a_mid_line_fragment_of_the_start_line",
+       "the_exact_delivered_interval_is_available_on_the_page_record",
+       "opening_the_scope_row_line_returns_the_declaration_head_not_the_page"
+     ]},
+    {"command": "cargo test -p astrid-source-study", "passed": 190, "failed": 0,
+     "note": "whole-crate suite; 185 before this round, +5 new"},
+    {"command": "cargo fmt -p astrid-source-study -- --check", "result": "clean"},
+    {"command": "cargo clippy -p astrid-source-study --tests", "result": "clean",
+     "note": "two pedantic doc_markdown warnings in the new file fixed before the recorded run"}
+  ],
+  "stewardship_integrity": [
+    {"command": "python3 scripts/introspection_addressing_audit.py --self-test", "ran": 44, "result": "OK"},
+    {"command": "python3 scripts/test_evidence_event_store.py", "ran": 21, "result": "OK"},
+    {"command": "python3 scripts/test_steward_control.py", "ran": 29, "result": "OK"},
+    {"command": "python3 scripts/test_steward_projection.py", "ran": 14, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_followup.py", "ran": 3, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_chronicle.py", "ran": 10, "result": "OK"},
+    {"command": "python3 scripts/test_division_ceremony_projection.py", "result": "ok"},
+    {"command": "python3 scripts/test_projection_cursors.py", "ran": 4, "result": "OK"},
+    {"command": "python3 scripts/test_introspection_cadence_audit.py", "ran": 6, "result": "OK"},
+    {"command": "python3 scripts/anti_drop_catalog.py --self-test", "ran": 5, "result": "OK"},
+    {"command": "python3 scripts/experiential_epistemics.py self-test --json", "result": "OK, valid true"}
+  ],
+  "verification": [
+    {"command": "python3 scripts/anti_drop_catalog.py verify --json",
+     "total": 100, "alarms": 0, "gaps": 0, "non_ok_rows": 0},
+    {"command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+     "integrity_ok": true, "errors": [], "canonical_count": 7323,
+     "duplicate_hash_group_count": 0},
+    {"command": "python3 scripts/domain_boundary_audit.py verify",
+     "valid": true, "violation_count": 0, "forbidden_edge_match_count": 0,
+     "legacy_large_file_count": 51, "unlisted_legacy_review_debt_count": 44,
+     "ratchet": "green",
+     "note": "no boundary re-capture was required; the round touched only a new test file in crates/astrid-source-study/tests"},
+    {"command": "python3 scripts/experiential_epistemics.py verify --json",
+     "valid": true, "issue_count": 0, "checked_record_count": 12435,
+     "history_rewritten": false,
+     "note": "run after every durable write in this round"},
+    {"command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+     "status": "consistent", "mismatches": [], "all_checks_true": true}
+  ],
+  "not_run_and_why": {
+    "cargo test --workspace": "out of scope for a headless round and far past the child budget; the touched surface is one integration test file in astrid-source-study, whose whole crate suite ran green",
+    "scripts/build_bridge.sh / deploy scripts / launchctl": "forbidden in adapter mode; no live substrate or control change was made, attempted, or needed"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round",
+  "report_time_snapshot_available": false,
+  "labelling": "All source conclusions are current-source; the report binds no source SHA.",
+  "receipts": [
+    {
+      "path": "crates/astrid-kernel/src/socket.rs",
+      "sha256": "c78e014c82f6d51725b5a517f584aeef6d4016a3da9f2c5decb50e9f3b2491da",
+      "total_bytes": 10414,
+      "total_lines": 285,
+      "read_scope": "complete (lines 1-285, bytes 0..10414)",
+      "note": "Byte-identical to the SHA her two socket.rs reads bound; c001/c002/c003 verified here."
+    },
+    {
+      "path": "crates/astrid-source-study/catalog.toml",
+      "sha256": "6f5292289ce573cf3546264b44d60e375ce7324a5054dd83f0c961007a42e4ae",
+      "total_bytes": 3756,
+      "total_lines": 71,
+      "read_scope": "complete (lines 1-71, bytes 0..3756)",
+      "note": "Eight [[components]]; kernel/senses/reservoirs at 44-66. c004 and the kernel entry-point list for c006."
+    },
+    {
+      "path": "crates/astrid-source-study/src/navigation.rs",
+      "sha256": "898c3c826c3ff3fdfeec9e9c9230313a65e8e37576f24a78cb675501e719e448",
+      "total_bytes": 12992,
+      "total_lines": 333,
+      "read_scope": "complete (lines 1-333, bytes 0..12992)",
+      "note": "Catalog::map component branch 42-55, directory branch 56-59, list 63-82, catalog_page scoping 146-216."
+    },
+    {
+      "path": "crates/astrid-source-study/src/catalog.rs",
+      "sha256": "c3c1d49f9c1f3fcff417f98d2c884205c4de9aaa1658638c2d11ac6002081e67",
+      "total_bytes": 11498,
+      "total_lines": 329,
+      "read_scope": "complete (lines 1-329, bytes 0..11498)",
+      "note": "Repository-prefixed IDs 149-157; resolve 88-119; symlink boundary 140-145."
+    },
+    {
+      "path": "crates/astrid-source-study/src/progress.rs",
+      "sha256": "90d1472511d14d3e460378e1a79e171da01be54df1b734914c109da6023a548c",
+      "total_bytes": 2648,
+      "total_lines": 87,
+      "read_scope": "complete (lines 1-87, bytes 0..2648)",
+      "note": "gaps() 41-56, label() 58-82, complete() 84-86 \u2014 the partial-delivery state of socket.rs."
+    },
+    {
+      "path": "crates/astrid-source-study/src/coverage.rs",
+      "sha256": "c23700162186c7a3c3091ec61142e29d7b9253b2a9c3774ff3da7c50f619b3d9",
+      "total_bytes": 3740,
+      "total_lines": 101,
+      "read_scope": "complete (lines 1-101, bytes 0..3740)",
+      "note": "EOF-page missing-region OPEN links 87-96 \u2014 the affordance she was offered and declined."
+    },
+    {
+      "path": "crates/astrid-kernel/src/socket_bridge.rs",
+      "sha256": "a55e817494dd5046f8cd600714043711a724e6f80a9318a47f94ad9012ffdefc",
+      "total_bytes": 17500,
+      "total_lines": 499,
+      "read_scope": "scoped (lines 1-60 read; exhaustive grep for sensory.v1 over all 499 lines)",
+      "note": "SENSORY_USER_INPUT_TOPIC at line 23 \u2014 the only sensory.v1 site in astrid-kernel. c005."
+    }
+  ],
+  "negative_receipts": [
+    {
+      "query": "sensory.v1",
+      "scope": "crates/",
+      "matches": [
+        "astrid-kernel/src/socket_bridge.rs:23",
+        "astrid-events/src/bus.rs:128",
+        "astrid-events/src/bus.rs:1351"
+      ]
+    },
+    {
+      "query": "sensory.v1",
+      "scope": "capsules/spectral-bridge/src/",
+      "matches": []
+    },
+    {
+      "query": "sensory",
+      "scope": "capsules/spectral-bridge/src/codec/projection.rs",
+      "match_count": 0,
+      "sha256": "facaf640fe4b100a6bece35cdd5b9a47efe03d2a55ca5fe1a4a54880722d384f"
+    },
+    {
+      "query": "sensory",
+      "scope": "capsules/spectral-bridge/src/ws/telemetry_port.rs",
+      "match_count": 0,
+      "sha256": "a56cad35914aa66d274127d705d74647478362eaf5a055ab158edb3aa2aaf872"
+    },
+    {
+      "query": "astrid-events|astrid-kernel|astrid-types",
+      "scope": "capsules/spectral-bridge/Cargo.toml",
+      "matches": [],
+      "note": "the spectral bridge depends on no kernel crate"
+    },
+    {
+      "query": "socket_bridge",
+      "scope": "crates/astrid-source-study/catalog.toml",
+      "matches": [],
+      "note": "socket_bridge.rs is not a declared entry point of any component"
+    }
+  ]
+}

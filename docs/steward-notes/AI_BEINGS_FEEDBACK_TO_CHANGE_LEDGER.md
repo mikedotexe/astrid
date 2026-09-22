@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-22 - Operator follow-through - historical evidence and test archive
+
+- **Request and provenance:** Mike asked to clean and assess the remaining dirty work. Review the 197 paths previously preserved during live rollouts: thirteen Claude source-first packets, their tests, Codex reader qualification and quiet-sensory tooling. Their original witness/response entries below remain the causal record; this is not a new Being-authored request or productive round.
+- **Verification:** All candidate bytes match the September 21 inventory; 40 report/witness bindings match retained sources; 164 claims have dispositions and 283 evidence links resolve, including twenty explicitly labelled sibling-relative legacy paths. Preserve old failed attempts, incomplete receipt fields, superseded page assertions and attribution rather than rewriting history.
+- **Boundary:** Archive only enumerated reviewed paths. Correct an unrelated pre-existing test's workspace-versus-source identity expectation without changing runtime routing. No journal rewrite, new claim closure, deployment, control-policy change or automation resumption. Current tests, historical limitations and the narrow kernel-topic follow-up are documented in `docs/steward-notes/2026-09-22-historical-dirty-work-assessment.md`.
+
 ### 2026-09-22 - Operator follow-through - provider diagnostic recording restored
 
 - **Provenance:** Mike requested repair of the full optional provider-observation spool identified during the paired open-framing rollout below. This is diagnostic maintenance supporting that verification, not a new Being-authored claim or subjective benefit.

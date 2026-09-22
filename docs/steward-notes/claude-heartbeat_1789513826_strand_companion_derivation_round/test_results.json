@@ -1,0 +1,32 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "round": "claude-heartbeat_1789513826_strand_companion_derivation_round",
+  "runs": [
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib strand_companion_is_the_derived_glimpse",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "filtered_out": 2274
+    },
+    {
+      "command": "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib inquiry::parsing",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "filtered_out": 2271
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid=true, violation_count=0, forbidden_edge_match_count=0"
+    }
+  ]
+}

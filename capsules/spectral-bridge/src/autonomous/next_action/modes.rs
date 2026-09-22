@@ -416,6 +416,11 @@ mod tests {
         let (sensory_tx, _sensory_rx) = mpsc::channel(1);
         let telemetry = telemetry();
         let mut burst_count = 0;
+        let mut expected =
+            IntrospectTargetV2::auto("system-resources-demo/system_resources.py".to_string());
+        // This example may resolve to an existing workspace experiment. That
+        // legacy route retains the dispatch identity, not a shared-reader job ID.
+        let shared_target = super::super::super::study_handoff::shared_target(&expected);
         let mut ctx = NextActionContext {
             operation_id: Some("examine-fixture"),
             burst_count: &mut burst_count,
@@ -436,10 +441,12 @@ mod tests {
 
         assert!(handled);
         assert!(conv.defer_inbox);
-        assert_study_target(
-            conv.introspect_target.as_ref().unwrap(),
-            IntrospectTargetV2::auto("system-resources-demo/system_resources.py".to_string()),
-        );
+        if shared_target {
+            assert_study_target(conv.introspect_target.as_ref().unwrap(), expected);
+        } else {
+            expected.operation_id = Some("examine-fixture".into());
+            assert_eq!(conv.introspect_target.as_ref().unwrap(), &expected);
+        }
         assert!(
             conv.emphasis
                 .as_deref()

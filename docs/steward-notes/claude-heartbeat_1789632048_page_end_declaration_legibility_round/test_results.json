@@ -1,0 +1,30 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "run_id": "run_1789627757397193000_9c8d2289b6",
+  "focused": [
+    {
+      "command": "cargo test -p astrid-source-study --test page_end_declaration_legibility",
+      "passed": 5,
+      "failed": 0,
+      "note": "the five read-only pins authored this round"
+    },
+    {
+      "command": "cargo test -p astrid-source-study",
+      "passed": 195,
+      "failed": 0,
+      "note": "190 before this round; +5 from the new file"
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "clean",
+      "note": "two rustfmt diffs in the new file corrected before the recorded run"
+    },
+    {
+      "command": "cargo clippy -p astrid-source-study --tests",
+      "result": "clean",
+      "note": "one pedantic filter(..).next_back() warning in the new file rewritten as rfind before the recorded run"
+    }
+  ],
+  "integrity": []
+}

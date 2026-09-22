@@ -1,0 +1,29 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "receipts": [
+    {
+      "introspection_id": "introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384",
+      "path": "capsules/astralis/astrid-capsule-edge-spectral/src/lib.rs",
+      "sha256": "ea092611b5f0d8e5082541bf8f5795799cb29077847ed50a0ce5f2877dec4125",
+      "report_bound_sha256": "ea092611b5f0d8e5082541bf8f5795799cb29077847ed50a0ce5f2877dec4125",
+      "hash_match": true,
+      "total_lines": 941,
+      "total_bytes": 33809,
+      "report_window_lines": "535-650",
+      "steward_read_scope": "complete file",
+      "working_copy_state": "clean at git HEAD c4f85e95e4; last touching commit d3784b4b79",
+      "verified_line_spans": {
+        "select_window": "546-557",
+        "window_bounds": "559-564",
+        "recorded_at": "566-571",
+        "summarize_metrics": "573-586",
+        "summarize": "588-603",
+        "round_six": "605-607",
+        "sanitize_spectral_record": "609-641",
+        "sanitize_substrate": "643-670",
+        "METRICS_const_table": "26-72",
+        "window_bounds_call_site": "167-183"
+      }
+    }
+  ]
+}

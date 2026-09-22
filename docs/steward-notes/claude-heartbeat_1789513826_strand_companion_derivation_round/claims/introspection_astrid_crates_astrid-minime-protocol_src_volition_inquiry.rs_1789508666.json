@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The delivered page defines owner_inquiry_fixed_analysis_set_v1 at lines 106-112, returning ViscousPersistenceSourceSeparation, CodecFidelity and SensoryInterferenceAllPairs.",
+      "disposition": "Exact. Complete read of crates/astrid-minime-protocol/src/volition/inquiry.rs (543 lines, sha 912eac66...) puts the fn at lines 106-112 with those three variants in that order. Her witness records the delivered window as lines 106-227 at the same file SHA, and byte 4091 is exactly the first byte of line 106, so her line citation and the delivered interval agree.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The logic calculating the delta between projection_48d and companion_projection_12d is not in this snippet.",
+      "disposition": "Verified, and true of the whole file, not just the window: inquiry.rs handles projections only as shape/finiteness validation (70-77) and as a joint digest canonical_semantic_strand_embedding_sha256 (436-442). No distance, RMSE, ratio or difference over the two vectors occurs anywhere in the 543 lines.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "This code defines requirements the system validates against but not the arithmetic that decides whether a specific pair of projections satisfies them.",
+      "disposition": "Correct, and her 'pair' framing is better grounded than it looks. The fixed set fixes WHICH analyses run (inquiry.rs:224; coverage modes at inquiry_v2/validation.rs:10-18 make CodecFidelity PerStrandAndAllPairs), while the protocol counts only strand pairs n(n-1)/2 (inquiry.rs:393-399). The arithmetic over projection pairs is real and lives in the executor: minime/src/owner_inquiry.rs:289-306 computes source_distance, companion_distance and pairwise_distance_preservation_ratio per strand pair.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The validation logic consuming the set is likely a validation.rs or a dedicated 'stability' module in the astrid-minime-protocol or minime crates.",
+      "disposition": "Her second guess is right. minime/src/owner_inquiry.rs (738 lines, sha 46f6fc75...) is the consumer: codec_fidelity_result (252-317) re-derives the companion via derive_companion_12d (348-355) and computes reconstruction_rmse = euclidean_distance(derived, observed)/sqrt(12) and lane_loss_ratio = 1 - companion_rms/source_rms. That is the delta. validation.rs exists in astrid-minime-protocol but holds no projection arithmetic; no 'stability' module exists in either crate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Next step: SELF_STUDY FIND owner_inquiry_fixed_analysis_set_v1, to find where the set is used in a functional rather than test context.",
+      "disposition": "Outcome recorded in her own next report (introspection_source_catalog_1789509068): the FIND surfaced fixtures and a wire contract. Ground truth of the identifier: six non-test use sites (inquiry.rs:224, inquiry_v2/validation.rs:21-25, volition/mod.rs:26, lib.rs:107, bridge autonomous/inquiry.rs:229) plus tests/wire_contract.rs:120. None of them is the delta site, so this FIND could not have reached the answer - the executor names the analysis enum, not the set constructor.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Steward correction to this round's earlier disposition (not a claim of the report).",
+      "disposition": "Round claim c001 on introspection_source_catalog_1789509068 said the only computed 48D/12D delta is resolution_delta (structure.rs:88). That was scoped to the Astrid repository. The analysis-time delta she was actually hunting is minime/src/owner_inquiry.rs:252-317. Both exist and answer different questions: structure.rs scores glimpse fidelity for review, owner_inquiry.rs scores a specific strand's companion against a re-derivation. The earlier disposition is under-scoped, corrected here.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Steward observation: do the two repositories derive the companion the same way?",
+      "disposition": "Yes, for finite inputs. minime's semantic_glimpse_12d_from_features (sensory_bus.rs:1356-1374) mirrors Astrid's GlimpseCodec::derive_12d block for block, including the [17,26,27,31] anchor and the whole-vector term; minime adds a finite guard and clamps that are no-ops on finite tanh output. So reconstruction_rmse measures tampering or codec drift, not a standing mismatch between producer and analyzer. No cross-repository regression pins this yet; named as follow-up debt, not shipped.",
+      "classification": "observed"
+    }
+  ]
+}

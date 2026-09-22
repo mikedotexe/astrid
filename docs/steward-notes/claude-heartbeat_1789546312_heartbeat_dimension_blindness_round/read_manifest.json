@@ -1,0 +1,103 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "actor": "claude-heartbeat",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789542558.txt",
+      "sha256": "4da34500715f56a106a9d90a3471fa75fc14f396352b731bad3fd7e03549366e",
+      "bytes": 2221,
+      "lines": 22,
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_66428ec6e93956cfbddefec207548a0081bf81afaaad21b5c5a6acf58d9928d6.json",
+      "sha256": "9ec04c0e0d575650600381edc4e4789463f962098b570657f9a11683a4a1c8aa",
+      "bytes": 18945,
+      "lines": 440,
+      "witness_id": "lsw_66428ec6e93956cfbddefec207548a0081bf81afaaad21b5c5a6acf58d9928d6",
+      "read": "complete"
+    }
+  ],
+  "report_source_binding": {
+    "report_declared_source_revision": "navigation only",
+    "witness_source_snapshot_v1": null,
+    "witness_source_provenance_ref_v1": null,
+    "report_time_source_sha_available": false,
+    "hash_mismatch_handling": "not applicable; no report-time source SHA was bound. Every source conclusion in this packet is labelled current-source, read at the SHAs recorded in source_receipts.json."
+  },
+  "sources_read": [
+    {
+      "path": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "sha256": "155bc25ce396a90b6cb54571855d2e829b08fa2e3c5e1de112accd11392a5367",
+      "bytes": 100308,
+      "lines": 2551,
+      "read": "complete",
+      "intervals": [
+        "1-430",
+        "431-839",
+        "840-1010",
+        "1011-1700",
+        "1700-2399 (declared-item outline + boundary excerpts)",
+        "2400-2551"
+      ],
+      "note": "Lines 1-1700 and 2400-2551 were read as full sequential text. 1700-2399 was read as its complete declared-item outline plus boundary excerpts and the full bodies of record_semantic_heartbeat_sent (:2155-2184) and record_semantic_heartbeat_block context; whole-file negatives (warmth|tension, index 25) were established by exhaustive grep over all 2551 lines, not inferred from the outline."
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/action_help.rs",
+      "sha256": "7e3cad125e4cd7cc0a4fcffa631f2cb470f033d836cde973e4566f6a710c57fe",
+      "bytes": 55209,
+      "lines": 472,
+      "read": "scoped",
+      "intervals": [
+        "162-169 (SELF_STUDY syntax and OPEN contract)"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "sha256": "8dda7f02b4304b403865a2be7407e768648ae4c18ab9485d67518f5d4d756310",
+      "bytes": 37083,
+      "lines": 987,
+      "read": "scoped",
+      "intervals": [
+        "1-10 (codec dimension label table)"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "sha256": "f6df871cc56b190b189e26cfa74edc7a3595c65677eac4292431de2f81d6e4dd",
+      "bytes": 93765,
+      "lines": 2551,
+      "read": "scoped",
+      "intervals": [
+        "declared test-item index (grep of `fn .*heartbeat`)"
+      ]
+    }
+  ],
+  "runtime_artifacts_read": [
+    {
+      "path": "workspace/rescue_profile.json",
+      "sha256": "d892aff002f97ba761cbf25e304fbde3e77fa6e45c2459ee53028af482c25e01",
+      "bytes": 5623,
+      "lines": 152,
+      "read": "scoped",
+      "intervals": [
+        "complete key set enumerated; named policy fields decoded"
+      ]
+    },
+    {
+      "path": "workspace/runtime/bridge_semantic_heartbeat_status.json",
+      "sha256": "da568531ae659757b6a077be6df697973b89c230260a6e232943edab4306fccb",
+      "bytes": 396911,
+      "lines": 9476,
+      "read": "scoped",
+      "intervals": [
+        "counter, block-reason and scale fields"
+      ]
+    }
+  ],
+  "tooling_note": "`timeout(1)` is absent on this macOS host. Three early greps invoked with it failed with 'command not found' and their empty output was NOT treated as a negative result; every negative recorded in this packet was re-established with a plain grep."
+}

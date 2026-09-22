@@ -1,0 +1,690 @@
+{
+ "schema": "introspection_family_scan_v1",
+ "threshold": 0.35,
+ "family_count": 40,
+ "batchable_family_count": 0,
+ "families": [
+  {
+   "family_head": "introspection_source_catalog_1789509068",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789509068",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+   "source_label": "astrid/crates/astrid-minime-protocol/src/volition/inquiry.rs",
+   "source_path": "",
+   "window": "bytes4091..8383",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789508322",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789508322",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-minime-protocol_tests_wire_contract.rs_1789508039",
+   "source_label": "astrid/crates/astrid-minime-protocol/tests/wire_contract.rs",
+   "source_path": "",
+   "window": "bytes4779..8930",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_tests_wire_contract.rs_1789508039",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789507681",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789507681",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789507180",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789507180",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789507007",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789507007",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506920",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506920",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506839",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506839",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506734",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506734",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506671",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506671",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506597",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506597",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506534",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506534",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506450",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506450",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506371",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506371",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506286",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506286",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506212",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506212",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506131",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506131",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789506004",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789506004",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789505868",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789505868",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789505554",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789505554",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789505111",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789505111",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789504792",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789504792",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789504699",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789504699",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789504337",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789504337",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789504031",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789504031",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789503620",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789503620",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_crates_astrid-minime-protocol_tests_fixtures_owner_inquiry_v1.json_1789503217",
+   "source_label": "astrid/crates/astrid-minime-protocol/tests/fixtures/owner_inquiry_v1.json",
+   "source_path": "",
+   "window": "bytes1266..3529",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_tests_fixtures_owner_inquiry_v1.json_1789503217",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789503078",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789503078",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_autonomy_owner_inquiry.py_1789502933",
+   "source_label": "minime/minime_autonomy/owner_inquiry.py",
+   "source_path": "",
+   "window": "bytes10363..14779",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_autonomy_owner_inquiry.py_1789502933",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789502786",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789502786",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_services_astrid-edge-rescue-helper_CONTRACT.md_1789502703",
+   "source_label": "astrid/services/astrid-edge-rescue-helper/CONTRACT.md",
+   "source_path": "",
+   "window": "bytes5794..10394",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_services_astrid-edge-rescue-helper_CONTRACT.md_1789502703",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789502595",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789502595",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789502456",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789502456",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789502280",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789502280",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789502190",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789502190",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_minime_minime_autonomy_owner_inquiry.py_1789502093",
+   "source_label": "minime/minime_autonomy/owner_inquiry.py",
+   "source_path": "",
+   "window": "bytes10363..14779",
+   "members": [
+    {
+     "introspection_id": "introspection_minime_minime_autonomy_owner_inquiry.py_1789502093",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789501971",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789501971",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_inquiry_parsing.rs_1789501877",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+   "source_path": "",
+   "window": "bytes8708..12570",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_inquiry_parsing.rs_1789501877",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_inquiry_parsing.rs_1789501743",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+   "source_path": "",
+   "window": "bytes4264..8708",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_inquiry_parsing.rs_1789501743",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  }
+ ],
+ "skipped": [],
+ "authority_boundary": "evidence routing only: a family is a candidate batch, not a disposition; every member still requires its own complete read, per-report claims naming its variant_distinct_terms, and its own close"
+}

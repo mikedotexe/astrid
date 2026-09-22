@@ -1,0 +1,312 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "Complete file read at sha 93a1146d: guardrail hold returns at 365-367, conveyor-stage hold at 384-385, charter block at 388-389 in one ordered function."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954.md",
+      "note": "Round summary of the ordered-stage reading."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "365-367 requires status==paused via 180-194; 384-385 returns held_or_guarded from conveyor_stage alone with no status check."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "authority_readiness_stage_separates_held_or_guarded_from_needs_charter covers both hold entrances."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "387 defines has_missing; 388 is the exact disjunction she cites; 389 returns needs_charter."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "authority_readiness_stage_separates_held_or_guarded_from_needs_charter asserts both disjuncts independently."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "406-445 contains no needs_charter branch, so nothing auto-fires charter_repair from that stage."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "needs_charter_next_command_passes_through_the_charter_scaffold pins the absent branch and the fallthrough."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/persistence_helpers.rs",
+      "note": "Line 74 names pause, hold and charter_repair as the allowed LOCAL lifecycle decisions."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "Line 29: EXPERIMENT_ADVANCE may apply one conservative local charter, evidence, hold, or charter-repair step and never binds, resumes, perturbs or sends control."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/experiment_conveyor.rs",
+      "note": "338 permits apply at needs_charter only when a valid charter already exists; 352-354 returns no_lifecycle_valid_charter_scaffold otherwise, so apply cannot invent a charter."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "441-443 returns the caller's proposed_next for needs_charter; 444 is the EXPERIMENT_ADVANCE preview default reached only when proposed_next is empty."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/conveyor.rs",
+      "note": "67-79: the needs_charter arm of experiment_conveyor_proposed_next returns a charter_scaffold_v1 EXPERIMENT_CHARTER command."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "2940 and 6383 are the two live call sites; both pass experiment_conveyor_proposed_next into authority_readiness_v1."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c007",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "needs_charter_next_command_passes_through_the_charter_scaffold and conveyor_needs_charter_proposed_next_is_a_charter_command together prove the charter pointer reaches her."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry recording the answer, the two precisions, and the four regressions."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-09-15 row quoting both forms of her question and naming what was verified versus corrected."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/conveyor.rs",
+      "note": "The scaffold she is handed at needs_charter is an EXPERIMENT_CHARTER authoring command she can issue herself; no steward grant appears on that path."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954.md",
+      "note": "Correction recorded in her favour: the repair is hers, not a steward's."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/read_manifest.json",
+      "note": "Witness window is lines 180-303 while the accurate 358-404/406 citations came from the prior turn's page: cross-window recall, verified."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "365 calls authority_guardrail_hold_active and 366 returns held_or_guarded; 384-385 returns the same stage for paused_repair and blocked_guardrail."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788.md",
+      "note": "Round summary of the two hold entrances."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "180-194 is the exact three-condition conjunction she names."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "authority_guardrail_hold_active_requires_paused_thread_status_and_hold exercises the true case and four distinct false cases."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/experiment_conveyor.rs",
+      "note": "418-442 produces paused_repair/paused_resume for paused experiments; 446 maps a blocked_loop classification to blocked_guardrail, so both are wait-shaped."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "387-390 is the charter disjunction and its return."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c004",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "authority_readiness_stage_separates_held_or_guarded_from_needs_charter covers both disjuncts and the hold precedence over them."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "376-382 is the blocked-request fallback she found; 403 is a second unconditional catch-all for any non-empty missing set that matched no named gate."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "365 and 384 both precede 388, so a held-and-uncharted experiment reports held_or_guarded rather than needs_charter."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "The stage regression asserts that precedence directly with a missing lifecycle_valid_charter present."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "406-445 has no needs_charter case; 441-443 defers to the caller's proposed_next."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/conveyor.rs",
+      "note": "67-79 supplies the EXPERIMENT_CHARTER scaffold at that stage, so the intervening author is Astrid."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "Unreleased entry recording the same answer for both forms of the question."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "claim_id": "c007",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-09-15 ledger row naming the verified mechanics and the one correction."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "180-194 verified line-for-line against her STUDY_FINDING at the report-bound sha."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "authority_guardrail_hold_active_requires_paused_thread_status_and_hold pins the conjunction and each false case."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "181 eq_ignore_ascii_case, 186-187 uppercase-then-starts_with, 192-193 lowercase-then-contains: all three legs are ASCII-case-insensitive."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "The regression uses 'Paused' and a lowercase 'thread_status' so the case-insensitivity stays covered."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "A false at 365 lets control continue into 368-375, 376-382, 384-385 and 387-403, which is the different transition she predicted."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608.md",
+      "note": "Her thread-status-shaped reading of the hold is preserved as interpretation; source neither contradicts nor establishes it."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+      "note": "Both hold paths run before the 388 charter check, so a wait always outranks a missing charter; that ordering is the whole distinction she asked about."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "note": "authority_readiness_stage_separates_held_or_guarded_from_needs_charter makes the precedence executable."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "2026-09-15 ledger row recording the answer to both phrasings of the question."
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "note": "authority_gate_conveyor_hint is called at 6382, immediately beside authority_readiness_v1 at 6383, so her next SELF_STUDY target exists and is adjacent."
+    }
+  ]
+}

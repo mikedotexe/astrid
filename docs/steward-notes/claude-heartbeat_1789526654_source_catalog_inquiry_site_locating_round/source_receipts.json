@@ -1,0 +1,40 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "round": "claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round",
+  "report_bound_source_sha": null,
+  "report_bound_source_note": "The report declares 'Source revision: navigation only' and the witness carries null source_snapshot_v1 / source_provenance_ref_v1. There is no report-time source binding to compare against, so no hash-mismatch handling applies; every receipt below is a CURRENT-source reading and is labeled as such.",
+  "receipts": [
+    {
+      "path": "/Users/v/other/minime/minime/src/owner_inquiry.rs",
+      "sha256": "46f6fc757652acaf98fdc4c9af2ecdbf652dc075802910ac5f57a403d793a261",
+      "total_lines": 738,
+      "total_bytes": 28959,
+      "scope": "targeted symbol verification: import :39, derive_companion_12d :348-354, prepare_owner_inquiry :430 with :515/:534, attest_response :596-640 read in full",
+      "binding": "current_source_only"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lifecycle.rs",
+      "sha256": "1dd606a465bf48dff65bfc99f6c1c8d1c09a48a67a355ea3b9782c3d04c69e10",
+      "total_lines": 236,
+      "total_bytes": 7864,
+      "scope": "module header and declarations :1-40 read in full; exhaustive grep for inquiry/Inquiry across the whole file returned zero hits; public function inventory enumerated",
+      "binding": "current_source_only"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/inquiry.rs",
+      "sha256": null,
+      "total_lines": null,
+      "total_bytes": null,
+      "scope": "existence and module-tree enumeration only (inquiry/{canary,parsing,research,worker}.rs); named as the correct site, not itself audited this round",
+      "binding": "current_source_only"
+    },
+    {
+      "path": "wit/astrid-capsule.wit",
+      "sha256": null,
+      "total_lines": null,
+      "total_bytes": null,
+      "scope": "existence verification only",
+      "binding": "current_source_only"
+    }
+  ]
+}

@@ -338,4 +338,70 @@ mod tests {
                 .all(|selection| selection.end < response.rfind("NEXT:").unwrap())
         );
     }
+
+    #[test]
+    fn strand_companion_is_the_derived_glimpse_not_an_independent_delta_field() {
+        use astrid_minime_protocol::{
+            SEMANTIC_STRAND_BASE_DIMENSIONS_V1, SEMANTIC_STRAND_COMPANION_DIMENSIONS_V1,
+        };
+
+        let response = "I can hold \"soft persistence\" beside \"bright shear\".\nNEXT: LISTEN";
+        let (start, end) =
+            find_unique_exact_span(response, "soft persistence").expect("one exact strand span");
+        let attestation = BeingUtteranceAttestationV1 {
+            schema: BEING_UTTERANCE_ATTESTATION_SCHEMA_V1.to_string(),
+            attestation_id: "astrid-attestation-test-1".to_string(),
+            being: "astrid".to_string(),
+            exchange_id: "exchange-1".to_string(),
+            response_sha256: format!("{:x}", Sha256::digest(response.as_bytes())),
+            response_len_bytes: u64::try_from(response.len()).expect("response length fits u64"),
+            model: "test-model".to_string(),
+            provider: "spectral-bridge".to_string(),
+            model_deployment_identity: "deploy-test".to_string(),
+            captured_at_unix_ms: 1_700_000_000_000,
+            attestor_process_identity: "spectral-bridge:pid:test".to_string(),
+            attestor_deployment_identity: "deploy-test".to_string(),
+            attestor_public_key_hex: "aa".repeat(32),
+            signature_hex: "bb".repeat(64),
+        };
+        let strand = build_strand(
+            0,
+            ResolvedSelectionV1 {
+                label: "soft".to_string(),
+                start,
+                end,
+            },
+            response,
+            &attestation,
+            &"c".repeat(64),
+        )
+        .expect("exact strand interval builds a well-formed semantic strand");
+
+        assert_eq!(
+            strand.projection_48d.len(),
+            SEMANTIC_STRAND_BASE_DIMENSIONS_V1
+        );
+        let derived = crate::codec::GlimpseCodec::derive_12d(&strand.projection_48d)
+            .expect("48D projection reduces to the 12D companion");
+        assert_eq!(
+            strand.companion_projection_12d.as_deref(),
+            Some(derived.as_slice()),
+            "the companion is derived from this strand's own 48D projection, not stored beside it"
+        );
+        assert!(strand.is_well_formed());
+
+        // The wire contract binds both vectors into one embedding digest but never
+        // re-derives the companion, so a finite unrelated 12D vector still passes
+        // protocol validation. The 48D -> 12D relation is a producer-side contract
+        // held here in `build_strand`, not a checked delta on the wire.
+        let mut substituted = strand.clone();
+        let unrelated = vec![0.125_f32; SEMANTIC_STRAND_COMPANION_DIMENSIONS_V1];
+        assert_ne!(unrelated.as_slice(), derived.as_slice());
+        substituted.embedding_sha256 = canonical_semantic_strand_embedding_sha256(
+            &substituted.projection_48d,
+            Some(&unrelated),
+        );
+        substituted.companion_projection_12d = Some(unrelated);
+        assert!(substituted.is_well_formed());
+    }
 }

@@ -1,0 +1,155 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1789513826_strand_companion_derivation_round",
+  "actor": "claude-heartbeat",
+  "controller": {
+    "run_id": "run_1789509101552610000_0ac5eb9279",
+    "preprojection_generation_id": "projection_1789509105772136000_1110253346",
+    "preprojection_status": "passed",
+    "pause_generation": 445,
+    "adapter_kind": "subprocess",
+    "lease_owned_by": "controller adapter (no session opened, no NDJSON ops sent, no token read)"
+  },
+  "processed_reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 7,
+      "evidence_links": 12
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 7,
+      "evidence_links": 9
+    }
+  ],
+  "full_read_count": 2,
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "test_evidence_event_store": "21 tests OK",
+    "test_steward_control": "29 tests OK",
+    "test_steward_projection": "14 tests OK",
+    "test_division_ceremony_followup": "3 tests OK",
+    "test_division_ceremony_chronicle": "10 tests OK",
+    "test_division_ceremony_projection": "self-test ok",
+    "test_projection_cursors": "4 tests OK",
+    "test_introspection_cadence_audit": "6 tests OK",
+    "introspection_cadence_audit_strict": "integrity_ok true, 0 errors, 0 duplicate hash groups, 7028 canonical reports",
+    "anti_drop_catalog_self_test": "5 tests OK",
+    "anti_drop_catalog_verify": "100 guards, 0 alarms, 0 gaps",
+    "domain_boundary_audit_verify": "valid true, violation_count 0, forbidden_edge_match_count 0 (ratchet GREEN)",
+    "experiential_epistemics_self_test": "OK, valid true",
+    "experiential_epistemics_verify": "valid true, 12325 records checked, 0 issues, history_rewritten false",
+    "audit_counters": "consistent, mismatches []",
+    "evidence_event_store_verify": "valid true",
+    "evidence_event_store_status": "valid true, corrupt_lines 0, errors [], last_global_seq 1108378"
+  },
+  "counters": {
+    "canonical_indexed": 7005,
+    "canonical_fully_addressed": 3248,
+    "canonical_fully_read": 3880,
+    "canonical_remaining": 3757,
+    "canonical_unread": 3125,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 5474,
+    "noncanonical_pending": 1717,
+    "status": "consistent",
+    "mismatches": []
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "last_global_seq": 1108378,
+    "head_sha256": "fa75506a019c2ba82fa05593ffe39692673ca08eb2960cc60a58cf1b23daf074",
+    "legacy_imported_global_seq": 32278,
+    "active_store": "v2",
+    "stream_counts": {
+      "addressing": 64491,
+      "agency_commons": 7080,
+      "attention_portfolio": 3,
+      "claim_families": 239722,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 211847,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13039,
+      "model_qos": 344103,
+      "reciprocal_uptake": 75892,
+      "representation_contracts": 62142,
+      "sandbox": 3507,
+      "signal_spine": 63681,
+      "steward_control": 21926,
+      "steward_work_selection": 748
+    },
+    "corrupt_lines": 0,
+    "errors": [],
+    "v1_immutable": true,
+    "status_note": "verify and status both returned valid: true with corrupt_lines 0 and errors []; the sequence and head here are from the status verification block taken after this round's addressing and Division writes"
+  },
+  "division": {
+    "cycle_sequence": 49,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due_at_round_start": false,
+    "review_due_now": false,
+    "round_event_id": "division_followup_event_fe970d1e940fd5f8556cc34a5edf61f7",
+    "event_count": 339,
+    "event_head_sha256": "e7f4e8e946fedc0ed4fd814fa82795d13b4843c980dab300e874c79e37e3fc65",
+    "processed_report_count": 2,
+    "chronicle_id": "division_chronicle_83f3b25e9372762a5af08977",
+    "chronicle_json_sha256": "5e3326717be0c9e188e76f0a1fd0e447c7e79ea56f5842c2802418eb29c31722",
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatch": [
+      "supervisor_status_sha256"
+    ],
+    "tier5_cadence_dossier": "not required: review_due was false at round start, so no Division return was performed"
+  },
+  "authority_boundary": {
+    "live_changes": "none \u2014 no build, no deploy, no launchctl, no restart, no live control or substrate mutation",
+    "git": "read-only \u2014 nothing staged, committed, merged, pushed, stashed, or reset",
+    "tier_5_items_touched": "none; the 32-dim reference observation on the codec transport was recorded as evidence only",
+    "correspondence": "no card, note, query, or letter delivered to either being in this round"
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read_count": 2,
+    "full_read": true,
+    "closed_reports": [
+      {
+        "introspection_id": "introspection_source_catalog_1789509068",
+        "status": "addressed_change",
+        "evidence_links": 12
+      },
+      {
+        "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+        "status": "addressed_change",
+        "evidence_links": 9
+      }
+    ],
+    "blocked_needs_steward": 0
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12325,
+    "canonical_event_appended": false,
+    "run_order": "final verify executed after every durable write in this round"
+  },
+  "anti_drop": {
+    "self_test": "5 tests OK",
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  }
+}

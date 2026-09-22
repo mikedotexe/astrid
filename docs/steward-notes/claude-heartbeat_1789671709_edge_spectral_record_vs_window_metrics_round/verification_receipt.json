@@ -1,0 +1,201 @@
+{
+  "schema": "introspection_flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_adapter",
+  "controller": {
+    "run_id": "run_1789667511811449000_c164bb18ad",
+    "steward_run_id": "run_1789667511811449000_c164bb18ad",
+    "preprojection_generation_id": "projection_1789667515386260000_dff7738bd4",
+    "preprojection_status": "passed",
+    "preprojection_completed_steps": 27,
+    "preprojection_authority_scan_passed": true,
+    "postprojection_generation_id": "runs after this process exits; not observable from inside the round",
+    "pause_generation": 454,
+    "stop_requested_observed": false,
+    "session_opened": false,
+    "ndjson_ops_sent": false,
+    "lease_token_read_or_persisted": false,
+    "preprojection_wall_note": "lease acquired 17:51:51Z; model child's first command 18:54:5xZ (~63 min), far outside the handoff's stated 6-9 minutes"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384",
+      "terminal_status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claim_count": 11,
+      "evidence_links_new": 18,
+      "evidence_links_existing": 0
+    }
+  ],
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "introspection_ids": [
+      "introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384"
+    ],
+    "terminal_status": "addressed_change",
+    "claim_count": 11,
+    "evidence_links_new": 18,
+    "evidence_links_existing": 0,
+    "selected_count": 40,
+    "processed_count": 1,
+    "unprocessed_count": 39,
+    "family_scan": {
+      "family_count": 40,
+      "batchable_family_count": 0,
+      "skipped": 0,
+      "note": "every queue item is a distinct source window of one sequential walk; no family batch existed"
+    },
+    "process_note": "close was invoked twice: the grounded --write close, then a no-write re-invocation used only to read the projected state back. Terminal state is one addressed_change with the grounded rationale."
+  },
+  "addressing_counters": {
+    "canonical": {
+      "indexed": 7389,
+      "fully_addressed": 3265,
+      "full_read": 3897,
+      "remaining": 4124,
+      "unread": 3492,
+      "blocked_needs_steward": 416,
+      "triaged_pending_action": 212,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": {
+      "indexed": 9106,
+      "remaining": 5841
+    },
+    "noncanonical_pending": 1717,
+    "proof_gap_artifact_count": 0,
+    "proof_gap_claim_count": 0
+  },
+  "counters": {
+    "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+    "status": "consistent",
+    "mismatches": [],
+    "all_checks_true": true
+  },
+  "epistemic_lint": {
+    "command": "python3 scripts/experiential_epistemics.py verify --json",
+    "run_after_all_durable_writes": true,
+    "valid": true,
+    "issue_count": 0,
+    "issues": [],
+    "checked_record_count": 12478,
+    "history_rewritten": false,
+    "self_test": {"valid": true}
+  },
+  "anti_drop": {
+    "self_test": "5 tests OK",
+    "verify": {"total": 100, "alarms": 0, "gaps": 0}
+  },
+  "domain_boundary": {
+    "command": "python3 scripts/domain_boundary_audit.py verify",
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "stable_facade_count": 6,
+    "unlisted_legacy_review_debt_count": 44,
+    "resolved_large_file_debt_count": 3,
+    "ratchet": "GREEN",
+    "note": "round appended one test to an existing capsule test file; no boundary re-capture required; legacy review debt unchanged and pre-existing"
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1123098,
+    "last_global_seq": 1123098,
+    "last_event_sha256": "abab4a360d8a0379877d45887b33b138953c8185f1cb3696dc178b5da3397255",
+    "stream_counts": {
+      "addressing": 65208,
+      "agency_commons": 7143,
+      "attention_portfolio": 3,
+      "claim_families": 240040,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 213230,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13442,
+      "model_qos": 351432,
+      "reciprocal_uptake": 76834,
+      "representation_contracts": 63773,
+      "sandbox": 3507,
+      "signal_spine": 64904,
+      "steward_control": 22613,
+      "steward_work_selection": 772
+    },
+    "active_store": "v2",
+    "legacy_imported_global_seq": 32278,
+    "v1_immutable": true,
+    "history_rewritten": false,
+    "verify_wall_seconds": 780,
+    "status_wall_seconds": 1990,
+    "note": "both verify and the full status enumeration completed inside this round; the live bridge kept appending to the steward_control stream during the enumeration, so head.json advanced past the enumerated sequence (expected)"
+  },
+  "division": {
+    "cycle_sequence": 51,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due_before_round": false,
+    "review_due_after_round": false,
+    "round_event_id": "division_followup_event_3a16f1777e13fa4f697299f0a9c46eca",
+    "event_count": 353,
+    "event_head_sha256": "43cc03cae575f7ab6d7d7a98a6a81487563abc5d94cf9cfab5f8fb2554c25878",
+    "processed_report_count": 1,
+    "projection_generation_id": "projection_1789667515386260000_dff7738bd4",
+    "tier5_cadence_dossier": "not owed this round (review_due was false at round start); owed by the session that completes the next tracker-enforced bounded return",
+    "note_action": "none; no Division return was due at round start, so no being note was written and no review-query slot was occupied"
+  },
+  "chronicle": {
+    "command": "python3 scripts/division_ceremony_chronicle.py verify",
+    "result": "chronicle durable source inputs changed; project before verify",
+    "interpretation": "expected project-before-verify condition after the round-record append; resolved by the postprojection. The Chronicle is NOT claimed current and this is not a durable-integrity failure."
+  },
+  "integrity": {
+    "introspection_addressing_audit --self-test": "44 tests OK",
+    "test_evidence_event_store.py": "21 tests OK",
+    "test_steward_control.py": "29 tests OK",
+    "test_steward_projection.py": "14 tests OK",
+    "test_division_ceremony_followup.py": "3 tests OK",
+    "test_division_ceremony_chronicle.py": "10 tests OK",
+    "test_division_ceremony_projection.py": "self-test ok",
+    "test_projection_cursors.py": "4 tests OK",
+    "test_introspection_cadence_audit.py": "6 tests OK",
+    "introspection_cadence_audit --strict": {
+      "integrity_ok": true,
+      "duplicate_hash_group_count": 0,
+      "canonical_count": 7401,
+      "errors": []
+    },
+    "git diff --check": "clean",
+    "cargo test --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml": "15 passed / 0 failed (14 before)",
+    "cargo test … record_metrics_are_per_record_scalars_not_window_summaries": "1 passed / 0 failed, 14 filtered out",
+    "cargo fmt (capsule) -- --check": "clean",
+    "cargo clippy (capsule) --all-targets": "clean"
+  },
+  "live_surface": {
+    "restart_required": false,
+    "deploy_attempted": false,
+    "launchctl_used": false,
+    "build_bridge_used": false,
+    "note": "no live substrate or control change; bridge, codec, controller and being-facing prompt bytes untouched"
+  },
+  "git": {
+    "staged": false,
+    "committed": false,
+    "branch": "main",
+    "index_clean": true,
+    "note": "git read-only for the whole round; exact commit debt named in RUN_REPORT.md; foreign dirty paths preserved untouched"
+  },
+  "authority_boundary": {
+    "state": "evidence_only",
+    "grants_approval": false,
+    "live_eligible_now": false,
+    "tier4_or_5_items_created": 0,
+    "tier4_or_5_items_discharged": 0,
+    "note": "the three standing Tier-5 waits from introspection_minime_esn_1785630442 remain untouched with live_authority_granted=false; her NEXT: SELF_STUDY CONTINUE is her own continuation, not a request or an authority signal; silence infers nothing"
+  }
+}

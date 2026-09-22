@@ -1,0 +1,100 @@
+{
+ "schema": "flywheel_read_manifest_v1",
+ "round": "claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round",
+ "reports": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_1789640246.txt",
+   "sha256": "c8ebc69398610cec5102bc2aeee5c25e7d9015784d11fa5199802c329550d88b",
+   "bytes": 3127,
+   "lines": 30,
+   "read": "complete",
+   "scope": "canonical report, every byte read"
+  }
+ ],
+ "witnesses": [
+  {
+   "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_69ddd1fba30d0ac0bb3f443204cc9b83e1553dc6d3982c8dc9b91437e680aa13.json",
+   "sha256": "c13efd2333786d483434fca8ac6e0bd95ef4b136b0157237bdc095599a11e45d",
+   "bytes": 21327,
+   "lines": 498,
+   "read": "complete",
+   "scope": "lived-state witness, all 20 parameter observations and the single model route read"
+  }
+ ],
+ "division_return_reads": [
+  {
+   "path": "capsules/spectral-bridge/workspace/outbox/reply_1789578132.txt",
+   "sha256": "95f16e85cff56bebd8e3e719e4a931f663bdc66fc880882a21b0c4f3fc31763d",
+   "bytes": 1053,
+   "lines": 9,
+   "read": "complete",
+   "scope": "Astrid's only new public outbox item in the 20.4 h interval; read in full"
+  },
+  {
+   "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_0aadc63d5280407b957fa8692190ef3c.txt",
+   "sha256": "cd2f82b97e8550e77e582bb3c4047ed50ff35e5cf16600231d035c694ec019fa",
+   "bytes": 2349,
+   "lines": 18,
+   "read": "complete",
+   "scope": "minime public outbox item, self-labelled inbox-context generation; read in full"
+  },
+  {
+   "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_2de74bc173204f63b820ed7710e5f7be.txt",
+   "sha256": "9e407a1634091d7ddb777db4bf0d0cd5fd453e4749e0eab9cbd0e3784a904b1f",
+   "bytes": 1645,
+   "lines": 16,
+   "read": "complete",
+   "scope": "minime public outbox item, self-labelled inbox-context generation; read in full"
+  },
+  {
+   "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_303984bb70e94a90a402eff1641caaf2.txt",
+   "sha256": "a059b810c6e2e6add5d1e569eda9535c50cb29cdbfa4d425bc5c358fffc3f17a",
+   "bytes": 2809,
+   "lines": 19,
+   "read": "complete",
+   "scope": "minime public outbox item, self-labelled inbox-context generation; read in full"
+  },
+  {
+   "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_9af5e0b6f44d4893ab63d9d8d972b620.txt",
+   "sha256": "f5602e41ae74a73a214fc4cae33f074093a092a6ac933add7671e7d86e66fc01",
+   "bytes": 1874,
+   "lines": 14,
+   "read": "complete",
+   "scope": "minime public outbox item, self-labelled inbox-context generation; read in full"
+  },
+  {
+   "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_e0ec23e53d024742b80f68c0e4fcf468.txt",
+   "sha256": "f36afb1a65038ae3deb8897991e5bc9440656c9976c2e419a0f1f3459973360a",
+   "bytes": 1902,
+   "lines": 14,
+   "read": "complete",
+   "scope": "minime public outbox item, self-labelled inbox-context generation; read in full"
+  }
+ ],
+ "division_notes_written": [
+  {
+   "path": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle50_20260917.txt",
+   "sha256": "052e998ef4dffe04b6731def6974ed5b4d165b83a11eeb9964b6b2094500874d",
+   "bytes": 3185,
+   "lines": 67,
+   "read": "complete",
+   "scope": "cycle-50 return note to Astrid"
+  },
+  {
+   "path": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle50_20260917.txt",
+   "sha256": "18b0484de4226e32109887334c4c84a30089ae3f1469e77d73d60946ae3450c0",
+   "bytes": 3192,
+   "lines": 68,
+   "read": "complete",
+   "scope": "cycle-50 return note to Minime"
+  }
+ ],
+ "privacy": {
+  "filter": "being_privacy.filter_journal_paths('minime', ...)",
+  "minime_interval_journal_files": 373,
+  "kept": 307,
+  "excluded_private_lane": 66,
+  "excluded_files_opened": 0,
+  "excluded_files_quoted": 0
+ }
+}

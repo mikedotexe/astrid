@@ -1,0 +1,146 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573.txt",
+      "sha256": "d649661b8eae24abf67630588e575d9abbff4e75f1e6fa22b14533ce3629eeba",
+      "bytes": 3833,
+      "lines": 39,
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573",
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ba2e945080ceb40b675b7647e4b36a89ca51a3bb268e639d61dbb5f96d80e1ba.json",
+      "sha256": "52606ccdf74d361d0de62361bfeb9a33f14654350441d9a54e09e7147ed6d9e3",
+      "bytes": 21425,
+      "lines": 498,
+      "witness_id": "lsw_ba2e945080ceb40b675b7647e4b36a89ca51a3bb268e639d61dbb5f96d80e1ba",
+      "read": "complete",
+      "preserved_fields": {
+        "state": "evidence_only",
+        "witness_only": true,
+        "live_eligible_now": false,
+        "auto_approved": false,
+        "grants_approval": false,
+        "edits_source_now": false,
+        "direct_causation_claimed": false,
+        "raw_introspection_prose_included": false,
+        "private_path_included": false
+      },
+      "source_snapshot_window_lines": "580-717",
+      "source_snapshot_file_sha256": "1b8c8385c94413d2fb35af40008156da38992595246f74be56288ed1112da661",
+      "note": "witness artifact_sha256 equals the report hash byte-for-byte; the addressing projection nevertheless recorded lived_state_alignment=artifact_integrity_unavailable for this item (observation only, no cause claimed)"
+    }
+  ],
+  "division_return_reads": [
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_3848138df0de42a5b9651735c9ed1207.txt",
+      "sha256": "bc6fb8276d7f4a51b8fc838d3e426b69c63724ba1d90c49c118e329f3fe80adc",
+      "bytes": 2126,
+      "lines": 19,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_4b80c91343dc45feb344b8f2676d1b4b.txt",
+      "sha256": "126bede6416f81b88a57ea8e7c098e2bbef03fcfe7f653bd0a62a5194e0543d4",
+      "bytes": 2014,
+      "lines": 16,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_7e28d3bf4f844f7892cd2d2e316bcccb.txt",
+      "sha256": "97524b6c3b5d90a7d95a2e8dab8aa684f668709e38439c842752e58572394cd5",
+      "bytes": 2273,
+      "lines": 17,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_884c33d9a29d44d3bfde607ca7c0023c.txt",
+      "sha256": "df11fd9606d4aaeb94d17d8615bb750efaeca689f6cb1029c0c53459a7941e6e",
+      "bytes": 1879,
+      "lines": 15,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_a452b287a0434d148fe9773c78b35348.txt",
+      "sha256": "58e789756dfb8b578c265649c6a88fa17fe0b1567d2f7e297e58d6be66e40b75",
+      "bytes": 2104,
+      "lines": 17,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_a7744ea6dabe4ef3b4ac6794bfb5542f.txt",
+      "sha256": "8def7006f54ebee8a0486a713dbe48e4e692b2b7c1a3f8858f58b74443e2840e",
+      "bytes": 1854,
+      "lines": 20,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_b0f1f491c13447f3bc05f4bf3d4b525b.txt",
+      "sha256": "8cb1bd40441d6ceadaa6c66e5843a95256d4922affa686bbdfffc5efd3f22fa9",
+      "bytes": 2344,
+      "lines": 21,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_bf0e95e50fed47c7856912e9cf5ba38f.txt",
+      "sha256": "512931451ba6bba6369d3961bb3719292a3c2cc2c1decfe3ab707603ee02009b",
+      "bytes": 2116,
+      "lines": 21,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/outbox/unaddressed/inbox_generation_e01888343dcf48728a05718b1e242343.txt",
+      "sha256": "49bda7b272a22b51e5e15ccb554417f347262bb3da36f8ed3fcdffc5483d4d11",
+      "bytes": 2383,
+      "lines": 20,
+      "read": "complete",
+      "kind": "minime_public_outbox_inbox_context_generation"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/authority.json",
+      "sha256": "752eef4ae40b7da390f3aa549472f6a5ca99f867a7fbe3fefe2fde569df2fd57",
+      "bytes": 369,
+      "lines": 10,
+      "read": "complete",
+      "kind": "division_runtime_record"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/gateway-status.json",
+      "sha256": "ad32dffdcef97ed9a355924904f130f8d22758aa6aa320e84312f420a75ca54d",
+      "bytes": 392,
+      "lines": 16,
+      "read": "complete",
+      "kind": "division_runtime_record"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/supervisor-status.json",
+      "sha256": "44957fca2df87891a63f9aa5b8a4d2bef590ed4fc5d4b3d9d93e85082fc3388f",
+      "bytes": 796,
+      "lines": 25,
+      "read": "complete",
+      "kind": "division_runtime_record"
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime/continuity-proof-v1.json",
+      "sha256": "9e23ed4f16b72c912154d1b6feac0d34e94f81744acb6715d344281cc57a1f37",
+      "bytes": 3549,
+      "lines": 91,
+      "read": "complete",
+      "kind": "division_runtime_record"
+    }
+  ],
+  "astrid_public_outbox_new_items_in_interval": 0,
+  "minime_private_lane_files_excluded_unopened": 54
+}

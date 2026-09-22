@@ -1,0 +1,118 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "toolchain": "cargo 1.94 via /Users/v/.cargo/bin (not on the default PATH in this environment; PATH was extended for the run)",
+  "focused_rust": [
+    {
+      "command": "cargo test --lib -- authority_guardrail_hold_active_requires",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        "action_continuity::runtime::tests::authority_guardrail_hold_active_requires_paused_thread_status_and_hold"
+      ]
+    },
+    {
+      "command": "cargo test --lib -- authority_readiness_stage_separates",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        "action_continuity::runtime::tests::authority_readiness_stage_separates_held_or_guarded_from_needs_charter"
+      ]
+    },
+    {
+      "command": "cargo test --lib -- needs_charter_next_command_passes_through_the_charter_scaffold",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        "action_continuity::runtime::tests::needs_charter_next_command_passes_through_the_charter_scaffold"
+      ]
+    },
+    {
+      "command": "cargo test --lib -- needs_charter",
+      "result": "ok",
+      "passed": 11,
+      "failed": 0,
+      "note": "covers conveyor_needs_charter_proposed_next_is_a_charter_command plus the nine pre-existing needs_charter tests, including authority_gate::tests::needs_charter_stage_points_at_experiment_charter_not_advance"
+    }
+  ],
+  "filter_correction": "A first invocation passed four positional filters at once and ran 0 tests. Per the handoff, a zero-test filter is not a pass: the filters were corrected to single substrings and rerun until every new test was observed running.",
+  "formatting": {
+    "command": "cargo fmt --all -- --check",
+    "result": "clean (nightly-only option warnings only, exit 0)"
+  },
+  "diff_check": {
+    "command": "git diff --check",
+    "result": "clean"
+  },
+  "stewardship_suites": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "result": "OK",
+      "tests": 44
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "result": "OK",
+      "tests": 21
+    },
+    {
+      "command": "test_steward_control.py",
+      "result": "OK",
+      "tests": 29
+    },
+    {
+      "command": "test_steward_projection.py",
+      "result": "OK",
+      "tests": 14
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "result": "OK",
+      "tests": 3
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "result": "OK",
+      "tests": 10
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "result": "ok",
+      "tests": null
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "result": "OK",
+      "tests": 4
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "result": "OK",
+      "tests": 6
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "result": "OK",
+      "tests": 5
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "result": "total 100, alarms 0, gaps 0"
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok true, errors []"
+    },
+    {
+      "command": "experiential_epistemics.py self-test --json",
+      "result": "OK, valid true",
+      "tests": 2
+    },
+    {
+      "command": "domain_boundary_audit.py verify",
+      "result": "valid true, violation_count 0, violation_kind_counts {}"
+    }
+  ]
+}

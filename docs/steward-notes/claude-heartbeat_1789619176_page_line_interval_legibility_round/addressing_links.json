@@ -1,0 +1,137 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/page.rs",
+      "note": "Page::read formats the delivered interval as 'Exact source bytes {start}..{end}' (86-98) and never as lines; start/end Positions carry line numbers (21-25)."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/source_structure.rs",
+      "note": "scope_text (114-176) is the only prose line range on the page: '(lines {start_line}-{end_line})' for the ENCLOSING declaration, 464-515 in her case."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/page_line_interval_legibility.rs",
+      "note": "Five read-only pins: byte-only header, sole prose range is the declaration's and starts behind the page, mid-line first gutter row, interval available on the page record, scope-row line is a real Action."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789608500.md",
+      "note": "Exact page bytes: header line 4, SOURCE SCOPE row, and first gutter row '   502 | lityBoundaryTransparencyV1 {' quoted from delivery receipt f6ca4acbe67e."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c002",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789608500.md",
+      "note": "Window 502-620 content inventory: boundary-transparency constructor tail 503-515, authority gate 517-528, two read-only review packets 530-620."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "SemanticReceptivityPulseReviewV1 struct 374-383; builder 536-583 on her own page; admitted 556, raw_to_admitted_gap 557, read-only authority 581."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "Glimpse constructor 2183-2199 contradicts 'primary unit of movement': live_vector_write false 2196, authority 2198, live_transport_dim_count LLAVA_DIM=48 (line 24) vs GLIMPSE_12D_DIM=12."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "semantic_fresh_ms/semantic_stale_ms declared 392-393, populated 2189-2190, and semantic_active derived from them 2191."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "opaque 480-483, constrained 484-488, status 489-495, contact_change_route 496-500; struct 404-417; constructor tail on her page 502-515."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "SurrenderModeAuthorityGateV1 struct 419-428; builder 517-528 on her page, including status 'tier5_operator_approval_required_before_live_trial' (525)."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "semantic_degradation_clarity_factor signature 430-435 takes age_fraction, density_gradient, fill_pct, spectral_entropy; called at 619. Function closes at 452, not 462."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "smoothstep_unit applied to age_fraction only (436); max_loss built at 449-450 without it; combined once at 451 as 1.0 - age*max_loss."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c010",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "Persistence and clarity are separate quantities in one function: base_stale_ms 611, stale_window_ms 612-613, age_fraction 614-618, clarity_factor 619, edge_softening 620."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c011",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "Entropy sign inverted: SEMANTIC_ENTROPY_PERSISTENCE_START=0.75 (60), entropy_support 446-448 enters max_loss with -0.08 (449). Crowding enters with +0.26; low fill with -0.12."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c012",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "semantic_degradation_curve_review_v1 585-620; its doc comment names her distinction: 'semantic hold quality, not just hold duration' (585-588). Declared read-only review."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c013",
+      "kind": "code",
+      "target": "minime/src/sensory_bus.rs",
+      "note": "Her section bounds checked: 374 first governance struct, 528 closes the last, 530 begins the next doc comment; 454 is exactly normalized_boundary_label; 515 closes the constructor."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c014",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789608500.md",
+      "note": "Un-muffle check: eof false, CONTINUE/MAP/FIND/OPEN offered, RELATED rows at 420 and 374; nothing she reports needing lies behind the cursor, so no reply or recovery is owed."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the byte-only page header, her 464 substitution, and the five read-only pins."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report: what she surfaced, what source established, what was pinned, what was corrected, what was not authorized."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "flywheel_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "crates/astrid-kernel/src/maintenance.rs",
+      "report_bound_sha256": "1b8c8385c94413d2fb35af40008156da38992595246f74be56288ed1112da661",
+      "report_time_sha256": "1b8c8385c94413d2fb35af40008156da38992595246f74be56288ed1112da661",
+      "report_time_bytes": 30543,
+      "report_time_lines": 864,
+      "binding_match": true,
+      "report_time_source": "git show HEAD:crates/astrid-kernel/src/maintenance.rs (HEAD fe3f438f1d)",
+      "read_scope": "complete file, lines 1-864 at the report-bound revision",
+      "post_edit_working_copy_sha256": "e31941820e76247b1321ee925812cbb1dd8d2d5628790855246bfbeb2b7f4703",
+      "post_edit_bytes": 32579,
+      "post_edit_lines": 909,
+      "edit_note": "this round appended one #[cfg(test)] regression; the insertion sits after original line 788 and moves no line or byte cited by the report",
+      "window_map_at_report_revision": {
+        "bytes 20750..24941": "lines 580-717 (this report page)",
+        "bytes 16466..20750": "lines 455-580 (previous page, report 1789566303)",
+        "bytes 12048..16466": "lines 344-455 (page before, reports 1789566008 / 1789565716)"
+      }
+    }
+  ]
+}

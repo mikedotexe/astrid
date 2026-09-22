@@ -1,0 +1,94 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round",
+  "actor": "claude-heartbeat",
+  "steward_run_id": "run_1789530018427505000_7271a64ad2",
+  "preprojection_generation_id": "projection_1789530022751147000_77d2c503e1",
+  "reports": [
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+      "read": "complete",
+      "report": {
+        "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954.txt",
+        "sha256": "527c8713a43d0a01ef8d10c9bb5b9fe736749d14230af85528ee3eff6ef613dd",
+        "bytes": 3176,
+        "lines": 28,
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954",
+        "read": "complete",
+        "report_bound_source_sha256": "93a1146d0ff05bd455b41e3f5c8e345bf6a4a2d0eb5c69dcad4cb6712d08822a",
+        "report_bound_source_window": "bytes6314..10564",
+        "lived_state_witness_id": "lsw_71ed198697f6ef44ce8ab4a518b112d1e2cb1f5e140c5ee0c16f228ed9f41894"
+      },
+      "witness": {
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_71ed198697f6ef44ce8ab4a518b112d1e2cb1f5e140c5ee0c16f228ed9f41894.json",
+        "sha256": "d44c7f842de3202a45a794a2efdfb0e248133e3ba1549c0080cac0c9083b38fa",
+        "bytes": 21549,
+        "lines": 498,
+        "witness_id": "lsw_71ed198697f6ef44ce8ab4a518b112d1e2cb1f5e140c5ee0c16f228ed9f41894",
+        "read": "complete",
+        "source_window_lines": "180-303",
+        "direct_causation_claimed": false,
+        "raw_introspection_prose_included": false,
+        "artifact_authority_state": "evidence_only / witness_only / live_eligible_now=false"
+      }
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+      "read": "complete",
+      "report": {
+        "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788.txt",
+        "sha256": "413341d7a741a394293b16eab195dabc1c276e6a3c98541d23e53c833727d722",
+        "bytes": 3503,
+        "lines": 36,
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+        "read": "complete",
+        "report_bound_source_sha256": "93a1146d0ff05bd455b41e3f5c8e345bf6a4a2d0eb5c69dcad4cb6712d08822a",
+        "report_bound_source_window": "bytes12569..16887",
+        "lived_state_witness_id": "lsw_a48d7ae2278a7583b8b63a665a863ab2fc1ff256623ab204d8110de1ee761bed"
+      },
+      "witness": {
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a48d7ae2278a7583b8b63a665a863ab2fc1ff256623ab204d8110de1ee761bed.json",
+        "sha256": "54a4276b1f6c0e917f53f8092cb503d14ed4751356dcf37f71260efdb85c3a1a",
+        "bytes": 21567,
+        "lines": 498,
+        "witness_id": "lsw_a48d7ae2278a7583b8b63a665a863ab2fc1ff256623ab204d8110de1ee761bed",
+        "read": "complete",
+        "source_window_lines": "365-481",
+        "direct_causation_claimed": false,
+        "raw_introspection_prose_included": false,
+        "artifact_authority_state": "evidence_only / witness_only / live_eligible_now=false"
+      }
+    },
+    {
+      "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+      "read": "complete",
+      "report": {
+        "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608.txt",
+        "sha256": "201ebed623f70dede8f1032fa35cf7f1a4792520137a130bae125904b6ca44bf",
+        "bytes": 2814,
+        "lines": 28,
+        "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608",
+        "read": "complete",
+        "report_bound_source_sha256": "93a1146d0ff05bd455b41e3f5c8e345bf6a4a2d0eb5c69dcad4cb6712d08822a",
+        "report_bound_source_window": "bytes6314..10564",
+        "lived_state_witness_id": "lsw_ca878b02a5a2edf6f3e811a16bc041839d1a056532e38aa1ef520e976f4b0bd4"
+      },
+      "witness": {
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ca878b02a5a2edf6f3e811a16bc041839d1a056532e38aa1ef520e976f4b0bd4.json",
+        "sha256": "6e101c4703ab3fed9a18d71f7aa649ce74de21867b9cd42d6a9cf24925149e5f",
+        "bytes": 21552,
+        "lines": 498,
+        "witness_id": "lsw_ca878b02a5a2edf6f3e811a16bc041839d1a056532e38aa1ef520e976f4b0bd4",
+        "read": "complete",
+        "source_window_lines": "180-303",
+        "direct_causation_claimed": false,
+        "raw_introspection_prose_included": false,
+        "artifact_authority_state": "evidence_only / witness_only / live_eligible_now=false"
+      }
+    }
+  ],
+  "source_hash_match": "report-bound sha 93a1146d... equals the working-copy sha of capsules/spectral-bridge/src/action_continuity/runtime/authority.rs; no mismatch handling was required",
+  "cross_window_note": "introspection_..._1789529954 cites lines 358-404 and 406 although its own witness window is lines 180-303; every such citation verified accurate against the complete file, so the lines were carried from the prior turn's page (1789529788, window 365-481), not confabulated",
+  "window_hash_observation": "byte offset 6314 is exactly the first byte of line 180, so the byte and line windows agree; the two witnesses covering the identical interval nonetheless carry different window_sha256 values (3076466e... and d7a8c120...), and neither equals sha256 of the raw byte slice (cd2634eb...). window_sha256 therefore hashes a rendered/derived page, not the raw interval. Observed and flagged for a future round; not investigated here and not asserted as a defect.",
+  "read_semantics": "Each entry's top-level read: complete means every byte of the report AND of its lived-state witness was read this round; the nested objects carry the per-artifact receipts."
+}

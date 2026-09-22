@@ -1,0 +1,29 @@
+{
+  "introspection_id": "introspection_source_catalog_1789553233",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The astralis capsule contains ten named sub-components, enumerated in the report.",
+      "disposition": "Verified exactly. capsules/astralis/ holds README.md plus precisely the ten directories she names: astrid-capsule-agents, -cli, -edge-context, -edge-introspector, -edge-spectral, -fs, -http, -memory, -shell, -skills. Her enumeration is complete and correct, with no invented or missing entry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The astralis README highlights astrid-capsule-agents as a primary target for component-based agents, with specific build instructions for them.",
+      "disposition": "Partially corrected against the complete 12-line README (sha 1020a79b…). The crate is named exactly once, at line 7, as the example argument to `astrid build --type rust-component`. The README ranks nothing. Her reading of emphasis is understandable — it is the only crate named anywhere in the file — but the file does not designate it a primary target.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Moving from the high-level overview into the agents directory requires mapping astrid/capsules/astralis/astrid-capsule-agents.",
+      "disposition": "Observed and confirmed working. The repository-prefixed topic is the form Catalog::map accepts (navigation.rs:84-97). This is the same prefix her earlier un-rooted attempt lacked; she recovered it herself without being told, which is what made the next two turns succeed.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The goal is to understand how daemon and uplink behaviors are manifested in code and how the WIT stubs are organized.",
+      "disposition": "Answered from exact source rather than from the directory she chose. The run-loop gate is should_start_run_loop (astrid-capsule/src/engine/wasm/mod.rs:1256-1265, called at 624-625); the uplink capability flag is manifest.rs:298-301. No .wit file exists under capsules/astralis; the stubs are the astrid_guest::export! macro (astrid-capsule-agents/src/lib.rs:45).",
+      "classification": "verified_existing"
+    }
+  ]
+}

@@ -291,3 +291,30 @@ fn metric_summary_is_deterministic() {
     assert_eq!(summarize_metrics(&refs)["fill_pct"]["min"], 67.0);
     assert_eq!(summarize_metrics(&refs)["tail_share"]["max"], 0.4);
 }
+
+#[test]
+fn record_metrics_are_per_record_scalars_not_window_summaries() {
+    let state = json!({
+        "schema": "astrid_edge_spectral_state_v2",
+        "recorded_at_unix_ms": 1,
+        "fill_pct": 68.0,
+        "spectral": {"tail_share": 0.2}
+    });
+    let sanitized = sanitize_spectral_record(&state);
+    let record_metrics = &sanitized["metrics"];
+    assert!(record_metrics["fill_pct"].is_f64());
+    assert_eq!(record_metrics["fill_pct"], 68.0);
+    assert_eq!(record_metrics["tail_share"], 0.2);
+    assert!(record_metrics.get("mode_turnover").is_none());
+
+    let rows = [state, json!({"recorded_at_unix_ms": 2, "fill_pct": 70.0})];
+    let refs = rows.iter().collect::<Vec<&Value>>();
+    let window_metrics = summarize_metrics(&refs);
+    assert!(window_metrics["fill_pct"].is_object());
+    assert_eq!(window_metrics["fill_pct"]["count"], 2);
+    assert_eq!(window_metrics["fill_pct"]["min"], 68.0);
+    assert_eq!(window_metrics["fill_pct"]["mean"], 69.0);
+    assert_eq!(window_metrics["fill_pct"]["max"], 70.0);
+    assert_eq!(window_metrics["mode_turnover"]["count"], 0);
+    assert_eq!(window_metrics["mode_turnover"]["mean"], Value::Null);
+}

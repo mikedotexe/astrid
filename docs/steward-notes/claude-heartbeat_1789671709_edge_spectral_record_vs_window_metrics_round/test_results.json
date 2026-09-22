@@ -1,0 +1,112 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "focused": [
+    {
+      "command": "cargo test --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml",
+      "scope": "full capsule suite after adding the contrast regression",
+      "result": "ok",
+      "passed": 15,
+      "failed": 0,
+      "baseline_passed_before_change": 14
+    },
+    {
+      "command": "cargo test --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml record_metrics_are_per_record_scalars_not_window_summaries",
+      "scope": "exact new regression, non-zero filter confirmed",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "filtered_out": 14
+    },
+    {
+      "command": "cargo fmt --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "cargo clippy --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml --all-targets",
+      "result": "clean, no warnings"
+    }
+  ],
+  "integrity": [
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "result": "44 tests OK"
+    },
+    {
+      "command": "python3 scripts/test_evidence_event_store.py",
+      "result": "21 tests OK"
+    },
+    {
+      "command": "python3 scripts/test_steward_control.py",
+      "result": "29 tests OK"
+    },
+    {
+      "command": "python3 scripts/test_steward_projection.py",
+      "result": "14 tests OK"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_followup.py",
+      "result": "3 tests OK"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_chronicle.py",
+      "result": "10 tests OK"
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_projection.py",
+      "result": "self-test ok"
+    },
+    {
+      "command": "python3 scripts/test_projection_cursors.py",
+      "result": "4 tests OK"
+    },
+    {
+      "command": "python3 scripts/test_introspection_cadence_audit.py",
+      "result": "6 tests OK"
+    },
+    {
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok true, 0 duplicate hash groups, 7401 canonical reports, errors []"
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "result": "5 tests OK"
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "result": "100 rows, 0 alarms, 0 gaps"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid true, violation_count 0, ratchet GREEN, 6 stable facades, 44 unlisted legacy review debt (pre-existing)"
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py self-test --json",
+      "result": "OK, valid true"
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py verify --json",
+      "result": "valid true, 12478 records checked, 0 issues, history_rewritten false (run after all durable writes)"
+    },
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py audit-counters --json",
+      "result": "status consistent, mismatches [], all seven checks true"
+    },
+    {
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "result": "valid true, corrupt lines 0 (~13 min wall)"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_followup.py verify",
+      "result": "ok true, cycle 51, 2/6 rounds, review_due false"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_chronicle.py verify",
+      "result": "chronicle durable source inputs changed; project before verify - expected after the round-record append, resolved by the postprojection; not a durable-integrity failure"
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    }
+  ],
+  "notes": "Integrity suite results are appended after the durable addressing writes; see integrity section of RUN_REPORT.md."
+}

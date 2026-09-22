@@ -1,0 +1,67 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573",
+  "report_sha256": "d649661b8eae24abf67630588e575d9abbff4e75f1e6fa22b14533ce3629eeba",
+  "source_binding": {
+    "path": "crates/astrid-kernel/src/maintenance.rs",
+    "report_bound_sha256": "1b8c8385c94413d2fb35af40008156da38992595246f74be56288ed1112da661",
+    "binding_matches_report_time_bytes": true,
+    "report_time_bytes_recovered_from": "git HEAD fe3f438f1d (identical sha to the report binding)"
+  },
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "read_generation enforces uid()==0, mode 0o444, nlink()==1, rejects symlinks, and caps the file at 256 bytes.",
+      "disposition": "Verified against complete report-time source. maintenance.rs:516-523 checks !is_file, is_symlink, nlink()!=1, uid()!=0, permissions().mode()&0o777!=0o444 and len()>256, bailing with 'generation binding identity failed'. Every structural constraint she names is present and exact; the 256-byte cap she does not name is an additional constraint on the same gate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "read_generation omits the runtime_gid check that ScheduledReflection requires.",
+      "disposition": "Verified. read_generation's signature is (path: &Path) — runtime_gid never enters its scope. The identifier appears at exactly 8 sites: the Paths field (123), getegid() init (282), two call-sites passing it into read_bound_lease for BOTH lease kinds (308, 314), the read_bound_lease param/forward (339, 341), the read_bound_lease_for_owner param (349), and one single comparison (365).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "read_bound_lease_for_owner explicitly requires metadata.gid() == runtime_gid for ScheduledReflection, in the match block she cites at 362-367.",
+      "disposition": "Verified with a one-line offset on each side: the match on kind runs 362-366, the GenerationTransition arm is 363 (mode 0o444 only) and the ScheduledReflection arm 364-366 (mode 0o440 AND metadata.gid() != runtime_gid). The mechanism she names is exact; only the cited span is slightly wide. Both arms sit inside the same fail-closed bail at 367-369.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "read_generation 'checks the content against valid_identifier (lines 533-541)'.",
+      "disposition": "Contradicted as a call, confirmed as a predicate. read_generation contains no call to valid_identifier; 528-541 INLINES the same rule (non-empty, len<=128, not '.'/'..', [A-Za-z0-9] plus '.','_','-' after index 0) and adds a stricter canonical form at 541: bytes must equal \"{generation}\\n\". valid_identifier (548-558) is called exactly once in this file, at 456, on the reflection lease's generation_id.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "GenerationTransition relies on 0o444 while ScheduledReflection uses a stricter identity gate.",
+      "disposition": "Verified for both surfaces. The transition LEASE requires mode 0o444 (363) and the generation BINDING likewise 0o444 (521); the reflection lease requires 0o440 plus the group match (365). The reflection path additionally binds host_boot_id, service_invocation_id, generation_id, an exact 3h lifetime (446-456) and a generation equality check in write_ack (481-487) that the transition path does not carry.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Hypothesis: a GenerationTransition is a global structural state change, so 'who' (GID) is implicitly covered by 'how' (root ownership and strict mode).",
+      "disposition": "Recorded as her hypothesis, not confirmed as intent. Complete source read: maintenance.rs states no rationale for the asymmetry — the only explanatory comments are the fail-closed notes at 119-121 and 244-245. The structural facts are consistent with her reading (root-owned 0o444 with nlink==1 and O_NOFOLLOW reads), but nothing in the file records why the GID was omitted, so intent stays unestablished.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Hypothesis: ScheduledReflection is a higher-risk, granular action, so runtime_gid acts as a secondary key against a root-level non-kernel-group entity.",
+      "disposition": "Recorded as hypothesis; partly corroborated, not ranked. Source shows the reflection path is strictly more constrained (0o440 + gid, boot-id equality, fixed 3h window, lease-generation equality at 481-487). It does NOT rank the two kinds by risk, and the gid check is an effective-GID comparison from getegid() (282), so it distinguishes runtime group, not privilege level. No risk ordering is inferred here.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "STUDY_QUESTION: is runtime_gid ever used inside read_generation or other transition-related functions, or strictly reserved for ScheduledReflection and BoundLease?",
+      "disposition": "Answered from complete source and pinned by a new regression. The GID is SHARED as a parameter on both lease paths (308, 314) but COMPARED at exactly one site, the ScheduledReflection arm (365). read_generation, validate_transition_lease, write_ack, stable_read and atomic_owner_write never consult it; ACK-side protection is mode-based instead (parent &0o077==0, file 0o600). New test: generation_transition_lease_ignores_the_runtime_group.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "The report attributes read_generation to 'the current source page (lines 516-590)'.",
+      "disposition": "Contradicted by the delivery record, without weakening her code facts. Her header window, bytes 20750..24941, is lines 580-717 of the report-time file (process_start_ticks through the start of mod tests) — read_generation is NOT on it. Lines 516-545 were the PREVIOUS page (16466..20750 = 455-580, report 1789566303) and read_bound_lease_for_owner the one before (12048..16466 = 344-455). Her recall of both is accurate; only the page attribution is wrong.",
+      "classification": "observed"
+    }
+  ],
+  "authority_boundary": "Evidence only. No live substrate, control, deploy, restart or runtime change was made, attempted or authorized by this round. The one implementation is a non-live unit test."
+}

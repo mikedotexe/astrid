@@ -1,0 +1,868 @@
+{
+  "schema": "registered_worktree_assessment_v1",
+  "repositories": [
+    {
+      "repository": "/Users/v/other/astrid",
+      "worktrees": [
+        {
+          "path": "/Users/v/other/astrid",
+          "branch": "refs/heads/main",
+          "head": "8a0a5ae7b1ae876a29fa446c5a5c64a717758cda",
+          "dirty_paths": 204,
+          "status_counts": {
+            "M ": 1,
+            " M": 10,
+            "A ": 27,
+            "??": 166
+          },
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/astrid/.claude/worktrees/hopeful-williamson-9f566c",
+          "branch": "refs/heads/claude/hopeful-williamson-9f566c",
+          "head": "491b0e0982353da10676f3d9e7774aca51a1e829",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/activation-controls-20260909/astrid",
+          "branch": "refs/heads/codex/activation-controls-20260909",
+          "head": "39f959ea91b941210fdebb18f5534392d0f8cb08",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/activation-controls-20260909/astrid-doc-fix",
+          "branch": "refs/heads/codex/dispatcher-ordering-doc-20260909",
+          "head": "5e4365467ea1bf31be3ddbc32eb30d8e89d79b8d",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/aspiration-time-20260922/astrid",
+          "branch": "refs/heads/codex/aspiration-time-20260922",
+          "head": "25ab0f1c07771cb38cc8a6974759421a8746ea08",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-activity-continuity",
+          "branch": "refs/heads/codex/activity-continuity-v1",
+          "head": "68cbb1d522cab9b09767a98b83df35a0e7eba297",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-activity-foundation",
+          "branch": "refs/heads/codex/activity-foundation",
+          "head": "5bcb457fe6f0a50a3d52589b48144cd404189d8c",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-activity-release-20260906",
+          "branch": "detached",
+          "head": "e4761122e32749b15ef7c2958d2e136cdd5f4613",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-addressed-human-replies",
+          "branch": "refs/heads/codex/astrid-addressed-human-replies",
+          "head": "ebbf9ae9c83a0066fd7754ce991e2b2982411ddc",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-claude-tranche1",
+          "branch": "refs/heads/claude/tranche1-dialogue-record",
+          "head": "bc66a62b0bf02a515a551334dd9bea502c473578",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-cpu-edge-release",
+          "branch": "refs/heads/codex/cpu-edge-release-v0.5.6",
+          "head": "8a1f4919b88a7ba58aee8799a3b07ed6dac04283",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-cpu-edge-self-evolution",
+          "branch": "refs/heads/codex/cpu-edge-self-evolution",
+          "head": "8e61f75e8e42203fe854da632f6263b725e93e87",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-credential-safe-main",
+          "branch": "refs/heads/codex/introspection-continuity-v1",
+          "head": "859ecef79bc9b048a66db6c50f2f3162c356b89b",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-graceful-coupling-rollout",
+          "branch": "refs/heads/codex/graceful-coupling-rollout",
+          "head": "d6ff371cd25e6a4616431d8f07f09a3e7eb3fcdf",
+          "dirty_paths": 5951,
+          "status_counts": {
+            " M": 40,
+            "??": 5911
+          },
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-hebbian-clock-boundary",
+          "branch": "refs/heads/codex/hebbian-clock-boundary",
+          "head": "d6ff371cd25e6a4616431d8f07f09a3e7eb3fcdf",
+          "dirty_paths": 3029,
+          "status_counts": {
+            " M": 46,
+            "??": 2983
+          },
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-human-replies-operator",
+          "branch": "refs/heads/codex/astrid-human-replies-operator",
+          "head": "528046fec77c910681f64c231a88039c6f554ed6",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-human-replies-release-20260906",
+          "branch": "refs/heads/codex/astrid-human-replies-live-scope",
+          "head": "3f669bf2220c36a10cd95be551d544223f135758",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-open-framing-20260922/astrid",
+          "branch": "detached",
+          "head": "9266412b8e3d817e87c93441a145cdfe32e76a79",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-stash-rescue-20260419",
+          "branch": "refs/heads/codex/recover-full-restart-stash",
+          "head": "e8474a9425a270acaf81c68daee56acc340bb55d",
+          "dirty_paths": 28,
+          "status_counts": {
+            " M": 19,
+            "??": 9
+          },
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-tranche1-release-20260907",
+          "branch": "detached",
+          "head": "bc66a62b0bf02a515a551334dd9bea502c473578",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/collaboration-attention-integrated-20260907/astrid",
+          "branch": "detached",
+          "head": "4c7a91787ae882656fbc2fb771390fd1ef2dd096",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/collaboration-attention-v1-20260907/astrid",
+          "branch": "refs/heads/codex/collaboration-attention-v1",
+          "head": "e07583dd5c99389c3726dc1e30e2863643a9b801",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/evidence-grounded-study-20260918/astrid",
+          "branch": "refs/heads/codex/evidence-grounded-study-20260918",
+          "head": "df9fd3e87f8bad6fe288e1876595fa548302cac7",
+          "dirty_paths": 10,
+          "status_counts": {
+            " M": 4,
+            "??": 6
+          },
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/journal-coherence-20260911/astrid",
+          "branch": "refs/heads/codex/journal-coherence-20260911",
+          "head": "ed62f1b8c2524b18922f3bb3c796a3a25f452119",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/journal-room-20260909/astrid",
+          "branch": "refs/heads/codex/journal-room",
+          "head": "e2f0038c97b20cac6ca6c855bffca20d893f6a78",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/journal-room-20260909/astrid-release",
+          "branch": "detached",
+          "head": "e2f0038c97b20cac6ca6c855bffca20d893f6a78",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/longform-20260909/astrid",
+          "branch": "refs/heads/codex/longform-room",
+          "head": "6f8aac6384232bc010d2776f13454eb8795bf3ae",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/persistent-introspection-20260916/astrid",
+          "branch": "refs/heads/codex/persistent-introspection-20260916",
+          "head": "fe3f438f1d31666e6e6e3d8ff408f6d2120eab3b",
+          "dirty_paths": 23,
+          "status_counts": {
+            " M": 18,
+            "??": 5
+          },
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/provider-spool-maintenance-20260922/astrid",
+          "branch": "refs/heads/codex/provider-spool-maintenance-20260922",
+          "head": "8a0a5ae7b1ae876a29fa446c5a5c64a717758cda",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/quiet-sensory-release-20260920/astrid",
+          "branch": "refs/heads/codex/quiet-sensory-release-20260920",
+          "head": "c4f85e95e41703daa65d3ce2789e1e5c46961c4e",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/astrid",
+          "branch": "detached",
+          "head": "f9283f193de9c9c9affc238725de19146e979c77",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/astrid",
+          "branch": "refs/heads/codex/self-study-follow-through",
+          "head": "a202cfd89741b038e4768921089333b799c1b3de",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/astrid-release",
+          "branch": "detached",
+          "head": "a202cfd89741b038e4768921089333b799c1b3de",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/self-study-parity-v1-20260908/astrid",
+          "branch": "refs/heads/codex/self-study-parity-v1",
+          "head": "542c006040381ef7673cc0c5f5154da5edd6ca90",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/source-study-question-grounding-20260909",
+          "branch": "refs/heads/codex/source-study-question-grounding",
+          "head": "8841ba596887f8ec0acaa6683d99016aceb5d42c",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-choice-20260909/astrid",
+          "branch": "refs/heads/codex/study-choice",
+          "head": "7d85683d8052251cf35386f47d5a7c3f3b515462",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-context-20260909/astrid",
+          "branch": "refs/heads/codex/study-context",
+          "head": "a376a11b5bfef8ef63e607ed7f986441c4c57805",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-context-20260909/astrid-release",
+          "branch": "detached",
+          "head": "a376a11b5bfef8ef63e607ed7f986441c4c57805",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-direction-20260916/astrid",
+          "branch": "refs/heads/codex/study-direction-20260916",
+          "head": "0967375133c7b5c80aab707ba913fbfceb01e29b",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-evidence-20260908/astrid",
+          "branch": "refs/heads/codex/study-evidence",
+          "head": "dde5d51136b0822d8172280b4430da8a462c988e",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-evidence-20260908/astrid-release",
+          "branch": "detached",
+          "head": "dde5d51136b0822d8172280b4430da8a462c988e",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-inquiries-20260909/astrid",
+          "branch": "refs/heads/codex/study-inquiries",
+          "head": "33b9956ef4edddca317fb203320635d85150e7e7",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-inquiries-20260909/astrid-release",
+          "branch": "detached",
+          "head": "33b9956ef4edddca317fb203320635d85150e7e7",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-interface-20260917/astrid",
+          "branch": "refs/heads/codex/study-interface-20260917",
+          "head": "d8732e1d44a3aa3b49f9f0bab075883544469b7c",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-interface-20260917/astrid-manifest",
+          "branch": "refs/heads/codex/study-stage-inventory-20260917",
+          "head": "374024a02a5bcfae92f228570b9efe337d85b729",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-navigation-20260910/astrid",
+          "branch": "refs/heads/codex/study-navigation-20260910",
+          "head": "59a79771f0a83a9aa31d6e876aed22dd01c450cf",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-navigation-20260915/astrid",
+          "branch": "refs/heads/codex/study-navigation-20260915",
+          "head": "97db1b2f46506ef90105283daaf606dc1ebc131c",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-source-context-20260915/astrid",
+          "branch": "refs/heads/codex/study-source-context-20260915",
+          "head": "76c2aa43cfd8c9dad084c8f98ef21f2ece6ffaab",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-source-context-20260915/astrid-format",
+          "branch": "refs/heads/codex/study-navigation-separator-20260915",
+          "head": "dd35cdd83a863da373c63e21788a0197768e1175",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/voluntary-continuity-20260920/astrid",
+          "branch": "refs/heads/codex/voluntary-continuity-20260920",
+          "head": "8b47231d924a9f68a7b6560f3d2149b3e19e45db",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/voluntary-observations-20260921/astrid",
+          "branch": "refs/heads/codex/voluntary-observations-20260921",
+          "head": "fcc0ce650934343c0f47fcd1fa9025e413fc44ac",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        }
+      ]
+    },
+    {
+      "repository": "/Users/v/other/minime",
+      "worktrees": [
+        {
+          "path": "/Users/v/other/minime",
+          "branch": "refs/heads/main",
+          "head": "2dbdf66924fc8d04bc3e6edb983b9e7116bf77a1",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/activation-controls-20260909/minime",
+          "branch": "refs/heads/codex/activation-controls-20260909",
+          "head": "997de4f04244f334313eb900f20ea3a4f7071d50",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/aspiration-time-20260922/minime",
+          "branch": "refs/heads/codex/aspiration-time-20260922",
+          "head": "7e35f31f209c2f1e3b95b7ccf0541be19876a55c",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/astrid-open-framing-20260922/minime",
+          "branch": "refs/heads/codex/astrid-open-framing-20260922",
+          "head": "2dbdf66924fc8d04bc3e6edb983b9e7116bf77a1",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/collaboration-attention-integrated-20260907/minime",
+          "branch": "detached",
+          "head": "f3c53d631428e1f5a2a5dc835827f623f6d6a7f7",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/collaboration-attention-v1-20260907/minime",
+          "branch": "refs/heads/codex/collaboration-attention-v1",
+          "head": "631c26b1e27276edd1803ccf4290f5e875fe97e4",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/evidence-grounded-study-20260918/minime",
+          "branch": "refs/heads/codex/evidence-grounded-study-20260918",
+          "head": "d44ca5e7e6e697233a7e01ef0e0ce87e4122546d",
+          "dirty_paths": 17,
+          "status_counts": {
+            " M": 9,
+            "??": 8
+          },
+          "head_ancestor_of_local_main": false,
+          "ancestor_check_exit": 1,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/journal-coherence-20260911/minime",
+          "branch": "refs/heads/codex/journal-coherence-20260911",
+          "head": "96b0b615d917c8edc164ab8a457c1dd1ddb5b0df",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/journal-room-20260909/minime",
+          "branch": "refs/heads/codex/journal-room",
+          "head": "e95e0cc532111f611bbb2b20fef92cbd5e30d197",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/longform-20260909/minime",
+          "branch": "refs/heads/codex/longform-room",
+          "head": "33c324d229893a061ea958891f19fa450f232bd6",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/minime-claude-tranche1",
+          "branch": "refs/heads/claude/tranche1-generation-record",
+          "head": "36998c681d67c67e11279d6fab28a082f132dc5c",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/minime-continuity-performance",
+          "branch": "refs/heads/codex/minime-continuity-performance",
+          "head": "0a2832349e8acbd19fd354329c0ec4e34b73b4eb",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/minime-inbox-reply-boundaries",
+          "branch": "refs/heads/codex/minime-inbox-reply-boundaries",
+          "head": "63c1ab99abee7284df46e1532ce5f427c1b0fb21",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/minime-job-outcomes-and-timing",
+          "branch": "refs/heads/codex/minime-job-outcomes-and-timing",
+          "head": "d0f316d0326983bd620df6b8de928a849b4449b3",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/minime-pre-btsp-b8823ad",
+          "branch": "detached",
+          "head": "b8823ad689bab7b1caaa9885f96f421d2c9dc419",
+          "dirty_paths": 1,
+          "status_counts": {
+            " M": 1
+          },
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/persistent-introspection-20260916/minime",
+          "branch": "refs/heads/codex/persistent-introspection-20260916",
+          "head": "12cbf5740e1cc751a2beb09ec5bb5fad742af459",
+          "dirty_paths": 6,
+          "status_counts": {
+            " M": 3,
+            "??": 3
+          },
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/quiet-sensory-release-20260920/minime",
+          "branch": "refs/heads/codex/quiet-sensory-release-20260920",
+          "head": "5f4925f54580f1fd44666058b126a121ff32880f",
+          "dirty_paths": 11,
+          "status_counts": {
+            " M": 6,
+            "??": 5
+          },
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/self-study-continuity-live-20260908/minime",
+          "branch": "detached",
+          "head": "defd7c66e82d9d003d166a22f3bd8c72b3943ff5",
+          "dirty_paths": 2,
+          "status_counts": {
+            " M": 2
+          },
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/self-study-follow-through-20260908/minime",
+          "branch": "refs/heads/codex/self-study-follow-through",
+          "head": "10222446b37f3c6dfe104a61ccc2d66ce3dca8cc",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/self-study-parity-v1-20260908/minime",
+          "branch": "refs/heads/codex/self-study-parity-v1",
+          "head": "37ed8b7f153043521cc89fe881ed55fd56b5700f",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-choice-20260909/minime",
+          "branch": "refs/heads/codex/study-choice",
+          "head": "c9c2a70fb8dbb3fd51725839fce853cc8d576db5",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-context-20260909/minime",
+          "branch": "refs/heads/codex/study-context",
+          "head": "3383aef12d6794ef1492667472c5a549c752206a",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-direction-20260916/minime",
+          "branch": "detached",
+          "head": "12cbf5740e1cc751a2beb09ec5bb5fad742af459",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-evidence-20260908/minime",
+          "branch": "refs/heads/codex/study-evidence",
+          "head": "378957a9d71fb094ab3b3e66d367900b8c88c09e",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-inquiries-20260909/minime",
+          "branch": "refs/heads/codex/study-inquiries",
+          "head": "a44e26580c6911195d88f213230eb4dd0fd2f4ac",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-interface-20260917/minime",
+          "branch": "refs/heads/codex/study-interface-20260917",
+          "head": "5f4925f54580f1fd44666058b126a121ff32880f",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-navigation-20260910/minime",
+          "branch": "refs/heads/codex/study-navigation-20260910",
+          "head": "15df37ea4524375c1d9e816e5c8a447d02cc4cb5",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-navigation-20260915/minime",
+          "branch": "refs/heads/codex/study-navigation-20260915",
+          "head": "12cbf5740e1cc751a2beb09ec5bb5fad742af459",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/study-source-context-20260915/minime",
+          "branch": "detached",
+          "head": "12cbf5740e1cc751a2beb09ec5bb5fad742af459",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/voluntary-continuity-20260920/minime",
+          "branch": "refs/heads/codex/voluntary-continuity-20260920",
+          "head": "b19614fbb169608e07ded7c46cc19bb1f5d3ce56",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        },
+        {
+          "path": "/Users/v/other/worktrees/voluntary-observations-20260921/minime",
+          "branch": "refs/heads/codex/voluntary-observations-20260921",
+          "head": "3241d5f74d086c12d57cadb0461b922f582a9425",
+          "dirty_paths": 0,
+          "status_counts": {},
+          "head_ancestor_of_local_main": true,
+          "ancestor_check_exit": 0,
+          "scope": "Git status and ancestry only; no content/ownership or deletion approval."
+        }
+      ]
+    }
+  ]
+}

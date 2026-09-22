@@ -1,0 +1,56 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round",
+  "actor": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789589587.txt",
+      "sha256": "73aedbca2c508bf3022376a0fae2d39bf5660774ddda4db31dfb73e0174f1b0c",
+      "bytes": 1605,
+      "lines": 19,
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "read": "complete",
+      "source_family": "source_catalog",
+      "report_bound_source": "source catalog (Source revision: navigation only)",
+      "report_bound_source_sha256": null,
+      "source_coverage": "not applicable \u2014 navigation-only report binds no source SHA",
+      "lived_state_witness_id": "lsw_c69fd24e27cb2e270cbf3c1df38cd6b4004dbc81ddba080a4bb51323bf4fa47f"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c69fd24e27cb2e270cbf3c1df38cd6b4004dbc81ddba080a4bb51323bf4fa47f.json",
+      "sha256": "f5c3c8bc15fe348b2fa1b49c7a090d9b60e9db8c28e139444c5a966895de215d",
+      "bytes": 18954,
+      "lines": 440,
+      "read": "complete",
+      "witness_id": "lsw_c69fd24e27cb2e270cbf3c1df38cd6b4004dbc81ddba080a4bb51323bf4fa47f",
+      "artifact_sha256_matches_report": true,
+      "source_snapshot_v1": null,
+      "source_provenance_ref_v1": null,
+      "note": "Witness artifact_sha256 equals the report SHA exactly. Queue metadata carried lived_state_alignment=artifact_integrity_unavailable with one gap; that projection field was not traced to a producer this round and is recorded, not explained."
+    }
+  ],
+  "adjacent_reports_read_for_continuity": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_socket.rs_1789589306.txt",
+      "sha256": "8282eab1304dbd853f38670871b7caf44dafd30e659b1ea5a327663f2ea42cda",
+      "bytes": 3563,
+      "lines": 37,
+      "read": "complete",
+      "role": "names the socket.rs revision and interval 0..4481 this report summarizes"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_socket.rs_1789589462.txt",
+      "sha256": "9b7f5f3194881c4d8762805f732c61ba07b35446c75e11ef6359eac93b1b4a84",
+      "bytes": 3407,
+      "lines": 37,
+      "read": "complete",
+      "role": "names the socket.rs interval 7989..10414; both bind the same source SHA"
+    }
+  ],
+  "prior_packets_consulted": [
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/RUN_REPORT.md",
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/RUN_REPORT.md"
+  ]
+}

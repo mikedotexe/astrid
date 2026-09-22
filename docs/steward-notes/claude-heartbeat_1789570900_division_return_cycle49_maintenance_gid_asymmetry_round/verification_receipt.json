@@ -1,0 +1,182 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "subprocess_run_adapter_controller_held_lease",
+  "controller": {
+    "run_id": "run_1789566866432918000_6755aa828d",
+    "preprojection_generation_id": "projection_1789566871344705000_89a56746d7",
+    "preprojection_phase": "pre",
+    "preprojection_status": "passed",
+    "pause_generation": 445,
+    "controller_paused": false,
+    "stop_requested_observed": false,
+    "postprojection": "not observable from this process; the adapter runs it after exit"
+  },
+  "processed": {
+    "introspection_id": "introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573",
+    "status": "addressed_change",
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "claim_count": 9,
+    "evidence_links_new": 11,
+    "evidence_links_existing": 0
+  },
+  "division": {
+    "return_completed_first": true,
+    "cycle_before": 49,
+    "cycle_after": 50,
+    "followup_event_id": "division_followup_event_38d1fb23e3f206b3d7ae2a859aad6f8d",
+    "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle49_20260916.txt",
+    "astrid_note_sha256": "1369d93994ba33d295e2a3a064dc0bd488201bd0dbf5e2c3c75f0a118aa29264",
+    "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle49_20260916.txt",
+    "minime_note_sha256": "8511b49049a793a3b5186dc7ec0f208e2de31e2384caebc3802f8cb9eba3f537",
+    "round_event_id": "division_followup_event_3193e441fbed150bf08818243b57bc93",
+    "processed_report_count": 1,
+    "completed_rounds_since_followup": 1,
+    "review_due": false,
+    "event_count": 345,
+    "event_head_sha256": "e082f640cf20d73bb618aabb17a13986335b3f94f5330fe608e8fd4249b56928",
+    "round_event_defect": "projection_generation_id was recorded as an empty string: the command substitution read capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/projection_state.json, which does not exist (the id lives in projections/latest_generation.json). record_round is idempotent by deterministic event id, so the field cannot be repaired without falsifying a second round. The correct value is projection_1789566871344705000_89a56746d7, recorded here and in RUN_REPORT.md.",
+    "chronicle_final_id": "division_chronicle_7bc88e489ceb7c7a1c6c24ba",
+    "chronicle_json_sha256": "e707f5d2bf45447a5dda5baed8d0a14463261b58d4c20bedab978436eeefecad",
+    "chronicle_html_sha256": "105f4e334b291fee011558f9fa3cf5d506a05fb567cb07007c0e25383a7b3270",
+    "chronicle_timeline_event_count": 345,
+    "chronicle_durable_inputs_current": true,
+    "chronicle_volatile_mismatches": [
+      "supervisor_status_sha256"
+    ]
+  },
+  "integrity": {
+    "addressing_counter_audit": {
+      "status": "consistent",
+      "mismatches": []
+    },
+    "canonical_indexed": 7207,
+    "canonical_fully_addressed": 3257,
+    "canonical_full_read": 3889,
+    "canonical_remaining": 3950,
+    "canonical_unread": 3318,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 5667,
+    "noncanonical_pending": 1717,
+    "evidence_event_store": {
+      "valid": true,
+      "event_count": 1113716,
+      "last_global_seq": 1113716,
+      "last_event_sha256": "6076a88bdfc19dbd54bd55109a1e94980d7f2996e5b508c80493f5ec24634325",
+      "corrupt_lines": 0
+    },
+    "experiential_epistemics_verify": {
+      "valid": true,
+      "checked_record_count": 12392,
+      "issue_count": 0,
+      "history_rewritten": false
+    },
+    "anti_drop_catalog_verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "domain_boundary_verify": {
+      "valid": true,
+      "violation_count": 0,
+      "counter_audit": "consistent",
+      "ratchet": "green",
+      "standing_debt": {
+        "unlisted_legacy_review_debt": 44,
+        "resolved_large_file_debt": 3,
+        "legacy_large_files": 51,
+        "documented_cohesion_exceptions": 7
+      }
+    },
+    "cadence_audit": {
+      "integrity_ok": true,
+      "configuration_valid": true,
+      "errors": 0,
+      "canonical_reports": 7219,
+      "duplicate_hash_groups": 0
+    }
+  },
+  "authority": {
+    "live_change_made": false,
+    "deploy_or_restart": "not required and not attempted",
+    "git_mutation": "none \u2014 read-only git use only (status, show, cat-file)",
+    "cards_delivered": 0,
+    "correspondence_dispatched": 0,
+    "tier4_or_tier5_grants": 0,
+    "tier5_dossier": "prepare-only; nothing approved, granted, dispatched or run"
+  },
+  "addressing": {
+    "introspection_ids": [
+      "introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573"
+    ],
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 1,
+    "status": "addressed_change",
+    "claim_count": 9,
+    "evidence_links_new": 11,
+    "evidence_links_existing": 0
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "issue_count": 0,
+    "history_rewritten": false,
+    "checked_record_count": 12392
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical_indexed": 7207,
+    "canonical_fully_addressed": 3257,
+    "canonical_full_read": 3889,
+    "canonical_remaining": 3950,
+    "canonical_unread": 3318,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifact_pending": 5667,
+    "noncanonical_pending": 1717
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "event_count": 1113716,
+    "last_global_seq": 1113716,
+    "last_event_sha256": "6076a88bdfc19dbd54bd55109a1e94980d7f2996e5b508c80493f5ec24634325",
+    "corrupt_lines": 0,
+    "errors": [],
+    "active_store": "v2",
+    "status_command": "evidence_event_store.py --json status was still running at the budget boundary and is not claimed as run; verify completed and is reported here"
+  },
+  "anti_drop": {
+    "verify": {
+      "total": 100,
+      "alarms": 0,
+      "gaps": 0
+    }
+  },
+  "domain_boundary": {
+    "valid": true,
+    "violation_count": 0,
+    "counter_audit": "consistent",
+    "ratchet": "green",
+    "standing_debt": {
+      "unlisted_legacy_review_debt": 44,
+      "resolved_large_file_debt": 3,
+      "legacy_large_files": 51,
+      "documented_cohesion_exceptions": 7
+    }
+  },
+  "cadence": {
+    "integrity_ok": true,
+    "configuration_valid": true,
+    "errors": 0,
+    "canonical_reports": 7219,
+    "duplicate_hash_groups": 0
+  }
+}

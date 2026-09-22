@@ -1,0 +1,123 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "Line 2478 is exactly `fn prepare_semantic_heartbeat_for_path_with_enqueue_probe`; body runs 2478-2527 as the report stated."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "policy.heartbeat_block_reason(path) at :2502 with record_semantic_heartbeat_block at :2503; apply_semantic_heartbeat_shape at :2510."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "Gate is config-parsed (RescueBridgePolicy::from_value :497-651); shaper is an associated fn with no &self (:940-945) and cannot read the policy."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c003",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/summaries/introspection_source_catalog_1789542558.md",
+      "note": "Split verdict recorded: delegation governs whether a pulse goes, never how its dimensions are treated."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "Case-insensitive grep for warmth|tension over all 2551 lines returns 0; no configured skip is keyed to a feature index."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/source_receipts.json",
+      "note": "Live rescue_profile.json sha256 d892aff0\u2026 enumerated: 89 keys, none per-dimension."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "heartbeat_block_reason(&self, profile_path: &Path) :892-935 takes no features; decides on profile flags plus health.json state only."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "note": "semantic_heartbeat_blocks_hot_or_discharge_states (:2246) is the existing regression over the state-driven gate."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "apply_semantic_heartbeat_shape :940-945 scales every element by 0.025 (:35) and clamps to \u00b10.018 (:36); status receipt writes those constants at :2176-2177."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "note": "semantic_heartbeat_bypasses_limited_write_cooldown_and_stays_tiny (:1503) is the existing regression over the uniform tiny shaping."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "note": "SEMANTIC_HEARTBEAT_TAIL_START_DIM = 24 (:43) is consumed only by semantic_heartbeat_signal_metrics (:319-401) for observational tail_rms; index 25 appears nowhere."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "note": "Line 5: (\"warmth\", 24) \u2014 the tail boundary coincides exactly with the codec's warmth dim and the 24-31 emotional block."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/action_help.rs",
+      "note": "Line 169: OPEN uses one-based lines and an unknown target returns a labelled recovery map without delivering that source."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/RUN_REPORT.md",
+      "note": "Un-muffle item: her two prior turns resolved the same path and 2478 is in range; emitting site not isolated this round and named as the next round's first check."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c009",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/summaries/introspection_source_catalog_1789542558.md",
+      "note": "Her stated NEXT is recorded, not adjudicated, dispatched, or blocked."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c003",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the verification and the split delegation verdict."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789542558",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for the contradicted rescue_profile.json hypothesis."
+    }
+  ]
+}

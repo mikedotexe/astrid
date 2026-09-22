@@ -1,0 +1,120 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "focused": [
+    {
+      "command": "cargo test -p astrid-source-study --test unrooted_map_topic_reach",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        "unrooted_map_topic_that_open_would_accept_gets_no_candidate_naming_its_rooted_form",
+        "bare_directory_name_still_recovers_to_its_rooted_spelling"
+      ]
+    },
+    {
+      "command": "cargo test -p astrid-source-study",
+      "result": "ok",
+      "binaries": 28,
+      "passed": 166,
+      "failed": 0
+    },
+    {
+      "command": "cargo fmt -p astrid-source-study -- --check",
+      "result": "clean"
+    },
+    {
+      "command": "cargo clippy -p astrid-source-study --all-targets --all-features -- -D warnings",
+      "result": "clean",
+      "rc": 0
+    }
+  ],
+  "stewardship_integrity": [
+    {
+      "command": "python3 scripts/introspection_addressing_audit.py --self-test",
+      "result": "OK",
+      "tests": 44
+    },
+    {
+      "command": "python3 scripts/test_evidence_event_store.py",
+      "result": "OK",
+      "tests": 21
+    },
+    {
+      "command": "python3 scripts/test_steward_control.py",
+      "result": "OK",
+      "tests": 29
+    },
+    {
+      "command": "python3 scripts/test_steward_projection.py",
+      "result": "OK",
+      "tests": 14
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_followup.py",
+      "result": "OK",
+      "tests": 3
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_chronicle.py",
+      "result": "OK",
+      "tests": 10
+    },
+    {
+      "command": "python3 scripts/test_division_ceremony_projection.py",
+      "result": "ok (self-test)"
+    },
+    {
+      "command": "python3 scripts/test_projection_cursors.py",
+      "result": "OK",
+      "tests": 4
+    },
+    {
+      "command": "python3 scripts/test_introspection_cadence_audit.py",
+      "result": "OK",
+      "tests": 6
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py --self-test",
+      "result": "OK",
+      "tests": 5
+    },
+    {
+      "command": "python3 scripts/anti_drop_catalog.py verify --json",
+      "result": "green",
+      "rows": 100,
+      "alarms": 0,
+      "gaps": 0
+    },
+    {
+      "command": "python3 scripts/introspection_cadence_audit.py --strict --compact",
+      "result": "integrity_ok true, errors []"
+    },
+    {
+      "command": "python3 scripts/domain_boundary_audit.py verify",
+      "result": "valid true, violation_count 0, violation_kind_counts {} \u2014 ratchet GREEN",
+      "note": "unlisted_legacy_review_debt_count 44, stable_facade_count 6; no Rust production source was changed this round."
+    },
+    {
+      "command": "python3 scripts/experiential_epistemics.py verify --json",
+      "result": "valid true, 12377 records checked, 0 issues, history_rewritten false (final, after every durable evidence write)"
+    },
+    {
+      "command": "python3 scripts/evidence_event_store.py --json verify",
+      "result": "valid true, 1,112,557 events, head 8ccda801\u2026, corrupt_lines 0"
+    },
+    {
+      "command": "python3 scripts/evidence_event_store.py --json status",
+      "result": "active_store v2, effective_aggregate_valid true, corrupt_event_lines 0; embedded verification seq 1,112,572 head ddcee6b7\u2026"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_followup.py verify (final)",
+      "result": "ok true, cycle 49, 6/6 completed, review_due TRUE, event_count 343, head 29cbbe09\u2026"
+    },
+    {
+      "command": "python3 scripts/division_ceremony_chronicle.py project && verify",
+      "result": "division_chronicle_1071bcf7c549eaa75b823a05; durable_inputs_current true, durable_mismatches []; only volatile supervisor_status_sha256 mismatched"
+    }
+  ],
+  "failures": [],
+  "debt": []
+}

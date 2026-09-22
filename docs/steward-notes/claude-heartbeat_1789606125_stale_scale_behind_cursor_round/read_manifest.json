@@ -1,0 +1,88 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789606125_stale_scale_behind_cursor_round",
+  "actor": "claude-heartbeat",
+  "steward_run_id": "run_1789601431310501000_07a09d6e59",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_1789601340.txt",
+      "sha256": "ef2a74508c8dcfa9c834737c0c01c3b57afe394360a951651b72ce90573fcddb",
+      "bytes": 3708,
+      "lines": 44,
+      "read": "complete",
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f28ccee4b47ea64b12517d49341d6611917eaf5a8149ac7e21f808e1fbcb4575.json",
+      "sha256": "336bf20e81a3633f413861ebefdc1a662f8d7226f614db04e87cb59796228c35",
+      "bytes": 21323,
+      "lines": 498,
+      "read": "complete",
+      "witness_id": "lsw_f28ccee4b47ea64b12517d49341d6611917eaf5a8149ac7e21f808e1fbcb4575",
+      "artifact_sha256_matches_report": true
+    }
+  ],
+  "sources": [
+    {
+      "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "bytes": 168439,
+      "lines": 4404,
+      "read": "scoped_intervals",
+      "report_bound_sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+      "working_copy_matches_binding": true,
+      "git_clean": true,
+      "read_intervals": [
+        {
+          "lines": "1-30",
+          "why": "Z_DIM / LLAVA_DIM constants"
+        },
+        {
+          "lines": "165-260",
+          "why": "dynamic_semantic_stale_ms_for and semantic_context_persistence_multiplier definition sites"
+        },
+        {
+          "lines": "1370-1420",
+          "why": "stale_scale whole definition (1377-1417)"
+        },
+        {
+          "lines": "1470-1600",
+          "why": "memory_decay_rate field and default"
+        },
+        {
+          "lines": "1705-1775",
+          "why": "semantic_stale_ms whole definition (1710-1729)"
+        },
+        {
+          "lines": "2877-2965",
+          "why": "her exact report window"
+        },
+        {
+          "lines": "2960-3000",
+          "why": "the noise sampling line and SampleMeta, immediately past her window"
+        }
+      ],
+      "grep_scoped": [
+        "stale_scale (4 sites: 1237, 1377, 2144, 2927)",
+        "memory_decay_rate",
+        "fn semantic_stale_ms",
+        "const Z_DIM/LLAVA_DIM"
+      ]
+    }
+  ],
+  "implementation_artifacts": [
+    {
+      "path": "crates/astrid-source-study/tests/behind_cursor_helper_midwalk_reach.rs",
+      "sha256": "61ad7d9bc0dd0baacd83e8db889d85bd342ec20d6c1f2bcd17048c2a1f389384",
+      "bytes": 10827,
+      "lines": 274,
+      "created_this_round": true
+    }
+  ],
+  "delivery_windows_read": {
+    "source": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_*.txt header line 3",
+    "note": "All 31 walk windows of this source family were enumerated to establish which pieces her walk delivered."
+  }
+}

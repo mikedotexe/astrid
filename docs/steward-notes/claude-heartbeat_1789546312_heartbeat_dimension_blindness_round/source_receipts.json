@@ -1,0 +1,78 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "receipts": [
+    {
+      "path": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "sha256": "155bc25ce396a90b6cb54571855d2e829b08fa2e3c5e1de112accd11392a5367",
+      "total_lines": 2551,
+      "total_bytes": 100308,
+      "scope": "complete sequential read of 1-1700 and 2400-2551; declared-item outline plus exact bodies for 1700-2399; whole-file grep negatives",
+      "findings": [
+        "2478: fn prepare_semantic_heartbeat_for_path_with_enqueue_probe",
+        "2502: policy.heartbeat_block_reason(path) call; 2510: RescueBridgePolicy::apply_semantic_heartbeat_shape(features)",
+        "892-935: heartbeat_block_reason(&self, profile_path: &Path) \u2014 no features parameter",
+        "940-945: apply_semantic_heartbeat_shape(features: &mut [f32]) \u2014 associated fn, uniform scale+clamp",
+        "35-36: SEMANTIC_HEARTBEAT_FEATURE_SCALE=0.025, SEMANTIC_HEARTBEAT_MAX_ABS=0.018",
+        "43: SEMANTIC_HEARTBEAT_TAIL_START_DIM=24, consumed only at 319-401 for observational tail_rms",
+        "884-889: apply_limited_write_shape \u2014 config-driven scale/clamp, still index-uniform",
+        "2176-2177: the status receipt records the compiled constants, not profile values",
+        "grep -ic 'warmth|tension' over all 2551 lines = 0; no literal index 25 anywhere"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/action_help.rs",
+      "sha256": "7e3cad125e4cd7cc0a4fcffa631f2cb470f033d836cde973e4566f6a710c57fe",
+      "total_lines": 472,
+      "total_bytes": 55209,
+      "scope": "lines 162-169",
+      "findings": [
+        "169: 'OPEN uses one-based lines; ... An unknown target returns a labelled recovery map without delivering that source.'"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "sha256": "8dda7f02b4304b403865a2be7407e768648ae4c18ab9485d67518f5d4d756310",
+      "total_lines": 987,
+      "total_bytes": 37083,
+      "scope": "lines 1-10",
+      "findings": [
+        "5: (\"warmth\", 24) \u2014 dim 24 is the codec's warmth dimension and the start of the 24-31 emotional block"
+      ]
+    },
+    {
+      "path": "capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "sha256": "f6df871cc56b190b189e26cfa74edc7a3595c65677eac4292431de2f81d6e4dd",
+      "total_lines": 2551,
+      "total_bytes": 93765,
+      "scope": "declared test-item index",
+      "findings": [
+        "1503: semantic_heartbeat_bypasses_limited_write_cooldown_and_stays_tiny \u2014 existing regression over the uniform tiny shaping",
+        "2246: semantic_heartbeat_blocks_hot_or_discharge_states \u2014 existing regression over the state-driven gate"
+      ]
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/rescue_profile.json",
+      "sha256": "d892aff002f97ba761cbf25e304fbde3e77fa6e45c2459ee53028af482c25e01",
+      "total_lines": 152,
+      "total_bytes": 5623,
+      "scope": "complete key enumeration + decoded policy fields",
+      "findings": [
+        "89 keys, none per-dimension",
+        "profile=bridge_budgeted_sovereignty_v1, limited_write_policy_version=2",
+        "limited_write_feature_scale=0.14, limited_write_max_abs=0.28 \u2014 NOT the heartbeat scale"
+      ]
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/runtime/bridge_semantic_heartbeat_status.json",
+      "sha256": "da568531ae659757b6a077be6df697973b89c230260a6e232943edab4306fccb",
+      "total_lines": 9476,
+      "total_bytes": 396911,
+      "scope": "counters, scales, last block reason",
+      "findings": [
+        "send_count=17630, block_count=2, attempt_count=17632",
+        "feature_scale=0.025, max_abs=0.018 \u2014 compiled constants, current-runtime observation",
+        "last_block_reason='limited-write v2 requires fresh health.json; age 7.4s exceeds 5s' \u2014 both lifetime blocks were staleness, never content"
+      ]
+    }
+  ]
+}

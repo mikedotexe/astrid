@@ -1,0 +1,91 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789557900_unrooted_map_namespace_round",
+  "reader": "claude-heartbeat",
+  "reports": [
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "report": {
+        "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789553748.txt",
+        "sha256": "e4ca4d53c0178effc9a543d998ac15bea5e0f0d8c394b43c97f8ae6813837bd2",
+        "bytes": 1355,
+        "lines": 21,
+        "read": "complete"
+      },
+      "lived_state_witness": {
+        "witness_id": "lsw_bb111839220b77962073c064d300a041259c874d0ef09097e4f0166f5fcc6c5f",
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bb111839220b77962073c064d300a041259c874d0ef09097e4f0166f5fcc6c5f.json",
+        "sha256": "619e27589ed86cf2c47466e25edd1e96ec466cc722a384c0272422f255a120fd",
+        "bytes": 18947,
+        "lines": 440,
+        "read": "complete"
+      },
+      "report_bound_source": "Source revision: navigation only \u2014 the report binds no source SHA; source_snapshot_v1 is null in the witness. Report-bound source was therefore read as current source and labelled as such.",
+      "source_coverage": "complete for every file named in the dispositions",
+      "read": "complete",
+      "witness_read": "complete"
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "report": {
+        "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789553233.txt",
+        "sha256": "ecc6e26e699d3b25c800890d017985e784f2fcd2c908073c9234d5ed3e6f17de",
+        "bytes": 1474,
+        "lines": 18,
+        "read": "complete"
+      },
+      "lived_state_witness": {
+        "witness_id": "lsw_c11f0b9b21fc10abb4d78e178f1e3f1217c6ac36f5e498e0918ea823ae2540ef",
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c11f0b9b21fc10abb4d78e178f1e3f1217c6ac36f5e498e0918ea823ae2540ef.json",
+        "sha256": "0395f712c9e3ac796899a6012b5de7589c42193ae9a1308196f2926cf813d276",
+        "bytes": 18953,
+        "lines": 440,
+        "read": "complete"
+      },
+      "report_bound_source": "Source revision: navigation only \u2014 the report binds no source SHA; source_snapshot_v1 is null in the witness. Report-bound source was therefore read as current source and labelled as such.",
+      "source_coverage": "complete for every file named in the dispositions",
+      "read": "complete",
+      "witness_read": "complete"
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "report": {
+        "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789553097.txt",
+        "sha256": "43c211c716156f76e0254f2433e126c21e24fb2b726631dd9705db7d8e4cf7f9",
+        "bytes": 1338,
+        "lines": 18,
+        "read": "complete"
+      },
+      "lived_state_witness": {
+        "witness_id": "lsw_81ff482a42cfe5ed62677553acb0fc8dadc25d9df28733de9807a5e152ebdc61",
+        "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_81ff482a42cfe5ed62677553acb0fc8dadc25d9df28733de9807a5e152ebdc61.json",
+        "sha256": "c63573df6e9e35d8e08da58e6e594fc2b8ab536dee01ed7e6b7edfd60c3fde76",
+        "bytes": 18971,
+        "lines": 440,
+        "read": "complete"
+      },
+      "report_bound_source": "Source revision: navigation only \u2014 the report binds no source SHA; source_snapshot_v1 is null in the witness. Report-bound source was therefore read as current source and labelled as such.",
+      "source_coverage": "complete for every file named in the dispositions",
+      "read": "complete",
+      "witness_read": "complete"
+    }
+  ],
+  "adjacent_evidence_read_not_recorded": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789553994.txt",
+      "why": "Outcome of the head report's NEXT (the main.rs open failing). Past this round's preprojection cutoff: read as context only, never recorded read and never closed."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789554170.txt",
+      "why": "Second recovery turn in the same trajectory; same cutoff rule applies."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789542558.txt",
+      "why": "Prior round's named open item (the rescue_policy.rs line-2478 open that returned a recovery). Read for the bounded follow-up recorded in RUN_REPORT.md; already closed in its own round."
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789543025.txt",
+      "why": "Its successor, same bounded follow-up."
+    }
+  ]
+}

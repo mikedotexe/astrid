@@ -1,0 +1,108 @@
+{
+ "schema": "flywheel_source_receipts_v1",
+ "receipts": [
+  {
+   "path": "minime/src/sensory_bus.rs",
+   "abs_path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+   "sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+   "total_bytes": 168439,
+   "total_lines": 4404,
+   "report_bound_sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+   "binding_match": true,
+   "report_window": {
+    "start_line": 700,
+    "end_line": 818,
+    "bytes": "25797..30171"
+   },
+   "read_intervals": [
+    {
+     "lines": "40-110",
+     "why": "the constant block holding SEMANTIC_CONTEXT_PERSISTENCE_MAX_MULT (68) and every threshold her claims depend on"
+    },
+    {
+     "lines": "240-300",
+     "why": "semantic_context_persistence_multiplier: the live computation, the 0.14/0.11 literals (286) and the cap application (289)"
+    },
+    {
+     "lines": "690-840",
+     "why": "her full page plus the 15 lines past its end, including the authority field at 830-831"
+    },
+    {
+     "lines": "1695-1740",
+     "why": "SensoryBus::set_semantic_stale_context and semantic_stale_ms - the live path"
+    },
+    {
+     "lines": "3900-3990",
+     "why": "the existing regressions covering the cap and the review functions"
+    }
+   ],
+   "grep_verified": [
+    "SEMANTIC_CONTEXT_PERSISTENCE_MAX_MULT",
+    "snap_probe_delta_ms",
+    "semantic_stale_context_review_v1",
+    "semantic_decay_hysteresis_salience_review_v1",
+    "effective_release_fill",
+    "entropy_velocity",
+    "pressure_risk",
+    "context_multiplier",
+    "salience",
+    "0.14",
+    "0.11"
+   ],
+   "scope": "targeted complete intervals plus repo-wide symbol enumeration; the whole 4404-line file was not read line by line and this receipt does not claim it was"
+  },
+  {
+   "path": "minime/src/runtime/orchestration.rs",
+   "abs_path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+   "sha256": "020595234e2820c0a8d08b62cac00f64d367837d7c4c11f9573c279a8367799a",
+   "total_bytes": 321337,
+   "total_lines": 6101,
+   "read_intervals": [
+    {
+     "lines": "4290-4345",
+     "why": "the single production call site of set_semantic_stale_context and the values it passes"
+    }
+   ],
+   "scope": "one interval; read to establish live wiring only"
+  },
+  {
+   "path": "minime/src/owner_inquiry/source_separation.rs",
+   "abs_path": "/Users/v/other/minime/minime/src/owner_inquiry/source_separation.rs",
+   "sha256": "3c2335d89aa44d37b4fa9be469c4b19b3683752ac99f78e4dcb6aa60456d5489",
+   "total_bytes": 10264,
+   "total_lines": 287,
+   "read_intervals": [
+    {
+     "lines": "1-25"
+    },
+    {
+     "lines": "138-165",
+     "why": "the non-test caller of semantic_stale_context_review_v1 - a synthetic axis sweep at FIXED_FILL 0.68, not the live decay gate"
+    }
+   ],
+   "scope": "two intervals; read to avoid the false claim that the review function has no production caller"
+  },
+  {
+   "path": "crates/astrid-source-study/tests/unnamed_coefficient_reach.rs",
+   "sha256": "158c768781711ddcdfe82af0c22b14e5355e043a0b871ff83b4550f1fce4d7d6",
+   "total_bytes": 9934,
+   "total_lines": 211,
+   "scope": "written this round; read complete as authored"
+  }
+ ],
+ "runtime_observations": [
+  {
+   "path": "/Users/v/other/minime/workspace/spectral_state.json",
+   "field": "resonance_density_v1.pressure_risk",
+   "samples": 12,
+   "interval_secs": 110,
+   "observed_values": [
+    0.19408103823661804,
+    0.22574418783187866,
+    0.2257460057735443,
+    0.22576308250427246
+   ],
+   "note": "alternates in step with resonance_density_v1.components.mode_packing (0.8333 <-> 1.0); straddles SEMANTIC_PRESSURE_RETENTION_START = 0.20. Co-occurrence only."
+  }
+ ]
+}

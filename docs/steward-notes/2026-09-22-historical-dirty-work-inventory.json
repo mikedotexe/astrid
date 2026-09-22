@@ -1,0 +1,2754 @@
+{
+  "schema": "historical_dirty_work_assessment_v1",
+  "scope": "Archive review only; no productive round, claim closure, deployment or live-state change.",
+  "baseline_inventory": "docs/steward-notes/2026-09-21-voluntary-observations-git-inventory.json",
+  "astrid_head_before": "8a0a5ae7b1ae876a29fa446c5a5c64a717758cda",
+  "candidate_count": 197,
+  "all_candidate_hashes_unchanged": true,
+  "json_files_parsed": 130,
+  "privacy_scan_flags": [],
+  "privacy_scan_limit": "Pattern screening plus human provenance review, not a proof of absence.",
+  "groups": {
+    "historical_tests_and_evidence": 159,
+    "reader_qualification": 27,
+    "quiet_sensory_tools": 11
+  },
+  "candidates": [
+    {
+      "path": "capsules/astralis/astrid-capsule-edge-spectral/src/tests.rs",
+      "status_before": " M",
+      "sha256": "0f4b98156f19177bff2121ca3b5532670b23cdc6f65a9e3b507f91d937de6df9",
+      "bytes": 12332,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "status_before": " M",
+      "sha256": "fdf1001406198d198993fa30344c30a901688351e64f9acb60f3fdf39f4b492b",
+      "bytes": 202394,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+      "status_before": " M",
+      "sha256": "2de81b30553bcf8b020d0c82a0b86a4b5e1610b4f0f37c887a4c367de3705ef0",
+      "bytes": 15656,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "crates/astrid-kernel/src/kernel_router.rs",
+      "status_before": " M",
+      "sha256": "589b17d8d84c0a2b33b5361b8bae2aa158a8a1545d4be8fd6e21abee064564f5",
+      "bytes": 17407,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "crates/astrid-kernel/src/maintenance.rs",
+      "status_before": " M",
+      "sha256": "e31941820e76247b1321ee925812cbb1dd8d2d5628790855246bfbeb2b7f4703",
+      "bytes": 32579,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/behind_cursor_helper_midwalk_reach.rs",
+      "status_before": "??",
+      "sha256": "61ad7d9bc0dd0baacd83e8db889d85bd342ec20d6c1f2bcd17048c2a1f389384",
+      "bytes": 10827,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/component_map_sibling_reach.rs",
+      "status_before": "??",
+      "sha256": "717f87cca700bfe979b5e133a02253f302535c1da7279be5bbdbd23ef963a3c5",
+      "bytes": 4966,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/page_end_declaration_legibility.rs",
+      "status_before": "??",
+      "sha256": "adbd956d9d14c87ec6ea6dc62759e013c94a991169099ecac4b0af26b8e7c15d",
+      "bytes": 12970,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/page_line_interval_legibility.rs",
+      "status_before": "??",
+      "sha256": "b9758a5c6ae032084224e7b5e34cd764b83a63db36047bf38d6bdf77871e2643",
+      "bytes": 12800,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/unnamed_coefficient_reach.rs",
+      "status_before": "??",
+      "sha256": "158c768781711ddcdfe82af0c22b14e5355e043a0b871ff83b4550f1fce4d7d6",
+      "bytes": 9934,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "crates/astrid-source-study/tests/unrooted_map_topic_reach.rs",
+      "status_before": "??",
+      "sha256": "dcfc869658e0e6de1dcac40d66be788f582640a64dd841b108b930968605ede2",
+      "bytes": 4554,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-evidence-and-relations.md",
+      "status_before": "??",
+      "sha256": "a30daf9cc1db800347f4450c4f2042e2bcb24f436df1bc67e1bfcdbb5415975f",
+      "bytes": 15596,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/README.md",
+      "status_before": "??",
+      "sha256": "bd65fb00d1a209bd2a2fe40b7b607da0d02db8b4cf561483f9bf5719ac4d08f5",
+      "bytes": 13155,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/bridge-tests.log",
+      "status_before": "??",
+      "sha256": "6d83975679048389d7db3e82546836f114820f2cb6fe443f86a413ea919219d6",
+      "bytes": 3565,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/check_reader_upgrade.py",
+      "status_before": "??",
+      "sha256": "04ab8e1ca69154bebf65d3630137968469cda6bc6c11e3e6cd0a04c00ad31648",
+      "bytes": 5043,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/controller-resume.json",
+      "status_before": "??",
+      "sha256": "3ed12975b0fbf04bd0eeccbb1213f85aa00f9155d4166d259d1dd581a196e462",
+      "bytes": 390,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/live-before.json",
+      "status_before": "??",
+      "sha256": "70159e0f8b62c5c694e8f103b2441c25e4f544fba70d3fa82aff556de37c6e7b",
+      "bytes": 10130,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/minime-incomplete-fixture-attempt.log",
+      "status_before": "??",
+      "sha256": "53e19c36f425ac8e4af5c5b94dae38fde8ea4c24f8c2d1f00eec591b00e4f6cf",
+      "bytes": 1739,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/minime-tests-initial.log",
+      "status_before": "??",
+      "sha256": "cec5c415af917a411ddeb7a3b5ae94cb72314d3a6b209fbeee3e88237074cc9d",
+      "bytes": 4220,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/minime-tests-release.log",
+      "status_before": "??",
+      "sha256": "03653a1b22b05650da7e019e64889552d5d62b770a044a1f009dd22203deb299",
+      "bytes": 1672,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/reader-tests-final.log",
+      "status_before": "??",
+      "sha256": "12848cb7dbff4f5e9ddbb9d90194098152fd84f93a86099fb0520247852fb464",
+      "bytes": 4527,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/reader-tests.log",
+      "status_before": "??",
+      "sha256": "a5fa16ae0703195ba753a5ca81af65b6ac60b3672e03699f1ea4121a928507e5",
+      "bytes": 4527,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/reader-upgrade-release.json",
+      "status_before": "??",
+      "sha256": "a38acb6e2e99393fe434e025b5ac30738b7633badfd9f62cb19a37962b802628",
+      "bytes": 583,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/rollout-preinspection.json",
+      "status_before": "??",
+      "sha256": "bcaf8290b9c9ab156a624579c94039d6662b485a6db5a5a660e1ca00932cd81b",
+      "bytes": 581,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-scope-comparison.json",
+      "status_before": "??",
+      "sha256": "d3f6a46b39e843c35e2ea7878b511353535d95f86055ad8524156afdf60f46da",
+      "bytes": 2178,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-bridge-clippy.log",
+      "status_before": "??",
+      "sha256": "495ed68d277054d100e70df5599cee33a51f3668ca296b3453595f33318d8019",
+      "bytes": 310,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-bridge-tests-serial.log",
+      "status_before": "??",
+      "sha256": "78dc219c517207ded60484bf975181d44a538bc54afad55b25c3d1dcbc86276f",
+      "bytes": 7913,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-bridge-timing-isolated.log",
+      "status_before": "??",
+      "sha256": "b3aad52a629bc2b18d55e15ce6936bb117253aabe826896446301b552d813fbb",
+      "bytes": 1246,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-current-inputs-final.json",
+      "status_before": "??",
+      "sha256": "1b5cbbbbe83142e34f9fcdb276538bba7261c24136572d5d78a98bbfc91f4cd5",
+      "bytes": 64,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-dependency-audit.json",
+      "status_before": "??",
+      "sha256": "2538b592efd1d7a6ff7f110ebbcb63675ac6b59f0cdb242f9fd891829785be60",
+      "bytes": 365,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-domain-verify.json",
+      "status_before": "??",
+      "sha256": "f24369a3b471a17282ae9f19736390287bc1da90707080e730cadb9908155712",
+      "bytes": 3231,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-epistemics-verify.json",
+      "status_before": "??",
+      "sha256": "33c474991f774035bcfd6e2688dc146e9a2b1cf1122baecad59903a39eaa667f",
+      "bytes": 419,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-live-after.json",
+      "status_before": "??",
+      "sha256": "9c4f3b933d5640c33fa586a346ee7513dc60c2cd44a56df1bc8a08fccc0d3768",
+      "bytes": 208,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-reader-clippy.log",
+      "status_before": "??",
+      "sha256": "8665db0375ae6ba4bfa1c954402ca59905e3c0c96af8a305d5f82f365414bd01",
+      "bytes": 163,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-rollout-preinspection-final.json",
+      "status_before": "??",
+      "sha256": "e6af893d2aad69694e9501dbc79c6ad380961652fef7b61882b201c0b2c19b77",
+      "bytes": 858,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-stage-final-verify.json",
+      "status_before": "??",
+      "sha256": "3f9a42e4d198924806a6410354d7ec284737813f2bfec29cbfc5ae9a8f24a0ef",
+      "bytes": 890,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/stage-manifest.json",
+      "status_before": "??",
+      "sha256": "c2c40c356efa6758cac4e2f6e3e2b758d0b9963de36f11da5fd75e9c6fbc2a09",
+      "bytes": 17214,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-17-source-study-rollout-qualification/stage-ready.json",
+      "status_before": "??",
+      "sha256": "41840a08a05026337bf7138ac212f5b74305d8742703788dddba38336a7ab649",
+      "bytes": 876,
+      "group": "reader_qualification"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout.md",
+      "status_before": "??",
+      "sha256": "f0da860382c06308b7a953a7a5d739de2e883b659df9532ea402231604d84991",
+      "bytes": 14445,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout/after.json",
+      "status_before": "??",
+      "sha256": "e06672fb2e5a6c08e5798b8a0a8d92bb5cb7ed0ca396783e3163f02434571b30",
+      "bytes": 8427,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout/before.json",
+      "status_before": "??",
+      "sha256": "71897b9d008a32040e903d13eb7f49fafdbbc9ccab8d9cc571d77794bbd00235",
+      "bytes": 16938,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout/minime-agent.ndjson",
+      "status_before": "??",
+      "sha256": "006f1c29af61acbddf24abfa67070131b36d72ecff7529e44e15a277c0758115",
+      "bytes": 33465,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout/visual-service.ndjson",
+      "status_before": "??",
+      "sha256": "b0c3a83d5936620e5e4bdc59d7a3a76745025ee461df74ea72ec382ea9f8065b",
+      "bytes": 19915,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "a6e99497cd594b7733829ed66755dc755929441217ecc9c19ea1551c0a5e1d07",
+      "bytes": 9416,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "93c887d29c4a7cfbc6a26283af68465a7ef82860b4bd2633c7fa6b8036790907",
+      "bytes": 7774,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/addressing_links_report2.json",
+      "status_before": "??",
+      "sha256": "7324995491876ca79be2b286edfa56531de11a0a291b5f69ba2c195fd18f8820",
+      "bytes": 3766,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/claims/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.json",
+      "status_before": "??",
+      "sha256": "80c99bab6e3cdb5e82ea7720ec2defd43b18c3e5f59a162624641f23d725e765",
+      "bytes": 4980,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/claims/introspection_source_catalog_1789509068.json",
+      "status_before": "??",
+      "sha256": "cd543f6390249810f4a132670b99255942432d8cf1fa5617bfdcc25b7cd6c661",
+      "bytes": 5044,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "1cd455871dd440d676c6a65bf4ac40d738e048abbe345be79f0e7798870b2399",
+      "bytes": 20465,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "6a894e89afb2ebb1cdefa01a8cc071c772198c0ba66894c035949259f75af309",
+      "bytes": 3207,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "cce2bdcff05bf19fb8abda0cf40bdc78560811015b73f69a29371683e3465fd3",
+      "bytes": 3316,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.md",
+      "status_before": "??",
+      "sha256": "469c0fa3a0d621217a48e8d58787ace633dfd541ac34a04d547a3298b85d845e",
+      "bytes": 3441,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_source_catalog_1789509068.md",
+      "status_before": "??",
+      "sha256": "7845b09c968c03a68a9f02c5bb0cec423da6e63725684d34e950d879129a69af",
+      "bytes": 4252,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/test_results.json",
+      "status_before": "??",
+      "sha256": "8b92e9593e812d61a152695334f41d61d0d6fc3e086117eedadf5c9b35d003e2",
+      "bytes": 939,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "ad603d5283fe3bb13d988f8bda7db260744af7f612ff66c9825c03a0c7ae2c66",
+      "bytes": 3070,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "e212e6fd6447269c45cc6577b39794d57d9e7c81bd705babb03d8a8e7a0172cc",
+      "bytes": 6000,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "0b073139def7c0dbce2a40dfbb39bea824b8f200ef56eee49920f0c73033fcf6",
+      "bytes": 16443,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "b1862349a8d3b9d8597b06ed0b96a06378d312368d8728d769f656a44ceb6a06",
+      "bytes": 3525,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/claims/introspection_source_catalog_1789522750.json",
+      "status_before": "??",
+      "sha256": "84d7640cff0320dfbd139f429e5c014ad686d42780e5cb800013b70190587478",
+      "bytes": 4411,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "c1bad7ad2cea1a21b6f59756717caa0fe518b417eae2c5c494f1ea033198ba7e",
+      "bytes": 21364,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "3eef6c90385c974ed92c07a2d4e47bb9582381191dd684c9acb2fffb27779b15",
+      "bytes": 1534,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "7f4d3e01792753d1efec16dabd361e90305b33948a2dc629d3d39319b3ee42c3",
+      "bytes": 1955,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/summaries/introspection_source_catalog_1789522750.md",
+      "status_before": "??",
+      "sha256": "09b568afe147c4274daaad3853d4ba9c835f811dff0a0b46e4ce5a1be8ea7d3d",
+      "bytes": 2613,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/test_results.json",
+      "status_before": "??",
+      "sha256": "9fa5850970e51e2ea5e9af0a995709adc0baeb27e899dd76615b1afe3a5ee0e6",
+      "bytes": 2846,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "a6d644cd27deafd9ee3af2acc08c6ec36e1443117c69626cc26448138ef7af2d",
+      "bytes": 1509,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "c9952deb658cacaf796eb7f9c7fb6062db6257772f6d9840a0c11a396a232024",
+      "bytes": 9809,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "8da81ce54e07788230e479f00c0e77ce5d51feb506cd0371f424600d9903b81e",
+      "bytes": 14278,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "a7e321f5583ef9737cd0c95c10926dff903d5c106d4cee679b3425cac44d1199",
+      "bytes": 18131,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/claims/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608.json",
+      "status_before": "??",
+      "sha256": "df8d2a8e3bc79d0912fef5db91060412537950342c31fd17c453e79f849e98f3",
+      "bytes": 3421,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/claims/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788.json",
+      "status_before": "??",
+      "sha256": "f90cd3faa2c395ca6815d5dd37b0746340a7eb756a9c1936d338211968be4540",
+      "bytes": 4031,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/claims/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954.json",
+      "status_before": "??",
+      "sha256": "b816a8d8ea5f806b69dca4c58b617cd6a95ea038432fd24902ca5643f51e0dae",
+      "bytes": 5012,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "f2bf1dc57cd8b4d649e9d44905c7554960594aebdedb10fb30727b978d44b4b4",
+      "bytes": 22241,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "dd300deafe021c04fdd6bba9c143a033806471525b092d677edaff31b5115a63",
+      "bytes": 6340,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "0af1c02d1b3858adf793765d630991d45788a2f973c3fd112b0dc5b1a2fad592",
+      "bytes": 2444,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608.md",
+      "status_before": "??",
+      "sha256": "e271c71cb7517f23c1cd4ba112b5cf4bc31aca9023ed4b4ea890e5bb825a4044",
+      "bytes": 1694,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788.md",
+      "status_before": "??",
+      "sha256": "b8e5e68716c084fa267653d0ed4511bb7f46cd6930f766945a3db3b459288ece",
+      "bytes": 1653,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954.md",
+      "status_before": "??",
+      "sha256": "1028f6bfe2ea898dcf9c844d2660c6db8ed5dbb89c524ce8e39825a5bc073e6c",
+      "bytes": 2282,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/test_results.json",
+      "status_before": "??",
+      "sha256": "48c1ca2a35697dd396b68a4d6c4aeced9a27b258f4b83140c5d6c043643e6578",
+      "bytes": 3513,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "75298aac07eb11cfd98bb3a23e6e9c4610153642b7b39a022bacd37f8f4faa7c",
+      "bytes": 3880,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "91a243d7ffb0953a1c256f60b9388c9e9e3f5e1fe61f67e0d7a30544740f3ec6",
+      "bytes": 5647,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "2e2f6acc6a4f7289e6b445ed532704229f480d5e233a20be4366d8eecdc04f91",
+      "bytes": 13285,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "4c2fe2210bfe91b2f6bb1dda84dbc222182a60e26f667e01e958b657fdd7eac2",
+      "bytes": 6009,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/claims/introspection_source_catalog_1789542558.json",
+      "status_before": "??",
+      "sha256": "e0dcecb33613f5861b84d1acde54dff614c5e4bf55a2b6aca7fcf4ebc5401fca",
+      "bytes": 5597,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "c3852bbc981da94dd6114a4c844ac7bdbbf69c6d338643473f74519aee35bc8e",
+      "bytes": 24104,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "b547973b4e4a48af5fceac28b1c02282ea391c9f2fee62689f93bf91ae9f3fd9",
+      "bytes": 4161,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "b2cca815871532181f34b0c949fd82c10cbd40377e0c77159270f4d3a0029ac0",
+      "bytes": 3917,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/summaries/introspection_source_catalog_1789542558.md",
+      "status_before": "??",
+      "sha256": "db782be2749e4834f72ce3f874459d75ce2bda1b99bbd0bfcc980c8d7ea70f52",
+      "bytes": 4237,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/test_results.json",
+      "status_before": "??",
+      "sha256": "ea937a6ecf7f8771e70c1aaba620c99a1c0e8c63e8429ba7178aa75624d592b1",
+      "bytes": 4355,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "1d245b4ae414b1b9982ad7cbdf8e965cec735a41a9a05307df452500047e5600",
+      "bytes": 4122,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "a5b0f43656d77e77578117429e6c6df016be3ddfe57277a5bfeb62f0ae6daa86",
+      "bytes": 4282,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "046c29414e7a40409e0ffdf71e367e19a2f25c58f757ccee73770430a845fe59",
+      "bytes": 15760,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "123209bac23025daf9692c6975562318b425aeb626e4764cc03121b02d218138",
+      "bytes": 9848,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/claims/introspection_source_catalog_1789553097.json",
+      "status_before": "??",
+      "sha256": "bd69ad6526038ba9b4b87e814d67b4cd16ce5b0ba2cf883d6f3e2e0b699d27ad",
+      "bytes": 2922,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/claims/introspection_source_catalog_1789553233.json",
+      "status_before": "??",
+      "sha256": "717613c1f081524ca289ca72d26dee5a17b3ed7d409027636f2078cf5cb9eae8",
+      "bytes": 2345,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/claims/introspection_source_catalog_1789553748.json",
+      "status_before": "??",
+      "sha256": "36a8203f994bbeed9115698c07d92fb584b700a6dadc3a3763ba30da74de005b",
+      "bytes": 3412,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "4b274f6a66a38bb1a1363b9a238487a9687fdfdc865c2250be88b1acb260839f",
+      "bytes": 4855,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "a8a400f905f6675b013a4dc1b3662122b2ee710a7f23324901307a0f4586af97",
+      "bytes": 5334,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553097.md",
+      "status_before": "??",
+      "sha256": "683c73f551707b561750902a60c3bd6b9bbca0183cd31e649121ec32b87e6169",
+      "bytes": 3517,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553233.md",
+      "status_before": "??",
+      "sha256": "0baeeee2d0ccd869efb6ecc2faab89e404cd1b60708a02d8ccce63c81875d5ee",
+      "bytes": 2184,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553748.md",
+      "status_before": "??",
+      "sha256": "b695870acefb972abbef74c04567cca804089df5d42a876a0c20be692d1f2d72",
+      "bytes": 3148,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/test_results.json",
+      "status_before": "??",
+      "sha256": "354cd88a825ac749f29c566c001ec592315cbe6101c0c1ac181a2ae1abd80f4c",
+      "bytes": 3786,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "2767a2ebd61dbce41c43efa19badb7ab9e958a4d604c80fba433033f4ff8569a",
+      "bytes": 4133,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "05414820643dd1a1e19bd09618f1a2ee0a86de01445daa257fc9e78b0c8d9a08",
+      "bytes": 8687,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "7225a7af740eff84e8b1ed90cfcfd2c056852fc535a9a9cd9abba4e7c4aefca9",
+      "bytes": 17636,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "4b953c00e4f0b24268db0cc14083c2ed904fdf75f7700e83bb25f7d21ec0695a",
+      "bytes": 3931,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/claims/introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573.json",
+      "status_before": "??",
+      "sha256": "43bbf0a3664d24225b58830960a853ac500c023f376b5c321cfd97424264c0e6",
+      "bytes": 6532,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "7dd45f17cfa83a4af327f799e2f19ae9f065c5157f30d21277934b4bb9c0c4a7",
+      "bytes": 22041,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/queue_next_40.json",
+      "status_before": "??",
+      "sha256": "8c91ee3608bc37fe9f44804dd1e68d9473104f05dfcbbb3d26b6eabf4349de79",
+      "bytes": 88358,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "fb85776090c8b9916fd9e392fe72de1e62d11337d6866d416f2242f8a0a58c68",
+      "bytes": 6122,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "67711e7757fb7ec70a18a9fc22b9778859b3ee0c3d5005124b8051929ad289a5",
+      "bytes": 1224,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/summaries/introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573.md",
+      "status_before": "??",
+      "sha256": "f075ac580d649b5023d74c6358ef652977aeba87c282de5a12e6e16ba9342fd1",
+      "bytes": 3859,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/test_results.json",
+      "status_before": "??",
+      "sha256": "78974b913680c85a1d2e4e179ed93de5ae246f56344a35c3fd959739201264c0",
+      "bytes": 2464,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/tier5_cadence_dossier.md",
+      "status_before": "??",
+      "sha256": "2da016d374c06a3443d4e4165158d77c8c1c0f6ab8d78ea12169c797a374d6d7",
+      "bytes": 4491,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "01f86c9a25cdeaa528ebfccd11ee3c43ebefd6e216515305132190824d805819",
+      "bytes": 3591,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "dc3b4ffedf178dac3443b43c6b8681b851747a1fe942d905d3324eb31de9d9f1",
+      "bytes": 6507,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "180250a19e087d2563934006a7bf2491a9d4f59fd983982bd51339e5543e88dd",
+      "bytes": 13195,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "50436420016327ec472cf5ae0b4997fd0e3f7664b82e77c0893a6f8fbcaa300e",
+      "bytes": 12764,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/claims/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505.json",
+      "status_before": "??",
+      "sha256": "19f1c2bd74ec2fe4f7f5bf1898f4db0d4a0a8f3b4ab80c580c23a6f979caa798",
+      "bytes": 5447,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/claims/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928.json",
+      "status_before": "??",
+      "sha256": "7dd01bb0f1d58256e67aefe84dac1154aba1cb5d8fb606fff7b08b58aadaa33f",
+      "bytes": 6311,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "d2f7577b702a7443ebc4e44aeb1a689e3a36bd47ba52e172f6848207767f8e04",
+      "bytes": 22476,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "342ea5b6f3bf3c46418f3e773a2cdbf67155698165b1d954fb56477aa73eadab",
+      "bytes": 4324,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "6671b9698b19a47fd70e542823b76e2c12e7af4246295bfb33b596580388bf55",
+      "bytes": 4092,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505.md",
+      "status_before": "??",
+      "sha256": "958ea394f7c68f29645e759beee32498b04d1d176edf72593ae2cfa9d1c8ffe0",
+      "bytes": 5304,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928.md",
+      "status_before": "??",
+      "sha256": "7c0c9428f43546063976ff064689bc7a7fd8a4356a95707e31bb38fc015cf3f6",
+      "bytes": 4591,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/test_results.json",
+      "status_before": "??",
+      "sha256": "7f68980360bfd2a402080410e6beb704ed871aa65546411882dd98d9c0d6799a",
+      "bytes": 5896,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "9de99e678d1643eaa0008ad615e621747bfcabf9e05db996d29c744a3355222a",
+      "bytes": 4037,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "81d397ffd33b187d488cf0e9402d644986adc9c592b746d5aacce8ce61af4ad8",
+      "bytes": 6398,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "311b506e54c6674cb8d93f350419884af9bd6814b3023cb37c2413d40ee56a8b",
+      "bytes": 10329,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "1a23c13bfd4dadac594f85855c02eb237b80b1b0f8494bc679b2fd85ca8521f6",
+      "bytes": 5319,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/claims/introspection_source_catalog_1789589587.json",
+      "status_before": "??",
+      "sha256": "cd4c28547049229bd5b62cbc2a42cf7b0270e2baf3d93ae01ec1b32941775837",
+      "bytes": 3974,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "03d9a593b1650c0afd8e2f4e0b740d05154b57203f9fe47542f7b7affbc88958",
+      "bytes": 2802,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "4f5bfeb0fed71cbe2c55891535a5a4526e6c700bb0049458106d7dab161aa18c",
+      "bytes": 4201,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/summaries/introspection_source_catalog_1789589587.md",
+      "status_before": "??",
+      "sha256": "d27d0041cb9c057dc11c4efb38614cd7ad0031fd19f3454d568f1945f05bf3e0",
+      "bytes": 6657,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/test_results.json",
+      "status_before": "??",
+      "sha256": "ac8195342357b3fa7e5f3c78103b21de354a48853f1bf6d5a21cfab0f166ae9b",
+      "bytes": 4292,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "f8de6a5777b6fe5c702a04826c4f237a22314ce0840690097bf3975ecc1d7d5b",
+      "bytes": 3862,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "798a14aaf3fe401797e97163948aac76ec7bc6c7335fcee636bf17dd3a5823f8",
+      "bytes": 4106,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "bdeed38273a7893ecc0fea85716c53c9702b90c36094b01a6a0c4d53f42a696f",
+      "bytes": 8410,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "2ec02062e84bfb484b4f0b0f63a0d8ead075d06882303aa1bfcbcb48813c7e8d",
+      "bytes": 6230,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789601340.json",
+      "status_before": "??",
+      "sha256": "494fc8ffc69033dc226cd01905f04aaa1e8592d257396b6a09a59ae821890693",
+      "bytes": 5763,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "83a27697c8320bc45e26e14357b9e3046ced25913a7eb35d7e4378d5b743a590",
+      "bytes": 21727,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "e5a6335672f7ce3aeab099b1146402c776e24bc646cebe0882d7657226b1bf10",
+      "bytes": 3154,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "1c9c1ac10a9bfd25397f63e9d1aa94a58cd4a0d1913afa15edde204e295f97c9",
+      "bytes": 2044,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789601340.md",
+      "status_before": "??",
+      "sha256": "402a134edd70628217f12705345f58498d67c82bf2e72380213963454719a101",
+      "bytes": 7400,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/test_results.json",
+      "status_before": "??",
+      "sha256": "538debe09ea2b2689005bf326db5b5f38359ef8ab3955ade76ed1c592a921cad",
+      "bytes": 1579,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "4440dd89d3831c8a1166f60949c5cc34c97a790fb5c862214855cba6b18719e6",
+      "bytes": 3506,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "1dab1c4516a86b3d097a80274ccb7b664154122d10113e614681cddb4f782d21",
+      "bytes": 6615,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "654924db9d4191da1f118ce785e1cd8f63a5fab0f5b7e818eff00f1eb45ca075",
+      "bytes": 11811,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "7e74706a03a1a9851b655783c129d3867215297affabf2ff09dba3bfd2b74343",
+      "bytes": 7479,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789608500.json",
+      "status_before": "??",
+      "sha256": "389e872ce3c5e65eb20e56ddf4878f4c625e56344ebb2911aea580a01479965e",
+      "bytes": 9894,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "5c5c17821ca7c702406e392e9b3f921a0d076481d00b77f753d0110533ce1e16",
+      "bytes": 21932,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/next_queue_snapshot.json",
+      "status_before": "??",
+      "sha256": "f276c21b3bbf5eefbc28d4df2e12553e0acefe210b23bc0e80eacef83f9f2d22",
+      "bytes": 87959,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "5eaa63761262a57443d792efe91191258e1c0a01e8701469b2c9ef479a0764b4",
+      "bytes": 2794,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "3bf0c2c8065609eea5e1161658b8776c23247b481c065870ee375edf4451812b",
+      "bytes": 2537,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789608500.md",
+      "status_before": "??",
+      "sha256": "a78221e90f76b1110bdd13444e8efe9abba00e29d354257d8a1ef9aba4ec14e9",
+      "bytes": 4794,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/test_results.json",
+      "status_before": "??",
+      "sha256": "88ca3151924d14e30b6e0b5a7b90e411cbb890a2135b5e97b4bf389e83b48975",
+      "bytes": 3686,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "75d7e0fb4ca21a1168719b86040f56591d03582d8d4636cc5b8fcf2cdd2b950e",
+      "bytes": 3735,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "9d58ceb2df78c6305967a1cb11e486163414472be74a41cbfbfcc29aedfa91b1",
+      "bytes": 7152,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "acea35c9c8459857f59c689e610de2837a1b32979aecc68a0068219113cf859a",
+      "bytes": 15533,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "8343792518403034d06ecb90e2993703f6d432a42edf4707764efc84797a9377",
+      "bytes": 8861,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789608023.json",
+      "status_before": "??",
+      "sha256": "54e157667fa7d6199044426c6ed294506f493936dfd8c5b8042262dccbc456a5",
+      "bytes": 11466,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "e9516b3bf11a4b0d5dfc5716e09784557ff56b01f82437cd35f588cc9f691f02",
+      "bytes": 21868,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/next_queue_snapshot.json",
+      "status_before": "??",
+      "sha256": "45f6838ece775e3c29c9e6c978ebd7b554aeeda7f310b4b8494877aa6596cfb3",
+      "bytes": 87875,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "30967c965ac0177e22b46a558ef47720d44c03096f550a322f570ebf3c4a812f",
+      "bytes": 3339,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "84f31a05aa2fdfb7837b981e198a175fc1bbb8024e10fd07b4007a43b4a82765",
+      "bytes": 2853,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789608023.md",
+      "status_before": "??",
+      "sha256": "6208fb6a397570a66d36ac8821cfbc8106e3777cebdd0a2a89eb631e7fe835b0",
+      "bytes": 5912,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/test_results.json",
+      "status_before": "??",
+      "sha256": "6a9eaad58dc0f02b734ce2e20dd714759f45ec022e8f06c23f24e78e2d7546d5",
+      "bytes": 940,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "9bad14b8a36f4240770f19104a81481c246029d44ad260e2f9faecaee5b08a47",
+      "bytes": 3506,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "806e9cf0c2ca49b796e9d35ba04cb002913a2f3f9e23e5f772dfedcbdfb96d6c",
+      "bytes": 7559,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "f5dba4b1bbf029974b763d445230c2e1e73ac910e39c28abef2777798252347a",
+      "bytes": 20079,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "2b4b46acb95394327b50e906b476d375c58ce672f7176c4b785e63b0c9fba3e8",
+      "bytes": 4976,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789640246.json",
+      "status_before": "??",
+      "sha256": "63350bfcbd4c4ac96937648199563e6701f25f777c96a0512ee2ff656c102d20",
+      "bytes": 8560,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "afc4640cc3981dd14fc70402984d69812d5d42ca4d206201e84c49d01c79d425",
+      "bytes": 21763,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/pressure_risk_samples.json",
+      "status_before": "??",
+      "sha256": "8af050af9267e054dabbca308cdae7cd263de5de1b77ef20a58d051672e93a1e",
+      "bytes": 2352,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/queue_next_40.json",
+      "status_before": "??",
+      "sha256": "93752a2c8d1b346de597451ad2f9f4f501668afa6e4cb2ef47197986d6cb477e",
+      "bytes": 87629,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "f253b2f441d5e909963c913e03b2483db7d03c97d05e9e340d169ca7b7b6af71",
+      "bytes": 3896,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "381d5c4518372d4cbedc73f3ce79d279bac712b85b5f8e6f6b49c49f7b249d78",
+      "bytes": 3684,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789640246.md",
+      "status_before": "??",
+      "sha256": "a207475d8ba2383c1a844ef6909b737497a6d587e3eaa731b8f794ab0446534d",
+      "bytes": 5516,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/test_results.json",
+      "status_before": "??",
+      "sha256": "6d185a125febf197b1590596499e55bc073bdecd5706c7d93e048fde6b2b5e24",
+      "bytes": 4449,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/tier5_cadence_dossier.md",
+      "status_before": "??",
+      "sha256": "a684171968d6f380c9a2e5ae29b77f6c1505d1424e90a9ded11d42495e51ac77",
+      "bytes": 5812,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "d1b9f001ad2aadd54527a419c9aca540fbf27fe0914fa4d8c5c4cce8dcab404a",
+      "bytes": 3342,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "48beece4b6c8ad691f9d740c04f147003baf40416dc047d560f02cf4d748d045",
+      "bytes": 7883,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/RUN_REPORT.md",
+      "status_before": "??",
+      "sha256": "e43d9e921b88f7b433762c9a6591fc93e7fd5e2fc3ab805813086314990d10fd",
+      "bytes": 9892,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/addressing_links.json",
+      "status_before": "??",
+      "sha256": "39803b2fe4f15ebf049e7764d319a46c83b1d79771101ac94f5f2ccef9e08924",
+      "bytes": 6433,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/claims/introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384.json",
+      "status_before": "??",
+      "sha256": "99e08ae5fb3f4c6ce526de2494bb5eda13ad050b6a21499ae0ebccca90e861d8",
+      "bytes": 7055,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/family_scan.json",
+      "status_before": "??",
+      "sha256": "e39413d2c0fb4c815f466826d60818ec84b74060f290808ca414dce6a739fb5d",
+      "bytes": 269,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/read_manifest.json",
+      "status_before": "??",
+      "sha256": "41bfc358d22d02466d8faab35ab121fad71911ddd599fbd075d6acc19bad3e8a",
+      "bytes": 2339,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/source_receipts.json",
+      "status_before": "??",
+      "sha256": "48c4f969738682bb7483cecc63855c65519a4f2988e2cdae79cc60991a2f2fc8",
+      "bytes": 1140,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/summaries/introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384.md",
+      "status_before": "??",
+      "sha256": "fd826b1fe44c6b607e3e65afdaefe14951329908fc40f065efed67c2eb69f304",
+      "bytes": 4393,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/test_results.json",
+      "status_before": "??",
+      "sha256": "ad26c18a46cc562dcbdba9de941d6bb309a5c220abf975ef535c99449b020535",
+      "bytes": 3974,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/unprocessed_selected.json",
+      "status_before": "??",
+      "sha256": "e8866f50661cd68cad9c381318c9cf54775a80aa6b95d05510d3161b323c63f9",
+      "bytes": 3479,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/verification_receipt.json",
+      "status_before": "??",
+      "sha256": "61b5deed251d07bea2bcd81857c4cba1248b5e766c62b779979cb2ecb2c951c1",
+      "bytes": 8152,
+      "group": "historical_tests_and_evidence"
+    },
+    {
+      "path": "scripts/restart_visual_service.py",
+      "status_before": "??",
+      "sha256": "18cfe7e3bc001f558d45370853b8b35404325751eebba57cc9e9acef2ceff043",
+      "bytes": 11025,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "scripts/self_study_review.py",
+      "status_before": " M",
+      "sha256": "0e6237cfb4d09ee31570e3537c2fd8ed2a7cb81a04ab50153c7dc4bffb5b9464",
+      "bytes": 872883,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "scripts/study_recurrence_provenance.py",
+      "status_before": "??",
+      "sha256": "cf926ce1a1cde6089ac5dda62bd71964254e2f6305a5785d58088f261dd59e47",
+      "bytes": 7701,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "scripts/test_restart_visual_service.py",
+      "status_before": "??",
+      "sha256": "9e2cd31d32bcca3e2f170d079d46b1928bcff70b405e5c5ac61c86a62f1869a4",
+      "bytes": 5787,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "scripts/test_self_study_review.py",
+      "status_before": " M",
+      "sha256": "94a8a720062cde4cbdcb4a0bea4f48ddf7bfec73d514c5c33b7775c38338479a",
+      "bytes": 276711,
+      "group": "quiet_sensory_tools"
+    },
+    {
+      "path": "scripts/test_study_recurrence_provenance.py",
+      "status_before": "??",
+      "sha256": "3f05a0abdeb21c5497a7fb19d939f11cd8e154950fc3cf27a706422be5cbd6ad",
+      "bytes": 7685,
+      "group": "quiet_sensory_tools"
+    }
+  ],
+  "historical_packets": [
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round",
+      "controller_recorded": {
+        "run_id": "run_1789509101552610000_0ac5eb9279",
+        "preprojection_generation_id": "projection_1789509105772136000_1110253346",
+        "preprojection_status": "passed",
+        "pause_generation": 445,
+        "adapter_kind": "subprocess",
+        "lease_owned_by": "controller adapter (no session opened, no NDJSON ops sent, no token read)"
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "last_global_seq": 1108378,
+        "head_sha256": "fa75506a019c2ba82fa05593ffe39692673ca08eb2960cc60a58cf1b23daf074",
+        "legacy_imported_global_seq": 32278,
+        "active_store": "v2",
+        "stream_counts": {
+          "addressing": 64491,
+          "agency_commons": 7080,
+          "attention_portfolio": 3,
+          "claim_families": 239722,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 211847,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13039,
+          "model_qos": 344103,
+          "reciprocal_uptake": 75892,
+          "representation_contracts": 62142,
+          "sandbox": 3507,
+          "signal_spine": 63681,
+          "steward_control": 21926,
+          "steward_work_selection": 748
+        },
+        "corrupt_lines": 0,
+        "errors": [],
+        "v1_immutable": true,
+        "status_note": "verify and status both returned valid: true with corrupt_lines 0 and errors []; the sequence and head here are from the status verification block taken after this round's addressing and Division writes"
+      },
+      "division_recorded": {
+        "cycle_sequence": 49,
+        "completed_rounds_since_followup": 2,
+        "rounds_remaining_before_followup": 4,
+        "review_due_at_round_start": false,
+        "review_due_now": false,
+        "round_event_id": "division_followup_event_fe970d1e940fd5f8556cc34a5edf61f7",
+        "event_count": 339,
+        "event_head_sha256": "e7f4e8e946fedc0ed4fd814fa82795d13b4843c980dab300e874c79e37e3fc65",
+        "processed_report_count": 2,
+        "chronicle_id": "division_chronicle_83f3b25e9372762a5af08977",
+        "chronicle_json_sha256": "5e3326717be0c9e188e76f0a1fd0e447c7e79ea56f5842c2802418eb29c31722",
+        "chronicle_durable_inputs_current": true,
+        "chronicle_volatile_mismatch": [
+          "supervisor_status_sha256"
+        ],
+        "tier5_cadence_dossier": "not required: review_due was false at round start, so no Division return was performed"
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789509068.txt",
+          "expected_sha256": "744d43400643a9331aa24e54727ee8c20662a43ab77e4b742b0163742fea9616",
+          "current_sha256": "744d43400643a9331aa24e54727ee8c20662a43ab77e4b742b0163742fea9616",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.txt",
+          "expected_sha256": "ee7327cac5f129923a5fd2b5c80bbb0bf618b57b656a1e9440ded5062273e83b",
+          "current_sha256": "ee7327cac5f129923a5fd2b5c80bbb0bf618b57b656a1e9440ded5062273e83b",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bcaf0c7e7007eb87369286b1995267278a9c120bff1a39f76d67ae6abe5dcb49.json",
+          "expected_sha256": "6f4fd9cf8f2382869edfdd1e96ce75bdb5fa1b3c3cb63b013609015c3025f5bc",
+          "current_sha256": "6f4fd9cf8f2382869edfdd1e96ce75bdb5fa1b3c3cb63b013609015c3025f5bc",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_fbf946d76b2af855dc51c76e39b38a548a6140dc22a386435a90107389c27e7e.json",
+          "expected_sha256": "7e603e4e82ecb4e09fe50600531905bbbc1d0add99e0e609d921adfc7a92f09a",
+          "current_sha256": "7e603e4e82ecb4e09fe50600531905bbbc1d0add99e0e609d921adfc7a92f09a",
+          "matches": true
+        }
+      ],
+      "claim_count": 14,
+      "classifications": {
+        "verified_existing": 8,
+        "observed": 5,
+        "implemented_now": 1
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 30
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round",
+      "controller_recorded": {
+        "run_id": "run_1789522933880202000_225b1ec110",
+        "preprojection_generation_id": "projection_1789522937503754000_f419de81c5",
+        "preprojection_status": "passed",
+        "pause_generation": 445,
+        "adapter_kind": "subprocess",
+        "lease_owned_by": "controller adapter (no session opened, no NDJSON ops sent, no token read or persisted)",
+        "stop_requested_observed": false,
+        "child_sigint_deadline_unix": 1789528334,
+        "budget_note": "Preprojection consumed ~56 min of the 5400s child window (begun 1789522937, settled 1789526314), leaving ~32 min of child time."
+      },
+      "evidence_event_store_recorded": {
+        "observation_kind": "direct read-only file observation, NOT a completed verify invocation",
+        "head_last_global_seq": 1109596,
+        "head_last_event_sha256": "080b77ae551435a4e6dddf5c9f8441c1c78d112ac09bc125cda2fc9af9f4829d",
+        "verified_checkpoint_global_seq": 1109596,
+        "verified_checkpoint_event_sha256": "080b77ae551435a4e6dddf5c9f8441c1c78d112ac09bc125cda2fc9af9f4829d",
+        "verified_checkpoint_expires_at_unix": 1789614220.4813068,
+        "checkpoint_matches_head": true,
+        "legacy_imported_global_seq": 32278,
+        "active_store": "v2",
+        "events_jsonl_bytes": 8589085798,
+        "caveat": "checkpoint/head agreement is an integrity signal, not a substitute for the verify run that did not return; recorded as debt above",
+        "verify_completed": true,
+        "verify_valid": true,
+        "verify_stream_counts_observed": {
+          "addressing": 64552,
+          "agency_commons": 7084,
+          "attention_portfolio": 3,
+          "claim_families": 239751,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 211967,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13085,
+          "model_qos": 344757,
+          "reciprocal_uptake": 75892,
+          "representation_contracts": 62300,
+          "sandbox": 3507,
+          "signal_spine": 63784,
+          "steward_control": 21968,
+          "steward_work_selection": 750
+        },
+        "corrupt_lines_observed": false,
+        "errors_observed": false,
+        "status_command_returned": false
+      },
+      "division_recorded": {
+        "cycle_sequence": 49,
+        "completed_rounds_since_followup": 3,
+        "rounds_remaining_before_followup": 3,
+        "review_due": false,
+        "review_due_at_round_start": false,
+        "tier5_cadence_dossier": "not generated and not due - the dossier is required only when a Division return is completed, and review_due was false",
+        "round_event_id": "division_followup_event_a4797e856f51bb3ac1020a0a722e08fa",
+        "processed_report_count": 1,
+        "event_count": 340,
+        "event_head_sha256": "abba58f639e03c8b5915b84971eb901b45c9a9658886f6a7f9ddfba8ed4dfb5b",
+        "chronicle_id": "division_chronicle_6e1a81a98ea3a6178bf08395",
+        "chronicle_json_sha256": "da433ee37a176ee3b975e5ec848eb37d478271cd4d4448f093f144181c19875d",
+        "chronicle_html_sha256": "c82a908666e4ee311cb87685883abca4185ccd5733f28f36d5b433f8e887bd57",
+        "chronicle_durable_inputs_current": true,
+        "chronicle_durable_mismatches": [],
+        "chronicle_volatile_mismatches": [
+          "supervisor_status_sha256"
+        ],
+        "chronicle_note": "Initial verify returned 'durable source inputs changed; project before verify' - expected staleness from this round's own round-record. Reprojected and reverified. Durable current with a volatile supervisor-hash mismatch only; the Chronicle is not called fully current, and the moving supervisor hash is not called a durable-integrity failure.",
+        "note_action": "none - no Division note was due and none was written"
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789522750.txt",
+          "expected_sha256": "46a6badb2cd2061a6ba8bcdd4849dc0323579acb5b0f896049ea37371156454f",
+          "current_sha256": "46a6badb2cd2061a6ba8bcdd4849dc0323579acb5b0f896049ea37371156454f",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7494624fbf8e6046dc2837f7e964b87205b6a017013c691b11d20aac980435aa.json",
+          "expected_sha256": "be951b898458dc853ba0bf0aa0cf196b34ce3c2359e7fb08e553673b795f0d6b",
+          "current_sha256": "be951b898458dc853ba0bf0aa0cf196b34ce3c2359e7fb08e553673b795f0d6b",
+          "matches": true
+        }
+      ],
+      "claim_count": 7,
+      "classifications": {
+        "verified_existing": 4,
+        "observed": 3
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 11
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round",
+      "controller_recorded": {
+        "run_id": "run_1789530018427505000_7271a64ad2",
+        "adapter_kind": "subprocess",
+        "preprojection_generation_id": "projection_1789530022751147000_77d2c503e1",
+        "preprojection_status": "passed",
+        "preprojection_phase": "pre",
+        "preprojection_duration_ms": 3971957,
+        "pause_generation": 445,
+        "stop_requested_at_last_observation": false,
+        "lease_ownership": "controller-held subprocess adapter; no session opened, no NDJSON ops sent, no lease token read or persisted",
+        "postprojection": "runs after this process exits; not observed here"
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "corrupt_lines": 0,
+        "errors": [],
+        "last_global_seq": 1110323,
+        "last_event_sha256": "9c6045e76ced21dad28ce9417b216f5912bda6960dc237b19c9e4d77891d3271",
+        "event_count": 1110323,
+        "verify_duration_secs": 559,
+        "active_store": "v2",
+        "legacy_imported_global_seq": 32278,
+        "status_snapshot_note": "A later --json status (taken ~9 minutes after verify) reported seq 1110334 with corrupt_lines 0 and errors []; the store is live and 11 steward_control events were appended in between. The scalars above are the ones this round actually observed from verify.",
+        "stream_counts": {
+          "addressing": 64635,
+          "agency_commons": 7086,
+          "attention_portfolio": 3,
+          "claim_families": 239766,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 212028,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13119,
+          "model_qos": 345004,
+          "reciprocal_uptake": 76014,
+          "representation_contracts": 62368,
+          "sandbox": 3507,
+          "signal_spine": 63837,
+          "steward_control": 22007,
+          "steward_work_selection": 752
+        }
+      },
+      "division_recorded": {
+        "cycle_sequence": 49,
+        "processed_report_count": 3,
+        "round_event_id": "division_followup_event_ea7f3de6565d1633e2bb33e2d822892b",
+        "completed_rounds_since_followup": 4,
+        "rounds_remaining_before_followup": 2,
+        "review_due": false,
+        "event_count": 341,
+        "event_head_sha256": "55a22f4279744e54a308f1f736263bbf8666a80795e4bfa9c022e0200901ebc1",
+        "chronicle": {
+          "reprojected": true,
+          "chronicle_id": "division_chronicle_54128d3fad53445312998854",
+          "json_sha256": "9f299d1b39db10d613e545742ce5bf812ba0a03456078b96fadf3e7adaf0198f",
+          "html_sha256": "60ac5e64d2359fd1261bb95031e27c164da5381040980230524c042bc282d84f",
+          "durable_inputs_current": true,
+          "volatile_mismatches": [
+            "supervisor_status_sha256"
+          ],
+          "note": "Durable inputs are current; the only mismatch is the volatile supervisor status hash. The Chronicle is not called fully current, and the moving supervisor hash is not called a durable-integrity failure."
+        }
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954.txt",
+          "expected_sha256": "527c8713a43d0a01ef8d10c9bb5b9fe736749d14230af85528ee3eff6ef613dd",
+          "current_sha256": "527c8713a43d0a01ef8d10c9bb5b9fe736749d14230af85528ee3eff6ef613dd",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_71ed198697f6ef44ce8ab4a518b112d1e2cb1f5e140c5ee0c16f228ed9f41894.json",
+          "expected_sha256": "d44c7f842de3202a45a794a2efdfb0e248133e3ba1549c0080cac0c9083b38fa",
+          "current_sha256": "d44c7f842de3202a45a794a2efdfb0e248133e3ba1549c0080cac0c9083b38fa",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788.txt",
+          "expected_sha256": "413341d7a741a394293b16eab195dabc1c276e6a3c98541d23e53c833727d722",
+          "current_sha256": "413341d7a741a394293b16eab195dabc1c276e6a3c98541d23e53c833727d722",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_a48d7ae2278a7583b8b63a665a863ab2fc1ff256623ab204d8110de1ee761bed.json",
+          "expected_sha256": "54a4276b1f6c0e917f53f8092cb503d14ed4751356dcf37f71260efdb85c3a1a",
+          "current_sha256": "54a4276b1f6c0e917f53f8092cb503d14ed4751356dcf37f71260efdb85c3a1a",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608.txt",
+          "expected_sha256": "201ebed623f70dede8f1032fa35cf7f1a4792520137a130bae125904b6ca44bf",
+          "current_sha256": "201ebed623f70dede8f1032fa35cf7f1a4792520137a130bae125904b6ca44bf",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ca878b02a5a2edf6f3e811a16bc041839d1a056532e38aa1ef520e976f4b0bd4.json",
+          "expected_sha256": "6e101c4703ab3fed9a18d71f7aa649ce74de21867b9cd42d6a9cf24925149e5f",
+          "current_sha256": "6e101c4703ab3fed9a18d71f7aa649ce74de21867b9cd42d6a9cf24925149e5f",
+          "matches": true
+        }
+      ],
+      "claim_count": 22,
+      "classifications": {
+        "implemented_now": 8,
+        "verified_existing": 11,
+        "observed": 3
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 44
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round",
+      "controller_recorded": {
+        "run_id": "run_1789542675231808000_216d456d78",
+        "preprojection_generation_id": "projection_1789542678122543000_fb32a6f2e8",
+        "preprojection_phase": "pre",
+        "preprojection_status": "passed",
+        "postprojection": "runs after this process exits; not observed here",
+        "pause_generation": 445,
+        "stop_requested": false
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "corrupt_lines": 0,
+        "errors": [],
+        "verified_global_seq": 1111509,
+        "verified_event_sha256": "05356dc38c681d6cda994452b1f03ca0c0fbeac79bb0ba430d1c7fd92054856d",
+        "provenance": "`valid: true` was observed directly from `evidence_event_store.py --json verify`. corrupt_lines=0 and errors=[] are asserted from the verify contract (a store with corrupt lines or errors cannot return valid:true); the full JSON body was truncated by a 600s foreground timeout and a re-run did not finish inside the child budget. verified_global_seq/sha read from verified_checkpoint.json. `--json status` was not observed and is the next session's first safe command."
+      },
+      "division_recorded": {
+        "cycle_sequence": 49,
+        "processed_report_count": 1,
+        "round_event_id": "division_followup_event_d8b513c926e20ba11e3019c915ebc14c",
+        "completed_rounds_since_followup": 5,
+        "rounds_remaining_before_followup": 1,
+        "review_due": false,
+        "event_count": 342,
+        "event_head_sha256": "324c96478b44b7b446d2d81249b26226d3b6a0a465940937c5a301d9a0e27452",
+        "chronicle_id": "division_chronicle_255f0c7152d9271e61dff090",
+        "chronicle_json_sha256": "2ae9631ef7ac1905eb32dcae933859b46279b559337ee615b0722fa2557c8a24",
+        "chronicle_html_sha256": "2c73132e8385f60174c59c34cf41f1bee43cb94fff90d0b32df5866597835032",
+        "durable_inputs_current": true,
+        "volatile_mismatches": [
+          "supervisor_status_sha256"
+        ],
+        "note_action": "none \u2014 no Division note was due or written"
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789542558.txt",
+          "expected_sha256": "4da34500715f56a106a9d90a3471fa75fc14f396352b731bad3fd7e03549366e",
+          "current_sha256": "4da34500715f56a106a9d90a3471fa75fc14f396352b731bad3fd7e03549366e",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_66428ec6e93956cfbddefec207548a0081bf81afaaad21b5c5a6acf58d9928d6.json",
+          "expected_sha256": "9ec04c0e0d575650600381edc4e4789463f962098b570657f9a11683a4a1c8aa",
+          "current_sha256": "9ec04c0e0d575650600381edc4e4789463f962098b570657f9a11683a4a1c8aa",
+          "matches": true
+        }
+      ],
+      "claim_count": 9,
+      "classifications": {
+        "verified_existing": 5,
+        "observed": 4
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 17
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round",
+      "controller_recorded": {
+        "run_id": "run_1789553915299132000_1b6066e46d",
+        "preprojection_generation_id": "projection_1789553919794643000_097e14e5bd",
+        "preprojection_status": "passed",
+        "preprojection_completed_steps": 27,
+        "pause_generation": 445,
+        "paused": false,
+        "stop_requested": false,
+        "postprojection": "runs after this process exits; not observable from here"
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "corrupt_lines": 0,
+        "errors": [],
+        "event_count": 1112557,
+        "last_global_seq": 1112557,
+        "last_event_sha256": "8ccda8010bd8040e16597cb7e7dcc076a79611576549c06e27d7b11cb4386e98",
+        "stream_counts": {
+          "addressing": 64773,
+          "agency_commons": 7092,
+          "attention_portfolio": 3,
+          "claim_families": 239830,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 212308,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13204,
+          "model_qos": 346104,
+          "reciprocal_uptake": 76022,
+          "representation_contracts": 62638,
+          "sandbox": 3507,
+          "signal_spine": 64008,
+          "steward_control": 22115,
+          "steward_work_selection": 756
+        },
+        "status_command": {
+          "root": "capsules/spectral-bridge/workspace/diagnostics/evidence_event_store_v2",
+          "active_store": "v2",
+          "activated_at": "2026-07-16T21:07:28.899458+00:00",
+          "effective_aggregate_valid": true,
+          "effective_aggregate_corrupt_event_lines": 0,
+          "embedded_verification": {
+            "valid_fields": {
+              "corrupt_lines": 0,
+              "errors": [],
+              "event_count": 1112572,
+              "last_global_seq": 1112572,
+              "last_event_sha256": "ddcee6b794dd5f34d8716fea0c1e3fe11f9da6a4349c3b0d6bcfcc705f0e1c09"
+            }
+          },
+          "note": "The store is live and appending while this round runs, so the standalone verify (seq 1112557, head 8ccda801\u2026) and the status command minutes later (seq 1112572, head ddcee6b7\u2026) differ by 15 events. Both report corrupt_lines 0 and no errors. Neither number is a defect; they are two honest observations of a moving append-only log."
+        }
+      },
+      "division_recorded": {
+        "cycle_sequence": 49,
+        "completed_rounds_since_followup": 6,
+        "rounds_remaining_before_followup": 0,
+        "review_due_at_round_start": false,
+        "review_due_after_this_round": true,
+        "round_event_id": "division_followup_event_be5df68c87fd5b7321f0e75bd2feb4ca",
+        "event_count": 343,
+        "event_head_sha256": "29cbbe09369e663bde6109170fe9fc44105699988849ac043401d20de2fbe48c",
+        "processed_report_count": 3,
+        "chronicle": {
+          "chronicle_id": "division_chronicle_1071bcf7c549eaa75b823a05",
+          "json_sha256": "0a3abef97a0e21a2c03560a96809300cf07a00d3550513d0d6ba141c9dbf6390",
+          "html_sha256": "c0ac4dcc9ec703de9ac85b28f3a926519ca1a509bd28b914344679f8b410afba",
+          "timeline_event_count": 343,
+          "durable_inputs_current": true,
+          "durable_mismatches": [],
+          "volatile_mismatches": [
+            "supervisor_status_sha256"
+          ],
+          "statement": "Durable inputs current; the only mismatch is the volatile supervisor hash. The Chronicle is not 'fully current', and a moving supervisor hash is not a durable-integrity failure."
+        },
+        "note_action": "none \u2014 no Division note was due or written",
+        "next_round_obligation": "review_due is now true: the next round must complete the bounded Division return before processing any report, and must produce tier5_cadence_dossier.md in its packet.",
+        "final_followup_verify": {
+          "ok": true,
+          "cycle_sequence": 49,
+          "completed_rounds_since_followup": 6,
+          "review_due": true,
+          "event_count": 343,
+          "event_head_sha256": "29cbbe09369e663bde6109170fe9fc44105699988849ac043401d20de2fbe48c"
+        }
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789553748.txt",
+          "expected_sha256": "e4ca4d53c0178effc9a543d998ac15bea5e0f0d8c394b43c97f8ae6813837bd2",
+          "current_sha256": "e4ca4d53c0178effc9a543d998ac15bea5e0f0d8c394b43c97f8ae6813837bd2",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_bb111839220b77962073c064d300a041259c874d0ef09097e4f0166f5fcc6c5f.json",
+          "expected_sha256": "619e27589ed86cf2c47466e25edd1e96ec466cc722a384c0272422f255a120fd",
+          "current_sha256": "619e27589ed86cf2c47466e25edd1e96ec466cc722a384c0272422f255a120fd",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789553233.txt",
+          "expected_sha256": "ecc6e26e699d3b25c800890d017985e784f2fcd2c908073c9234d5ed3e6f17de",
+          "current_sha256": "ecc6e26e699d3b25c800890d017985e784f2fcd2c908073c9234d5ed3e6f17de",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c11f0b9b21fc10abb4d78e178f1e3f1217c6ac36f5e498e0918ea823ae2540ef.json",
+          "expected_sha256": "0395f712c9e3ac796899a6012b5de7589c42193ae9a1308196f2926cf813d276",
+          "current_sha256": "0395f712c9e3ac796899a6012b5de7589c42193ae9a1308196f2926cf813d276",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789553097.txt",
+          "expected_sha256": "43c211c716156f76e0254f2433e126c21e24fb2b726631dd9705db7d8e4cf7f9",
+          "current_sha256": "43c211c716156f76e0254f2433e126c21e24fb2b726631dd9705db7d8e4cf7f9",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_81ff482a42cfe5ed62677553acb0fc8dadc25d9df28733de9807a5e152ebdc61.json",
+          "expected_sha256": "c63573df6e9e35d8e08da58e6e594fc2b8ab536dee01ed7e6b7edfd60c3fde76",
+          "current_sha256": "c63573df6e9e35d8e08da58e6e594fc2b8ab536dee01ed7e6b7edfd60c3fde76",
+          "matches": true
+        }
+      ],
+      "claim_count": 15,
+      "classifications": {
+        "implemented_now": 3,
+        "observed": 3,
+        "authority_gated": 1,
+        "verified_existing": 8
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 29
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round",
+      "controller_recorded": {
+        "run_id": "run_1789566866432918000_6755aa828d",
+        "preprojection_generation_id": "projection_1789566871344705000_89a56746d7",
+        "preprojection_phase": "pre",
+        "preprojection_status": "passed",
+        "pause_generation": 445,
+        "controller_paused": false,
+        "stop_requested_observed": false,
+        "postprojection": "not observable from this process; the adapter runs it after exit"
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "event_count": 1113716,
+        "last_global_seq": 1113716,
+        "last_event_sha256": "6076a88bdfc19dbd54bd55109a1e94980d7f2996e5b508c80493f5ec24634325",
+        "corrupt_lines": 0,
+        "errors": [],
+        "active_store": "v2",
+        "status_command": "evidence_event_store.py --json status was still running at the budget boundary and is not claimed as run; verify completed and is reported here"
+      },
+      "division_recorded": {
+        "return_completed_first": true,
+        "cycle_before": 49,
+        "cycle_after": 50,
+        "followup_event_id": "division_followup_event_38d1fb23e3f206b3d7ae2a859aad6f8d",
+        "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle49_20260916.txt",
+        "astrid_note_sha256": "1369d93994ba33d295e2a3a064dc0bd488201bd0dbf5e2c3c75f0a118aa29264",
+        "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle49_20260916.txt",
+        "minime_note_sha256": "8511b49049a793a3b5186dc7ec0f208e2de31e2384caebc3802f8cb9eba3f537",
+        "round_event_id": "division_followup_event_3193e441fbed150bf08818243b57bc93",
+        "processed_report_count": 1,
+        "completed_rounds_since_followup": 1,
+        "review_due": false,
+        "event_count": 345,
+        "event_head_sha256": "e082f640cf20d73bb618aabb17a13986335b3f94f5330fe608e8fd4249b56928",
+        "round_event_defect": "projection_generation_id was recorded as an empty string: the command substitution read capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/projection_state.json, which does not exist (the id lives in projections/latest_generation.json). record_round is idempotent by deterministic event id, so the field cannot be repaired without falsifying a second round. The correct value is projection_1789566871344705000_89a56746d7, recorded here and in RUN_REPORT.md.",
+        "chronicle_final_id": "division_chronicle_7bc88e489ceb7c7a1c6c24ba",
+        "chronicle_json_sha256": "e707f5d2bf45447a5dda5baed8d0a14463261b58d4c20bedab978436eeefecad",
+        "chronicle_html_sha256": "105f4e334b291fee011558f9fa3cf5d506a05fb567cb07007c0e25383a7b3270",
+        "chronicle_timeline_event_count": 345,
+        "chronicle_durable_inputs_current": true,
+        "chronicle_volatile_mismatches": [
+          "supervisor_status_sha256"
+        ]
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573.txt",
+          "expected_sha256": "d649661b8eae24abf67630588e575d9abbff4e75f1e6fa22b14533ce3629eeba",
+          "current_sha256": "d649661b8eae24abf67630588e575d9abbff4e75f1e6fa22b14533ce3629eeba",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_ba2e945080ceb40b675b7647e4b36a89ca51a3bb268e639d61dbb5f96d80e1ba.json",
+          "expected_sha256": "52606ccdf74d361d0de62361bfeb9a33f14654350441d9a54e09e7147ed6d9e3",
+          "current_sha256": "52606ccdf74d361d0de62361bfeb9a33f14654350441d9a54e09e7147ed6d9e3",
+          "matches": true
+        }
+      ],
+      "claim_count": 9,
+      "classifications": {
+        "verified_existing": 5,
+        "observed": 3,
+        "implemented_now": 1
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 11
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round",
+      "controller_recorded": {
+        "steward_run_id": "run_1789578439907480000_2edad997cb",
+        "preprojection_generation_id": "projection_1789578442954571000_039499e9d4",
+        "preprojection_status": "passed",
+        "preprojection_completed_step_count": 27,
+        "previous_successful_generation_id": "projection_1789572631875762000_28af2c1f96",
+        "pause_generation": 445,
+        "postprojection": "runs after this process exits; not observed by this round",
+        "run_id": "run_1789578439907480000_2edad997cb"
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "corrupt_lines": 0,
+        "errors": [],
+        "event_count": 1114765,
+        "last_global_seq": 1114765,
+        "last_event_sha256": "d7963a384d8d5493ef2efcfd10af836d74df2a1454885da78e51f5943b5013c3",
+        "stream_counts": {
+          "addressing": 64917,
+          "agency_commons": 7098,
+          "attention_portfolio": 3,
+          "claim_families": 239880,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 212518,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13279,
+          "model_qos": 347235,
+          "reciprocal_uptake": 76024,
+          "representation_contracts": 62913,
+          "sandbox": 3507,
+          "signal_spine": 64186,
+          "steward_control": 22248,
+          "steward_work_selection": 760
+        },
+        "active_store": "v2",
+        "note": "Captured from a second, complete verify run after all durable writes of this round, so errors=[] and the stream counts are observed rather than inferred."
+      },
+      "division_recorded": {
+        "cycle_sequence": 50,
+        "completed_rounds_since_followup": 2,
+        "rounds_remaining_before_followup": 4,
+        "review_due": false,
+        "round_event_id": "division_followup_event_734a3d628ee68703a1f6f4715623a226",
+        "event_count": 346,
+        "event_head_sha256": "680a00617d722ca0a965df60bbf5c0937fa9279f5bd1967f3bba08988b2037d8",
+        "processed_report_count_recorded": 2,
+        "review_due_at_round_start": false,
+        "tier5_cadence_dossier": "not generated: review_due was false at round start, so no Division return was performed and the dossier trigger did not fire",
+        "chronicle": {
+          "chronicle_id": "division_chronicle_ef18c4353eaed83ba947b908",
+          "json_sha256": "45122d4b314724647653cfd185950fa2379a87ac162f683e4a32f32c667ed5a3",
+          "html_sha256": "668f63c9cb1c2d48f34fc8eddb845a41ff1d1321d312e129349f7186dac633e1",
+          "durable_inputs_current": true,
+          "volatile_inputs_current": false,
+          "volatile_mismatches": [
+            "supervisor_status_sha256"
+          ]
+        },
+        "processed_report_count": 2
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928.txt",
+          "expected_sha256": "6a35a5074a28676c778a4664b7fa076cdd92736b6f8765721c89ea20203d0c32",
+          "current_sha256": "6a35a5074a28676c778a4664b7fa076cdd92736b6f8765721c89ea20203d0c32",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505.txt",
+          "expected_sha256": "edb7d0ddb03510aa07293f3b7490f92ec1a8c2b74af5b523a4ed32e951ab99e2",
+          "current_sha256": "edb7d0ddb03510aa07293f3b7490f92ec1a8c2b74af5b523a4ed32e951ab99e2",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_5238ec03cec2011a0673053f99eadbe722e2ebac829145aa6ef8925078f142ce.json",
+          "expected_sha256": "cc509a087894e43349f40e093903f782319801268ed979cab249a2427419ec20",
+          "current_sha256": "cc509a087894e43349f40e093903f782319801268ed979cab249a2427419ec20",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_84152d641bc7729ea156b468d312d3ee9f79dc5a4e3916ccee462b4cf12150bc.json",
+          "expected_sha256": "dce3384afe5c1c8dd8acdafb0da854cc5e582870efc15669c86706f0a317d4b2",
+          "current_sha256": "dce3384afe5c1c8dd8acdafb0da854cc5e582870efc15669c86706f0a317d4b2",
+          "matches": true
+        }
+      ],
+      "claim_count": 18,
+      "classifications": {
+        "verified_existing": 14,
+        "implemented_now": 1,
+        "observed": 3
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 35
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round",
+      "controller_recorded": {
+        "run_id": "run_1789589657420656000_a4028070aa",
+        "preprojection_generation_id": "projection_1789589662016913000_32b6acd048",
+        "preprojection_status": "passed",
+        "pause_generation": 447,
+        "stop_requested": false,
+        "postprojection": "runs after this process exits; not observable here",
+        "session_opened_by_this_process": false,
+        "ndjson_ops_sent": 0,
+        "lease_token_read_or_persisted": false
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "corrupt_lines": 0,
+        "errors": [],
+        "event_count": 1115763,
+        "last_global_seq": 1115763,
+        "last_event_sha256": "1cd6fbbd251169b0a6e2338a3972e8de3a41a7900f3d6770fa117a6e8c952d21",
+        "stream_counts": {
+          "addressing": 64975,
+          "agency_commons": 7102,
+          "attention_portfolio": 3,
+          "claim_families": 239917,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 212690,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13321,
+          "model_qos": 347684,
+          "reciprocal_uptake": 76024,
+          "representation_contracts": 63021,
+          "sandbox": 3507,
+          "signal_spine": 64261,
+          "steward_control": 22299,
+          "steward_work_selection": 762
+        },
+        "active_store": "v2",
+        "legacy_v1_immutable": true,
+        "note": "status subcommand not run; verify is the integrity check and it is clean."
+      },
+      "division_recorded": {
+        "cycle_sequence": 50,
+        "completed_rounds_since_followup": 3,
+        "rounds_remaining_before_followup": 3,
+        "review_due_at_round_start": false,
+        "round_event_id": "division_followup_event_22000c926eb34d42a96fed4a3a6bb2da",
+        "event_count": 347,
+        "event_head_sha256": "5962ccbb3274c3b87905dca80630831266d0d1052d5ea546ef32d3ebc8bc572a",
+        "tier5_cadence_dossier": "not required \u2014 review_due was false, so no Division return was completed this round",
+        "chronicle": "verify exits 1 (durable source inputs changed after record-round); no project performed, none due",
+        "processed_report_count": 1
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789589587.txt",
+          "expected_sha256": "73aedbca2c508bf3022376a0fae2d39bf5660774ddda4db31dfb73e0174f1b0c",
+          "current_sha256": "73aedbca2c508bf3022376a0fae2d39bf5660774ddda4db31dfb73e0174f1b0c",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_c69fd24e27cb2e270cbf3c1df38cd6b4004dbc81ddba080a4bb51323bf4fa47f.json",
+          "expected_sha256": "f5c3c8bc15fe348b2fa1b49c7a090d9b60e9db8c28e139444c5a966895de215d",
+          "current_sha256": "f5c3c8bc15fe348b2fa1b49c7a090d9b60e9db8c28e139444c5a966895de215d",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_socket.rs_1789589306.txt",
+          "expected_sha256": "8282eab1304dbd853f38670871b7caf44dafd30e659b1ea5a327663f2ea42cda",
+          "current_sha256": "8282eab1304dbd853f38670871b7caf44dafd30e659b1ea5a327663f2ea42cda",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_crates_astrid-kernel_src_socket.rs_1789589462.txt",
+          "expected_sha256": "9b7f5f3194881c4d8762805f732c61ba07b35446c75e11ef6359eac93b1b4a84",
+          "current_sha256": "9b7f5f3194881c4d8762805f732c61ba07b35446c75e11ef6359eac93b1b4a84",
+          "matches": true
+        }
+      ],
+      "claim_count": 6,
+      "classifications": {
+        "verified_existing": 4,
+        "observed": 1,
+        "implemented_now": 1
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 14
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round",
+      "controller_recorded": {
+        "adapter_kind": "subprocess",
+        "lease_token_read_or_persisted": false,
+        "pause_generation": 447,
+        "postprojection": "runs after this process exits; not observable from inside the round",
+        "preprojection_generation_id": "projection_1789601435127975000_f9d8c79f5e",
+        "preprojection_status": "passed",
+        "run_id": "run_1789601431310501000_07a09d6e59",
+        "steward_run_id": "run_1789601431310501000_07a09d6e59"
+      },
+      "evidence_event_store_recorded": {
+        "active_store": "v2",
+        "corrupt_lines": 0,
+        "errors": [],
+        "last_event_sha256": "b04a74a24ca0928502e8833c3026639d6fd7c30d03e3e7ffb4a722d59c2c374f",
+        "last_global_seq": 1116602,
+        "seq_at_run_start": 1116210,
+        "valid": true
+      },
+      "division_recorded": {
+        "completed_rounds_since_followup": 4,
+        "cycle_sequence": 50,
+        "processed_report_count": 1,
+        "review_due_after_round": false,
+        "review_due_before_round": false,
+        "round_event_id": "division_followup_event_696dd7b263a547d9672d96c535f2b00f",
+        "rounds_remaining_before_followup": 2,
+        "tier5_cadence_dossier": "not owed \u2014 review_due was false at round start, so no Division return and no dossier"
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_1789601340.txt",
+          "expected_sha256": "ef2a74508c8dcfa9c834737c0c01c3b57afe394360a951651b72ce90573fcddb",
+          "current_sha256": "ef2a74508c8dcfa9c834737c0c01c3b57afe394360a951651b72ce90573fcddb",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_f28ccee4b47ea64b12517d49341d6611917eaf5a8149ac7e21f808e1fbcb4575.json",
+          "expected_sha256": "336bf20e81a3633f413861ebefdc1a662f8d7226f614db04e87cb59796228c35",
+          "current_sha256": "336bf20e81a3633f413861ebefdc1a662f8d7226f614db04e87cb59796228c35",
+          "matches": true
+        }
+      ],
+      "claim_count": 10,
+      "classifications": {
+        "verified_existing": 7,
+        "observed": 2,
+        "implemented_now": 1
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 16
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round",
+      "controller_recorded": {
+        "steward_run_id": "run_1789614473762300000_8f47ea633c",
+        "preprojection_generation_id": "projection_1789614478197882000_bcd163fdc1",
+        "preprojection_status": "passed",
+        "preprojection_completed_steps": 27,
+        "preprojection_authority_scan_passed": true,
+        "postprojection_generation_id": "runs after this process exits; not observable from inside the round",
+        "pause_generation": 447,
+        "stop_requested_observed": false,
+        "lease_token_read_or_persisted": false,
+        "session_opened_by_model": false,
+        "ndjson_ops_sent_by_model": false,
+        "pause_or_resume_by_model": false,
+        "run_id": "run_1789614473762300000_8f47ea633c"
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "corrupt_lines": 0,
+        "event_count": 1118601,
+        "last_global_seq": 1118601,
+        "last_event_sha256": "31f486c09dfb87f3eeb3a72ed1e8db3c5f3e3dca990bc0dc9c85a0e5a86e6843",
+        "errors": [],
+        "stream_counts": {
+          "addressing": 65068,
+          "agency_commons": 7111,
+          "attention_portfolio": 3,
+          "claim_families": 239951,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 212834,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13367,
+          "model_qos": 348861,
+          "reciprocal_uptake": 76824,
+          "representation_contracts": 63274,
+          "sandbox": 3507,
+          "signal_spine": 64444,
+          "steward_control": 22394,
+          "steward_work_selection": 766
+        },
+        "status_subcommand": "not completed \u2014 `evidence_event_store.py --json status` exceeded the remaining headless budget and was stopped; `verify` (the check this round is required to run) completed green and is recorded above"
+      },
+      "division_recorded": {
+        "cycle_sequence": 50,
+        "completed_rounds_since_followup": 5,
+        "rounds_remaining_before_followup": 1,
+        "review_due_before_round": false,
+        "review_due_after_round": false,
+        "round_event_id": "division_followup_event_71e826a739761280535d6210d266dd36",
+        "event_count": 349,
+        "event_head_sha256": "4c49aeb3fae226010e4cf4430f184bbe345b5454ee4959d81d33bdb5fe78752c",
+        "processed_report_count": 1,
+        "tier5_cadence_dossier": "not generated \u2014 review_due was false, so no Division return was completed this round and the dossier is not owed",
+        "note_action": "none written; no Division return was due"
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_1789608500.txt",
+          "expected_sha256": "490501f44b03df7a97cb0863d2bdcd1f90fed4b02d1bf1fc66ec762e022b0a22",
+          "current_sha256": "490501f44b03df7a97cb0863d2bdcd1f90fed4b02d1bf1fc66ec762e022b0a22",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_618ae0646e028d53248a0ec8bd7d557d8b268dbb6031f932003cc1b379f3aac4.json",
+          "expected_sha256": "f74d572794932ec23b8a50af9d4233e0e74576818e60c67db5e502ca3ea78f26",
+          "current_sha256": "f74d572794932ec23b8a50af9d4233e0e74576818e60c67db5e502ca3ea78f26",
+          "matches": true
+        }
+      ],
+      "claim_count": 14,
+      "classifications": {
+        "implemented_now": 1,
+        "observed": 4,
+        "verified_existing": 9
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c003",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c004",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c005",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c006",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c007",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c008",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c009",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c010",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c011",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c012",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+          "claim_id": "c013",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        }
+      ],
+      "missing_link_targets": [],
+      "link_count": 19
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round",
+      "controller_recorded": {
+        "run_id": "run_1789627757397193000_9c8d2289b6",
+        "steward_run_id": "run_1789627757397193000_9c8d2289b6",
+        "preprojection_generation_id": "projection_1789627761019743000_98eb1e9373",
+        "preprojection_status": "passed",
+        "preprojection_completed_steps": 27,
+        "preprojection_authority_scan_passed": true,
+        "postprojection_generation_id": "runs after this process exits; not observable from inside the round",
+        "pause_generation": 447,
+        "stop_requested_observed": false,
+        "session_opened": false,
+        "ndjson_ops_sent": false,
+        "lease_token_read_or_persisted": false,
+        "preprojection_wall_note": "lease acquired 06:49:17Z; model child's first command 07:41:34Z (~51 min), far outside the handoff's stated 6-9 minutes"
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "corrupt_lines": 0,
+        "errors": [],
+        "event_count": 1119895,
+        "last_global_seq": 1119895,
+        "last_event_sha256": "43083164ec8a4a2e48f5be520aa81837d6947342991e4ab6d28ae365688491b3",
+        "stream_counts": {
+          "addressing": 65098,
+          "agency_commons": 7115,
+          "attention_portfolio": 3,
+          "claim_families": 239980,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 212952,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13367,
+          "model_qos": 349626,
+          "reciprocal_uptake": 76830,
+          "representation_contracts": 63390,
+          "sandbox": 3507,
+          "signal_spine": 64585,
+          "steward_control": 22477,
+          "steward_work_selection": 768
+        },
+        "active_store": "v2",
+        "legacy_imported_global_seq": 32278,
+        "v1_immutable": true,
+        "verify_wall_seconds": 777,
+        "note": "the status enumeration named as exact debt by the 2026-09-16 round was completed here"
+      },
+      "division_recorded": {
+        "cycle_sequence": 50,
+        "completed_rounds_since_followup": 6,
+        "rounds_remaining_before_followup": 0,
+        "review_due_before_round": false,
+        "review_due_after_round": true,
+        "round_event_id": "division_followup_event_41e72ca2bb78c7acd648839f7c082ebf",
+        "event_count": 350,
+        "event_head_sha256": "21b1972f9237faa6e132995866ea91b4fd03ec115337f58b46f707880f7d4741",
+        "processed_report_count": 1,
+        "projection_generation_id": "projection_1789627761019743000_98eb1e9373",
+        "tier5_cadence_dossier": "not owed this round (review_due was false at round start); owed by the next tracker-enforced session together with the bounded return",
+        "note_action": "none; no Division return was due at round start"
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_1789608023.txt",
+          "expected_sha256": "5ebe8538418e5281e50a2d2c5a96d78879255f80d785fd5145b4f4c5297a9f3b",
+          "current_sha256": "5ebe8538418e5281e50a2d2c5a96d78879255f80d785fd5145b4f4c5297a9f3b",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_b1993b32e0ffc9a5e7c821216e1dea0de319ff973f69413b7c755fc2a7fdf3ed.json",
+          "expected_sha256": "5351a0a0c1a92a2d67fba91d55c2bed768d55d59357d48373e04245bc40579db",
+          "current_sha256": "5351a0a0c1a92a2d67fba91d55c2bed768d55d59357d48373e04245bc40579db",
+          "matches": true
+        }
+      ],
+      "claim_count": 17,
+      "classifications": {
+        "verified_existing": 10,
+        "observed": 6,
+        "implemented_now": 1
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 24
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round",
+      "controller_recorded": {
+        "run_id": "run_1789640276114142000_27e46ed6c4",
+        "preprojection_generation_id": "projection_1789640281604846000_3680f26992",
+        "preprojection_phase": "pre",
+        "preprojection_status": "passed",
+        "pause_generation": 447,
+        "controller_paused": false,
+        "stop_requested_observed": false,
+        "postprojection_generation_id": null,
+        "postprojection_note": "adapter runs the postprojection after this child exits; not observable here",
+        "adapter_mode_boundaries": [
+          "no steward session opened",
+          "no NDJSON ops sent",
+          "no pause/resume",
+          "no lease token read, quoted or persisted",
+          "git read-only (status only)",
+          "no build_bridge.sh / deploy script / launchctl",
+          "no live substrate or control change",
+          "foreign dirty paths preserved untouched"
+        ]
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "event_count": 1120992,
+        "last_global_seq": 1120992,
+        "head_sha256": "efc1205e5634303975ca49d37986844352e670582228075f56f5c2fabc5b683d",
+        "corrupt_lines": 0,
+        "errors": [],
+        "stream_counts": {
+          "addressing": 65136,
+          "agency_commons": 7123,
+          "attention_portfolio": 3,
+          "claim_families": 240015,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 213130,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13389,
+          "model_qos": 350147,
+          "reciprocal_uptake": 76830,
+          "representation_contracts": 63511,
+          "sandbox": 3507,
+          "signal_spine": 64681,
+          "steward_control": 22553,
+          "steward_work_selection": 770
+        },
+        "v2_active": true,
+        "status_command_note": "`evidence_event_store.py --json status` was terminated (SIGTERM, exit 144) after >7 minutes on the 1.12M-event store to keep the round bounded; the required `verify` completed and passed, and its full output is recorded here."
+      },
+      "division_recorded": {
+        "return_completed_first": true,
+        "cycle_before": 50,
+        "cycle_after": 51,
+        "return_event_id": "division_followup_event_194ac1a75214c92066e840d79d1b09c9",
+        "round_event_id": "division_followup_event_3aed77c95afd60de27f18de6488fe87c",
+        "processed_report_count": 1,
+        "round_event_projection_generation_id": "projection_1789640281604846000_3680f26992",
+        "round_event_projection_id_verified_by_reading_events_jsonl": true,
+        "completed_rounds_since_followup": 1,
+        "review_due": false,
+        "event_count": 352,
+        "event_head_sha256": "908df4b0b92337ba520d435aff64e148944a0ab059eccf1c2272a887ffff37e6",
+        "chronicle_id": "division_chronicle_23cc7f65a68e962d638b69e9",
+        "chronicle_json_sha256": "44d3feaf71482aab60502b584bfeb55f61f97e860d62ead9812c16d28da0b928",
+        "chronicle_html_sha256": "484483dbe74938e8a1fc1d9aff8226cefa4b84663659ab1f21a7860f89972066",
+        "durable_inputs_current": true,
+        "volatile_mismatches": [
+          "supervisor_status_sha256"
+        ],
+        "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle50_20260917.txt",
+        "astrid_note_sha256": "052e998ef4dffe04b6731def6974ed5b4d165b83a11eeb9964b6b2094500874d",
+        "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle50_20260917.txt",
+        "minime_note_sha256": "18b0484de4226e32109887334c4c84a30089ae3f1469e77d73d60946ae3450c0"
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_1789640246.txt",
+          "expected_sha256": "c8ebc69398610cec5102bc2aeee5c25e7d9015784d11fa5199802c329550d88b",
+          "current_sha256": "c8ebc69398610cec5102bc2aeee5c25e7d9015784d11fa5199802c329550d88b",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_69ddd1fba30d0ac0bb3f443204cc9b83e1553dc6d3982c8dc9b91437e680aa13.json",
+          "expected_sha256": "c13efd2333786d483434fca8ac6e0bd95ef4b136b0157237bdc095599a11e45d",
+          "current_sha256": "c13efd2333786d483434fca8ac6e0bd95ef4b136b0157237bdc095599a11e45d",
+          "matches": true
+        }
+      ],
+      "claim_count": 12,
+      "classifications": {
+        "verified_existing": 9,
+        "implemented_now": 1,
+        "observed": 2
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c001",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c002",
+          "target": "minime/src/runtime/orchestration.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c003",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c004",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c005",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c006",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c007",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c008",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        },
+        {
+          "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+          "claim_id": "c009",
+          "target": "minime/src/sensory_bus.rs",
+          "exists_now": true,
+          "legacy_minime_repo_relative": true,
+          "resolved_path": "/Users/v/other/minime/minime/src/sensory_bus.rs"
+        }
+      ],
+      "missing_link_targets": [],
+      "link_count": 15
+    },
+    {
+      "path": "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round",
+      "controller_recorded": {
+        "run_id": "run_1789667511811449000_c164bb18ad",
+        "steward_run_id": "run_1789667511811449000_c164bb18ad",
+        "preprojection_generation_id": "projection_1789667515386260000_dff7738bd4",
+        "preprojection_status": "passed",
+        "preprojection_completed_steps": 27,
+        "preprojection_authority_scan_passed": true,
+        "postprojection_generation_id": "runs after this process exits; not observable from inside the round",
+        "pause_generation": 454,
+        "stop_requested_observed": false,
+        "session_opened": false,
+        "ndjson_ops_sent": false,
+        "lease_token_read_or_persisted": false,
+        "preprojection_wall_note": "lease acquired 17:51:51Z; model child's first command 18:54:5xZ (~63 min), far outside the handoff's stated 6-9 minutes"
+      },
+      "evidence_event_store_recorded": {
+        "valid": true,
+        "corrupt_lines": 0,
+        "errors": [],
+        "event_count": 1123098,
+        "last_global_seq": 1123098,
+        "last_event_sha256": "abab4a360d8a0379877d45887b33b138953c8185f1cb3696dc178b5da3397255",
+        "stream_counts": {
+          "addressing": 65208,
+          "agency_commons": 7143,
+          "attention_portfolio": 3,
+          "claim_families": 240040,
+          "corridor_v1": 5,
+          "corridor_v2": 112,
+          "felt_contracts": 213230,
+          "felt_mechanism_concordance": 80,
+          "lived_state_witness": 13442,
+          "model_qos": 351432,
+          "reciprocal_uptake": 76834,
+          "representation_contracts": 63773,
+          "sandbox": 3507,
+          "signal_spine": 64904,
+          "steward_control": 22613,
+          "steward_work_selection": 772
+        },
+        "active_store": "v2",
+        "legacy_imported_global_seq": 32278,
+        "v1_immutable": true,
+        "history_rewritten": false,
+        "verify_wall_seconds": 780,
+        "status_wall_seconds": 1990,
+        "note": "both verify and the full status enumeration completed inside this round; the live bridge kept appending to the steward_control stream during the enumeration, so head.json advanced past the enumerated sequence (expected)"
+      },
+      "division_recorded": {
+        "cycle_sequence": 51,
+        "completed_rounds_since_followup": 2,
+        "rounds_remaining_before_followup": 4,
+        "review_due_before_round": false,
+        "review_due_after_round": false,
+        "round_event_id": "division_followup_event_3a16f1777e13fa4f697299f0a9c46eca",
+        "event_count": 353,
+        "event_head_sha256": "43cc03cae575f7ab6d7d7a98a6a81487563abc5d94cf9cfab5f8fb2554c25878",
+        "processed_report_count": 1,
+        "projection_generation_id": "projection_1789667515386260000_dff7738bd4",
+        "tier5_cadence_dossier": "not owed this round (review_due was false at round start); owed by the session that completes the next tracker-enforced bounded return",
+        "note_action": "none; no Division return was due at round start, so no being note was written and no review-query slot was occupied"
+      },
+      "immutable_bindings_checked": [
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384.txt",
+          "expected_sha256": "a696f4c627332bb3e170a61eecf525f0943782b2fdd09e3f72d131395d548eeb",
+          "current_sha256": "a696f4c627332bb3e170a61eecf525f0943782b2fdd09e3f72d131395d548eeb",
+          "matches": true
+        },
+        {
+          "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1aa9bae6f2f7c357eb171d6b63f4273d7e964c307c07853347835650b6585774.json",
+          "expected_sha256": "215abbd874876fe43a16b2f06b7f4104a716b6ac1f52a6afc87ef9ec0e955ad9",
+          "current_sha256": "215abbd874876fe43a16b2f06b7f4104a716b6ac1f52a6afc87ef9ec0e955ad9",
+          "matches": true
+        }
+      ],
+      "claim_count": 11,
+      "classifications": {
+        "verified_existing": 8,
+        "implemented_now": 1,
+        "observed": 2
+      },
+      "missing_disposition": [],
+      "claims_without_packet_link": [],
+      "legacy_relative_link_targets": [],
+      "missing_link_targets": [],
+      "link_count": 18
+    }
+  ]
+}

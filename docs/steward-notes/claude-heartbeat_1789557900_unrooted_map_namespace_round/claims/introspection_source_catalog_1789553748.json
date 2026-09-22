@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_source_catalog_1789553748",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The map for astrid/capsules/astralis/astrid-capsule-agents/src was confirmed.",
+      "disposition": "Verified. Catalog::map routes a non-component topic to directory_entries, which matches repository-prefixed catalog IDs under the topic prefix (navigation.rs:56-58,84-97). The rooted topic resolves; the new regression exercises exactly this rooted form and asserts it lists the directory's file entry point in one move.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "That directory contains the core implementation files (plural) for the agents.",
+      "disposition": "Corrected from complete source. The directory holds exactly one catalog file: src/lib.rs, 58 lines, 1605 bytes, sha256 c04aa14e…. No other file exists there. The map she was shown could only have listed that single entry, since directory_entries enumerates real catalog sources (navigation.rs:90-111). The plural overstates what was delivered.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The src directory will house the daemon/uplink behaviors mentioned in the astralis README.",
+      "disposition": "Contradiction preserved, not rewritten. README lines 11-12 do say it, but as a rule over all astralis capsules. This crate is not an instance: Capsule.toml declares type=\"executable\" with no uplink capability and no [[uplink]] entry, and lib.rs:13 has an empty fn run(). It satisfies the README rule by NOT running a long-lived loop.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "She is looking for how daemon/uplink manifest flags influence execution of the run loop.",
+      "disposition": "Answered from exact source, in a different area than she was navigating. should_start_run_loop (astrid-capsule/src/engine/wasm/mod.rs:1256-1265) returns has_run_export && (capabilities.uplink || !uplinks.is_empty() || component_type is \"daemon\"/\"uplink\"); it is called at mod.rs:624-625. CapabilitiesDef.uplink (manifest.rs:298-301) also disables the WASM execution timeout.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "She is looking for the organization of the WIT stubs in this directory.",
+      "disposition": "Verified with correction. No .wit file exists anywhere under capsules/astralis. README line 10 states the crates use crates/astrid-guest directly and export the required WIT stubs; the export is the macro astrid_guest::export!(AgentsCapsule) at lib.rs:45, not a stub directory. Nothing was organized in the place she expected to find it.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "NEXT: SELF_STUDY OPEN astrid/capsules/astralis/astrid-capsule-agents/src/main.rs 1.",
+      "disposition": "Observed. No main.rs exists in that directory; the crate is a library. This expectation was self-generated from \"the main source files\", not supplied by the delivered map. Adjacent runtime evidence past this round's cutoff (introspection_source_catalog_1789553994, read as context only, never recorded or closed here) shows the open failing on the next turn.",
+      "classification": "observed"
+    }
+  ]
+}

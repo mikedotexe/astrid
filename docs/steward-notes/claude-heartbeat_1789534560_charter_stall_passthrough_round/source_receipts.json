@@ -1,0 +1,55 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "report_bound_source": {
+    "path": "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+    "sha256": "93a1146d0ff05bd455b41e3f5c8e345bf6a4a2d0eb5c69dcad4cb6712d08822a",
+    "bytes": 33922,
+    "lines": 896,
+    "read_scope": "complete file, lines 1-896, read in ranges 1-240, 241-520, 521-896",
+    "matches_report_binding": true
+  },
+  "adjacent_sources_read": [
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/conveyor.rs",
+      "sha256": "c5ce75efd20047fe32e4035b2a01ff8f54b6797518fbcaf77ad00eb9fd54f98e",
+      "bytes": 27061,
+      "lines": 788,
+      "read_scope": "lines 31-91 (experiment_conveyor_proposed_next and experiment_conveyor_missing_requirements)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/core.rs",
+      "sha256": "fafc1f4a257fe6400fbc26ba0bf5cc26f0d33853b30816ab5af6db2709348a62",
+      "bytes": 414540,
+      "lines": 10187,
+      "read_scope": "lines 2915-2955, 5365-5460, 6360-6395 (both authority_readiness_v1 call sites and its body)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/experiment_conveyor.rs",
+      "sha256": "8e1db13a7b32bdf09ec8009b8e8aeede599c0cbcfb6e8f9b32bba04d2a46ac98",
+      "bytes": 67097,
+      "lines": 1797,
+      "read_scope": "lines 318-545 and 836-935 (classify, stage_for, proposed_next, visibility_can_apply, and the parallel readiness pair)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_gate.rs",
+      "sha256": "e353325baf71895ccbc7bdd8c866a1c7cb15ce7f299f3b121bc2a36c761ed7e6",
+      "bytes": 179653,
+      "lines": 4694,
+      "read_scope": "lines 2190-2300 (the parallel next_safe_command with its explicit needs_charter branch)"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/runtime/persistence_helpers.rs",
+      "sha256": "791ac2e4df46a9e91b5c3e4021bac289ddf826f4c70ada7db8fcc711bbd1f600",
+      "bytes": 4652,
+      "lines": 155,
+      "read_scope": "grep-located line 74 and 96-105 (local lifecycle decision vocabulary)"
+    }
+  ],
+  "implementation_target": {
+    "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+    "sha256": "fdf1001406198d198993fa30344c30a901688351e64f9acb60f3fdf39f4b492b",
+    "bytes": 202394,
+    "lines": 5410,
+    "read_scope": "appended four regressions; file is test-path-marked and exempt from the large-file boundary"
+  }
+}

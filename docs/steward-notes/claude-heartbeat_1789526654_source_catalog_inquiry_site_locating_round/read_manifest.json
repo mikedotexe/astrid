@@ -1,0 +1,28 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "round": "claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round",
+  "reads": [
+    {
+      "kind": "canonical_report",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_source_catalog_1789522750.txt",
+      "introspection_id": "introspection_source_catalog_1789522750",
+      "sha256": "46a6badb2cd2061a6ba8bcdd4849dc0323579acb5b0f896049ea37371156454f",
+      "bytes": 1608,
+      "lines": 21,
+      "read": "complete"
+    },
+    {
+      "kind": "lived_state_witness",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_7494624fbf8e6046dc2837f7e964b87205b6a017013c691b11d20aac980435aa.json",
+      "witness_id": "lsw_7494624fbf8e6046dc2837f7e964b87205b6a017013c691b11d20aac980435aa",
+      "sha256": "be951b898458dc853ba0bf0aa0cf196b34ce3c2359e7fb08e553673b795f0d6b",
+      "bytes": 18956,
+      "lines": 440,
+      "read": "complete",
+      "source_binding": "source_snapshot_v1 null and source_provenance_ref_v1 null - navigation-only report with no report-time source SHA",
+      "artifact_authority_state": "evidence_only; witness_only true; live_eligible_now false; grants_approval false",
+      "notable_fields": "model route duration_ms 177583 on provider_route http://127.0.0.1:8090/v1/chat/completion (provider_route_complete false); bridge.fill_pct 70.52; minime.fill_pct 72.95; bridge.mode_packing 1.0; direct_causation_claimed false throughout"
+    }
+  ],
+  "full_read_count": 1
+}

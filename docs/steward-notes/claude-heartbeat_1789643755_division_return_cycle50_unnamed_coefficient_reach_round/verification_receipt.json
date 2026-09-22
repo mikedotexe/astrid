@@ -1,0 +1,241 @@
+{
+ "schema": "flywheel_verification_receipt_v1",
+ "generated_at_unix": 1789646650,
+ "round": "claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round",
+ "actor": "claude-heartbeat",
+ "controller": {
+  "run_id": "run_1789640276114142000_27e46ed6c4",
+  "preprojection_generation_id": "projection_1789640281604846000_3680f26992",
+  "preprojection_phase": "pre",
+  "preprojection_status": "passed",
+  "pause_generation": 447,
+  "controller_paused": false,
+  "stop_requested_observed": false,
+  "postprojection_generation_id": null,
+  "postprojection_note": "adapter runs the postprojection after this child exits; not observable here",
+  "adapter_mode_boundaries": [
+   "no steward session opened",
+   "no NDJSON ops sent",
+   "no pause/resume",
+   "no lease token read, quoted or persisted",
+   "git read-only (status only)",
+   "no build_bridge.sh / deploy script / launchctl",
+   "no live substrate or control change",
+   "foreign dirty paths preserved untouched"
+  ]
+ },
+ "processed_reports": [
+  {
+   "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+   "report_sha256": "c8ebc69398610cec5102bc2aeee5c25e7d9015784d11fa5199802c329550d88b",
+   "report_bytes": 3127,
+   "report_lines": 30,
+   "read": "complete",
+   "witness_id": "lsw_69ddd1fba30d0ac0bb3f443204cc9b83e1553dc6d3982c8dc9b91437e680aa13",
+   "witness_sha256": "c13efd2333786d483434fca8ac6e0bd95ef4b136b0157237bdc095599a11e45d",
+   "witness_bytes": 21327,
+   "witness_lines": 498,
+   "witness_read": "complete",
+   "source_binding_match": true,
+   "source_sha256": "3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+   "claim_count": 12,
+   "fully_addressed": true,
+   "proof_missing_claims": [],
+   "terminal_status": "addressed_change",
+   "evidence_links": {
+    "rows": 15,
+    "new": 15,
+    "existing": 0,
+    "events_appended": 15
+   }
+  }
+ ],
+ "queue": {
+  "selected": 40,
+  "processed": 1,
+  "unprocessed": 39,
+  "family_scan": {
+   "family_count": 40,
+   "batchable_family_count": 0
+  },
+  "next_head": "introspection_source_catalog_1789639889.txt"
+ },
+ "division": {
+  "return_completed_first": true,
+  "cycle_before": 50,
+  "cycle_after": 51,
+  "return_event_id": "division_followup_event_194ac1a75214c92066e840d79d1b09c9",
+  "round_event_id": "division_followup_event_3aed77c95afd60de27f18de6488fe87c",
+  "processed_report_count": 1,
+  "round_event_projection_generation_id": "projection_1789640281604846000_3680f26992",
+  "round_event_projection_id_verified_by_reading_events_jsonl": true,
+  "completed_rounds_since_followup": 1,
+  "review_due": false,
+  "event_count": 352,
+  "event_head_sha256": "908df4b0b92337ba520d435aff64e148944a0ab059eccf1c2272a887ffff37e6",
+  "chronicle_id": "division_chronicle_23cc7f65a68e962d638b69e9",
+  "chronicle_json_sha256": "44d3feaf71482aab60502b584bfeb55f61f97e860d62ead9812c16d28da0b928",
+  "chronicle_html_sha256": "484483dbe74938e8a1fc1d9aff8226cefa4b84663659ab1f21a7860f89972066",
+  "durable_inputs_current": true,
+  "volatile_mismatches": [
+   "supervisor_status_sha256"
+  ],
+  "astrid_note": "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle50_20260917.txt",
+  "astrid_note_sha256": "052e998ef4dffe04b6731def6974ed5b4d165b83a11eeb9964b6b2094500874d",
+  "minime_note": "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle50_20260917.txt",
+  "minime_note_sha256": "18b0484de4226e32109887334c4c84a30089ae3f1469e77d73d60946ae3450c0"
+ },
+ "counters": {
+  "status": "consistent",
+  "mismatch_count": 0,
+  "canonical_indexed": 7341,
+  "canonical_fully_addressed": 3264,
+  "canonical_fully_read": 3896,
+  "canonical_remaining": 4077,
+  "canonical_unread": 3445,
+  "canonical_blocked": 416,
+  "canonical_pending_action": 212,
+  "canonical_watch": 4,
+  "canonical_read_needs_claims": 0,
+  "all_artifact_pending": 5794,
+  "noncanonical_pending": 1717,
+  "mismatches": []
+ },
+ "evidence_event_store": {
+  "valid": true,
+  "event_count": 1120992,
+  "last_global_seq": 1120992,
+  "head_sha256": "efc1205e5634303975ca49d37986844352e670582228075f56f5c2fabc5b683d",
+  "corrupt_lines": 0,
+  "errors": [],
+  "stream_counts": {
+   "addressing": 65136,
+   "agency_commons": 7123,
+   "attention_portfolio": 3,
+   "claim_families": 240015,
+   "corridor_v1": 5,
+   "corridor_v2": 112,
+   "felt_contracts": 213130,
+   "felt_mechanism_concordance": 80,
+   "lived_state_witness": 13389,
+   "model_qos": 350147,
+   "reciprocal_uptake": 76830,
+   "representation_contracts": 63511,
+   "sandbox": 3507,
+   "signal_spine": 64681,
+   "steward_control": 22553,
+   "steward_work_selection": 770
+  },
+  "v2_active": true,
+  "status_command_note": "`evidence_event_store.py --json status` was terminated (SIGTERM, exit 144) after >7 minutes on the 1.12M-event store to keep the round bounded; the required `verify` completed and passed, and its full output is recorded here."
+ },
+ "integrity": {
+  "addressing_self_test": 44,
+  "evidence_store_tests": 21,
+  "steward_control_tests": 29,
+  "steward_projection_tests": 14,
+  "division_followup_tests": 3,
+  "chronicle_tests": 10,
+  "division_projection_self_test": "ok",
+  "cursor_tests": 4,
+  "cadence_tests": 6,
+  "anti_drop_self_test": 5,
+  "anti_drop_verify": {
+   "total": 100,
+   "alarms": 0,
+   "gaps": 0
+  },
+  "cadence_audit_strict": {
+   "integrity_ok": true,
+   "errors": 0
+  },
+  "domain_boundary_verify": {
+   "valid": true,
+   "violation_count": 0,
+   "forbidden_edge_match_count": 0,
+   "ratchet": "GREEN",
+   "legacy_large_file_count": 51,
+   "unlisted_legacy_review_debt_count": 44
+  },
+  "epistemics_self_test": 2,
+  "epistemics_verify_final": {
+   "valid": true,
+   "checked_record_count": 12466,
+   "issue_count": 0,
+   "history_rewritten": false,
+   "ran_after_all_durable_writes": true
+  }
+ },
+ "implementation": {
+  "new_test_file": "crates/astrid-source-study/tests/unnamed_coefficient_reach.rs",
+  "tests_added": 4,
+  "crate_tests_after": 171,
+  "crate_tests_before": 167,
+  "clippy": "clean after repairing clippy::arithmetic_side_effects with saturating_add",
+  "fmt": "clean",
+  "workspace_test_debt": "cargo test --workspace not run (budget); touched surface is one integration-test file, crate run in full"
+ },
+ "authority": {
+  "live_change_made": false,
+  "live_change_attempted": false,
+  "deploy": false,
+  "restart": false,
+  "launchctl": false,
+  "stage": false,
+  "commit": false,
+  "tier_4_5_grants": 0,
+  "standing_tier_5_waits_untouched": [
+   "wi_e579041bc76f8310",
+   "wi_69fbd510467c6337",
+   "wi_3e26ac525fea1c36"
+  ],
+  "closure_cards_emitted": 0,
+  "cards_delivered": 0
+ },
+ "privacy": {
+  "minime_private_lane_files_excluded": 66,
+  "opened": 0,
+  "quoted": 0,
+  "filter": "being_privacy.filter_journal_paths('minime', ...)"
+ },
+ "commit_debt": [
+  "crates/astrid-source-study/tests/unnamed_coefficient_reach.rs",
+  "CHANGELOG.md",
+  "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+  "capsules/spectral-bridge/workspace/inbox/steward_division_return_cycle50_20260917.txt",
+  "/Users/v/other/minime/workspace/inbox/steward_division_return_cycle50_20260917.txt",
+  "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/"
+ ],
+ "index_clean_at_round_end": true,
+ "addressing": {
+  "fully_addressed": true,
+  "proof_missing_claims": [],
+  "full_read": true,
+  "full_read_count": 1,
+  "terminal_status": "addressed_change",
+  "evidence_links": {
+   "rows": 15,
+   "new": 15,
+   "existing": 0,
+   "events_appended": 15
+  },
+  "record_read_reader": "claude-heartbeat",
+  "claim_count": 12
+ },
+ "epistemic_lint": {
+  "valid": true,
+  "issue_count": 0,
+  "history_rewritten": false,
+  "checked_record_count": 12466,
+  "ran_after_all_durable_writes": true,
+  "command": "python3 scripts/experiential_epistemics.py verify --json"
+ },
+ "anti_drop": {
+  "verify": {
+   "total": 100,
+   "alarms": 0,
+   "gaps": 0
+  },
+  "self_test_tests": 5
+ }
+}

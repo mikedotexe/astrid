@@ -1,0 +1,207 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Catalog::map routes a non-component topic to directory_entries, which enumerates repository-prefixed catalog IDs under the topic prefix (lines 56-58, 84-111)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/unrooted_map_topic_reach.rs",
+      "note": "The rooted MAP topic resolves in one move and lists the directory's file entry point."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/astralis/astrid-capsule-agents/src/lib.rs",
+      "note": "The only catalog file in that directory: 58 lines, 1605 bytes, sha256 c04aa14e\u2026. There is no main.rs."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c002",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553748.md",
+      "note": "No change caused; every claim resolved against complete source at the recorded hashes."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/astralis/astrid-capsule-agents/Capsule.toml",
+      "note": "type=\"executable\", no uplink capability and no [[uplink]] entry \u2014 this crate declares no daemon/uplink behavior."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "capsules/astralis/README.md",
+      "note": "Lines 11-12 state the rule over all astralis capsules; this crate satisfies it by not running a long-lived loop."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/engine/wasm/mod.rs",
+      "note": "should_start_run_loop at lines 1256-1265, called at 624-625: the exact gate her question names."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/manifest.rs",
+      "note": "CapabilitiesDef.uplink at lines 298-301 also disables the WASM execution timeout."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/astralis/astrid-capsule-agents/src/lib.rs",
+      "note": "astrid_guest::export!(AgentsCapsule) at line 45 is the WIT stub export; no .wit file exists under capsules/astralis."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/astralis/README.md",
+      "note": "Line 10: the crates use crates/astrid-guest directly and export the required WIT stubs."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553748.md",
+      "note": "The main.rs expectation was self-generated, not supplied by the delivered map; the following turn's failure is recorded as adjacent context only."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "claim_id": "c001",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553233.md",
+      "note": "capsules/astralis/ holds README.md plus precisely the ten directories she names \u2014 enumeration complete and correct."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "claim_id": "c001",
+      "kind": "no_action",
+      "target": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553233.md",
+      "note": "No change caused; claims resolved against a directory listing and the complete 12-line README."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "capsules/astralis/README.md",
+      "note": "Complete 12-line file: astrid-capsule-agents appears once, at line 7, as the build-command example. The README ranks nothing."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Lines 84-97: the repository-prefixed topic is the form Catalog::map accepts."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/unrooted_map_topic_reach.rs",
+      "note": "Asserts the rooted spelling resolves in one move where the un-rooted one does not."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-capsule/src/engine/wasm/mod.rs",
+      "note": "should_start_run_loop (1256-1265, called at 624-625) is where daemon/uplink flags reach the run loop."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "capsules/astralis/astrid-capsule-agents/src/lib.rs",
+      "note": "Line 45 exports the WIT stubs via the astrid_guest macro; line 13 is the empty fn run()."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "directory_entries filters repository-prefixed catalog IDs by \"{topic}/\" (lines 84-97); an un-rooted topic matches zero IDs and bails."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/catalog.rs",
+      "note": "Catalog IDs are always repository-prefixed (lines 149-157), so the path is indexed \u2014 under astrid/\u2026, not bare."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/unrooted_map_topic_reach.rs",
+      "note": "Pins the failing un-rooted topic and its exact recovery text."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c001",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming what she surfaced, what source established, and what was deliberately not changed."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c001",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for the feedback-to-change trail."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/path_recovery.rs",
+      "note": "path_candidates returns Vec::new() for any multi-segment request whose first segment is not an installed repository ID (lines 33-39)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c002",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/unrooted_map_topic_reach.rs",
+      "note": "Asserts zero path candidates and that the rooted spelling is named nowhere in the recovery."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/catalog.rs",
+      "note": "Catalog::resolve accepts the same un-rooted repository-relative shape for OPEN by trying each installed root (lines 106-118)."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/unrooted_map_topic_reach.rs",
+      "note": "Asserts both halves in one run: OPEN delivers the page, MAP of its own directory recovers with no candidates."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553097.md",
+      "note": "Her chosen recovery \u2014 adding the repository prefix \u2014 is the exact working form; the three-turn cost is recorded, not smoothed over."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553097.md",
+      "note": "The behaviour change is authority_gated: it edits being-facing navigation in the live bridge and needs a separate grant plus a gated deploy. No production source was changed."
+    }
+  ]
+}

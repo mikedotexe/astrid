@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_source_catalog_1789509068",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A specific calculation of the delta between projection_48d and companion_projection_12d exists and is being searched for.",
+      "disposition": "Partly correct, mechanism corrected. No delta is computed at the strand level: the companion is DERIVED from the 48D by GlimpseCodec::derive_12d (evidence_types.rs:839-856; producer site parsing.rs:187). The only computed 48D/12D delta in the checkout is resolution_delta = (1.0 - glimpse_fidelity_score).clamp(0,1) in codec/structure.rs:88, inside multi_scale_observer_v1, with resonance_loss_ratio at structure.rs:90-95. Both are read-only observers, not wire validation.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "inquiry.rs defines owner_inquiry_fixed_analysis_set_v1, which establishes the required analysis types but does not show the delta arithmetic.",
+      "disposition": "Verified by complete read of crates/astrid-minime-protocol/src/volition/inquiry.rs (543 lines, sha 912eac66...). The fn at lines 106-112 returns exactly three OwnerInquiryAnalysisV1 variants. The file contains no projection arithmetic; its only projection handling is shape/finiteness validation (lines 70-77) and the joint digest canonical_semantic_strand_embedding_sha256 (lines 436-442).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The identifier owner_inquiry_fixed_analysis_set_v1 is used within a validation context, potentially involving a 'stability corridor'.",
+      "disposition": "Validation context confirmed: use sites are inquiry_v2/validation.rs:21-25, inquiry.rs:224, volition/mod.rs:26, lib.rs:107, tests/wire_contract.rs:120, bridge autonomous/inquiry.rs:229. The 'stability corridor' half is not corroborated: neither 'stability corridor' nor 'stability_corridor' occurs anywhere in crates/ or capsules/spectral-bridge/src/. The nearest named corridor is astrid-types/src/agency_corridor.rs, an unrelated agency surface. Contradiction preserved, not resolved against her.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The validation logic likely lives in a validation.rs or a module importing OwnerInquiryV1 that holds the logic for these projections.",
+      "disposition": "File hypothesis right, content hypothesis wrong. crates/astrid-minime-protocol/src/volition/inquiry_v2/validation.rs exists (111 lines, sha ce1ad404...) and imports from the module that defines the fixed analysis set. Complete read shows coverage modes, plan equality, offline budget, cancellation, strand distinctness, pair keys and observation chaining - and no projection arithmetic at all. The projection logic she wants is in the bridge codec, not the protocol crate.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "The actual implementation of how the 12D companion relates to the 48D projection needs to be visible.",
+      "disposition": "Implemented as a focused regression in capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs tests: strand_companion_is_the_derived_glimpse_not_an_independent_delta_field pins companion == GlimpseCodec::derive_12d(projection_48d) at build_strand, and pins the honest boundary that SemanticStrandV1::is_well_formed still accepts an unrelated finite 12D companion once the embedding digest is recomputed. The relation is a producer-side contract, not a checked wire delta. 4 parsing tests pass.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Report input evidence: the requested source was not supplied and no new source page arrived this turn.",
+      "disposition": "Corroborated by the witness (source_snapshot_v1 null, source_provenance_ref_v1 null) and by documented reader behavior: an unknown target returns a labelled recovery map without delivering source (next_action/action_help.rs:169). No delivery failure found. The reach limit is real but different: an identifier-scoped search for owner_inquiry_fixed_analysis_set_v1 cannot reach evidence_types.rs:839 or structure.rs:88, which name neither that identifier nor OwnerInquiryV1.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "Steward-side observation about the delta she was seeking (not claimed by the report).",
+      "disposition": "The one computed 48D/12D delta scores the glimpse against a 32-dim reference: glimpse_fidelity_score = calculate_compression_fidelity(&features[..32], &glimpse) (structure.rs:87), while derive_12d consumes dims 32..40, 40..44 and the full 48 for out[8], out[9], out[11]. MultiScaleObserverV1 declares live_transport_dim_count: 32 while SEMANTIC_DIM is 48. Recorded as a bounded observation only; codec transport surfaces stay Tier 5 and no change was made.",
+      "classification": "observed"
+    }
+  ]
+}

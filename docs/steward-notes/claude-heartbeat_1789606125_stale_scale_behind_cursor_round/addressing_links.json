@@ -1,0 +1,116 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Lines 2930-2949 at bound sha 3fc6bd2a: z[..8] video, z[8..16] audio, z[16]/z[17] aux, z[18..(18+LLAVA_DIM)] semantic."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Lines 24-25 define LLAVA_DIM=48 and Z_DIM=VIDEO+AUDIO+AUX+LLAVA=66; the doc comment at 2888-2890 on her own page names the 66D layout."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Lines 2919-2929: semantic_stale_ms(), semantic_fresh_ms from llava.updated_at_ms, semantic_scale via stale_scale, semantic_input_active."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Lines 2935-2943 apply embedding_strength and journal_resonance; line 2938 is the comment that names memory_decay_rate."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Lines 1717-1721: memory_decay_rate becomes decay_mult=(1.0-(decay_rate-0.1)*3.0).clamp(0.5,2.0) inside semantic_stale_ms, scaling the window not the amplitude."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Line 2943 is her formula verbatim; 2945-2950 apply it to z[18..66] and record semantic_input_energy."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Lines 2960-2969, past her window: noise_level gate, loop over all of z, sampling (rng.gen::<f32>()-0.5)*noise_level*0.10 = +/-(noise_level*0.05)."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c007",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Lines 2891-2950 perform the fusion; 2971-2987 carry freshness (semantic_fresh_ms, semantic_stale_ms, semantic_input_energy, semantic_input_active) downstream in SampleMeta."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c008",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "stale_scale is defined at 1377-1417 and called at 1237, 2144 and 2927 \u2014 every site at or behind her page, so nothing ahead of byte 111564 carries it."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c008",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/behind_cursor_helper_midwalk_reach.rs",
+      "note": "Four passing reach pins for the mid-walk behind-cursor case: walk delivers the helper early, forward CONTINUE keeps succeeding without it, FIND/RELATE reach it, OPEN def-line then OPEN frontier-line restores the walk."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c008",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789601340.md",
+      "note": "Delivery evidence that the helper was already handed to her five times inside page 48123..52681, and that eight further pages arrived after this report without it."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c008",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming the report, the reach finding and the new read-only test."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c008",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report's reach finding and the test it caused."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Lines 1710-1729: semantic_stale_ms fuses fill, semantic entropy, entropy velocity, pressure risk, stale shape and memory_decay_rate into the window."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c009",
+      "kind": "code",
+      "target": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "note": "Definition sites of the two multipliers that carry the fusion: dynamic_semantic_stale_ms_for at line 171 and semantic_context_persistence_multiplier at line 251."
+    },
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "claim_id": "c010",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789601340.md",
+      "note": "Per-piece delivery table built from the 31 enumerated walk windows of this source family: two pieces delivered and behind her, two never opened in this walk (before the 48123 open point)."
+    }
+  ]
+}

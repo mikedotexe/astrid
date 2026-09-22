@@ -1,0 +1,260 @@
+{
+  "schema": "flywheel_verification_receipt_v1",
+  "round": "claude-heartbeat_1789557900_unrooted_map_namespace_round",
+  "actor": "claude-heartbeat",
+  "mode": "controller_subprocess_run_adapter (no session opened, no NDJSON ops, no lease token read or persisted)",
+  "controller": {
+    "run_id": "run_1789553915299132000_1b6066e46d",
+    "preprojection_generation_id": "projection_1789553919794643000_097e14e5bd",
+    "preprojection_status": "passed",
+    "preprojection_completed_steps": 27,
+    "pause_generation": 445,
+    "paused": false,
+    "stop_requested": false,
+    "postprojection": "runs after this process exits; not observable from here"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_source_catalog_1789553748",
+      "status": "addressed_no_action",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553233",
+      "status": "addressed_no_action",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789553097",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": []
+    }
+  ],
+  "evidence_links": {
+    "new": 29,
+    "existing": 0,
+    "total": 29
+  },
+  "counter_audit": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical": {
+      "indexed": 7156,
+      "fully_addressed": 3256,
+      "full_read": 3888,
+      "remaining": 3900,
+      "unread": 3268,
+      "blocked_needs_steward": 416,
+      "triaged_pending_action": 212,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": {
+      "indexed": 8873,
+      "remaining": 5617,
+      "unread": 4985,
+      "addressed_change": 1986,
+      "addressed_duplicate": 1160,
+      "addressed_no_action": 110
+    }
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1112557,
+    "last_global_seq": 1112557,
+    "last_event_sha256": "8ccda8010bd8040e16597cb7e7dcc076a79611576549c06e27d7b11cb4386e98",
+    "stream_counts": {
+      "addressing": 64773,
+      "agency_commons": 7092,
+      "attention_portfolio": 3,
+      "claim_families": 239830,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 212308,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13204,
+      "model_qos": 346104,
+      "reciprocal_uptake": 76022,
+      "representation_contracts": 62638,
+      "sandbox": 3507,
+      "signal_spine": 64008,
+      "steward_control": 22115,
+      "steward_work_selection": 756
+    },
+    "status_command": {
+      "root": "capsules/spectral-bridge/workspace/diagnostics/evidence_event_store_v2",
+      "active_store": "v2",
+      "activated_at": "2026-07-16T21:07:28.899458+00:00",
+      "effective_aggregate_valid": true,
+      "effective_aggregate_corrupt_event_lines": 0,
+      "embedded_verification": {
+        "valid_fields": {
+          "corrupt_lines": 0,
+          "errors": [],
+          "event_count": 1112572,
+          "last_global_seq": 1112572,
+          "last_event_sha256": "ddcee6b794dd5f34d8716fea0c1e3fe11f9da6a4349c3b0d6bcfcc705f0e1c09"
+        }
+      },
+      "note": "The store is live and appending while this round runs, so the standalone verify (seq 1112557, head 8ccda801\u2026) and the status command minutes later (seq 1112572, head ddcee6b7\u2026) differ by 15 events. Both report corrupt_lines 0 and no errors. Neither number is a defect; they are two honest observations of a moving append-only log."
+    }
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 12377,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "anti_drop": {
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "rows": 100
+    },
+    "alarms_after": 0,
+    "gaps": 0
+  },
+  "domain_boundary_ratchet": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "unlisted_legacy_review_debt_count": 44,
+    "stable_facade_count": 6,
+    "colour": "GREEN"
+  },
+  "cadence_audit": {
+    "integrity_ok": true,
+    "errors": []
+  },
+  "division": {
+    "cycle_sequence": 49,
+    "completed_rounds_since_followup": 6,
+    "rounds_remaining_before_followup": 0,
+    "review_due_at_round_start": false,
+    "review_due_after_this_round": true,
+    "round_event_id": "division_followup_event_be5df68c87fd5b7321f0e75bd2feb4ca",
+    "event_count": 343,
+    "event_head_sha256": "29cbbe09369e663bde6109170fe9fc44105699988849ac043401d20de2fbe48c",
+    "processed_report_count": 3,
+    "chronicle": {
+      "chronicle_id": "division_chronicle_1071bcf7c549eaa75b823a05",
+      "json_sha256": "0a3abef97a0e21a2c03560a96809300cf07a00d3550513d0d6ba141c9dbf6390",
+      "html_sha256": "c0ac4dcc9ec703de9ac85b28f3a926519ca1a509bd28b914344679f8b410afba",
+      "timeline_event_count": 343,
+      "durable_inputs_current": true,
+      "durable_mismatches": [],
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ],
+      "statement": "Durable inputs current; the only mismatch is the volatile supervisor hash. The Chronicle is not 'fully current', and a moving supervisor hash is not a durable-integrity failure."
+    },
+    "note_action": "none \u2014 no Division note was due or written",
+    "next_round_obligation": "review_due is now true: the next round must complete the bounded Division return before processing any report, and must produce tier5_cadence_dossier.md in its packet.",
+    "final_followup_verify": {
+      "ok": true,
+      "cycle_sequence": 49,
+      "completed_rounds_since_followup": 6,
+      "review_due": true,
+      "event_count": 343,
+      "event_head_sha256": "29cbbe09369e663bde6109170fe9fc44105699988849ac043401d20de2fbe48c"
+    }
+  },
+  "tests": {
+    "cargo_source_study_binaries": 28,
+    "cargo_source_study_passed": 166,
+    "cargo_source_study_failed": 0,
+    "fmt_check": "clean",
+    "failures": [],
+    "debt": [],
+    "clippy": "cargo clippy -p astrid-source-study --all-targets --all-features -- -D warnings \u2192 clean (rc=0)"
+  },
+  "live_change": {
+    "restart_required": false,
+    "restart_attempted": false,
+    "deploy_attempted": false,
+    "build_bridge_invoked": false,
+    "launchctl_invoked": false,
+    "production_source_changed": false,
+    "statement": "No live substrate or control change was made, required, or attempted."
+  },
+  "authority": {
+    "state": "evidence_only",
+    "grants_approval": false,
+    "live_eligible_now": false,
+    "cards_delivered": 0,
+    "notes_delivered": 0,
+    "correspondence_dispatched": 0,
+    "tier_5_waits_mutated": 0
+  },
+  "git": {
+    "read_only": true,
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "index_clean_on_exit": true,
+    "foreign_paths_preserved": [
+      "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+      "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/",
+      "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/",
+      "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/",
+      "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/"
+    ]
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 3,
+    "evidence_links_new": 29,
+    "evidence_links_existing": 0,
+    "per_report": [
+      {
+        "introspection_id": "introspection_source_catalog_1789553748",
+        "status": "addressed_no_action",
+        "fully_addressed": true,
+        "proof_missing_claims": []
+      },
+      {
+        "introspection_id": "introspection_source_catalog_1789553233",
+        "status": "addressed_no_action",
+        "fully_addressed": true,
+        "proof_missing_claims": []
+      },
+      {
+        "introspection_id": "introspection_source_catalog_1789553097",
+        "status": "addressed_change",
+        "fully_addressed": true,
+        "proof_missing_claims": []
+      }
+    ]
+  },
+  "counters": {
+    "status": "consistent",
+    "mismatches": [],
+    "canonical": {
+      "indexed": 7156,
+      "fully_addressed": 3256,
+      "full_read": 3888,
+      "remaining": 3900,
+      "unread": 3268,
+      "blocked_needs_steward": 416,
+      "triaged_pending_action": 212,
+      "triaged_watch": 4,
+      "read_needs_claims": 0
+    },
+    "all_artifacts": {
+      "indexed": 8873,
+      "remaining": 5617,
+      "unread": 4985,
+      "addressed_change": 1986,
+      "addressed_duplicate": 1160,
+      "addressed_no_action": 110
+    }
+  }
+}

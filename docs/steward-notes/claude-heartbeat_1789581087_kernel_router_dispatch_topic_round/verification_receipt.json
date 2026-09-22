@@ -1,0 +1,154 @@
+{
+  "schema": "flywheel_round_verification_receipt_v1",
+  "round": "claude-heartbeat_1789581087_kernel_router_dispatch_topic_round",
+  "actor": "claude-heartbeat",
+  "adapter_mode": "steward_control subprocess run adapter; the controller owned the lease and its heartbeats. No steward session was opened, no NDJSON ops were sent, no lease token was read, quoted or persisted.",
+  "controller": {
+    "steward_run_id": "run_1789578439907480000_2edad997cb",
+    "preprojection_generation_id": "projection_1789578442954571000_039499e9d4",
+    "preprojection_status": "passed",
+    "preprojection_completed_step_count": 27,
+    "previous_successful_generation_id": "projection_1789572631875762000_28af2c1f96",
+    "pause_generation": 445,
+    "postprojection": "runs after this process exits; not observed by this round",
+    "run_id": "run_1789578439907480000_2edad997cb"
+  },
+  "processed": [
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claims": 10
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+      "status": "addressed_change",
+      "fully_addressed": true,
+      "proof_missing_claims": [],
+      "claims": 8
+    }
+  ],
+  "evidence_links": {
+    "batch_row_count": 35,
+    "link_count": 35,
+    "new_link_count": 35,
+    "introspection_count": 2,
+    "note": "35 new on the first batch; the idempotent re-run reported new_link_count 0 / existing_link_count 35, confirming the write."
+  },
+  "counters": {
+    "canonical_indexed": 7238,
+    "canonical_fully_addressed": 3259,
+    "canonical_full_read": 3891,
+    "canonical_remaining": 3979,
+    "canonical_unread": 3347,
+    "canonical_blocked": 416,
+    "canonical_pending_action": 212,
+    "canonical_watch": 4,
+    "canonical_read_needs_claims": 0,
+    "all_artifacts_indexed": 8955,
+    "all_artifacts_remaining": 5696,
+    "all_artifacts_unread": 5064,
+    "counter_audit_status": "consistent",
+    "counter_audit_mismatches": [],
+    "status": "consistent",
+    "mismatches": []
+  },
+  "evidence_event_store": {
+    "valid": true,
+    "corrupt_lines": 0,
+    "errors": [],
+    "event_count": 1114765,
+    "last_global_seq": 1114765,
+    "last_event_sha256": "d7963a384d8d5493ef2efcfd10af836d74df2a1454885da78e51f5943b5013c3",
+    "stream_counts": {
+      "addressing": 64917,
+      "agency_commons": 7098,
+      "attention_portfolio": 3,
+      "claim_families": 239880,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 212518,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13279,
+      "model_qos": 347235,
+      "reciprocal_uptake": 76024,
+      "representation_contracts": 62913,
+      "sandbox": 3507,
+      "signal_spine": 64186,
+      "steward_control": 22248,
+      "steward_work_selection": 760
+    },
+    "active_store": "v2",
+    "note": "Captured from a second, complete verify run after all durable writes of this round, so errors=[] and the stream counts are observed rather than inferred."
+  },
+  "division": {
+    "cycle_sequence": 50,
+    "completed_rounds_since_followup": 2,
+    "rounds_remaining_before_followup": 4,
+    "review_due": false,
+    "round_event_id": "division_followup_event_734a3d628ee68703a1f6f4715623a226",
+    "event_count": 346,
+    "event_head_sha256": "680a00617d722ca0a965df60bbf5c0937fa9279f5bd1967f3bba08988b2037d8",
+    "processed_report_count_recorded": 2,
+    "review_due_at_round_start": false,
+    "tier5_cadence_dossier": "not generated: review_due was false at round start, so no Division return was performed and the dossier trigger did not fire",
+    "chronicle": {
+      "chronicle_id": "division_chronicle_ef18c4353eaed83ba947b908",
+      "json_sha256": "45122d4b314724647653cfd185950fa2379a87ac162f683e4a32f32c667ed5a3",
+      "html_sha256": "668f63c9cb1c2d48f34fc8eddb845a41ff1d1321d312e129349f7186dac633e1",
+      "durable_inputs_current": true,
+      "volatile_inputs_current": false,
+      "volatile_mismatches": [
+        "supervisor_status_sha256"
+      ]
+    },
+    "processed_report_count": 2
+  },
+  "epistemic_lint": {
+    "valid": true,
+    "checked_record_count": 12401,
+    "issue_count": 0,
+    "history_rewritten": false
+  },
+  "domain_boundary_ratchet": {
+    "valid": true,
+    "violation_count": 0,
+    "violation_kind_counts": {},
+    "colour": "green"
+  },
+  "anti_drop": {
+    "verify": {
+      "rows": 100,
+      "alarms": 0,
+      "gaps": 0
+    },
+    "self_test": "OK, 5 tests"
+  },
+  "authority": {
+    "live_change": false,
+    "deploy": false,
+    "restart": false,
+    "git_mutation": false,
+    "statement": "No bridge build, no deploy script, no launchctl action, no live substrate or control change was made or attempted. Git was read-only: nothing staged, committed, merged, pushed, stashed, reset or amended. Foreign dirty paths were left untouched.",
+    "tier_4_5_items_touched": "none; no authority marker was set and no grant was inferred"
+  },
+  "self_noted_evidence_blemish": {
+    "what": "A second `close` call for introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928 was issued with the placeholder rationale \"idempotency probe\" while confirming that the first close had produced fully_addressed=true with no proof gaps.",
+    "effect": "The evidence store is append-only, so that placeholder close event stands beside the substantive one. The substantive rationale is the first close event for this id in this run; the artifact status is unchanged (addressed_change, fully_addressed true, proof_missing_claims []).",
+    "correction": "Not rewritten - the store must not be rewritten. Recorded here instead, and the second report was closed with a single call that returned its status directly."
+  },
+  "addressing": {
+    "fully_addressed": true,
+    "proof_missing_claims": [],
+    "full_read": true,
+    "full_read_count": 2,
+    "closed_reports": [
+      "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+      "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505"
+    ],
+    "terminal_status": "addressed_change",
+    "evidence_link_count": 35,
+    "note": "Both processed reports returned fully_addressed=true with proof_missing_claims=[] from their own close calls."
+  }
+}

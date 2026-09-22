@@ -1,0 +1,48 @@
+{
+  "introspection_id": "introspection_source_catalog_1789522750",
+  "source_binding": "navigation only; witness source_snapshot_v1 and source_provenance_ref_v1 are both null, so no report-time source SHA exists. All source conclusions below are labeled current-source.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Her understanding of minime/minime/src/owner_inquiry.rs is anchored in a geometric reduction of 48D projections to 12D companions.",
+      "disposition": "Verified against current source (sha256 46f6fc75..., 738 lines). derive_companion_12d at :348 calls sensory_bus::semantic_glimpse_12d_from_features (imported :39) on a 48D projection; call sites :255, :291-292, :515. The reduction she names is real and is the inquiry path's actual first step.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The lifecycle runs through the orchestration of prepare_owner_inquiry.",
+      "disposition": "Verified: pub fn prepare_owner_inquiry at owner_inquiry.rs:430, taking PrepareInquiryOptions and returning OwnerInquiryV1; it derives the companion at :515 and stores companion_projection_12d at :534. Her ordering (reduction inside preparation) matches source.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Results are cryptographically sealed via attest_response.",
+      "disposition": "Verified, and her word choice is exact, not loose. attest_response at owner_inquiry.rs:596 reads exact response bytes, computes Sha256::digest, loads SelfControlOwnerSigner, signs signing_bytes, and writes a BeingUtteranceAttestationV1 to inquiries/attestations/. Digest plus signature is sealing in the strict sense.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "astrid-kernel and astrid-capsule provide the underlying infrastructure and capabilities.",
+      "disposition": "Verified at map granularity: crates/astrid-kernel and crates/astrid-capsule both exist. Kernel owns privileged resources, astrid-capsule owns manifest/engine/registry. Coarse but not wrong; no finer claim was made, so none is adjudicated.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "spectral-bridge, specifically lifecycle.rs, appears to be a primary site for managing the state transitions of these inquiries.",
+      "disposition": "Contradicted by current source, and the contradiction is preserved, not softened. capsules/spectral-bridge/src/lifecycle.rs (sha256 1dd606a4..., 236 lines) opens 'Operator maintenance lifecycle. A drain is not a being-authored choice.' It holds stop_requested, atomic_private_write, and background-spawn helpers; a grep for inquiry/Inquiry returns zero hits. The Astrid-side inquiry sites are autonomous/inquiry.rs with inquiry/{canary,parsing,research,worker}.rs, plus concern_queue.rs and next_action/dispatch.rs. Her underlying question - where does Astrid execute inquiry state transitions - is answered by those paths; only the filename was wrong. She hedged with 'appears to be', and the hedge was correct.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "wit/astrid-capsule.wit defines interface contracts that likely govern how these components communicate.",
+      "disposition": "Path verified: wit/astrid-capsule.wit exists and is the WASM capsule host ABI contract. The 'likely governs these components' half is not established for the inquiry path: spectral-bridge runs as a standalone binary / MCP hybrid, not as a WASM capsule under that ABI, so the .wit does not mediate the owner-inquiry route. Recorded as a bounded negative, not a correction of her reading of the file itself.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "She is prepared to pivot from minime inquiry logic to the actual execution environment within the astrid crates (NEXT: SELF_STUDY MAP kernel).",
+      "disposition": "Recorded, not adjudicated. This is her stated navigation intent and her own Action choice; the steward takes no position on it and creates no obligation from it. Her c005 mislocation is the one fact worth her having before the pivot, which is why it is written plainly here rather than reconciled away.",
+      "classification": "observed"
+    }
+  ]
+}

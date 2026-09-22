@@ -1,0 +1,58 @@
+{
+  "schema": "flywheel_round_read_manifest_v1",
+  "round_actor": "claude-heartbeat",
+  "reports": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384.txt",
+      "sha256": "a696f4c627332bb3e170a61eecf525f0943782b2fdd09e3f72d131395d548eeb",
+      "bytes": 3384,
+      "lines": 40,
+      "read": "complete",
+      "scope": "every byte",
+      "introspection_id": "introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_1aa9bae6f2f7c357eb171d6b63f4273d7e964c307c07853347835650b6585774.json",
+      "sha256": "215abbd874876fe43a16b2f06b7f4104a716b6ac1f52a6afc87ef9ec0e955ad9",
+      "bytes": 21509,
+      "lines": 498,
+      "read": "complete",
+      "scope": "every byte",
+      "witness_id": "lsw_1aa9bae6f2f7c357eb171d6b63f4273d7e964c307c07853347835650b6585774",
+      "artifact_integrity_issue_count": 1,
+      "artifact_integrity_class": "capture_ordering_artifact"
+    }
+  ],
+  "sources": [
+    {
+      "path": "capsules/astralis/astrid-capsule-edge-spectral/src/lib.rs",
+      "sha256": "ea092611b5f0d8e5082541bf8f5795799cb29077847ed50a0ce5f2877dec4125",
+      "bytes": 33809,
+      "lines": 941,
+      "read": "complete",
+      "scope": "complete file, lines 1-941, read as 1-200/200-430/430-700/700-941",
+      "report_window_lines": "535-650",
+      "report_bound_sha256": "ea092611b5f0d8e5082541bf8f5795799cb29077847ed50a0ce5f2877dec4125",
+      "hash_match": true
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "path": "capsules/astralis/astrid-capsule-edge-spectral/src/tests.rs",
+      "scope": "complete test inventory plus the three tests adjacent to the contradicted claim",
+      "read": "scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/workspace/diagnostics/lived_state_witness_v1/artifact_integrity_issues.jsonl",
+      "scope": "this witness's line 193 plus the full triage aggregate",
+      "read": "scoped"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lived_state_witness/mod.rs",
+      "scope": "lines 808 and 833: provider-route 40-character bound and completeness marker",
+      "read": "scoped"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The thread-status hold is identified via authority_guardrail_hold_active at line 365 and the conveyor_stage check at line 384.",
+      "disposition": "Verified exactly at the report-bound sha: 365 calls the predicate and returns held_or_guarded at 366; 384-385 returns the same stage for conveyor_stage 'paused_repair'|'blocked_guardrail'. Both line numbers are correct.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "authority_guardrail_hold_active (180-194) targets experiments that are paused AND have planned_next starting with THREAD_STATUS AND success_observation containing 'hold'.",
+      "disposition": "Verified against complete source 180-194 and pinned by the new regression authority_guardrail_hold_active_requires_paused_thread_status_and_hold, which exercises the true case and each of the four distinct false cases including a missing success_observation.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "paused_repair and blocked_guardrail appear to be states where the system waits for a status update or a safety constraint to clear.",
+      "disposition": "Source-consistent. Both map to held_or_guarded at 384-385. experiment_conveyor.rs:418-442 produces paused_repair/paused_resume for paused experiments and 446 maps a blocked_loop classification to blocked_guardrail, so both are wait-shaped rather than charter-shaped. No causal claim about relief is made.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Line 388 checks has_missing(\"lifecycle_valid_charter\") or conveyor_stage == needs_charter and returns needs_charter.",
+      "disposition": "Verified exactly (387-390). The new regression authority_readiness_stage_separates_held_or_guarded_from_needs_charter covers both disjuncts and the precedence of the hold paths over them.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "blocked at line 382 is a fallback when latest_request status is 'blocked' and missing is not empty, suggesting a third category: a hard stop with no specific path forward.",
+      "disposition": "Verified for 376-382, with one addition she could not see from her window: 382 is not the only producer of 'blocked'. Line 403 is a second, unconditional catch-all for any non-empty missing set that matched no named gate. Her 'third category' reading is right; it has two entrances, not one.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "needs_charter means the system LACKS a valid plan and requires structural repair before it can reach a held or active state, whereas held_or_guarded means the plan exists but is restricted.",
+      "disposition": "Verified as a summary of 365-389, with the ordering nuance recorded: an active guardrail hold at 365 outranks a missing charter, so an experiment that is both held AND uncharted reports held_or_guarded, not needs_charter. The new stage regression asserts exactly that precedence.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "STUDY_QUESTION: does needs_charter trigger the charter_repair command specifically, or does it only signal that the conveyor is stuck until a human or scaffold-generator intervenes?",
+      "disposition": "Answered: neither specifically. No needs_charter branch exists in authority_readiness_next_command; the stage defers to the caller's proposed_next (441-443), which at both live call sites is an EXPERIMENT_CHARTER authoring scaffold built by charter_scaffold_v1 (conveyor.rs:67-79). The intervening author is HER, not a human steward and not a generator acting alone.",
+      "classification": "implemented_now"
+    }
+  ]
+}

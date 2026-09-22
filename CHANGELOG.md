@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Maintenance - historical source-study work reconciliation (2026-09-22)
+
+- Archive the reviewed 197-path backlog as explicit historical-test/evidence, reader-qualification and quiet-sensory operator-tool tranches, preserving every original byte and authorship. Revalidate report hashes, claim links and focused/full relevant suites; keep unresolved navigation, router-topic and historical receipt debt visible. Correct one existing bridge test's source-versus-workspace job-identity assumption without changing production routing. No service restart, authority grant, evidence deletion or automation resume. See `docs/steward-notes/2026-09-22-historical-dirty-work-assessment.md` and its exact-path inventory.
+
 ### Maintenance - bounded provider-observation epochs (2026-09-22)
 
 - Add private spool inspection, 80% capacity warnings, explicit epoch preparation and stopped-writer hash sealing/verification. Restore natural provider receipts through a verified same-binary bridge-only graceful transition to a fresh epoch. Preserve all 50,000 earlier event files, existing quotas, protected services and paused automations; do not prune, backfill missing receipts or install automatic rotation. See `docs/steward-notes/2026-09-22-provider-observation-spool-maintenance.md` for tests, guarded attempts and live verification.

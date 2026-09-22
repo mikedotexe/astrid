@@ -1,0 +1,26 @@
+{
+  "schema": "flywheel_test_results_v1",
+  "actor": "claude-heartbeat",
+  "focused": [
+    {"command": "cargo test -p astrid-kernel --lib maintenance", "result": "7 passed, 0 failed, 0 ignored, 34 filtered out", "includes_new_test": "generation_transition_lease_ignores_the_runtime_group"},
+    {"command": "cargo fmt --all -- --check", "result": "clean (rc=0)"},
+    {"command": "git diff --check", "result": "clean (rc=0)"}
+  ],
+  "integrity": [
+    {"command": "introspection_addressing_audit.py --self-test", "result": "OK", "rc": 0},
+    {"command": "test_evidence_event_store.py", "result": "OK", "rc": 0},
+    {"command": "test_steward_control.py", "result": "29 tests, 1 failure under parallel load: test_subprocess_watchdog_requests_graceful_interrupt asserted elapsed < 4s and measured 5.465s", "rc": 1},
+    {"command": "test_steward_control.py StewardControlTests.test_subprocess_watchdog_requests_graceful_interrupt (re-run serially)", "result": "OK in 2.630s", "rc": 0, "note": "wall-clock assertion; the failure reproduced only while 14 suites ran concurrently on this machine, and is recorded as load-induced flake rather than a regression. Not repaired: the assertion belongs to steward tooling this round did not touch."},
+    {"command": "test_steward_projection.py", "result": "OK", "rc": 0},
+    {"command": "test_division_ceremony_followup.py", "result": "OK", "rc": 0},
+    {"command": "test_division_ceremony_chronicle.py", "result": "OK", "rc": 0},
+    {"command": "test_division_ceremony_projection.py", "result": "OK", "rc": 0},
+    {"command": "test_projection_cursors.py", "result": "OK", "rc": 0},
+    {"command": "test_introspection_cadence_audit.py", "result": "OK", "rc": 0},
+    {"command": "introspection_cadence_audit.py --strict --compact", "result": "integrity_ok true, configuration_valid true, 0 errors, 7219 canonical reports, 0 duplicate hash groups", "rc": 0},
+    {"command": "anti_drop_catalog.py --self-test", "result": "OK", "rc": 0},
+    {"command": "anti_drop_catalog.py verify --json", "result": "100 rows, 0 alarms, 0 gaps", "rc": 0},
+    {"command": "domain_boundary_audit.py verify", "result": "valid true, violation_count 0, counter_audit consistent — ratchet GREEN; standing debt: 44 unlisted legacy review, 3 resolved large-file debt, 51 legacy large files, 7 documented cohesion exceptions", "rc": 0},
+    {"command": "experiential_epistemics.py self-test --json", "result": "valid true", "rc": 0}
+  ]
+}

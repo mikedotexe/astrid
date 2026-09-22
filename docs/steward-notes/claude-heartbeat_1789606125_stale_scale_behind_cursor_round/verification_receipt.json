@@ -1,0 +1,173 @@
+{
+  "actor": "claude-heartbeat",
+  "addressing": {
+    "claim_count": 10,
+    "evidence_link_count": 16,
+    "full_read": true,
+    "full_read_count": 1,
+    "fully_addressed": true,
+    "introspection_ids": [
+      "introspection_minime_minime_src_sensory_bus.rs_1789601340"
+    ],
+    "new_link_count": 16,
+    "proof_missing_claims": [],
+    "status": "addressed_change"
+  },
+  "anti_drop": {
+    "self_test": "5 tests OK",
+    "verify": {
+      "alarms": 0,
+      "gaps": 0,
+      "total_rows": 100
+    }
+  },
+  "authority_boundary": {
+    "cards_delivered": false,
+    "committed": false,
+    "correspondence_sent": false,
+    "deploy": false,
+    "git_mutation": false,
+    "launchctl": false,
+    "live_change": false,
+    "note": "Read-only tests over a temporary fixture. No navigation, prompt, ranking, dispatch, codec, controller or substrate behaviour was changed.",
+    "restart": false,
+    "staged": false
+  },
+  "controller": {
+    "adapter_kind": "subprocess",
+    "lease_token_read_or_persisted": false,
+    "pause_generation": 447,
+    "postprojection": "runs after this process exits; not observable from inside the round",
+    "preprojection_generation_id": "projection_1789601435127975000_f9d8c79f5e",
+    "preprojection_status": "passed",
+    "run_id": "run_1789601431310501000_07a09d6e59",
+    "steward_run_id": "run_1789601431310501000_07a09d6e59"
+  },
+  "counters": {
+    "canonical_blocked": 416,
+    "canonical_full_read": 3893,
+    "canonical_fully_addressed": 3261,
+    "canonical_indexed": 7306,
+    "canonical_pending_action": 212,
+    "canonical_read_needs_claims": 0,
+    "canonical_remaining": 4045,
+    "canonical_unread": 3413,
+    "canonical_watch": 4,
+    "mismatches": [],
+    "status": "consistent"
+  },
+  "counters_after": {
+    "all_artifact_indexed": 9023,
+    "all_artifact_remaining": 5762,
+    "canonical_blocked": 416,
+    "canonical_full_read": 3893,
+    "canonical_fully_addressed": 3261,
+    "canonical_indexed": 7306,
+    "canonical_pending_action": 212,
+    "canonical_read_needs_claims": 0,
+    "canonical_remaining": 4045,
+    "canonical_unread": 3413,
+    "canonical_watch": 4
+  },
+  "division": {
+    "completed_rounds_since_followup": 4,
+    "cycle_sequence": 50,
+    "processed_report_count": 1,
+    "review_due_after_round": false,
+    "review_due_before_round": false,
+    "round_event_id": "division_followup_event_696dd7b263a547d9672d96c535f2b00f",
+    "rounds_remaining_before_followup": 2,
+    "tier5_cadence_dossier": "not owed \u2014 review_due was false at round start, so no Division return and no dossier"
+  },
+  "epistemic_lint": {
+    "checked_record_count": 12425,
+    "history_rewritten": false,
+    "issue_count": 0,
+    "valid": true
+  },
+  "evidence_event_store": {
+    "active_store": "v2",
+    "corrupt_lines": 0,
+    "errors": [],
+    "last_event_sha256": "b04a74a24ca0928502e8833c3026639d6fd7c30d03e3e7ffb4a722d59c2c374f",
+    "last_global_seq": 1116602,
+    "seq_at_run_start": 1116210,
+    "valid": true
+  },
+  "integrity": {
+    "addressing_self_test": "44 tests OK",
+    "anti_drop_self_test": "5 tests OK",
+    "anti_drop_verify": "100 rows, 0 gaps, 0 alarms",
+    "audit_counters": "status consistent, mismatches []",
+    "cadence_strict": "integrity_ok true, 0 errors, 7318 canonical reports, 0 duplicate hash groups",
+    "cadence_unit": "6 tests OK",
+    "cargo_clippy_crate_tests": "clean",
+    "cargo_fmt_crate": "clean",
+    "division_chronicle_unit": "10 tests OK",
+    "division_chronicle_verify": "expected-stale: 'chronicle durable source inputs changed; project before verify' after this round's round-append; the postprojection division_chronicle stage resolves it. NOT claimed current.",
+    "division_followup_unit": "3 tests OK",
+    "division_projection_self_test": "ok",
+    "division_verify": "cycle 50, 4/6 rounds, review_due false, event_count 348, head 9dcae364d788fb7a0882744f08a761216970b40ee4364f3b5b7f3710934fec08",
+    "domain_boundary_verify": "valid true, violation_count 0 \u2014 ratchet GREEN",
+    "epistemics_self_test": "valid true",
+    "epistemics_verify_final": "valid true, 12425 records checked, 0 issues, history_rewritten false",
+    "evidence_event_store_status": "read; stream enumeration not expanded in this receipt",
+    "evidence_event_store_unit": "21 tests OK",
+    "evidence_event_store_verify": "valid true, 1116602 events, 0 corrupt lines, head b04a74a24ca0928502e8833c3026639d6fd7c30d03e3e7ffb4a722d59c2c374f",
+    "git_diff_check": "clean",
+    "projection_cursors_unit": "4 tests OK",
+    "steward_control_unit": "29 tests, 1 load-sensitive failure (test_pause_cooperatively_interrupts_wrapped_subprocess) that passes when re-run serially; no code changed",
+    "steward_projection_unit": "14 tests OK"
+  },
+  "packet_files": {
+    "RUN_REPORT.md": {
+      "bytes": 8410,
+      "sha256": "bdeed38273a7893ecc0fea85716c53c9702b90c36094b01a6a0c4d53f42a696f"
+    },
+    "addressing_links.json": {
+      "bytes": 6230,
+      "sha256": "2ec02062e84bfb484b4f0b0f63a0d8ead075d06882303aa1bfcbcb48813c7e8d"
+    },
+    "claims/introspection_minime_minime_src_sensory_bus.rs_1789601340.json": {
+      "bytes": 5763,
+      "sha256": "494fc8ffc69033dc226cd01905f04aaa1e8592d257396b6a09a59ae821890693"
+    },
+    "family_scan.json": {
+      "bytes": 21727,
+      "sha256": "83a27697c8320bc45e26e14357b9e3046ced25913a7eb35d7e4378d5b743a590"
+    },
+    "read_manifest.json": {
+      "bytes": 3154,
+      "sha256": "e5a6335672f7ce3aeab099b1146402c776e24bc646cebe0882d7657226b1bf10"
+    },
+    "source_receipts.json": {
+      "bytes": 2044,
+      "sha256": "1c9c1ac10a9bfd25397f63e9d1aa94a58cd4a0d1913afa15edde204e295f97c9"
+    },
+    "summaries/introspection_minime_minime_src_sensory_bus.rs_1789601340.md": {
+      "bytes": 7400,
+      "sha256": "402a134edd70628217f12705345f58498d67c82bf2e72380213963454719a101"
+    },
+    "test_results.json": {
+      "bytes": 1579,
+      "sha256": "538debe09ea2b2689005bf326db5b5f38359ef8ab3955ade76ed1c592a921cad"
+    },
+    "unprocessed_selected.json": {
+      "bytes": 3506,
+      "sha256": "4440dd89d3831c8a1166f60949c5cc34c97a790fb5c862214855cba6b18719e6"
+    }
+  },
+  "packet_files_note": "hashes of every packet file except this receipt itself",
+  "processed": [
+    {
+      "claim_count": 10,
+      "evidence_link_count": 16,
+      "fully_addressed": true,
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789601340",
+      "proof_missing_claims": [],
+      "status": "addressed_change"
+    }
+  ],
+  "round": "claude-heartbeat_1789606125_stale_scale_behind_cursor_round",
+  "schema": "flywheel_verification_receipt_v1"
+}

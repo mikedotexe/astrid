@@ -1,0 +1,53 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505",
+  "claims": [
+    {
+      "claim_id": "d001",
+      "summary": "`kernel_router.rs` is the primary dispatcher / IPC and connection-lifecycle entry point, managing internal state through two distinct asynchronous loops.",
+      "disposition": "Verified from the complete file: `spawn_kernel_router` (18-67) and `spawn_connection_tracker` (74-95) are exactly two `tokio::spawn` loops, the second spawned from the first at line 20. Scope nuance: they subscribe two topic patterns (`astrid.v1.request.*`, `client.v1.*`), not all IPC \u2014 the EventBus carries everything else past this file.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "d002",
+      "summary": "`spawn_kernel_router` (lines 18-67) listens on the `astrid.v1.request.*` topic.",
+      "disposition": "Exact: `subscribe_topic(\"astrid.v1.request.*\")` at line 22, function spanning 18-67. The live publishers of that pattern are all in astrid-cli (get_commands, status, shutdown, reload_capsules).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "d003",
+      "summary": "A `ManagementRateLimiter` (lines 25, 39-58) protects the kernel from being overwhelmed by management commands \"like listing capsules or reloading configurations\".",
+      "disposition": "The lines are exact, the example is contradicted. `ListCapsules` is deliberately unlimited (`None`, line 298), as are `GetCommands`, `GetCapsuleMetadata` and `GetStatus`; only `ReloadCapsules` (5), `InstallCapsule` (10), `ApproveCapability` (10) and `Shutdown` (1) are throttled. That table sits at 292-304, below her window, so the dispatch alone could not show it. Now pinned by the added `rate_limit_table_covers_every_request_variant`.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "d004",
+      "summary": "Requests are parsed into `KernelRequest` (line 37); a rate-limited request generates a corresponding error on a `kernel.response.*` topic.",
+      "disposition": "Parse exact at 37. The response-topic half is contradicted: line 49 rewrites \"kernel.request.\" to \"kernel.response.\", but no topic containing `kernel.request.` is published anywhere in the repository and this router subscribes `astrid.v1.request.*`, so the replace is a no-op and the rate-limit error goes out on the unchanged *request* topic, while every other response uses `strip_prefix` to `astrid.v1.response.{suffix}` (99-103). `lib.rs:845` still documents `kernel.request.*` - a stale name.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "d005",
+      "summary": "`spawn_connection_tracker` (69-95) handles `client.v1.*` events, tracking Connect and Disconnect-with-reason and updating the kernel's connection counts.",
+      "disposition": "Verified: `subscribe_topic(\"client.v1.*\")` at 75; `IpcPayload::Disconnect{reason}` \u2192 `connection_closed()` (83-86); `IpcPayload::Connect` \u2192 `connection_opened()` (87-90). Her 69-95 interval includes the doc comment at 69-73. The count she calls \"vitality of active connections\" does surface: `DaemonStatus.connected_clients` at line 206.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "d006",
+      "summary": "`handle_request` (98-110+) holds the actual logic, handles `InstallCapsule`, and shows a placeholder for identity verification and capability checks, suggesting capsule security/integrity is managed here before admission.",
+      "disposition": "The placeholder is a *comment* (108-109), not executing code; the arm returns `Error(\"Installation logic not yet implemented in kernel router\")` (110-112). So admission security is not managed here today. It exists elsewhere: `CapabilityStore` and `astrid-approval`'s `AllowanceStore` are `Kernel` fields (lib.rs 47, 92), and the five-layer gate lives in `astrid-approval`. Her reading of the comment's intent is right; the location inference is not established.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "d007",
+      "summary": "`handle_request` likely interacts with the spectral data seen in `projection.rs`; capsule content processing \"would involve the curvature and complexity metrics\".",
+      "disposition": "Contradicted by the same complete-source check that answers her next turn's version of this hypothesis (c007). `crates/astrid-kernel/src/` contains no spectral, eigenvalue, curvature or reservoir reference at all; the only `projection.rs` in the tree is `capsules/spectral-bridge/src/codec/projection.rs`, a different crate loaded into a different process. The kernel routes capsule *bytes and manifests*; it never inspects capsule contents spectrally.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "d008",
+      "summary": "\"I need to see the rest of `handle_request` to see the full suite of supported commands.\"",
+      "disposition": "Bounded observation. The suite is exactly eight `KernelRequest` variants (`crates/astrid-types/src/kernel.rs:15-46`): the six she read in the next window plus the two she had already seen. Her own `NEXT: SELF_STUDY CONTINUE` reached that next page 423 seconds later (report 1789577928, window 111-213), so the request was self-served by the pagination she chose; nothing about navigation was changed here.",
+      "classification": "observed"
+    }
+  ]
+}

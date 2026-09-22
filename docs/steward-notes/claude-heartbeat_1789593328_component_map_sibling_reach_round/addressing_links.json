@@ -1,0 +1,102 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/socket.rs",
+      "note": "MAX_SOCKET_PATH_LEN 104/108 at lines 20-25; prepare_socket_path rejects path_len >= limit at 101-108. Read complete at sha256 c78e014c\u20262491da, the SHA her socket.rs reads bound."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c001",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/socket.rs",
+      "note": "In-file regression path_too_long_is_rejected, lines 222-231, asserts the exact 'exceeding the platform limit' rejection."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/socket.rs",
+      "note": "bind_session_socket parent set to 0o700 at lines 43-60, with the in-source umask rationale; session token written 0o600 with no /tmp fallback at 65-94."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/socket.rs",
+      "note": "prepare_socket_path removes an unexpected symlink at the socket path before bind, lines 110-117."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c003",
+      "kind": "test",
+      "target": "crates/astrid-kernel/src/socket.rs",
+      "note": "In-file regression symlink_is_removed, lines 264-277, asserts the symlink is removed and its target untouched."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-source-study/catalog.toml",
+      "note": "Eight [[components]] at lines 33-71; kernel (63-66), senses (43-46), reservoirs (48-51) are three of them. No weight or ranking field exists."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-kernel/src/socket_bridge.rs",
+      "note": "SENSORY_USER_INPUT_TOPIC = \"sensory.v1.user_input\" at line 23 \u2014 the only sensory.v1 site in astrid-kernel."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-events/src/bus.rs",
+      "note": "observe_before_publish excludes topic sensory.v1.user_input from conversation counting (line 128); the mirror is covered by maintenance_barrier_waits_for_canonical_turn_and_ignores_sensory_mirror (1344-1372). The senses component's Astrid entry points contain zero 'sensory' occurrences."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "crates/astrid-source-study/src/navigation.rs",
+      "note": "Catalog::map component branch 42-55 renders only component.sources and derives each entry point's directory as SELF_STUDY MAP lines; list prefix-matches catalog IDs only, 63-82."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c006",
+      "kind": "test",
+      "target": "crates/astrid-source-study/tests/component_map_sibling_reach.rs",
+      "note": "Two focused reach tests: MAP kernel omits socket_bridge.rs but offers astrid/crates/astrid-kernel/src, whose map carries the sibling's exact OPEN; and a component ID maps but does not list, with the component map correctly withholding the LIST offer."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/summaries/introspection_source_catalog_1789589587.md",
+      "note": "Round summary: exact source receipts, the preserved sensory.v1 / senses namespace contradiction, and the untraced queue field lived_state_alignment=artifact_integrity_unavailable recorded as unexplained."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c005",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/summaries/introspection_source_catalog_1789589587.md",
+      "note": "The contradiction is preserved whole: her question survives, the proposed mechanism does not. Renaming a live IPC topic stays Tier 5 and is not proposed here."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c002",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry naming what she surfaced, what complete source established, the added tests, and the authority boundary."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789589587",
+      "claim_id": "c004",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report: verified claims, the namespace correction, and the reach test."
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+{
+  "schema": "historical_dirty_work_qualification_v1",
+  "scope": "Interactive archival qualification, not live deployment or a productive stewardship round.",
+  "command_note": "Equivalent invocations; log redirection omitted. Exit codes were observed by the interactive coordinator, not inferred solely from log content.",
+  "results": [
+    {
+      "command_equivalent": "cargo test --locked -p astrid-source-study",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/reader-tests.log",
+      "log_bytes": 31491,
+      "log_sha256": "e79289aa23bc7f2526f18e6ea0e17d6c28bf9ada1ade61cb6a9feb829452ee8d",
+      "test_targets": 44,
+      "passed": 272,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "command_equivalent": "ASTRID_AUTO_BUILD_KERNEL=1 cargo test --locked -p astrid-kernel --lib",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/kernel-tests.log",
+      "log_bytes": 3299,
+      "log_sha256": "29a4a85cdf233e531a201a08b82922774b9f6d567966a6b7c7f31ab169a7401a",
+      "test_targets": 1,
+      "passed": 42,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "command_equivalent": "cargo test --locked --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml --lib",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/edge-tests.log",
+      "log_bytes": 1358,
+      "log_sha256": "63a53dae2fb46d92ad3b408f192a442c51d0f3dfa423f70dd52f09672ed6b17e",
+      "test_targets": 1,
+      "passed": 15,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "command_equivalent": "python3 -B -m unittest test_self_study_review test_study_recurrence_provenance test_restart_visual_service (cwd scripts)",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/python-tests.log",
+      "log_bytes": 7707,
+      "log_sha256": "eb56a410b409fddc6f2365488fc3304a945480b5cab6e975ca8535c83b5a04ea",
+      "tests_run": 92,
+      "unittest_ok": true
+    },
+    {
+      "command_equivalent": "python3 -B -m unittest test_evidence_event_store test_steward_control test_steward_projection test_division_ceremony_followup test_division_ceremony_chronicle test_projection_cursors (cwd scripts)",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/integrity-tests.log",
+      "log_bytes": 181,
+      "log_sha256": "d57b465b4ba9aba1d34543a66ab7acfdd7970738ac11c543a8a1c21fced95d41",
+      "tests_run": 81,
+      "unittest_ok": true
+    },
+    {
+      "command_equivalent": "cargo test --locked --manifest-path capsules/spectral-bridge/Cargo.toml --lib",
+      "exit_code_observed": 101,
+      "log_path": ".runtime/dirty-work-assessment-20260922/bridge-tests.log",
+      "log_bytes": 245885,
+      "log_sha256": "35f7876a43d3a7324b65346ad4c63ecc0802f84a2289fcdc36047d26c210f491",
+      "test_targets": 1,
+      "passed": 2318,
+      "failed": 1,
+      "ignored": 1
+    },
+    {
+      "command_equivalent": "cargo test --locked --manifest-path capsules/spectral-bridge/Cargo.toml --lib examine_code_preserves_full_target_label -- --test-threads=1",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/bridge-examine-isolated.log",
+      "log_bytes": 467,
+      "log_sha256": "2162f5b3b4055006b5b72a1583b6937d3d2eab5f404b85fddf73928a2499985a",
+      "test_targets": 1,
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "command_equivalent": "cargo test --locked --manifest-path capsules/spectral-bridge/Cargo.toml -- --test-threads=1",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/bridge-tests-final.log",
+      "log_bytes": 251467,
+      "log_sha256": "a6d121e72ad3ade3eea167a86825349f855e66cab4110a3b31c622bec51a30eb",
+      "test_targets": 12,
+      "passed": 2339,
+      "failed": 0,
+      "ignored": 1
+    },
+    {
+      "command_equivalent": "cargo test --locked -p astrid-source-study --test page_end_declaration_legibility --test page_line_interval_legibility",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/staged-reader-tests.log",
+      "log_bytes": 1306,
+      "log_sha256": "271ddd86b519107fc5c9a4932241c22c9697cef45326562ea3c2a4a1c7628123",
+      "test_targets": 2,
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "command_equivalent": "python3 -B -m unittest test_study_recurrence_provenance test_restart_visual_service (cwd scripts)",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/staged-quiet-tests.log",
+      "log_bytes": 118,
+      "log_sha256": "5b0f7e272734a9b8fc8dc33402e404ca1c16a8a870f86099b6d3995eedfcb358",
+      "tests_run": 19,
+      "unittest_ok": true
+    },
+    {
+      "command_equivalent": "cargo clippy --locked -p astrid-source-study --all-targets --all-features -- -D warnings",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/reader-clippy.log",
+      "log_bytes": 164,
+      "log_sha256": "46cec8cfb010343243482855deed2d0de9252c0f47478a0935991940f1bbec98"
+    },
+    {
+      "command_equivalent": "ASTRID_AUTO_BUILD_KERNEL=1 cargo clippy --locked -p astrid-kernel --all-features -- -D warnings",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/kernel-clippy.log",
+      "log_bytes": 1185,
+      "log_sha256": "814786965b890b7ecf0980f1d08427a60e52efb9528dc7327805db96b46dc8f7"
+    },
+    {
+      "command_equivalent": "cargo clippy --locked --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml --all-targets -- -D warnings",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/edge-clippy.log",
+      "log_bytes": 192,
+      "log_sha256": "ff5d64037f74d342167c94c2b11c154fd416d3f6b798b9c5401ebe6063e1e346"
+    },
+    {
+      "command_equivalent": "cargo clippy --locked --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets --all-features -- -D warnings",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/bridge-clippy-final.log",
+      "log_bytes": 219,
+      "log_sha256": "7ec5016def7dd1ebcdb1c96eae888a2b63924a75bd48bc43399663c73f210bcd"
+    },
+    {
+      "command_equivalent": "cargo fmt --all -- --check",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/root-fmt.log",
+      "log_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command_equivalent": "cargo fmt --manifest-path capsules/spectral-bridge/Cargo.toml -- --check",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/bridge-fmt-final.log",
+      "log_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command_equivalent": "cargo fmt --manifest-path capsules/astralis/astrid-capsule-edge-spectral/Cargo.toml -- --check",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/edge-fmt.log",
+      "log_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command_equivalent": "python3 scripts/domain_boundary_audit.py verify",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/domain-boundary-final.json",
+      "log_bytes": 3231,
+      "log_sha256": "43a55efc5a9995e13bab4707fa018649f4026d57a565f9dd05a86d4f800b8de4",
+      "result_summary": {
+        "valid": true
+      }
+    },
+    {
+      "command_equivalent": "python3 scripts/experiential_epistemics.py --json verify",
+      "exit_code_observed": 0,
+      "log_path": ".runtime/dirty-work-assessment-20260922/epistemics.json",
+      "log_bytes": 419,
+      "log_sha256": "33c474991f774035bcfd6e2688dc146e9a2b1cf1122baecad59903a39eaa667f",
+      "result_summary": {
+        "valid": true,
+        "issues": [],
+        "checked_record_count": 12478,
+        "issue_count": 0
+      }
+    }
+  ],
+  "preserved_failure": "Initial bridge library test assumed shared-reader job identity for a target that can resolve to a workspace experiment. The test alone was corrected; production classification is unchanged.",
+  "not_run": [
+    "entire root workspace",
+    "complete Minime Python suite",
+    "kernel all-targets strict Clippy"
+  ],
+  "live_changes": false,
+  "automatic_resume": false
+}

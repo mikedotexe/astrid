@@ -1,0 +1,64 @@
+{
+  "schema": "flywheel_read_manifest_v1",
+  "reader": "claude-heartbeat",
+  "steward_run_id": "run_1789614473762300000_8f47ea633c",
+  "preprojection_generation_id": "projection_1789614478197882000_bcd163fdc1",
+  "reports": [
+    {
+      "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789608500",
+      "path": "capsules/spectral-bridge/workspace/introspections/introspection_minime_minime_src_sensory_bus.rs_1789608500.txt",
+      "sha256": "490501f44b03df7a97cb0863d2bdcd1f90fed4b02d1bf1fc66ec762e022b0a22",
+      "bytes": 4370,
+      "lines": 38,
+      "read": "complete"
+    }
+  ],
+  "witnesses": [
+    {
+      "witness_id": "lsw_618ae0646e028d53248a0ec8bd7d557d8b268dbb6031f932003cc1b379f3aac4",
+      "path": "capsules/spectral-bridge/workspace/introspections/lived_state_witnesses/witnesses/lsw_618ae0646e028d53248a0ec8bd7d557d8b268dbb6031f932003cc1b379f3aac4.json",
+      "sha256": "f74d572794932ec23b8a50af9d4233e0e74576818e60c67db5e502ca3ea78f26",
+      "bytes": 21334,
+      "lines": 498,
+      "read": "complete",
+      "recorded_window": {
+        "repository_relative_path": "minime/src/sensory_bus.rs",
+        "window_start_line": 502,
+        "window_end_line": 620,
+        "total_file_lines": 4404,
+        "window_sha256": "eb2fb50fb27dc1272f4e215b82fd4e119e091d4d9b13b33886a67019409c5153"
+      }
+    }
+  ],
+  "adjacent_evidence": [
+    {
+      "kind": "delivered_page_receipt",
+      "path": "capsules/spectral-bridge/workspace/diagnostics/source_first_v3/shared_reader/deliveries/efabf5fb3465d74a0620642dd51fba75d8bedbfa70435cbe5a096eaffb2d6042/f6ca4acbe67eadd1c6a8e52e19e1bbd190a6a678742b9e92d13dd3a7dce5f9e4.json",
+      "sha256": "f6ca4acbe67eadd1c6a8e52e19e1bbd190a6a678742b9e92d13dd3a7dce5f9e4",
+      "bytes": 122033,
+      "lines": 86,
+      "read": "complete_for_declared_scope",
+      "scope": "page metadata, page.text header/gutter/footer, source_locations; request_json and response_json inspected only for the leading response sentence and the page binding",
+      "page_id": "efabf5fb3465d74a0620642dd51fba75d8bedbfa70435cbe5a096eaffb2d6042",
+      "page_start": {
+        "byte": 18492,
+        "line": 502
+      },
+      "page_end": {
+        "byte": 22865,
+        "line": 620
+      },
+      "page_text_bytes": 6692,
+      "raw_prompt_quoted": false,
+      "raw_response_quoted": false,
+      "private_reasoning_quoted": false
+    },
+    {
+      "kind": "prior_round_packet",
+      "path": "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/RUN_REPORT.md",
+      "read": "complete",
+      "scope": "continuity: same walk, prior behind-cursor finding, family-scan verdict"
+    }
+  ],
+  "authority_boundary": "evidence only; no live substrate, control, deploy, restart, staging, or commit action taken"
+}

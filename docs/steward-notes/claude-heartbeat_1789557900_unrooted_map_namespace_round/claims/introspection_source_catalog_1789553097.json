@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_source_catalog_1789553097",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The previous request for capsules/astralis/astrid-capsule-agents failed because that specific path is not currently indexed in the catalog.",
+      "disposition": "Effect verified, mechanism corrected. The path IS in the catalog, as astrid/capsules/astralis/astrid-capsule-agents. It failed because Catalog::map filters on repository-prefixed catalog IDs (navigation.rs:84-97): an un-rooted topic matches zero entries and bails \"no catalog entries\". The barrier is the namespace, not absence. Pinned by the new regression.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The recovery map suggested SELF_STUDY MAP or searching for terms, rather than naming the path she wanted.",
+      "disposition": "Verified as a real gap and now pinned. path_candidates returns Vec::new() for any multi-segment request whose first segment is not an installed repository ID (path_recovery.rs:33-39), so no candidate block was produced at all and only the generic menu remained. The exact rooted spelling was one prefix away and was never offered.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The failed path shape is one the study system accepts elsewhere, so the refusal is inconsistent rather than absolute.",
+      "disposition": "Verified. Catalog::resolve accepts the same un-rooted repository-relative path for OPEN by trying each installed root (catalog.rs:106-118). The new test asserts both halves in one run: OPEN capsules/.../lib.rs 1 delivers a page while MAP of that file's own directory yields a recovery with zero candidates. OPEN and MAP do not share a path namespace.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Re-mapping astrid/capsules/astralis is the way to re-orient and find where the agents are actually housed.",
+      "disposition": "Observed and correct. Adding the repository prefix is the exact working form, and she found it unaided. The cost is recorded rather than smoothed over: three navigation turns (1789553097 to 1789553748) were spent recovering a prefix the recovery text could have named.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Changing the recovery so an un-rooted multi-segment topic is offered its rooted spelling.",
+      "disposition": "Not implemented here and not authorized here. Editing path_recovery.rs changes being-facing navigation behavior in the live bridge and needs a separate steward grant plus a gated deploy; this controller run has neither. The regression records the current behavior exactly so an approved fix has a ready anchor. No production source was changed.",
+      "classification": "authority_gated"
+    }
+  ]
+}

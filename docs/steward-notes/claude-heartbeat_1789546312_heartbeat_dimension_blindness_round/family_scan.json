@@ -1,0 +1,690 @@
+{
+ "schema": "introspection_family_scan_v1",
+ "threshold": 0.35,
+ "family_count": 40,
+ "batchable_family_count": 0,
+ "families": [
+  {
+   "family_head": "introspection_source_catalog_1789542558",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789542558",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789542123",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes0..4503",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789542123",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789541827",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes97893..100308",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789541827",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789541583",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789541583",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789541217",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes99861..100308",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789541217",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789540950",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes0..4503",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789540950",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789540720",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes0..4503",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789540720",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789540447",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes99861..100308",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789540447",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789540168",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes99861..100308",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789540168",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789539956",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes99861..100308",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789539956",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789539693",
+   "source_label": "astrid/capsules/spectral-bridge/src/rescue_policy.rs",
+   "source_path": "",
+   "window": "bytes99861..100308",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_rescue_policy.rs_1789539693",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789539254",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789539254",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1789539011",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "source_path": "",
+   "window": "bytes1027..5404",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1789539011",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_structure.rs_1789538837",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/structure.rs",
+   "source_path": "",
+   "window": "bytes67344..71413",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_structure.rs_1789538837",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_codec_structure.rs_1789538707",
+   "source_label": "astrid/capsules/spectral-bridge/src/codec/structure.rs",
+   "source_path": "",
+   "window": "bytes67344..71413",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_codec_structure.rs_1789538707",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789538462",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789538462",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1789538224",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "source_path": "",
+   "window": "bytes0..4320",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1789538224",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1789537911",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "source_path": "",
+   "window": "bytes1027..5404",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1789537911",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1789537563",
+   "source_label": "astrid/capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+   "source_path": "",
+   "window": "bytes0..4320",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_autonomous_runtime_orchestration.rs_1789537563",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789537216",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789537216",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789536960",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789536960",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789536549",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes31326..33922",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789536549",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789536036",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes27044..31326",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789536036",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789535508",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes22756..27044",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789535508",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789535186",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes18273..22756",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789535186",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789535044",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789535044",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789534799",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789534799",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789534478",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes31484..33922",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789534478",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789534151",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes27141..31484",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789534151",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789533825",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes22835..27141",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789533825",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789533468",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes18362..22835",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789533468",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532947",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes14115..18362",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532947",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532776",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes9820..14115",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532776",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532577",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes5582..9820",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532577",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532460",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes1318..5582",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532460",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789532340",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789532340",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532172",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes28339..32774",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789532172",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789532020",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789532020",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789531888",
+   "source_label": "astrid/capsules/spectral-bridge/src/action_continuity/runtime/authority.rs",
+   "source_path": "",
+   "window": "bytes28339..32774",
+   "members": [
+    {
+     "introspection_id": "introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789531888",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  },
+  {
+   "family_head": "introspection_source_catalog_1789531734",
+   "source_label": "source catalog",
+   "source_path": "",
+   "window": "unknown",
+   "members": [
+    {
+     "introspection_id": "introspection_source_catalog_1789531734",
+     "similarity_to_head": 1.0,
+     "variant_distinct_terms": [],
+     "variant_distinct_term_count": 0
+    }
+   ],
+   "member_count": 1,
+   "batchable": false,
+   "similarity_basis": "none_no_snag_or_test_text_or_unparsed_header"
+  }
+ ],
+ "skipped": [],
+ "authority_boundary": "evidence routing only: a family is a candidate batch, not a disposition; every member still requires its own complete read, per-report claims naming its variant_distinct_terms, and its own close"
+}

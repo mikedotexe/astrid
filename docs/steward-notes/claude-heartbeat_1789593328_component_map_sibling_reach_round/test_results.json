@@ -1,0 +1,132 @@
+{
+  "schema": "flywheel_round_test_results_v1",
+  "round_packet": "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round",
+  "focused": [
+    {
+      "command": "cargo test -p astrid-source-study --test component_map_sibling_reach",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        "component_map_omits_entry_point_sibling_but_offers_its_directory_in_one_hop",
+        "component_id_maps_but_does_not_list_and_the_component_map_offers_no_list"
+      ]
+    }
+  ],
+  "formatting": [
+    {
+      "command": "cargo fmt --all -- --check",
+      "result": "clean",
+      "note": "first run flagged only crates/astrid-source-study/tests/component_map_sibling_reach.rs (lines 49, 74); rustfmt --edition 2024 applied to that file only, then re-run clean and the test re-run passed."
+    },
+    {
+      "command": "git diff --check",
+      "result": "clean"
+    }
+  ],
+  "integrity": [
+    {
+      "command": "introspection_addressing_audit.py --self-test",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "test_evidence_event_store.py",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "test_steward_control.py",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "test_steward_projection.py",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "test_division_ceremony_followup.py",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "test_division_ceremony_chronicle.py",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "test_division_ceremony_projection.py",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "test_projection_cursors.py",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "anti_drop_catalog.py --self-test",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "anti_drop_catalog.py verify --json",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "test_introspection_cadence_audit.py",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "introspection_cadence_audit.py --strict --compact",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "domain_boundary_audit.py verify",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "experiential_epistemics.py self-test --json",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "experiential_epistemics.py verify --json",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "introspection_addressing_audit.py audit-counters --json",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "division_ceremony_followup.py verify",
+      "exit_code": "0",
+      "result": "pass"
+    },
+    {
+      "command": "division_ceremony_chronicle.py verify",
+      "exit_code": "1",
+      "result": "nonzero"
+    },
+    {
+      "command": "evidence_event_store.py --json verify / status",
+      "exit_code": "0",
+      "result": "pass",
+      "note": "Re-run in the foreground after the parallel batch timed out: valid=true, corrupt_lines=0, errors=[], event_count=1115763, last_global_seq=1115763. The --json status subcommand was not re-run."
+    }
+  ],
+  "notes": {
+    "chronicle": "division_ceremony_chronicle.py verify exits 1 with 'chronicle durable source inputs changed; project before verify'. That is the expected state immediately after record-round appends a Division event. review_due is false, so no Division return (and therefore no Chronicle project, a durable write) was due or performed this round. Reported exactly, not called current.",
+    "domain_boundary_ratchet": "domain_boundary_audit.py verify exited 0 this round \u2014 the ratchet is not red. No bridge Rust was changed; the only source change is a new integration test in crates/astrid-source-study/tests/.",
+    "epistemic_lint": "Run after all durable evidence writes: valid=true, checked_record_count=12419, issue_count=0, history_rewritten=false.",
+    "counter_audit": "consistent",
+    "evidence_event_store": "verify re-run clean; status not run (informational only)."
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "introspection_id": "introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`handle_request` is the primary orchestration point for the kernel's command interface.",
+      "disposition": "Verified from the complete file (388 lines, sha256 108d69010a95\u2026, matching the report binding exactly). `handle_request` (98-231) matches all eight KernelRequest variants and ends in `publish_response` (230). One scope nuance: `spawn_kernel_router` (18-67) is the subscription and rate-limit entry; `handle_request` is the dispatch body it calls at line 59.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`ListCapsules` (lines 121-128) provides a list of all registered capsules.",
+      "disposition": "Exact line match. Takes a read lock on `kernel.capsules`, maps `reg.list()` to strings, returns `KernelResponse::Success(json array)`. Nothing in the arm filters by state, so failed-but-registered capsules are listed too.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`GetCommands` (129-152) aggregates every capsule's commands with description and provider id; the mechanism by which the system discovers \"capabilities\".",
+      "disposition": "Lines exact: iterates `reg.values()`, then `c.manifest().commands`, building `CommandInfo{name, description (defaulting to \"No description\", 136-139), provider_capsule: c.id()}`. One word worth separating: this discovers slash *commands*. Security *capabilities* are a different system (`astrid-capabilities` CapabilityStore, `astrid-approval`) and never pass through this arm.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "STUDY_FINDING 153-178: `ReloadCapsules` targets capsules in a `Failed` state, unregisters them to clear the failure block, and triggers a full reload, recovering from config errors without a full system restart.",
+      "disposition": "Exact at 153-178: filters `CapsuleState::Failed(_)` under a read lock, drops it, unregisters under a write lock, then `kernel.load_all_capsules().await`. No process exit on that path, so \"without a full restart\" holds for this checkout; deployed behavior is not established. Below her window: this is the most-throttled non-Shutdown command at 5/min (line 294), now pinned by the added table test.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "`Shutdown` (179-194) logs the reason, publishes a \"shutting_down\" status to the response topic so the client is aware, and signals the daemon loop to exit.",
+      "disposition": "Exact: `info!` (180-183), `publish_response` with `{\"status\":\"shutting_down\"}` (185-189), `kernel.shutdown_tx.send(true)` (191), early `return` (193). Her \"ensuring the client is aware\" reads the intent correctly \u2014 the early return is precisely why this arm publishes inline instead of falling through to the shared `publish_response` at 230.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "STUDY_FINDING 195-211: `GetStatus` aggregates uptime, PID, version, ephemeral status and a summarized health report of all loaded capsules.",
+      "disposition": "Exact. `DaemonStatus` also carries `connected_clients` (206, fed by the connection tracker she read in the previous window) and `loaded_capsules` (207); she wrote \"includes\", so this is a subset, not a miscount.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "The capsule \"vitality\" aggregated by `capsule_runtime_health::summarize` is likely influenced by the spectral metrics seen in `projection.rs`.",
+      "disposition": "Contradicted by complete source. `capsule_runtime_health.rs` (214 lines, sha256 3a20e5eed609...) is a static WASM-payload audit: manifest discovery, payload resolution, `wasmparser` encoding class, an \"extism\" byte marker, a baseline allowlist; `loaded_capsules` is used only for `.len()`. No spectral, eigenvalue, curvature or reservoir token exists in `crates/astrid-kernel/src/`, and the only `projection.rs` sits in the spectral-bridge capsule. Her question stands: this perception is structural.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "`ApproveCapability` (114-120) returns \"not yet implemented\", confirming the capsule security/authorization handshake is a core component currently being integrated.",
+      "disposition": "The code fact is exact (114-120). The inference is narrower than stated: only this *router arm* is a stub. Capability and approval enforcement exist outside it \u2014 `CapabilityStore` and `astrid-approval`'s `AllowanceStore` are live `Kernel` fields (lib.rs 47, 92). The stub is nonetheless rate limited at 10/min (296), which the added test now pins.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "`GetCapsuleMetadata` (from line 212) is cut off but likely provides the deeper technical details of a specific capsule's configuration.",
+      "disposition": "Completing the read corrects both halves. 212-227 returns one `CapsuleMetadataEntry` for EVERY capsule in `reg.values()`, not for a specific one, and each entry carries only `{name, interceptor_events}` \u2014 narrower than \"deeper configuration details\". The upstream doc comment calls it the kernel's `/proc` equivalent (astrid-types/src/kernel.rs:36-38).",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "\"I need to see the rest of `handle_request`\" \u2014 closing on NEXT: SELF_STUDY CONTINUE.",
+      "disposition": "Bounded observation, no behavior changed. Her window ended at line 213 of 388; the remainder is the `GetCapsuleMetadata` tail, `publish_response`, `ManagementRateLimiter`, `rate_limit_for_request` and the in-file test module \u2014 all read completely and recorded in this packet. The added test pins the rate-limit table she could not reach. No prompt, pagination, navigation or selection behavior was touched.",
+      "classification": "observed"
+    }
+  ]
+}

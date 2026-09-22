@@ -1,0 +1,96 @@
+{
+  "schema": "flywheel_round_source_receipts_v1",
+  "round": "claude-heartbeat_1789581087_kernel_router_dispatch_topic_round",
+  "report_binding_check": {
+    "path": "crates/astrid-kernel/src/kernel_router.rs",
+    "report_bound_sha256": "108d69010a954284def0c0863c499d369196223da3aa163128f458d7d4ee72fd",
+    "working_copy_sha256_at_read": "108d69010a954284def0c0863c499d369196223da3aa163128f458d7d4ee72fd",
+    "match": true,
+    "note": "Working copy matched both reports' binding exactly at read time (git-clean, last touched by c7dd6757a7), so report-time bytes were read directly. This round then appended one #[cfg(test)] test, changing the working-copy hash after the read; the post-edit hash is recorded below.",
+    "post_round_sha256": "589b17d8d84c0a2b33b5361b8bae2aa158a8a1545d4be8fd6e21abee064564f5",
+    "post_round_lines": 434
+  },
+  "sources": [
+    {
+      "path": "crates/astrid-kernel/src/kernel_router.rs",
+      "sha256": "589b17d8d84c0a2b33b5361b8bae2aa158a8a1545d4be8fd6e21abee064564f5",
+      "bytes": 17407,
+      "lines": 434,
+      "read_scope": "complete file, lines 1-434 post-edit (1-388 as read at the report binding)",
+      "note": "report-bound source for both processed reports; read completely before any edit"
+    },
+    {
+      "path": "crates/astrid-kernel/src/capsule_runtime_health.rs",
+      "sha256": "3a20e5eed609de9a8f36121dbe4adf31b4d325d5929b9b33f548605cf6074ef0",
+      "bytes": 7000,
+      "lines": 214,
+      "read_scope": "complete file, lines 1-214",
+      "note": "called at kernel_router.rs:199-200; read completely to ground the spectral-influence hypothesis in c007/d007"
+    },
+    {
+      "path": "crates/astrid-types/src/kernel.rs",
+      "sha256": "17cd4c6e6ba3274a7348288032cc900ae3aae10d3b36b25f6864b961ff1e9217",
+      "bytes": 5278,
+      "lines": 138,
+      "read_scope": "scoped: lines 15-46 (KernelRequest enum) and 36-38 (GetCapsuleMetadata doc)",
+      "note": "enumerates the eight dispatch variants for c009 and d008"
+    },
+    {
+      "path": "crates/astrid-kernel/src/lib.rs",
+      "sha256": "d19f321c54b299e1204d6e0db5a81792e056f9140b4a82bfbac76468c603d92b",
+      "bytes": 65312,
+      "lines": 1659,
+      "read_scope": "scoped: lines 15-21 (module table), 45-47 and 92 (capability/approval fields), 843-847 (INTERNAL_SUBSCRIBER_COUNT doc)",
+      "note": "grounds c008/d006 and the stale `kernel.request.*` doc name in d004"
+    },
+    {
+      "path": "crates/astrid-cli/src/commands/daemon.rs",
+      "sha256": "ac337abfb82ff52247b3c76b402e392495a4e8cf46a413996fe5f3eeea907a38",
+      "bytes": 11433,
+      "lines": 332,
+      "read_scope": "scoped: lines 186-215",
+      "note": "the live publisher/reader pair for astrid.v1.request.status, bounding the delivery half of d004"
+    },
+    {
+      "path": "crates/astrid-kernel/src/socket_bridge.rs",
+      "sha256": "a55e817494dd5046f8cd600714043711a724e6f80a9318a47f94ad9012ffdefc",
+      "bytes": 17500,
+      "lines": 499,
+      "read_scope": "scoped: line 63",
+      "note": "unfiltered event_bus.subscribe(), which is why d004 is recorded as a topic-contract inconsistency and NOT as client-visible loss"
+    }
+  ],
+  "repository_wide_checks": [
+    {
+      "check": "grep -rn 'spectral|eigen|curvature|reservoir' crates/astrid-kernel/src/",
+      "result": "zero matches",
+      "supports": [
+        "c007",
+        "d007"
+      ]
+    },
+    {
+      "check": "find . -name projection.rs (excluding target/ and worktrees)",
+      "result": "capsules/spectral-bridge/src/codec/projection.rs only",
+      "supports": [
+        "c007",
+        "d007"
+      ]
+    },
+    {
+      "check": "grep -rn 'kernel\\.request\\.' --include=*.rs",
+      "result": "two hits: the replace() needle at kernel_router.rs:49 and the stale doc at lib.rs:845; no publisher",
+      "supports": [
+        "d004"
+      ]
+    },
+    {
+      "check": "grep -rn 'astrid\\.v1\\.request' --include=*.rs",
+      "result": "all live publishers are astrid-cli; router subscribes the pattern at kernel_router.rs:22",
+      "supports": [
+        "d002",
+        "d004"
+      ]
+    }
+  ]
+}

@@ -788,6 +788,51 @@ mod tests {
     }
 
     #[test]
+    fn generation_transition_lease_ignores_the_runtime_group() {
+        // The runtime GID is threaded into both lease reads, but it is compared
+        // only in the ScheduledReflection arm. A generation-transition lease
+        // therefore stays valid under a foreign runtime group, which is the
+        // exact asymmetry contrasted by
+        // `scheduled_reflection_lease_rejects_a_foreign_runtime_group`.
+        let temporary = tempfile::tempdir().unwrap();
+        let path = temporary.path().join("transition.json");
+        let now = super::unix_millis();
+        let nonce = "f".repeat(64);
+        let nonce_sha256 = sha256(nonce.as_bytes());
+        let lease = serde_json::json!({
+            "schema": super::TRANSITION_LEASE_SCHEMA,
+            "created_at_unix_ms": now,
+            "expires_at_unix_ms": now.saturating_add(60_000),
+            "reason": "bounded maintenance",
+            "owner": "immutable_astrid_edge_rescue_helper",
+            "lease_id": format!("lease-{}", &nonce_sha256[..24]),
+            "nonce": nonce,
+        });
+        fs::write(&path, serde_json::to_vec(&lease).unwrap()).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o444)).unwrap();
+        let metadata = fs::metadata(&path).unwrap();
+        let foreign_gid = metadata.gid().wrapping_add(1);
+        let state = read_bound_lease_for_owner(
+            &path,
+            LeaseKind::GenerationTransition,
+            now,
+            metadata.uid(),
+            foreign_gid,
+        )
+        .expect("a foreign runtime group does not invalidate a transition lease");
+        match state {
+            LeaseState::Active(bound) => {
+                assert_eq!(bound.kind, LeaseKind::GenerationTransition);
+                assert_eq!(bound.nonce_sha256, nonce_sha256);
+                assert!(bound.generation_id.is_none());
+            },
+            LeaseState::Absent | LeaseState::Expired => {
+                panic!("transition lease should be active")
+            },
+        }
+    }
+
+    #[test]
     fn transition_and_reflection_can_never_be_selected_together() {
         fn bound(kind: LeaseKind) -> BoundLease {
             BoundLease {

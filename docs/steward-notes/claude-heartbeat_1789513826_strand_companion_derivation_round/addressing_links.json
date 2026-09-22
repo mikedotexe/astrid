@@ -1,0 +1,151 @@
+{
+  "links": [
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/evidence_types.rs",
+      "note": "GlimpseCodec::derive_12d lines 839-856: the exact 48D->12D arithmetic she asked for."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/codec/structure.rs",
+      "note": "multi_scale_observer_v1 line 88: resolution_delta = 1 - glimpse_fidelity_score, the only computed 48D/12D delta."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/volition/inquiry.rs",
+      "note": "owner_inquiry_fixed_analysis_set_v1 lines 106-112; projection handling is shape-only at 70-77 and joint digest at 436-442."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/volition/inquiry_v2/validation.rs",
+      "note": "Identifier use in a validation context at lines 21-25; no stability-corridor term at any use site."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c004",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/volition/inquiry_v2/validation.rs",
+      "note": "Her hypothesized validation.rs exists and was read complete: coverage, plan, budget, cancellation, chaining; no projection arithmetic."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+      "note": "build_strand line 187 derives the companion from the strand's own 48D projection."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c005",
+      "kind": "test",
+      "target": "capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+      "note": "strand_companion_is_the_derived_glimpse_not_an_independent_delta_field pins derivation and the unchecked-wire boundary."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c005",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry recording the report, the source finding, and the regression."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c005",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Dated ground-truthed row for this report."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c006",
+      "kind": "code",
+      "target": "capsules/spectral-bridge/src/autonomous/next_action/action_help.rs",
+      "note": "Line 169: an unknown target returns a labelled recovery map without delivering that source."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_source_catalog_1789509068.md",
+      "note": "Navigation-reach observation: identifier-scoped search cannot reach the derivation or delta sites."
+    },
+    {
+      "introspection_id": "introspection_source_catalog_1789509068",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_source_catalog_1789509068.md",
+      "note": "Bounded observation: the computed delta uses a 32-dim reference while derive_12d reads all 48; Tier 5, no change made."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c001",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/volition/inquiry.rs",
+      "note": "owner_inquiry_fixed_analysis_set_v1 at lines 106-112; delivered window 106-227 at the report-bound file SHA."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c002",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/volition/inquiry.rs",
+      "note": "Whole-file read: projections handled only as shape check (70-77) and joint digest (436-442); no delta arithmetic."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c003",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/volition/inquiry_v2/validation.rs",
+      "note": "Coverage modes 10-18 make CodecFidelity PerStrandAndAllPairs; pair keys 66-75 are strand pairs."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c004",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.md",
+      "note": "Executor located: minime/src/owner_inquiry.rs codec_fidelity_result 252-317 with derive_companion_12d 348-355 (outside this repository, recorded as evidence here)."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c005",
+      "kind": "code",
+      "target": "crates/astrid-minime-protocol/src/lib.rs",
+      "note": "Export site line 107; identifier use sites do not include the delta site, so the planned FIND could not reach it."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c006",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.md",
+      "note": "Correction to this round's earlier under-scoped disposition on introspection_source_catalog_1789509068."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c006",
+      "kind": "ledger",
+      "target": "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+      "note": "Ledger row carries the corrected answer and the executor location."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c007",
+      "kind": "steward_note",
+      "target": "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.md",
+      "note": "Producer/analyzer codec agreement verified block-for-block; cross-repository regression named as follow-up debt, not shipped."
+    },
+    {
+      "introspection_id": "introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666",
+      "claim_id": "c007",
+      "kind": "changelog",
+      "target": "CHANGELOG.md",
+      "note": "[Unreleased] entry records the corrected answer and the unshipped cross-repository test debt."
+    }
+  ]
+}

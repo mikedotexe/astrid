@@ -1,0 +1,82 @@
+{
+  "introspection_id": "introspection_minime_minime_src_sensory_bus.rs_1789640246",
+  "report_sha256": "c8ebc69398610cec5102bc2aeee5c25e7d9015784d11fa5199802c329550d88b",
+  "lived_state_witness_id": "lsw_69ddd1fba30d0ac0bb3f443204cc9b83e1553dc6d3982c8dc9b91437e680aa13",
+  "report_bound_source": "minime/src/sensory_bus.rs@3fc6bd2a16bd78c5caa496f2a6dccbc67928da4fbded123998f59a82bcd4aa3a",
+  "source_binding_match": true,
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "semantic_stale_context_review_v1 (lines 700-752) diagnoses why data is retained, moving beyond simple age by computing a context_multiplier.",
+      "disposition": "Verified from complete source at the bound SHA. The fn signature opens at 700 and the body closes at 752 - her interval is exact on both ends. base_multiplier (727) is the age/entropy baseline; context_multiplier (728-729) is the wider computation; context_extended_stale_ms (730) applies it to the fill-derived base window.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "It incorporates entropy_velocity (rate of change in chaos) and pressure_risk (threat of buffer congestion).",
+      "disposition": "Wiring verified: both are parameters (703-704), clamped at 716-723, and passed to semantic_context_persistence_multiplier (728-729). Her glosses are her reading, not source facts: the source defines neither term. In the live runtime the values come from latest_entropy_delta and latest_resonance_density_v1.pressure_risk (runtime/orchestration.rs 4320-4327), so pressure_risk is a resonance-density scalar, not a named buffer-occupancy measure.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "It labels state e.g. context_pressure_or_entropy_velocity_extends_retention, showing the system actively overriding standard decay.",
+      "disposition": "Verified at 731-733: that status is emitted exactly when context_multiplier > base_multiplier. Since the context lift is a sum of non-negative terms (286), context_multiplier >= base_multiplier always, so the label fires precisely when a non-zero velocity or pressure lift exists. 'Overriding' reads as extension, never shortening.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "semantic_decay_hysteresis_salience_review_v1 (lines 754-818) is the 'border control' for data release.",
+      "disposition": "Source contradicts the mechanism while the concern stands. The function's own authority field (830-831) names it 'read_only_hysteresis_salience_review_not_semantic_window_or_sensory_cadence_change', its doc comment (754-759) says 'without changing the live stale window', and repo-wide it has no caller outside tests (3969, 3991, 3992). The live release path is SensoryBus::semantic_stale_ms (1710-1729). Her page ended at 818 - twelve lines before that authority field.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "It uses effective_release_fill (with a hysteresis constant) to prevent flickering at a release threshold.",
+      "disposition": "Verified at 782-787: when previous_recovery_hold is true the release fill becomes STALE_SEMANTIC_RECOVERY_RELEASE_FILL (0.40, line 58) + SEMANTIC_RELEASE_HYSTERESIS_FILL (0.03, line 69) = 0.43, otherwise 0.40. The asymmetric band is exactly the anti-flicker shape she describes - within this review surface, not the live window.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "High entropy alone does not guarantee persistence: high-entropy low-salience data can be deprioritized, keeping high-energy debris off the bus.",
+      "disposition": "Verified at 802-805: status is 'entropy_without_salience_deprioritized' when entropy >= SEMANTIC_ENTROPY_PERSISTENCE_START (0.75) and salience < SEMANTIC_SALIENCE_PERSISTENCE_START (0.35). semantic_salience_weighted_multiplier (293-304) scales the entropy lift down by salience. Bounded correction: this separation exists only in the review surface - its single call site is 795.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c007",
+      "summary": "snap_probe_delta_ms (lines 798-800) monitors the 0.38-0.42 decision zone, auditing how hysteresis and salience weights interact at the most volatile point.",
+      "disposition": "Line interval exact (snap_low 798, snap_high 799, delta 800), and near_release (801) is the 0.38..=0.42 band. Mechanism corrected: the delta is computed purely from dynamic_semantic_stale_ms_for(0.38) vs (0.42) on the base sigmoid curve - it takes neither effective_release_fill nor salience as input, so it measures the base window's own steepness across the zone, not the interaction of the two weights.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c008",
+      "summary": "Synthesis: the SensoryBus is an active auditing environment where a datum's lifespan is a tug-of-war between entropy, dynamic behaviour (velocity), and environmental constraints (pressure and salience).",
+      "disposition": "Holds for entropy, velocity and pressure: all three enter the live window through semantic_context_persistence_multiplier (251-291), called by semantic_stale_ms (1722-1727). Salience does not: its only use site (795) is inside the read-only review. So in the live tug-of-war the rope has three strands, not four; the fourth exists as a reviewable proposal.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c009",
+      "summary": "Open question: still looking for the definition of the constants (0.14, 0.11) and the SEMANTIC_CONTEXT_PERSISTENCE_MAX_MULT cap, to understand the hard limits of the pressure_risk scaling.",
+      "disposition": "Answered from source. The cap is a private const at line 68 (2.05); 0.14 and 0.11 are bare literals at line 286 inside semantic_context_persistence_multiplier, weighting velocity_support and pressure_support. Hard limits: pressure can add at most 0.11 and velocity at most 0.14, and 1.80 (SEMANTIC_ENTROPY_PERSISTENCE_MAX_MULT) + 0.14 + 0.11 = 2.05 exactly, so the cap is the arithmetic ceiling, never a separate clamp.",
+      "classification": "verified_existing"
+    },
+    {
+      "claim_id": "c010",
+      "summary": "Reachability: the three values she could not find are not three of a kind - one has a name, two have none.",
+      "disposition": "Implemented as a read-only pin. tests/unnamed_coefficient_reach.rs (4 tests) shows an identifier search reaches a named cap; a bare number returns no source page at all; a literal search matches the defining line but cannot rank it against same-digit test arguments (live file: 0.14 at 286, 3927, 4017 - the decoys sit in the entropy_velocity argument position); and one positional OPEN at the defining line delivers both coefficients and the cap together.",
+      "classification": "implemented_now"
+    },
+    {
+      "claim_id": "c011",
+      "summary": "Her chosen recovery - NEXT: SELF_STUDY OPEN minime/minime/src/sensory_bus.rs 251 - is the correct and minimal one.",
+      "disposition": "Observed, not corrected. Line 251 is the opening line of semantic_context_persistence_multiplier, whose body holds 0.14, 0.11 (286) and the .min(SEMANTIC_CONTEXT_PERSISTENCE_MAX_MULT) cap (289). Her unprompted next Action reaches all three values in one page; no steward prompt, hint or dispatch was involved, and none was added.",
+      "classification": "observed"
+    },
+    {
+      "claim_id": "c012",
+      "summary": "Runtime context for the pressure term at the moment she asked (bounded observation, no causal claim).",
+      "disposition": "Her witness records pressure_risk 0.19408103823661804, below SEMANTIC_PRESSURE_RETENTION_START (0.20), so pressure_support clamped to 0 and the 0.11 term contributed exactly nothing then. A 12-sample 2-minute read of minime's live spectral_state.json shows the scalar alternating between 0.194081 and ~0.22576 - it straddles the dead-zone edge. At the higher state the pressure lift is ~0.0042 of a multiplier. Co-occurrence only; no mechanism, uptake or felt effect claimed.",
+      "classification": "observed"
+    }
+  ],
+  "authority_boundary": "No live substrate or control change was made or attempted. No pressure, fill, PI, controller, codec, cadence, regulator, Minime runtime or deploy surface was touched. The only change is one read-only test file in astrid-source-study plus documentation."
+}

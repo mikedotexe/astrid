@@ -385,4 +385,50 @@ mod tests {
         assert_eq!(name, "ListCapsules");
         assert_eq!(limit, None);
     }
+
+    /// Pins the whole management rate-limit table, one case per `KernelRequest`
+    /// variant. The dispatch arms in `handle_request` were read arm by arm from
+    /// outside this file, but `rate_limit_for_request` sits below that reading
+    /// window, so which of those commands are actually throttled was not
+    /// visible from the dispatch alone. Two facts worth holding still: the two
+    /// arms that currently answer "not yet implemented" (`InstallCapsule`,
+    /// `ApproveCapability`) are still throttled, and every read-only query is
+    /// deliberately unlimited.
+    ///
+    /// The inner `match` has no wildcard arm, so a new `KernelRequest` variant
+    /// cannot compile here until someone decides — and records — whether it is
+    /// rate limited.
+    #[test]
+    fn rate_limit_table_covers_every_request_variant() {
+        let cases = [
+            KernelRequest::InstallCapsule {
+                source: "example.capsule".to_string(),
+                workspace: false,
+            },
+            KernelRequest::ApproveCapability {
+                request_id: "req-1".to_string(),
+                signature: "sig-1".to_string(),
+            },
+            KernelRequest::ListCapsules,
+            KernelRequest::ReloadCapsules,
+            KernelRequest::GetCommands,
+            KernelRequest::GetCapsuleMetadata,
+            KernelRequest::Shutdown { reason: None },
+            KernelRequest::GetStatus,
+        ];
+
+        for req in cases {
+            let expected = match &req {
+                KernelRequest::InstallCapsule { .. } => ("InstallCapsule", Some(10)),
+                KernelRequest::ApproveCapability { .. } => ("ApproveCapability", Some(10)),
+                KernelRequest::ListCapsules => ("ListCapsules", None),
+                KernelRequest::ReloadCapsules => ("ReloadCapsules", Some(5)),
+                KernelRequest::GetCommands => ("GetCommands", None),
+                KernelRequest::GetCapsuleMetadata => ("GetCapsuleMetadata", None),
+                KernelRequest::Shutdown { .. } => ("Shutdown", Some(1)),
+                KernelRequest::GetStatus => ("GetStatus", None),
+            };
+            assert_eq!(rate_limit_for_request(&req), expected);
+        }
+    }
 }
