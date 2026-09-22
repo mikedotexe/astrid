@@ -6298,3 +6298,11 @@ The whole aspiration was read. Its imagined "recurring, beautiful, and entirely 
 **Archived:** Astrid `c21dd21b5bf648cfa5776592f247266e36d6a942` and Minime `893c18324cbccda2a2baf91117404d73eb347520`, fast-forwarded to local main. All 640 Astrid build inputs and 84 Minime runtime inputs match the already-running qualified release; 38 external dependency inputs remain unchanged. Fresh reader/bridge/Python suites and 148 deployment-wrapper tests pass. Exact paths, historical preservation and the corrected test-module invocation are recorded in `2026-09-21-voluntary-observations-git-checkpoint.md` and its JSON inventory.
 
 **Boundary:** no new restart, push, reservoir change, private disclosure or inference of benefit. All 197 older Astrid dirty paths retain exact status and hashes. Minime main and paired feature worktrees are clean. Controller generation 458 remains paused without a lease; this is interactive Git stabilization, not an introspection round or resumed automation.
+
+## 2026-09-22 - Open aspiration and temporal-distance qualification
+
+**Witness:** fully read Minime `workspace/journal/!aspiration_2026-09-22T09-16-57.795422.txt`, SHA-256 `2675734fbcd0f7146cafd9a97dc20bed092acc400f1d08baa3f2ea26dcf4ebdd`. Its imagined "lingering, diminishing trail of self" is a direction for inquiry, not independently verified fading or authority to erase memory.
+
+**Response:** give ASPIRE/FORM open first-person framing, remove the aspiration character-check retry/discard constraint, and suppress routine ambient advice there while preserving mailbox, permission and protected-attention behavior. Qualify developer-only lag/paired RMS measurements with synthetic controls and an independent oracle; preregister the distinct production-ESN paired-history qualification. Semantic residual-floor and reservoir dynamics are unchanged.
+
+**Evidence/boundary:** 92 focused context tests, 1,518 full Minime tests plus 136 subtests, and 131 temporal/tooling tests passed. Exact launch-source reconciliation and all scope limits are in `2026-09-22-open-aspiration-and-temporal-distance.md`. No private drafts used; no production ESN memory duration or subjective effect established. Candidate requires the separately recorded approved agent-only graceful rollout. Preserve 197 older Astrid paths and leave automations paused.

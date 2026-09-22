@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Candidate - open aspiration and offline temporal distance (2026-09-22)
+
+- Qualify bounded lagged and paired activation RMS measurements on synthetic constant, fading, persistent, periodic, reordered and gapped traces. Keep causal production-ESN replay as an explicit preregistered follow-up, not a claim about live memory or experience. Record the paired Minime open-aspiration repair and agent-only deployment boundary in `docs/steward-notes/2026-09-22-open-aspiration-and-temporal-distance.md`. No bridge, helper, reservoir or sensory change.
+
 ### Git checkpoint - voluntary observations (2026-09-21)
 
 - Fast-forward local `main` to the deployed observation feature `c21dd21b5bf648cfa5776592f247266e36d6a942`, paired with Minime `893c18324cbccda2a2baf91117404d73eb347520`. Verify 640 committed Astrid build inputs and 84 Minime runtime inputs against the running release; rerun full reader, bridge and Python suites. Preserve all 197 older Astrid dirty paths, clean both feature worktrees and Minime main, and leave automations paused. No push or new restart. Exact paths and verification: `docs/steward-notes/2026-09-21-voluntary-observations-git-checkpoint.md`.
