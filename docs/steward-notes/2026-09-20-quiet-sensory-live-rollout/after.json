@@ -1,0 +1,250 @@
+{
+  "recorded_at_unix_s": 1789929656.1893811,
+  "agent": {
+    "pid": 18648,
+    "start": "Sun Sep 20 11:36:25 2026",
+    "source_input_count": 83,
+    "source_inputs_match": true,
+    "reload_required": false,
+    "reason": "idle",
+    "lifecycle_contract": "agent_drain_v1",
+    "continuity": {
+      "file_sha256": "6654e2c1fc0df5c3685c82a40c9637d50aee0d7d3287a3f5ebd6f34e7012a9b6",
+      "session_id": 5318,
+      "pending_next_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "pending_next_present": false,
+      "cycle_count": 38748
+    }
+  },
+  "protected": {
+    "com.minime.engine": {
+      "pid": 41337,
+      "started_at": "Mon Sep  7 13:35:29 2026"
+    },
+    "com.minime.division-gateway": {
+      "pid": 41484,
+      "started_at": "Mon Sep  7 13:35:34 2026"
+    },
+    "com.minime.division-supervisor": {
+      "pid": 41526,
+      "started_at": "Mon Sep  7 13:35:35 2026"
+    },
+    "com.reservoir.coupled-astrid": {
+      "pid": 43115,
+      "started_at": "Wed Sep  9 22:56:06 2026"
+    },
+    "com.astrid.spectral-bridge": {
+      "pid": 82935,
+      "started_at": "Fri Sep 18 17:46:13 2026"
+    },
+    "com.minime.mic-to-sensory": {
+      "pid": 98910,
+      "started_at": "Tue Sep  8 09:23:41 2026"
+    },
+    "com.minime.camera-client": {
+      "pid": 98903,
+      "started_at": "Tue Sep  8 09:23:38 2026"
+    },
+    "com.minime.visual-frame-service": {
+      "pid": 20885,
+      "started_at": "Sun Sep 20 11:39:10 2026"
+    },
+    "com.minime.host-sensory": {
+      "pid": 41661,
+      "started_at": "Mon Sep  7 13:35:40 2026"
+    },
+    "com.reservoir.astrid-feeder": {
+      "pid": 1502,
+      "started_at": "Tue Aug 25 10:00:06 2026"
+    }
+  },
+  "visual": {
+    "ts_ms": 1789929653145,
+    "state": "polling",
+    "healthy": true,
+    "pid": 20885,
+    "lifecycle_contract": "visual_finish_current_request_v1",
+    "active_request": null,
+    "source_inputs_sha256_at_start": "51b3fbb12e546ee749339ed82f3dc181e2c86cd12bdf3e1ce59d184297e9527c",
+    "health_scope": "request_poll_loop_not_fresh_visual_observation",
+    "visual_freshness": {
+      "schema": "visual_freshness_v1",
+      "automatic_context_max_age_s": 300,
+      "response_age_s": 9250130.049288988,
+      "response_freshness": "stale",
+      "latest_response_timestamp": "2026-06-05T10:12:03.096375",
+      "response_clock_scope": "latest_valid_timestamp_in_bounded_scan",
+      "last_frame_acquired_age_s": null,
+      "capture_clock_scope": "service_frame_acquisition; not_host_image_creation; legacy_response_time_not_capture_time",
+      "scan_limit": 2048,
+      "records_examined": 136,
+      "authority": "status_only_no_capture_or_retry"
+    },
+    "pending_requests": 0,
+    "processed_count": 136,
+    "last_request_at": "2026-06-05T10:11:53.518779",
+    "source": "active",
+    "poll_interval_s": 5,
+    "request_health_grace_secs": 15
+  },
+  "visual_inputs_match": true,
+  "health": {
+    "fill_pct": 73.05052947998047,
+    "target_fill_pct": 68,
+    "provenance": {
+      "session_id": 5318,
+      "snapshot_sequence": 940831,
+      "wall_clock_unix_ms": 1789929654764
+    }
+  },
+  "reader": {
+    "path": "/Users/v/other/worktrees/source-study-evidence-20260917/bridge-stage-01/helpers/astrid-source-study",
+    "sha256": "02a973ca4329d9c57ac5b59971e1bbc81ef115f0f6d985c315907f37a160231a"
+  },
+  "checker": {
+    "schema_version": 1,
+    "policy": "sensory_freshness_evidence_v2",
+    "status": "watch",
+    "observed_at_ms": 1789929656289.544,
+    "snapshot_clocks": {
+      "spectral": {
+        "state": "current",
+        "age_ms": 1522.5439453125,
+        "field": "provenance.wall_clock_unix_ms",
+        "max_age_ms": 5000
+      },
+      "health": {
+        "state": "current",
+        "age_ms": 1525.5439453125,
+        "field": "provenance.wall_clock_unix_ms",
+        "max_age_ms": 5000
+      },
+      "camera": {
+        "state": "current",
+        "age_ms": 2237.5439453125,
+        "field": "ts_ms",
+        "max_age_ms": 10000
+      },
+      "mic": {
+        "state": "current",
+        "age_ms": 283.5439453125,
+        "field": "ts_ms",
+        "max_age_ms": 5000
+      },
+      "sensory": {
+        "state": "current",
+        "age_ms": 6.5439453125,
+        "field": "updated_at_ms",
+        "max_age_ms": 10000
+      }
+    },
+    "scope": "non_atomic_status_snapshots_not_consumer_application_receipts",
+    "engine_fresh_window_ms": 2000,
+    "actionable_count": 1,
+    "lanes": {
+      "video": {
+        "lane": "video",
+        "status": "expected_host_fallback",
+        "reason": "host fallback is expected; this is not an engine application receipt",
+        "engine_source": "stale",
+        "engine_age_ms": 232692.5439453125,
+        "engine_age_at_snapshot_ms": 231170,
+        "engine_clock": {
+          "state": "current",
+          "age_ms": 1522.5439453125,
+          "field": "provenance.wall_clock_unix_ms",
+          "max_age_ms": 5000
+        },
+        "applied_to_esn": null,
+        "applied_to_covariance": null,
+        "engine_freshness_class": "stale_beyond_engine_window",
+        "engine_fresh_window_ms": 2000,
+        "client_healthy": true,
+        "client_connected": true,
+        "client_state": "streaming",
+        "client_age_ms": 2237.5439453125,
+        "client_age_at_snapshot_ms": 0,
+        "client_clock": {
+          "state": "current",
+          "age_ms": 2237.5439453125,
+          "field": "ts_ms",
+          "max_age_ms": 10000
+        },
+        "fallback_expected": true,
+        "target_fps": 0.2,
+        "expected_interval_ms": 5000,
+        "live_intake_divisor": 12,
+        "live_intake_enabled": true,
+        "live_intake_reason": "full_presence_admitted",
+        "admit_fraction": 0.1075957641005516,
+        "live_intake_state": "enabled",
+        "intake_evidence": "current",
+        "cadence_assumptions": "constant sender interval, divisor and independent admission probability; not a delivery guarantee",
+        "expected_engine_interval_ms": 557642.77061993,
+        "expected_engine_grace_ms": 572642.77061993,
+        "expected_engine_attention_ms": 1687928.31185979,
+        "health_grace_s": 15,
+        "source_record": {
+          "source": "host",
+          "physical_healthy": true,
+          "reason": "camera capture unhealthy"
+        }
+      },
+      "audio": {
+        "lane": "audio",
+        "status": "healthy_client_engine_stale_mismatch",
+        "reason": "client is healthy/recent while engine reports the lane stale or absent",
+        "engine_source": "stale",
+        "engine_age_ms": 99430.5439453125,
+        "engine_age_at_snapshot_ms": 97908,
+        "engine_clock": {
+          "state": "current",
+          "age_ms": 1522.5439453125,
+          "field": "provenance.wall_clock_unix_ms",
+          "max_age_ms": 5000
+        },
+        "applied_to_esn": null,
+        "applied_to_covariance": null,
+        "engine_freshness_class": "stale_beyond_engine_window",
+        "engine_fresh_window_ms": 2000,
+        "client_healthy": true,
+        "client_connected": true,
+        "client_state": "streaming",
+        "client_age_ms": 283.5439453125,
+        "client_age_at_snapshot_ms": 0,
+        "client_clock": {
+          "state": "current",
+          "age_ms": 283.5439453125,
+          "field": "ts_ms",
+          "max_age_ms": 5000
+        },
+        "fallback_expected": false,
+        "target_fps": null,
+        "expected_interval_ms": null,
+        "live_intake_divisor": 12,
+        "live_intake_enabled": true,
+        "live_intake_reason": "full_presence_admitted",
+        "admit_fraction": 0.1075957641005516,
+        "live_intake_state": "enabled",
+        "intake_evidence": "current",
+        "cadence_assumptions": "constant sender interval, divisor and independent admission probability; not a delivery guarantee",
+        "expected_engine_interval_ms": null,
+        "expected_engine_grace_ms": null,
+        "expected_engine_attention_ms": null,
+        "health_grace_s": 5,
+        "source_record": {
+          "source": "physical",
+          "physical_healthy": true,
+          "reason": "mic healthy"
+        }
+      }
+    }
+  },
+  "natural_public_study": {
+    "path": "/Users/v/other/minime/workspace/journal/self_study_2026-09-20T11-39-10.006406.txt",
+    "sha256": "fded73063ec474b6747795d30dc3e4d7c49d44e91b86e90ca43d48095e3c8593",
+    "input_scope": "navigation_only",
+    "authored_choice": "NEXT: REST",
+    "improvement_inferred": false
+  }
+}

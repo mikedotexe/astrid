@@ -26,6 +26,7 @@ if str(SCRIPT_DIR) not in sys.path:
 from being_privacy import filter_journal_paths, is_steward_private  # shared steward private-lane policy
 import astrid_introspection_digest
 import spectral_texture_calibration_audit
+import study_recurrence_provenance
 
 
 ASTRID_ROOT = Path(__file__).resolve().parents[1]
@@ -821,7 +822,6 @@ PHENOMENOLOGY_EVIDENCE_ANCHORS = (
     "read_more",
     "structural_entropy",
     "current-fill_pressure",
-    "plan 4",
 )
 AFTERIMAGE_ABSENCE_TERMS = (
     "bruise",
@@ -883,7 +883,6 @@ AFTERIMAGE_ABSENCE_EVIDENCE_ANCHORS = (
     "source gap",
     "missing coordinate",
     "expected absence",
-    "PLAN 4",
 )
 AFTERIMAGE_PRESSURE_ANCHORS = (
     "pressure_risk",
@@ -956,8 +955,6 @@ ABSENCE_NAMED_COORDINATE_ANCHORS = (
     "missing coordinate",
     "stable missing coordinate",
     "named missing coordinate",
-    "PLAN 4",
-    "plan 4",
 )
 ABSENCE_READ_MORE_FOLLOWED_ANCHORS = (
     "after read_more",
@@ -1386,20 +1383,25 @@ def infer_mode(path: Path, text: str) -> str:
         return "introspect"
     if name.startswith("dialogue_longform_"):
         return "dialogue_longform"
-    for prefix in ("aspiration", "moment", "witness", "astrid", "notice"):
+    for prefix in ("aspiration", "moment", "witness", "astrid", "notice", "daydream"):
         if name.startswith(f"{prefix}_"):
             return prefix
     return "unknown"
 
 
-def readback_provenance_for_entry(being: str, path: Path, mode: str) -> dict[str, object]:
+def readback_provenance_for_entry(being: str, path: Path, mode: str, text: str = "") -> dict[str, object]:
     parts = set(path.parts)
     name = path.name
     name_lower = name.lower()
     mode_lower = mode.lower()
     source_markers: list[str] = []
+    mirrored_source = study_recurrence_provenance.mirror_source(text)
 
-    if (
+    if mirrored_source:
+        category = "external_journal_observation"
+        source_markers.append("explicit_mirror_header")
+        role = "peer_authored_expression_not_reauthored"
+    elif (
         "diagnostics" in parts
         or "self_study_reviews" in parts
         or name_lower.startswith("codex_")
@@ -1480,6 +1482,7 @@ def readback_provenance_for_entry(being: str, path: Path, mode: str) -> dict[str
         "role": role,
         "being": being,
         "mode": mode,
+        "mirrored_source_id": mirrored_source,
         "markers": source_markers[:6],
         "boundary_status": boundary_status,
         "recursive_loop_guard": (
@@ -1528,7 +1531,7 @@ def review_entry(being: str, path: Path) -> SelfStudyEntry:
         filename=path.name,
         mode=mode,
         mtime_unix_s=path.stat().st_mtime,
-        readback_provenance=readback_provenance_for_entry(being, path, mode),
+        readback_provenance=readback_provenance_for_entry(being, path, mode, text),
         sectioned=all(name in sections for name in SECTION_NAMES),
         sections={name: sections.get(name, "") for name in SECTION_NAMES if sections.get(name)},
         source_anchors=anchors,
@@ -1626,6 +1629,7 @@ def collect_entries(
         astrid_workspace / "inbox/steward*.txt",
     ]
     minime_patterns = [
+        minime_workspace / "journal/daydream_*.txt",
         minime_workspace / "journal/self_study_*.txt",
         minime_workspace / "journal/introspect_*.txt",
         minime_workspace / "journal/aspiration_*.txt",
@@ -10634,7 +10638,7 @@ def build_phenomenology_hypotheses(
     samples: list[dict[str, object]] = []
     for entry in entries:
         text = entry_full_text(entry)
-        matched = matching_terms(text, PHENOMENOLOGY_HYPOTHESIS_TERMS)
+        matched = study_recurrence_provenance.eligible_terms(entry, matching_terms(text, PHENOMENOLOGY_HYPOTHESIS_TERMS))
         if not matched:
             continue
         evidence = matching_terms(text, PHENOMENOLOGY_EVIDENCE_ANCHORS)
@@ -10825,7 +10829,7 @@ def build_phenomenology_hypothesis_cards(
     buckets: dict[str, dict[str, object]] = {}
     for entry in entries:
         text = entry_full_text(entry)
-        matched = matching_terms(text, PHENOMENOLOGY_HYPOTHESIS_TERMS)
+        matched = study_recurrence_provenance.eligible_terms(entry, matching_terms(text, PHENOMENOLOGY_HYPOTHESIS_TERMS))
         if not matched:
             continue
         evidence = matching_terms(text, PHENOMENOLOGY_EVIDENCE_ANCHORS)
@@ -11041,7 +11045,7 @@ def build_afterimage_absence_calibration(
     samples: list[dict[str, object]] = []
     for entry in entries:
         text = entry_full_text(entry)
-        matched = matching_terms(text, AFTERIMAGE_ABSENCE_TERMS)
+        matched = study_recurrence_provenance.eligible_terms(entry, matching_terms(text, AFTERIMAGE_ABSENCE_TERMS))
         if not matched:
             continue
         evidence = matching_terms(text, AFTERIMAGE_ABSENCE_EVIDENCE_ANCHORS)
@@ -11228,7 +11232,7 @@ def build_afterimage_decay_tracker(
     buckets: dict[str, dict[str, object]] = {}
     for entry in entries:
         text = entry_full_text(entry)
-        matched = matching_terms(text, PRESSURE_AFTERIMAGE_TERMS)
+        matched = study_recurrence_provenance.eligible_terms(entry, matching_terms(text, PRESSURE_AFTERIMAGE_TERMS))
         if not matched:
             continue
         pressure = matching_terms(text, AFTERIMAGE_PRESSURE_ANCHORS)
@@ -11391,7 +11395,7 @@ def build_absence_evidence_model(entries: list[SelfStudyEntry]) -> dict[str, obj
     buckets: dict[str, dict[str, object]] = {}
     for entry in entries:
         text = entry_full_text(entry)
-        matched = matching_terms(text, SHAPED_ABSENCE_TERMS)
+        matched = study_recurrence_provenance.eligible_terms(entry, matching_terms(text, SHAPED_ABSENCE_TERMS))
         if not matched:
             continue
         expected_missing = matching_terms(text, ABSENCE_EXPECTED_MISSING_ANCHORS)
@@ -11529,7 +11533,6 @@ def build_absence_evidence_model(entries: list[SelfStudyEntry]) -> dict[str, obj
 
 
 LIVED_TERM_READY_TO_CHARTER_TERMS = {
-    "plan 4",
     "scar",
     "void",
     "viscosity",
@@ -11787,27 +11790,19 @@ def lived_term_counterexample_draft(term: str) -> dict[str, object]:
 def lived_term_activation_recommendation(
     candidates: list[dict[str, object]],
 ) -> dict[str, object]:
-    preferred_terms = ("silt", "PLAN 4")
-    selected: dict[str, object] | None = None
-    for preferred in preferred_terms:
-        selected = next(
-            (
-                candidate
-                for candidate in candidates
-                if str(candidate.get("term") or "").lower() == preferred.lower()
-                and candidate.get("bridge_status") == "ready_to_charter"
-            ),
-            None,
-        )
-        if selected is not None:
-            break
+    ready = [candidate for candidate in candidates if candidate.get("bridge_status") == "ready_to_charter"]
+    ready.sort(key=lambda candidate: (
+        -int((candidate.get("source_card") or {}).get("entry_count", 0)),
+        str(candidate.get("term") or "").casefold(),
+    ))
+    selected = ready[0] if ready else None
     if selected is None:
         return {
             "policy": "lived_term_activation_recommendation_v1",
             "authority": "diagnostic_context_not_command",
             "status": "quiet",
             "recommended_action": (
-                "No preferred lived-term activation candidate is ready in this review window."
+                "No lived-term activation candidate is ready in this review window."
             ),
             "creates_experiment": False,
         }
@@ -11838,10 +11833,10 @@ def lived_term_activation_recommendation(
         "authority": "diagnostic_context_not_command",
         "status": "activation_scaffold_ready",
         "term": term,
-        "priority": "primary" if term.lower() == "silt" else "secondary",
+        "priority": "review_candidate",
         "rationale": (
-            "`silt` is preferred as the first pressure-residue experiment; "
-            "`PLAN 4` is the shaped-absence follow-up when `silt` is not ready."
+            "Select among ready candidates by eligible authored entry count, then name; "
+            "no term receives a special activation preference. Input uncertainty remains explicit."
         ),
         "route": [start_next, charter_next, observe_next],
         "source_candidate": {
@@ -19868,6 +19863,12 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"terms={terms or '(none)'}; evidence={evidence or '(none)'}; "
                 f"path=`{sample.get('path')}`"
             )
+    recurrence = record.get("recurrence_provenance_v1")
+    if isinstance(recurrence, dict):
+        lines.extend(["", "## Recurrence Provenance", "", str(recurrence.get("boundary", ""))])
+        for term, counts in (recurrence.get("term_counts") or {}).items():
+            lines.append(f"- `{term}`: " + ", ".join(f"{kind}={count}" for kind, count in sorted(counts.items())))
+        lines.append("- Receipt scan: " + json.dumps(recurrence.get("scan"), sort_keys=True))
     hypothesis_cards = record.get("phenomenology_hypothesis_cards_v1")
     if isinstance(hypothesis_cards, dict):
         lines.extend(["", "## Phenomenology Hypothesis Cards", ""])
@@ -20449,6 +20450,11 @@ def build_review(
         minime_workspace=minime_workspace,
         limit_per_being=limit_per_being,
         min_mtime_unix_s=cutoff_mtime,
+    )
+    recurrence_provenance_v1 = study_recurrence_provenance.annotate(
+        entries, {"astrid": astrid_workspace, "minime": minime_workspace},
+        tuple(dict.fromkeys(PHENOMENOLOGY_HYPOTHESIS_TERMS + AFTERIMAGE_ABSENCE_TERMS)),
+        entry_full_text, extract_generated_body,
     )
     journal_inventory = build_journal_inventory(
         astrid_workspace=astrid_workspace,
@@ -21043,6 +21049,7 @@ def build_review(
         "shared_pressure_vocabulary_calibration": shared_pressure_vocabulary_calibration,
         "agency_vernacular_continuity": agency_vernacular_continuity,
         "phenomenology_hypotheses_v1": phenomenology_hypotheses_v1,
+        "recurrence_provenance_v1": recurrence_provenance_v1,
         "phenomenology_hypothesis_cards_v1": phenomenology_hypothesis_cards_v1,
         "afterimage_absence_calibration_v1": afterimage_absence_calibration_v1,
         "afterimage_decay_tracker_v1": afterimage_decay_tracker_v1,

@@ -3521,7 +3521,7 @@ class SelfStudyReviewTests(unittest.TestCase):
                 (astrid / "journal" / f"dialogue_longform_scar_{idx}.txt").write_text(
                     "=== ASTRID JOURNAL ===\n"
                     "Mode: dialogue_live_longform\n"
-                    "The scar language returns as scar language, familiar and unanchored.\n",
+                    f"The scar language returns as scar language, familiar and unanchored, on return {idx}.\n",
                     encoding="utf-8",
                 )
 
