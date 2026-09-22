@@ -336,6 +336,27 @@ fn handle_next_action_with_author(
             .with_stage_visibility("blocked", "protected_summary");
     }
 
+    match astrid_source_study::observation_presentation_requested(&original) {
+        Ok(Some(false)) => {
+            let result = (|| -> anyhow::Result<()> {
+                let reader = super::activity_focus::reader()?;
+                let operation = ctx.operation_id.ok_or_else(|| anyhow::anyhow!("observation requires durable action identity"))?;
+                super::activity_focus::store_observation(&reader, &original, operation)?;
+                Ok(())
+            })();
+            // Exact private receipts stay in the owner store, never ambient file listings.
+            return match result {
+                Ok(()) => NextActionOutcome::handled("private_writing", "Observation operation retained in its owner store; no generation or public entry.")
+                    .with_stage_visibility("local_state", "protected_summary"),
+                Err(_) => NextActionOutcome::blocked("private_writing", "Observation operation was not completed; private state preserved. Inspect WRITE OBSERVE status explicitly.")
+                    .with_stage_visibility("blocked", "protected_summary"),
+            };
+        },
+        Err(_) => return NextActionOutcome::blocked("private_writing", "Invalid typed observation request; no model generation or public entry.")
+            .with_stage_visibility("blocked", "protected_summary"),
+        _ => {},
+    }
+
     if let Some(result) = action_continuity::handle_thread_next_action(
         ctx.db,
         base_action.as_str(),

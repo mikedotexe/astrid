@@ -3,10 +3,26 @@ use crate::{digest, store::completion_text};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
+/// Withhold private observation payloads from general diagnostics, without changing execution bytes.
+#[must_use]
+pub fn diagnostic_action(text: &str) -> &str {
+    if text.trim_start().starts_with("WRITE OBSERVE ") {
+        "WRITE OBSERVE [private payload withheld]"
+    } else {
+        text
+    }
+}
+
 /// Identify an opaque typed payload; this does not validate or authorize it.
 #[must_use]
 pub fn is_geometry_action(text: &str) -> bool {
-    text.trim_start().starts_with("SELF_STUDY GEOMETRY ")
+    [
+        "SELF_STUDY GEOMETRY ",
+        "SELF_STUDY OBSERVE ",
+        "WRITE OBSERVE ",
+    ]
+    .iter()
+    .any(|prefix| text.trim_start().starts_with(prefix))
 }
 
 /// Indices of unquoted top-level lines. Unclosed fences remain data through EOF.

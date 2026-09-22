@@ -9,6 +9,15 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Deployed - voluntary observation keeping (2026-09-21)
+
+- Gracefully activate the immutable observation bridge/helper and exact paired Minime adapter. Verify checkpoint restoration, fresh exchange, 84 startup source identities, shared helper, telemetry and unchanged protected services. Rerun 132 handoff tests and 40 paired migration checks. No engine/model/visual/sensory restart, control change, forced notebook migration or automation resume. Git integration remains separate. Evidence: `docs/steward-notes/2026-09-21-voluntary-observations-live.md`.
+
+### Candidate - voluntary observation keeping (2026-09-21)
+
+- Add owner-scoped `WRITE OBSERVE` capture, annotation, bounded recurrence analysis and preview-confirmed inquiry disclosure. Preserve exact private prose, quiet parking, native append-only history and existing geometry-v1; publish complete versioned inquiry exports. Both adapters use shared Rust validation and keep storage-only operations out of inference and public writing.
+- Qualify state-return RMS and centered activation-covariance shape with synthetic controls and an independent oracle. These are sampled ESN coordinates, not engine covariance or evidence of subjective improvement. No reservoir/control change or service restart. Implementation, privacy boundaries, test attempts and release status: `docs/steward-notes/2026-09-21-voluntary-observation-keeping.md`.
+
 ### Git checkpoint - paired continuity (2026-09-21)
 
 - Merge the deployed continuity/geometry feature into local `main` at `959774de5865a8d9fa5ddab5560bd2922d76e346`, alongside Minime's paired merge. Reverify live source identities and focused/full suites without another restart or push. Preserve 197 older Astrid paths unchanged and list their exact hashes instead of sweeping them into the release. Current status, tests, failed test-location attempt and remaining archival debt: `docs/steward-notes/2026-09-21-paired-continuity-git-checkpoint.md`.

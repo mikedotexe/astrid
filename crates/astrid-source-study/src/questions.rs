@@ -4,6 +4,8 @@ use crate::notebook::Notebook;
 use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt::Write as _};
+#[path = "question_observations.rs"]
+mod observations;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum QuestionCommand {
@@ -67,6 +69,8 @@ struct Inquiry {
     sources: Vec<Reference>,
     #[serde(default)]
     geometry: crate::geometry::History,
+    #[serde(default)]
+    observations: crate::observations::History,
 }
 #[derive(Serialize, Deserialize)]
 struct Reference {
@@ -86,6 +90,7 @@ impl Questions {
     pub(crate) fn validate_geometry(&self) -> Result<()> {
         for inquiry in self.entries.values() {
             inquiry.geometry.validate()?;
+            inquiry.observations.validate(false)?;
         }
         Ok(())
     }
@@ -103,12 +108,17 @@ impl Questions {
             &inquiry.sources,
         ))?);
         // An empty additive family must not invalidate existing focus/return references.
-        if inquiry.geometry.records.is_empty() {
-            return Ok(authored);
+        let prior = if inquiry.geometry.records.is_empty() {
+            authored
+        } else {
+            crate::digest(serde_json::to_vec(&(authored, &inquiry.geometry))?)
+        };
+        if inquiry.observations.records.is_empty() {
+            return Ok(prior);
         }
         Ok(crate::digest(serde_json::to_vec(&(
-            authored,
-            &inquiry.geometry,
+            prior,
+            &inquiry.observations,
         ))?))
     }
     pub(crate) fn apply(
@@ -148,6 +158,7 @@ impl Questions {
                         notebook: fresh.clone(),
                         sources: Vec::new(),
                         geometry: crate::geometry::History::default(),
+                        observations: crate::observations::History::default(),
                     },
                 );
                 self.active = Some(id);

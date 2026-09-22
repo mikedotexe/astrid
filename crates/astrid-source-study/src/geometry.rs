@@ -88,7 +88,7 @@ pub(crate) enum Entry {
     },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Snapshot {
     pub source_sha256: String,
@@ -98,9 +98,21 @@ pub(crate) struct Snapshot {
     pub scope: String,
     pub identity: String,
     pub frames: Vec<Frame>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quality: Option<RecordingQuality>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct RecordingQuality {
+    pub recorder_policy: String,
+    pub source_frame_count: usize,
+    pub nominal_sample_interval_ms: u64,
+    pub source_retained_frame_limit: usize,
+    pub sanitized_frame_count: usize,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Frame {
     pub t_ms: u64,
     pub wall_clock_unix_ms: u64,
@@ -130,8 +142,15 @@ struct Summary {
 
 impl Snapshot {
     pub fn capture(root: &Path, seconds: u64, now: u64) -> Result<Self> {
-        use std::io::Read as _;
         ensure!((1..=60).contains(&seconds), "choose 1 through 60 seconds");
+        let mut snapshot = Self::capture_observation(root, seconds, now)?;
+        snapshot.quality = None; // Preserve the geometry-v1 capture/export contract.
+        Ok(snapshot)
+    }
+
+    pub(crate) fn capture_observation(root: &Path, seconds: u64, now: u64) -> Result<Self> {
+        use std::io::Read as _;
+        ensure!((1..=180).contains(&seconds), "choose 1 through 180 seconds");
         let root = root.canonicalize()?;
         let path = root.join("workspace/runtime/esn_activation_trace_v1.json");
         ensure!(
@@ -165,6 +184,13 @@ impl Snapshot {
                 .all(|f| f.summary.finite_fraction.to_bits() == 1.0_f64.to_bits()),
             "sanitized/nonfinite source is not measured geometry"
         );
+        let quality = RecordingQuality {
+            recorder_policy: trace.policy.clone(),
+            source_frame_count: trace.frames.len(),
+            nominal_sample_interval_ms: 1000,
+            source_retained_frame_limit: 180,
+            sanitized_frame_count: 0,
+        };
         let frames: Vec<_> = trace.frames.into_iter().map(|f| f.frame).collect();
         validate_frames(&frames)?;
         let last = frames.last().context("empty recorder")?;
@@ -185,8 +211,9 @@ impl Snapshot {
             scope: "native_esn_128_activations".into(),
             identity: "boot_and_node_layout_unverified".into(),
             frames: frames.into_iter().filter(|f| f.t_ms >= cutoff).collect(),
+            quality: Some(quality),
         };
-        snapshot.validate()?;
+        snapshot.validate_observation()?;
         Ok(snapshot)
     }
 
@@ -194,6 +221,24 @@ impl Snapshot {
         ensure!(
             (1..=60).contains(&self.requested_seconds) && (1..=61).contains(&self.frames.len()),
             "invalid frozen interval bounds"
+        );
+        self.validate_observation()
+    }
+
+    pub(crate) fn validate_observation(&self) -> Result<()> {
+        if let Some(quality) = &self.quality {
+            ensure!(
+                quality.recorder_policy == "esn_activation_trace_v1"
+                    && quality.nominal_sample_interval_ms == 1000
+                    && quality.source_retained_frame_limit == 180
+                    && quality.sanitized_frame_count == 0
+                    && (self.frames.len()..=180).contains(&quality.source_frame_count),
+                "invalid frozen recorder quality"
+            );
+        }
+        ensure!(
+            (1..=180).contains(&self.requested_seconds) && (1..=180).contains(&self.frames.len()),
+            "invalid observation interval bounds"
         );
         ensure!(
             self.scope == "native_esn_128_activations"

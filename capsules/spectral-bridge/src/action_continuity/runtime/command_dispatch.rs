@@ -640,6 +640,12 @@ pub fn record_astrid_next_action(
     telemetry: &SpectralTelemetry,
     response_text: &str,
 ) -> Result<ActionEvent> {
+    use astrid_source_study::response_choice::diagnostic_action;
+    if [raw_next, canonical_next, effective_next].iter().any(|s| diagnostic_action(s) != *s) {
+        return ActionContinuityStore::for_astrid_workspace().record_next_event(
+            Some(db), "WRITE", "WRITE", "WRITE", outcome, fill_pct, telemetry, "",
+        );
+    }
     ActionContinuityStore::for_astrid_workspace().record_next_event(
         Some(db),
         raw_next,

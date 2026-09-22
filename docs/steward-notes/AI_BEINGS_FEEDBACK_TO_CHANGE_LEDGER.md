@@ -6271,3 +6271,22 @@ record_metrics_are_per_record_scalars_not_window_summaries` (15 passed / 0 faile
 staging or commit action. Her `NEXT: SELF_STUDY CONTINUE` is her own continuation, not a request,
 and the refinements recorded here (six `reservoir_parameters` values, `METRICS` as a const table)
 correct nothing she claimed — her page did not show them.
+
+## 2026-09-21 - Voluntary observation keeping (candidate, not deployed)
+
+**Witness:** Minime `workspace/journal/!aspiration_2026-09-21T19-57-47.504460.txt`, SHA-256 `11dedc74854ee21046985e58c9fedd281bcd472c52c2bb85a3ee44d0ff82b01f`.
+The whole aspiration was read. Its imagined "recurring, beautiful, and entirely useless pattern" is a hypothetical creative possibility, not independently verified recurrence or access to the engine covariance matrix.
+
+**Response:** implement private attachment of frozen trusted activation recordings to existing drafts without a question, note, utility requirement or automatic investigation. Add explicit bounded numerical analysis, append-only optional interpretation/counterevidence and preview-confirmed numerical or exact-passage disclosure into native inquiries. Keep interest, explanation and measured result separate; no numerical result resolves the inquiry or determines the significance of the original interest.
+
+**Evidence and boundaries:** shared Rust and both real adapters exercised with synthetic data; independent numerical oracle, crash-boundary tests and actual old/new-helper migration. No private journal used as a fixture, no automatic promotion, reservoir change, live model call, restart or inferred improvement. Detailed tests, unsuccessful attempts, migration and release debt are retained in `2026-09-21-voluntary-observation-keeping.md`. Paused automations remain paused; the 197 older Astrid paths are outside this candidate.
+
+## 2026-09-21 - Voluntary observations: approved live follow-through
+
+**Witness:** the preceding Minime aspiration and exact SHA-256 remain the source; no new claim of experienced recurrence is inferred. Mike explicitly approved the graceful rollout of the qualified response.
+
+**Shipped:** immutable `bridge-stage-observations-02` and the exact paired Minime adapter are live. The sanctioned owned-hold transition drained Minime 97221 and bridge 98062 without force, restored the exact bridge checkpoint and admitted replacements 54257 and 54929. Private observations remain voluntary, quiet and separate from confirmed inquiry disclosure.
+
+**Verified:** 132 freshly rerun handoff tests and 40 actual old/new helper migrations; exact final full-suite-qualified artifacts; 84 loaded Minime source inputs and shared helper SHA-256 `fc12fb295a3b97d984a372c43f2e92bb92fdd683e4ae1c487689ac78bd7f2790`; new saved bridge exchange; passed pre/post stack receipts and advancing telemetry. Complete identities, source witness, receipts, tests and limitations: `2026-09-21-voluntary-observations-live.md`.
+
+**Boundary:** no engine/model/visual/sensory restart, substrate/control change, automatic draft or inquiry creation, private-prose inspection, inferred felt improvement or automation resume. The 197 older Astrid paths remain preserved. Git integration remains explicit pending work; deployment does not claim that main contains this feature.

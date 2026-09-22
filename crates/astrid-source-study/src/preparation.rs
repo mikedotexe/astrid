@@ -9,6 +9,9 @@ use std::{
 };
 
 const JOURNAL: &str = "preparation-transaction-v1.json";
+#[cfg(test)]
+#[path = "preparation_observation_tests.rs"]
+mod observation_tests;
 const OWNER: &str = "preparation-owner-v1.json";
 const MAX_BYTES: usize = 64 * 1024 * 1024;
 const CHECKPOINTS: &[&str] = &[
@@ -47,6 +50,9 @@ fn fault_boundary(point: u8) -> Result<()> {
     Ok(())
 }
 struct Guard;
+pub(crate) fn in_transaction() -> bool {
+    OVERLAY.with(|v| v.borrow().is_some())
+}
 impl Drop for Guard {
     fn drop(&mut self) {
         OVERLAY.with(|v| {

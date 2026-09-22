@@ -4811,7 +4811,7 @@ pub fn spawn_autonomous_loop(
                         .filter(|_| finish_recovery.is_none());
                     if let Some(next_action) = selected_next_action {
                         let canonical_next_action = canonicalize_next_action_text(next_action);
-                        info!("Astrid chose NEXT: {}", canonical_next_action);
+                        info!("Astrid chose NEXT: {}", astrid_source_study::response_choice::diagnostic_action(&canonical_next_action));
                         let (volition_start, volition_block_reason) =
                             match volition::begin_astrid_next(
                                 &response_text,
@@ -4826,7 +4826,7 @@ pub fn spawn_autonomous_loop(
                                 Err(error) => {
                                     info!(
                                         mode = mode_name,
-                                        action = canonical_next_action,
+                                        action = astrid_source_study::response_choice::diagnostic_action(&canonical_next_action),
                                         "volition provenance unavailable; action blocked rather than attributed to Astrid: {error}"
                                     );
                                     (
@@ -4895,7 +4895,7 @@ pub fn spawn_autonomous_loop(
                                 },
                                 Err(error) => {
                                     warn!(
-                                        action = effective_next_action,
+                                        action = astrid_source_study::response_choice::diagnostic_action(&effective_next_action),
                                         "volition receipt persistence failed: {error}"
                                     );
                                 },

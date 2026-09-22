@@ -80,6 +80,7 @@ impl Reader {
             bail!("complete study input exceeds the shared provider budget; bookmark unchanged");
         }
         let mut output = StudyOutput {
+            generation_requested: true,
             require_complete_input: true,
             input_kind,
             evidence_scope,

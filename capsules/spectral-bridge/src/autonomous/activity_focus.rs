@@ -28,6 +28,28 @@ pub(super) fn reader() -> Result<Reader> {
     .with_runtime_workspace(paths.bridge_workspace().to_path_buf(), "astrid"))
 }
 
+pub(super) fn store_observation(
+    reader: &Reader,
+    action: &str,
+    operation: &str,
+) -> Result<astrid_source_study::StudyOutput> {
+    ensure!(
+        astrid_source_study::observation_presentation_requested(action)? == Some(false),
+        "storage-only observation required"
+    );
+    ensure!(
+        !operation.is_empty(),
+        "durable observation identity required"
+    );
+    let revision = reader.preparation_revision()?;
+    let output = reader.prepare_once(&format!("observe-{operation}"), &revision, action)?;
+    ensure!(
+        !output.generation_requested,
+        "storage request unexpectedly requires generation"
+    );
+    Ok(output)
+}
+
 fn exists() -> bool {
     let root = bridge_paths()
         .bridge_workspace()
@@ -538,6 +560,10 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+#[path = "observation_adapter_tests.rs"]
+mod observation_tests;
 
 #[cfg(test)]
 #[path = "activity_focus_interruption_tests.rs"]

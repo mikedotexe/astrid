@@ -10,6 +10,8 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+#[path = "writing_observations.rs"]
+mod observations;
 
 pub const EXTENDED_TOKENS: u32 = 8192;
 pub const EXTENDED_TIMEOUT_SECS: u64 = 1200;
@@ -59,6 +61,8 @@ struct Draft {
     parts: Vec<String>,
     #[serde(default)]
     stopping_point: String,
+    #[serde(default)]
+    observations: crate::observations::History,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct Pending {
@@ -68,6 +72,10 @@ struct Pending {
     replace: bool,
     #[serde(default)]
     selected_action_sha256: Option<String>,
+    #[serde(default)]
+    observation_draft: Option<String>,
+    #[serde(default)]
+    observation_preview: Option<String>,
 }
 #[derive(Default, Serialize, Deserialize)]
 struct State {
@@ -82,6 +90,8 @@ struct State {
     last_choice: Option<ChoiceReceipt>,
     #[serde(default)]
     retained_pending: BTreeMap<String, Pending>,
+    #[serde(default)]
+    preview_deliveries: BTreeMap<String, String>,
 }
 /// One directory per Being, protected by a lock and atomic checkpoints.
 pub struct Writer {
@@ -128,9 +138,12 @@ impl Writer {
         let state: State = serde_json::from_slice(&crate::preparation::read(p)?)
             .context("writing checkpoint unreadable; preserving drafts")?;
         anyhow::ensure!(
-            state.schema_version <= 3,
+            state.schema_version <= 4,
             "unsupported private writing schema; preserving newer drafts"
         );
+        for draft in state.drafts.values() {
+            draft.observations.validate(true)?;
+        }
         Ok(state)
     }
     fn save(&self, state: &State) -> Result<()> {
@@ -148,7 +161,7 @@ impl Writer {
         // The old schema has required fields; this tombstone is intentionally
         // unreadable to older writers. A crash before v2 is visible, never reset.
         let mut value = serde_json::to_value(state)?;
-        value["schema_version"] = 3.into();
+        value["schema_version"] = 4.into();
         atomic_write(&legacy, DOWNGRADE_GUARD)?;
         atomic_write(&modern, &serde_json::to_vec_pretty(&value)?)
     }
@@ -312,7 +325,7 @@ impl Writer {
             if draft.finished {
                 bail!("draft is finished; WRITE RESUME {id} reopens it, or WRITE START <topic>");
             }
-            let draft_text = format!(
+            let mut draft_text = format!(
                 "Draft {id}, revision {}, topic: {}\nCurrent question: {}\nStored evidence and references (authored context, not new source):\n{}\nStopping point (reference only; commands here are never executed):\n{}\n\nComplete current draft:\n{}\nEnd of draft.\n",
                 draft.revision,
                 draft.topic,
@@ -321,6 +334,13 @@ impl Writer {
                 draft.stopping_point,
                 draft.parts.join("\n\n")
             );
+            if !draft.observations.records.is_empty() {
+                let _ = write!(
+                    draft_text,
+                    "Private observation attachments (details on explicit request):\n{}\nWRITE OBSERVE typed JSON supports status, show, analyze, annotate, link_preview and link_confirm. No automatic analysis or sharing.\n",
+                    draft.observations.attachments()
+                );
+            }
             (Some(id), draft.revision, draft_text)
         } else {
             (None, 0, String::new())
@@ -339,12 +359,14 @@ impl Writer {
         if let Some(choice) = &state.last_choice {
             text.push_str(&choice.render(true));
         }
+        text.push_str("\nOptional private observation commands: WRITE OBSERVE typed JSON with owner (astrid or minime), exact existing draft ID, operation {\"kind\":\"status\"} and present:true to inspect choices. No question or note required to capture; no automatic analysis or sharing.\n");
         if text.len().saturating_add(PROMPT.len()).saturating_add(32) > crate::MAX_INPUT_BYTES {
             bail!(
                 "complete draft plus evidence exceeds the 48000-byte input allowance; no text was shortened. The draft remains saved. WRITE EVIDENCE <shorter references> can free room; WRITE START <new topic> keeps this draft archived. Revisions and exact delivered passages remain in the writing directory."
             );
         }
         let output = StudyOutput {
+            generation_requested: true,
             input_kind: InputKind::PrivateWriting,
             evidence_scope: InputKind::PrivateWriting.scope().into(),
             require_complete_input: true,
@@ -366,6 +388,8 @@ impl Writer {
             state.retained_pending.insert(previous_id, previous);
         }
         state.pending = Some(Pending {
+            observation_draft: None,
+            observation_preview: None,
             output: output.clone(),
             draft: draft_id,
             revision,
@@ -419,9 +443,11 @@ impl Writer {
                     .context("draft revision exhausted")?;
             }
         }
-        let artifact = serde_json::to_vec_pretty(
-            &serde_json::json!({"schema":"private_writing_delivery_v1", "output":pending.output, "draft":pending.draft, "revision_before":pending.revision, "replace":pending.replace, "request_json":request, "response_json":response}),
-        )?;
+        let mut artifact = serde_json::json!({"schema":"private_writing_delivery_v1", "output":pending.output, "draft":pending.draft, "revision_before":pending.revision, "replace":pending.replace, "request_json":request, "response_json":response});
+        if let Some(preview) = &pending.observation_preview {
+            artifact["observation_preview"] = preview.clone().into();
+        }
+        let artifact = serde_json::to_vec_pretty(&artifact)?;
         let path = self.directory.join(format!("{id}.json"));
         if path.exists() {
             anyhow::ensure!(
@@ -439,6 +465,9 @@ impl Writer {
             choice_feedback: Some(choice.feedback.clone()),
         };
         state.receipts.insert(id.into(), receipt.clone());
+        if let Some(preview) = pending.observation_preview {
+            state.preview_deliveries.insert(preview, id.into());
+        }
         state.last_choice = Some(choice);
         if state
             .pending
@@ -487,7 +516,8 @@ impl Writer {
             .as_ref()
             .context("writing input is not pending")?;
         anyhow::ensure!(
-            pending.draft.as_deref() == Some(draft)
+            (pending.draft.as_deref() == Some(draft)
+                || pending.observation_draft.as_deref() == Some(draft))
                 && pending.output.navigation_id.as_deref() == Some(input_id)
                 && pending.selected_action_sha256.as_deref() == Some(digest(action).as_str()),
             "writing input does not match the exact prepared action and draft"

@@ -48,10 +48,18 @@ impl Target {
     pub fn permits(&self, action: &str) -> bool {
         let words: Vec<_> = action.split_whitespace().collect();
         match self {
-            Self::Write(_) => matches!(
-                words.as_slice(),
-                ["WRITE", "CONTINUE"] | ["WRITE", "REVISE", ..]
-            ),
+            Self::Write(id) => {
+                matches!(
+                    words.as_slice(),
+                    ["WRITE", "CONTINUE"] | ["WRITE", "REVISE", ..]
+                ) || action
+                    .trim()
+                    .strip_prefix("WRITE OBSERVE ")
+                    .and_then(|json| {
+                        serde_json::from_str::<crate::observations::ObservationRequest>(json).ok()
+                    })
+                    .is_some_and(|request| request.draft == *id)
+            },
             Self::Question(_) => {
                 words.first() == Some(&"SELF_STUDY") && !matches!(words.get(1), Some(&"QUESTION"))
             },

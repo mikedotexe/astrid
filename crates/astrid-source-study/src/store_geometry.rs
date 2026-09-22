@@ -12,6 +12,19 @@ impl Reader {
             .runtime
             .as_ref()
             .context("host-configured owner required")?;
+        if matches!(request.operation, Operation::Export)
+            && state.questions.has_observations(&request.question)
+        {
+            let bytes = state
+                .questions
+                .observation_export(&runtime.being, &request.question)?;
+            let path = self
+                .directory
+                .join("geometry-exports")
+                .join(format!("{}.json", digest(&bytes)));
+            atomic_write(&path, &bytes)?;
+            return self.output(state,format!("Complete inquiry-observations-v2 export (includes legacy geometry and confirmed observations): {} SHA256 {}",path.display(),digest(&bytes)),None,InputKind::Geometry);
+        }
         let (question, history) = state.questions.geometry(&request.question)?;
         history.check_owner(&runtime.being)?;
         history.validate()?;

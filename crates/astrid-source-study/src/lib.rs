@@ -16,6 +16,8 @@ mod navigation_recovery;
 mod notebook;
 mod notebook_findings;
 mod notebook_persistence;
+mod observation_expectations;
+mod observations;
 pub mod owner_transaction;
 mod page;
 mod path_recovery;
@@ -23,6 +25,7 @@ mod preparation;
 mod progress;
 mod question_sources;
 mod questions;
+mod recurrence;
 mod relationships;
 pub mod response_choice;
 mod source_links;
@@ -39,11 +42,12 @@ pub use evidence::InputKind;
 pub use navigation_recovery::{NavigationRecovery, recover_local_navigation};
 pub use page::{Page, Position, SourceLocation, SourceRevision};
 pub use questions::QuestionCommand;
+pub use store::observation_presentation_requested;
 pub use store::{ActivityRequest, ActivityResponse, DeliveryReceipt, Reader, StudyOutput};
 
 pub const STUDY_PROMPT: &str = include_str!("../prompt.txt");
 
-pub const SCHEMA_VERSION: u32 = 6;
+pub const SCHEMA_VERSION: u32 = 7;
 /// Whole system + reference input, shared by every provider adapter.
 pub const MAX_INPUT_BYTES: usize = 48_000;
 /// Byte-safe room for the protected input, framing and 8,192 output tokens.

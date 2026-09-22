@@ -8,12 +8,15 @@ mod cursors;
 mod geometry;
 #[path = "store_navigation.rs"]
 mod navigation;
+#[path = "store_observations.rs"]
+mod observations;
 #[path = "store_sessions.rs"]
 mod sessions;
 use crate::progress::{self, Progress};
 use crate::{Catalog, Command, InputKind, Page, SCHEMA_VERSION, digest};
 pub use activity::{Request as ActivityRequest, Response as ActivityResponse};
 use anyhow::{Context as _, Result, bail};
+pub use observations::observation_presentation_requested;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -23,6 +26,11 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StudyOutput {
+    #[serde(
+        default = "default_generation_requested",
+        skip_serializing_if = "is_generation_requested"
+    )]
+    pub generation_requested: bool,
     #[serde(default)]
     pub input_kind: InputKind,
     #[serde(default)]
@@ -44,6 +52,13 @@ pub struct StudyOutput {
     pub question_id: Option<String>,
     #[serde(default)]
     pub navigation_id: Option<String>,
+}
+fn default_generation_requested() -> bool {
+    true
+}
+#[allow(clippy::trivially_copy_pass_by_ref)] // serde skip_serializing_if requires a reference.
+fn is_generation_requested(value: &bool) -> bool {
+    *value
 }
 fn default_input_budget() -> usize {
     crate::MAX_INPUT_BYTES
@@ -340,6 +355,12 @@ impl Reader {
     /// # Errors
     /// Returns source or checkpoint errors; recovery cannot bypass reader integrity.
     pub fn prepare_action(&self, action: &str) -> Result<StudyOutput> {
+        if let Some(json) = action.trim().strip_prefix("WRITE OBSERVE ") {
+            return self.prepare_observation(json, action);
+        }
+        if let Some(json) = action.trim().strip_prefix("SELF_STUDY OBSERVE ") {
+            return self.prepare_inquiry_observation(json);
+        }
         if action.split_whitespace().next() == Some("WRITE") {
             return crate::writing::Writer::new(self.directory.join("writing")).prepare(action);
         }
