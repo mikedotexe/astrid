@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Git checkpoint - paired continuity (2026-09-21)
+
+- Merge the deployed continuity/geometry feature into local `main` at `959774de5865a8d9fa5ddab5560bd2922d76e346`, alongside Minime's paired merge. Reverify live source identities and focused/full suites without another restart or push. Preserve 197 older Astrid paths unchanged and list their exact hashes instead of sweeping them into the release. Current status, tests, failed test-location attempt and remaining archival debt: `docs/steward-notes/2026-09-21-paired-continuity-git-checkpoint.md`.
+
 ### Deployed - voluntary continuity and geometry (2026-09-21)
 
 - Gracefully activate the qualified paired bridge/reader and Minime adapter release: protected attention, quiet parking, private continuation, question-owned geometry and durable ordinary-study handoff. Add a tested owned launcher hold so old/new shared-reader writers cannot overlap during the transition.

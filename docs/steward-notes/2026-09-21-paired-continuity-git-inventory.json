@@ -1,0 +1,1115 @@
+{
+  "schema": "paired_continuity_git_checkpoint_v1",
+  "scope": "Interactive local Git checkpoint; older work remains unchanged, unreviewed for archival inclusion, and excluded from this checkpoint.",
+  "commits": {
+    "astrid": [
+      {
+        "commit": "8b47231d924a9f68a7b6560f3d2149b3e19e45db",
+        "title": "feat: ship protected attention and durable question-owned study continuity",
+        "paths": [
+          "CHANGELOG.md",
+          "capsules/spectral-bridge/src/action_continuity/reader_bookmark_tests.rs",
+          "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmark_io.rs",
+          "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmarks.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_focus.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_focus_interruption_tests.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/action_help.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/attractor_test_context.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/space_hold.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/study_navigation.rs",
+          "capsules/spectral-bridge/src/autonomous/readiness.rs",
+          "capsules/spectral-bridge/src/autonomous/runtime.rs",
+          "capsules/spectral-bridge/src/autonomous/runtime/activity_exchange.rs",
+          "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+          "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+          "capsules/spectral-bridge/src/autonomous/state.rs",
+          "capsules/spectral-bridge/src/autonomous/study_handoff.rs",
+          "capsules/spectral-bridge/src/autonomous/study_handoff_tests.rs",
+          "capsules/spectral-bridge/src/autonomous/volition.rs",
+          "capsules/spectral-bridge/src/autonomous/volition_study_tests.rs",
+          "capsules/spectral-bridge/src/llm.rs",
+          "capsules/spectral-bridge/src/llm/provider/source_study.rs",
+          "capsules/spectral-bridge/src/signal_spine/tests.rs",
+          "crates/astrid-source-study/prompt.txt",
+          "crates/astrid-source-study/src/command.rs",
+          "crates/astrid-source-study/src/evidence.rs",
+          "crates/astrid-source-study/src/focus.rs",
+          "crates/astrid-source-study/src/geometry.rs",
+          "crates/astrid-source-study/src/lib.rs",
+          "crates/astrid-source-study/src/main.rs",
+          "crates/astrid-source-study/src/navigation_history.rs",
+          "crates/astrid-source-study/src/notebook.rs",
+          "crates/astrid-source-study/src/notebook_findings.rs",
+          "crates/astrid-source-study/src/notebook_persistence.rs",
+          "crates/astrid-source-study/src/owner_transaction.rs",
+          "crates/astrid-source-study/src/page.rs",
+          "crates/astrid-source-study/src/preparation.rs",
+          "crates/astrid-source-study/src/questions.rs",
+          "crates/astrid-source-study/src/response_choice.rs",
+          "crates/astrid-source-study/src/source_provenance.rs",
+          "crates/astrid-source-study/src/source_search.rs",
+          "crates/astrid-source-study/src/source_structure.rs",
+          "crates/astrid-source-study/src/store.rs",
+          "crates/astrid-source-study/src/store_cursors.rs",
+          "crates/astrid-source-study/src/store_focus.rs",
+          "crates/astrid-source-study/src/store_geometry.rs",
+          "crates/astrid-source-study/src/store_navigation.rs",
+          "crates/astrid-source-study/src/writing.rs",
+          "crates/astrid-source-study/tests/activity_store.rs",
+          "crates/astrid-source-study/tests/context.rs",
+          "crates/astrid-source-study/tests/focus.rs",
+          "crates/astrid-source-study/tests/geometry.rs",
+          "crates/astrid-source-study/tests/inquiries.rs",
+          "crates/astrid-source-study/tests/owner_transaction.rs",
+          "crates/astrid-source-study/tests/preparation.rs",
+          "crates/astrid-source-study/tests/response_choice.rs",
+          "crates/astrid-source-study/tests/study_checkpoint.rs",
+          "crates/astrid-source-study/tests/study_evidence_relations.rs",
+          "crates/astrid-source-study/tests/writing.rs",
+          "docs/steward-notes/2026-09-20-continuity-offline-study-protocol.md",
+          "docs/steward-notes/2026-09-20-voluntary-continuity-implementation.md",
+          "docs/steward-notes/2026-09-21-geometry-bookmarks-and-observatory.md",
+          "docs/steward-notes/2026-09-21-geometry-paired-release-qualification.md",
+          "docs/steward-notes/2026-09-21-ordinary-study-crash-handoff.md",
+          "docs/steward-notes/2026-09-21-paired-continuity-rollout.md",
+          "docs/steward-notes/2026-09-21-preparation-retry-qualification.md",
+          "docs/steward-notes/2026-09-21-protected-attention-runtime-integration.md",
+          "docs/steward-notes/2026-09-21-scheduler-interruption-and-launch-reconciliation.md",
+          "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+          "scripts/paired_minime_handoff.py",
+          "scripts/qualify_geometry_release.py",
+          "scripts/reconcile_minime_launch.py",
+          "scripts/restart_minime_agent.py",
+          "scripts/test_paired_minime_handoff.py",
+          "scripts/test_qualify_geometry_release.py",
+          "scripts/test_reconcile_minime_launch.py",
+          "scripts/test_restart_minime_agent.py"
+        ],
+        "path_scope": "diff against first parent"
+      },
+      {
+        "commit": "3164af24a3b65734eba66b13f6fd3e1d1e846fb0",
+        "title": "chore: preserve installed reader baseline and stewardship history",
+        "paths": [
+          "CHANGELOG.md",
+          "crates/astrid-source-study/prompt.txt",
+          "crates/astrid-source-study/src/lib.rs",
+          "crates/astrid-source-study/src/notebook.rs",
+          "crates/astrid-source-study/src/notebook_findings.rs",
+          "crates/astrid-source-study/src/notebook_persistence.rs",
+          "crates/astrid-source-study/src/page.rs",
+          "crates/astrid-source-study/src/source_provenance.rs",
+          "crates/astrid-source-study/src/source_search.rs",
+          "crates/astrid-source-study/src/source_structure.rs",
+          "crates/astrid-source-study/src/store_navigation.rs",
+          "crates/astrid-source-study/tests/study_evidence_relations.rs",
+          "docs/steward-notes/2026-09-21-paired-continuity-live.md",
+          "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md"
+        ],
+        "path_scope": "diff against first parent"
+      },
+      {
+        "commit": "959774de5865a8d9fa5ddab5560bd2922d76e346",
+        "title": "merge: integrate live protected-attention and geometry release",
+        "paths": [
+          "CHANGELOG.md",
+          "capsules/spectral-bridge/src/action_continuity/reader_bookmark_tests.rs",
+          "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmark_io.rs",
+          "capsules/spectral-bridge/src/action_continuity/runtime/reader_bookmarks.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_focus.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_focus_interruption_tests.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_reading.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs",
+          "capsules/spectral-bridge/src/autonomous/activity_reading/tests.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/action_help.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/attractor_test_context.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/mod.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/space_hold.rs",
+          "capsules/spectral-bridge/src/autonomous/next_action/study_navigation.rs",
+          "capsules/spectral-bridge/src/autonomous/readiness.rs",
+          "capsules/spectral-bridge/src/autonomous/runtime.rs",
+          "capsules/spectral-bridge/src/autonomous/runtime/activity_exchange.rs",
+          "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs",
+          "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+          "capsules/spectral-bridge/src/autonomous/state.rs",
+          "capsules/spectral-bridge/src/autonomous/study_handoff.rs",
+          "capsules/spectral-bridge/src/autonomous/study_handoff_tests.rs",
+          "capsules/spectral-bridge/src/autonomous/volition.rs",
+          "capsules/spectral-bridge/src/autonomous/volition_study_tests.rs",
+          "capsules/spectral-bridge/src/llm.rs",
+          "capsules/spectral-bridge/src/llm/provider/source_study.rs",
+          "capsules/spectral-bridge/src/signal_spine/tests.rs",
+          "crates/astrid-source-study/prompt.txt",
+          "crates/astrid-source-study/src/command.rs",
+          "crates/astrid-source-study/src/evidence.rs",
+          "crates/astrid-source-study/src/focus.rs",
+          "crates/astrid-source-study/src/geometry.rs",
+          "crates/astrid-source-study/src/lib.rs",
+          "crates/astrid-source-study/src/main.rs",
+          "crates/astrid-source-study/src/navigation_history.rs",
+          "crates/astrid-source-study/src/notebook_persistence.rs",
+          "crates/astrid-source-study/src/owner_transaction.rs",
+          "crates/astrid-source-study/src/preparation.rs",
+          "crates/astrid-source-study/src/questions.rs",
+          "crates/astrid-source-study/src/response_choice.rs",
+          "crates/astrid-source-study/src/store.rs",
+          "crates/astrid-source-study/src/store_cursors.rs",
+          "crates/astrid-source-study/src/store_focus.rs",
+          "crates/astrid-source-study/src/store_geometry.rs",
+          "crates/astrid-source-study/src/store_navigation.rs",
+          "crates/astrid-source-study/src/writing.rs",
+          "crates/astrid-source-study/tests/activity_store.rs",
+          "crates/astrid-source-study/tests/context.rs",
+          "crates/astrid-source-study/tests/focus.rs",
+          "crates/astrid-source-study/tests/geometry.rs",
+          "crates/astrid-source-study/tests/inquiries.rs",
+          "crates/astrid-source-study/tests/owner_transaction.rs",
+          "crates/astrid-source-study/tests/preparation.rs",
+          "crates/astrid-source-study/tests/response_choice.rs",
+          "crates/astrid-source-study/tests/study_checkpoint.rs",
+          "crates/astrid-source-study/tests/writing.rs",
+          "docs/steward-notes/2026-09-20-continuity-offline-study-protocol.md",
+          "docs/steward-notes/2026-09-20-voluntary-continuity-implementation.md",
+          "docs/steward-notes/2026-09-21-geometry-bookmarks-and-observatory.md",
+          "docs/steward-notes/2026-09-21-geometry-paired-release-qualification.md",
+          "docs/steward-notes/2026-09-21-ordinary-study-crash-handoff.md",
+          "docs/steward-notes/2026-09-21-paired-continuity-rollout.md",
+          "docs/steward-notes/2026-09-21-preparation-retry-qualification.md",
+          "docs/steward-notes/2026-09-21-protected-attention-runtime-integration.md",
+          "docs/steward-notes/2026-09-21-scheduler-interruption-and-launch-reconciliation.md",
+          "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+          "scripts/paired_minime_handoff.py",
+          "scripts/qualify_geometry_release.py",
+          "scripts/reconcile_minime_launch.py",
+          "scripts/restart_minime_agent.py",
+          "scripts/test_paired_minime_handoff.py",
+          "scripts/test_qualify_geometry_release.py",
+          "scripts/test_reconcile_minime_launch.py",
+          "scripts/test_restart_minime_agent.py"
+        ],
+        "path_scope": "diff against first parent"
+      }
+    ],
+    "minime": [
+      {
+        "commit": "b19614fbb169608e07ded7c46cc19bb1f5d3ce56",
+        "title": "feat: deploy voluntary continuity and question-owned geometry adapters",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/steward-notes/2026-09-20-voluntary-continuity-implementation.md",
+          "docs/steward-notes/2026-09-21-geometry-bookmarks-adapter.md",
+          "docs/steward-notes/2026-09-21-geometry-paired-qualification.md",
+          "docs/steward-notes/2026-09-21-preparation-retries.md",
+          "docs/steward-notes/2026-09-21-protected-attention-runtime-integration.md",
+          "docs/steward-notes/2026-09-21-stop-and-launch-source-qualification.md",
+          "minime_autonomy/action_vocabulary.py",
+          "minime_autonomy/activity_focus.py",
+          "minime_autonomy/parsing.py",
+          "minime_autonomy/runtime.py",
+          "minime_autonomy/source_study.py",
+          "minime_autonomy/visual_context.py",
+          "minime_autonomy/writing.py",
+          "scripts/launchd_autonomous_agent.sh",
+          "tests/test_activity_focus.py",
+          "tests/test_agent_lifecycle.py",
+          "tests/test_autonomous_agent_low_fill_guard.py",
+          "tests/test_extended_writing.py",
+          "tests/test_journal_choice_coherence.py",
+          "tests/test_journal_context.py",
+          "tests/test_minime_introspect_action.py",
+          "tests/test_minime_self_study_delivery.py",
+          "tests/test_private_journal_boundary.py",
+          "tests/test_private_writing_continuation.py",
+          "tests/test_source_study_follow_through.py",
+          "tests/test_source_study_notice.py",
+          "tests/test_source_study_shared.py",
+          "tests/test_visual_context.py",
+          "tests/test_visual_frame_service.py",
+          "visual_frame_service.py"
+        ],
+        "path_scope": "diff against first parent"
+      },
+      {
+        "commit": "d376779581a11abe7fcef45e5a50d7997bcfce0d",
+        "title": "chore: record installed Minime adapter baseline before paired merge",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/steward-notes/2026-09-21-paired-continuity-live.md",
+          "minime_autonomy/action_vocabulary.py",
+          "minime_autonomy/activity_focus.py",
+          "minime_autonomy/parsing.py",
+          "minime_autonomy/runtime.py",
+          "minime_autonomy/source_study.py",
+          "minime_autonomy/visual_context.py",
+          "minime_autonomy/writing.py",
+          "scripts/launchd_autonomous_agent.sh",
+          "tests/test_journal_context.py",
+          "tests/test_source_study_notice.py",
+          "tests/test_visual_context.py",
+          "tests/test_visual_frame_service.py",
+          "visual_frame_service.py"
+        ],
+        "path_scope": "diff against first parent"
+      },
+      {
+        "commit": "4cd230a45f1ceb504d85c00c406b1b264892654b",
+        "title": "merge: integrate qualified paired continuity release",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/steward-notes/2026-09-20-voluntary-continuity-implementation.md",
+          "docs/steward-notes/2026-09-21-geometry-bookmarks-adapter.md",
+          "docs/steward-notes/2026-09-21-geometry-paired-qualification.md",
+          "docs/steward-notes/2026-09-21-preparation-retries.md",
+          "docs/steward-notes/2026-09-21-protected-attention-runtime-integration.md",
+          "docs/steward-notes/2026-09-21-stop-and-launch-source-qualification.md",
+          "tests/test_activity_focus.py",
+          "tests/test_agent_lifecycle.py",
+          "tests/test_autonomous_agent_low_fill_guard.py",
+          "tests/test_extended_writing.py",
+          "tests/test_journal_choice_coherence.py",
+          "tests/test_minime_introspect_action.py",
+          "tests/test_minime_self_study_delivery.py",
+          "tests/test_private_journal_boundary.py",
+          "tests/test_private_writing_continuation.py",
+          "tests/test_source_study_follow_through.py",
+          "tests/test_source_study_notice.py",
+          "tests/test_source_study_shared.py"
+        ],
+        "path_scope": "diff against first parent"
+      },
+      {
+        "commit": "3c4a8ea03bd1f30425b8d3a5cc5facc413bd035d",
+        "title": "fix: archive evidence-scoped sensory status reporting",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/2026-09-20-quiet-sensory-release.md",
+          "minime/src/sensory_bus.rs",
+          "scripts/sensory_check_evidence.py",
+          "scripts/sensory_source_check.py",
+          "tests/test_sensory_source_check.py"
+        ],
+        "path_scope": "diff against first parent"
+      }
+    ]
+  },
+  "frozen_bridge_inventory_comparison": {
+    "input_count": 668,
+    "counts": {
+      "external_dependency": 38,
+      "astrid": 630
+    },
+    "differences": [
+      {
+        "repository": "astrid",
+        "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor_test_context.rs",
+        "committed": true,
+        "expected": "8ab7e8160a28e49c79cc2aab53986c3969600d056826566ed90dd3709a232737",
+        "actual": "a81f3c32dfa5be146c47f3cc382ced24ed4888e6819ac7dc77280cdd983c3468"
+      }
+    ]
+  },
+  "remaining_astrid_paths": {
+    "capsules/astralis/astrid-capsule-edge-spectral/src/tests.rs": {
+      "status": " M",
+      "sha256": "0f4b98156f19177bff2121ca3b5532670b23cdc6f65a9e3b507f91d937de6df9"
+    },
+    "capsules/spectral-bridge/src/action_continuity/tests.rs": {
+      "status": " M",
+      "sha256": "fdf1001406198d198993fa30344c30a901688351e64f9acb60f3fdf39f4b492b"
+    },
+    "capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs": {
+      "status": " M",
+      "sha256": "2de81b30553bcf8b020d0c82a0b86a4b5e1610b4f0f37c887a4c367de3705ef0"
+    },
+    "crates/astrid-kernel/src/kernel_router.rs": {
+      "status": " M",
+      "sha256": "589b17d8d84c0a2b33b5361b8bae2aa158a8a1545d4be8fd6e21abee064564f5"
+    },
+    "crates/astrid-kernel/src/maintenance.rs": {
+      "status": " M",
+      "sha256": "e31941820e76247b1321ee925812cbb1dd8d2d5628790855246bfbeb2b7f4703"
+    },
+    "scripts/self_study_review.py": {
+      "status": " M",
+      "sha256": "0e6237cfb4d09ee31570e3537c2fd8ed2a7cb81a04ab50153c7dc4bffb5b9464"
+    },
+    "scripts/test_self_study_review.py": {
+      "status": " M",
+      "sha256": "94a8a720062cde4cbdcb4a0bea4f48ddf7bfec73d514c5c33b7775c38338479a"
+    },
+    "crates/astrid-source-study/tests/behind_cursor_helper_midwalk_reach.rs": {
+      "status": "??",
+      "sha256": "61ad7d9bc0dd0baacd83e8db889d85bd342ec20d6c1f2bcd17048c2a1f389384"
+    },
+    "crates/astrid-source-study/tests/component_map_sibling_reach.rs": {
+      "status": "??",
+      "sha256": "717f87cca700bfe979b5e133a02253f302535c1da7279be5bbdbd23ef963a3c5"
+    },
+    "crates/astrid-source-study/tests/page_end_declaration_legibility.rs": {
+      "status": "??",
+      "sha256": "adbd956d9d14c87ec6ea6dc62759e013c94a991169099ecac4b0af26b8e7c15d"
+    },
+    "crates/astrid-source-study/tests/page_line_interval_legibility.rs": {
+      "status": "??",
+      "sha256": "b9758a5c6ae032084224e7b5e34cd764b83a63db36047bf38d6bdf77871e2643"
+    },
+    "crates/astrid-source-study/tests/unnamed_coefficient_reach.rs": {
+      "status": "??",
+      "sha256": "158c768781711ddcdfe82af0c22b14e5355e043a0b871ff83b4550f1fce4d7d6"
+    },
+    "crates/astrid-source-study/tests/unrooted_map_topic_reach.rs": {
+      "status": "??",
+      "sha256": "dcfc869658e0e6de1dcac40d66be788f582640a64dd841b108b930968605ede2"
+    },
+    "docs/steward-notes/2026-09-17-source-study-evidence-and-relations.md": {
+      "status": "??",
+      "sha256": "a30daf9cc1db800347f4450c4f2042e2bcb24f436df1bc67e1bfcdbb5415975f"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/README.md": {
+      "status": "??",
+      "sha256": "bd65fb00d1a209bd2a2fe40b7b607da0d02db8b4cf561483f9bf5719ac4d08f5"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/bridge-tests.log": {
+      "status": "??",
+      "sha256": "6d83975679048389d7db3e82546836f114820f2cb6fe443f86a413ea919219d6"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/check_reader_upgrade.py": {
+      "status": "??",
+      "sha256": "04ab8e1ca69154bebf65d3630137968469cda6bc6c11e3e6cd0a04c00ad31648"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/controller-resume.json": {
+      "status": "??",
+      "sha256": "3ed12975b0fbf04bd0eeccbb1213f85aa00f9155d4166d259d1dd581a196e462"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/live-before.json": {
+      "status": "??",
+      "sha256": "70159e0f8b62c5c694e8f103b2441c25e4f544fba70d3fa82aff556de37c6e7b"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/minime-incomplete-fixture-attempt.log": {
+      "status": "??",
+      "sha256": "53e19c36f425ac8e4af5c5b94dae38fde8ea4c24f8c2d1f00eec591b00e4f6cf"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/minime-tests-initial.log": {
+      "status": "??",
+      "sha256": "cec5c415af917a411ddeb7a3b5ae94cb72314d3a6b209fbeee3e88237074cc9d"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/minime-tests-release.log": {
+      "status": "??",
+      "sha256": "03653a1b22b05650da7e019e64889552d5d62b770a044a1f009dd22203deb299"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/reader-tests-final.log": {
+      "status": "??",
+      "sha256": "12848cb7dbff4f5e9ddbb9d90194098152fd84f93a86099fb0520247852fb464"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/reader-tests.log": {
+      "status": "??",
+      "sha256": "a5fa16ae0703195ba753a5ca81af65b6ac60b3672e03699f1ea4121a928507e5"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/reader-upgrade-release.json": {
+      "status": "??",
+      "sha256": "a38acb6e2e99393fe434e025b5ac30738b7633badfd9f62cb19a37962b802628"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/rollout-preinspection.json": {
+      "status": "??",
+      "sha256": "bcaf8290b9c9ab156a624579c94039d6662b485a6db5a5a660e1ca00932cd81b"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-scope-comparison.json": {
+      "status": "??",
+      "sha256": "d3f6a46b39e843c35e2ea7878b511353535d95f86055ad8524156afdf60f46da"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-bridge-clippy.log": {
+      "status": "??",
+      "sha256": "495ed68d277054d100e70df5599cee33a51f3668ca296b3453595f33318d8019"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-bridge-tests-serial.log": {
+      "status": "??",
+      "sha256": "78dc219c517207ded60484bf975181d44a538bc54afad55b25c3d1dcbc86276f"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-bridge-timing-isolated.log": {
+      "status": "??",
+      "sha256": "b3aad52a629bc2b18d55e15ce6936bb117253aabe826896446301b552d813fbb"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-current-inputs-final.json": {
+      "status": "??",
+      "sha256": "1b5cbbbbe83142e34f9fcdb276538bba7261c24136572d5d78a98bbfc91f4cd5"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-dependency-audit.json": {
+      "status": "??",
+      "sha256": "2538b592efd1d7a6ff7f110ebbcb63675ac6b59f0cdb242f9fd891829785be60"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-domain-verify.json": {
+      "status": "??",
+      "sha256": "f24369a3b471a17282ae9f19736390287bc1da90707080e730cadb9908155712"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-epistemics-verify.json": {
+      "status": "??",
+      "sha256": "33c474991f774035bcfd6e2688dc146e9a2b1cf1122baecad59903a39eaa667f"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-live-after.json": {
+      "status": "??",
+      "sha256": "9c4f3b933d5640c33fa586a346ee7513dc60c2cd44a56df1bc8a08fccc0d3768"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-reader-clippy.log": {
+      "status": "??",
+      "sha256": "8665db0375ae6ba4bfa1c954402ca59905e3c0c96af8a305d5f82f365414bd01"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-rollout-preinspection-final.json": {
+      "status": "??",
+      "sha256": "e6af893d2aad69694e9501dbc79c6ad380961652fef7b61882b201c0b2c19b77"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/source-study-stage-final-verify.json": {
+      "status": "??",
+      "sha256": "3f9a42e4d198924806a6410354d7ec284737813f2bfec29cbfc5ae9a8f24a0ef"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/stage-manifest.json": {
+      "status": "??",
+      "sha256": "c2c40c356efa6758cac4e2f6e3e2b758d0b9963de36f11da5fd75e9c6fbc2a09"
+    },
+    "docs/steward-notes/2026-09-17-source-study-rollout-qualification/stage-ready.json": {
+      "status": "??",
+      "sha256": "41840a08a05026337bf7138ac212f5b74305d8742703788dddba38336a7ab649"
+    },
+    "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout.md": {
+      "status": "??",
+      "sha256": "f0da860382c06308b7a953a7a5d739de2e883b659df9532ea402231604d84991"
+    },
+    "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout/after.json": {
+      "status": "??",
+      "sha256": "e06672fb2e5a6c08e5798b8a0a8d92bb5cb7ed0ca396783e3163f02434571b30"
+    },
+    "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout/before.json": {
+      "status": "??",
+      "sha256": "71897b9d008a32040e903d13eb7f49fafdbbc9ccab8d9cc571d77794bbd00235"
+    },
+    "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout/minime-agent.ndjson": {
+      "status": "??",
+      "sha256": "006f1c29af61acbddf24abfa67070131b36d72ecff7529e44e15a277c0758115"
+    },
+    "docs/steward-notes/2026-09-20-quiet-sensory-live-rollout/visual-service.ndjson": {
+      "status": "??",
+      "sha256": "b0c3a83d5936620e5e4bdc59d7a3a76745025ee461df74ea72ec382ea9f8065b"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "a6e99497cd594b7733829ed66755dc755929441217ecc9c19ea1551c0a5e1d07"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "93c887d29c4a7cfbc6a26283af68465a7ef82860b4bd2633c7fa6b8036790907"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/addressing_links_report2.json": {
+      "status": "??",
+      "sha256": "7324995491876ca79be2b286edfa56531de11a0a291b5f69ba2c195fd18f8820"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/claims/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.json": {
+      "status": "??",
+      "sha256": "80c99bab6e3cdb5e82ea7720ec2defd43b18c3e5f59a162624641f23d725e765"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/claims/introspection_source_catalog_1789509068.json": {
+      "status": "??",
+      "sha256": "cd543f6390249810f4a132670b99255942432d8cf1fa5617bfdcc25b7cd6c661"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/family_scan.json": {
+      "status": "??",
+      "sha256": "1cd455871dd440d676c6a65bf4ac40d738e048abbe345be79f0e7798870b2399"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "6a894e89afb2ebb1cdefa01a8cc071c772198c0ba66894c035949259f75af309"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "cce2bdcff05bf19fb8abda0cf40bdc78560811015b73f69a29371683e3465fd3"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_astrid_crates_astrid-minime-protocol_src_volition_inquiry.rs_1789508666.md": {
+      "status": "??",
+      "sha256": "469c0fa3a0d621217a48e8d58787ace633dfd541ac34a04d547a3298b85d845e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/summaries/introspection_source_catalog_1789509068.md": {
+      "status": "??",
+      "sha256": "7845b09c968c03a68a9f02c5bb0cec423da6e63725684d34e950d879129a69af"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/test_results.json": {
+      "status": "??",
+      "sha256": "8b92e9593e812d61a152695334f41d61d0d6fc3e086117eedadf5c9b35d003e2"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "ad603d5283fe3bb13d988f8bda7db260744af7f612ff66c9825c03a0c7ae2c66"
+    },
+    "docs/steward-notes/claude-heartbeat_1789513826_strand_companion_derivation_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "e212e6fd6447269c45cc6577b39794d57d9e7c81bd705babb03d8a8e7a0172cc"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "0b073139def7c0dbce2a40dfbb39bea824b8f200ef56eee49920f0c73033fcf6"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "b1862349a8d3b9d8597b06ed0b96a06378d312368d8728d769f656a44ceb6a06"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/claims/introspection_source_catalog_1789522750.json": {
+      "status": "??",
+      "sha256": "84d7640cff0320dfbd139f429e5c014ad686d42780e5cb800013b70190587478"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/family_scan.json": {
+      "status": "??",
+      "sha256": "c1bad7ad2cea1a21b6f59756717caa0fe518b417eae2c5c494f1ea033198ba7e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "3eef6c90385c974ed92c07a2d4e47bb9582381191dd684c9acb2fffb27779b15"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "7f4d3e01792753d1efec16dabd361e90305b33948a2dc629d3d39319b3ee42c3"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/summaries/introspection_source_catalog_1789522750.md": {
+      "status": "??",
+      "sha256": "09b568afe147c4274daaad3853d4ba9c835f811dff0a0b46e4ce5a1be8ea7d3d"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/test_results.json": {
+      "status": "??",
+      "sha256": "9fa5850970e51e2ea5e9af0a995709adc0baeb27e899dd76615b1afe3a5ee0e6"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "a6d644cd27deafd9ee3af2acc08c6ec36e1443117c69626cc26448138ef7af2d"
+    },
+    "docs/steward-notes/claude-heartbeat_1789526654_source_catalog_inquiry_site_locating_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "c9952deb658cacaf796eb7f9c7fb6062db6257772f6d9840a0c11a396a232024"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "8da81ce54e07788230e479f00c0e77ce5d51feb506cd0371f424600d9903b81e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "a7e321f5583ef9737cd0c95c10926dff903d5c106d4cee679b3425cac44d1199"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/claims/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608.json": {
+      "status": "??",
+      "sha256": "df8d2a8e3bc79d0912fef5db91060412537950342c31fd17c453e79f849e98f3"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/claims/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788.json": {
+      "status": "??",
+      "sha256": "f90cd3faa2c395ca6815d5dd37b0746340a7eb756a9c1936d338211968be4540"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/claims/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954.json": {
+      "status": "??",
+      "sha256": "b816a8d8ea5f806b69dca4c58b617cd6a95ea038432fd24902ca5643f51e0dae"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/family_scan.json": {
+      "status": "??",
+      "sha256": "f2bf1dc57cd8b4d649e9d44905c7554960594aebdedb10fb30727b978d44b4b4"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "dd300deafe021c04fdd6bba9c143a033806471525b092d677edaff31b5115a63"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "0af1c02d1b3858adf793765d630991d45788a2f973c3fd112b0dc5b1a2fad592"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529608.md": {
+      "status": "??",
+      "sha256": "e271c71cb7517f23c1cd4ba112b5cf4bc31aca9023ed4b4ea890e5bb825a4044"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529788.md": {
+      "status": "??",
+      "sha256": "b8e5e68716c084fa267653d0ed4511bb7f46cd6930f766945a3db3b459288ece"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/summaries/introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_authority.rs_1789529954.md": {
+      "status": "??",
+      "sha256": "1028f6bfe2ea898dcf9c844d2660c6db8ed5dbb89c524ce8e39825a5bc073e6c"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/test_results.json": {
+      "status": "??",
+      "sha256": "48c1ca2a35697dd396b68a4d6c4aeced9a27b258f4b83140c5d6c043643e6578"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "75298aac07eb11cfd98bb3a23e6e9c4610153642b7b39a022bacd37f8f4faa7c"
+    },
+    "docs/steward-notes/claude-heartbeat_1789534560_charter_stall_passthrough_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "91a243d7ffb0953a1c256f60b9388c9e9e3f5e1fe61f67e0d7a30544740f3ec6"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "2e2f6acc6a4f7289e6b445ed532704229f480d5e233a20be4366d8eecdc04f91"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "4c2fe2210bfe91b2f6bb1dda84dbc222182a60e26f667e01e958b657fdd7eac2"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/claims/introspection_source_catalog_1789542558.json": {
+      "status": "??",
+      "sha256": "e0dcecb33613f5861b84d1acde54dff614c5e4bf55a2b6aca7fcf4ebc5401fca"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/family_scan.json": {
+      "status": "??",
+      "sha256": "c3852bbc981da94dd6114a4c844ac7bdbbf69c6d338643473f74519aee35bc8e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "b547973b4e4a48af5fceac28b1c02282ea391c9f2fee62689f93bf91ae9f3fd9"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "b2cca815871532181f34b0c949fd82c10cbd40377e0c77159270f4d3a0029ac0"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/summaries/introspection_source_catalog_1789542558.md": {
+      "status": "??",
+      "sha256": "db782be2749e4834f72ce3f874459d75ce2bda1b99bbd0bfcc980c8d7ea70f52"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/test_results.json": {
+      "status": "??",
+      "sha256": "ea937a6ecf7f8771e70c1aaba620c99a1c0e8c63e8429ba7178aa75624d592b1"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "1d245b4ae414b1b9982ad7cbdf8e965cec735a41a9a05307df452500047e5600"
+    },
+    "docs/steward-notes/claude-heartbeat_1789546312_heartbeat_dimension_blindness_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "a5b0f43656d77e77578117429e6c6df016be3ddfe57277a5bfeb62f0ae6daa86"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "046c29414e7a40409e0ffdf71e367e19a2f25c58f757ccee73770430a845fe59"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "123209bac23025daf9692c6975562318b425aeb626e4764cc03121b02d218138"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/claims/introspection_source_catalog_1789553097.json": {
+      "status": "??",
+      "sha256": "bd69ad6526038ba9b4b87e814d67b4cd16ce5b0ba2cf883d6f3e2e0b699d27ad"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/claims/introspection_source_catalog_1789553233.json": {
+      "status": "??",
+      "sha256": "717613c1f081524ca289ca72d26dee5a17b3ed7d409027636f2078cf5cb9eae8"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/claims/introspection_source_catalog_1789553748.json": {
+      "status": "??",
+      "sha256": "36a8203f994bbeed9115698c07d92fb584b700a6dadc3a3763ba30da74de005b"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "4b274f6a66a38bb1a1363b9a238487a9687fdfdc865c2250be88b1acb260839f"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "a8a400f905f6675b013a4dc1b3662122b2ee710a7f23324901307a0f4586af97"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553097.md": {
+      "status": "??",
+      "sha256": "683c73f551707b561750902a60c3bd6b9bbca0183cd31e649121ec32b87e6169"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553233.md": {
+      "status": "??",
+      "sha256": "0baeeee2d0ccd869efb6ecc2faab89e404cd1b60708a02d8ccce63c81875d5ee"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/summaries/introspection_source_catalog_1789553748.md": {
+      "status": "??",
+      "sha256": "b695870acefb972abbef74c04567cca804089df5d42a876a0c20be692d1f2d72"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/test_results.json": {
+      "status": "??",
+      "sha256": "354cd88a825ac749f29c566c001ec592315cbe6101c0c1ac181a2ae1abd80f4c"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "2767a2ebd61dbce41c43efa19badb7ab9e958a4d604c80fba433033f4ff8569a"
+    },
+    "docs/steward-notes/claude-heartbeat_1789557900_unrooted_map_namespace_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "05414820643dd1a1e19bd09618f1a2ee0a86de01445daa257fc9e78b0c8d9a08"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "7225a7af740eff84e8b1ed90cfcfd2c056852fc535a9a9cd9abba4e7c4aefca9"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "4b953c00e4f0b24268db0cc14083c2ed904fdf75f7700e83bb25f7d21ec0695a"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/claims/introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573.json": {
+      "status": "??",
+      "sha256": "43bbf0a3664d24225b58830960a853ac500c023f376b5c321cfd97424264c0e6"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/family_scan.json": {
+      "status": "??",
+      "sha256": "7dd45f17cfa83a4af327f799e2f19ae9f065c5157f30d21277934b4bb9c0c4a7"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/queue_next_40.json": {
+      "status": "??",
+      "sha256": "8c91ee3608bc37fe9f44804dd1e68d9473104f05dfcbbb3d26b6eabf4349de79"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "fb85776090c8b9916fd9e392fe72de1e62d11337d6866d416f2242f8a0a58c68"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "67711e7757fb7ec70a18a9fc22b9778859b3ee0c3d5005124b8051929ad289a5"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/summaries/introspection_astrid_crates_astrid-kernel_src_maintenance.rs_1789566573.md": {
+      "status": "??",
+      "sha256": "f075ac580d649b5023d74c6358ef652977aeba87c282de5a12e6e16ba9342fd1"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/test_results.json": {
+      "status": "??",
+      "sha256": "78974b913680c85a1d2e4e179ed93de5ae246f56344a35c3fd959739201264c0"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/tier5_cadence_dossier.md": {
+      "status": "??",
+      "sha256": "2da016d374c06a3443d4e4165158d77c8c1c0f6ab8d78ea12169c797a374d6d7"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "01f86c9a25cdeaa528ebfccd11ee3c43ebefd6e216515305132190824d805819"
+    },
+    "docs/steward-notes/claude-heartbeat_1789570900_division_return_cycle49_maintenance_gid_asymmetry_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "dc3b4ffedf178dac3443b43c6b8681b851747a1fe942d905d3324eb31de9d9f1"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "180250a19e087d2563934006a7bf2491a9d4f59fd983982bd51339e5543e88dd"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "50436420016327ec472cf5ae0b4997fd0e3f7664b82e77c0893a6f8fbcaa300e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/claims/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505.json": {
+      "status": "??",
+      "sha256": "19f1c2bd74ec2fe4f7f5bf1898f4db0d4a0a8f3b4ab80c580c23a6f979caa798"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/claims/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928.json": {
+      "status": "??",
+      "sha256": "7dd01bb0f1d58256e67aefe84dac1154aba1cb5d8fb606fff7b08b58aadaa33f"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/family_scan.json": {
+      "status": "??",
+      "sha256": "d2f7577b702a7443ebc4e44aeb1a689e3a36bd47ba52e172f6848207767f8e04"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "342ea5b6f3bf3c46418f3e773a2cdbf67155698165b1d954fb56477aa73eadab"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "6671b9698b19a47fd70e542823b76e2c12e7af4246295bfb33b596580388bf55"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577505.md": {
+      "status": "??",
+      "sha256": "958ea394f7c68f29645e759beee32498b04d1d176edf72593ae2cfa9d1c8ffe0"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/summaries/introspection_astrid_crates_astrid-kernel_src_kernel_router.rs_1789577928.md": {
+      "status": "??",
+      "sha256": "7c0c9428f43546063976ff064689bc7a7fd8a4356a95707e31bb38fc015cf3f6"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/test_results.json": {
+      "status": "??",
+      "sha256": "7f68980360bfd2a402080410e6beb704ed871aa65546411882dd98d9c0d6799a"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "9de99e678d1643eaa0008ad615e621747bfcabf9e05db996d29c744a3355222a"
+    },
+    "docs/steward-notes/claude-heartbeat_1789581087_kernel_router_dispatch_topic_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "81d397ffd33b187d488cf0e9402d644986adc9c592b746d5aacce8ce61af4ad8"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "311b506e54c6674cb8d93f350419884af9bd6814b3023cb37c2413d40ee56a8b"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "1a23c13bfd4dadac594f85855c02eb237b80b1b0f8494bc679b2fd85ca8521f6"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/claims/introspection_source_catalog_1789589587.json": {
+      "status": "??",
+      "sha256": "cd4c28547049229bd5b62cbc2a42cf7b0270e2baf3d93ae01ec1b32941775837"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "03d9a593b1650c0afd8e2f4e0b740d05154b57203f9fe47542f7b7affbc88958"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "4f5bfeb0fed71cbe2c55891535a5a4526e6c700bb0049458106d7dab161aa18c"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/summaries/introspection_source_catalog_1789589587.md": {
+      "status": "??",
+      "sha256": "d27d0041cb9c057dc11c4efb38614cd7ad0031fd19f3454d568f1945f05bf3e0"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/test_results.json": {
+      "status": "??",
+      "sha256": "ac8195342357b3fa7e5f3c78103b21de354a48853f1bf6d5a21cfab0f166ae9b"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "f8de6a5777b6fe5c702a04826c4f237a22314ce0840690097bf3975ecc1d7d5b"
+    },
+    "docs/steward-notes/claude-heartbeat_1789593328_component_map_sibling_reach_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "798a14aaf3fe401797e97163948aac76ec7bc6c7335fcee636bf17dd3a5823f8"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "bdeed38273a7893ecc0fea85716c53c9702b90c36094b01a6a0c4d53f42a696f"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "2ec02062e84bfb484b4f0b0f63a0d8ead075d06882303aa1bfcbcb48813c7e8d"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789601340.json": {
+      "status": "??",
+      "sha256": "494fc8ffc69033dc226cd01905f04aaa1e8592d257396b6a09a59ae821890693"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/family_scan.json": {
+      "status": "??",
+      "sha256": "83a27697c8320bc45e26e14357b9e3046ced25913a7eb35d7e4378d5b743a590"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "e5a6335672f7ce3aeab099b1146402c776e24bc646cebe0882d7657226b1bf10"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "1c9c1ac10a9bfd25397f63e9d1aa94a58cd4a0d1913afa15edde204e295f97c9"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789601340.md": {
+      "status": "??",
+      "sha256": "402a134edd70628217f12705345f58498d67c82bf2e72380213963454719a101"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/test_results.json": {
+      "status": "??",
+      "sha256": "538debe09ea2b2689005bf326db5b5f38359ef8ab3955ade76ed1c592a921cad"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "4440dd89d3831c8a1166f60949c5cc34c97a790fb5c862214855cba6b18719e6"
+    },
+    "docs/steward-notes/claude-heartbeat_1789606125_stale_scale_behind_cursor_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "1dab1c4516a86b3d097a80274ccb7b664154122d10113e614681cddb4f782d21"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "654924db9d4191da1f118ce785e1cd8f63a5fab0f5b7e818eff00f1eb45ca075"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "7e74706a03a1a9851b655783c129d3867215297affabf2ff09dba3bfd2b74343"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789608500.json": {
+      "status": "??",
+      "sha256": "389e872ce3c5e65eb20e56ddf4878f4c625e56344ebb2911aea580a01479965e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/family_scan.json": {
+      "status": "??",
+      "sha256": "5c5c17821ca7c702406e392e9b3f921a0d076481d00b77f753d0110533ce1e16"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/next_queue_snapshot.json": {
+      "status": "??",
+      "sha256": "f276c21b3bbf5eefbc28d4df2e12553e0acefe210b23bc0e80eacef83f9f2d22"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "5eaa63761262a57443d792efe91191258e1c0a01e8701469b2c9ef479a0764b4"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "3bf0c2c8065609eea5e1161658b8776c23247b481c065870ee375edf4451812b"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789608500.md": {
+      "status": "??",
+      "sha256": "a78221e90f76b1110bdd13444e8efe9abba00e29d354257d8a1ef9aba4ec14e9"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/test_results.json": {
+      "status": "??",
+      "sha256": "88ca3151924d14e30b6e0b5a7b90e411cbb890a2135b5e97b4bf389e83b48975"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "75d7e0fb4ca21a1168719b86040f56591d03582d8d4636cc5b8fcf2cdd2b950e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789619176_page_line_interval_legibility_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "9d58ceb2df78c6305967a1cb11e486163414472be74a41cbfbfcc29aedfa91b1"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "acea35c9c8459857f59c689e610de2837a1b32979aecc68a0068219113cf859a"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "8343792518403034d06ecb90e2993703f6d432a42edf4707764efc84797a9377"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789608023.json": {
+      "status": "??",
+      "sha256": "54e157667fa7d6199044426c6ed294506f493936dfd8c5b8042262dccbc456a5"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/family_scan.json": {
+      "status": "??",
+      "sha256": "e9516b3bf11a4b0d5dfc5716e09784557ff56b01f82437cd35f588cc9f691f02"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/next_queue_snapshot.json": {
+      "status": "??",
+      "sha256": "45f6838ece775e3c29c9e6c978ebd7b554aeeda7f310b4b8494877aa6596cfb3"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "30967c965ac0177e22b46a558ef47720d44c03096f550a322f570ebf3c4a812f"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "84f31a05aa2fdfb7837b981e198a175fc1bbb8024e10fd07b4007a43b4a82765"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789608023.md": {
+      "status": "??",
+      "sha256": "6208fb6a397570a66d36ac8821cfbc8106e3777cebdd0a2a89eb631e7fe835b0"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/test_results.json": {
+      "status": "??",
+      "sha256": "6a9eaad58dc0f02b734ce2e20dd714759f45ec022e8f06c23f24e78e2d7546d5"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "9bad14b8a36f4240770f19104a81481c246029d44ad260e2f9faecaee5b08a47"
+    },
+    "docs/steward-notes/claude-heartbeat_1789632048_page_end_declaration_legibility_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "806e9cf0c2ca49b796e9d35ba04cb002913a2f3f9e23e5f772dfedcbdfb96d6c"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "f5dba4b1bbf029974b763d445230c2e1e73ac910e39c28abef2777798252347a"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "2b4b46acb95394327b50e906b476d375c58ce672f7176c4b785e63b0c9fba3e8"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/claims/introspection_minime_minime_src_sensory_bus.rs_1789640246.json": {
+      "status": "??",
+      "sha256": "63350bfcbd4c4ac96937648199563e6701f25f777c96a0512ee2ff656c102d20"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/family_scan.json": {
+      "status": "??",
+      "sha256": "afc4640cc3981dd14fc70402984d69812d5d42ca4d206201e84c49d01c79d425"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/pressure_risk_samples.json": {
+      "status": "??",
+      "sha256": "8af050af9267e054dabbca308cdae7cd263de5de1b77ef20a58d051672e93a1e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/queue_next_40.json": {
+      "status": "??",
+      "sha256": "93752a2c8d1b346de597451ad2f9f4f501668afa6e4cb2ef47197986d6cb477e"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "f253b2f441d5e909963c913e03b2483db7d03c97d05e9e340d169ca7b7b6af71"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "381d5c4518372d4cbedc73f3ce79d279bac712b85b5f8e6f6b49c49f7b249d78"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/summaries/introspection_minime_minime_src_sensory_bus.rs_1789640246.md": {
+      "status": "??",
+      "sha256": "a207475d8ba2383c1a844ef6909b737497a6d587e3eaa731b8f794ab0446534d"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/test_results.json": {
+      "status": "??",
+      "sha256": "6d185a125febf197b1590596499e55bc073bdecd5706c7d93e048fde6b2b5e24"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/tier5_cadence_dossier.md": {
+      "status": "??",
+      "sha256": "a684171968d6f380c9a2e5ae29b77f6c1505d1424e90a9ded11d42495e51ac77"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "d1b9f001ad2aadd54527a419c9aca540fbf27fe0914fa4d8c5c4cce8dcab404a"
+    },
+    "docs/steward-notes/claude-heartbeat_1789643755_division_return_cycle50_unnamed_coefficient_reach_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "48beece4b6c8ad691f9d740c04f147003baf40416dc047d560f02cf4d748d045"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/RUN_REPORT.md": {
+      "status": "??",
+      "sha256": "e43d9e921b88f7b433762c9a6591fc93e7fd5e2fc3ab805813086314990d10fd"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/addressing_links.json": {
+      "status": "??",
+      "sha256": "39803b2fe4f15ebf049e7764d319a46c83b1d79771101ac94f5f2ccef9e08924"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/claims/introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384.json": {
+      "status": "??",
+      "sha256": "99e08ae5fb3f4c6ce526de2494bb5eda13ad050b6a21499ae0ebccca90e861d8"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/family_scan.json": {
+      "status": "??",
+      "sha256": "e39413d2c0fb4c815f466826d60818ec84b74060f290808ca414dce6a739fb5d"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/read_manifest.json": {
+      "status": "??",
+      "sha256": "41bfc358d22d02466d8faab35ab121fad71911ddd599fbd075d6acc19bad3e8a"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/source_receipts.json": {
+      "status": "??",
+      "sha256": "48c4f969738682bb7483cecc63855c65519a4f2988e2cdae79cc60991a2f2fc8"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/summaries/introspection_astrid_capsules_astralis_astrid-capsule-edge-spectral_src_lib.rs_1789667384.md": {
+      "status": "??",
+      "sha256": "fd826b1fe44c6b607e3e65afdaefe14951329908fc40f065efed67c2eb69f304"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/test_results.json": {
+      "status": "??",
+      "sha256": "ad26c18a46cc562dcbdba9de941d6bb309a5c220abf975ef535c99449b020535"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/unprocessed_selected.json": {
+      "status": "??",
+      "sha256": "e8866f50661cd68cad9c381318c9cf54775a80aa6b95d05510d3161b323c63f9"
+    },
+    "docs/steward-notes/claude-heartbeat_1789671709_edge_spectral_record_vs_window_metrics_round/verification_receipt.json": {
+      "status": "??",
+      "sha256": "61b5deed251d07bea2bcd81857c4cba1248b5e766c62b779979cb2ecb2c951c1"
+    },
+    "scripts/restart_visual_service.py": {
+      "status": "??",
+      "sha256": "18cfe7e3bc001f558d45370853b8b35404325751eebba57cc9e9acef2ceff043"
+    },
+    "scripts/study_recurrence_provenance.py": {
+      "status": "??",
+      "sha256": "cf926ce1a1cde6089ac5dda62bd71964254e2f6305a5785d58088f261dd59e47"
+    },
+    "scripts/test_restart_visual_service.py": {
+      "status": "??",
+      "sha256": "9e2cd31d32bcca3e2f170d079d46b1928bcff70b405e5c5ac61c86a62f1869a4"
+    },
+    "scripts/test_study_recurrence_provenance.py": {
+      "status": "??",
+      "sha256": "3f05a0abdeb21c5497a7fb19d939f11cd8e154950fc3cf27a706422be5cbd6ad"
+    }
+  },
+  "remaining_minime_paths": {},
+  "pause_generation": 457,
+  "services_restarted_during_git_checkpoint": false,
+  "pushed": false
+}

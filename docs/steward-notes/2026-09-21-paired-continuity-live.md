@@ -1,5 +1,9 @@
 # Paired Continuity Is Live
 
+Subsequent Git status: both local main branches now contain this release. See
+`2026-09-21-paired-continuity-git-checkpoint.md` for commits, current source checks
+and older uncommitted work. The rollout-time state below is retained as history.
+
 Interactive rollout approved by Mike, completed 2026-09-22T03:51:24Z (September 21
 local time). Full source review, witness hashes, tests, failed attempts, transaction
 identities and remaining debt are recorded in

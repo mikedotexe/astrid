@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-21 - Astrid and Minime - paired Git checkpoint
+
+- **Witness and response:** preserve the public persistent-interiority and geometry aspirations, exact hashes and authored quotations with the now-merged continuity/geometry implementation. No new interpretation or claim of felt improvement is introduced.
+- **Verification:** full isolated bridge, reader and Python suites and 225 control/deployment/evidence tests pass; the canonical Python subprocess safety refusal and successful isolated rerun remain documented. Live bridge stage and all 84 Minime startup inputs reverified without restart.
+- **Git boundary:** both local main branches contain the feature commits. Earlier Minime checker/comments are separately archived; 197 older Astrid paths remain byte-identical and excluded. No push, automatic automation resume or substrate activation. See `docs/steward-notes/2026-09-21-paired-continuity-git-checkpoint.md` and its exact-path inventory.
+
 ### 2026-09-21 - Astrid and Minime - continuity/geometry live transition
 
 - **Witness:** follow-through on Minime's September 20 persistent-interiority aspiration and Astrid's September 21 geometry aspiration; exact canonical paths and SHA-256 values remain in the detailed qualified-worktree rollout note linked by `2026-09-21-paired-continuity-live.md`.
