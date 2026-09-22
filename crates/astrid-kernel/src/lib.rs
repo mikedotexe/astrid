@@ -709,11 +709,8 @@ fn spawn_kernel_tasks(kernel: &Arc<Kernel>) {
     .with_identity_store(Arc::clone(&kernel.identity_store));
     tokio::spawn(dispatcher.run());
 
-    debug_assert_eq!(
-        kernel.event_bus.subscriber_count(),
-        INTERNAL_SUBSCRIBER_COUNT,
-        "INTERNAL_SUBSCRIBER_COUNT is stale; update it when adding permanent subscribers"
-    );
+    // Subscription is asynchronous in some tasks; an immediate count is not a
+    // boot invariant. Idle shutdown uses the explicit client connection count.
 }
 
 /// Initialize the sandboxed overlay VFS.
@@ -836,16 +833,6 @@ fn load_or_generate_runtime_key(keys_dir: &Path) -> std::io::Result<KeyPair> {
     }
 }
 
-/// Spawns a background task that cleanly shuts down the Kernel if there is no activity.
-///
-/// Idle shutdown is only active for explicitly ephemeral daemons.
-///
-/// Configurable via `ASTRID_IDLE_TIMEOUT_SECS` (default 30 seconds).
-/// Number of permanent internal event bus subscribers that are not client
-/// connections: `KernelRouter` (`kernel.request.*`), `ConnectionTracker` (`client.*`),
-/// and `EventDispatcher` (all events).
-const INTERNAL_SUBSCRIBER_COUNT: usize = 4;
-
 /// Initial grace period before idle checking begins.
 const IDLE_INITIAL_GRACE: std::time::Duration = std::time::Duration::from_secs(5);
 /// How often the idle monitor polls when running in ephemeral mode.
@@ -868,6 +855,8 @@ fn idle_monitor_config(ephemeral: bool, env_timeout_secs: Option<u64>) -> IdleMo
     }
 }
 
+/// Shuts down explicitly ephemeral daemons after `ASTRID_IDLE_TIMEOUT_SECS`
+/// without connected clients (default 30 seconds).
 fn spawn_idle_monitor(kernel: Arc<Kernel>) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
         // Initial grace period — wait for capsules to boot and first client

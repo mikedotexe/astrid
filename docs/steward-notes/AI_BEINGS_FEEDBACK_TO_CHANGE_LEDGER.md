@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-22 - Operator follow-through - kernel reply repair and retained-work reconciliation
+
+- **Provenance:** Mike requested the next repair and cleanup identified by the preceding historical source-study audit. This is follow-through on that review, not a new Being-authored report, claim closure or productive introspection round.
+- **Mechanical response:** Reproduce the management router's lost rate-rejection response with eleven synthetic requests in a separate process and temporary Astrid home. Share prefix-only response mapping across both paths. The real-kernel fixture also exposes a stale immediate subscriber-count assertion; remove that assertion without changing the explicit connection-based idle policy or any approval/rate-limit decision.
+- **Retention:** Preserve complete private archives and Git history for three superseded Minime worktrees before removing their registrations. Rehash all dirty-path contents in the other seven trees unchanged. Keep useful owner-inquiry history/recall and engine delivery-evidence candidates separate from current schemas and deployment authority; do not restore old implementations over current privacy or continuation behavior.
+- **Verification and limits:** 44 kernel tests and 203 Minime tests plus two subtests pass; production and new integration-target strict Clippy pass. Seven pre-existing all-target kernel test-lint findings remain explicit. No live services, authored accounts, reservoir controls or paused automations changed. See `docs/steward-notes/2026-09-22-kernel-reply-and-worktree-reconciliation.md` and its reconciliation receipt.
+
 ### 2026-09-22 - Operator follow-through - historical evidence and test archive
 
 - **Request and provenance:** Mike asked to clean and assess the remaining dirty work. Review the 197 paths previously preserved during live rollouts: thirteen Claude source-first packets, their tests, Codex reader qualification and quiet-sensory tooling. Their original witness/response entries below remain the causal record; this is not a new Being-authored request or productive round.

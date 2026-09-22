@@ -45,8 +45,7 @@ pub(crate) fn spawn_kernel_router(kernel: Arc<crate::Kernel>) -> tokio::task::Jo
                             method = method,
                             "Rate limited kernel management request"
                         );
-                        let response_topic =
-                            message.topic.replace("kernel.request.", "kernel.response.");
+                        let response_topic = management_response_topic(&message.topic);
                         publish_response(
                             &kernel,
                             response_topic,
@@ -94,13 +93,17 @@ fn spawn_connection_tracker(kernel: Arc<crate::Kernel>) -> tokio::task::JoinHand
     })
 }
 
-#[expect(clippy::too_many_lines)]
-async fn handle_request(kernel: &Arc<crate::Kernel>, topic: String, req: KernelRequest) {
-    let response_topic = if let Some(suffix) = topic.strip_prefix("astrid.v1.request.") {
+fn management_response_topic(topic: &str) -> String {
+    if let Some(suffix) = topic.strip_prefix("astrid.v1.request.") {
         format!("astrid.v1.response.{suffix}")
     } else {
-        topic.clone()
-    };
+        topic.to_string()
+    }
+}
+
+#[expect(clippy::too_many_lines)]
+async fn handle_request(kernel: &Arc<crate::Kernel>, topic: String, req: KernelRequest) {
+    let response_topic = management_response_topic(&topic);
 
     let res = match req {
         KernelRequest::InstallCapsule { source, workspace } => {
@@ -306,6 +309,31 @@ fn rate_limit_for_request(req: &KernelRequest) -> (&'static str, Option<u32>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn response_topic_maps_only_the_leading_management_namespace() {
+        for (request, response) in [
+            ("astrid.v1.request.status", "astrid.v1.response.status"),
+            (
+                "astrid.v1.request.kernel.request.approval",
+                "astrid.v1.response.kernel.request.approval",
+            ),
+            (
+                "astrid.v1.request.astrid.v1.request.nested",
+                "astrid.v1.response.astrid.v1.request.nested",
+            ),
+            ("astrid.v1.request.", "astrid.v1.response."),
+            ("kernel.request.status", "kernel.request.status"),
+            (
+                "other.astrid.v1.request.status",
+                "other.astrid.v1.request.status",
+            ),
+            ("astrid.v1.response.status", "astrid.v1.response.status"),
+            ("", ""),
+        ] {
+            assert_eq!(management_response_topic(request), response);
+        }
+    }
 
     #[test]
     fn rate_limiter_allows_within_limit() {
