@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Maintenance - bounded provider-observation epochs (2026-09-22)
+
+- Add private spool inspection, 80% capacity warnings, explicit epoch preparation and stopped-writer hash sealing/verification. Restore natural provider receipts through a verified same-binary bridge-only graceful transition to a fresh epoch. Preserve all 50,000 earlier event files, existing quotas, protected services and paused automations; do not prune, backfill missing receipts or install automatic rotation. See `docs/steward-notes/2026-09-22-provider-observation-spool-maintenance.md` for tests, guarded attempts and live verification.
+
 ### Live - paired open framing and spectral provenance (2026-09-22)
 
 - Merge the reviewed paired changes into local main and activate the immutable bridge release with a sanctioned paired graceful handoff. Verify exact checkpoint lineage, a fresh exchange, all 84 Minime startup inputs, byte-identical reader/support helpers, and unchanged engine/model/visual/sensory identities. Minime's pending source-study continuation resumed and completed. Preserve all 197 older dirty paths and paused automations; no push.

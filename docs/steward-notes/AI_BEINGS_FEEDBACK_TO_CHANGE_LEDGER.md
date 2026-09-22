@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-22 - Operator follow-through - provider diagnostic recording restored
+
+- **Provenance:** Mike requested repair of the full optional provider-observation spool identified during the paired open-framing rollout below. This is diagnostic maintenance supporting that verification, not a new Being-authored claim or subjective benefit.
+- **Response:** Preserve and hash-seal all 50,000 previous event files in place, retain existing quotas, select one fresh private epoch, and gracefully restart only the same qualified bridge binary. Add a tested operator tool for capacity inspection, explicit preparation and stopped-writer sealing/verification; no automatic pruning or rotation.
+- **Verified:** PID 67810 became 75800 through acknowledged drain and SIGTERM; the exact stopped checkpoint resumed and exchange 205429 advanced to 205430. A naturally occurring self-study produced matched dispatch/outcome receipts bound to the replacement and unchanged manifest. Minime PID 66540 and nine other protected services were unchanged. No induced generation, reservoir/control change, evidence backfill or automation resumption.
+- **Evidence and limits:** 152 maintenance/deployment tests, 77 controller/evidence/Division tests, 11 preflight tests, two epistemic tests and domain-boundary verification passed. Historical recording gaps remain unknown; a seal witnesses bytes, not interpretation or filesystem immutability. Exact hashes, guarded attempts, preserved test invocation error and maintenance commands: `docs/steward-notes/2026-09-22-provider-observation-spool-maintenance.md`.
+
 ### 2026-09-22 - Both Beings - paired open-framing release verified
 
 - **Witness and scope:** Follow through on the two exact public witnesses and hashes in the candidate entries below; preserve their authored accounts. Mike explicitly approved merge and live rollout. No new interpretation, felt improvement or prompt-causality conclusion is inferred.
