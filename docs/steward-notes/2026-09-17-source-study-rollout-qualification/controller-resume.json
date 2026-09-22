@@ -1,0 +1,15 @@
+{
+  "event": {
+    "appended": true,
+    "spooled": null
+  },
+  "state": {
+    "acknowledgement_sha256": "a8402450c08ba048a18093455b7b50b293b1acaeed5a838bffe1ef5ecaba005c",
+    "actor": "codex-astra-interactive",
+    "pause_generation": 454,
+    "paused": false,
+    "recorded_at": "2026-09-17T17:44:13.922021+00:00",
+    "schema": "steward_control_state_v1",
+    "schema_version": 1
+  }
+}

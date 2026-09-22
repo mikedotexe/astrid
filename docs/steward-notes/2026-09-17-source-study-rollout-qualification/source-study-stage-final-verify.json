@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "acknowledgement_sha256": "f7eebb79275410c3f9ab5bb55af03cd2729e3948781a6c5a994ec06f600b8dec",
+  "activation_performed": false,
+  "actor": "codex-astra-interactive",
+  "authority": "build_manifest_witness_not_deploy_authority",
+  "binary_sha256": "7ab70e192afc4bbb4f77ea1a9978c3cc1fdac0cf325f579ff6d8eb398c41ced8",
+  "live_authority_granted": false,
+  "live_eligible_now": false,
+  "manifest_sha256": "c2c40c356efa6758cac4e2f6e3e2b758d0b9963de36f11da5fd75e9c6fbc2a09",
+  "native_target": "aarch64-apple-darwin",
+  "prepared_at": "2026-09-17T17:24:16.139363+00:00",
+  "schema": "bridge_staged_release_v3",
+  "source_inputs_sha256": "1e4658959440ce45a10187eb838605dca95348beed3187dc62e7807263754622",
+  "source_root": "/Users/v/other/astrid",
+  "stage": "/Users/v/other/worktrees/source-study-evidence-20260917/bridge-stage-01",
+  "status": "staged_verified_not_activated"
+}

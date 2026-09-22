@@ -1,0 +1,161 @@
+
+running 2281 tests
+....................................................................................... 87/2281
+....................................................................................... 174/2281
+....................................................................................... 261/2281
+....................................................................................... 348/2281
+....................................................................................... 435/2281
+....................................................................................... 522/2281
+....................................................................................... 609/2281
+....................................................................................... 696/2281
+....................................................................................... 783/2281
+....................................................................................... 870/2281
+....................................................................................... 957/2281
+....................................................................................... 1044/2281
+....................................................................................... 1131/2281
+....................................................................................... 1218/2281
+....................................................................................... 1305/2281
+....................................................................................... 1392/2281
+....................................................................................... 1479/2281
+....................................................................................... 1566/2281
+....................................................................................... 1653/2281
+....................................................................................... 1740/2281
+....................................................................................... 1827/2281
+.....................................................................i................. 1914/2281
+....................................................................................... 2001/2281
+....................................................................................... 2088/2281
+....................................................................................... 2175/2281
+....................................................................................... 2262/2281
+...................
+test result: ok. 2280 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 417.18s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+......
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+
+running 1 test
+   Compiling ring v0.17.14
+    Checking astrid-core v0.5.6 (/Users/v/other/astrid/crates/astrid-core)
+    Checking astrid-crypto v0.5.6 (/Users/v/other/astrid/crates/astrid-crypto)
+    Checking rascii_art v0.4.5 (/Users/v/other/RASCII)
+    Checking astrid-source-study v0.1.0 (/Users/v/other/astrid/crates/astrid-source-study)
+    Checking astrid-minime-protocol v0.1.0 (/Users/v/other/astrid/crates/astrid-minime-protocol)
+    Checking astrid-storage v0.5.6 (/Users/v/other/astrid/crates/astrid-storage)
+    Checking astrid-capabilities v0.5.6 (/Users/v/other/astrid/crates/astrid-capabilities)
+   Compiling rustls v0.23.43
+    Checking rustls-webpki v0.103.15
+    Checking tokio-rustls v0.26.5
+    Checking hyper-rustls v0.27.9
+    Checking reqwest v0.12.28
+    Checking spectral-bridge-server v0.1.0 (/Users/v/other/astrid/capsules/spectral-bridge)
+    Checking spectral-bridge-server-tests v0.0.0 (/Users/v/other/astrid/capsules/spectral-bridge/target/tests/trybuild/spectral-bridge-server)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 22.65s
+
+
+test tests/ui/evidence_cannot_dispatch.rs ... ok
+test tests/ui/pending_cannot_dispatch.rs ... ok
+test tests/ui/granted_cannot_deserialize.rs ... ok
+test tests/ui/verified_temporal_cannot_deserialize.rs ... ok
+
+
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.45s
+
+
+running 5 tests
+.....
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.93s
+
+
+running 1 test
+   Compiling ring v0.17.14
+   Compiling astrid-core v0.5.6 (/Users/v/other/astrid/crates/astrid-core)
+   Compiling astrid-crypto v0.5.6 (/Users/v/other/astrid/crates/astrid-crypto)
+   Compiling astrid-source-study v0.1.0 (/Users/v/other/astrid/crates/astrid-source-study)
+   Compiling rascii_art v0.4.5 (/Users/v/other/RASCII)
+   Compiling astrid-minime-protocol v0.1.0 (/Users/v/other/astrid/crates/astrid-minime-protocol)
+   Compiling prime_esn_wasm v0.1.0 (/Users/v/other/prime_esn_wasm)
+   Compiling astrid-storage v0.5.6 (/Users/v/other/astrid/crates/astrid-storage)
+   Compiling rustls-webpki v0.103.15
+   Compiling rustls v0.23.43
+   Compiling astrid-capabilities v0.5.6 (/Users/v/other/astrid/crates/astrid-capabilities)
+   Compiling tokio-rustls v0.26.5
+   Compiling hyper-rustls v0.27.9
+   Compiling reqwest v0.12.28
+   Compiling spectral-bridge-server v0.1.0 (/Users/v/other/astrid/capsules/spectral-bridge)
+   Compiling spectral-bridge-server-tests v0.0.0 (/Users/v/other/astrid/capsules/spectral-bridge/target/tests/trybuild/spectral-bridge-server)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 32.52s
+
+
+test tests/ui/llm_facade_reexports_exchange.rs [should pass] ... ok
+test tests/ui/llm_facade_reexports_generation.rs [should pass] ... ok
+test tests/ui/llm_provider_module_is_private.rs [should fail to compile] ... ok
+
+
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 183.82s
+
+
+running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.23s
+
+
+running 1 test
+    Checking spectral-bridge-server-tests v0.0.0 (/Users/v/other/astrid/capsules/spectral-bridge/target/tests/trybuild/spectral-bridge-server)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.52s
+
+
+test tests/ui/raw_packet_cannot_construct_observation.rs ... ok
+test tests/ui/producer_cannot_construct_bridge_evidence.rs ... ok
+test tests/ui/observation_cannot_deserialize.rs ... ok
+test tests/ui/interpretation_cannot_dispatch.rs ... ok
+test tests/ui/witness_frame_cannot_dispatch.rs ... ok
+test tests/ui/lived_state_witness_cannot_be_forged.rs ... ok
+test tests/ui/lived_state_witness_cannot_deserialize.rs ... ok
+test tests/ui/reciprocal_experiential_cannot_be_forged.rs ... ok
+test tests/ui/reciprocal_experiential_cannot_deserialize.rs ... ok
+test tests/ui/reciprocal_resonance_cannot_be_forged.rs ... ok
+test tests/ui/reciprocal_resonance_cannot_deserialize.rs ... ok
+test tests/ui/study_capture_cannot_be_forged.rs ... ok
+test tests/ui/study_capture_cannot_deserialize.rs ... ok
+
+
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.94s
+
+
+running 1 test
+    Checking spectral-bridge-server-tests v0.0.0 (/Users/v/other/astrid/capsules/spectral-bridge/target/tests/trybuild/spectral-bridge-server)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.24s
+
+
+test tests/ui/signal_stage_cannot_be_forged.rs ... ok
+test tests/ui/signal_receipt_cannot_deserialize.rs ... ok
+
+
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.88s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

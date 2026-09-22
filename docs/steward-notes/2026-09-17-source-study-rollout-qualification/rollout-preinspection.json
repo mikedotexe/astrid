@@ -1,0 +1,10 @@
+{
+  "schema": "source_study_preinspection_attempt_v1",
+  "outcome": "denied_recent_edit_gate",
+  "record_type": "retrospective_operator_summary_not_original_command_stdout",
+  "original_stdout_bytes": 0,
+  "error": "deployment preflight denied: /Users/v/other/astrid: foreign_active",
+  "explanation": "The guard included recently written qualification documentation. Both rejected inspections sent no signal; the final inspection waited for the unchanged settling gate.",
+  "activation_performed": false,
+  "successful_followup": "source-study-rollout-preinspection-final.json"
+}

@@ -1,0 +1,4 @@
+    Blocking waiting for file lock on build directory
+    Checking astrid-source-study v0.1.0 (/Users/v/other/astrid/crates/astrid-source-study)
+    Checking spectral-bridge-server v0.1.0 (/Users/v/other/astrid/capsules/spectral-bridge)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5m 21s

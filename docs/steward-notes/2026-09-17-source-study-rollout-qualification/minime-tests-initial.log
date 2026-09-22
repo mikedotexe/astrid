@@ -1,0 +1,61 @@
+........................................................................ [  5%]
+............................................................... [  9%]
+...................................................................... [ 14%]
+........................................................................ [ 19%]
+.................................................................. [ 23%]
+........................................................................ [ 29%]
+........................................................................ [ 34%]
+......................................s.............................. [ 38%]
+........................................................ [ 42%]
+........................................................................ [ 47%]
+................................................... [ 51%]
+........................................................................ [ 56%]
+........................................................................ [ 61%]
+.............................................F.......................... [ 66%]
+................................................................... [ 71%]
+.................................................................................................... [ 78%]
+........................................................................ [ 83%]
+.............................................. [ 86%]
+........................................................................ [ 91%]
+........................................................................ [ 96%]
+..................................................                     [100%]
+=================================== FAILURES ===================================
+__________ test_both_hosts_share_choice_scanner_and_feedback_fixtures __________
+
+tmp_path = PosixPath('/private/var/folders/98/rh9s2vt50c90b6f910bcnf3m0000gn/T/pytest-of-v/pytest-237/test_both_hosts_share_choice_s0')
+
+    def test_both_hosts_share_choice_scanner_and_feedback_fixtures(tmp_path):
+        from minime_autonomy.parsing import eligible_choice_line_indices
+        fixture_path = Path(os.environ.get(
+            "ASTRID_CHOICE_FIXTURES",
+            str(Path(__file__).resolve().parents[2] / "astrid/crates/astrid-source-study/tests/fixtures/response_choice_cases.json"),
+        ))
+>       fixtures = json.loads(fixture_path.read_text())
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/minime-rollout-qualification.uJHlBn/tests/test_journal_choice_coherence.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/private/tmp/astrid/crates/astrid-source-study/tests/fixtures/response_choice_cases.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/astrid/crates/astrid-source-study/tests/fixtures/response_choice_cases.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+=========================== short test summary info ============================
+FAILED ../../tmp/minime-rollout-qualification.uJHlBn/tests/test_journal_choice_coherence.py::test_both_hosts_share_choice_scanner_and_feedback_fixtures
+1 failed, 1428 passed, 1 skipped, 134 subtests passed in 102.68s (0:01:42)

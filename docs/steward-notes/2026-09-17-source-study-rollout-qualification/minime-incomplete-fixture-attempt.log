@@ -1,0 +1,29 @@
+
+==================================== ERRORS ====================================
+_____________ ERROR collecting test_ollama_mlx_contention_bench.py _____________
+/tmp/astrid-study-baseline.6173Ga/minime-fixture/tests/test_ollama_mlx_contention_bench.py:44: in <module>
+    SPEC.loader.exec_module(MODULE)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+<frozen importlib._bootstrap_external>:950: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/astrid-study-baseline.6173Ga/minime-fixture/tools/ollama_mlx_contention_bench.py'
+_______________ ERROR collecting test_sensory_device_absence.py ________________
+/tmp/astrid-study-baseline.6173Ga/minime-fixture/tests/test_sensory_device_absence.py:20: in <module>
+    camera_client = _load_module(
+/tmp/astrid-study-baseline.6173Ga/minime-fixture/tests/test_sensory_device_absence.py:16: in _load_module
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+<frozen importlib._bootstrap_external>:950: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/astrid-study-baseline.6173Ga/minime-fixture/minime/tools/camera_client.py'
+=========================== short test summary info ============================
+ERROR ../../tmp/astrid-study-baseline.6173Ga/minime-fixture/tests/test_ollama_mlx_contention_bench.py
+ERROR ../../tmp/astrid-study-baseline.6173Ga/minime-fixture/tests/test_sensory_device_absence.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+2 errors in 1.04s

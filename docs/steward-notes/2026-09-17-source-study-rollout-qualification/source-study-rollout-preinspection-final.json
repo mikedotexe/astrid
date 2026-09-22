@@ -1,0 +1,16 @@
+{
+  "bridge_inspection": {
+    "started_at": "Thu Sep 17 08:43:23 2026",
+    "binary": "/Users/v/other/worktrees/study-interface-20260917/bridge-stage-02/spectral-bridge-server",
+    "binary_sha256": "607013b10ec185873c1fbea5b1cf16093cd0bdd3f1025161d4b53577253bddf7",
+    "manifest_sha256": "bbeaa882f3597d4d062a25db5d926489829f7052ebce5045808ed08a8a294170",
+    "launcher_sha256": "4ccf7606dd85dda3c9187e0d936163396973b90759e970ebd17aae96a3ef544c",
+    "drain_supported": true,
+    "selection_helper_sha256": "39007854f07e7ecf90bddb0be0fdad693b50d71f34a4613010f7da15ff9ef89f",
+    "selection_sha256": "92c87e14ef3ce3a63c23db92847dab8dcf613fbde87cc52d782f6a60e1e77e4b"
+  },
+  "stage": "/Users/v/other/worktrees/source-study-evidence-20260917/bridge-stage-01",
+  "minime_pid": 71419,
+  "minime_launch_preflight_valid": true,
+  "activation_performed": false
+}

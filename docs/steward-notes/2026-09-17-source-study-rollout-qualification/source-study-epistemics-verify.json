@@ -1,0 +1,17 @@
+{
+  "artifact_authority_state_v1": {
+    "schema": "artifact_authority_state_v1",
+    "schema_version": 1,
+    "state": "evidence_only",
+    "witness_only": true
+  },
+  "canonical_event_appended": false,
+  "checked_record_count": 12478,
+  "history_rewritten": false,
+  "issue_count": 0,
+  "issues": [],
+  "rule_counts": {},
+  "schema": "experiential_epistemics_lint_status_v1",
+  "schema_version": 1,
+  "valid": true
+}

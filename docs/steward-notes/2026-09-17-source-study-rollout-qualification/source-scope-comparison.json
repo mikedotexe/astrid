@@ -1,0 +1,32 @@
+{
+  "previous_head": "374024a02a5bcfae92f228570b9efe337d85b729",
+  "candidate_head": "c4f85e95e41703daa65d3ce2789e1e5c46961c4e",
+  "normalization": "relocate prior isolated astrid-manifest, RASCII and prime_esn_wasm roots to canonical roots; no byte normalization",
+  "modified": [
+    "/Users/v/other/astrid/capsules/spectral-bridge/src/action_continuity/tests.rs",
+    "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/inquiry/parsing.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/prompt.txt",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/lib.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/notebook.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/notebook_findings.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/notebook_persistence.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/page.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/source_search.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/source_structure.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/store_navigation.rs"
+  ],
+  "added": [
+    "/Users/v/other/astrid/capsules/spectral-bridge/backups/bridge.db.20260506-1401-main-attractor-pulse",
+    "/Users/v/other/astrid/capsules/spectral-bridge/backups/consciousness-bridge-server.release.20260506-1401-main-attractor-pulse",
+    "/Users/v/other/astrid/crates/astrid-source-study/src/source_provenance.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/tests/behind_cursor_helper_midwalk_reach.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/tests/component_map_sibling_reach.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/tests/page_end_declaration_legibility.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/tests/page_line_interval_legibility.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/tests/study_evidence_relations.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/tests/unnamed_coefficient_reach.rs",
+    "/Users/v/other/astrid/crates/astrid-source-study/tests/unrooted_map_topic_reach.rs"
+  ],
+  "removed": [],
+  "candidate_file_count": 659
+}

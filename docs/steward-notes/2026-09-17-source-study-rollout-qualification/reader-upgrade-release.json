@@ -1,0 +1,13 @@
+{
+  "schema": "source_study_upgrade_qualification_v1",
+  "passed": true,
+  "old_reader_sha256": "7636b8dc675e97ed6d7dce4c30df6d04ae802c7cac983c6b1028788ba224a100",
+  "candidate_reader_sha256": "02a973ca4329d9c57ac5b59971e1bbc81ef115f0f6d985c315907f37a160231a",
+  "old_pending_input_preserved": true,
+  "ordinary_v1_readable_by_old_helper": true,
+  "relation_v2_rejects_old_helper_without_checkpoint_changes": true,
+  "compatibility_floor_survives_explicit_drop": true,
+  "candidate_recovers_after_rejected_downgrade": true,
+  "live_state_opened": false,
+  "provider_called": false
+}
