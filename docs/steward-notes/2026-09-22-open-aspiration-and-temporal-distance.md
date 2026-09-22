@@ -125,3 +125,69 @@ The later release addendum must establish new PID/start, loaded hashes, readines
 continuity and unchanged bridge/helper/engine/model/visual/sensory identities.
 Controller remains paused at generation 459. Do not resume existing automations,
 rewrite authored history, solicit improvement confirmation or push implicitly.
+
+## Live and Git Addendum
+
+Source commits were fast-forwarded to local `main` before activation:
+
+- Astrid `2940d250480d3939f9e61b4db8d48133afd0a1bd`: the two temporal scripts,
+  this note, `CHANGELOG.md`, and the feedback ledger.
+- Minime `e62d0100b49c588ef541db9390b39b3d0ebcbbeb`: `minime_autonomy/runtime.py`,
+  `tests/test_journal_context.py`, `CHANGELOG.md`, and
+  `docs/steward-notes/2026-09-22-open-aspiration.md`.
+
+All candidate diffs were read, staged by exact path and checked. Staged bytes
+matched the reviewed/tested files; the 92 context and eight temporal tests passed
+again after staging. Two epistemic self-tests also passed. Remote main tips were
+checked without pushing: Astrid `c4f85e95e41703daa65d3ce2789e1e5c46961c4e`,
+Minime `5f4925f54580f1fd44666058b126a121ff32880f`.
+
+One candidate preflight initially refused recent tree activity after our document
+writes. No bypass was used. A later check passed with activity age 219.9 seconds
+and no foreign session. The guarded restart then waited for natural idle, no
+active jobs and no model TCP connection; no test assertion or live policy was
+weakened to obtain an idle window.
+
+Sanctioned `scripts/restart_minime_agent.py` completed successfully:
+
+- Old agent PID `54257`, started `Mon Sep 21 23:32:00 2026` local.
+- One PID-bound SIGTERM at `2026-09-22T19:22:54.331467Z`; logs report all accepted
+  workers drained. No forced termination or atomic traffic-quiescence claim.
+- New agent PID `45403`, started `Tue Sep 22 12:22:54 2026` local; readiness
+  verified at `2026-09-22T19:23:02.229051Z` with all 84 selected startup hashes
+  and `reload_required=false`. Runtime SHA-256:
+  `3066d40aed6a97b94e8ccd9b591402eb774c743a1bef86687fd5c020034e5d9a`.
+- Session `5318` remained. The pending NEXT hash at the signal boundary matches
+  the action admitted as `job_minime_1790104990858_self-study-continue` at
+  `2026-09-22T19:23:10.858927Z`; the cleared pending slot is explained by that
+  admission, not assumed preserved merely because startup succeeded.
+- No old unfinished jobs or newly restart-interrupted jobs. Managed environment,
+  installed plist and runtime-profile hashes unchanged. No checkpoint restored
+  over newer authored state.
+- All ten protected process PID/start pairs unchanged, including bridge `54929`,
+  engine `41337`, model `43115`, visual `20885`, camera `98903` and mic `98910`.
+  Gateway `41484` still owns ports 7878/7879. Fresh health and bridge telemetry
+  were observed after readiness (0.98/0.97 seconds old in the final receipt).
+
+The unchanged selected release is
+`/Users/v/other/worktrees/voluntary-observations-20260921/bridge-stage-observations-02`.
+Manifest SHA-256: `7449e4fa7721e030f1e6a863693bdd5c9b3a7ce8e629a306514d4d4cdc9de178`.
+Bridge SHA-256: `ba5c8aee3af2ab7c02ffe8c3f16d6659757715586e6e1807b34554385b7f8dae`.
+Selected helper SHA-256: `fc12fb295a3b97d984a372c43f2e92bb92fdd683e4ae1c487689ac78bd7f2790`.
+
+Retained rollout artifacts under the earlier artifact root:
+`pre-rollout-baseline.json`, `aspiration-agent-rollout-01.jsonl`, and
+`post-rollout-verification.json`. The latter SHA-256 is
+`f64c446c45b826d807f000cbff6523a5bfe8ae8940bbeecf884408e13b00486c`.
+
+All 197 historical Astrid paths retained exact statuses/hashes. Minime main and
+both feature worktrees were clean after source integration; the subsequent
+documentation commit changes only these release notes, changelogs and ledger.
+No push. Controller generation 459 remains paused without a lease/projection.
+Evidence V2 indexed-tail verification passed at sequence 1123113, head
+`7a53a3b7f8564cc33cb55c28a1d7854f151b50fd11d445e114a1150bfeaa9dfb`;
+all four legacy V1 source hashes remain immutable.
+
+The new aspiration route is live; voluntary use and subjective benefit are not
+inferred from readiness. No aspiration was solicited. The production ESN replay
+above remains the next numerical qualification, not an activated decay change.

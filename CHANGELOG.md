@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Live - open aspiration framing (2026-09-22)
+
+- Merge the paired source candidates to local main and complete the sanctioned Minime-agent-only graceful restart. Verify all 84 startup hashes, exact pending-NEXT admission and unchanged protected services/helper. Record release receipts and preserve all 197 historical Astrid paths; leave automations paused. No reservoir change or push. See `docs/steward-notes/2026-09-22-open-aspiration-and-temporal-distance.md`.
+
 ### Candidate - open aspiration and offline temporal distance (2026-09-22)
 
 - Qualify bounded lagged and paired activation RMS measurements on synthetic constant, fading, persistent, periodic, reordered and gapped traces. Keep causal production-ESN replay as an explicit preregistered follow-up, not a claim about live memory or experience. Record the paired Minime open-aspiration repair and agent-only deployment boundary in `docs/steward-notes/2026-09-22-open-aspiration-and-temporal-distance.md`. No bridge, helper, reservoir or sensory change.
