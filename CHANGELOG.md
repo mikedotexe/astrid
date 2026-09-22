@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed - native daemon WASM shutdown (2026-09-22)
+
+- Make long-running WASM guests observe cancellation at epoch checks and join their worker before removing the ticker. Preserve ordinary interceptor timeouts and run-loop lifetime; failed or timed-out joins are errors, not successful unloads. Isolated deployment qualification reproduced a CLI guest looping after kernel shutdown, which otherwise prevented the daemon process from exiting. No bridge, reservoir, or model change.
+
 ### Fixed - kernel management rejection delivery (2026-09-22)
 
 - Use the same leading `astrid.v1.request.` to `astrid.v1.response.` mapping for normal and rate-limited replies, preserving the complete request suffix. Add an isolated real-kernel regression through the eleventh approval-stub request; retain existing rate limits and authorization behavior. Remove the obsolete startup subscriber-count assertion that races asynchronous subscriptions; idle shutdown continues to use explicit client connections.

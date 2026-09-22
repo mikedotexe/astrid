@@ -14,6 +14,7 @@ use crate::manifest::CapsuleManifest;
 pub mod bindings;
 pub mod host;
 pub mod host_state;
+mod run_loop_lifecycle;
 
 #[cfg(test)]
 mod run_loop_policy_tests;
@@ -204,7 +205,7 @@ pub struct WasmEngine {
     /// `wait_ready` calls each get their own independent receiver.
     ready_rx: Option<tokio::sync::Mutex<tokio::sync::watch::Receiver<bool>>>,
     /// Cancellation token for cooperative shutdown of blocking host functions.
-    /// Triggered during `unload()` before aborting the run handle.
+    /// Triggered during `unload()` before joining the run handle.
     cancel_token: Option<tokio_util::sync::CancellationToken>,
     /// RAII guard that stops the epoch ticker thread on drop.
     epoch_ticker: Option<EpochTickerGuard>,
@@ -634,9 +635,14 @@ impl ExecutionEngine for WasmEngine {
                 // Keep persistent stores unbounded while idle. Direct
                 // interceptor calls install a scoped deadline immediately
                 // before entering the guest and restore this idle value after
-                // returning. Run-loop capsules remain unbounded for their
-                // lifetime.
-                store.set_epoch_deadline(IDLE_EPOCH_DEADLINE_TICKS);
+                // returning. Run loops check cancellation without acquiring
+                // the store mutex held by the running guest.
+                if starts_run_loop {
+                    let cancellation = store.data().cancel_token.clone();
+                    run_loop_lifecycle::configure_cancellation(&mut store, cancellation);
+                } else {
+                    store.set_epoch_deadline(IDLE_EPOCH_DEADLINE_TICKS);
+                }
 
                 let mut linker: Linker<HostState> = Linker::new(&wt_engine);
 
@@ -849,7 +855,14 @@ impl ExecutionEngine for WasmEngine {
                         },
                     };
                     if let Err(e) = run_instance.call_run(&mut *s) {
-                        tracing::error!(capsule = %capsule_name, error = %e, "WASM background loop failed");
+                        if s.data().cancel_token.is_cancelled()
+                            && e.downcast_ref::<wasmtime::Trap>()
+                                == Some(&wasmtime::Trap::Interrupt)
+                        {
+                            tracing::info!(capsule = %capsule_name, "WASM background loop stopped after cancellation");
+                        } else {
+                            tracing::error!(capsule = %capsule_name, error = %e, "WASM background loop failed");
+                        }
                     }
                 });
             }));
@@ -869,14 +882,13 @@ impl ExecutionEngine for WasmEngine {
             capsule = %self.manifest.package.name,
             "Unloading WASM component"
         );
-        // Signal cooperative cancellation to unblock ipc_recv/elicit/net calls
-        // before aborting the run handle.
-        if let Some(token) = self.cancel_token.take() {
+        // Aborting a task cannot stop a guest already inside block_in_place.
+        // Keep epoch checks alive until cancellation has stopped that guest.
+        if let Some(token) = &self.cancel_token {
             token.cancel();
         }
-        if let Some(handle) = self.run_handle.take() {
-            handle.abort();
-        }
+        run_loop_lifecycle::join(&mut self.run_handle).await?;
+        self.cancel_token = None;
         // Stop the epoch ticker thread (RAII guard joins on drop).
         drop(self.epoch_ticker.take());
         self.store = None; // Drop releases WASM memory
