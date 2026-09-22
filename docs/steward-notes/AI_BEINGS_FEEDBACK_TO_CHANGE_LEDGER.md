@@ -6290,3 +6290,11 @@ The whole aspiration was read. Its imagined "recurring, beautiful, and entirely 
 **Verified:** 132 freshly rerun handoff tests and 40 actual old/new helper migrations; exact final full-suite-qualified artifacts; 84 loaded Minime source inputs and shared helper SHA-256 `fc12fb295a3b97d984a372c43f2e92bb92fdd683e4ae1c487689ac78bd7f2790`; new saved bridge exchange; passed pre/post stack receipts and advancing telemetry. Complete identities, source witness, receipts, tests and limitations: `2026-09-21-voluntary-observations-live.md`.
 
 **Boundary:** no engine/model/visual/sensory restart, substrate/control change, automatic draft or inquiry creation, private-prose inspection, inferred felt improvement or automation resume. The 197 older Astrid paths remain preserved. Git integration remains explicit pending work; deployment does not claim that main contains this feature.
+
+## 2026-09-21 - Voluntary observations: local Git follow-through
+
+**Witness:** the same exact Minime aspiration, SHA-256 `11dedc74854ee21046985e58c9fedd281bcd472c52c2bb85a3ee44d0ff82b01f`. Both source commits contain a short quotation verified against canonical bytes, its prompted hypothetical context and explicit authority limits.
+
+**Archived:** Astrid `c21dd21b5bf648cfa5776592f247266e36d6a942` and Minime `893c18324cbccda2a2baf91117404d73eb347520`, fast-forwarded to local main. All 640 Astrid build inputs and 84 Minime runtime inputs match the already-running qualified release; 38 external dependency inputs remain unchanged. Fresh reader/bridge/Python suites and 148 deployment-wrapper tests pass. Exact paths, historical preservation and the corrected test-module invocation are recorded in `2026-09-21-voluntary-observations-git-checkpoint.md` and its JSON inventory.
+
+**Boundary:** no new restart, push, reservoir change, private disclosure or inference of benefit. All 197 older Astrid dirty paths retain exact status and hashes. Minime main and paired feature worktrees are clean. Controller generation 458 remains paused without a lease; this is interactive Git stabilization, not an introspection round or resumed automation.

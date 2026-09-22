@@ -1,5 +1,9 @@
 # Voluntary Observations: Graceful Paired Rollout
 
+Subsequent Git status: both local main branches now contain this release, with
+the exact running source identities reverified. See [the Git checkpoint](2026-09-21-voluntary-observations-git-checkpoint.md).
+Pending-Git statements below describe the earlier rollout boundary, not current debt.
+
 ## Outcome
 
 Mike explicitly approved the graceful rollout. The sanctioned paired wrapper

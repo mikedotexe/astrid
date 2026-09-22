@@ -1,5 +1,9 @@
 # Voluntary Observation Keeping and Bounded Recurrence Analysis
 
+Git follow-through: the deployed feature is now committed and fast-forwarded to
+both local main branches. See [the Git checkpoint](2026-09-21-voluntary-observations-git-checkpoint.md).
+Earlier candidate and pending-Git statements below retain their historical scope.
+
 Subsequent status: Mike approved the paired rollout, which completed successfully
 at 2026-09-22T06:34:21Z. Exact running identities, renewed qualification,
 checkpoint continuity and remaining Git work are recorded in

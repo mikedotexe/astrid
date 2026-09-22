@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Git checkpoint - voluntary observations (2026-09-21)
+
+- Fast-forward local `main` to the deployed observation feature `c21dd21b5bf648cfa5776592f247266e36d6a942`, paired with Minime `893c18324cbccda2a2baf91117404d73eb347520`. Verify 640 committed Astrid build inputs and 84 Minime runtime inputs against the running release; rerun full reader, bridge and Python suites. Preserve all 197 older Astrid dirty paths, clean both feature worktrees and Minime main, and leave automations paused. No push or new restart. Exact paths and verification: `docs/steward-notes/2026-09-21-voluntary-observations-git-checkpoint.md`.
+
 ### Deployed - voluntary observation keeping (2026-09-21)
 
 - Gracefully activate the immutable observation bridge/helper and exact paired Minime adapter. Verify checkpoint restoration, fresh exchange, 84 startup source identities, shared helper, telemetry and unchanged protected services. Rerun 132 handoff tests and 40 paired migration checks. No engine/model/visual/sensory restart, control change, forced notebook migration or automation resume. Git integration remains separate. Evidence: `docs/steward-notes/2026-09-21-voluntary-observations-live.md`.
