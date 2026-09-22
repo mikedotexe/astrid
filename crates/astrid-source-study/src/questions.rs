@@ -65,6 +65,8 @@ struct Inquiry {
     finding: String,
     notebook: Notebook,
     sources: Vec<Reference>,
+    #[serde(default)]
+    geometry: crate::geometry::History,
 }
 #[derive(Serialize, Deserialize)]
 struct Reference {
@@ -73,6 +75,42 @@ struct Reference {
     line: usize,
 }
 impl Questions {
+    pub(crate) fn geometry(&mut self, id: &str) -> Result<(&str, &mut crate::geometry::History)> {
+        let inquiry = self
+            .entries
+            .get_mut(id)
+            .context("existing question required")?;
+        Ok((&inquiry.question, &mut inquiry.geometry))
+    }
+
+    pub(crate) fn validate_geometry(&self) -> Result<()> {
+        for inquiry in self.entries.values() {
+            inquiry.geometry.validate()?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn target_revision(&self, id: &str) -> Result<String> {
+        let inquiry = self
+            .entries
+            .get(id)
+            .context("question not found; use SELF_STUDY QUESTION")?;
+        // Selection/parking status is not a revision of the authored account.
+        let authored = crate::digest(serde_json::to_vec(&(
+            &inquiry.question,
+            &inquiry.finding,
+            &inquiry.notebook,
+            &inquiry.sources,
+        ))?);
+        // An empty additive family must not invalidate existing focus/return references.
+        if inquiry.geometry.records.is_empty() {
+            return Ok(authored);
+        }
+        Ok(crate::digest(serde_json::to_vec(&(
+            authored,
+            &inquiry.geometry,
+        ))?))
+    }
     pub(crate) fn apply(
         &mut self,
         command: QuestionCommand,
@@ -109,6 +147,7 @@ impl Questions {
                         finding: String::new(),
                         notebook: fresh.clone(),
                         sources: Vec::new(),
+                        geometry: crate::geometry::History::default(),
                     },
                 );
                 self.active = Some(id);
@@ -233,7 +272,7 @@ impl Questions {
         out
     }
     fn render_list(&self, page: usize) -> Result<String> {
-        let mut rows=vec!["Your study questions. Select qN to restore its notebook; source bookmarks stay independent. NEW starts a question; PARK leaves it available; RESOLVE records your conclusion, without verifying it. HOME returns to unthreaded browsing.".into()];
+        let mut rows=vec!["Your study questions. Select qN to restore its notebook and saved reading position. NEW starts a question; PARK leaves it available; RESOLVE records your conclusion, without verifying it. HOME returns to unthreaded browsing. Historical questions without a saved position require an explicit source selection.".into()];
         rows.extend(self.entries.iter().map(|(id, q)| {
             format!(
                 "SELF_STUDY QUESTION {id} — {}{} — {}",
@@ -246,6 +285,9 @@ impl Questions {
                 q.question
             )
         }));
+        if let Some(id) = &self.active {
+            rows.push(format!("Optional chosen geometry observations: SELF_STUDY GEOMETRY {{\"question\":\"{id}\",\"operation\":{{\"kind\":\"status\"}}}}. No automatic capture or experiment."));
+        }
         for (id, q) in &self.entries {
             if !q.finding.is_empty() {
                 rows.push(format!(
@@ -255,5 +297,38 @@ impl Questions {
             }
         }
         crate::navigation::paginate(rows, "SELF_STUDY QUESTION", page)
+    }
+}
+
+#[cfg(test)]
+mod geometry_migration_tests {
+    use super::*;
+    #[test]
+    fn empty_geometry_preserves_preexisting_question_revision() {
+        let mut questions = Questions::default();
+        questions
+            .apply(
+                QuestionCommand::New("Existing inquiry".into()),
+                &mut Notebook::default(),
+            )
+            .unwrap();
+        let inquiry = &questions.entries["q1"];
+        let original = crate::digest(
+            serde_json::to_vec(&(
+                &inquiry.question,
+                &inquiry.finding,
+                &inquiry.notebook,
+                &inquiry.sources,
+            ))
+            .unwrap(),
+        );
+        let mut legacy = serde_json::to_value(&questions).unwrap();
+        legacy["entries"]["q1"]
+            .as_object_mut()
+            .unwrap()
+            .remove("geometry");
+        let migrated: Questions = serde_json::from_value(legacy).unwrap();
+        assert_eq!(migrated.target_revision("q1").unwrap(), original);
+        assert_eq!(questions.target_revision("q1").unwrap(), original);
     }
 }

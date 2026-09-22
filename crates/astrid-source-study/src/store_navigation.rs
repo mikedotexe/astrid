@@ -44,18 +44,23 @@ impl Reader {
             .render(&key, input_kind, &self.catalog);
         // Keep fresh source ahead of recalled interpretations. The optional
         // checkpoint uses this input's notebook, including late inquiry ownership.
-        let choices = notebook.study_choices(&self.catalog, page.as_ref(), &text);
+        let navigation = text.clone();
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         let receipt_position = text.len();
         text.push('\n');
         text.push_str(&state.questions.render_context(question_id.as_deref()));
-        text.push_str(&choices);
         let mut suffix = String::new();
         if let Some(choice) = &state.last_choice {
             suffix.push_str(&choice.render(false));
         }
-        let notebook_budget = remaining_input_budget(text.len().saturating_add(suffix.len()));
-        text.push_str(&notebook.render_with_budget(notebook_budget)?);
+        let recall = study_context(
+            notebook,
+            &self.catalog,
+            page.as_ref(),
+            &navigation,
+            text.len().saturating_add(suffix.len()),
+        )?;
+        text.push_str(&recall);
         text.push_str(&suffix);
         let available = remaining_input_budget(text.len());
         if receipt.len() <= available {
@@ -154,6 +159,29 @@ fn remaining_input_budget(text_bytes: usize) -> usize {
             .saturating_add(crate::STUDY_PROMPT.len())
             .saturating_add(32),
     )
+}
+
+fn study_context(
+    notebook: &crate::notebook::Notebook,
+    catalog: &Catalog,
+    page: Option<&Page>,
+    navigation: &str,
+    fixed_bytes: usize,
+) -> Result<String> {
+    // Duplicate previews yield before retained authored words. Source bytes and
+    // delivery identities stay untouched; the complete input still fits 48 KB.
+    for preview_budget in [4_500, 3_500, 2_500, 1_500, 0] {
+        let choices = notebook.study_choices(catalog, page, navigation, preview_budget);
+        let recall = notebook.render_with_budget(remaining_input_budget(
+            fixed_bytes.saturating_add(choices.len()),
+        ));
+        if let Ok(recall) = recall {
+            return Ok(format!("{choices}{recall}"));
+        }
+    }
+    // At the boundary, optional generated navigation suggestions also yield.
+    // Full authored recall and the delivered source are never shortened here.
+    notebook.render_with_budget(remaining_input_budget(fixed_bytes))
 }
 
 fn remember_offer(

@@ -10,6 +10,88 @@ struct Fixture {
     source: std::path::PathBuf,
 }
 
+#[test]
+fn activity_selection_rejects_stale_cache_and_older_writer() {
+    let fixture = Fixture::new("synthetic");
+    let initial = ActivityRuntimeV1::default();
+    let current = persist_activity(&fixture.store, &initial).unwrap();
+    assert_eq!(current.selection_revision, 1);
+    let path = fixture.store.root().join("activity_runtime_v3.json");
+    let bytes = fs::read(&path).unwrap();
+    assert!(persist_activity(&fixture.store, &initial).is_err());
+    assert_eq!(fs::read(&path).unwrap(), bytes);
+    let old_path = fixture.store.root().join("activity_runtime_v1.json");
+    assert!(serde_json::from_slice::<ActivityRuntimeV1>(&fs::read(&old_path).unwrap()).is_err());
+    fs::write(&old_path, serde_json::to_vec(&initial).unwrap()).unwrap();
+    assert!(load_activity(&fixture.store).is_err());
+    assert!(persist_activity(&fixture.store, &current).is_err());
+    assert_eq!(fs::read(path).unwrap(), bytes);
+}
+
+#[test]
+fn legacy_activity_migration_archives_exact_bytes_without_creating_focus() {
+    let fixture = Fixture::new("synthetic");
+    fs::create_dir_all(fixture.store.root()).unwrap();
+    let original = b"{\"foreground_reader\":null,\"return_reader\":null,\"mailbox_window\":null}\n";
+    fs::write(
+        fixture.store.root().join("activity_runtime_v1.json"),
+        original,
+    )
+    .unwrap();
+    let legacy = load_activity(&fixture.store).unwrap();
+    let migrated = persist_activity(&fixture.store, &legacy).unwrap();
+    assert!(migrated.native_focus_window.is_none());
+    let archive = fixture.store.root().join(format!(
+        "activity_legacy_{:x}.json",
+        Sha256::digest(original)
+    ));
+    assert_eq!(fs::read(archive).unwrap(), original);
+}
+
+#[test]
+fn v2_activity_migration_keeps_selection_and_refuses_an_interrupted_upgrade() {
+    let fixture = Fixture::new("synthetic");
+    fs::create_dir_all(fixture.store.root()).unwrap();
+    let original = b"{\"selection_revision\":19,\"foreground_reader\":null,\"return_reader\":null,\"mailbox_window\":null,\"native_focus_window\":\"existing-window\"}\n";
+    fs::write(
+        fixture.store.root().join("activity_runtime_v1.json"),
+        b"{\"foreground_reader\":\"requires activity_runtime_v2\"}\n",
+    )
+    .unwrap();
+    fs::write(
+        fixture.store.root().join("activity_runtime_v2.json"),
+        original,
+    )
+    .unwrap();
+    let prior = load_activity(&fixture.store).unwrap();
+    assert_eq!(prior.selection_revision, 19);
+    let migrated = persist_activity(&fixture.store, &prior).unwrap();
+    assert_eq!(
+        migrated.native_focus_window.as_deref(),
+        Some("existing-window")
+    );
+    assert!(!migrated.study_handoff.pending());
+    assert_eq!(migrated.selection_revision, 20);
+    assert_eq!(
+        fs::read(fixture.store.root().join(format!(
+            "activity_legacy_{:x}.json",
+            Sha256::digest(original)
+        )))
+        .unwrap(),
+        original
+    );
+    let guarded = fs::read(fixture.store.root().join("activity_runtime_v2.json")).unwrap();
+    assert!(serde_json::from_slice::<ActivityRuntimeV1>(&guarded).is_err());
+    // A lost final rename must not manufacture a default window or overwrite the guards.
+    fs::remove_file(fixture.store.root().join("activity_runtime_v3.json")).unwrap();
+    assert!(load_activity(&fixture.store).is_err());
+    assert!(persist_activity(&fixture.store, &prior).is_err());
+    assert_eq!(
+        fs::read(fixture.store.root().join("activity_runtime_v2.json")).unwrap(),
+        guarded
+    );
+}
+
 impl Fixture {
     fn new(text: &str) -> Self {
         let directory = tempfile::tempdir().unwrap();

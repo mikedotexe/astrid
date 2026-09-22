@@ -3,6 +3,12 @@ use crate::{digest, store::completion_text};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
+/// Identify an opaque typed payload; this does not validate or authorize it.
+#[must_use]
+pub fn is_geometry_action(text: &str) -> bool {
+    text.trim_start().starts_with("SELF_STUDY GEOMETRY ")
+}
+
 /// Indices of unquoted top-level lines. Unclosed fences remain data through EOF.
 #[must_use]
 pub fn eligible_choice_line_indices(text: &str) -> Vec<usize> {
@@ -40,7 +46,10 @@ pub fn eligible_choice_line_indices(text: &str) -> Vec<usize> {
         }
         if !trimmed.is_empty()
             && !trimmed.starts_with(['>', '"', '\'', '`', '“', '‘'])
-            && !scan_internal_blocks(line, &mut hidden_tag)
+            && (trimmed
+                .strip_prefix("NEXT:")
+                .is_some_and(is_geometry_action)
+                || !scan_internal_blocks(line, &mut hidden_tag))
         {
             eligible.push(index);
         }

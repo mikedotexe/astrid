@@ -41,18 +41,34 @@ fn prepare_shared_study_target(
     reader: &astrid_source_study::Reader,
     target: Option<state::IntrospectTargetV2>,
 ) -> anyhow::Result<astrid_source_study::StudyOutput> {
+    let operation = target.as_ref().and_then(|t| t.operation_id.clone());
+    let mut explicit_action = None;
     if let Some(target) = target.as_ref() {
         if next_action::study_navigation::private(target) {
             if target.label.split_whitespace().next() != Some("WRITE") {
                 anyhow::bail!("use an explicit WRITE command without a source prefix or colon; WRITE HELP lists writing choices");
             }
-            return reader.prepare_action(&target.label);
+            explicit_action = Some(target.label.clone());
         }
         if target.label.starts_with("SELF_STUDY") {
-            return reader.prepare_action(&target.label);
+            explicit_action = Some(target.label.clone());
         }
     }
-    reader.prepare(shared_study_command(target)?)
+    let action = match explicit_action {
+        Some(action) => action,
+        None => match shared_study_command(target)? {
+            astrid_source_study::Command::Continue => "SELF_STUDY CONTINUE".into(),
+            astrid_source_study::Command::Resume { source } => format!("SELF_STUDY RESUME {source}"),
+            astrid_source_study::Command::Open { source, line } => format!("SELF_STUDY OPEN {source} {line}"),
+            _ => anyhow::bail!("unsupported legacy study target"),
+        },
+    };
+    let revision = reader.preparation_revision()?;
+    // Authored requests use their durable dispatch event; protected presentation
+    // uses its window/slot. Untargeted scheduler reads are checkpoint-scoped.
+    let operation = operation.unwrap_or_else(|| format!("scheduled-reader-{revision}"));
+    use sha2::{Digest as _, Sha256};
+    reader.prepare_once(&format!("prepare-{:x}", Sha256::digest(operation.as_bytes())), &revision, &action)
 }
 
 fn source_study_prepare_notice(
@@ -72,7 +88,14 @@ async fn run_shared_source_study(
     fill_pct: f32,
 ) -> (&'static str, String, String) {
     let _attempt = next_action::introspection_cadence::begin_attempt(conv);
+    let store = crate::action_continuity::ActionContinuityStore::for_astrid_workspace();
+    let private_request = conv.introspect_target.as_ref().is_some_and(next_action::study_navigation::private);
+    let job = match study_handoff::ensure_run_job(conv) {
+        Ok(job) => job,
+        Err(error) => return source_study_prepare_notice(private_request, &error),
+    };
     let requested = conv.introspect_target.take();
+    let requested_action = requested.as_ref().map_or("SELF_STUDY CONTINUE", |t| t.label.as_str()).to_owned();
     let private_request = requested.as_ref().is_some_and(next_action::study_navigation::private);
     let prepared = (|| -> anyhow::Result<_> {
         let paths = bridge_paths();
@@ -85,12 +108,19 @@ async fn run_shared_source_study(
                 .join("diagnostics/source_first_v3/shared_reader"),
         )
         .with_runtime_workspace(paths.bridge_workspace().to_path_buf(), "astrid");
-        let output = prepare_shared_study_target(&reader, requested)?;
+        let output = if let Some(id) = job.as_deref() {
+            study_handoff::prepare(&store, conv, id, || prepare_shared_study_target(&reader, requested))?
+        } else { prepare_shared_study_target(&reader, requested)? };
+        study_handoff::validate_sources(&output, &catalog)?;
         Ok((reader, output, catalog))
     })();
     let (reader, output, catalog) = match prepared {
         Ok(value) => value,
         Err(error) => {
+            if let Some(id) = job.as_deref()
+                && let Err(failure) = study_handoff::failed(&store, conv, id, false) {
+                    warn!(%failure, "study preparation failure retains handoff debt");
+            }
             next_action::introspection_cadence::mark_failed(
                 conv,
                 format!("source_study_prepare:{error}"),
@@ -98,6 +128,10 @@ async fn run_shared_source_study(
             );
             return source_study_prepare_notice(private_request, &error);
         },
+    };
+    let admission = match activity_focus::admit(&reader, &output, &requested_action) {
+        Ok(admission) => admission,
+        Err(error) => return source_study_prepare_notice(private_request, &error),
     };
     let source_snapshot = output.page.as_ref().and_then(|page| {
         if page.revision.lines == 0 {
@@ -131,12 +165,18 @@ async fn run_shared_source_study(
     let shadow = conv
         .astrid_shadow
         .lived_state_scalar_observation_v1(started);
-    let completion = crate::llm::generate_source_study(&output).await;
+    if let Some(id) = job.as_deref()
+        && let Err(error) = study_handoff::claim(&store, conv, id) {
+            return source_study_prepare_notice(private_request, &error);
+    }
+    let completion = if job.is_some() {
+        crate::llm::generate_source_study_for_job(&output, job.as_deref()).await
+    } else { crate::llm::generate_source_study(&output).await };
     let completed = crate::lived_state_witness::clock_sample_v1().unix_ms;
     let source = output.page.as_ref().map_or_else(
         || {
             if output.session_pages.is_empty() {
-                if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private draft".into() } else { "source catalog".into() }
+                if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private draft".into() } else if output.input_kind == astrid_source_study::InputKind::Geometry { "chosen geometry evidence".into() } else { "source catalog".into() }
             } else {
                 format!(
                     "study session ({} source pages)",
@@ -147,6 +187,13 @@ async fn run_shared_source_study(
         |p| p.source.clone(),
     );
     let Some(text) = completion.text else {
+        if let Some(id) = job.as_deref()
+            && let Err(error) = study_handoff::failed(&store, conv, id, true) {
+                warn!(%error, "study provider failure retains handoff debt");
+        }
+        if let Err(error) = activity_focus::finish(&reader, admission, false) {
+            warn!(%error, "protected provider failure retains recovery debt");
+        }
         next_action::introspection_cadence::mark_failed(
             conv,
             "source_study_generation_unavailable",
@@ -159,6 +206,9 @@ async fn run_shared_source_study(
         .as_ref()
         .ok_or_else(|| anyhow::anyhow!("complete source delivery was not retained"))
         .and_then(|receipt| {
+            if let Some(id) = job.as_deref() {
+                return study_handoff::delivered(&store, conv, id, &reader, receipt);
+            }
             crate::llm::verify_delivery_receipt(receipt)?;
             if let Some(page) = &output.page {
                 reader.delivered_artifact(
@@ -173,6 +223,9 @@ async fn run_shared_source_study(
             }
             Ok(())
         });
+    if let Err(error) = activity_focus::finish(&reader, admission, delivery.is_ok()) {
+        warn!(%error, "protected delivery retains recovery debt");
+    }
     let timestamp = chrono_timestamp();
     let directory = if output.input_kind == astrid_source_study::InputKind::PrivateWriting {
         bridge_paths().bridge_workspace().join("private_writing/artifacts")
@@ -219,7 +272,7 @@ async fn run_shared_source_study(
     let revision = output.page.as_ref().map_or_else(
         || {
             if output.session_pages.is_empty() {
-                "navigation only".into()
+                if output.input_kind == astrid_source_study::InputKind::Geometry { "frozen observation hashes in supplied evidence; no new source page".into() } else { "navigation only".into() }
             } else {
                 output
                     .session_pages
@@ -330,6 +383,23 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 mod source_study_tests {
     use super::*;
     #[test]
+    fn authored_study_preparation_replays_by_dispatch_identity() {
+        let temp = tempfile::tempdir().unwrap();
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
+            temp.path().join("reader"),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let mut target = state::IntrospectTargetV2::auto("SELF_STUDY QUESTION NEW Synthetic retry?".into());
+        target.operation_id = Some("durable-dispatch-1".into());
+        let first = prepare_shared_study_target(&reader, Some(target.clone())).unwrap();
+        let restored: state::IntrospectTargetV2 = serde_json::from_str(&serde_json::to_string(&target).unwrap()).unwrap();
+        let retry = prepare_shared_study_target(&reader, Some(restored)).unwrap();
+        assert_eq!(serde_json::to_value(first).unwrap(), serde_json::to_value(retry).unwrap());
+        target.label = "SELF_STUDY MAP".into();
+        assert!(prepare_shared_study_target(&reader, Some(target)).is_err());
+    }
+
+    #[test]
     fn malformed_private_targets_cannot_prepare_public_source_recovery() {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path().join("astrid");
@@ -341,7 +411,7 @@ mod source_study_tests {
                 ("astrid".into(), root),
             ])).unwrap(),
             directory.clone(),
-        );
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
         for label in [
             "write START PRIVATE_TITLE_MARKER",
             "WRITE: START PRIVATE_TITLE_MARKER",

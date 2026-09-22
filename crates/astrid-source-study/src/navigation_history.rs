@@ -111,7 +111,10 @@ impl NavigationHistory {
     pub(crate) fn record(&mut self, offer: NavigationOffer, input_id: &str, response: &str) {
         if matches!(
             offer.kind,
-            InputKind::Questions | InputKind::RuntimeTrace | InputKind::Legacy
+            InputKind::Questions
+                | InputKind::RuntimeTrace
+                | InputKind::Geometry
+                | InputKind::Legacy
         ) {
             return;
         }
@@ -161,6 +164,7 @@ impl NavigationHistory {
                     | InputKind::SourceSession
                     | InputKind::Questions
                     | InputKind::RuntimeTrace
+                    | InputKind::Geometry
             )
         {
             return String::new();

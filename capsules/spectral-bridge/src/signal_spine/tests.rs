@@ -183,16 +183,14 @@ fn capture_window_enforces_hard_limits_and_owner_only_fixture_permissions() {
         format!("captures/capture_test/fixtures/{}.json", references[0].1)
     );
     let deadline = Instant::now() + Duration::from_secs(2);
-    let fixture_dir = temp.path().join("captures/capture_test/fixtures");
-    while !fixture_dir.exists() && Instant::now() < deadline {
+    let fixture = temp.path().join(&references[0].2);
+    while !fixture.is_file() && Instant::now() < deadline {
         std::thread::sleep(Duration::from_millis(10));
     }
-    let fixture = fs::read_dir(fixture_dir)
-        .unwrap()
-        .filter_map(Result::ok)
-        .next()
-        .unwrap()
-        .path();
+    assert!(
+        fixture.is_file(),
+        "the accepted capture must be published, not just its directory"
+    );
     assert_eq!(
         fs::metadata(fixture).unwrap().permissions().mode() & 0o777,
         0o600

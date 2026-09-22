@@ -5,8 +5,12 @@ use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::os::unix::fs::OpenOptionsExt;
 
-const RUNTIME_FILE: &str = "activity_runtime_v1.json";
-const MAX_RUNTIME_BYTES: u64 = 64 * 1024;
+const RUNTIME_FILE: &str = "activity_runtime_v3.json";
+const PREVIOUS_FILE: &str = "activity_runtime_v2.json";
+const LEGACY_FILE: &str = "activity_runtime_v1.json";
+const PREVIOUS_GUARD: &str = "{\"foreground_reader\":\"requires activity_runtime_v3\"}\n";
+const DOWNGRADE_GUARD: &str = "{\"foreground_reader\":\"requires activity_runtime_v2\"}\n";
+const MAX_RUNTIME_BYTES: u64 = 32 * 1024 * 1024;
 
 pub(super) fn validate_reader_ref(reader: &ReaderActivityRefV1) -> Result<()> {
     for value in [&reader.thread_id, &reader.session_id] {
@@ -23,6 +27,21 @@ pub(super) fn validate_reader_ref(reader: &ReaderActivityRefV1) -> Result<()> {
 }
 
 fn validate_activity(activity: &ActivityRuntimeV1) -> Result<()> {
+    activity.study_handoff.validate()?;
+    anyhow::ensure!(
+        activity.native_focus_window.is_none() || !activity.study_handoff.pending(),
+        "ordinary study and protected focus cannot own generation together"
+    );
+    if let Some(window) = &activity.native_focus_window {
+        anyhow::ensure!(
+            !window.is_empty() && window.len() <= 128,
+            "invalid native focus window"
+        );
+        anyhow::ensure!(
+            activity.foreground_reader.is_none() && activity.mailbox_window.is_none(),
+            "native focus and another foreground activity cannot be selected together"
+        );
+    }
     for reader in [&activity.foreground_reader, &activity.return_reader]
         .into_iter()
         .flatten()
@@ -50,9 +69,26 @@ fn validate_activity(activity: &ActivityRuntimeV1) -> Result<()> {
 pub(crate) fn persist_activity(
     store: &ActionContinuityStore,
     activity: &ActivityRuntimeV1,
-) -> Result<()> {
+) -> Result<ActivityRuntimeV1> {
+    let _lock = store.reader_owner_transaction()?;
     validate_activity(activity)?;
     fs::create_dir_all(store.root())?;
+    let current = load_activity(store)?;
+    anyhow::ensure!(
+        activity.selection_revision == current.selection_revision,
+        "stale foreground selection; reload ACTIVITY_STATUS before updating"
+    );
+    let mut committed = activity.clone();
+    committed.selection_revision = current
+        .selection_revision
+        .checked_add(1)
+        .context("activity selection revision exhausted")?;
+    let encoded = serde_json::to_vec_pretty(&committed)?;
+    anyhow::ensure!(
+        u64::try_from(encoded.len())? <= MAX_RUNTIME_BYTES,
+        "activity selection exceeds size limit; prior state retained"
+    );
+    prepare_upgrade(store)?;
     let target = store.root().join(RUNTIME_FILE);
     let temporary = store
         .root()
@@ -63,7 +99,7 @@ pub(crate) fn persist_activity(
             .write(true)
             .mode(0o600)
             .open(&temporary)?;
-        serde_json::to_writer_pretty(&mut file, activity)?;
+        file.write_all(&encoded)?;
         file.write_all(b"\n")?;
         file.sync_all()?;
         fs::rename(&temporary, &target)?;
@@ -73,11 +109,27 @@ pub(crate) fn persist_activity(
     if temporary.exists() {
         let _ = fs::remove_file(&temporary);
     }
-    result.context("saving authoritative activity selection")
+    result.context("saving authoritative activity selection")?;
+    Ok(committed)
 }
 
 pub(crate) fn load_activity(store: &ActionContinuityStore) -> Result<ActivityRuntimeV1> {
-    let path = store.root().join(RUNTIME_FILE);
+    let _lock = store.reader_owner_transaction()?;
+    let upgraded = store.root().join(RUNTIME_FILE).exists();
+    if upgraded {
+        verify_guard(store)?;
+    }
+    let path = store.root().join(if upgraded {
+        RUNTIME_FILE
+    } else if store.root().join(PREVIOUS_FILE).exists() {
+        anyhow::ensure!(
+            fs::read(store.root().join(LEGACY_FILE))? == DOWNGRADE_GUARD.as_bytes(),
+            "older activity writer replaced the downgrade guard; retained for review"
+        );
+        PREVIOUS_FILE
+    } else {
+        LEGACY_FILE
+    });
     let file = match File::open(&path) {
         Ok(file) => file,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
@@ -122,4 +174,67 @@ pub(crate) fn load_activity(store: &ActionContinuityStore) -> Result<ActivityRun
         }
     }
     Ok(activity)
+}
+
+fn verify_guard(store: &ActionContinuityStore) -> Result<()> {
+    anyhow::ensure!(
+        fs::read(store.root().join(LEGACY_FILE))? == DOWNGRADE_GUARD.as_bytes()
+            && fs::read(store.root().join(PREVIOUS_FILE))? == PREVIOUS_GUARD.as_bytes(),
+        "older activity writer replaced the downgrade guard; retained for review"
+    );
+    Ok(())
+}
+
+fn prepare_upgrade(store: &ActionContinuityStore) -> Result<()> {
+    if store.root().join(RUNTIME_FILE).exists() {
+        return verify_guard(store);
+    }
+    for (name, guard) in [
+        (LEGACY_FILE, DOWNGRADE_GUARD),
+        (PREVIOUS_FILE, PREVIOUS_GUARD),
+    ] {
+        let legacy = store.root().join(name);
+        if legacy.exists() {
+            let bytes = fs::read(&legacy)?;
+            anyhow::ensure!(
+                bytes != guard.as_bytes() || name == LEGACY_FILE,
+                "interrupted activity migration; inspect retained legacy bytes"
+            );
+            if bytes != guard.as_bytes() {
+                let _: ActivityRuntimeV1 = serde_json::from_slice(&bytes)?;
+            }
+            use sha2::{Digest, Sha256};
+            let archive = store
+                .root()
+                .join(format!("activity_legacy_{:x}.json", Sha256::digest(&bytes)));
+            if archive.exists() {
+                anyhow::ensure!(
+                    fs::read(&archive)? == bytes,
+                    "legacy archive identity mismatch"
+                );
+            } else {
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .mode(0o600)
+                    .open(archive)?;
+                file.write_all(&bytes)?;
+                file.sync_all()?;
+            }
+        }
+        let temporary = store.root().join(format!(
+            ".activity-guard-{:032x}.tmp",
+            rand::random::<u128>()
+        ));
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&temporary)?;
+        file.write_all(guard.as_bytes())?;
+        file.sync_all()?;
+        fs::rename(temporary, legacy)?;
+        File::open(store.root())?.sync_all()?;
+    }
+    Ok(())
 }

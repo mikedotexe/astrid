@@ -69,6 +69,13 @@ const ALLOWED_PENDING_NEXT_BASES: &[&str] = &[
 pub(super) struct PendingNextOverride {
     pub action: String,
     token: String,
+    operation_identity: Option<String>,
+}
+
+impl PendingNextOverride {
+    pub(super) fn operation_id(&self) -> Option<&str> {
+        self.operation_identity.as_deref()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -401,7 +408,35 @@ pub(super) fn read_pending_next_override() -> Option<PendingNextOverride> {
         .unwrap_or(action.as_str())
         .to_string();
 
-    Some(PendingNextOverride { action, token })
+    let operation_identity = operator_operation_identity(&payload);
+    Some(PendingNextOverride {
+        action,
+        token,
+        operation_identity,
+    })
+}
+
+fn operator_operation_identity(payload: &serde_json::Map<String, Value>) -> Option<String> {
+    ["override_id", "updated_at", "created_at"]
+        .iter()
+        .find_map(|key| {
+            payload
+                .get(*key)
+                .and_then(Value::as_str)
+                .filter(|id| !id.trim().is_empty())
+        })
+        .map(|id| format!("operator-{id}"))
+}
+
+#[test]
+fn operator_retry_identity_never_falls_back_to_command_prose() {
+    let value = serde_json::json!({"action":"ACTIVITY_FOCUS WRITE d1"});
+    assert!(operator_operation_identity(value.as_object().unwrap()).is_none());
+    let value = serde_json::json!({"action":"ACTIVITY_FOCUS WRITE d1","override_id":"event-a"});
+    assert_eq!(
+        operator_operation_identity(value.as_object().unwrap()).as_deref(),
+        Some("operator-event-a")
+    );
 }
 
 pub(super) fn mark_pending_next_override_consumed(pending: &PendingNextOverride, reason: &str) {

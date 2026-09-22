@@ -27,6 +27,9 @@ fn begin_activity_mailbox_window(
     conv: &mut ConversationState,
     inbox: &durable_inbox::DurableInbox,
 ) -> (Option<durable_inbox::InboxReservation>, String) {
+    if activity_focus::quiet() {
+        return (None, String::new());
+    }
     if let Err(error) = recover_activity_deliveries(
         &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
         inbox,
@@ -59,8 +62,8 @@ fn begin_activity_mailbox_window(
                     &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
                     &next,
                 ) {
-                    Ok(()) => {
-                        conv.activity = next;
+                    Ok(committed) => {
+                        conv.activity = committed;
                         match admission {
                             durable_inbox::InboxAdmission::Reserved(letter) => reservation = Some(letter),
                             durable_inbox::InboxAdmission::NeedsExplicitReadingWindow(letter) => {

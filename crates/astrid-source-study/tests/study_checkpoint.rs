@@ -204,6 +204,7 @@ fn chosen_correction_outlives_recent_responses_without_automatic_rewriting() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)] // One ordered two-inquiry history exercises cross-question recovery.
 fn new_and_restored_inquiries_show_only_their_own_authored_context() {
     let (temp, reader) = setup();
     let general = open(&reader, SOURCE);
@@ -296,6 +297,12 @@ fn new_and_restored_inquiries_show_only_their_own_authored_context() {
     let pending = open(&reader, SOURCE);
     let switch = reader.prepare_action("SELF_STUDY QUESTION q2").unwrap();
     accept(&reader, &switch, "The second inquiry remains independent.");
+    let second_position = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert_ne!(
+        second_position.page.as_ref().map(|p| &p.id),
+        pending.page.as_ref().map(|p| &p.id)
+    );
+    reader.prepare_action("SELF_STUDY QUESTION q1").unwrap();
     let resumed = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
     assert_eq!(resumed.page.as_ref().unwrap().id, pending.page.unwrap().id);
     assert_eq!(resumed.question_id.as_deref(), Some("q1"));
@@ -307,7 +314,7 @@ fn new_and_restored_inquiries_show_only_their_own_authored_context() {
             .text
             .contains("Second inquiry's tentative caller conclusion.")
     );
-    assert_eq!(state(&temp)["questions"]["active"], "q2");
+    assert_eq!(state(&temp)["questions"]["active"], "q1");
 }
 
 #[test]

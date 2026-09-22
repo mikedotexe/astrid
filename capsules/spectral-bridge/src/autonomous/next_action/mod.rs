@@ -114,6 +114,7 @@ impl ActionPreflightReport {
 }
 
 pub(super) struct NextActionContext<'a> {
+    pub operation_id: Option<&'a str>,
     pub burst_count: &'a mut u32,
     pub db: &'a BridgeDb,
     pub sensory_tx: &'a mpsc::Sender<SensoryMsg>,
@@ -138,7 +139,9 @@ pub(super) fn reconcile_lease_law(conv: &mut super::state::ConversationState) {
 /// Parse NEXT: action from Astrid's response.
 pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
     if let Some(action) = astrid_source_study::response_choice::final_explicit_next(text) {
-        if action.starts_with("AFTERIMAGE_KEEP ") {
+        if action.starts_with("AFTERIMAGE_KEEP ")
+            || astrid_source_study::response_choice::is_geometry_action(action)
+        {
             return Some(action);
         }
         let mut clean = action.trim();
@@ -453,6 +456,9 @@ fn is_action_token_like(token: &str) -> bool {
 ///   "EXAMINE foo AND DEFER reason"           → ["EXAMINE foo", "DEFER reason"]
 ///   "A AND B AND C AND D"                    → ["A", "B", "C AND D"]  (truncated to 3)
 fn split_multi_action(original: &str) -> Vec<String> {
+    if astrid_source_study::response_choice::is_geometry_action(original) {
+        return vec![original.into()];
+    }
     const MAX_MULTI_ACTION_SEGMENTS: usize = 3;
     let mut segments: Vec<String> = Vec::new();
     let mut remaining = original;
@@ -1152,8 +1158,13 @@ fn normalize_feedback_shadow_model_alias(
 }
 
 fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
-    if leading_action_token(next_action.trim_start()) == "AFTERIMAGE_KEEP" {
-        return ("AFTERIMAGE_KEEP".into(), next_action.trim_start().into());
+    if leading_action_token(next_action.trim_start()) == "AFTERIMAGE_KEEP"
+        || astrid_source_study::response_choice::is_geometry_action(next_action)
+    {
+        return (
+            leading_action_token(next_action.trim_start()),
+            next_action.trim_start().into(),
+        );
     }
     let original =
         unwrap_outer_action_wrappers(strip_choice_metadata_from_next_action(next_action));
@@ -1354,6 +1365,8 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
     if matches!(
         base_action,
         "ACTIVITY_STATUS"
+            | "ACTIVITY_FOCUS"
+            | "END_ACTIVITY_FOCUS"
             | "PARK_ACTIVITY"
             | "RETURN_ACTIVITY"
             | "CHECK_MAILBOX"
@@ -1476,7 +1489,8 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "COLLABORATIONS"
         | "COLLABORATION_STATUS"
         | "COLLAB_STATUS" => return "read_only",
-        "PARK_ACTIVITY" | "RETURN_ACTIVITY" | "CHECK_MAILBOX" => return "local_state",
+        "ACTIVITY_FOCUS" | "END_ACTIVITY_FOCUS" | "PARK_ACTIVITY" | "RETURN_ACTIVITY"
+        | "CHECK_MAILBOX" => return "local_state",
         _ => {},
     }
     if protected_diagnostics::canonical_action_for(base_action).is_some() {
@@ -1676,6 +1690,8 @@ fn route_for_preflight_base(base_action: &str) -> String {
     if matches!(
         base_action,
         "ACTIVITY_STATUS"
+            | "ACTIVITY_FOCUS"
+            | "END_ACTIVITY_FOCUS"
             | "PARK_ACTIVITY"
             | "RETURN_ACTIVITY"
             | "CHECK_MAILBOX"
@@ -2143,6 +2159,7 @@ fn dispatch_multi_action(
     author: introspection_cadence::NextActionAuthorV1,
 ) -> NextActionOutcome {
     let NextActionContext {
+        operation_id,
         burst_count,
         db,
         sensory_tx,
@@ -2179,7 +2196,9 @@ fn dispatch_multi_action(
             decision_already_emitted = true;
         }
         // Reborrow the &mut field; immutable refs are Copy.
+        let segment_id = operation_id.map(|id| format!("{id}-segment-{i}"));
         let segment_ctx = NextActionContext {
+            operation_id: segment_id.as_deref(),
             burst_count: &mut *burst_count,
             db,
             sensory_tx,
@@ -2311,6 +2330,28 @@ mod tests {
                 "{text}"
             );
         }
+    }
+
+    #[test]
+    fn geometry_next_is_opaque_data_through_parsing_and_chaining() {
+        let action = format!(
+            "SELF_STUDY GEOMETRY {}",
+            serde_json::json!({
+                "question":"q1", "operation":{"kind":"revise", "target":"earlier", "text":"<think>quoted text</think> <unfinished> AND SELF_STUDY MAP </s>"},
+                "request_id":"fixture", "expected_head":"empty"
+            })
+        );
+        assert_eq!(
+            parse_next_action(&format!("NEXT: {action}")),
+            Some(action.as_str())
+        );
+        assert_eq!(canonicalize_next_action_text(&action), action);
+        assert_eq!(split_multi_action(&action), vec![action.clone()]);
+        assert!(parse_next_action(&format!("```\nNEXT: {action}\n```")).is_none());
+        assert_eq!(
+            parse_next_action(&format!("NEXT: {action}\nNEXT: REST")),
+            Some("REST")
+        );
     }
 
     #[test]
@@ -2545,6 +2586,7 @@ mod tests {
         let mut burst_count = 0;
         let expected_burst = conv.burst_target.saturating_add(2);
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -2582,6 +2624,7 @@ mod tests {
             &mut conv,
             "SHUT_EYES",
             NextActionContext {
+                operation_id: None,
                 burst_count: &mut burst_count,
                 db: &db,
                 sensory_tx: &sensory_tx,
@@ -2603,6 +2646,7 @@ mod tests {
             &mut conv,
             "SHUT_EARS",
             NextActionContext {
+                operation_id: None,
                 burst_count: &mut burst_count,
                 db: &db,
                 sensory_tx: &sensory_tx,
@@ -2623,6 +2667,7 @@ mod tests {
             &mut conv,
             "OPEN_EYES",
             NextActionContext {
+                operation_id: None,
                 burst_count: &mut burst_count,
                 db: &db,
                 sensory_tx: &sensory_tx,
@@ -2643,6 +2688,7 @@ mod tests {
             &mut conv,
             "OPEN_EARS",
             NextActionContext {
+                operation_id: None,
                 burst_count: &mut burst_count,
                 db: &db,
                 sensory_tx: &sensory_tx,
@@ -2797,6 +2843,7 @@ mod tests {
         let dispatch = |conv: &mut ConversationState, action: &str| {
             let mut burst_count = 0;
             let ctx = NextActionContext {
+                operation_id: None,
                 burst_count: &mut burst_count,
                 db: &db,
                 sensory_tx: &sensory_tx,
@@ -2856,6 +2903,7 @@ mod tests {
             workspace.join("action_threads"),
         );
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -2903,6 +2951,7 @@ mod tests {
         ));
         let _ = std::fs::remove_dir_all(&workspace);
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -2946,6 +2995,7 @@ mod tests {
         ));
         let _ = std::fs::remove_dir_all(&workspace);
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -2984,6 +3034,7 @@ mod tests {
             std::env::temp_dir().join(format!("astrid_m6_bridge_read_only_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&workspace);
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3038,6 +3089,7 @@ mod tests {
         let telemetry = telemetry();
         let mut burst_count = 0;
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3084,6 +3136,7 @@ mod tests {
         let telemetry = telemetry();
         let mut burst_count = 0;
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3123,6 +3176,7 @@ mod tests {
         let telemetry = telemetry();
         let mut burst_count = 0;
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3225,6 +3279,7 @@ mod tests {
         )
         .expect("health");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3272,6 +3327,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&workspace);
         std::fs::create_dir_all(&workspace).expect("workspace");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3315,6 +3371,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&workspace);
         std::fs::create_dir_all(&workspace).expect("workspace");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3364,6 +3421,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&workspace);
         std::fs::create_dir_all(&workspace).expect("workspace");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3458,6 +3516,7 @@ mod tests {
         )
         .expect("write drill artifact");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3586,6 +3645,7 @@ mod tests {
         )
         .expect("write review artifact");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3628,6 +3688,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&workspace);
         std::fs::create_dir_all(&workspace).expect("workspace");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3684,6 +3745,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&workspace);
         std::fs::create_dir_all(&workspace).expect("workspace");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -3727,6 +3789,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&workspace);
         std::fs::create_dir_all(&workspace).expect("workspace");
         let ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,

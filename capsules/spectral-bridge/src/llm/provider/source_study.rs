@@ -2,14 +2,21 @@
 pub(crate) async fn generate_source_study(
     output: &astrid_source_study::StudyOutput,
 ) -> DialogueCompletionV1 {
+    generate_source_study_for_job(output, None).await
+}
+
+pub(crate) async fn generate_source_study_for_job(
+    output: &astrid_source_study::StudyOutput,
+    job: Option<&str>,
+) -> DialogueCompletionV1 {
     let private = output.input_kind == astrid_source_study::InputKind::PrivateWriting;
     let label = if private { "private_writing" } else { "self_study" };
     let input = ProtectedDialogueInputV1 {
         reading_source: None,
-        content_id: output.page.as_ref().map_or_else(
+        content_id: job.map_or_else(|| output.page.as_ref().map_or_else(
             || format!("source-navigation:{}", protected_digest(&output.text)),
             |page| format!("source-study:{}", page.id),
-        ),
+        ), crate::autonomous::study_handoff::content_id),
         kind: if private { ProtectedDialogueKindV1::PrivateWriting } else { ProtectedDialogueKindV1::SourceStudy },
         source_text: output.text.clone(),
         source_start_byte: 0,
@@ -20,7 +27,7 @@ pub(crate) async fn generate_source_study(
         .join("diagnostics/accepted_deliveries");
     // OPEN receives a fresh reader sequence. Recovery is only for an interrupted
     // delivery, and must still match the complete current input, including notes.
-    if output.page.is_some()
+    if job.is_none() && output.page.is_some()
         && let Ok(Some((receipt, text))) = recover_retained_delivery(&input.content_id, 0)
         && source_study_recovery_matches(output, &receipt)
     {
@@ -91,6 +98,27 @@ fn source_study_attempt_complete(
             .verify_delivery(&attempt.request_json, &attempt.response_json)
             .is_ok()
     })
+}
+
+#[cfg(test)]
+pub(crate) fn retain_source_study_fixture(
+    output: &astrid_source_study::StudyOutput, job: &str, root: &std::path::Path, text: &str,
+) -> PromptDeliveryReceiptV1 {
+    let input = ProtectedDialogueInputV1 {
+        reading_source: None, content_id: crate::autonomous::study_handoff::content_id(job),
+        kind: if output.input_kind == astrid_source_study::InputKind::PrivateWriting { ProtectedDialogueKindV1::PrivateWriting } else { ProtectedDialogueKindV1::SourceStudy },
+        source_text: output.text.clone(), source_start_byte: 0, reply_message_id: None,
+    };
+    let mut messages = vec![Message { role: "system".into(), content: output.system_prompt.clone() }];
+    let admission = admit_protected_dialogue_content(&mut messages, &input, astrid_source_study::MAX_INPUT_BYTES).unwrap();
+    let attempt = SubmittedDeliveryAttemptV1 {
+        provider_route: "synthetic".into(), provider_model: "stub".into(),
+        request_json: serde_json::json!({"messages":messages}).to_string(),
+        response_json: serde_json::json!({"choices":[{"message":{"content":text},"finish_reason":"stop"}]}).to_string(),
+        admission,
+    };
+    assert!(source_study_attempt_complete(output, Some(&attempt)));
+    retain_accepted_delivery_at(root, attempt, text).unwrap()
 }
 
 #[cfg(test)]

@@ -95,6 +95,13 @@ pub(super) enum AstridVolitionStartV1 {
 }
 
 impl AstridVolitionStartV1 {
+    pub(super) fn operation_id(&self) -> Option<&str> {
+        match self {
+            Self::Accepted(accepted) => Some(&accepted.intent.intent_id),
+            Self::Shadowed(_) => None,
+        }
+    }
+
     pub(super) fn dispatch_block_reason(&self) -> Option<String> {
         match self {
             Self::Accepted(_) => None,

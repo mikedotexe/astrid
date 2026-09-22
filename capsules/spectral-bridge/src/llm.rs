@@ -18,11 +18,11 @@ pub(crate) use provider::{
     derive_browse_anchor, dialogue_outer_timeout_secs, dialogue_retry_tokens,
     estimate_dialogue_prompt_pressure_chars, fetch_url, format_browse_failure_context,
     format_browse_read_context, format_dialogue_web_context, format_read_more_context,
-    generate_dialogue_with_runtime_feedback, generate_source_study, journal_outer_timeout,
-    recover_retained_delivery, sanitize_model_control_markers_with_report, set_astrid_aperture,
-    set_astrid_tail_participation, set_astrid_vibrancy_aperture,
-    strip_trailing_control_marker_case_variants, trim_chars, verify_delivery_receipt,
-    verify_runtime_feedback_receipt, web_search,
+    generate_dialogue_with_runtime_feedback, generate_source_study, generate_source_study_for_job,
+    journal_outer_timeout, recover_retained_delivery, recover_retained_delivery_at,
+    sanitize_model_control_markers_with_report, set_astrid_aperture, set_astrid_tail_participation,
+    set_astrid_vibrancy_aperture, strip_trailing_control_marker_case_variants, trim_chars,
+    verify_delivery_receipt, verify_runtime_feedback_receipt, web_search,
 };
 
 #[allow(unused_imports)] // Compatibility entry point for independently prepared callers.
@@ -31,5 +31,5 @@ pub(crate) use provider::generate_dialogue_with_delivery;
 #[cfg(test)]
 pub(crate) use provider::{
     GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT, ResearchHit, ResearchSourceKind, SYSTEM_PROMPT,
-    WebSearchResult, recover_retained_delivery_at, test_completed_protected_dialogue_at,
+    WebSearchResult, retain_source_study_fixture, test_completed_protected_dialogue_at,
 };

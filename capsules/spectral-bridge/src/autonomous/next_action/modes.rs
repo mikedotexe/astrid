@@ -51,7 +51,12 @@ pub(super) fn handle_action(
     original: &str,
     ctx: &mut NextActionContext<'_>,
 ) -> bool {
-    if let Some(outcome) = super::study_navigation::handle_request(conv, base_action, original) {
+    if let Some(outcome) = super::study_navigation::handle_durable_request(
+        conv,
+        base_action,
+        original,
+        ctx.operation_id,
+    ) {
         return outcome.handled;
     }
     match base_action {
@@ -402,12 +407,17 @@ mod tests {
 
     #[test]
     fn examine_code_preserves_full_target_label() {
+        let temp = tempfile::tempdir().unwrap();
+        let _scope = crate::action_continuity::scoped_test_action_continuity_root(
+            temp.path().canonicalize().unwrap().join("action_threads"),
+        );
         let mut conv = ConversationState::new(Vec::new(), None);
         let db = BridgeDb::open(":memory:").expect("open in-memory db");
         let (sensory_tx, _sensory_rx) = mpsc::channel(1);
         let telemetry = telemetry();
         let mut burst_count = 0;
         let mut ctx = NextActionContext {
+            operation_id: Some("examine-fixture"),
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -426,11 +436,9 @@ mod tests {
 
         assert!(handled);
         assert!(conv.defer_inbox);
-        assert_eq!(
-            conv.introspect_target,
-            Some(IntrospectTargetV2::auto(
-                "system-resources-demo/system_resources.py".to_string()
-            ))
+        assert_study_target(
+            conv.introspect_target.as_ref().unwrap(),
+            IntrospectTargetV2::auto("system-resources-demo/system_resources.py".to_string()),
         );
         assert!(
             conv.emphasis
@@ -441,12 +449,17 @@ mod tests {
 
     #[test]
     fn targeted_introspect_preserves_case_sensitive_path_and_defers_inbox_once() {
+        let temp = tempfile::tempdir().unwrap();
+        let _scope = crate::action_continuity::scoped_test_action_continuity_root(
+            temp.path().canonicalize().unwrap().join("action_threads"),
+        );
         let mut conv = ConversationState::new(Vec::new(), None);
         let db = BridgeDb::open(":memory:").expect("open in-memory db");
         let (sensory_tx, _sensory_rx) = mpsc::channel(1);
         let telemetry = telemetry();
         let mut burst_count = 0;
         let mut ctx = NextActionContext {
+            operation_id: Some("path-fixture"),
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -466,23 +479,28 @@ mod tests {
         assert!(handled);
         assert!(conv.wants_introspect);
         assert!(conv.defer_inbox);
-        assert_eq!(
-            conv.introspect_target,
-            Some(IntrospectTargetV2::exact(
+        assert_study_target(
+            conv.introspect_target.as_ref().unwrap(),
+            IntrospectTargetV2::exact(
                 "capsules/spectral-bridge/DOMAIN_BOUNDARIES.md".to_string(),
-                680
-            ))
+                680,
+            ),
         );
     }
 
     #[test]
     fn targeted_introspect_distinguishes_auto_from_explicit_zero() {
+        let temp = tempfile::tempdir().unwrap();
+        let _scope = crate::action_continuity::scoped_test_action_continuity_root(
+            temp.path().canonicalize().unwrap().join("action_threads"),
+        );
         let mut conv = ConversationState::new(Vec::new(), None);
         let db = BridgeDb::open(":memory:").expect("open in-memory db");
         let (sensory_tx, _sensory_rx) = mpsc::channel(1);
         let telemetry = telemetry();
         let mut burst_count = 0;
         let mut ctx = NextActionContext {
+            operation_id: Some("auto-fixture"),
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -498,12 +516,27 @@ mod tests {
             "INTROSPECT astrid:llm",
             &mut ctx,
         ));
-        assert_eq!(
-            conv.introspect_target,
-            Some(IntrospectTargetV2::auto("astrid:llm".to_string()))
+        assert_study_target(
+            conv.introspect_target.as_ref().unwrap(),
+            IntrospectTargetV2::auto("astrid:llm".to_string()),
         );
 
-        // The prior auto request has been consumed before a new exact request.
+        // Known preparation failure completes the old dispatch before a new choice.
+        let id = conv
+            .introspect_target
+            .as_ref()
+            .unwrap()
+            .operation_id
+            .clone()
+            .unwrap();
+        super::super::super::study_handoff::failed(
+            &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
+            &mut conv,
+            &id,
+            false,
+        )
+        .unwrap();
+        ctx.operation_id = Some("exact-fixture");
         conv.introspect_target.take();
         conv.wants_introspect = false;
         assert!(handle_action(
@@ -512,10 +545,22 @@ mod tests {
             "INTROSPECT astrid:llm 0",
             &mut ctx,
         ));
-        assert_eq!(
-            conv.introspect_target,
-            Some(IntrospectTargetV2::exact("astrid:llm".to_string(), 0))
+        assert_study_target(
+            conv.introspect_target.as_ref().unwrap(),
+            IntrospectTargetV2::exact("astrid:llm".to_string(), 0),
         );
+    }
+
+    fn assert_study_target(actual: &IntrospectTargetV2, mut expected: IntrospectTargetV2) {
+        assert!(
+            actual
+                .operation_id
+                .as_deref()
+                .unwrap()
+                .starts_with("study-job-")
+        );
+        expected.operation_id = actual.operation_id.clone();
+        assert_eq!(actual, &expected);
     }
 
     #[test]
@@ -526,6 +571,7 @@ mod tests {
         let telemetry = telemetry();
         let mut burst_count = 0;
         let mut ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,
@@ -562,6 +608,7 @@ mod tests {
         let telemetry = telemetry();
         let mut burst_count = 0;
         let mut ctx = NextActionContext {
+            operation_id: None,
             burst_count: &mut burst_count,
             db: &db,
             sensory_tx: &sensory_tx,

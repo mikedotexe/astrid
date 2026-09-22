@@ -651,6 +651,14 @@ pub fn spawn_autonomous_loop(
                         "spectral regime classified"
                     );
 
+                    let protected_work = match study_handoff::reconcile_configured(&mut conv).and_then(|()| activity_focus::prepare_exchange(&mut conv)) {
+                        Ok(active) => active,
+                        Err(error) => {
+                            warn!(%error, "protected work unresolved; no competing generation or mailbox admission");
+                            continue;
+                        },
+                    };
+
                     // Route minime outbox replies → Astrid inbox before checking.
                     scan_minime_outbox(&mut conv.last_outbox_scan_ts);
                     promote_deferred_inbox_notes();
@@ -666,7 +674,7 @@ pub fn spawn_autonomous_loop(
                     let inbox_content = inbox_reservation.as_ref().map(capture_reserved_letter);
                     let mutual_address_target = inbox_reservation.as_ref()
                         .and_then(reserved_letter_peer_target);
-                    let chosen_attention = conv.activity.foreground_reader.is_some()
+                    let chosen_attention = protected_work || conv.activity.foreground_reader.is_some()
                         || inbox_reservation.is_some()
                         || conv.browse_url.is_some()
                         || conv.wants_search;
@@ -754,7 +762,11 @@ pub fn spawn_autonomous_loop(
                     }
 
                     let inbox_forces_dialogue = inbox_reservation.is_some();
-                    let mode = if chosen_attention {
+                    let mode = if protected_work {
+                        next_action::introspection_cadence::observe_due(&mut conv);
+                        next_action::introspection_cadence::defer_pending(&mut conv, "protected_activity");
+                        Mode::Introspect
+                    } else if chosen_attention {
                         next_action::introspection_cadence::observe_due(&mut conv);
                         next_action::introspection_cadence::defer_pending(
                             &mut conv, "chosen_activity",
@@ -1821,8 +1833,11 @@ pub fn spawn_autonomous_loop(
                                     warn!(error = %error, "failed to record coupling advisory metrics");
                                 }
                             }
-                            let diversity_hint =
+                            // Keep diagnostic observations out of authored work.
+                            // Repeated wording alone does not solicit correction.
+                            let _diagnostic_hints =
                                 merge_hints([diversity_hint, vocab_nudge, coupling_nudge, motif_nudge]);
+                            let diversity_hint: Option<String> = None;
 
                             let mut activity_recovery_ready = true;
                             if inbox_reservation.is_none() {
@@ -4846,7 +4861,6 @@ pub fn spawn_autonomous_loop(
                                 "diversity redirect retained as advice; authored NEXT remains effective"
                             );
                         }
-                        let deferred_diversity_hint = next_choice_feedback.hint;
                         let effective_next_action = canonical_next_action.clone();
                         // Extract workspace path before mutable borrow of conv.
                         let ws_clone = conv.remote_workspace.clone();
@@ -4863,6 +4877,7 @@ pub fn spawn_autonomous_loop(
                                 &mut conv,
                                 &effective_next_action,
                                 NextActionContext {
+                                    operation_id: volition_start.as_ref().and_then(volition::AstridVolitionStartV1::operation_id),
                                     burst_count: &mut burst_count,
                                     db: db.as_ref(),
                                     sensory_tx: &sensory_tx,
@@ -4898,14 +4913,8 @@ pub fn spawn_autonomous_loop(
                         ) {
                             warn!("action continuity record failed: {err:#}");
                         }
-                        // Merge diversity hint AFTER the action handler, so the
-                        // handler can't silently overwrite it by setting emphasis.
-                        if let Some(hint) = deferred_diversity_hint {
-                            conv.emphasis = Some(match conv.emphasis.take() {
-                                Some(existing) => format!("{hint}\n\n{existing}"),
-                                None => hint,
-                            });
-                        }
+                        // Authored emphasis and NEXT survive unchanged. Routine
+                        // diversity observations remain diagnostic, not prompt advice.
                     }
                     if let Some(ref pending) = operator_override {
                         let operator_action = canonicalize_next_action_text(&pending.action);
@@ -4918,6 +4927,7 @@ pub fn spawn_autonomous_loop(
                             &mut conv,
                             &operator_action,
                             NextActionContext {
+                                operation_id: pending.operation_id(),
                                 burst_count: &mut burst_count,
                                 db: db.as_ref(),
                                 sensory_tx: &sensory_tx,

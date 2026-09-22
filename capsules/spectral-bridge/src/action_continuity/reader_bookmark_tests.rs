@@ -587,12 +587,15 @@ fn reader_bookmark_invalid_utf8_never_attaches_source() {
 fn reader_bookmark_append_failure_reports_the_uncertain_stage() {
     let fixture = ReaderFixture::new("failure fixture");
     let path = fixture.store.continuity_sessions_path(&fixture.thread);
-    let mut log = reader_bookmark_io::ReaderSessionLog {
-        file: fs::File::open(&path).unwrap(),
-        path,
-        latest: None,
-        prior_operation: None,
-    };
+    let mut log = reader_bookmark_io::ReaderSessionLog::open(
+        &fixture.store,
+        &fixture.thread,
+        &fixture.session,
+        None,
+    )
+    .unwrap()
+    .unwrap();
+    log.file = fs::File::open(&path).unwrap();
     let error = log
         .append(&json!({"synthetic":true}), "operation", "record")
         .unwrap_err();

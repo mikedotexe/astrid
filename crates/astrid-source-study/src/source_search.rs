@@ -89,6 +89,8 @@ impl SearchReport {
         exact: bool,
     ) {
         let rust = source.path.extension().is_some_and(|ext| ext == "rs");
+        let outline = (exact && role == Role::Implementation && text.contains(query))
+            .then(|| crate::source_structure::Outline::parse(&source.id, text));
         let mut test_remainder = role == Role::Test;
         for (offset, line) in text.lines().enumerate() {
             if rust && line.trim_start().starts_with("#[cfg(test)]") {
@@ -121,13 +123,25 @@ impl SearchReport {
             if !found {
                 continue;
             }
-            let kind = if exact
+            let consumer = outline.as_ref().is_some_and(|outline| {
+                outline.complete
+                    && outline.references.iter().any(|reference| {
+                        reference.line == number
+                            && reference.name == query
+                            && !reference.test_context
+                            && matches!(reference.usage, "call" | "match")
+                    })
+            });
+            let kind = if consumer && role == Role::Implementation {
+                3
+            } else if exact
                 && words.windows(2).any(|w| {
                     matches!(
                         w[0],
                         "fn" | "struct" | "enum" | "trait" | "type" | "class" | "def" | "function"
                     ) && w[1] == query
-                }) {
+                })
+            {
                 0
             } else if exact && words.first() == Some(&"impl") {
                 1
@@ -184,8 +198,23 @@ impl SearchReport {
                 lines.push(format!("Candidate identifier text {word}: {location}"));
             }
         }
-        for ((role, kind), rows) in self.rows {
+        let mut groups = self.rows.into_iter().collect::<Vec<_>>();
+        groups.sort_by_key(|((role, kind), _)| {
+            (
+                *role,
+                if *kind == 3 {
+                    0
+                } else {
+                    kind.saturating_add(1)
+                },
+            )
+        });
+        let mut additional_consumers = Vec::new();
+        for ((role, kind), mut rows) in groups {
             let label = match (role, kind) {
+                (Role::Implementation, 3) => {
+                    "Call / match sites (parsed syntax; name binding and execution unverified)"
+                },
                 (Role::Implementation, 0) => {
                     "Definition candidates (declaration-like text; inspect the surrounding source)"
                 },
@@ -195,8 +224,17 @@ impl SearchReport {
                 },
                 _ => "Other references",
             };
+            // Keep a bounded use-site preview ahead of definitions. A heavily
+            // used symbol must not push every definition off the first page.
+            if role == Role::Implementation && kind == 3 && rows.len() > 3 {
+                additional_consumers = rows.split_off(3);
+            }
             lines.push(format!("{} — {label}", role.label()));
             lines.extend(rows);
+        }
+        if !additional_consumers.is_empty() {
+            lines.push("Other references — additional parsed call / match sites (name binding and execution unverified)".into());
+            lines.extend(additional_consumers);
         }
         lines.push("OPEN any exact result to inspect numbered source and context. You may page through the remaining matches, reread, change the query, browse MAP, or stop; no replacement mechanism has been inferred.".into());
         lines

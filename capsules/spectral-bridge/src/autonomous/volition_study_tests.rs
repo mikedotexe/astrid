@@ -42,6 +42,9 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
         ),
     ] {
         let temp = tempfile::tempdir().unwrap();
+        let _scope = crate::action_continuity::scoped_test_action_continuity_root(
+            temp.path().canonicalize().unwrap().join("action_threads"),
+        );
         let source_root = temp.path().join("astrid");
         fs::create_dir_all(&source_root).unwrap();
         fs::write(
@@ -103,6 +106,7 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
             &mut conv,
             chosen,
             next_action::NextActionContext {
+                operation_id: start.operation_id(),
                 burst_count: &mut burst,
                 db: &db,
                 sensory_tx: &sensory_tx,
@@ -114,6 +118,20 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
         );
         assert_eq!(outcome.status, "handled", "{}", outcome.outcome_summary);
         assert!(conv.wants_introspect);
+        assert_eq!(
+            conv.introspect_target
+                .as_ref()
+                .unwrap()
+                .operation_id
+                .as_deref(),
+            Some(
+                format!(
+                    "study-job-{:x}",
+                    Sha256::digest(start.operation_id().unwrap())
+                )
+                .as_str()
+            )
+        );
         assert_eq!(conv.introspect_target.unwrap().label, chosen);
         assert!(reader.prepare_action(chosen).is_ok());
         assert!(sensory_rx.try_recv().is_err());
@@ -128,6 +146,9 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
 #[test]
 fn dispatched_study_choices_preserve_pending_page_until_consumption_or_explicit_replacement() {
     let temp = tempfile::tempdir().unwrap();
+    let _scope = crate::action_continuity::scoped_test_action_continuity_root(
+        temp.path().canonicalize().unwrap().join("action_threads"),
+    );
     let mut conv = ConversationState::new(Vec::new(), None);
     let db = crate::db::BridgeDb::open(":memory:").unwrap();
     let (sensory_tx, mut sensory_rx) = tokio::sync::mpsc::channel(1);
@@ -148,6 +169,7 @@ fn dispatched_study_choices_preserve_pending_page_until_consumption_or_explicit_
             &mut conv,
             action,
             next_action::NextActionContext {
+                operation_id: Some(action),
                 burst_count: &mut burst,
                 db: &db,
                 sensory_tx: &sensory_tx,
@@ -162,13 +184,28 @@ fn dispatched_study_choices_preserve_pending_page_until_consumption_or_explicit_
         assert!(conv.wants_introspect);
         assert!(sensory_rx.try_recv().is_err());
     }
-    // Production consumption takes this slot; the following authored choice is free.
+    // A known preparation failure releases this dispatch, retaining its history.
+    let id = conv
+        .introspect_target
+        .as_ref()
+        .unwrap()
+        .operation_id
+        .clone()
+        .unwrap();
+    runtime::study_handoff::failed(
+        &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
+        &mut conv,
+        &id,
+        false,
+    )
+    .unwrap();
     conv.introspect_target.take();
     conv.wants_introspect = false;
     let outcome = next_action::handle_next_action(
         &mut conv,
         page_two,
         next_action::NextActionContext {
+            operation_id: Some("next-after-completion"),
             burst_count: &mut burst,
             db: &db,
             sensory_tx: &sensory_tx,

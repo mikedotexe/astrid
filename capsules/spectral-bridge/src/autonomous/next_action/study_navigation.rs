@@ -99,10 +99,59 @@ fn valid_replacement(operation: &str) -> bool {
             .is_none()
 }
 
+#[cfg(test)]
 pub(super) fn handle_request(
     conv: &mut ConversationState,
     base: &str,
     original: &str,
+) -> Option<NextActionOutcome> {
+    handle_request_with(conv, base, original, |_, _, _| Ok(true))
+}
+
+pub(in crate::autonomous) fn handle_durable_request(
+    conv: &mut ConversationState,
+    base: &str,
+    original: &str,
+    operation: Option<&str>,
+) -> Option<NextActionOutcome> {
+    handle_request_with(conv, base, original, |conv, requested, replace| {
+        if conv.activity.native_focus_window.is_some()
+            || requested
+                .as_ref()
+                .is_some_and(|t| !super::super::study_handoff::shared_target(t))
+        {
+            if let Some(target) = requested {
+                target.operation_id = operation.map(str::to_owned);
+            }
+            return Ok(true);
+        }
+        if !replace && conv.wants_introspect {
+            return super::super::study_handoff::verify_pending(
+                &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
+                conv,
+                requested.as_ref(),
+            );
+        }
+        super::super::study_handoff::queue(
+            &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
+            conv,
+            requested,
+            operation
+                .ok_or_else(|| anyhow::anyhow!("durable study operation identity required"))?,
+            replace,
+        )
+    })
+}
+
+fn handle_request_with(
+    conv: &mut ConversationState,
+    base: &str,
+    original: &str,
+    persist: impl FnOnce(
+        &mut ConversationState,
+        &mut Option<IntrospectTargetV2>,
+        bool,
+    ) -> anyhow::Result<bool>,
 ) -> Option<NextActionOutcome> {
     let mut requested = request_target(base, original)?;
     let argument = strip_action(original, base);
@@ -131,16 +180,17 @@ pub(super) fn handle_request(
     if conv.introspect_target.is_some() {
         conv.wants_introspect = true;
     }
+    let mut identical_retry = false;
     if conv.wants_introspect {
         let pending = conv.introspect_target.as_ref();
-        if pending == requested.as_ref() {
-            let outcome = NextActionOutcome::handled("source_study_request",
-                format!("Already pending: {}. This identical retry shares that request; source has not yet been delivered.", visible_target(pending)))
-                .with_stage_visibility("read_only", "protected_summary");
-            retain(conv, original, &outcome);
-            return Some(outcome);
+        if !replace
+            && pending.map(|t| (&t.label, t.offset))
+                == requested.as_ref().map(|t| (&t.label, t.offset))
+        {
+            identical_retry = true;
+            requested = pending.cloned();
         }
-        if !replace {
+        if !replace && !identical_retry {
             let mut message = format!(
                 "Pending choice preserved: {}. The later request for {} was not queued. You can choose it again after the pending reading, or deliberately replace the pending source operation with SELF_STUDY REPLACE <operation>.",
                 visible_target(pending),
@@ -170,6 +220,21 @@ pub(super) fn handle_request(
         .introspect_target
         .as_ref()
         .map(|target| visible_target(Some(target)));
+    match persist(conv, &mut requested, replace) {
+        Ok(true) => {},
+        Ok(false) => {
+            let outcome = NextActionOutcome::handled("source_study_request", "This study operation already finished or was explicitly superseded. Its retained record is unchanged; this retry did not queue generation.")
+                .with_stage_visibility("read_only", "protected_summary");
+            retain(conv, original, &outcome);
+            return Some(outcome);
+        },
+        Err(error) => {
+            let outcome = NextActionOutcome::blocked("source_study_request", format!("Study handoff could not be confirmed; no new generation was started. Inspect retained state with ACTIVITY_STATUS before retrying. Storage/identity error: {error}"))
+                .with_stage_visibility("blocked", "protected_summary");
+            retain(conv, original, &outcome);
+            return Some(outcome);
+        },
+    }
     conv.introspect_target = requested;
     conv.wants_introspect = true;
     conv.defer_inbox = true;
@@ -179,6 +244,9 @@ pub(super) fn handle_request(
     );
     if replace && let Some(prior) = prior {
         message.push_str(&format!(" Explicitly superseded: {prior}."));
+    }
+    if identical_retry {
+        message.push_str(" This identical retry shares the existing pending request; it did not queue another generation.");
     }
     let outcome = NextActionOutcome::handled("source_study_request", message)
         .with_stage_visibility("read_only", "protected_summary");

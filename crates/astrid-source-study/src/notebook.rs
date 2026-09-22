@@ -37,11 +37,18 @@ impl Notebook {
         catalog: &Catalog,
         page: Option<&Page>,
         navigation: &str,
+        checkpoint_budget: usize,
     ) -> String {
-        let mut out = self.checkpoint_context();
+        let mut out = self.checkpoint_context(checkpoint_budget);
         let mut has_question_source = false;
         if let Some(question) = self.question_text() {
-            let quoted = inquiry_terms(question);
+            let mut quoted = inquiry_terms(question);
+            let consumers = consumer_question_symbols(question);
+            for term in &consumers {
+                if !quoted.contains(term) {
+                    quoted.push(term);
+                }
+            }
             let context_sources = page
                 .map(|page| page.source.as_str())
                 .into_iter()
@@ -70,6 +77,9 @@ impl Notebook {
                 })
                 .take(2)
             {
+                if consumers.contains(&term) {
+                    out.push_str("Your question asks about use or enforcement. RELATE places parsed call/match candidates ahead of definitions; OPEN supplies their conditions.\n");
+                }
                 append_lookup_choice(&mut out, navigation, term);
             }
         }
@@ -108,10 +118,9 @@ impl Notebook {
 
     /// Render existing authored state together without synthesizing conclusions,
     /// classifying their truth, or changing the inquiry's status or scheduling.
-    fn checkpoint_context(&self) -> String {
+    fn checkpoint_context(&self, max_bytes: usize) -> String {
         // Leave room for maximum durable fields and exact-path failure receipts
         // inside the shared whole-input budget; this section duplicates recall.
-        const MAX_CHECKPOINT_BYTES: usize = 4_500;
         const FOOTER: &str = "You can distinguish what you have established from what remains an assumption, including places already checked. Your findings remain yours to retain, qualify or revise.\n";
         if self.question.is_none()
             && self.note.is_none()
@@ -149,7 +158,7 @@ impl Notebook {
                 } else {
                     500
                 })
-                <= MAX_CHECKPOINT_BYTES
+                <= max_bytes
             {
                 out.push_str(&preview);
                 out.push('\n');
@@ -158,14 +167,20 @@ impl Notebook {
             }
         }
         if self.source_findings.has_authored() {
-            out.push_str(&self.source_findings.render_authored(
-                MAX_CHECKPOINT_BYTES.saturating_sub(out.len().saturating_add(FOOTER.len())),
-            ));
+            out.push_str(
+                &self.source_findings.render_authored(
+                    max_bytes.saturating_sub(out.len().saturating_add(FOOTER.len())),
+                ),
+            );
         } else {
             out.push_str("No source-linked finding is saved in this notebook. Your prose can remain freeform; STUDY_FINDING: can optionally keep a concrete conclusion beside a supplied source line.\n");
         }
         out.push_str(FOOTER);
-        out
+        if out.len() <= max_bytes {
+            out
+        } else {
+            "OPTIONAL STUDY CHECK-IN — duplicate previews omitted for input space; your saved words and results remain whole in the notebook below.\n".into()
+        }
     }
 
     pub(crate) fn record(&mut self, response: &str, text: &str, page: Option<&Page>) {
@@ -280,7 +295,8 @@ impl Notebook {
                 "study notebook framing exceeds the remaining input budget; notebook unchanged"
             );
         };
-        let json_budget = json_budget.min(32_000);
+        // The whole-input budget is the limit. Two-anchor relations may need more
+        // than the old 32 KB notebook allowance, without growing provider input.
         let mut view = self.clone();
         // Bound the serialized value without ever cutting JSON syntax or an exact path.
         loop {
@@ -315,10 +331,42 @@ impl Notebook {
             // minimum framing cannot fit, report failure rather than silently
             // replacing them with null or clipping serialized JSON.
             anyhow::bail!(
-                "saved study findings, note, question and minimum account exceed the remaining input budget; notebook unchanged"
+                "saved study findings, note, question and minimum account need {} bytes, exceeding the remaining {}-byte notebook budget; notebook unchanged",
+                serialized.len(),
+                json_budget
             );
         }
     }
+}
+
+fn consumer_question_symbols(text: &str) -> Vec<&str> {
+    let lower = text.to_ascii_lowercase();
+    if ![
+        "consum", "caller", "calls", "called", "enforc", "handled", "handles", "used", "use site",
+    ]
+    .iter()
+    .any(|word| lower.contains(word))
+    {
+        return Vec::new();
+    }
+    let mut symbols = inquiry_terms(text)
+        .into_iter()
+        .filter(|term| identifier(term))
+        .collect::<Vec<_>>();
+    for term in text.split(|c: char| !c.is_ascii_alphanumeric() && c != '_') {
+        if identifier(term)
+            && term.len() > 2
+            && (term.contains('_') || term.bytes().filter(u8::is_ascii_uppercase).count() >= 2)
+            && !symbols.contains(&term)
+        {
+            symbols.push(term);
+        }
+        if symbols.len() >= 2 {
+            break;
+        }
+    }
+    symbols.truncate(2);
+    symbols
 }
 
 fn source_from_reopen(entry: &Entry) -> Option<&str> {
