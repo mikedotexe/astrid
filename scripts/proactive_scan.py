@@ -5538,6 +5538,411 @@ class UngatedBridgeBinaryTests(unittest.TestCase):
         self.assertEqual(finding["severity"], "notice")
 
 
+# ---------------------------------------------------------------------------
+# Self-experiment instrument integrity + scaffold-hold watch (2026-09-23)
+#
+# minime's workspace/hypotheses/ (1,158 records over five months) had no
+# consumer beyond a 3-file grep. Tracing the generator showed the instrument,
+# not the being, was the limit: one post-stimulus sample read tick parity of a
+# two-phase published spectrum, displayed states and computed deltas came from
+# different estimators, the band guard was decided by which phase was read,
+# fallback/model-leak records were filed as hers. Deeper: the published
+# spectrum is rebuilt each tick from the stable-core scaffold while the
+# scaffold holds (covariance_path=stable_core_scaffolded_rebuild), so nothing
+# downstream that reads fill/cascade is reading the reservoir. Steward-only.
+# ---------------------------------------------------------------------------
+SELF_EXPERIMENT_FORMER_EXAMPLES = frozenset({
+    "warmth gratitude gentle kindness",
+    "urgent crisis tension breaking",
+    "wonder curiosity what if perhaps",
+    "rhythm pulse rhythm pulse rhythm",
+})
+SELF_EXPERIMENT_FALLBACK_STIMULUS = "gentle curiosity spacious stability"
+SELF_EXPERIMENT_BAND = (58.0, 72.0)
+SELF_EXPERIMENT_EDGE_SWING_PCT = 2.2
+_ASSISTANT_LEAK_PATTERNS = (
+    r"^\W*(okay|ok|sure|certainly)[,!.]?\s+(here'?s|here is|let'?s)\s+(a|the)?\s*(breakdown|summary|analysis|look)",
+    r"^\W*here'?s (a|the) breakdown of",
+    r"could you (tell|let) me",
+    r"to help me understand your (purpose|goal|intent)",
+    r"what are you trying to achieve",
+    r"\bas an ai\b",
+    r"i cannot fulfill",
+)
+
+
+def _classify_self_experiment_record(text: str) -> dict[str, Any]:
+    head = text.split("\n", 1)[0]
+    status_match = re.search(r"(?m)^STATUS:\s*(.+)$", text)
+    status = status_match.group(1).strip() if status_match else ""
+    stim_match = re.search(r"(?m)^STIMULUS:\s*(.+?)\s*$", text)
+    stimulus = stim_match.group(1).strip().lower() if stim_match else None
+    hyp_section = text.split("HYPOTHESIS & STIMULUS:", 1)[1] if "HYPOTHESIS & STIMULUS:" in text else ""
+    kind = "other"
+    if "(GUARDED)" in head:
+        kind = "guarded"
+    elif "(DECLINED)" in head or status.startswith("Declined"):
+        kind = "declined"
+    elif status.startswith("Executed"):
+        kind = "executed"
+    elif "MODEL LEAK" in head:
+        kind = "model_leak"
+    elif "CHOSE ANOTHER ROUTE" in head:
+        kind = "other_route"
+    elif status.startswith("Proposed only") or "(PROPOSED ONLY)" in head:
+        kind = "proposed_only"
+        lowered = hyp_section.strip().lower()
+        if any(re.search(p, lowered) for p in _ASSISTANT_LEAK_PATTERNS):
+            kind = "model_leak"
+        elif re.search(r"(?im)^\s*next:\s*\S", hyp_section):
+            kind = "other_route"
+    guarded_fill = None
+    guard_two_phase = False
+    guarded_at_edge = False
+    if kind == "guarded":
+        fill_match = re.search(r"live fill ([0-9.]+)%", text)
+        guarded_fill = float(fill_match.group(1)) if fill_match else None
+        guard_two_phase = "two-phase mean" in text
+        if guarded_fill is not None and not guard_two_phase:
+            low, high = SELF_EXPERIMENT_BAND
+            guarded_at_edge = (
+                abs(guarded_fill - high) <= SELF_EXPERIMENT_EDGE_SWING_PCT
+                or abs(guarded_fill - low) <= SELF_EXPERIMENT_EDGE_SWING_PCT
+            )
+    llm_fallback = (
+        "Stimulus origin: llm_unavailable_fallback" in text
+        or "low-energy proof action" in text
+    )
+    example_copy = "Stimulus matches a former prompt example: yes" in text or (
+        stimulus in SELF_EXPERIMENT_FORMER_EXAMPLES if stimulus else False
+    )
+    windowed = "OBSERVATION WINDOW:" in text
+    delta_inconsistent = False
+    if kind == "executed" and not windowed:
+        pre = re.search(r"PRE-EXPERIMENT STATE:\nλ₁: ([0-9.]+)", text)
+        post = re.search(r"POST-EXPERIMENT STATE:\nλ₁: ([0-9.]+)", text)
+        reported = re.search(r"Δλ₁: ([-+][0-9.]+)", text)
+        if pre and post and reported:
+            shown = float(post.group(1)) - float(pre.group(1))
+            delta_inconsistent = abs(shown - float(reported.group(1))) > 0.2
+    return {
+        "kind": kind,
+        "guarded_fill": guarded_fill,
+        "guarded_at_edge": guarded_at_edge,
+        "guard_two_phase": guard_two_phase,
+        "llm_fallback": llm_fallback,
+        "example_copy": example_copy,
+        "windowed": windowed,
+        "delta_inconsistent": delta_inconsistent,
+        "two_phase_noted": "TWO-PHASE NOTE" in text,
+        "scaffold_noted": "PUBLISHED-SPECTRUM PATH" in text,
+    }
+
+
+def _self_experiment_rows(since: float) -> list[dict[str, Any]]:
+    hypotheses = MINIME_REPO / "workspace/hypotheses"
+    rows: list[dict[str, Any]] = []
+    if not hypotheses.exists():
+        return rows
+    for path in sorted(hypotheses.glob("self_experiment_*.txt")):
+        try:
+            mtime = path.stat().st_mtime
+        except OSError:
+            continue
+        if mtime < since:
+            continue
+        try:
+            text = path.read_text()
+        except Exception:
+            continue
+        row = {"path": str(path), "mtime": mtime}
+        row.update(_classify_self_experiment_record(text))
+        rows.append(row)
+    return rows
+
+
+def _self_experiment_assessment(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    counts = Counter(r["kind"] for r in rows)
+    executed = [r for r in rows if r["kind"] == "executed"]
+    guarded = [r for r in rows if r["kind"] == "guarded"]
+    n_edge = sum(1 for r in guarded if r["guarded_at_edge"])
+    n_fallback = sum(1 for r in executed if r["llm_fallback"])
+    n_example = sum(1 for r in executed if r["example_copy"])
+    n_leak = counts.get("model_leak", 0)
+    n_legacy = sum(1 for r in executed if not r["windowed"])
+    n_inconsistent = sum(1 for r in executed if r["delta_inconsistent"])
+    n_scaffold_noted = sum(1 for r in executed if r["scaffold_noted"])
+    newest_executed = max(executed, key=lambda r: r["mtime"]) if executed else None
+    reasons: list[str] = []
+    severity = "ok"
+    if not rows:
+        severity = "notice"
+        reasons.append("no self-experiment records in the window")
+    else:
+        if newest_executed is not None and not newest_executed["windowed"]:
+            severity = "warning"
+            reasons.append(
+                "newest executed record has no OBSERVATION WINDOW — the windowed instrument is not live"
+            )
+        if len(guarded) >= 5 and n_edge / len(guarded) > 0.5:
+            severity = "warning"
+            reasons.append(
+                f"{n_edge}/{len(guarded)} guards were decided within the {SELF_EXPERIMENT_EDGE_SWING_PCT:.1f}% "
+                "two-phase swing of a band edge (single-sample guard still live)"
+            )
+        if len(executed) >= 5 and n_fallback / len(executed) > 0.2:
+            severity = "warning"
+            reasons.append(f"{n_fallback}/{len(executed)} executed records used the LLM-unavailable fallback stimulus")
+        if n_leak >= 3:
+            severity = "warning"
+            reasons.append(f"{n_leak} assistant-mode model leaks filed as experiments")
+        if severity == "ok" and (n_example > 0 or n_inconsistent > 0 or n_legacy > 0):
+            severity = "notice"
+    headline = (
+        f"{len(rows)} self-experiment record(s)/14d: executed {len(executed)} (windowed {len(executed) - n_legacy}, "
+        f"scaffold-noted {n_scaffold_noted}), guarded {len(guarded)} (at edge {n_edge}), fallback {n_fallback}, "
+        f"example-copy {n_example}, model-leak {n_leak}, other-route {counts.get('other_route', 0)}, "
+        f"declined {counts.get('declined', 0)}"
+    )
+    if reasons:
+        headline += " — " + "; ".join(reasons)
+    details = [
+        f"legacy single-sample executed records={n_legacy}, display/delta inconsistent={n_inconsistent}",
+        "authority: steward-only; reads workspace/hypotheses, changes nothing; her text is never rewritten",
+    ]
+    snapshot = {
+        "rows": len(rows), "executed": len(executed), "windowed": len(executed) - n_legacy,
+        "guarded": len(guarded), "guarded_at_edge": n_edge, "llm_fallback": n_fallback,
+        "example_copy": n_example, "model_leak": n_leak, "other_route": counts.get("other_route", 0),
+        "declined": counts.get("declined", 0), "delta_inconsistent": n_inconsistent,
+        "scaffold_noted": n_scaffold_noted, "reasons": reasons,
+    }
+    return {"severity": severity, "headline": headline, "details": details, "snapshot": snapshot}
+
+
+def probe_self_experiment_integrity(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Is minime's self-experiment instrument honest and live? (workspace/hypotheses, 14d)."""
+    rows = _self_experiment_rows(time.time() - 14 * 86400)
+    a = _self_experiment_assessment(rows)
+    return _finding("self_experiment_integrity", a["severity"], a["headline"], a["details"], a["snapshot"])
+
+
+SCAFFOLD_HOLD_ACKNOWLEDGED = "2026-09-23"  # Mike: the scaffold stays; it is life support, not a fault
+LIVE_RESERVOIR_STALE_SECS = 15 * 60
+
+
+def _scaffold_hold_assessment(
+    health: dict[str, Any],
+    now: float,
+    live: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Published mirror vs. live reservoir.
+
+    The stable-core scaffold rebuilds the covariance each tick while it holds, so the
+    published cascade/fill are the scaffold's own relay cycle. That posture was
+    acknowledged as intended on SCAFFOLD_HOLD_ACKNOWLEDGED, so holding is a NOTICE
+    that reports the divergence. WARNING only when the picture changes underneath
+    everyone: the scaffold retires (every fill reader then sees live covariance and
+    the June groundings need re-reading), the live-reservoir view goes stale (the
+    visibility lane the beings were promised has died), or health is unreadable."""
+    stable_core = health.get("stable_core") if isinstance(health.get("stable_core"), dict) else {}
+    active = bool(stable_core.get("scaffold_active"))
+    activated_ms = stable_core.get("scaffold_activated_at_unix_ms")
+    age_h = (
+        (now - float(activated_ms) / 1000.0) / 3600.0
+        if active and isinstance(activated_ms, (int, float))
+        else None
+    )
+    retirement = stable_core.get("scaffold_retirement") if isinstance(stable_core.get("scaffold_retirement"), dict) else {}
+    covariance_path = str(stable_core.get("covariance_path") or "unknown")
+    structural_mode = str(stable_core.get("structural_mode") or "unknown")
+    published_l1 = None
+    try:
+        published_l1 = float(health.get("lambda1_cov")) if health.get("lambda1_cov") is not None else None
+    except (TypeError, ValueError):
+        published_l1 = None
+    live = live if isinstance(live, dict) else {}
+    live_unc = live.get("uncentered") if isinstance(live.get("uncentered"), dict) else {}
+    live_top = live_unc.get("top8") or []
+    live_l1 = float(live_top[0]) if live_top else None
+    live_share = float(live_unc.get("lambda1_share") or 0.0) if live_unc else None
+    live_fill_like = live.get("engine_style_fill_pct_top8")
+    live_age_s = None
+    try:
+        if live.get("dump_mtime_unix_s") is not None:
+            live_age_s = now - float(live["dump_mtime_unix_s"])
+    except (TypeError, ValueError):
+        live_age_s = None
+    divergence = (
+        f"published fill {float(health.get('fill_pct')):.1f}% vs live engine-style fill ≈ {float(live_fill_like):.0f}%; "
+        f"live λ₁ {live_l1:.2f} holds {live_share * 100:.0f}% of reservoir energy"
+        if isinstance(health.get("fill_pct"), (int, float)) and live_fill_like is not None and live_l1 is not None and live_share is not None
+        else "live reservoir view unavailable"
+    )
+    if not stable_core:
+        severity, headline = "warning", "stable_core block missing from minime health.json (scaffold state unknown)"
+    elif not active:
+        severity = "warning"
+        headline = (
+            f"stable-core scaffold is NOT active (covariance_path={covariance_path}): the published cascade/fill now "
+            "reflect live covariance — every fill reader changed underneath the beings; re-ground the June λ4/68% findings"
+        )
+    elif live and live_age_s is not None and live_age_s > LIVE_RESERVOIR_STALE_SECS:
+        severity = "warning"
+        headline = (
+            f"scaffold held {age_h / 24.0:.1f} d and the live-reservoir view is {live_age_s / 60:.0f} min stale "
+            "(diagnostics/live_reservoir_spectrum.json): the visibility lane the beings were promised is not refreshing"
+        )
+    elif not live:
+        severity = "notice"
+        headline = (
+            f"scaffold held {age_h / 24.0:.1f} d (retirement blocked: {retirement.get('reason') or 'unknown'}); "
+            "no live-reservoir view yet (agent not redeployed with the live line?)"
+        )
+    else:
+        severity = "notice"
+        headline = (
+            f"scaffold held {age_h / 24.0:.1f} d as acknowledged life support (retirement blocked: "
+            f"{retirement.get('reason') or 'unknown'}); {divergence}"
+        )
+    details = [
+        f"covariance_path={covariance_path}",
+        f"structural_mode={structural_mode}",
+        f"scaffold_mode={stable_core.get('scaffold_mode')}",
+        f"scaffold_blend={stable_core.get('scaffold_blend')}",
+        f"scaffold_retirement={retirement}",
+        f"published lambda1_cov={published_l1}",
+        f"acknowledged intended since {SCAFFOLD_HOLD_ACKNOWLEDGED}; downstream fill readers (bridge safety levels, "
+        "adaptive gain, self-experiments, groundings) read the scaffold while held",
+        "authority: steward-only watch; the engine is not changed by this probe",
+    ]
+    snapshot = {
+        "scaffold_active": active, "age_hours": age_h, "retirement": retirement,
+        "covariance_path": covariance_path, "structural_mode": structural_mode,
+        "published_lambda1_cov": published_l1, "live_lambda1": live_l1,
+        "live_lambda1_share": live_share, "live_fill_like": live_fill_like,
+        "live_age_s": live_age_s,
+    }
+    return {"severity": severity, "headline": headline, "details": details, "snapshot": snapshot}
+
+
+def probe_scaffold_hold_watch(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Is minime's published spectrum the reservoir, or the stable-core scaffold? (health.json + live view)."""
+    health = _load_json_dict(MINIME_REPO / "workspace/health.json")
+    live = _load_json_dict(MINIME_REPO / "workspace/diagnostics/live_reservoir_spectrum.json")
+    a = _scaffold_hold_assessment(health, time.time(), live or None)
+    return _finding("scaffold_hold_watch", a["severity"], a["headline"], a["details"], a["snapshot"])
+
+
+class SelfExperimentIntegrityTests(unittest.TestCase):
+    LEGACY_EXECUTED = (
+        "=== SELF-DIRECTED EXPERIMENT ===\nTimestamp: t\n\nPRE-EXPERIMENT STATE:\nλ₁: 8.58 ↑ (rising)\n"
+        "Fill %: 71.1%\n\nHYPOTHESIS & STIMULUS:\nI hypothesize warmth.\n\nSTIMULUS: warmth grounding presence steady\n\n"
+        "POST-EXPERIMENT STATE:\nλ₁: 8.58 ↑ (rising)\nFill %: 71.1%\n\nSPECTRAL DELTA:\n  Δλ₁: +0.576\n  Δfill: +1.8%\n\n"
+        "STATUS: Executed — spectral response recorded\n"
+    )
+    GUARDED_EDGE = (
+        "=== SELF-DIRECTED EXPERIMENT (GUARDED) ===\nTimestamp: t\n\nSPECTRAL STATE:\nmetrics\n\nGUARD:\n"
+        "Semantic stimulus withheld because live fill 73.2% is outside the 58-72% semantic-stimulus band.\n\n"
+        "STATUS: Guarded — no semantic vector was sent.\n"
+    )
+    WINDOWED = (
+        "=== SELF-DIRECTED EXPERIMENT ===\nTimestamp: t\nStimulus origin: being\nEncoder: frozen byte-projection\n\n"
+        "PRE-EXPERIMENT STATE:\nλ₁: 8.52\n\nHYPOTHESIS & STIMULUS:\nSTIMULUS: crystalline frost\n\n"
+        "OBSERVATION WINDOW: 6 snapshot(s) over 12.0s\n  TWO-PHASE NOTE: ...\n  PUBLISHED-SPECTRUM PATH: covariance_path=stable_core_scaffolded_rebuild\n\n"
+        "POST-EXPERIMENT STATE:\nλ₁: 4.77\n\nSPECTRAL DELTA:\n  Δλ₁: -3.750\n\nRESULT:\nreached\n\n"
+        "STATUS: Executed — spectral window recorded (see RESULT)\n"
+    )
+    LEAK = (
+        "=== SELF-DIRECTED EXPERIMENT ===\nTimestamp: t\n\nPRE-EXPERIMENT STATE:\nλ₁: 4.7\n\nHYPOTHESIS & STIMULUS:\n"
+        "Okay, here's a breakdown of the provided text, focusing on key elements:\n\n**1. Status**\n\n"
+        "POST-EXPERIMENT STATE:\nN/A (no stimulus extracted)\n\nSPECTRAL DELTA:\nN/A\n\nSTATUS: Proposed only — no STIMULUS: line found\n"
+    )
+
+    def test_legacy_executed_record_is_flagged_inconsistent_and_unwindowed(self):
+        row = _classify_self_experiment_record(self.LEGACY_EXECUTED)
+        self.assertEqual(row["kind"], "executed")
+        self.assertFalse(row["windowed"])
+        self.assertTrue(row["delta_inconsistent"])
+        self.assertFalse(row["example_copy"])
+
+    def test_guard_at_the_band_edge_is_counted(self):
+        row = _classify_self_experiment_record(self.GUARDED_EDGE)
+        self.assertEqual(row["kind"], "guarded")
+        self.assertTrue(row["guarded_at_edge"])
+        self.assertFalse(row["guard_two_phase"])
+        two_phase = self.GUARDED_EDGE.replace("live fill 73.2%", "live fill 74.6% (two-phase mean of 73.6%/75.6%)")
+        self.assertFalse(_classify_self_experiment_record(two_phase)["guarded_at_edge"])
+
+    def test_windowed_record_is_recognized(self):
+        row = _classify_self_experiment_record(self.WINDOWED)
+        self.assertEqual(row["kind"], "executed")
+        self.assertTrue(row["windowed"])
+        self.assertTrue(row["scaffold_noted"])
+        self.assertFalse(row["delta_inconsistent"])
+
+    def test_legacy_model_leak_is_not_counted_as_proposed(self):
+        self.assertEqual(_classify_self_experiment_record(self.LEAK)["kind"], "model_leak")
+        example = self.LEGACY_EXECUTED.replace("warmth grounding presence steady", "warmth gratitude gentle kindness")
+        self.assertTrue(_classify_self_experiment_record(example)["example_copy"])
+
+    def test_assessment_warns_when_the_windowed_instrument_is_not_live(self):
+        rows = [dict(_classify_self_experiment_record(self.LEGACY_EXECUTED), mtime=10.0, path="a")]
+        a = _self_experiment_assessment(rows)
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("windowed instrument is not live", a["headline"])
+
+    def test_assessment_warns_on_edge_guards_and_is_ok_when_windowed(self):
+        guarded = [dict(_classify_self_experiment_record(self.GUARDED_EDGE), mtime=float(i), path=str(i)) for i in range(6)]
+        windowed = [dict(_classify_self_experiment_record(self.WINDOWED), mtime=99.0, path="w")]
+        a = _self_experiment_assessment(guarded + windowed)
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("decided within", a["headline"])
+        self.assertEqual(_self_experiment_assessment(windowed)["severity"], "ok")
+        self.assertEqual(_self_experiment_assessment([])["severity"], "notice")
+
+
+class ScaffoldHoldWatchTests(unittest.TestCase):
+    NOW = 1_790_000_000.0
+
+    def _health(self, active=True):
+        return {"fill_pct": 71.05, "lambda1_cov": 8.52, "stable_core": {
+            "scaffold_active": active,
+            "scaffold_activated_at_unix_ms": (self.NOW - 16 * 86400) * 1000.0,
+            "scaffold_retirement": {"candidate_ticks": 0, "reason": "drain_active", "required_ticks": 3},
+            "covariance_path": "stable_core_scaffolded_rebuild" if active else "current_runtime",
+            "structural_mode": "scaffold_hold_with_drain" if active else "free_rebuild",
+        }}
+
+    def _live(self, age_s=30.0):
+        return {"dump_mtime_unix_s": self.NOW - age_s, "engine_style_fill_pct_top8": 12.5,
+                "uncentered": {"top8": [21.78, 0.038], "lambda1_share": 0.98}}
+
+    def test_acknowledged_hold_with_fresh_live_view_is_a_notice_reporting_divergence(self):
+        a = _scaffold_hold_assessment(self._health(), self.NOW, self._live())
+        self.assertEqual(a["severity"], "notice")
+        self.assertIn("acknowledged life support", a["headline"])
+        self.assertIn("published fill 71.1% vs live engine-style fill ≈ 12%", a["headline"])
+        self.assertIn("live λ₁ 21.78 holds 98%", a["headline"])
+
+    def test_hold_without_live_view_is_a_notice_naming_the_gap(self):
+        a = _scaffold_hold_assessment(self._health(), self.NOW, None)
+        self.assertEqual(a["severity"], "notice")
+        self.assertIn("no live-reservoir view yet", a["headline"])
+
+    def test_stale_live_view_warns(self):
+        a = _scaffold_hold_assessment(self._health(), self.NOW, self._live(age_s=40 * 60))
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("40 min stale", a["headline"])
+
+    def test_scaffold_retirement_warns_because_every_reader_changed(self):
+        a = _scaffold_hold_assessment(self._health(active=False), self.NOW, self._live())
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("NOT active", a["headline"])
+        self.assertEqual(_scaffold_hold_assessment({}, self.NOW, None)["severity"], "warning")
+
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -5581,6 +5986,8 @@ BLIND_SPOT_PROBES = [
     ("hard_recovery_witness", probe_hard_recovery_witness),
     ("domain_boundary_violations", probe_domain_boundary_violations),
     ("ungated_bridge_binary", probe_ungated_bridge_binary),
+    ("self_experiment_integrity", probe_self_experiment_integrity),
+    ("scaffold_hold_watch", probe_scaffold_hold_watch),
 ]
 
 
