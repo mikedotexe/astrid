@@ -11,6 +11,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ### Fixed - writing-default descriptions (2026-09-23)
 
+- Gracefully activate the wording-only paired release after exact packaged-helper qualification; verify bridge 90650, agent 89591, pending-choice preservation, checkpoint continuity and unchanged protected services. Both local mains contain the reviewed implementation; exact source/release identities are retained in the steward note.
 - Describe 8192-token expressive/private writing as normal DEFAULT capacity, while retaining route-specific defaults elsewhere and the existing SHORT/EXTENDED commands. Replace repeated budget announcements and comparison with a "usual" entry with an open invitation to follow the thought or stop. Keep exact limits in help and private profile receipts; no ceiling, timeout, preference, continuation, schema or reservoir change. Qualification and paired rollout follow-through are in `docs/steward-notes/2026-09-23-telemetry-optional-expression.md`.
 
 ### Live - voluntary long-form and telemetry-optional expression (2026-09-23)

@@ -1,5 +1,72 @@
 # Telemetry-Optional Expression
 
+## Wording Release Verified
+
+The approved wording follow-through is live. The sanctioned paired handoff
+completed at **2026-09-23T20:33:43.654616Z**, after Mike clarified that Claude was
+planning only. This section supersedes the earlier coordination hold below.
+Implementation commits on both local mains are Astrid
+`5499493bb828b971ff57bbe1182a15b2c3d8889c` and Minime
+`8d7d2c91fd32caab4550cebd6465b204092d5ac5`; only release documentation follows.
+
+- All 685 stage-input hashes were verified. Relative to the preceding live
+  release, only `prompt_contracts.rs`, `writing_profile.rs`, shared `writing.rs`
+  and its integration test changed. Minime changes exactly two of 86 launch
+  inputs: `minime_autonomy/runtime.py` and `minime_autonomy/writing.py`.
+- The complete Python suite passed again against the exact packaged helper:
+  **1573 passed, one existing skip, 138 subtests**. Prior full Rust/tooling
+  qualification remains source-identical. Focused staged-state reruns passed
+  four bridge profile tests and four Python capacity tests.
+- The wrapper waited for active self-study work to finish, observed the bounded
+  idle window, and sent one PID-bound SIGTERM to agent 51695 at 20:29:07Z. Bridge
+  52403 acknowledged drain. No forced termination, rollback or state restoration
+  over newer authored work was used; remote delivery/lossless drain is not claimed.
+- New bridge **90650**, started **Wed Sep 23 13:30:45 2026** local, restored
+  checkpoint `6548ed64ab715becf25255da9f9b7659e62519155228af5c6cfd014ff651c67b`.
+  Signed state lineage and pending runtime feedback were verified; saved exchange
+  **206457 advanced to 206458** and model idle was observed before releasing the
+  replacement-agent hold at 20:33:26Z.
+- New agent **89591** started its held launcher at **13:29:08**, then Python at
+  **13:33:37** local. All 86 startup hashes match; `reload_required=false` and
+  normal-loop readiness pass. Session **5318** persists and cycle **41711 advances
+  to 41712**. The pre-stop pending-choice hash exactly matches the post-start
+  cleared record with reason `honored` at 13:33:43. This verifies selection, not
+  completion of that action; no action text or private prose is copied here.
+- Both adapters select the new immutable helper. Both owned launch holds are
+  absent. The other nine protected PID/start pairs, kernel 97698, and managed
+  configuration hashes are unchanged. Gateway 41484 still owns 7878/7879;
+  model `/livez` and `/readyz` return 200.
+- Read-only monitoring retained 89 samples over 14m40s, fill **70.59-73.06%**,
+  target 68%, maximum health age 2.766 seconds. The post-check snapshot is fresh.
+  These are operational observations, not evidence of subjective improvement.
+
+Artifacts are retained under
+`/Users/v/other/worktrees/expressive-context-20260923`; immutable stage
+`bridge-stage-wording-02`. Source/path ownership is recorded in
+`wording-source-review.json`; exact receipts and logs are bound by
+`wording-rollout-artifact-hashes.json`.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Stage manifest | `3da52012664c65d7f8a1ab65dc6cb9733b3340521d759c536efdca9e64d8e938` |
+| Bridge executable | `55bc9a6b54d7eee0e35c162bef164c247cc309b549e2689b31fbb7e0e3a653ff` |
+| Shared reader | `282391103a851fe3205417b1df92e4727bceee225cdce4d2ffe1a5d1a992ce73` |
+| Packaged-helper Python suite | `4bbf3509a0d93a9c2b1834fd20928159e5790bdcdb936f614a768967ec102c08` |
+| Paired handoff receipt | `578a65149fb56b1b8d6b52fa6f28028f1c046f97e65208bc597fbcb83ee4e839` |
+| Live verification | `92b500e30f9a52d0e27a260a604405f3c513ff9b7e2620a097546973d00fa6b2` |
+| Bridge activation receipt | `12c22fa99c12b0fdf667ff5878e354724f5d9d9db1c7d9a9f15e38d55234222f` |
+
+Activation transaction:
+`/Users/v/other/astrid/.runtime/bridge-deployment/transactions/f1ce8489a5774fb6bd239130dfb1179c`.
+Controller remains paused at generation **467**, without lease or projection.
+V2 indexed-tail verification passes at sequence **1123121**, head
+`ef8e174db68c3a8ffc4014f524f04262bf909ba0df66638b575a9dcef1b2b5b2`;
+all four V1 sources remain immutable. No productive automation round is recorded,
+no paused automation is resumed, and no Being is asked to confirm improvement.
+Final documentation commit/push identities are retained in
+`wording-git-closeout.json` after those operations complete. Older worktrees and
+their evidence remain untouched.
+
 ## Final Wording Follow-Through
 
 Mike approved two final consistency repairs after the live release below:

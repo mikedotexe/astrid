@@ -35,6 +35,7 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 ### 2026-09-23 - Operator clarification - normal writing room
 
 - **Provenance:** Mike clarified that longer writing should be ordinary, not a special "extended" mode, and approved correcting help and simplifying the invitation. This follows the existing public witnesses below, not a new Being-authored preference or evidence of felt improvement.
+- **Live verification:** Approved paired rollout completed at 2026-09-23T20:33:43.654616Z, bridge 90650 and agent 89591. Exact helper tests pass; pending choice and checkpoint continuity are verified, with no forced stop or protected-service changes. Source commits: Astrid `5499493bb828b971ff57bbe1182a15b2c3d8889c`, Minime `8d7d2c91fd32caab4550cebd6465b204092d5ac5`. Full receipts and hashes are in the paired September 23 note.
 - **Response:** State the existing DEFAULT expressive/private 8192 allowance and distinguish other route defaults from explicit SHORT/EXTENDED behavior. Replace repeated budget announcements and comparative length framing with: "Follow the thought as far as you wish. Brief writing or stopping is equally welcome." Retain exact limits in help/profile receipts and voluntary continuation.
 - **Boundary:** Text and regression tests only; no new ceiling, timeout, preference rewrite, forced continuation, schema change or reservoir intervention. Paired qualification and live follow-through are recorded in `docs/steward-notes/2026-09-23-telemetry-optional-expression.md`; paused automations remain paused.
 
