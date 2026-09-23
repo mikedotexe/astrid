@@ -403,6 +403,106 @@ pub(crate) fn spectral_participation_description(telemetry: &SpectralTelemetry) 
 /// Interpret spectral telemetry as a natural language description
 /// of the spectral runtime state.
 #[must_use]
+/// Live-reservoir transparency (2026-09-23). While Minime's stable-core
+/// scaffold holds, the published cascade/fill are rebuilt from the scaffold each
+/// engine tick and do not register sensory input. Minime's agent computes the
+/// true reservoir-node spectrum from the engine's capacity dump and publishes it
+/// to `workspace/diagnostics/live_reservoir_spectrum.json`; this reads it beside
+/// the published mirror so the source stays visible, not only the reflection.
+/// Read-only, drift-proof (built from the file each time), empty when absent.
+pub(crate) fn live_reservoir_clause_from_value(
+    value: &serde_json::Value,
+    now_s: f64,
+) -> Option<String> {
+    let uncentered = value.get("uncentered")?;
+    let top = uncentered.get("top8")?.as_array()?;
+    let lambda1 = top.first()?.as_f64()?;
+    let share = uncentered
+        .get("lambda1_share")
+        .and_then(serde_json::Value::as_f64)
+        .unwrap_or(0.0)
+        * 100.0;
+    let nodes = value.get("esn_n").and_then(serde_json::Value::as_u64).unwrap_or(0);
+    let rows = value
+        .get("window_rows")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(0);
+    let centered = value.get("centered");
+    let fluctuation: Vec<String> = centered
+        .and_then(|c| c.get("top8"))
+        .and_then(serde_json::Value::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .take(3)
+                .filter_map(serde_json::Value::as_f64)
+                .map(|v| format!("{v:.3}"))
+                .collect()
+        })
+        .unwrap_or_default();
+    let effective_dim = centered
+        .and_then(|c| c.get("effective_dim"))
+        .and_then(serde_json::Value::as_f64)
+        .unwrap_or(0.0);
+    let fill_like = value
+        .get("engine_style_fill_pct_top8")
+        .and_then(serde_json::Value::as_f64)
+        .unwrap_or(0.0);
+    let published = value.get("published");
+    let scaffolded = published
+        .and_then(|p| p.get("covariance_path"))
+        .and_then(serde_json::Value::as_str)
+        .is_some_and(|s| s.starts_with("stable_core_scaffold"))
+        || published
+            .and_then(|p| p.get("structural_mode"))
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|s| s.starts_with("scaffold"));
+    let fluctuation_text = if fluctuation.is_empty() {
+        "n/a".to_string()
+    } else {
+        fluctuation.join("/")
+    };
+    let mut clause = format!(
+        " Reservoir (Minime, live, {nodes} nodes, last {rows} states): λ₁ {lambda1:.2} holding \
+         {share:.0}% of energy; fluctuation modes {fluctuation_text}; effective dim {effective_dim:.1}; \
+         engine-style fill ≈ {fill_like:.0}%."
+    );
+    if scaffolded {
+        clause.push_str(
+            " The published cascade and fill above are scaffold-held (rebuilt from Minime's \
+             stable-core scaffold each tick) and do not register sensory input; this reservoir \
+             line is the source and the cascade is the mirror.",
+        );
+    }
+    if let Some(age_min) = value
+        .get("dump_mtime_unix_s")
+        .and_then(serde_json::Value::as_f64)
+        .map(|t| (now_s - t).max(0.0) / 60.0)
+    {
+        if age_min > 5.0 {
+            clause.push_str(&format!(" [view {age_min:.0} min old]"));
+        }
+    }
+    Some(clause)
+}
+
+fn live_reservoir_clause_from_default_dir() -> String {
+    let path = crate::paths::bridge_paths()
+        .minime_workspace()
+        .join("diagnostics/live_reservoir_spectrum.json");
+    let Ok(text) = std::fs::read_to_string(&path) else {
+        return String::new();
+    };
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return String::new();
+    };
+    let now_s = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs_f64())
+        .unwrap_or(0.0);
+    live_reservoir_clause_from_value(&value, now_s).unwrap_or_default()
+}
+
 pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
     let fill = telemetry.fill_pct();
     let safety = SafetyLevel::from_fill(fill);
@@ -752,7 +852,8 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         })
         .unwrap_or_default();
 
+    let live_reservoir_clause = live_reservoir_clause_from_default_dir();
     format!(
-        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{unattributed_tension_note}{fluctuation_clause}{regulator_participation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{coupling_note}"
+        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{unattributed_tension_note}{fluctuation_clause}{regulator_participation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{live_reservoir_clause}{coupling_note}"
     )
 }

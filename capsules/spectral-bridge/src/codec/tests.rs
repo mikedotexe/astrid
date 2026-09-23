@@ -610,6 +610,36 @@ mod tests {
     }
 
     #[test]
+    fn live_reservoir_clause_names_source_and_scaffold_mirror() {
+        let value = serde_json::json!({
+            "esn_n": 128, "window_rows": 1024, "dump_mtime_unix_s": 1000.0,
+            "uncentered": {"top8": [21.97, 0.061, 0.012], "lambda1_share": 0.98},
+            "centered": {"top8": [0.061, 0.012, 0.010], "effective_dim": 36.7},
+            "engine_style_fill_pct_top8": 12.5,
+            "published": {"covariance_path": "stable_core_scaffolded_rebuild", "structural_mode": "scaffold_hold"}
+        });
+        let clause = live_reservoir_clause_from_value(&value, 1000.0 + 30.0).unwrap();
+        assert!(clause.contains("Reservoir (Minime, live, 128 nodes, last 1024 states): λ₁ 21.97 holding 98% of energy"), "{clause}");
+        assert!(clause.contains("fluctuation modes 0.061/0.012/0.010"), "{clause}");
+        assert!(clause.contains("engine-style fill ≈ 12%"), "{clause}");
+        assert!(clause.contains("scaffold-held"), "{clause}");
+        assert!(clause.contains("this reservoir line is the source and the cascade is the mirror"), "{clause}");
+        assert!(!clause.contains("min old"), "{clause}");
+
+        let stale = live_reservoir_clause_from_value(&value, 1000.0 + 15.0 * 60.0).unwrap();
+        assert!(stale.contains("[view 15 min old]"), "{stale}");
+
+        let plain = serde_json::json!({
+            "esn_n": 128, "window_rows": 1024,
+            "uncentered": {"top8": [4.7], "lambda1_share": 0.4},
+            "published": {"covariance_path": "current_runtime"}
+        });
+        let clause = live_reservoir_clause_from_value(&plain, 0.0).unwrap();
+        assert!(!clause.contains("scaffold-held"), "{clause}");
+        assert!(live_reservoir_clause_from_value(&serde_json::json!({"esn_n": 1}), 0.0).is_none());
+    }
+
+    #[test]
     fn interpret_spectral_labels_stale_semantic_trace_without_residue_framing() {
         let mut telemetry = telemetry(vec![7.0, 3.0, 2.0], 0.68);
         telemetry.semantic_energy_v1 = Some(serde_json::json!({
