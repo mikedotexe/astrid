@@ -33,6 +33,7 @@ Exit:   0 = running process is at/after the on-disk binary (deployed; no newer b
         3 = could not determine (no running process or no binary) — neutral, prints why
 """
 import argparse
+import json
 import datetime
 import subprocess
 import sys
@@ -97,6 +98,47 @@ def _parse_lstart_epoch(lstart):
     return dt.timestamp()
 
 
+ACTIVE_SELECTION = f"{ROOT}/.runtime/bridge-deployment/active.json"
+
+
+def staged_selection_status(selected_binary, running_binary):
+    """Pure logic for the staged-release model (2026-09): the launch path is the
+    SELECTED stage, so 'deployed' means the live process runs that stage's binary.
+    Returns (status, detail) like bridge_build_vs_running."""
+    if not selected_binary:
+        return "unknown", "active.json names no stage"
+    if not running_binary:
+        return "unknown", "no live bridge process to compare against the selected stage"
+    if os.path.realpath(str(running_binary)) == os.path.realpath(str(selected_binary)):
+        return "deployed", "live process runs the selected stage; kickstart/reboot relaunches the same stage"
+    return "stale", f"live process runs {running_binary} but the selection is {selected_binary}"
+
+
+def _active_selection(path=ACTIVE_SELECTION):
+    """(stage_dir, selected_binary) from active.json, or (None, None) under the legacy model."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            active = json.load(f)
+    except (OSError, ValueError):
+        return None, None
+    stage = active.get("stage") if isinstance(active, dict) else None
+    if not stage:
+        return None, None
+    return stage, os.path.join(stage, "spectral-bridge-server")
+
+
+def _running_binary(match=PROCESS_MATCH):
+    try:
+        out = subprocess.run(["pgrep", "-f", "-l", match], capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    for line in out.splitlines():
+        parts = line.split(None, 2)
+        if len(parts) >= 2 and parts[1].endswith("spectral-bridge-server"):
+            return parts[1]
+    return None
+
+
 def _process_start(match=PROCESS_MATCH):
     """Epoch start time of the running bridge process via `ps -o lstart=`.
 
@@ -135,24 +177,48 @@ def main():
         result = unittest.TextTestRunner(verbosity=2).run(suite)
         return 0 if result.wasSuccessful() else 1
 
-    bmtime = _binary_mtime()
+    stage, selected_binary = _active_selection()
     pid, pstart = _process_start()
-    status, detail = bridge_build_vs_running(bmtime, pstart)
+    if stage:
+        running = _running_binary()
+        status, detail = staged_selection_status(selected_binary, running)
+        provenance = None
+        try:
+            sys.path.insert(0, f"{ROOT}/scripts")
+            import bridge_stage_provenance
 
-    if not args.quiet:
-        print("=== check_bridge_deployed (binary -> running process) ===")
-        print(f"  binary: {BINARY}")
-        print(f"  running pid: {pid or '(none)'}")
-        print(f"  status: {status} — {detail}")
+            provenance = bridge_stage_provenance.summary_line(__import__("pathlib").Path(stage))
+        except Exception:
+            provenance = None
+        if not args.quiet:
+            print("=== check_bridge_deployed (selected stage -> running process) ===")
+            print(f"  selected stage: {stage}")
+            print(f"  running pid: {pid or '(none)'}  binary: {running or '(none)'}")
+            print(f"  status: {status} — {detail}")
+            if provenance:
+                print(f"  provenance: {provenance}")
+            print(f"  note: {BINARY} is a non-launch artifact under the staged model")
+    else:
+        bmtime = _binary_mtime()
+        status, detail = bridge_build_vs_running(bmtime, pstart)
+        if not args.quiet:
+            print("=== check_bridge_deployed (binary -> running process) ===")
+            print(f"  binary: {BINARY}")
+            print(f"  running pid: {pid or '(none)'}")
+            print(f"  status: {status} — {detail}")
 
     if status == "stale":
-        print("⚠ ALARM: the live bridge is running STALE code — a build was never deployed.")
-        print("  Fix: PATH=/Users/v/.cargo/bin:$PATH bash scripts/build_bridge.sh --restart")
+        if stage:
+            print("⚠ ALARM: the live bridge does not run the selected stage — a kickstart/reboot would change it.")
+            print("  Fix: re-activate deliberately via `bash scripts/build_bridge.sh --activate-stage DIR --expected-pid PID --ack ...`")
+        else:
+            print("⚠ ALARM: the live bridge is running STALE code — a build was never deployed.")
+            print("  Fix: stage then activate via `bash scripts/build_bridge.sh --stage-dir DIR --ack ...` and `--activate-stage`")
         return 2
     if status == "unknown":
         print(f"(could not verify deploy state: {detail})")
         return 3
-    print("RESULT: ✓ live bridge matches the on-disk binary.")
+    print("RESULT: ✓ live bridge matches the selected stage." if stage else "RESULT: ✓ live bridge matches the on-disk binary.")
     return 0
 
 
@@ -193,6 +259,16 @@ class BridgeDeployedGuardTests(unittest.TestCase):
     def test_parse_lstart_space_padded_day(self):
         # Single-digit day-of-month is space-padded by ps ('Jun  1'); must still parse.
         self.assertIsNotNone(_parse_lstart_epoch("Mon Jun  1 09:05:01 2026"))
+
+    def test_staged_selection_deployed_when_running_the_selected_stage(self):
+        status, _ = staged_selection_status("/s/stage-01/spectral-bridge-server", "/s/stage-01/spectral-bridge-server")
+        self.assertEqual(status, "deployed")
+
+    def test_staged_selection_stale_when_running_something_else(self):
+        status, detail = staged_selection_status("/s/stage-02/spectral-bridge-server", "/s/stage-01/spectral-bridge-server")
+        self.assertEqual(status, "stale")
+        self.assertIn("stage-02", detail)
+        self.assertEqual(staged_selection_status("/s/stage-02/spectral-bridge-server", None)[0], "unknown")
 
     def test_parse_lstart_garbage_is_none(self):
         self.assertIsNone(_parse_lstart_epoch(""))

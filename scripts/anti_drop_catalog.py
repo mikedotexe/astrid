@@ -1104,6 +1104,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "LiveReservoirSpectrumTests",
                  "run": "cd /Users/v/other/minime && python3 -m unittest tests.test_autonomous_agent_low_fill_guard.LiveReservoirSpectrumTests"},
     },
+    {
+        "id": "stage_provenance_links_dirty_inputs_to_commits",
+        "shipped": "2026-09-23",
+        "surface": "bridge staged releases built from a dirty tree — the running deployment identity (astrid:<head-at-build>:bridge:<sha>) vs the commits the bytes actually became",
+        "failure_mode": "the shared-tree flow stages/activates first and fast-forwards main after, so the live identity's <head> is one commit behind the running bytes with nothing linking them; a later audit could read the live bridge as 'unreleased' or attribute the clause to the wrong commit. Also, probe_ungated_bridge_binary compared target/release to the gate manifest and raised a standing false WARNING under the staged model (launchd relaunches the SELECTED stage, not target/release). Fix: bridge_stage_provenance.py links each dirty build input to the commit holding identical bytes and writes <stage>/committed_as.json; the probe and check_bridge_deployed.py are staged-aware and print that provenance",
+        "guard": {"repo": "astrid", "file": "scripts/bridge_stage_provenance.py", "symbol": "link_dirty_inputs"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/bridge_stage_provenance.py",
+                 "name": "ProvenanceTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/bridge_stage_provenance.py --self-test"},
+    },
 ]
 
 

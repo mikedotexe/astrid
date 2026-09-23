@@ -5402,6 +5402,77 @@ def _bridge_build_manifest_path() -> Path:
     return ASTRID_REPO / "capsules/spectral-bridge/workspace/deployment_manifests/spectral-bridge.json"
 
 
+def _bridge_active_selection_path() -> Path:
+    """Staged-release model (2026-09): when this exists, launchd's wrapper execs
+    bridge_release_launch.py, which launches the SELECTED stage — not target/release."""
+    return ASTRID_REPO / ".runtime/bridge-deployment/active.json"
+
+
+def _running_bridge_binary() -> Path | None:
+    """Path of the binary the live spectral-bridge-server process was started from."""
+    try:
+        res = subprocess.run(
+            ["pgrep", "-f", "-l", "spectral-bridge-server"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except Exception:
+        return None
+    for line in res.stdout.splitlines():
+        parts = line.split(None, 2)
+        if len(parts) >= 2 and parts[1].endswith("spectral-bridge-server"):
+            return Path(parts[1])
+    return None
+
+
+def _staged_release_assessment(
+    active: dict[str, Any],
+    running_binary: Path | None,
+) -> dict[str, Any]:
+    """Under the staged model the deploy hazard is a SELECTION the live process
+    does not match, not a stale target/release artifact."""
+    import hashlib
+
+    stage_text = str(active.get("stage") or "")
+    stage = Path(stage_text) if stage_text else None
+    snapshot: dict[str, Any] = {
+        "model": "staged_release",
+        "stage": stage_text,
+        "running_binary": str(running_binary) if running_binary else None,
+    }
+    if stage is None or not stage.is_dir():
+        return {"severity": "warning", "summary": "⚠ active.json selects a stage that does not exist — launchd would fail to relaunch the bridge; re-activate a valid stage via build_bridge.sh --activate-stage", "snapshot": snapshot}
+    if (stage / "failure.json").exists():
+        return {"severity": "warning", "summary": f"⚠ the selected stage {stage.name} carries failure evidence — a relaunch would be refused", "snapshot": snapshot}
+    manifest_path = stage / "manifest.json"
+    try:
+        manifest_sha = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    except OSError:
+        return {"severity": "warning", "summary": f"⚠ the selected stage {stage.name} has no readable manifest", "snapshot": snapshot}
+    recorded = str(active.get("manifest_sha256") or "")
+    snapshot["manifest_sha256"] = manifest_sha[:16]
+    if recorded and recorded != manifest_sha:
+        return {"severity": "warning", "summary": f"⚠ active.json's manifest sha does not match the selected stage {stage.name} — the stage changed after selection", "snapshot": snapshot}
+    stage_binary = stage / "spectral-bridge-server"
+    if running_binary is None:
+        return {"severity": "notice", "summary": f"no live spectral-bridge-server process found; active selection is stage {stage.name}", "snapshot": snapshot}
+    if running_binary.resolve() != stage_binary.resolve():
+        return {"severity": "warning", "summary": f"⚠ the live bridge runs {running_binary} but active.json selects stage {stage.name} — a kickstart/reboot would CHANGE the live process (deploy pending or a stale selection)", "snapshot": snapshot}
+    detail = f"live bridge runs the selected stage {stage.name}; a kickstart/reboot relaunches the same stage. target/release is a non-launch artifact under this model"
+    try:
+        sys.path.insert(0, str(ASTRID_REPO / "scripts"))
+        import bridge_stage_provenance  # noqa: WPS433 (steward tool, same tree)
+
+        provenance = bridge_stage_provenance.summary_line(stage)
+    except Exception:
+        provenance = None
+    if provenance:
+        detail += f"; {provenance}"
+        snapshot["provenance"] = provenance
+    return {"severity": "ok", "summary": detail, "snapshot": snapshot}
+
+
 def probe_ungated_bridge_binary(_prior: dict[str, Any]) -> dict[str, Any]:
     """The 2026-09-03 loaded gun: a bare `cargo build --release` in the main
     tree (never attributed) left a release binary on disk that the gate had
@@ -5411,9 +5482,21 @@ def probe_ungated_bridge_binary(_prior: dict[str, Any]) -> dict[str, Any]:
     stop a bare cargo build; what it CAN do is leave a manifest recording the
     sha256 it actually built. This probe compares the binary on disk against
     that record and warns on any mismatch, so an ungated build is witnessed
-    within six hours instead of at the next restart."""
+    within six hours instead of at the next restart.
+
+    2026-09-23: under the staged-release model (`.runtime/bridge-deployment/
+    active.json` present) launchd relaunches the selected stage, so the
+    target/release comparison is moot; the probe then checks that the live
+    process IS the selected stage and reports the stage's commit provenance."""
     import hashlib
     from datetime import datetime
+
+    # Staged-release model: the launch path is the SELECTED stage, so the
+    # question is whether the live process matches the selection.
+    active = _load_json_dict(_bridge_active_selection_path())
+    if active.get("stage"):
+        a = _staged_release_assessment(active, _running_bridge_binary())
+        return _finding("ungated_bridge_binary", a["severity"], a["summary"], snapshot=a["snapshot"])
 
     binary = _bridge_release_binary_path()
     manifest_path = _bridge_build_manifest_path()
@@ -5501,20 +5584,70 @@ class UngatedBridgeBinaryTests(unittest.TestCase):
             )
         return binary, manifest_path
 
-    def _run(self, binary: Path, manifest_path: Path) -> dict[str, Any]:
+    def _run(self, binary: Path, manifest_path: Path, active: Path | None = None,
+             running: Path | None = None) -> dict[str, Any]:
         saved = (
             globals()["_bridge_release_binary_path"],
             globals()["_bridge_build_manifest_path"],
+            globals()["_bridge_active_selection_path"],
+            globals()["_running_bridge_binary"],
         )
         try:
             globals()["_bridge_release_binary_path"] = lambda: binary
             globals()["_bridge_build_manifest_path"] = lambda: manifest_path
+            globals()["_bridge_active_selection_path"] = lambda: active or (binary.parent / "no-active.json")
+            globals()["_running_bridge_binary"] = lambda: running
             return probe_ungated_bridge_binary({})
         finally:
             (
                 globals()["_bridge_release_binary_path"],
                 globals()["_bridge_build_manifest_path"],
+                globals()["_bridge_active_selection_path"],
+                globals()["_running_bridge_binary"],
             ) = saved
+
+    def _stage(self, *, failed: bool = False):
+        import hashlib
+        import tempfile
+
+        root = Path(tempfile.mkdtemp(prefix="staged_rel_"))
+        stage = root / "stage-01"
+        stage.mkdir()
+        (stage / "spectral-bridge-server").write_bytes(b"stage-bytes")
+        manifest = json.dumps({"repository": {"path": "/repo", "head": "abc123", "dirty": False, "dirty_paths": []},
+                               "source_inputs": {"path": str(stage / "source-inputs.json")}})
+        (stage / "manifest.json").write_text(manifest, encoding="utf-8")
+        (stage / "source-inputs.json").write_text(json.dumps({"files": []}), encoding="utf-8")
+        if failed:
+            (stage / "failure.json").write_text("{}", encoding="utf-8")
+        active = root / "active.json"
+        active.write_text(json.dumps({"stage": str(stage), "manifest_sha256": hashlib.sha256(manifest.encode()).hexdigest()}), encoding="utf-8")
+        return root, stage, active
+
+    def test_staged_model_live_process_matching_selection_is_ok(self):
+        root, stage, active = self._stage()
+        binary, manifest_path = self._fixture(match=False)  # stale target/release must not matter
+        finding = self._run(binary, manifest_path, active=active, running=stage / "spectral-bridge-server")
+        self.assertEqual(finding["severity"], "ok", finding["summary"])
+        self.assertIn("relaunches the same stage", finding["summary"])
+
+    def test_staged_model_live_process_differing_from_selection_warns(self):
+        root, stage, active = self._stage()
+        binary, manifest_path = self._fixture()
+        finding = self._run(binary, manifest_path, active=active, running=root / "elsewhere" / "spectral-bridge-server")
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("would CHANGE the live process", finding["summary"])
+
+    def test_staged_model_failed_or_missing_stage_warns(self):
+        root, stage, active = self._stage(failed=True)
+        binary, manifest_path = self._fixture()
+        finding = self._run(binary, manifest_path, active=active, running=stage / "spectral-bridge-server")
+        self.assertEqual(finding["severity"], "warning")
+        import shutil
+        shutil.rmtree(stage)
+        finding = self._run(binary, manifest_path, active=active, running=None)
+        self.assertEqual(finding["severity"], "warning")
+        self.assertIn("does not exist", finding["summary"])
 
     def test_gated_build_reads_ok(self):
         finding = self._run(*self._fixture())
