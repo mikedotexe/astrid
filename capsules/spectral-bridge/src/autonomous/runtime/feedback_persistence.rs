@@ -74,9 +74,100 @@ fn render_astrid_journal_document(
     let provenance = provenance
         .map(|value| format!("\n{}", value.render()))
         .unwrap_or_default();
+    let fill = if expressive_journal_mode(mode) {
+        String::new()
+    } else {
+        format!("Fill: {fill_pct:.1}%\n")
+    };
     format!(
-        "=== ASTRID JOURNAL ===\nMode: {mode}\nFill: {fill_pct:.1}%\nTimestamp: {ts}{provenance}\n\n{clean_text}\n"
+        "=== ASTRID JOURNAL ===\nMode: {mode}\n{fill}Timestamp: {ts}{provenance}\n\n{clean_text}\n"
     )
+}
+
+fn expressive_journal_mode(mode: &str) -> bool {
+    matches!(
+        mode,
+        "aspiration" | "daydream" | "aspiration_longform" | "daydream_longform"
+    )
+}
+
+fn expressive_snapshot(telemetry: Option<&crate::types::SpectralTelemetry>) -> Value {
+    serde_json::json!({
+        "observed_at_utc": chrono::Utc::now().to_rfc3339(),
+        "source": "bridge.latest_telemetry; receipt time is not a new engine sample",
+        "telemetry": telemetry,
+    })
+}
+
+fn write_expressive_journal_metadata(
+    path: &Path,
+    document: &str,
+    mode: &str,
+    fill: f32,
+    observations: Option<&Value>,
+) -> std::io::Result<()> {
+    use sha2::{Digest, Sha256};
+    let directory = path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join("metadata");
+    std::fs::create_dir_all(&directory)?;
+    let name = path.file_stem().unwrap_or_default().to_string_lossy();
+    let metadata = serde_json::json!({
+        "schema": "expressive_journal_metadata_v1", "mode": mode,
+        "journal_filename": path.file_name().unwrap_or_default().to_string_lossy(),
+        "document_sha256": format!("{:x}", Sha256::digest(document.as_bytes())),
+        "fill_at_dispatch_pct_not_generation_input": fill,
+        "automatic_spectral_summary_supplied": false,
+        "scope": "expressive builder only; authored excerpts and selected observations may contain measurements",
+        "observations": observations,
+    });
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(directory.join(format!("{name}.json")))?;
+    serde_json::to_writer_pretty(&mut file, &metadata)?;
+    file.sync_all()
+}
+
+#[cfg(test)]
+mod expressive_record_tests {
+    use super::*;
+
+    #[test]
+    fn measurements_are_separate_and_historical_documents_are_not_overwritten() {
+        let dir = tempfile::tempdir().unwrap();
+        let prose = "My chosen words.\n\nNo numbers are required.\nNEXT: REST";
+        for mode in [
+            "aspiration",
+            "daydream",
+            "aspiration_longform",
+            "daydream_longform",
+        ] {
+            let document = render_astrid_journal_document(prose, mode, 68.0, "42", None);
+            assert_eq!(document.split_once("\n\n").unwrap().1, format!("{prose}\n"));
+            assert!(!document.contains("Fill:"));
+            let path =
+                write_collision_safe_journal_document(dir.path(), mode, "42", &document).unwrap();
+            let observation = serde_json::json!({"state_at_cycle_start_not_generation_input":{"fill":68},
+                "post_generation_observation_not_generation_input":{"fill":71}});
+            write_expressive_journal_metadata(&path, &document, mode, 68.0, Some(&observation))
+                .unwrap();
+            let metadata_path = dir.path().join("metadata").join(format!("{mode}_42.json"));
+            let bytes = std::fs::read(&metadata_path).unwrap();
+            let metadata: Value = serde_json::from_slice(&bytes).unwrap();
+            assert_eq!(metadata["observations"], observation);
+            assert_eq!(metadata["automatic_spectral_summary_supplied"], false);
+            assert!(!String::from_utf8(bytes.clone()).unwrap().contains(prose));
+            assert!(write_expressive_journal_metadata(&path, &document, mode, 68.0, None).is_err());
+            assert_eq!(std::fs::read(metadata_path).unwrap(), bytes);
+            assert_eq!(std::fs::read_to_string(path).unwrap(), document);
+        }
+        assert!(
+            render_astrid_journal_document(prose, "regulator_audit", 68.0, "42", None)
+                .contains("Fill: 68.0%")
+        );
+    }
 }
 
 fn write_collision_safe_journal_document(
@@ -129,14 +220,28 @@ fn save_astrid_journal_with_provenance(
     fill_pct: f32,
     provenance: Option<&AstridJournalProvenanceV1>,
 ) {
+    save_astrid_journal_record(text, mode, fill_pct, provenance, None);
+}
+
+fn save_astrid_journal_record(
+    text: &str,
+    mode: &str,
+    fill_pct: f32,
+    provenance: Option<&AstridJournalProvenanceV1>,
+    observations: Option<&Value>,
+) {
     #[cfg(test)]
     if TEST_SUPPRESS_ASTRID_JOURNAL_SAVES.load(std::sync::atomic::Ordering::Relaxed) {
         return;
     }
 
     let journal_dir = if matches!(mode, "private_writing" | "private_writing_notice") {
-        bridge_paths().bridge_workspace().join("private_writing/journal")
-    } else { bridge_paths().astrid_journal_dir() };
+        bridge_paths()
+            .bridge_workspace()
+            .join("private_writing/journal")
+    } else {
+        bridge_paths().astrid_journal_dir()
+    };
     let _ = std::fs::create_dir_all(&journal_dir);
     let ts = chrono_timestamp();
     // Mode-prefixed filenames — instant filesystem searchability.
@@ -172,6 +277,13 @@ fn save_astrid_journal_with_provenance(
             None
         },
     };
+    if let Some(path) = path.as_ref()
+        && expressive_journal_mode(mode)
+        && let Err(error) =
+            write_expressive_journal_metadata(path, &document, mode, fill_pct, observations)
+    {
+        warn!(%error, "expressive prose saved; separate journal metadata unavailable");
+    }
     if let Some(path) = path.as_ref()
         && crate::transition_afterimages::has_records()
     {

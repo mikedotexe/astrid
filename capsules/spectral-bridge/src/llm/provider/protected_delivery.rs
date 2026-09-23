@@ -333,7 +333,7 @@ fn build_ollama_protected_chat_request(
             GEMMA4_LANGUAGE_CONTRACT,
         );
     }
-    apply_writing_voice(&mut messages, journal_preference(label));
+    apply_writing_voice(&mut messages, label, journal_preference(label));
     let max_tokens = writing_tokens(label, max_tokens);
     OllamaChatRequest {
         model: fallback_model,

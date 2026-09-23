@@ -45,9 +45,47 @@ fn provider_control_response(body: &str) -> serde_json::Value {
         .unwrap_or_default()
 }
 
+fn provider_completion_metadata(body: &str) -> serde_json::Value {
+    let response = serde_json::from_str::<serde_json::Value>(body).unwrap_or_default();
+    let reason = response.get("done_reason").or_else(|| response.pointer("/choices/0/finish_reason"));
+    let reason = reason.and_then(serde_json::Value::as_str).map(|reason| match reason {
+        "stop" | "length" | "eos" | "eos_token" | "max_tokens" | "tool_calls" | "content_filter" | "load" | "unload" => reason,
+        _ => "other_reported",
+    });
+    serde_json::json!({
+        "native_finish": reason,
+        "native_done": response.get("done").and_then(serde_json::Value::as_bool),
+        "provider_eval_count": response.get("eval_count").or_else(|| response.pointer("/usage/completion_tokens")).and_then(serde_json::Value::as_u64),
+        "scope": "provider_report_not_authored_intent_or_output_acceptance",
+    })
+}
+
+fn record_provider_completion(label: &str, provider: &str, max_tokens: u32, body: &str) {
+    if cfg!(test) {
+        return;
+    }
+    append_llm_diagnostic_jsonl("provider_completion.jsonl", &serde_json::json!({
+        "schema": "provider_completion_v1", "timestamp": unix_timestamp_string(),
+        "label": label, "provider": provider, "effective_output_ceiling": max_tokens,
+        "completion": provider_completion_metadata(body),
+    }));
+}
+
 #[cfg(test)]
 mod generation_control_tests {
     use super::*;
+
+    #[test]
+    fn completion_receipt_is_bounded_and_missing_reason_stays_unknown() {
+        assert!(provider_completion_metadata("{}")["native_finish"].is_null());
+        let receipt = provider_completion_metadata(r#"{"choices":[{"finish_reason":"length","message":{"content":"private prose"}}],"usage":{"completion_tokens":8192}}"#);
+        assert_eq!(receipt["native_finish"], "length");
+        assert_eq!(receipt["provider_eval_count"], 8192);
+        assert!(!receipt.to_string().contains("private prose"));
+        assert_eq!(provider_completion_metadata(r#"{"done_reason":"stop","done":true}"#)["native_finish"], "stop");
+        assert_eq!(provider_completion_metadata(r#"{"done_reason":"private text"}"#)["native_finish"], "other_reported");
+        assert!(provider_completion_metadata(r#"{"eval_count":-1}"#)["provider_eval_count"].is_null());
+    }
 
     #[test]
     fn serialized_settings_are_not_mistaken_for_server_confirmation() {

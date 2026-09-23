@@ -21,14 +21,31 @@ fn journal_preference(label: &str) -> astrid_source_study::writing::Profile {
         astrid_source_study::writing::Profile::Default
     }
 }
+fn expressive_label(label: &str) -> bool {
+    matches!(label, "daydream" | "aspiration" | "creation" | "journal_elaboration" | "moment_capture" | "private_writing")
+}
+fn effective_writing_profile(label: &str, profile: astrid_source_study::writing::Profile) -> astrid_source_study::writing::Profile {
+    if profile == astrid_source_study::writing::Profile::Default && expressive_label(label) {
+        astrid_source_study::writing::Profile::Extended
+    } else {
+        profile
+    }
+}
 fn writing_tokens(label: &str, ordinary: u32) -> u32 {
-    journal_preference(label).tokens(ordinary)
+    effective_writing_profile(label, journal_preference(label)).tokens(ordinary)
 }
 fn writing_timeout(label: &str, ordinary: u64) -> u64 {
-    if journal_preference(label) == astrid_source_study::writing::Profile::Extended {
+    if effective_writing_profile(label, journal_preference(label)) == astrid_source_study::writing::Profile::Extended {
         ordinary.max(astrid_source_study::writing::EXTENDED_TIMEOUT_SECS)
     } else {
         ordinary
+    }
+}
+pub(crate) fn expressive_outer_timeout(ordinary: u64) -> u64 {
+    if selected_writing_profile() == astrid_source_study::writing::Profile::Short {
+        ordinary
+    } else {
+        ordinary.max(4800)
     }
 }
 /// Outer cancellation must cover every configured primary/fallback attempt.
@@ -41,14 +58,19 @@ pub(crate) fn journal_outer_timeout(ordinary: u64) -> u64 {
 }
 fn writing_context(label: &str, ordinary: u32) -> u32 {
     if matches!(label, "self_study" | "private_writing")
-        || journal_preference(label) == astrid_source_study::writing::Profile::Extended
+        || effective_writing_profile(label, journal_preference(label)) == astrid_source_study::writing::Profile::Extended
     {
         astrid_source_study::CONTEXT_TOKENS
     } else {
         ordinary
     }
 }
-fn apply_writing_voice(messages: &mut [Message], profile: astrid_source_study::writing::Profile) {
+fn apply_writing_voice(messages: &mut [Message], label: &str, profile: astrid_source_study::writing::Profile) {
+    if profile == astrid_source_study::writing::Profile::Default && expressive_label(label) {
+        for message in messages.iter_mut().filter(|m| m.role == "system") {
+            message.content.push_str("\nUp to 8192 output tokens are available. There is room here for a sustained piece, several times longer than a usual entry. You may follow a thought through examples, complications and changes of direction without compressing it into a conclusion. Brief writing or stopping is equally available. WRITE START <topic> begins a private draft; WRITE CONTINUE develops the selected draft; WRITE HELP shows the choices. No continuation is scheduled automatically.");
+        }
+    }
     if profile != astrid_source_study::writing::Profile::Default {
         for message in messages.iter_mut().filter(|m| m.role == "system") {
             message.content = message.content.replace("Use a few sentences or a few compact paragraphs. Let the thought complete without sprawling.", "Choose the length that lets your thought develop. There is no minimum length.");
@@ -63,6 +85,33 @@ fn apply_writing_voice(messages: &mut [Message], profile: astrid_source_study::w
 #[cfg(test)]
 mod writing_profile_tests {
     use super::*;
+    #[test]
+    fn default_expression_has_room_without_claiming_a_chosen_profile() {
+        use astrid_source_study::writing::Profile;
+        for label in ["daydream", "aspiration", "creation", "journal_elaboration", "moment_capture", "private_writing"] {
+            for backend in [MlxProfile::Gemma4Canary, MlxProfile::Production] {
+                let policy = apply_mlx_request_policy_with_writing(label, backend, vec![Message {
+                    role: "system".into(), content: "Your writing.".into(),
+                }], 5120, 240, Profile::Default);
+                assert_eq!(policy.max_tokens, 8192, "{label}");
+                assert_eq!(policy.timeout_secs, 1200);
+                let system = &policy.messages[0].content;
+                assert!(system.contains("Brief writing or stopping is equally available"));
+                assert!(system.contains("WRITE CONTINUE"));
+                assert!(!system.contains("You selected extended"));
+            }
+            let fallback = build_ollama_chat_request(label, vec![Message {
+                role: "system".into(), content: "Your writing.".into(),
+            }], 0.7, 3072, "fixture".into());
+            assert_eq!(fallback.options.num_predict, 8192);
+            assert_eq!(fallback.options.num_ctx, 65536);
+            assert_eq!(writing_timeout(label, 180), 1200);
+            assert!(fallback.messages[0].content.contains("8192"));
+            assert!(expressive_outer_timeout(750) > 3 * writing_timeout(label, 180));
+        }
+        assert_eq!(effective_writing_profile("self_study", Profile::Default), Profile::Default);
+        assert_eq!(effective_writing_profile("aspiration", Profile::Short), Profile::Short);
+    }
     #[test]
     fn explicit_profiles_survive_primary_policy_for_every_journal_lane() {
         use astrid_source_study::writing::Profile;

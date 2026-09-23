@@ -438,6 +438,7 @@ pub fn spawn_autonomous_loop(
                         debug!("no telemetry yet, skipping autonomous cycle");
                         continue;
                     };
+                    let cycle_observation = expressive_snapshot(Some(&telemetry));
 
                     match owner_policy::reconcile(
                         &mut conv,
@@ -2381,7 +2382,7 @@ pub fn spawn_autonomous_loop(
                             }
                             let enriched_context = if own_context_parts.is_empty() { None } else { Some(own_context_parts.join("\n\n")) };
                             let daydream = match tokio::time::timeout(
-                                Duration::from_secs(crate::llm::journal_outer_timeout(750)),
+                                Duration::from_secs(crate::llm::expressive_outer_timeout(750)),
                                 crate::llm::generate_daydream(
                                     perception_text.as_deref(),
                                     enriched_context.as_deref(),
@@ -2419,7 +2420,7 @@ pub fn spawn_autonomous_loop(
                             conv.peripheral_resonance = None;
                             let own_journal = enriched_context;
                             let aspiration = match tokio::time::timeout(
-                                Duration::from_secs(crate::llm::journal_outer_timeout(750)),
+                                Duration::from_secs(crate::llm::expressive_outer_timeout(750)),
                                 crate::llm::generate_aspiration(
                                     own_journal.as_deref(),
                                 )
@@ -2442,7 +2443,7 @@ pub fn spawn_autonomous_loop(
                                 .map(interpret_fingerprint)
                                 .unwrap_or_default();
                             let moment = match tokio::time::timeout(
-                                Duration::from_secs(crate::llm::journal_outer_timeout(690)),
+                                Duration::from_secs(crate::llm::expressive_outer_timeout(690)),
                                 crate::llm::generate_moment_capture(
                                     &spectral_summary, &fp_desc,
                                     fill_pct, fill_pct - conv.prev_fill,
@@ -2504,7 +2505,7 @@ pub fn spawn_autonomous_loop(
                             };
                             let is_revision = revise_kw.is_some();
                             let creation = match tokio::time::timeout(
-                                Duration::from_secs(crate::llm::journal_outer_timeout(870)),
+                                Duration::from_secs(crate::llm::expressive_outer_timeout(870)),
                                 crate::llm::generate_creation(
                                     own_journal.as_deref(),
                                     prev_creation.as_deref(),
@@ -4595,11 +4596,20 @@ pub fn spawn_autonomous_loop(
                             },
                             _ => None,
                         };
-                        save_astrid_journal_with_provenance(
+                        let expressive_observations = if expressive_journal_mode(mode_name) {
+                            let guard = state.read().await;
+                            Some(serde_json::json!({
+                                "state_at_cycle_start_not_generation_input": cycle_observation,
+                                "post_generation_observation_not_generation_input":
+                                    expressive_snapshot(guard.latest_telemetry.as_ref()),
+                            }))
+                        } else { None };
+                        save_astrid_journal_record(
                             &response_text,
                             mode_name,
                             fill_pct,
                             journal_provenance.as_ref(),
+                            expressive_observations.as_ref(),
                         );
 
                         // v5.1 Phase D — Hook A: auto-promote synchronously for
@@ -4674,37 +4684,56 @@ pub fn spawn_autonomous_loop(
                             }
 
                         // Stage B: journal elaboration for reflective modes.
-                        // The signal text is compact (for minime). The journal
-                        // elaboration is Astrid's private space to think longer.
+                        // The compact signal is supplied context. These journal
+                        // files are public reflective artifacts, not private drafts.
                         if matches!(mode_name, "dialogue_live" | "daydream" | "aspiration") {
                             let signal_for_journal = response_text.clone();
                             // Stage B is a second Dialogue surface, not a provenance-free
                             // afterthought. Keep the same read-only self/other boundary in
                             // the long-form continuation that framed the compact signal.
-                            let summary_for_journal = {
+                            let summary_for_journal = if mode_name == "dialogue_live" {
                                 let guard = state.read().await;
-                                journal_elaboration_witness_context_v1(
+                                Some(journal_elaboration_witness_context_v1(
                                     &spectral_interpretation,
                                     guard.witness_frame_v1(),
                                     mode,
-                                )
-                            };
+                                ))
+                            } else { None };
                             let mode_for_journal = mode_name.to_string();
                             let fill_for_journal = fill_pct;
                             let exchange_for_journal = conv.exchange_count;
+                            let journal_state = state.clone();
+                            let elaboration_observation = {
+                                let guard = state.read().await;
+                                expressive_snapshot(guard.latest_telemetry.as_ref())
+                            };
                             crate::lifecycle::spawn_background(async move {
                                 if let Some(elaboration) = crate::llm::generate_journal_elaboration(
                                     &signal_for_journal,
-                                    &summary_for_journal,
+                                    summary_for_journal.as_deref(),
                                     &mode_for_journal,
                                 ).await {
-                                    let journal_text =
-                                        format_longform_journal_text(&signal_for_journal, &elaboration);
                                     let longform_mode = format!("{mode_for_journal}_longform");
-                                    save_astrid_journal(
+                                    let journal_text = if expressive_journal_mode(&longform_mode) {
+                                        elaboration
+                                    } else {
+                                        format_longform_journal_text(&signal_for_journal, &elaboration)
+                                    };
+                                    let observations = {
+                                        let guard = journal_state.read().await;
+                                        serde_json::json!({
+                                            "earlier_compact_signal_sha256_prefix": short_sha256(&signal_for_journal),
+                                            "state_at_elaboration_start_not_generation_input": elaboration_observation,
+                                            "post_generation_observation_not_generation_input":
+                                                expressive_snapshot(guard.latest_telemetry.as_ref()),
+                                        })
+                                    };
+                                    save_astrid_journal_record(
                                         &journal_text,
                                         &longform_mode,
                                         fill_for_journal,
+                                        None,
+                                        Some(&observations),
                                     );
                                     // v5.1 Phase D — Hook B: scan the elaboration body
                                     // (where the gold-standard sentence lives, not the

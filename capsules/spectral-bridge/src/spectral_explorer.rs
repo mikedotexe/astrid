@@ -7,7 +7,8 @@ use crate::spectral_schema::{
 };
 use crate::types::{IsingShadowState, SpectralTelemetry};
 
-use crate::db::BridgeDb;
+mod history;
+pub(crate) use history::format_for_action;
 
 pub(crate) struct SpectralExplorerContext<'a> {
     pub telemetry: &'a SpectralTelemetry,
@@ -53,29 +54,6 @@ pub(crate) fn format_spectral_explorer(ctx: SpectralExplorerContext<'_>) -> Stri
     }
 
     sections.join("\n\n")
-}
-
-pub(crate) fn format_for_action(
-    telemetry: &SpectralTelemetry,
-    memory_bank: &[RemoteMemorySummary],
-    controller_health: Option<&serde_json::Value>,
-    ising_shadow: Option<&IsingShadowState>,
-    db: &BridgeDb,
-    current_codec_features: Option<&[f32]>,
-) -> String {
-    let eigen_history = db.recent_eigenvalue_snapshots(100);
-    let (codec_history, codec_fills) = db.recent_codec_features(100);
-    let selected_memory = selected_memory(telemetry, memory_bank);
-    format_spectral_explorer(SpectralExplorerContext {
-        telemetry,
-        selected_memory,
-        controller_health,
-        ising_shadow,
-        eigen_history: &eigen_history,
-        codec_history: &codec_history,
-        codec_fills: &codec_fills,
-        current_codec_features,
-    })
 }
 
 pub(crate) fn selected_memory<'a>(

@@ -390,13 +390,21 @@ fn apply_mlx_request_policy_with_writing(
     label: &str, profile: MlxProfile, messages: Vec<Message>, requested_tokens: u32,
     requested_timeout_secs: u64, preference: astrid_source_study::writing::Profile,
 ) -> MlxRequestPolicy {
-    if preference != astrid_source_study::writing::Profile::Default {
+    if preference != astrid_source_study::writing::Profile::Default || expressive_label(label) {
         let original_prompt_chars = message_prompt_chars(&messages);
-        let mut messages = messages;
-        apply_writing_voice(&mut messages, preference);
+        let bounded_default = preference == astrid_source_study::writing::Profile::Default && profile.is_gemma4_canary() && label != "private_writing";
+        let (mut messages, deprecated_terms_sanitized) = if bounded_default {
+            sanitize_messages_for_gemma4_canary(label, messages)
+        } else { (messages, false) };
+        apply_writing_voice(&mut messages, label, preference);
+        let prompt_char_limit = if bounded_default { gemma4_canary_prompt_limit(label) } else { Some(astrid_source_study::MAX_INPUT_BYTES) };
+        let (messages, trimmed) = if bounded_default && let Some(limit) = prompt_char_limit {
+            trim_messages_to_prompt_limit(messages, limit, label)
+        } else { (messages, false) };
         let effective_prompt_chars = message_prompt_chars(&messages);
-        let effective_tokens = preference.tokens(requested_tokens);
-        let effective_timeout_secs = if preference == astrid_source_study::writing::Profile::Extended {
+        let effective_profile = effective_writing_profile(label, preference);
+        let effective_tokens = effective_profile.tokens(requested_tokens);
+        let effective_timeout_secs = if effective_profile == astrid_source_study::writing::Profile::Extended {
             requested_timeout_secs.max(astrid_source_study::writing::EXTENDED_TIMEOUT_SECS)
         } else { requested_timeout_secs };
         return MlxRequestPolicy {
@@ -404,8 +412,8 @@ fn apply_mlx_request_policy_with_writing(
             diagnostic: Some(MlxRequestPolicyDiagnostic {
                 timestamp: unix_timestamp_string(), label: label.into(), profile: profile.as_str(),
                 original_prompt_chars, effective_prompt_chars, requested_tokens, effective_tokens,
-                requested_timeout_secs, effective_timeout_secs, prompt_char_limit: Some(astrid_source_study::MAX_INPUT_BYTES),
-                trimmed: false, deprecated_terms_sanitized: false,
+                requested_timeout_secs, effective_timeout_secs, prompt_char_limit,
+                trimmed, deprecated_terms_sanitized,
             }),
         };
     }
@@ -598,7 +606,7 @@ fn build_ollama_chat_request(
     fallback_model: String,
 ) -> OllamaChatRequest {
     let mut messages = reinforce_ollama_fallback_contract(label, messages);
-    apply_writing_voice(&mut messages, journal_preference(label));
+    apply_writing_voice(&mut messages, label, journal_preference(label));
     let max_tokens = writing_tokens(label, max_tokens);
     OllamaChatRequest {
         model: fallback_model,
@@ -863,7 +871,7 @@ async fn llm_chat_with_fallback_detailed_inner(
         crate::llm_jobs::start_call(
             label,
             &prompt_preview,
-            primary_timeout.saturating_add(ollama_timeout_secs.saturating_mul(2)),
+            primary_timeout.saturating_add(writing_timeout(label, ollama_timeout_secs).saturating_mul(2)),
             validation_contract,
             next_policy,
         )

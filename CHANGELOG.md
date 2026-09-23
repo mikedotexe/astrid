@@ -9,6 +9,13 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Candidate - telemetry-optional expressive writing (2026-09-23)
+
+- Give expressive routes an 8192-token default ceiling and 1200-second provider deadlines, including Ollama fallback and private drafts. Preserve explicitly selected 512-token short writing, bounded input and voluntary continuation; align shared-reader capacity descriptions and enclosing job deadlines. Record bounded provider-reported stop reasons without prose or inferred intent. Mike approved paired graceful rollout, merge and push; qualification and live receipts follow in the steward note.
+- Remove automatic spectral summaries from aspiration/daydream elaboration and routine continuity projections from their invitations. Preserve supplied authored passages and chosen observations; expose a compact action-discovery affordance without changing execution authority.
+- Put new expressive journal prose ahead of any measurements. Retain full, separately identified archival snapshots in metadata, distinguishing cycle/elaboration-time observations from later observations; preserve historical files and existing nonexpressive records.
+- Add explicit recorded-fill history to `SPECTRAL_EXPLORER`, with timestamps, span, latest gap, largest gap and endpoint change, not an invented present trend. Paired Minime prompts, records and qualification are detailed in `docs/steward-notes/2026-09-23-telemetry-optional-expression.md`. Isolated candidate only; no restart, reservoir change, merge or automation resume.
+
 ### Fixed - native daemon WASM shutdown (2026-09-22)
 
 - Make long-running WASM guests observe cancellation at epoch checks and join their worker before removing the ticker. Preserve ordinary interceptor timeouts and run-loop lifetime; failed or timed-out joins are errors, not successful unloads. Isolated deployment qualification reproduced a CLI guest looping after kernel shutdown, which otherwise prevented the daemon process from exiting. No bridge, reservoir, or model change.

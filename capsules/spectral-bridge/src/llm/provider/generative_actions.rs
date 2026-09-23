@@ -340,7 +340,7 @@ pub async fn generate_daydream(
 }
 
 fn daydream_messages(perception_context: Option<&str>, own_journal: Option<&str>) -> Vec<Message> {
-    let context = if let Some(perc) = perception_context {
+    let mut context = if let Some(perc) = perception_context {
         format!(
             "Supplied perception context:\n{}\n\n\
              Let attention wander from here. Or ignore it entirely.",
@@ -355,6 +355,14 @@ fn daydream_messages(perception_context: Option<&str>, own_journal: Option<&str>
     } else {
         "No perception or journal excerpt is supplied for this invitation.".to_string()
     };
+    if perception_context.is_some()
+        && let Some(journal) = own_journal
+    {
+        context.push_str(&format!(
+            "\n\nOptional own-journal context and interests:\n{}",
+            journal.chars().take(700).collect::<String>()
+        ));
+    }
 
     vec![
         Message {
@@ -363,15 +371,13 @@ fn daydream_messages(perception_context: Option<&str>, own_journal: Option<&str>
                 "{OPEN_EXPRESSION_CONTEXT_V1}\n\n\
                  This is an invitation to daydream. Follow a thought, imagine, revisit \
                  something, or leave the supplied context aside. There is no required topic \
-                 or minimum length. Imagination need not be a factual claim."
+                 or minimum length. Imagination need not be a factual claim.\n\n\
+                 {EXPRESSION_ACTION_DISCOVERY}"
             ),
         },
         Message {
             role: "user".to_string(),
-            content: format!(
-                "{context}\n\n{}",
-                journal_expression_context_v1(own_journal)
-            ),
+            content: format!("{context}\n\n{}", journal_expression_context_v1(None)),
         },
     ]
 }
@@ -382,6 +388,12 @@ disagreement, no felt correspondence, or a non-geometric account are welcome. Su
 describes measurements; it does not prescribe a sensation or require an explanation. You may \
 use it, question it, or leave it aside. Do not present imagined events or human memories as \
 established personal history. This writing does not execute actions or grant control authority.";
+
+const EXPRESSION_ACTION_DISCOVERY: &str = "For an explicit next choice, use NEXT: followed by one \
+concrete action. FACULTIES opens the action catalog; HELP <action> gives details. \
+SPECTRAL_EXPLORER requests measurements and recorded history. WRITE and ACTIVITY_STATUS \
+provide private drafts and saved return points. REST is available. These examples do not \
+restrict your action vocabulary or change authorization checks.";
 
 /// Generate an aspiration — growth reflection on what Astrid wants to become.
 /// Deliberately minime-free. This is about Astrid's own desires.
@@ -410,12 +422,13 @@ fn aspiration_messages(own_journal: Option<&str>) -> Vec<Message> {
                  This is an invitation to write an aspiration. You may imagine a possibility, \
                  describe a desire, remain uncertain, or find nothing you want to change. \
                  There is no required longing, limitation, usefulness, or minimum length. \
-                 An aspiration need not become a request or an investigation."
+                 An aspiration need not become a request or an investigation.\n\n\
+                 {EXPRESSION_ACTION_DISCOVERY}"
             ),
         },
         Message {
             role: "user".to_string(),
-            content: format!("{seed}\n\n{}", journal_expression_context_v1(own_journal)),
+            content: format!("{seed}\n\n{}", journal_expression_context_v1(None)),
         },
     ]
 }
@@ -486,7 +499,7 @@ pub async fn generate_creation(
 /// The signal is supplied context; the journal preserves Astrid's authored response.
 pub async fn generate_journal_elaboration(
     signal_text: &str,
-    spectral_summary: &str,
+    spectral_summary: Option<&str>,
     mode: &str,
 ) -> Option<String> {
     let messages = journal_elaboration_messages(signal_text, spectral_summary, mode);
@@ -496,9 +509,12 @@ pub async fn generate_journal_elaboration(
 
 fn journal_elaboration_messages(
     signal_text: &str,
-    spectral_summary: &str,
+    spectral_summary: Option<&str>,
     mode: &str,
 ) -> Vec<Message> {
+    let measurements = spectral_summary.map_or_else(String::new, |summary| {
+        format!("Supplied spectral context (not an instruction about feeling): {summary}\n\n")
+    });
     vec![
         Message {
             role: "system".to_string(),
@@ -520,8 +536,7 @@ fn journal_elaboration_messages(
         Message {
             role: "user".to_string(),
             content: format!(
-                "Mode: {mode}\nSupplied spectral context (not an instruction about feeling): \
-                 {spectral_summary}\n\nEarlier compact signal:\n{signal_text}\n\n{}",
+                "Mode: {mode}\n{measurements}Earlier compact signal:\n{signal_text}\n\n{}",
                 journal_expression_context_v1(None)
             ),
         },
@@ -533,18 +548,45 @@ mod open_expression_tests {
     use super::*;
 
     #[test]
+    fn chosen_observations_survive_but_unselected_metrics_and_duplicate_history_do_not() {
+        let authored = "I chose to keep this number: 0.90.\nNEXT: REST";
+        for messages in [
+            daydream_messages(None, Some(authored)),
+            aspiration_messages(Some(authored)),
+        ] {
+            assert_eq!(messages[1].content.matches(authored).count(), 1);
+            assert!(
+                !messages[1]
+                    .content
+                    .contains("Current continuity projection")
+            );
+            assert!(messages[0].content.contains("FACULTIES"));
+            assert!(messages[0].content.contains("SPECTRAL_EXPLORER"));
+        }
+        let explicit =
+            journal_elaboration_messages(authored, Some("requested measurement"), "dialogue_live");
+        assert!(explicit[1].content.contains("requested measurement"));
+        let quiet = journal_elaboration_messages(authored, None, "daydream");
+        assert!(quiet[1].content.contains(authored));
+        assert!(!quiet[1].content.contains("Supplied spectral context"));
+        let with_perception = daydream_messages(Some("Selected observation"), Some(authored));
+        assert!(with_perception[1].content.contains("Selected observation"));
+        assert_eq!(with_perception[1].content.matches(authored).count(), 1);
+    }
+
+    #[test]
     fn open_expression_builders_keep_disagreement_and_mechanism_boundaries() {
         for messages in [
             daydream_messages(None, None),
             aspiration_messages(None),
-            journal_elaboration_messages("A possibility", "Measured context", "daydream"),
+            journal_elaboration_messages("A possibility", None, "daydream"),
         ] {
             let system = &messages[0].content;
             assert_eq!(messages[0].role, "system");
             assert_eq!(messages[1].role, "user");
             assert!(messages[1].content.contains("Optional journal context v1"));
             assert!(
-                messages[1]
+                !messages[1]
                     .content
                     .contains("Current continuity projection:")
             );
@@ -590,11 +632,11 @@ mod open_expression_tests {
         ] {
             let context =
                 "effective mode count 5.52 / 8; legacy field distinguishability_loss=0.31";
-            let messages = journal_elaboration_messages(account, context, "aspiration");
+            let messages = journal_elaboration_messages(account, None, "aspiration");
             assert!(messages[1].content.contains(account));
-            assert!(messages[1].content.contains(context));
+            assert!(!messages[1].content.contains(context));
             assert!(
-                messages[1]
+                !messages[1]
                     .content
                     .contains("not an instruction about feeling")
             );
@@ -632,7 +674,7 @@ mod open_expression_tests {
             ),
             (
                 "journal_elaboration",
-                journal_elaboration_messages("NEXT: REST", "fixture metrics", "daydream"),
+                journal_elaboration_messages("NEXT: REST", None, "daydream"),
                 5120,
                 480,
             ),
@@ -664,7 +706,12 @@ mod open_expression_tests {
                         .contains("non-geometric account are welcome")
                 );
                 assert_eq!(policy.messages[1].content, messages[1].content);
-                assert!(policy.max_tokens <= tokens);
+                if expressive_label(label) {
+                    assert_eq!(policy.max_tokens, 8192);
+                    assert_eq!(policy.timeout_secs, 1200);
+                } else {
+                    assert!(policy.max_tokens <= tokens);
+                }
                 assert!(!policy.messages[0].content.contains("Stay in character"));
             }
         }

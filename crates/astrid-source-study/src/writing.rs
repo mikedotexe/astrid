@@ -351,11 +351,14 @@ impl Writer {
             .context("writing sequence exhausted")?;
         let id = format!("writing-{}", state.sequence);
         let selected_profile = profile(&self.directory)?;
-        let allowance = selected_profile.tokens(4096);
+        let allowance = selected_profile.tokens(EXTENDED_TOKENS);
         let mut text = format!(
             "Selected writing profile: {selected_profile:?}; output ceiling: {allowance} tokens, no minimum.\nPRIVATE WRITING — chosen action: {action}\n{notice}\n{draft_text}\n{GUIDANCE}\n{}\nA brief navigation-only response is also valid; it will not add prose to the draft.",
             crate::focus::GUIDANCE
         );
+        if selected_profile == Profile::Default {
+            text.push_str("\nThere is room for a sustained piece. You may follow a thought through examples, complications and changes of direction without compressing it into a conclusion. Brief writing or stopping is equally available. Continuation remains your explicit choice.\n");
+        }
         if let Some(choice) = &state.last_choice {
             text.push_str(&choice.render(true));
         }

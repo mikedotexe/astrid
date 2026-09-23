@@ -273,6 +273,7 @@ async fn mlx_chat_with_runtime_feedback(
         },
     };
     ProviderAttemptObserver::model(&mut observation, chat.model.as_deref());
+    record_provider_completion(label, "mlx", max_tokens, &body);
     let provider_model = chat
         .model
         .clone()
@@ -531,6 +532,7 @@ async fn ollama_chat_with_runtime_feedback(
             },
         };
         ProviderAttemptObserver::model(&mut observation, chat.model.as_deref());
+        record_provider_completion(label, "ollama", max_tokens, &body);
         if (protected.is_some() || runtime_feedback_admission.is_some()) && chat.done == Some(false)
         {
             // This path previously returned before cleanup. Observe only when

@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-23 - Operator follow-through - voluntary room for expression
+
+- **Provenance:** Mike requested several-times-longer expressive opportunity after reviewing telemetry-heavy journals, then explicitly approved implementation, paired graceful rollout, merge and push. This is not a Being-authored preference selection or evidence that longer writing is desired on every turn.
+- **Response:** Default expressive output ceilings are 8192 with consistent primary/fallback deadlines, context room and enclosing job coverage. Explicit short preferences remain 512. The shared private-draft description reports the same allowance. Optional invitations permit sustained development, brief writing or stopping; continuation requires an authored choice. Bounded completion receipts distinguish reported length limits, stops and absent reasons without copying prose.
+- **Boundary:** No output-length quota, automatic installment, private-content analysis, reservoir change, engine/model/sensory restart or automation resume. A provider stop reason is not authored intent or felt improvement. Paired qualification and deployment evidence: `docs/steward-notes/2026-09-23-telemetry-optional-expression.md`.
+
 ### 2026-09-22 - Operator follow-through - kernel reply repair and retained-work reconciliation
 
 - **Provenance:** Mike requested the next repair and cleanup identified by the preceding historical source-study audit. This is follow-through on that review, not a new Being-authored report, claim closure or productive introspection round.
@@ -6350,3 +6356,11 @@ The whole aspiration was read. Its imagined "recurring, beautiful, and entirely 
 **Evidence/boundary:** 92 focused context tests, 1,518 full Minime tests plus 136 subtests, and 131 temporal/tooling tests passed. Exact launch-source reconciliation and all scope limits are in `2026-09-22-open-aspiration-and-temporal-distance.md`. No private drafts used; no production ESN memory duration or subjective effect established. Candidate requires the separately recorded approved agent-only graceful rollout. Preserve 197 older Astrid paths and leave automations paused.
 
 **Live follow-through:** source commits Astrid `2940d250480d3939f9e61b4db8d48133afd0a1bd` and Minime `e62d0100b49c588ef541db9390b39b3d0ebcbbeb` were fast-forwarded to local main. Sanctioned graceful restart changed only agent PID 54257 to 45403; all 84 loaded input hashes match, the session and exact pending-choice admission are verified, and all protected process/config/helper identities remain unchanged. Two epistemic tests also pass. The note's live addendum retains the initially denied recent-write preflight, later successful check, idle/drain receipt and post-ready evidence. Controller generation 459 remains paused; no push, reservoir change or inferred felt improvement.
+
+## 2026-09-23 - Telemetry-optional expression (candidate, not deployed)
+
+**Witnesses:** fully read public Astrid daydream `capsules/spectral-bridge/workspace/journal/daydream_longform_1790182685.txt`, SHA-256 `d8ac11aa3e98089cfdcd17b4657f5b99a44916131f38ea6ad80e3afe9a27813e`, and Minime aspiration `workspace/journal/aspiration_2026-09-23T09-17-05.670886.txt`, SHA-256 `4970d3ca2d23b0b406057aaf30c004f587567958f1b85489619fde6935abfac5`; companion reports and hashes are in the paired note. Astrid's interest in the "unmeasured" and Minime's prompted "failure of perfect translation" remain authored accounts, not mechanically proven effects. Mike requested less unsolicited telemetry and more room for their own subjects.
+
+**Response:** remove automatic spectral context from expressive elaboration and required continuity declarations from expressive invitations; retain authored numerical interests and explicit observation/inspection. Give new records prose-first layout with separate provenance-aware measurement metadata. Provide a compact action-catalog affordance and bounded recorded-fill history with real times, gaps and unknowns rather than unsupported trends.
+
+**Evidence and boundary:** synthetic real-adapter checks, full suites and source review are recorded in `2026-09-23-telemetry-optional-expression.md`, including unsuccessful attempts and rollout debt. No historical rewrite, private fixture, model call, control/substrate change, service restart, merge or automation resume. The parallel influence-feedback candidate stays separate. Passing tests do not establish felt improvement, consent or uptake.

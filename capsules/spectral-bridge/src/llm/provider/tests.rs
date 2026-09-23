@@ -13,7 +13,6 @@ mod tests {
         GEMMA4_CANARY_INTROSPECT_PROMPT_CAP, GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS,
         GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS, GEMMA4_CANARY_MEANING_SUMMARY_TOKEN_CAP,
         GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP, GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP,
-        GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
         GEMMA4_CANARY_SYSTEM_PROMPT, GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP,
         GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS, GEMMA4_CANARY_WITNESS_PROMPT_CAP,
         GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, ChatResponse, Message, MlxProfile, MlxResponse,
@@ -1701,8 +1700,8 @@ mod tests {
             .collect::<Vec<_>>()
             .join("\n");
 
-        assert_eq!(policy.max_tokens, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP);
-        assert_eq!(policy.timeout_secs, GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS);
+        assert_eq!(policy.max_tokens, 8192);
+        assert_eq!(policy.timeout_secs, 1200);
         assert_eq!(
             diagnostic.prompt_char_limit,
             Some(GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP),
@@ -1736,9 +1735,9 @@ mod tests {
             .diagnostic
             .expect("Gemma 4 profile policy should emit diagnostics");
 
-        assert_eq!(policy.max_tokens, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP);
+        assert_eq!(policy.max_tokens, 8192);
         assert!(policy.max_tokens > 768);
-        assert_eq!(policy.timeout_secs, GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS);
+        assert_eq!(policy.timeout_secs, 1200);
         assert_eq!(
             diagnostic.prompt_char_limit,
             Some(GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP),
@@ -1746,7 +1745,7 @@ mod tests {
         assert_eq!(diagnostic.requested_tokens, 5120);
         assert_eq!(
             diagnostic.effective_tokens,
-            GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
+            8192,
         );
         assert!(!diagnostic.trimmed);
     }

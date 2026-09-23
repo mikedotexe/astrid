@@ -492,7 +492,12 @@ pub(crate) fn journal_continuity_contract_v1(own_journal: Option<&str>) -> Strin
 }
 
 fn journal_expression_context_v1(own_journal: Option<&str>) -> String {
-    let anchors = journal_continuity_anchors_v1(own_journal);
+    let anchors = own_journal.map_or_else(String::new, |journal| {
+        format!(
+            "Historical own-journal excerpt:\n{}",
+            trim_chars(journal, 700)
+        )
+    });
     format!(
         "Optional journal context v1:\n\
          These historical anchors may be used, questioned, or left aside. No continuity label, \

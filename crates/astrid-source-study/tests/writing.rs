@@ -191,6 +191,20 @@ fn explicit_preference_roundtrips_and_reader_routes_the_same_private_store() {
         let out = reader
             .prepare_action(&format!("WRITE PROFILE {name}"))
             .unwrap();
+        let ceiling = if expected == Profile::Short {
+            512
+        } else {
+            8192
+        };
+        assert!(
+            out.text
+                .contains(&format!("output ceiling: {ceiling} tokens, no minimum"))
+        );
+        assert_eq!(
+            out.text
+                .contains("Brief writing or stopping is equally available"),
+            expected == Profile::Default
+        );
         let (request, response) = wire(&out, "Preference acknowledged.");
         reader
             .navigation_delivered(out.navigation_id.as_deref().unwrap(), &request, &response)
