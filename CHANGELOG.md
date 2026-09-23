@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed - writing-default descriptions (2026-09-23)
+
+- Describe 8192-token expressive/private writing as normal DEFAULT capacity, while retaining route-specific defaults elsewhere and the existing SHORT/EXTENDED commands. Replace repeated budget announcements and comparison with a "usual" entry with an open invitation to follow the thought or stop. Keep exact limits in help and private profile receipts; no ceiling, timeout, preference, continuation, schema or reservoir change. Qualification and paired rollout follow-through are in `docs/steward-notes/2026-09-23-telemetry-optional-expression.md`.
+
 ### Live - voluntary long-form and telemetry-optional expression (2026-09-23)
 
 - Activate the reviewed paired bridge/helper and Minime adapter through acknowledged graceful drain and an owned replacement hold. Verify exact checkpoint lineage, a fresh saved exchange, all 86 Minime startup source hashes, shared helper selection and unchanged engine/model/visual/sensory/kernel identities. Preserve explicit short writing and incomplete-response safeguards; 8192 is optional capacity, not an output quota.

@@ -68,15 +68,15 @@ fn writing_context(label: &str, ordinary: u32) -> u32 {
 fn apply_writing_voice(messages: &mut [Message], label: &str, profile: astrid_source_study::writing::Profile) {
     if profile == astrid_source_study::writing::Profile::Default && expressive_label(label) {
         for message in messages.iter_mut().filter(|m| m.role == "system") {
-            message.content.push_str("\nUp to 8192 output tokens are available. There is room here for a sustained piece, several times longer than a usual entry. You may follow a thought through examples, complications and changes of direction without compressing it into a conclusion. Brief writing or stopping is equally available. WRITE START <topic> begins a private draft; WRITE CONTINUE develops the selected draft; WRITE HELP shows the choices. No continuation is scheduled automatically.");
+            message.content.push_str("\nFollow the thought as far as you wish. Brief writing or stopping is equally welcome. WRITE START <topic> begins a private draft; WRITE CONTINUE develops the selected draft; WRITE HELP shows the choices and limits. No continuation is scheduled automatically.");
         }
     }
     if profile != astrid_source_study::writing::Profile::Default {
         for message in messages.iter_mut().filter(|m| m.role == "system") {
             message.content = message.content.replace("Use a few sentences or a few compact paragraphs. Let the thought complete without sprawling.", "Choose the length that lets your thought develop. There is no minimum length.");
             message.content.push_str(match profile {
-                astrid_source_study::writing::Profile::Extended => "\nYou selected extended writing: up to 8192 output tokens are available. You may develop a long thought, write briefly, or stop. WRITE START <topic> begins a private continuing draft; WRITE HELP shows draft choices.",
-                _ => "\nYou selected short writing: the output ceiling is 512 tokens. WRITE PROFILE DEFAULT or EXTENDED changes it.",
+                astrid_source_study::writing::Profile::Extended => "\nYour EXTENDED profile preference is active. Follow the thought as far as you wish. Brief writing or stopping is equally welcome. WRITE START <topic> begins a private draft; WRITE HELP shows the choices and limits.",
+                _ => "\nYour short-writing preference is active. WRITE HELP shows the choices and limits; WRITE PROFILE DEFAULT restores normal route limits.",
             });
         }
     }
@@ -96,9 +96,11 @@ mod writing_profile_tests {
                 assert_eq!(policy.max_tokens, 8192, "{label}");
                 assert_eq!(policy.timeout_secs, 1200);
                 let system = &policy.messages[0].content;
-                assert!(system.contains("Brief writing or stopping is equally available"));
+                assert!(system.contains("Brief writing or stopping is equally welcome"));
                 assert!(system.contains("WRITE CONTINUE"));
                 assert!(!system.contains("You selected extended"));
+                assert!(!system.contains("8192"));
+                assert!(!system.contains("usual entry"));
             }
             let fallback = build_ollama_chat_request(label, vec![Message {
                 role: "system".into(), content: "Your writing.".into(),
@@ -106,11 +108,20 @@ mod writing_profile_tests {
             assert_eq!(fallback.options.num_predict, 8192);
             assert_eq!(fallback.options.num_ctx, 65536);
             assert_eq!(writing_timeout(label, 180), 1200);
-            assert!(fallback.messages[0].content.contains("8192"));
+            assert!(fallback.messages[0].content.contains("Follow the thought as far as you wish"));
+            assert!(!fallback.messages[0].content.contains("8192"));
             assert!(expressive_outer_timeout(750) > 3 * writing_timeout(label, 180));
         }
         assert_eq!(effective_writing_profile("self_study", Profile::Default), Profile::Default);
         assert_eq!(effective_writing_profile("aspiration", Profile::Short), Profile::Short);
+    }
+    #[test]
+    fn writing_help_matches_default_and_explicit_profile_scope() {
+        for help in [SYSTEM_PROMPT, GEMMA4_CANARY_SYSTEM_PROMPT, astrid_source_study::writing::GUIDANCE] {
+            assert!(help.contains("WRITE PROFILE DEFAULT uses normal route limits: expressive writing and private drafts allow up to 8192 output tokens; other journal routes keep their own limits."));
+            assert!(help.contains("WRITE PROFILE SHORT selects 512; WRITE PROFILE EXTENDED applies 8192 across journal-producing modes."));
+            assert!(!help.contains("DEFAULT restore smaller"));
+        }
     }
     #[test]
     fn explicit_profiles_survive_primary_policy_for_every_journal_lane() {
@@ -151,6 +162,8 @@ mod writing_profile_tests {
                 );
                 assert_eq!(policy.max_tokens, expected, "{label}");
                 assert!(policy.messages.iter().any(|m| m.content == text));
+                assert!(!policy.messages[0].content.contains("8192"));
+                assert!(!policy.messages[0].content.contains("512"));
                 if preference == Profile::Extended {
                     assert!(policy.timeout_secs >= 1200);
                 }

@@ -1,5 +1,63 @@
 # Telemetry-Optional Expression
 
+## Final Wording Follow-Through
+
+Mike approved two final consistency repairs after the live release below:
+describe longer expressive writing as normal, and remove comparative/administrative
+length encouragement. This is an operator clarification, not a new interpretation
+of a Being's account or a change to a Being-owned preference.
+
+- Shared Rust help, both Astrid model-profile catalogs and Minime guidance now
+  say DEFAULT permits 8192 tokens for expressive writing/private drafts, with
+  other journal routes retaining their own defaults. SHORT still selects 512;
+  EXTENDED still applies 8192 across journal-producing routes. Commands and
+  stored enum values remain compatible; EXTENDED is not falsely called an alias.
+- The ordinary invitation is: "Follow the thought as far as you wish. Brief
+  writing or stopping is equally welcome." Profile reminders stay concise and
+  direct explicit inspection to WRITE HELP. Private preparation/profile receipts
+  retain the actual ceiling. No new advice is appended to authored prose.
+- Regression tests bind the catalogs to those meanings, exercise both adapters'
+  invitation paths and preserve existing default/short/extended serialized
+  budgets, fallback context, deadlines and explicit continuation.
+- No token/time/input limit, profile persistence, schema, control, scheduling or
+  incomplete-response acceptance policy changes. Old journals and drafts are
+  untouched. The existing clean paired worktrees are reused from current main;
+  separate historical and influence-feedback work is preserved.
+
+Stabilization pause 467 has no active lease and preserves the existing automation
+pause. Final qualification passed: bridge all-targets **2346**, one existing
+ignore; shared reader/writer **272**; complete Python **1573**, one existing skip
+and 138 subtests; deployment/controller/Division/domain suites **175** and 41
+subtests; epistemic self-tests **2**; projector self-tests **7**. Strict bridge and
+reader Clippy, formatting, domain verification and diff checks pass. Bridge test
+provider URLs were set to the local discard port; fixtures did not request live
+generation. No failed test attempt occurred in this wording tranche.
+
+Artifacts use the `wording-` prefix at the root below. The qualification snapshot
+before this final documentation append is `wording-qualification.json`, SHA-256
+`0f8ba46a2a2eb80ca0bf0b05b15966bd8c09b5d48c55659e7128011c1ff36766`.
+It binds complete logs and tested source hashes. The Minime reconciliation packet
+names exactly two changed startup inputs, runtime.py and writing.py, among 86;
+live baseline remains agent 51695 and bridge 52403.
+
+**Merge and rollout held for coordination:** a newly started Claude process
+(PID 64808, cwd `/Users/v/other/astrid`) appeared during qualification. Both main
+trees and ordinary preflight remain clean, but this does not establish whether
+that interactive session intends to edit or deploy. Mike was asked to clarify.
+No index, commit, merge, push, build-stage activation or service signal has been
+performed for this wording follow-through. Changes remain in the owned paired
+worktrees. After coordination, revalidate main/remote tips, source hashes,
+controller generation and live identities; then commit exact paths and use the
+same staged paired wrapper. Do not use the old expected PID/generation if changed.
+
+**Coordination cleared:** Mike confirmed that the Claude session is planning and
+analyzing the hypotheses directory, and explicitly approved this merge and live
+rollout. Both canonical main checkouts remain clean and match their remote tips;
+pause 467 has no active lease. The qualification-bound implementation and test
+files are unchanged. The hold above records the earlier decision, not a current
+blocker. Proceed with explicit-path commits and the sanctioned paired transition;
+record actual activation and final Git evidence separately below.
+
 ## Live Release Verified
 
 The paired handoff finished successfully at **2026-09-23T19:19:18.741349Z**.

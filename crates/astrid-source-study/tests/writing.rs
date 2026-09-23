@@ -202,7 +202,7 @@ fn explicit_preference_roundtrips_and_reader_routes_the_same_private_store() {
         );
         assert_eq!(
             out.text
-                .contains("Brief writing or stopping is equally available"),
+                .contains("Brief writing or stopping is equally welcome"),
             expected == Profile::Default
         );
         let (request, response) = wire(&out, "Preference acknowledged.");
@@ -211,6 +211,10 @@ fn explicit_preference_roundtrips_and_reader_routes_the_same_private_store() {
             .unwrap();
         assert_eq!(profile(&directory.join("writing")).unwrap(), expected);
         assert_eq!(expected.tokens(768), tokens);
+        assert!(out.text.contains("WRITE PROFILE DEFAULT uses normal route limits: expressive writing and private drafts allow up to 8192 output tokens; other journal routes keep their own limits."));
+        assert!(out.text.contains("WRITE PROFILE SHORT selects 512; WRITE PROFILE EXTENDED applies 8192 across journal-producing modes."));
+        assert!(!out.text.contains("usual entry"));
+        assert!(!out.text.contains("sustained piece"));
     }
     let source = reader.prepare_action("SELF_STUDY MAP").unwrap();
     assert_eq!(source.input_kind, InputKind::Map);
