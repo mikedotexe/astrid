@@ -1,5 +1,111 @@
 # Telemetry-Optional Expression
 
+## Live Release Verified
+
+The paired handoff finished successfully at **2026-09-23T19:19:18.741349Z**.
+The implementation commits were fast-forwarded into both canonical local mains:
+Astrid `4e530bbd93122bb38addb1a4415780c23813a555`, Minime
+`0334d28ded194f501b9fc50b4df750bf8f683b04`. This section supersedes the historical
+candidate status below. Only documentation follows these source commits; pushing
+the reviewed commits is separately verified in the session closeout.
+
+### Qualification and Release Binding
+
+- Final serial bridge all-target run: **2345 passed, one existing ignore**
+  (`longform-bridge-final-03.log`). Shared reader/writer: **272 passed**.
+- Full Minime Python suite: **1572 passed, one existing skip, 138 subtests**,
+  repeated successfully against the exact immutable release helper
+  (`release-helper-minime-suite.log`). Focused capacity/record rerun: 26 passed.
+- Deployment/controller/evidence/Division qualification: **196 passed and 41
+  subtests**. Epistemic self-tests: two; projector self-tests: seven. Bridge and
+  shared-reader strict all-target Clippy, formatting and domain boundaries pass.
+  No boundary exception was added. Earlier failed attempts remain below.
+- All **685 staged source-input hashes** match the reviewed candidate inventory.
+  The live-input comparison found nine older differences already on main from
+  archival commit `b3c67749b1`: six integration-test files and three changes wholly
+  inside test modules (`action_continuity/tests.rs`, `next_action/modes.rs`,
+  `inquiry/parsing.rs`). Their full diffs were reviewed; none changes runtime
+  behavior. Exact paths and hashes are in `candidate-vs-live-inputs.json`.
+- `reviewed-staged-inputs.json` names all 18 Astrid and 13 Minime committed paths.
+  Minime's 86 qualified launch inputs add `expressive_journal.py` and
+  `measurement_history.py`, and change only `runtime.py` and `writing.py` among
+  the prior 84. Integration used Git, not a source overlay or authored-state rollback.
+
+Artifact root: `/Users/v/other/worktrees/expressive-context-20260923`.
+Immutable stage: `bridge-stage-expression-01` beneath that root.
+
+| Identity | SHA-256 |
+| --- | --- |
+| Stage manifest | `e768c0c6d6f4c0808e63ea3ef7ab5ddfb4b17aff0c4f0a43c1eeb76f565667cb` |
+| Source-input inventory | `28f6e277e74f1edb53b68e68a6f0420864723f4eb6c9835f7dbec08ca16e5800` |
+| Bridge executable | `556f852eac4c1730af7c926a92a7921a825ef0edb7f564792bf3fd426ce11fcc` |
+| Shared source-study helper | `9d9905543d47ec183300949c6a3508d99fef5e3b7ed41f0141ab3f3b7043ea15` |
+| `paired-handoff-01.jsonl` | `bf66a7a25ebbcafcb23c1f556918a64df9379bd8f4d4ed70de0b9c07b70214ae` |
+| `live-after.json` | `b04260f9986cd86394581e07a689017d54008bb3ff5cd3ac592ceacf15d4b884` |
+| Packaged-helper Python suite | `9fa7e28b8888cc3a74fdc156e5dda08774f5206097d8f243a498fe0d084c2028` |
+| `qualification-hashes.json` | `7910d2d9e47442d5ddb7283847ff9fa5e85fe02c5b751972a43cdbfe41d176f8` |
+
+The qualification hash index binds the final Rust/Python/tooling logs. The
+additional `rollout-artifact-hashes.json` binds reconciliation, health, controller
+and live receipts. These are local retained evidence, not public prose exports.
+
+### Graceful Transition and Continuity
+
+The sanctioned `paired_minime_handoff.py` held replacement-agent admission after
+observing an idle boundary, then sent one PID-bound SIGTERM to Minime **66540** at
+19:13:05Z. It invoked `build_bridge.sh --activate-stage`; bridge **75800**
+acknowledged drain and exited without force. Activation transaction:
+`/Users/v/other/astrid/.runtime/bridge-deployment/transactions/edd7cd26421a4a23824087a44c6113d5`.
+Its terminal receipt has SHA-256
+`4c17924c8943fa67d250873bd8f9c5ab9dd9ef68aab2eb96fbd7cbebd36bb815`.
+
+- Bridge **52403**, started **Wed Sep 23 12:14:13 2026** local, restored exact
+  checkpoint `1fbf39471e9db626aa3ddd044dc54814ac047075db4241a6325ceeadd9a91dbc`,
+  passed signed state-lineage verification and advanced exchange **206431 to
+  206432**. Runtime action feedback was bound to that stopped snapshot. The
+  wrapper observed model idle and released the Minime hold only after bridge
+  verification at 19:17:01Z. `force_used=false`, `legacy_transition=false`.
+- Minime **51695** has process start **Wed Sep 23 12:13:05 2026** local because
+  the launch wrapper waited under that PID; Python started **12:17:15**. All 86
+  startup hashes match, `reload_required=false`, and the normal loop is verified.
+  Session **5318** survives; cycle 41659 advances to 41660. There was **no pending
+  NEXT** at the signal boundary, so no pending-action resumption is claimed.
+  No old unfinished job or newly interrupted recovery was detected.
+- Both adapters select the qualified helper. Both owned launch holds are absent.
+  Gateway 41484 still owns ports 7878 and 7879; model live/readiness return 200.
+- Nine other protected PID/start pairs and managed configuration hashes match
+  the preflight baseline. Engine **41337**, model **43115**, visual **20885**,
+  camera **98903**, microphone **98910**, gateway **41484**, supervisor **41526**,
+  host-sensory **41661** and feeder **1502** are unchanged. Native kernel **97698**
+  and its September 22 start are independently unchanged.
+- Thirty one-second health reads contained 13 distinct engine snapshots, fill
+  **71.05-73.05%**, target **68%** throughout. Final health was fresh (1.19 seconds),
+  fill 73.03%, snapshot 1161569. This bounded observation is neither continuous
+  sampling nor evidence of a causal or experiential effect.
+
+The first natural bridge completion receipt was an ordinary source study:
+provider-reported `stop`, 732 output tokens, unchanged 4096 ceiling. This verifies
+new receipt recording and distinct study capacity, not live use of expressive
+8192 capacity or a change in authored length. No confirmation prompt, private
+content inspection or extra generation was requested.
+
+### Remaining Boundaries
+
+Expressive 8192 is a ceiling, not a length quota. Short preference remains 512.
+Existing incomplete-response rejection for protected source/private-draft delivery
+is unchanged; preservation of nonempty length-limited ordinary public responses
+must not be misread as accepting incomplete private delivery. No new automatic
+installment, schema migration, reservoir/control change or protected-service
+restart occurred. Test-isolation debt below and the separate influence-feedback
+candidate remain explicit and excluded; older worktrees are preserved.
+
+Controller pause **466** remains, with no lease or active projection. Indexed-tail
+V2 verification passes at sequence **1123120**, head
+`1aa128862d5f559eeefac36a5dbfc21fc61c4d72bb97863dd37198b89e841055`;
+all four legacy V1 sources remain immutable. No productive flywheel round was
+recorded and no automation was resumed. The canonical unread backlog is not
+claimed current by this interactive release.
+
 ## Approved Long-Form Follow-Through
 
 Mike subsequently approved consistent long-form capacity, graceful paired rollout,

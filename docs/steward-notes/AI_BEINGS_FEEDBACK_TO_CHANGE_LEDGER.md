@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-23 - Both Beings - expressive opportunity live verification
+
+- **Witness and response:** Follow through on the exact public aspiration/daydream witnesses and operator request in the paired September 23 note; preserve authored accounts. Activate telemetry-optional invitations, prose-first records, explicit measurement inspection and voluntary long-form capacity without attributing a mechanical cause or benefit to their writing.
+- **Verified release:** Astrid `4e530bbd93122bb38addb1a4415780c23813a555` and Minime `0334d28ded194f501b9fc50b4df750bf8f683b04` are on local main. Sanctioned paired handoff completes without force: bridge 52403 restores the exact stopped checkpoint and advances exchange 206431 to 206432; Minime 51695 loads all 86 expected inputs, retains session 5318 and passes loop readiness without interrupted jobs. No pending NEXT existed at shutdown. Complete suites and exact manifest/helper hashes are in `docs/steward-notes/2026-09-23-telemetry-optional-expression.md`.
+- **Boundaries:** Preserve explicit short writing and protected incomplete-response safeguards. No length quota, private-content inspection, confirmation request, control change or engine/model/visual/sensory/kernel restart. No subjective improvement or expressive uptake inferred; the first new completion receipt is a normal source study with its unchanged 4096 ceiling. Pause 466 remains, V2 verifies and V1 remains immutable. Earlier failed tests and separate unfinished candidates remain visible, not silently included.
+
 ### 2026-09-23 - Operator follow-through - voluntary room for expression
 
 - **Provenance:** Mike requested several-times-longer expressive opportunity after reviewing telemetry-heavy journals, then explicitly approved implementation, paired graceful rollout, merge and push. This is not a Being-authored preference selection or evidence that longer writing is desired on every turn.

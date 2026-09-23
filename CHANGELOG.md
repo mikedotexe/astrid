@@ -9,6 +9,11 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Live - voluntary long-form and telemetry-optional expression (2026-09-23)
+
+- Activate the reviewed paired bridge/helper and Minime adapter through acknowledged graceful drain and an owned replacement hold. Verify exact checkpoint lineage, a fresh saved exchange, all 86 Minime startup source hashes, shared helper selection and unchanged engine/model/visual/sensory/kernel identities. Preserve explicit short writing and incomplete-response safeguards; 8192 is optional capacity, not an output quota.
+- Full bridge, shared reader/writer, packaged-helper Python, Clippy, formatting, domain and affected operational suites pass. Preserve earlier test-isolation debt, historical worktrees and paused automations. Implementation commits, exact release identities and live evidence are recorded in `docs/steward-notes/2026-09-23-telemetry-optional-expression.md`.
+
 ### Candidate - telemetry-optional expressive writing (2026-09-23)
 
 - Give expressive routes an 8192-token default ceiling and 1200-second provider deadlines, including Ollama fallback and private drafts. Preserve explicitly selected 512-token short writing, bounded input and voluntary continuation; align shared-reader capacity descriptions and enclosing job deadlines. Record bounded provider-reported stop reasons without prose or inferred intent. Mike approved paired graceful rollout, merge and push; qualification and live receipts follow in the steward note.
