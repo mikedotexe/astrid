@@ -9,6 +9,13 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed - source counterevidence and voluntary note revision (2026-09-24)
+
+- Correct kernel comments that described advisory import/readiness checks and best-effort unloads as guaranteed gates. Test the production failure paths without changing loading, restart, shutdown or approval policy.
+- Add bounded caller/definition comparison suggestions, explicit `SELF_STUDY NOTE` retrieval and append-only `STUDY_REVISE` with an exact currently supplied source anchor. Preserve old accounts; omit saved notes from routine replay. Reader schema 8 refuses downgrade writers.
+- Separate explicitly chosen bare `INTROSPECT` from source study in both adapters, preserving pending source work, explicit NEXT and existing admission controls. Open reflection supplies no automatic source notebook or measurements and cannot mutate study notes.
+- Resolve inherited qualification debt: align the Minime inbox boundary fixture with its existing 12,000-character allowance; isolate default-off sidecar configuration without raising the architecture ratchet; correct its consumer comments; clean up kernel test-only lint. Paired reader/adapter rollout verified: bridge 46597, Minime agent 45642, exact checkpoint and queued-choice continuity retained. Engine/model/sensory services and paused automations unchanged; no native-kernel restart. Witnesses, tests and follow-up contract review: `docs/steward-notes/2026-09-24-source-counterevidence-and-reflection.md`.
+
 ### Fixed - four leftovers: study CONTINUE, sidecar switch (2026-09-23)
 
 - **[claude] Bare `CONTINUE` in a self-study turn is the study bookmark** (`next_action/writing_choice.rs::normalized_study_continue_next`, wired at the same site as the private-writing shorthand in `orchestration.rs`). Astrid chose `NEXT: CONTINUE` from self-study turns 29 times in 14 days and each was rejected as unwired while the recovery note recited the long form. Normalization only: her authored text is unchanged and a reference notice (`self_study_carriage_notice`) records the mapping. Scoped to mode `self_study`; `CONTINUE d88` and other arguments are untouched.

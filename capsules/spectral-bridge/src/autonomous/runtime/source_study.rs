@@ -19,7 +19,8 @@ fn shared_study_command(
 ) -> anyhow::Result<astrid_source_study::Command> {
     use astrid_source_study::Command;
     match target {
-        None => Ok(Command::Continue),
+        None => Ok(Command::Reflect),
+        Some(target) if target.label == "INTROSPECT" => Ok(Command::Reflect),
         Some(target) if next_action::study_navigation::private(&target) => anyhow::bail!("private writing requires the writing preparation path"),
         Some(target) if target.label.starts_with("SELF_STUDY") => Command::parse(&target.label),
         Some(target) if target.offset == state::IntrospectOffsetV2::Auto => Ok(Command::Resume {
@@ -58,6 +59,7 @@ fn prepare_shared_study_target(
         Some(action) => action,
         None => match shared_study_command(target)? {
             astrid_source_study::Command::Continue => "SELF_STUDY CONTINUE".into(),
+            astrid_source_study::Command::Reflect => "INTROSPECT".into(),
             astrid_source_study::Command::Resume { source } => format!("SELF_STUDY RESUME {source}"),
             astrid_source_study::Command::Open { source, line } => format!("SELF_STUDY OPEN {source} {line}"),
             _ => anyhow::bail!("unsupported legacy study target"),
@@ -95,7 +97,7 @@ async fn run_shared_source_study(
         Err(error) => return source_study_prepare_notice(private_request, &error),
     };
     let requested = conv.introspect_target.take();
-    let requested_action = requested.as_ref().map_or("SELF_STUDY CONTINUE", |t| t.label.as_str()).to_owned();
+    let requested_action = requested.as_ref().map_or("INTROSPECT", |t| t.label.as_str()).to_owned();
     let private_request = requested.as_ref().is_some_and(next_action::study_navigation::private);
     let prepared = (|| -> anyhow::Result<_> {
         let paths = bridge_paths();
@@ -176,7 +178,7 @@ async fn run_shared_source_study(
     let source = output.page.as_ref().map_or_else(
         || {
             if output.session_pages.is_empty() {
-                if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private draft".into() } else if output.input_kind == astrid_source_study::InputKind::Geometry { "chosen geometry evidence".into() } else { "source catalog".into() }
+                if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private draft".into() } else if output.input_kind == astrid_source_study::InputKind::Reflection { "open reflection".into() } else if output.input_kind == astrid_source_study::InputKind::Geometry { "chosen geometry evidence".into() } else { "source catalog".into() }
             } else {
                 format!(
                     "study session ({} source pages)",
@@ -272,7 +274,7 @@ async fn run_shared_source_study(
     let revision = output.page.as_ref().map_or_else(
         || {
             if output.session_pages.is_empty() {
-                if output.input_kind == astrid_source_study::InputKind::Geometry { "frozen observation hashes in supplied evidence; no new source page".into() } else { "navigation only".into() }
+                if output.input_kind == astrid_source_study::InputKind::Reflection { "not applicable; no source or measurements supplied".into() } else if output.input_kind == astrid_source_study::InputKind::Geometry { "frozen observation hashes in supplied evidence; no new source page".into() } else { "navigation only".into() }
             } else {
                 output
                     .session_pages
@@ -299,8 +301,11 @@ async fn run_shared_source_study(
     } else {
         "protected"
     };
+    let source_scope = if output.input_kind == astrid_source_study::InputKind::Reflection {
+        "open reflection; no source inspection supplied"
+    } else { "local checkout; deployed behavior not established" };
     let artifact = format!(
-        "=== ASTRID INTROSPECTION ===\nSource: {source}\nSource revision: {revision}\nSource scope: local checkout; deployed behavior not established\nInput evidence: {}\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
+        "=== ASTRID INTROSPECTION ===\nSource: {source}\nSource revision: {revision}\nSource scope: {source_scope}\nInput evidence: {}\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
         output.evidence_scope,
         authorship.witness_id()
     );
@@ -340,7 +345,7 @@ async fn run_shared_source_study(
             .as_ref()
             .map_or_else(|| "No live telemetry.".to_string(), interpret_spectral);
         let sidecar_context = format!(
-            "Fill {fill_pct:.1}%. {spectral}\n\nAstrid's self-study:\n{}",
+            "Fill {fill_pct:.1}%. {spectral}\n\nAstrid's authored account:\n{}",
             semantic_truncate_str(&text, 500)
         );
         let controller_path = directory.join(format!(
@@ -365,7 +370,7 @@ async fn run_shared_source_study(
         if let Some(page) = &output.page {
             finish_source_study_invitation(&catalog, &page.source);
         }
-        (if private { "private_writing" } else { mode }, text, source)
+        (if private { "private_writing" } else if output.input_kind == astrid_source_study::InputKind::Reflection { "introspect" } else { mode }, text, source)
     } else {
         next_action::introspection_cadence::mark_failed(
             conv,
@@ -412,6 +417,22 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 #[cfg(test)]
 mod source_study_tests {
     use super::*;
+    #[test]
+    fn explicit_introspection_prepares_reflection_not_a_source_page() {
+        let temp = tempfile::tempdir().unwrap();
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
+            temp.path().join("reader"),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let mut conv = ConversationState::new(Vec::new(), None);
+        next_action::study_navigation::handle_request(&mut conv, "INTROSPECT", "INTROSPECT").unwrap();
+        assert_eq!(conv.introspect_target.as_ref().unwrap().label, "INTROSPECT");
+        let output = prepare_shared_study_target(&reader, conv.introspect_target).unwrap();
+        assert_eq!(output.input_kind, astrid_source_study::InputKind::Reflection);
+        assert!(output.page.is_none());
+        assert!(!output.text.contains("RECALLED ACCOUNT"));
+        assert_eq!(shared_study_command(Some(state::IntrospectTargetV2::auto("SELF_STUDY CONTINUE".into()))).unwrap(), astrid_source_study::Command::Continue);
+    }
     #[test]
     fn authored_study_preparation_replays_by_dispatch_identity() {
         let temp = tempfile::tempdir().unwrap();

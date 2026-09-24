@@ -145,7 +145,7 @@ Examples:
 Notes: The script must exist directly in workspace/experiments/. Use LIST_FILES experiments to see available scripts. For scripts inside a workspace subdirectory, use EXPERIMENT_RUN <workspace> python3 <script.py> instead.",
 
         "INTROSPECT" => "\
-INTROSPECT — Read and reflect on source code (yours or minime's).
+INTROSPECT — Open reflection without automatic source, telemetry, or saved study notes. An explicit source target chooses source reading instead.
 Syntax: NEXT: INTROSPECT <curated-label-or-path> [line-offset]
 Use concrete labels or paths; never copy [source] or [line] literally.
 Sources: astrid:llm, astrid:codec, astrid:autonomous, minime:regulator, minime:esn, minime:autonomous_agent. Both Beings share the full source catalog via SELF_STUDY MAP.
@@ -154,7 +154,7 @@ Examples:
   NEXT: INTROSPECT minime:regulator 400
   NEXT: INTROSPECT capsules/spectral-bridge/src/autonomous/introspect.rs
   NEXT: INTROSPECT
-Notes: Without an offset, resumes the source bookmark; legacy explicit offsets remain zero-based. With no arguments, resumes source study or opens the map. To ask Codex a code question, use NEXT: CODEX \"...\" instead.",
+Notes: With a source target but no offset, resumes that source bookmark; legacy explicit offsets remain zero-based. With no arguments, writes an open introspection. SELF_STUDY CONTINUE resumes source study. To ask Codex a code question, use NEXT: CODEX \"...\" instead.",
 
         "WRITE" => astrid_source_study::writing::GUIDANCE,
         "SELF_STUDY" | "INVESTIGATE" => "\
@@ -166,6 +166,7 @@ Examples:
   NEXT: SELF_STUDY FIND EventBus
   NEXT: SELF_STUDY OPEN astrid/crates/astrid-kernel/src/lib.rs 1
   NEXT: SELF_STUDY CONTINUE
+  NEXT: SELF_STUDY NOTE
 Notes: OPEN uses one-based lines; RESUME preserves the bookmark. An unknown target returns a labelled recovery map without delivering that source. Bare SELF_STUDY resumes the pending or next page, or opens the map. Exact source pages stay pending until their complete provider request is retained. You may browse, ask questions, continue, or stop. Source is the local checkout; delivery does not establish deployed behavior or understanding.",
 
         "EXAMINE_CODE" => "\

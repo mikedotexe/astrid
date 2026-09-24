@@ -10,7 +10,8 @@ impl Catalog {
             );
         }
         let report = self.search(symbol, true)?;
-        let header = report.header(&format!("Symbol relationships: {symbol}. Exact identifier matches; lexical candidates, not compiler-resolved calls. OPEN supplies numbered source."));
+        let mut header = report.header(&format!("Symbol relationships: {symbol}. Exact identifier matches; lexical candidates, not compiler-resolved calls. OPEN supplies numbered source."));
+        header.push_str(&report.comparison());
         crate::navigation::paginate_with_header(
             &header,
             report.lines(symbol, true),

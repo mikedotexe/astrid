@@ -94,13 +94,15 @@ impl Reader {
             state.receipts.insert(page.id.clone(), page_receipt);
             state.current = Some(page.source.clone());
         }
-        state.questions.record(
-            output.question_id.as_deref(),
-            &mut state.notebook,
-            response,
-            &completion_text(response)?,
-            &output.session_pages,
-        );
+        if output.input_kind != InputKind::Reflection {
+            state.questions.record(
+                output.question_id.as_deref(),
+                &mut state.notebook,
+                response,
+                &completion_text(response)?,
+                &output.session_pages,
+            );
+        }
         if output.session_pages.is_empty() {
             state.pending_navigation = None;
         } else {
@@ -108,7 +110,10 @@ impl Reader {
         }
         if !matches!(
             output.input_kind,
-            InputKind::RuntimeTrace | InputKind::Questions
+            InputKind::RuntimeTrace
+                | InputKind::Questions
+                | InputKind::Reflection
+                | InputKind::Notebook
         ) {
             state.last_input = Some(receipt.clone());
         }

@@ -424,7 +424,14 @@ fn full_findings_notes_and_question_fit_shared_budget_and_legacy_state_still_loa
         rendered["source_findings"]["authored"],
         findings(&temp)["authored"]
     );
-    assert_eq!(rendered["note"]["text"], "N".repeat(1600));
+    assert!(rendered["note"].is_null());
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains(&"N".repeat(1600))
+    );
     assert_eq!(rendered["question"]["text"], "Q".repeat(500));
     // A genuinely old checkpoint has no new sidecar to restore; do not model
     // legacy compatibility by deleting a field from an already-upgraded reader.

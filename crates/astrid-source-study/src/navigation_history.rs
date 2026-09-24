@@ -112,6 +112,8 @@ impl NavigationHistory {
         if matches!(
             offer.kind,
             InputKind::Questions
+                | InputKind::Reflection
+                | InputKind::Notebook
                 | InputKind::RuntimeTrace
                 | InputKind::Geometry
                 | InputKind::Legacy
@@ -163,6 +165,8 @@ impl NavigationHistory {
                 InputKind::SourcePage
                     | InputKind::SourceSession
                     | InputKind::Questions
+                    | InputKind::Reflection
+                    | InputKind::Notebook
                     | InputKind::RuntimeTrace
                     | InputKind::Geometry
             )

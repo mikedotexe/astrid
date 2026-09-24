@@ -377,7 +377,7 @@ fn escaped_maximum_relations_preserve_words_and_both_anchors_under_input_pressur
                 .unwrap(),
         )
         .unwrap();
-        assert_eq!(rendered["note"]["text"], note);
+        assert!(rendered["note"].is_null());
         assert_eq!(rendered["question"]["text"], question);
         assert_eq!(rendered["source_findings"]["authored"], findings);
         assert_eq!(

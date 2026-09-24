@@ -496,6 +496,7 @@ dependencies = [
  "astrid-mcp",
  "astrid-storage",
  "astrid-vfs",
+ "async-trait",
  "nix 0.29.0",
  "semver",
  "serde",

@@ -33,10 +33,11 @@ fn setup() -> (tempfile::TempDir, Reader, StudyOutput) {
     assert!(output.question_id.is_none());
     assert!(output.text.contains("READING COVERAGE"));
     assert!(
-        output
+        !output
             .text
             .contains("Keep this notebook beside the source.")
     );
+    assert!(output.text.contains("SELF_STUDY NOTE"));
     (temp, reader, output)
 }
 
@@ -96,7 +97,7 @@ fn new_unthreaded_page_requires_full_coverage_and_notebook_input_before_any_cred
         output.text.replace(coverage_line, ""),
         output
             .text
-            .replace("Keep this notebook beside the source.", ""),
+            .replace("Saved note retained, not automatically quoted.", ""),
     ] {
         assert!(
             reader

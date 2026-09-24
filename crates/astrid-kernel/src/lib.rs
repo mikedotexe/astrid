@@ -15,6 +15,7 @@
 mod capsule_runtime_health;
 /// The Management API router listening to the `EventBus`.
 pub mod kernel_router;
+mod lifecycle_checks;
 mod maintenance;
 /// The Unix Domain Socket manager.
 pub mod socket;
@@ -345,27 +346,9 @@ impl Kernel {
                 .unregister(id)
                 .map_err(|e| anyhow::anyhow!("failed to unregister capsule '{id}': {e}"))?
         };
-        // Explicitly unload the old capsule. There is no Drop impl that
-        // calls unload() (it's async), so we must do it here to avoid
-        // leaking MCP subprocesses and other engine resources.
-        // Arc::get_mut requires exclusive ownership (strong_count == 1).
-        {
-            let mut old = old_capsule;
-            if let Some(capsule) = std::sync::Arc::get_mut(&mut old) {
-                if let Err(e) = capsule.unload().await {
-                    tracing::warn!(
-                        capsule_id = %id,
-                        error = %e,
-                        "Capsule unload failed during restart"
-                    );
-                }
-            } else {
-                tracing::warn!(
-                    capsule_id = %id,
-                    "Cannot call unload during restart - Arc still held by in-flight task"
-                );
-            }
-        }
+        // Best effort only: shared ownership skips unload; neither a skip nor
+        // an unload error prevents reloading. This is not an in-flight drain.
+        lifecycle_checks::unload_for_restart(old_capsule).await;
 
         // Re-load from disk.
         self.load_capsule(source_dir).await?;
@@ -398,8 +381,8 @@ impl Kernel {
     /// Auto-discover and load all capsules from the standard directories (`~/.astrid/capsules` and `.astrid/capsules`).
     ///
     /// Capsules are loaded in dependency order (topological sort) with
-    /// uplink/daemon capsules loaded first. Each uplink must signal
-    /// readiness before non-uplink capsules are loaded.
+    /// uplink/daemon capsules loaded first. Readiness waits are advisory:
+    /// timeouts and crashes are logged but do not prevent subsequent loading.
     ///
     /// After all capsules are loaded, tool schemas are injected into every
     /// capsule's KV namespace and the `astrid.v1.capsules_loaded` event is published.
@@ -443,15 +426,15 @@ impl Kernel {
             }
         }
 
-        // Validate imports/exports: every required import must have a matching export.
+        // Diagnose missing imports/exports; this call does not reject loading.
         validate_imports_exports(&sorted);
 
         // Partition after sorting: uplinks first, then the rest.
         // The relative order within each partition is preserved from the
         // toposort, so dependency edges are still respected. Cross-partition
         // edges (non-uplink requiring an uplink) are satisfied by construction
-        // since all uplinks load first. The inverse (uplink requiring a
-        // non-uplink) is rejected above.
+        // since uplink loading is attempted first. Discovery normally rejects
+        // uplinks with imports; the check above only warns if one reaches here.
         let (uplinks, others): (Vec<_>, Vec<_>) =
             sorted.into_iter().partition(|(m, _)| m.capabilities.uplink);
 
@@ -470,8 +453,9 @@ impl Kernel {
             }
         }
 
-        // Wait for uplink capsules to signal readiness before loading
-        // non-uplink capsules. This ensures IPC subscriptions are active.
+        // Attempt bounded readiness waits before loading non-uplinks. A
+        // timeout/crash is logged and loading continues; subscriptions may not
+        // be active. Missing registry entries are skipped by the helper.
         self.await_capsule_readiness(&uplink_names).await;
 
         for (manifest, dir) in &others {
@@ -484,14 +468,12 @@ impl Kernel {
             }
         }
 
-        // Wait for non-uplink run-loop capsules too, so any future
-        // dependency edges between them are respected.
+        // Apply the same advisory wait to non-uplink run-loop capsules.
         let other_names: Vec<String> = others.iter().map(|(m, _)| m.package.name.clone()).collect();
         self.await_capsule_readiness(&other_names).await;
 
-        // Signal that all capsules have been loaded so uplink capsules
-        // (like the registry) can proceed with discovery instead of
-        // polling with arbitrary timeouts.
+        // Signal completion of loading attempts. The legacy "ready" payload
+        // does not certify that every capsule loaded or signaled readiness.
         let msg = astrid_events::ipc::IpcMessage::new(
             "astrid.v1.capsules_loaded",
             astrid_events::ipc::IpcPayload::RawJson(serde_json::json!({"status": "ready"})),
@@ -547,9 +529,11 @@ impl Kernel {
     /// Gracefully shut down the kernel.
     ///
     /// 1. Publish `KernelShutdown` event on the bus.
-    /// 2. Drain and unload all capsules (stops MCP child processes, WASM engines).
-    /// 3. Flush and close the persistent KV store.
-    /// 4. Remove the Unix socket file.
+    /// 2. Drain registry handles and attempt unloading, with bounded ownership retries.
+    /// 3. Attempt to flush and close the persistent KV store.
+    /// 4. Attempt to remove the Unix socket file.
+    ///
+    /// Failures are logged; exhausted ownership retries may leave child processes.
     pub async fn shutdown(&self, reason: Option<String>) {
         tracing::info!(reason = ?reason, "Kernel shutting down");
 
@@ -613,10 +597,9 @@ impl Kernel {
 
         // 4. Remove the socket and token files so stale-socket detection works
         // on next boot and the auth token doesn't persist on disk after shutdown.
-        // This runs AFTER capsule unload, which is the correct order: MCP child
-        // processes communicate via stdio pipes (not this Unix socket), so they
-        // are already terminated by step 2. The socket is only used for
-        // CLI-to-kernel IPC.
+        // This follows the unload attempts. MCP children use stdio, not this
+        // socket; removing it does not prove they exited if unloading failed
+        // or ownership retries were exhausted.
         let socket_path = crate::socket::kernel_socket_path();
         let _ = std::fs::remove_file(&socket_path);
         let _ = std::fs::remove_file(&self.token_path);
@@ -630,14 +613,13 @@ impl Kernel {
     /// Collects `Arc<dyn Capsule>` handles under a short-lived read lock,
     /// then drops the lock before awaiting. Capsules without a run loop
     /// return `Ready` immediately and don't contribute to wait time.
+    /// The 500 ms timeout is passed to implementations, not independently enforced
+    /// here. Timeout/crash results are diagnostic and do not reject loading.
     async fn await_capsule_readiness(&self, names: &[String]) {
-        use astrid_capsule::capsule::ReadyStatus;
-
         if names.is_empty() {
             return;
         }
 
-        let timeout = std::time::Duration::from_millis(500);
         let capsules: Vec<(String, std::sync::Arc<dyn astrid_capsule::capsule::Capsule>)> = {
             let registry = self.capsules.read().await;
             names
@@ -658,35 +640,7 @@ impl Kernel {
                 .collect()
         };
 
-        // Await all capsules concurrently - independent capsules shouldn't
-        // compound each other's timeout.
-        let mut set = tokio::task::JoinSet::new();
-        for (name, capsule) in capsules {
-            set.spawn(async move {
-                let status = capsule.wait_ready(timeout).await;
-                (name, status)
-            });
-        }
-        while let Some(result) = set.join_next().await {
-            if let Ok((name, status)) = result {
-                match status {
-                    ReadyStatus::Ready => {},
-                    ReadyStatus::Timeout => {
-                        tracing::warn!(
-                            capsule = %name,
-                            timeout_ms = timeout.as_millis(),
-                            "Capsule did not signal ready within timeout"
-                        );
-                    },
-                    ReadyStatus::Crashed => {
-                        tracing::error!(
-                            capsule = %name,
-                            "Capsule run loop exited before signaling ready"
-                        );
-                    },
-                }
-            }
-        }
+        lifecycle_checks::await_readiness(capsules).await;
     }
 }
 
@@ -1151,290 +1105,7 @@ fn spawn_react_watchdog(event_bus: Arc<EventBus>) -> tokio::task::JoinHandle<()>
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_load_or_generate_creates_new_key() {
-        let dir = tempfile::tempdir().unwrap();
-        let keys_dir = dir.path().join("keys");
-
-        let keypair = load_or_generate_runtime_key(&keys_dir).unwrap();
-        let key_path = keys_dir.join("runtime.key");
-
-        // Key file should exist with 32 bytes.
-        assert!(key_path.exists());
-        let bytes = std::fs::read(&key_path).unwrap();
-        assert_eq!(bytes.len(), 32);
-
-        // The written bytes should reconstruct the same public key.
-        let reloaded = KeyPair::from_secret_key(&bytes).unwrap();
-        assert_eq!(
-            keypair.public_key_bytes(),
-            reloaded.public_key_bytes(),
-            "reloaded key should match generated key"
-        );
-    }
-
-    #[test]
-    fn test_load_or_generate_is_idempotent() {
-        let dir = tempfile::tempdir().unwrap();
-        let keys_dir = dir.path().join("keys");
-
-        let first = load_or_generate_runtime_key(&keys_dir).unwrap();
-        let second = load_or_generate_runtime_key(&keys_dir).unwrap();
-
-        assert_eq!(
-            first.public_key_bytes(),
-            second.public_key_bytes(),
-            "loading the same key file should produce the same keypair"
-        );
-    }
-
-    #[test]
-    fn test_load_or_generate_rejects_bad_key_length() {
-        let dir = tempfile::tempdir().unwrap();
-        let keys_dir = dir.path().join("keys");
-        std::fs::create_dir_all(&keys_dir).unwrap();
-
-        // Write a key file with wrong length.
-        std::fs::write(keys_dir.join("runtime.key"), [0u8; 16]).unwrap();
-
-        let result = load_or_generate_runtime_key(&keys_dir);
-        assert!(result.is_err());
-        let err = result.unwrap_err().to_string();
-        assert!(
-            err.contains("invalid runtime key"),
-            "expected 'invalid runtime key' error, got: {err}"
-        );
-    }
-
-    #[test]
-    fn test_connection_counter_increment_decrement() {
-        let counter = AtomicUsize::new(0);
-
-        // Simulate connection_opened (fetch_add)
-        counter.fetch_add(1, Ordering::Relaxed);
-        counter.fetch_add(1, Ordering::Relaxed);
-        assert_eq!(counter.load(Ordering::Relaxed), 2);
-
-        // Simulate connection_closed using the same fetch_update logic
-        // as the real implementation to exercise the actual code path.
-        for expected in [1, 0] {
-            let _ = counter.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
-                if n == 0 {
-                    None
-                } else {
-                    Some(n.saturating_sub(1))
-                }
-            });
-            assert_eq!(counter.load(Ordering::Relaxed), expected);
-        }
-    }
-
-    #[test]
-    fn test_connection_counter_underflow_guard() {
-        // Test the saturating behavior: decrementing from 0 should stay at 0.
-        // Mirrors the fetch_update logic in connection_closed().
-        let counter = AtomicUsize::new(0);
-
-        let result = counter.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
-            if n == 0 { None } else { Some(n - 1) }
-        });
-        // fetch_update returns Err(0) when the closure returns None (no-op).
-        assert!(result.is_err());
-        assert_eq!(counter.load(Ordering::Relaxed), 0);
-    }
-
-    /// Mirrors the `connection_closed()` logic: only `Ok(1)` (previous value 1,
-    /// now 0) triggers `clear_session_allowances`. Update this test if
-    /// `connection_closed()` is refactored.
-    #[test]
-    fn test_last_disconnect_clears_session_allowances() {
-        use astrid_approval::AllowanceStore;
-        use astrid_approval::allowance::{Allowance, AllowanceId, AllowancePattern};
-        use astrid_core::types::Timestamp;
-        use astrid_crypto::KeyPair;
-
-        let store = AllowanceStore::new();
-        let keypair = KeyPair::generate();
-
-        // Session-only allowance (should be cleared on last disconnect).
-        store
-            .add_allowance(Allowance {
-                id: AllowanceId::new(),
-                action_pattern: AllowancePattern::ServerTools {
-                    server: "session-server".to_string(),
-                },
-                created_at: Timestamp::now(),
-                expires_at: None,
-                max_uses: None,
-                uses_remaining: None,
-                session_only: true,
-                workspace_root: None,
-                signature: keypair.sign(b"test"),
-            })
-            .unwrap();
-
-        // Persistent allowance (should survive).
-        store
-            .add_allowance(Allowance {
-                id: AllowanceId::new(),
-                action_pattern: AllowancePattern::ServerTools {
-                    server: "persistent-server".to_string(),
-                },
-                created_at: Timestamp::now(),
-                expires_at: None,
-                max_uses: None,
-                uses_remaining: None,
-                session_only: false,
-                workspace_root: None,
-                signature: keypair.sign(b"test"),
-            })
-            .unwrap();
-
-        assert_eq!(store.count(), 2);
-
-        let counter = AtomicUsize::new(2);
-        let simulate_disconnect = || {
-            let result = counter.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
-                if n == 0 {
-                    None
-                } else {
-                    Some(n.saturating_sub(1))
-                }
-            });
-            if result == Ok(1) {
-                store.clear_session_allowances();
-            }
-        };
-
-        // Two connections active. First disconnect: 2 -> 1 (not last).
-        simulate_disconnect();
-        assert_eq!(
-            store.count(),
-            2,
-            "both allowances should survive non-final disconnect"
-        );
-
-        // Second disconnect: 1 -> 0 (last client gone).
-        simulate_disconnect();
-        assert_eq!(
-            store.count(),
-            1,
-            "session allowance should be cleared on last disconnect"
-        );
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn test_load_or_generate_sets_secure_permissions() {
-        use std::os::unix::fs::PermissionsExt;
-
-        let dir = tempfile::tempdir().unwrap();
-        let keys_dir = dir.path().join("keys");
-
-        let _ = load_or_generate_runtime_key(&keys_dir).unwrap();
-
-        let key_path = keys_dir.join("runtime.key");
-        let mode = std::fs::metadata(&key_path).unwrap().permissions().mode();
-        assert_eq!(
-            mode & 0o777,
-            0o600,
-            "key file should have 0o600 permissions, got {mode:#o}"
-        );
-    }
-
-    #[test]
-    fn restart_tracker_initial_state() {
-        let tracker = RestartTracker::new();
-        assert!(!tracker.exhausted());
-        // Should not restart immediately (backoff hasn't elapsed).
-        assert!(!tracker.should_restart());
-    }
-
-    #[test]
-    fn persistent_idle_monitor_is_disabled() {
-        let config = idle_monitor_config(false, Some(1));
-        assert!(!config.enabled);
-        assert_eq!(config.timeout, std::time::Duration::from_secs(1));
-    }
-
-    #[test]
-    fn ephemeral_idle_monitor_uses_default_timeout() {
-        let config = idle_monitor_config(true, None);
-        assert!(config.enabled);
-        assert_eq!(config.timeout, IDLE_DEFAULT_TIMEOUT);
-        assert_eq!(config.check_interval, IDLE_EPHEMERAL_CHECK_INTERVAL);
-    }
-
-    #[test]
-    fn ephemeral_idle_monitor_accepts_env_timeout() {
-        let config = idle_monitor_config(true, Some(9));
-        assert!(config.enabled);
-        assert_eq!(config.timeout, std::time::Duration::from_secs(9));
-    }
-
-    #[test]
-    fn restart_tracker_allows_restart_after_backoff() {
-        let mut tracker = RestartTracker::new();
-        // Simulate time passing by setting last_attempt in the past.
-        tracker.last_attempt = std::time::Instant::now()
-            - RestartTracker::INITIAL_BACKOFF
-            - std::time::Duration::from_millis(1);
-        assert!(tracker.should_restart());
-    }
-
-    #[test]
-    fn restart_tracker_doubles_backoff() {
-        let mut tracker = RestartTracker::new();
-        assert_eq!(tracker.backoff, RestartTracker::INITIAL_BACKOFF);
-
-        tracker.record_attempt();
-        assert_eq!(
-            tracker.backoff,
-            RestartTracker::INITIAL_BACKOFF.saturating_mul(2)
-        );
-        assert_eq!(tracker.attempts, 1);
-
-        tracker.record_attempt();
-        assert_eq!(
-            tracker.backoff,
-            RestartTracker::INITIAL_BACKOFF.saturating_mul(4)
-        );
-        assert_eq!(tracker.attempts, 2);
-    }
-
-    #[test]
-    fn restart_tracker_backoff_caps_at_max() {
-        let mut tracker = RestartTracker::new();
-        for _ in 0..20 {
-            tracker.record_attempt();
-        }
-        assert_eq!(tracker.backoff, RestartTracker::MAX_BACKOFF);
-    }
-
-    #[test]
-    fn restart_tracker_exhausted_at_max_attempts() {
-        let mut tracker = RestartTracker::new();
-        for _ in 0..RestartTracker::MAX_ATTEMPTS {
-            assert!(!tracker.exhausted());
-            tracker.record_attempt();
-        }
-        assert!(tracker.exhausted());
-    }
-
-    #[test]
-    fn restart_tracker_should_restart_false_when_exhausted() {
-        let mut tracker = RestartTracker::new();
-        for _ in 0..RestartTracker::MAX_ATTEMPTS {
-            tracker.record_attempt();
-        }
-        // Even if backoff has elapsed, exhausted tracker should not restart.
-        tracker.last_attempt = std::time::Instant::now() - RestartTracker::MAX_BACKOFF;
-        assert!(!tracker.should_restart());
-    }
-}
+mod tests;
 
 // ---------------------------------------------------------------------------
 // Boot validation

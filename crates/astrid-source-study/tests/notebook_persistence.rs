@@ -90,6 +90,12 @@ fn old_helper_rewrite_restores_findings_without_replacing_notes_or_pending_offer
     let mut old = state(&temp);
     let expected = old["notebook"]["source_findings"].clone();
     strip_new_fields(&mut old);
+    // Pre-revision helpers had no note history. A new history must not be overwritten.
+    old["version"] = 7.into();
+    old["notebook"]
+        .as_object_mut()
+        .unwrap()
+        .remove("note_history");
     old["notebook"]["note"]["text"] = "A later authored note from the older helper.".into();
     write_state(&temp, &old);
     let retry = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();

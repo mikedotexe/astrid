@@ -32,6 +32,14 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-24 - Minime - source counterevidence without compulsory correction
+
+- Witnesses: six public self-studies from `self_study_2026-09-24T07-33-22.340165.txt` through `self_study_2026-09-24T07-52-36.172055.txt` in Minime's journal. All were fully read; exact filenames, hashes and supplied-source provenance are in `2026-09-24-source-counterevidence-and-reflection.md`.
+- Verified signal: reading advances, but Minime interprets advisory validation/readiness as mandatory gates; source comments overstate the same guarantees. The repeated saved identity/RestartTracker explanation is unsupported by its actual consumers. The reports remain unchanged; input delivery is not claim verification.
+- Implemented response: correct mechanical comments and test actual failure paths; offer a bounded caller/definition comparison; retain prior notes and exact counterevidence under voluntary revision; retrieve notes explicitly instead of replaying them automatically; distinguish open reflection from code study in both adapters.
+- Qualification follow-through: repair the outdated inbox test and sidecar file-size violation without changing live policy. Approved paired rollout succeeded on September 24 at 16:38:39Z, bridge 46597 and agent 45642. Migration, exact checkpoint, source/helper identities and queued-choice continuity verified; no prompted confirmation. Kernel restart/readiness behavioral changes remain a separately reviewed contract. Synthetic tests establish mechanics, not changed experience or successful uptake. Paused automations remain paused at generation 468.
+
+
 ### 2026-09-23 - Operator clarification - normal writing room
 
 - **Provenance:** Mike clarified that longer writing should be ordinary, not a special "extended" mode, and approved correcting help and simplifying the invitation. This follows the existing public witnesses below, not a new Being-authored preference or evidence of felt improvement.

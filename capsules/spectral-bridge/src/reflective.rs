@@ -2,8 +2,8 @@
 //!
 //! Calls `chat_mlx_local.py` as a subprocess to get structured controller
 //! telemetry: regime classification, observer reports, field/geometry probes,
-//! and condition vectors. This gives Astrid qualitative perception of spectral
-//! state rather than just numerical summaries.
+//! and condition vectors for steward diagnostics. These sidecar reports are not
+//! read back into Astrid's prompts; the separate lightweight tracker is.
 //!
 //! The sidecar has its own 48-64D echo state reservoir that tracks Astrid's
 //! reflective trajectory independently from minime's 128-node ESN.
@@ -19,6 +19,10 @@ use std::{
     time::{Duration, Instant},
 };
 use tracing::{debug, info, warn};
+mod config;
+use config::{
+    REFLECTIVE_SIDECAR_ENABLED_ENV, reflective_sidecar_enabled, reflective_sidecar_timeout_seconds,
+};
 
 const STORED_PROMPT_COMPACT_THRESHOLD_CHARS: usize = 800;
 const STORED_PROMPT_PREVIEW_CHARS: usize = 480;
@@ -36,20 +40,6 @@ const DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS: u64 = 90;
 const MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS: u64 = 600;
 const REWRITE_RELIEF_CAP_COUNT_THRESHOLD: u64 = 2;
 const REWRITE_RELIEF_OVER_BUDGET_THRESHOLD: u64 = 2;
-const REFLECTIVE_SIDECAR_TIMEOUT_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS";
-const DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 240;
-const MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 30;
-const MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 900;
-/// Operator switch (2026-09-23), default OFF. The sidecar's report is written to
-/// disk for steward tools only (no bridge code reads `controller_*.json` back
-/// into Astrid's prompts; Layer 1 `RegimeTracker` is what reaches her). One run
-/// cost ~225 s of the shared GPU on 2026-09-07 (gemma3-12b load, 4 candidates ×
-/// 160 tokens at ~7 tok/s, a 90 s rewrite budget), and self-study cadence rose
-/// from ~10/day to 64–148/day once the shared source reader landed 2026-09-08 —
-/// the same change that dropped the hook, which is now restored in
-/// `run_shared_source_study` behind this switch. `launchctl setenv` it to 1
-/// (the launcher allowlists it) and kickstart the bridge to run the sidecar.
-const REFLECTIVE_SIDECAR_ENABLED_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_ENABLED";
 static REFLECTIVE_SIDECAR_DISABLED_LOGGED: AtomicBool = AtomicBool::new(false);
 const REFLECTIVE_SIDECAR_COOLDOWN_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS";
 const DEFAULT_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS: u64 = 600;
@@ -365,11 +355,6 @@ fn parse_bounded_u64(raw: Option<&str>, default: u64, max: u64) -> u64 {
         .map_or(default, |value| value.min(max))
 }
 
-fn parse_bounded_u64_range(raw: Option<&str>, default: u64, min: u64, max: u64) -> u64 {
-    raw.and_then(|value| value.trim().parse::<u64>().ok())
-        .map_or(default, |value| value.clamp(min, max))
-}
-
 fn parse_env_bool(raw: Option<&str>) -> bool {
     matches!(
         raw.map(str::trim).map(str::to_ascii_lowercase).as_deref(),
@@ -398,31 +383,6 @@ fn reflective_rewrite_budget_seconds() -> u64 {
 fn reflective_adaptive_rewrite_relief_enabled() -> bool {
     parse_env_bool(
         std::env::var(REFLECTIVE_ADAPTIVE_REWRITE_RELIEF_ENV)
-            .ok()
-            .as_deref(),
-    )
-}
-
-fn reflective_sidecar_timeout_seconds() -> u64 {
-    let raw = std::env::var(REFLECTIVE_SIDECAR_TIMEOUT_SECONDS_ENV).ok();
-    parse_bounded_u64_range(
-        raw.as_deref(),
-        DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-        MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-        MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-    )
-}
-
-pub(crate) fn reflective_sidecar_enabled_from(value: Option<&str>) -> bool {
-    matches!(
-        value.map(|v| v.trim().to_ascii_lowercase()).as_deref(),
-        Some("1" | "true" | "on" | "yes")
-    )
-}
-
-fn reflective_sidecar_enabled() -> bool {
-    reflective_sidecar_enabled_from(
-        std::env::var(REFLECTIVE_SIDECAR_ENABLED_ENV)
             .ok()
             .as_deref(),
     )
@@ -612,9 +572,8 @@ fn run_sidecar_command_with_timeout(
 
 /// Call the MLX reflective controller sidecar with spectral context.
 ///
-/// Returns structured controller telemetry. Runs as a subprocess —
-/// acceptable for INTROSPECT/OPEN_MIND (rare, ~1 in 15 exchanges).
-/// For lighter per-exchange telemetry, use `query_controller_light()` (future).
+/// Returns diagnostic telemetry only when the operator switch is enabled.
+/// Subprocess cost is separate from the lightweight per-exchange tracker.
 pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
     if !reflective_sidecar_enabled() {
         if !REFLECTIVE_SIDECAR_DISABLED_LOGGED.swap(true, Ordering::Relaxed) {
@@ -732,23 +691,6 @@ mod tests {
     use super::*;
     use serde_json::json;
     use std::fs;
-
-    #[test]
-    fn sidecar_switch_is_off_unless_explicitly_on() {
-        for off in [
-            None,
-            Some(""),
-            Some("0"),
-            Some("false"),
-            Some("off"),
-            Some("enabled"),
-        ] {
-            assert!(!reflective_sidecar_enabled_from(off), "{off:?}");
-        }
-        for on in ["1", " TRUE ", "on", "yes"] {
-            assert!(reflective_sidecar_enabled_from(Some(on)), "{on}");
-        }
-    }
 
     fn empty_report_with_self_tuning(self_tuning: serde_json::Value) -> ReflectiveReport {
         ReflectiveReport {
@@ -1002,37 +944,6 @@ mod tests {
                 MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS,
             ),
             DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS
-        );
-    }
-
-    #[test]
-    fn reflective_sidecar_timeout_parsing_defaults_and_clamps() {
-        assert_eq!(
-            parse_bounded_u64_range(
-                None,
-                DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-                MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-                MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-            ),
-            DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS
-        );
-        assert_eq!(
-            parse_bounded_u64_range(
-                Some("5"),
-                DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-                MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-                MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-            ),
-            MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS
-        );
-        assert_eq!(
-            parse_bounded_u64_range(
-                Some("1200"),
-                DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-                MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-                MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
-            ),
-            MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS
         );
     }
 

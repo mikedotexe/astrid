@@ -409,7 +409,14 @@ fn verified_notes_survive_restart_navigation_and_continuation_only() {
     let resumed = restarted.prepare(Command::Continue).unwrap();
     assert_eq!(resumed.page, next.page);
     assert!(resumed.text.contains("Where is the receiver?"));
-    assert!(resumed.text.contains("Follow the bus across modules."));
+    assert!(!resumed.text.contains("Follow the bus across modules."));
+    assert!(
+        restarted
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("Follow the bus across modules.")
+    );
     let page = resumed.page.unwrap();
     restarted
         .delivered(&page.id, &wire(&resumed.text), &response())
@@ -435,6 +442,8 @@ fn notes_are_bounded_visible_optional_and_clearable() {
         })
         .unwrap();
     assert!(!map.text.contains("hidden deliberation"));
+    assert!(!map.text.contains("excerpt truncated"));
+    let map = reader.prepare_action("SELF_STUDY NOTE").unwrap();
     assert!(map.text.contains("excerpt truncated"));
     // The optional readable checkpoint can add at most 6,000 bytes to the
     // previously bounded notebook view; authored state is still bounded/clearable.
@@ -553,7 +562,14 @@ fn navigation_receipt_recovers_after_checkpoint_crash_and_rejects_changed_replay
     );
     fs::write(&checkpoint, before).unwrap();
     let restarted = Reader::new(catalog, temp.path().join("reader"));
-    assert!(map_source(&restarted).contains("Follow this module."));
+    assert!(!map_source(&restarted).contains("Follow this module."));
+    assert!(
+        restarted
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("Follow this module.")
+    );
     assert!(map_source(&restarted).contains("Not delivered"));
 }
 

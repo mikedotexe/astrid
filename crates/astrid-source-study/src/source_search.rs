@@ -52,9 +52,27 @@ pub(crate) struct SearchReport {
     bytes: u64,
     hits: usize,
     bounded: bool,
+    definitions: Vec<(String, usize)>,
+    consumers: Vec<(String, usize)>,
 }
 
 impl SearchReport {
+    pub(crate) fn comparison(&self) -> String {
+        let [(source, line)] = self.definitions.as_slice() else {
+            return String::new();
+        };
+        let Some((caller_source, caller_line)) = self
+            .consumers
+            .iter()
+            .find(|(path, _)| path == source)
+            .or_else(|| self.consumers.first())
+        else {
+            return String::new();
+        };
+        format!(
+            "Optional caller/definition comparison (syntax candidates, binding unverified): SELF_STUDY SESSION OPEN {source} {line} | OPEN {caller_source} {caller_line}\nInspect both the failing branch and its caller: return, retry, skipped cleanup, and log-and-continue differ. A name, comment, or `?` alone does not establish what the caller ultimately does. No verdict has been inferred.\n\n"
+        )
+    }
     pub(crate) fn header(&self, title: &str) -> String {
         let mut lines = vec![title.to_owned(),
             "Evidence roles use catalog paths and conservative Rust test markers, not a compiler. Implementation text may contain comments or strings; declaration-like text is not proof of a declaration or runtime use. Test data does not establish a production counterpart. Historical commentary may repeat earlier claims; it is not independent implementation evidence.".into()];
@@ -91,6 +109,9 @@ impl SearchReport {
         let rust = source.path.extension().is_some_and(|ext| ext == "rs");
         let outline = (exact && role == Role::Implementation && text.contains(query))
             .then(|| crate::source_structure::Outline::parse(&source.id, text));
+        if let Some(outline) = &outline {
+            self.collect_comparison(&source.id, query, outline);
+        }
         let mut test_remainder = role == Role::Test;
         for (offset, line) in text.lines().enumerate() {
             if rust && line.trim_start().starts_with("#[cfg(test)]") {
@@ -170,6 +191,35 @@ impl SearchReport {
             if self.hits >= MAX_HITS {
                 self.bounded = true;
                 break;
+            }
+        }
+    }
+
+    fn collect_comparison(
+        &mut self,
+        source: &str,
+        query: &str,
+        outline: &crate::source_structure::Outline,
+    ) {
+        if !outline.complete {
+            return;
+        }
+        for definition in &outline.declarations {
+            if definition.name == query
+                && definition.test_context.is_none()
+                && self.definitions.len() < 17
+            {
+                self.definitions
+                    .push((source.into(), definition.start_line));
+            }
+        }
+        for reference in &outline.references {
+            if reference.name == query
+                && !reference.test_context
+                && reference.usage == "call"
+                && self.consumers.len() < 16
+            {
+                self.consumers.push((source.into(), reference.line));
             }
         }
     }
@@ -254,6 +304,8 @@ impl Catalog {
             bytes: 0,
             hits: 0,
             bounded: false,
+            definitions: Vec::new(),
+            consumers: Vec::new(),
         };
         for source in sources {
             if report.hits >= MAX_HITS {

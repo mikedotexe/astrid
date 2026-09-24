@@ -32,5 +32,8 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 wasmparser = { workspace = true }
 
+[dev-dependencies]
+async-trait = { workspace = true }
+
 [lints]
 workspace = true

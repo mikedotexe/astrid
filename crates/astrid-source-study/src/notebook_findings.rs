@@ -91,7 +91,7 @@ impl RelationKind {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-struct Anchor {
+pub(crate) struct Anchor {
     source: String,
     line: usize,
     revision_sha256: String,
@@ -530,4 +530,18 @@ fn supplied_lines(pages: &[Page]) -> Vec<(&Page, usize, &str)> {
             })
         })
         .collect()
+}
+
+pub(crate) fn current_anchor(source: &str, line: usize, pages: &[Page]) -> anyhow::Result<Anchor> {
+    let lines = supplied_lines(pages);
+    let matches = lines
+        .iter()
+        .filter(|(page, number, _)| page.source == source && *number == line)
+        .collect::<Vec<_>>();
+    anyhow::ensure!(
+        matches.len() == 1,
+        "counterevidence needs one unambiguous numbered line supplied in this turn"
+    );
+    let (page, number, fragment) = matches[0];
+    Ok(Anchor::from_line(page, *number, fragment))
 }

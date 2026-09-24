@@ -65,7 +65,14 @@ fn legal_full_notebook_and_named_sources_fit_without_shortening_saved_thoughts()
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(rendered["note"]["text"], note);
+    assert!(rendered["note"].is_null());
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains(&note)
+    );
     assert_eq!(rendered["question"]["text"], question);
     assert_eq!(rendered["previous"]["text"], "D".repeat(7200));
     assert_eq!(rendered["previous"]["complete"], true);

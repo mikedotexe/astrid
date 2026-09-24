@@ -2,6 +2,7 @@
 use super::*;
 
 impl Reader {
+    #[allow(clippy::too_many_lines)] // One bounded, atomic offer with shared identity and framing.
     pub(super) fn output(
         &self,
         state: &mut State,
@@ -23,9 +24,11 @@ impl Reader {
                 true,
             ));
         }
+        let reflection = input_kind == InputKind::Reflection;
         let question_id = page
             .as_ref()
             .map_or_else(|| state.questions.active.clone(), |p| p.question_id.clone());
+        let question_id = if reflection { None } else { question_id };
         let notebook = state
             .questions
             .notebook_for(question_id.as_deref(), &state.notebook);
@@ -48,28 +51,30 @@ impl Reader {
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         let receipt_position = text.len();
         text.push('\n');
-        text.push_str(&state.questions.render_context(question_id.as_deref()));
+        if !reflection {
+            text.push_str(&state.questions.render_context(question_id.as_deref()));
+        }
         let mut suffix = String::new();
-        if let Some(choice) = &state.last_choice {
+        if let Some(choice) = &state.last_choice
+            && !reflection
+        {
             suffix.push_str(&choice.render(false));
         }
-        let recall = study_context(
-            notebook,
-            &self.catalog,
-            page.as_ref(),
-            &navigation,
-            text.len().saturating_add(suffix.len()),
-        )?;
+        let recall = if reflection || input_kind == InputKind::Notebook {
+            String::new()
+        } else {
+            study_context(
+                notebook,
+                &self.catalog,
+                page.as_ref(),
+                &navigation,
+                text.len().saturating_add(suffix.len()),
+            )?
+        };
         text.push_str(&recall);
         text.push_str(&suffix);
-        let available = remaining_input_budget(text.len());
-        if receipt.len() <= available {
-            text.insert_str(receipt_position, &receipt);
-        } else if let Some(headline) = receipt.lines().next() {
-            let headline = format!("{headline}\n\n");
-            if headline.len() <= available {
-                text.insert_str(receipt_position, &headline);
-            }
+        if !reflection {
+            insert_receipt(&mut text, receipt_position, &receipt);
         }
         if text
             .len()
@@ -84,7 +89,11 @@ impl Reader {
             require_complete_input: true,
             input_kind,
             evidence_scope,
-            system_prompt: crate::STUDY_PROMPT.into(),
+            system_prompt: if reflection {
+                "You are writing an open introspection in your own words. No report template, minimum length, particular experience, diagnosis, or code explanation is required. This reflection may be recorded publicly; private writing is a separate WRITE choice. Choose any NEXT explicitly; stopping is available.".into()
+            } else {
+                crate::STUDY_PROMPT.into()
+            },
             input_budget_bytes: crate::MAX_INPUT_BYTES,
             context_tokens: crate::CONTEXT_TOKENS,
             text,
@@ -160,6 +169,18 @@ fn remaining_input_budget(text_bytes: usize) -> usize {
             .saturating_add(crate::STUDY_PROMPT.len())
             .saturating_add(32),
     )
+}
+
+fn insert_receipt(text: &mut String, position: usize, receipt: &str) {
+    let available = remaining_input_budget(text.len());
+    if receipt.len() <= available {
+        text.insert_str(position, receipt);
+    } else if let Some(headline) = receipt.lines().next() {
+        let headline = format!("{headline}\n\n");
+        if headline.len() <= available {
+            text.insert_str(position, &headline);
+        }
+    }
 }
 
 fn study_context(

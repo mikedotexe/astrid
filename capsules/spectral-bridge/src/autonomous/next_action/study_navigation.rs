@@ -28,9 +28,13 @@ fn request_target(base: &str, original: &str) -> Option<Option<IntrospectTargetV
         },
         "EXAMINE_CODE" => {
             let label = argument.trim_matches(['[', ']']).trim();
-            (!label.is_empty()).then(|| IntrospectTargetV2::auto(label.into()))
+            Some(IntrospectTargetV2::auto(if label.is_empty() {
+                "SELF_STUDY CONTINUE".into()
+            } else {
+                label.into()
+            }))
         },
-        "INTROSPECT" => None,
+        "INTROSPECT" => Some(IntrospectTargetV2::auto("INTROSPECT".into())),
         _ => return None,
     };
     Some(target)
@@ -100,7 +104,7 @@ fn valid_replacement(operation: &str) -> bool {
 }
 
 #[cfg(test)]
-pub(super) fn handle_request(
+pub(in crate::autonomous) fn handle_request(
     conv: &mut ConversationState,
     base: &str,
     original: &str,
@@ -366,7 +370,7 @@ mod tests {
                 .handled
         );
         assert!(conv.wants_introspect);
-        assert!(conv.introspect_target.is_none());
+        assert_eq!(conv.introspect_target.as_ref().unwrap().label, "INTROSPECT");
     }
 
     #[test]

@@ -103,9 +103,15 @@ fn current_source_precedes_authored_words_and_their_retained_evidence() {
     let notebook = output.text.find(NOTEBOOK).unwrap();
     assert!(source_end <= coverage && coverage < checkpoint && checkpoint < notebook);
     let visible = check_in(&output);
-    assert!(visible.contains("YOUR SAVED NOTE — recalled account, not independently verified"));
-    assert!(visible.contains("The caller is still unexamined."));
-    assert!(visible.contains("This origin does not establish the note's claims"));
+    assert!(visible.contains("Saved note retained, not automatically quoted"));
+    assert!(!visible.contains("The caller is still unexamined."));
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("The caller is still unexamined.")
+    );
     assert!(visible.contains("your saved interpretations, not independently verified facts"));
     assert!(visible.contains(claim));
     assert!(visible.contains(&format!("Retained fragment {SOURCE}:1")));
@@ -145,9 +151,9 @@ fn chosen_correction_outlives_recent_responses_without_automatic_rewriting() {
     for turn in 0..6 {
         let next = open(&reader, SECOND);
         let visible = check_in(&next);
-        assert!(visible.contains(note));
+        assert!(!visible.contains(note));
         assert!(visible.contains(finding));
-        assert!(visible.contains("This origin does not establish the note's claims"));
+        assert!(visible.contains("SELF_STUDY NOTE"));
         accept(
             &reader,
             &next,
@@ -196,7 +202,14 @@ fn chosen_correction_outlives_recent_responses_without_automatic_rewriting() {
         correction.page.as_ref().unwrap().revision.sha256
     );
     let visible = check_in(&reopened);
-    assert!(visible.contains(note));
+    assert!(!visible.contains(note));
+    assert!(
+        restored
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains(note)
+    );
     assert!(visible.contains(finding));
     assert!(visible.contains(&format!("{STUB:?}")));
     assert!(visible.contains("current checkout may differ"));
@@ -257,7 +270,14 @@ fn new_and_restored_inquiries_show_only_their_own_authored_context() {
         ),
     );
     let restored = reader.prepare_action("SELF_STUDY QUESTION q1").unwrap();
-    assert!(check_in(&restored).contains("First inquiry note."));
+    assert!(!check_in(&restored).contains("First inquiry note."));
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("First inquiry note.")
+    );
     assert!(check_in(&restored).contains("First inquiry's tentative stub conclusion."));
     assert!(!restored.text.contains("Second inquiry note."));
     assert!(
@@ -269,7 +289,14 @@ fn new_and_restored_inquiries_show_only_their_own_authored_context() {
         .prepare_action("SELF_STUDY QUESTION PARK q1")
         .unwrap();
     assert!(parked.question_id.is_none());
-    assert!(check_in(&parked).contains("General browsing note."));
+    assert!(!check_in(&parked).contains("General browsing note."));
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("General browsing note.")
+    );
     assert!(!parked.text.contains("First inquiry note."));
     assert!(
         !parked
@@ -277,7 +304,14 @@ fn new_and_restored_inquiries_show_only_their_own_authored_context() {
             .contains("First inquiry's tentative stub conclusion.")
     );
     let second_again = reader.prepare_action("SELF_STUDY QUESTION q2").unwrap();
-    assert!(check_in(&second_again).contains("Second inquiry note."));
+    assert!(!check_in(&second_again).contains("Second inquiry note."));
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("Second inquiry note.")
+    );
     assert!(check_in(&second_again).contains("Second inquiry's tentative caller conclusion."));
     assert!(!second_again.text.contains("General browsing note."));
     assert_eq!(
@@ -306,7 +340,14 @@ fn new_and_restored_inquiries_show_only_their_own_authored_context() {
     let resumed = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
     assert_eq!(resumed.page.as_ref().unwrap().id, pending.page.unwrap().id);
     assert_eq!(resumed.question_id.as_deref(), Some("q1"));
-    assert!(check_in(&resumed).contains("First inquiry note."));
+    assert!(!check_in(&resumed).contains("First inquiry note."));
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("First inquiry note.")
+    );
     assert!(check_in(&resumed).contains("First inquiry's tentative stub conclusion."));
     assert!(!resumed.text.contains("Second inquiry note."));
     assert!(
@@ -475,7 +516,7 @@ fn escaped_maximum_authored_fields_fit_source_and_session_without_losing_saved_w
                 .0,
         )
         .unwrap();
-        assert_eq!(rendered["note"]["text"], note);
+        assert!(rendered["note"].is_null());
         assert_eq!(rendered["question"]["text"], question);
         assert_eq!(&rendered["source_findings"]["authored"], authored);
         assert_eq!(rendered["source_findings"]["updates"], updates);

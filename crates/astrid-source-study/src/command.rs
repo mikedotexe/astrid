@@ -10,6 +10,8 @@ pub enum Command {
     Open { source: String, line: usize },
     Resume { source: String },
     Continue,
+    Reflect,
+    Note { page: usize },
     Relate { symbol: String, page: usize },
     Question(crate::QuestionCommand),
     Session { targets: Vec<(String, usize)> },
@@ -21,14 +23,25 @@ impl Command {
     /// Parse a source-study Action without changing case-sensitive paths.
     /// # Errors
     /// Returns an error for invalid line or page numbers.
+    #[allow(clippy::too_many_lines)] // Central command grammar; one bounded dispatch table.
     pub fn parse(input: &str) -> Result<Self> {
         let input = input.trim();
+        if input.eq_ignore_ascii_case("INTROSPECT") {
+            return Ok(Self::Reflect);
+        }
         let input = input.strip_prefix("SELF_STUDY").unwrap_or(input).trim();
         let (verb, rest) = input.split_once(' ').unwrap_or((input, ""));
         if verb.eq_ignore_ascii_case("REPLACE") {
             return Self::parse_replacement(rest);
         }
         match verb.to_ascii_uppercase().as_str() {
+            "NOTE" => {
+                let (rest, page) = page_suffix(rest)?;
+                if !rest.is_empty() {
+                    bail!("use SELF_STUDY NOTE [--page N]");
+                }
+                Ok(Self::Note { page })
+            },
             "GEOMETRY" => Ok(Self::Geometry {
                 request: serde_json::from_str(rest)?,
             }),
@@ -135,6 +148,7 @@ impl Command {
                 | "QUESTION"
                 | "SESSION"
                 | "TRACE"
+                | "NOTE"
         ) {
             bail!(
                 "REPLACE requires one ordinary source-study operation; nested REPLACE and private WRITE are not source-study operations"

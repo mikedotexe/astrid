@@ -77,7 +77,14 @@ fn inquiries_restore_notes_park_resolve_and_retain_source_references() {
         .unwrap();
     accept(&reader, &q, "STUDY_NOTE: Different question.");
     let restored = reader.prepare_action("SELF_STUDY QUESTION q1").unwrap();
-    assert!(restored.text.contains("The caller is still unknown."));
+    assert!(!restored.text.contains("The caller is still unknown."));
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("The caller is still unknown.")
+    );
     assert!(!restored.text.contains("Different question."));
     assert!(restored.text.contains(&format!("OPEN {SOURCE} 1")));
     let parked = reader
@@ -129,7 +136,14 @@ fn delayed_source_completion_updates_its_original_question_only() {
     assert!(second_reading.page.is_none());
     let first = reader.prepare_action("SELF_STUDY QUESTION q1").unwrap();
     assert!(
-        first
+        !first
+            .text
+            .contains("Answer belonging to the first question.")
+    );
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
             .text
             .contains("Answer belonging to the first question.")
     );
@@ -165,7 +179,14 @@ fn questions_restore_their_own_source_position_and_pending_delivery() {
     let progress_before = state(&temp)["progress"].clone();
     let return_first = reader.prepare_action("SELF_STUDY QUESTION q1").unwrap();
     assert!(
-        return_first
+        !return_first
+            .text
+            .contains("First finding remains uncertain.")
+    );
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
             .text
             .contains("First finding remains uncertain.")
     );
@@ -184,7 +205,14 @@ fn questions_restore_their_own_source_position_and_pending_delivery() {
         resumed_second.page.as_ref().unwrap().start,
         second.page.as_ref().unwrap().end
     );
-    assert!(resumed_second.text.contains("Independent second finding."));
+    assert!(!resumed_second.text.contains("Independent second finding."));
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("Independent second finding.")
+    );
 }
 #[test]
 fn inquiry_delivery_requires_the_complete_question_context() {
@@ -437,6 +465,13 @@ fn repeated_home_preserves_new_unthreaded_notes() {
     let home = reader.prepare_action("SELF_STUDY QUESTION HOME").unwrap();
     accept(&reader, &home, "STUDY_NOTE: Fresh unthreaded thought.");
     let home = reader.prepare_action("SELF_STUDY QUESTION HOME").unwrap();
-    assert!(home.text.contains("Fresh unthreaded thought."));
+    assert!(!home.text.contains("Fresh unthreaded thought."));
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY NOTE")
+            .unwrap()
+            .text
+            .contains("Fresh unthreaded thought.")
+    );
     assert!(Command::parse("SELF_STUDY SESSION SESSION OPEN a 1 | OPEN b 1").is_err());
 }

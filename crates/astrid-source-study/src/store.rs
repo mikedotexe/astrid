@@ -433,6 +433,7 @@ impl Reader {
         Ok(output)
     }
 
+    #[allow(clippy::too_many_lines)] // Central owner-locked dispatch; helpers own each operation.
     fn prepare_parsed_locked(&self, command: Result<Command>) -> Result<StudyOutput> {
         let mut state = self.load()?;
         self.hydrate(&mut state)?;
@@ -442,6 +443,12 @@ impl Reader {
             Err(error) => return self.recovery_map(&mut state, &error),
         };
         let page = match command {
+            Command::Reflect => return self.output(&mut state, "You chose open introspection. You may reflect on your thoughts, experience, uncertainty, or anything that matters to you, without connecting it to code or measurements. Nothing specific needs to be felt, explained, or concluded. Length and stopping remain yours to choose.\n\nNEXT choices remain yours: INTROSPECT for another reflection, SELF_STUDY CONTINUE for the retained source bookmark, WRITE START <topic> for private writing, or REST. No continuation is automatic.".into(), None, InputKind::Reflection),
+            Command::Note { page } => {
+                let notebook = state.questions.notebook_for(state.questions.active.as_deref(), &state.notebook);
+                let text = notebook.note_view(page)?;
+                return self.output(&mut state, text, None, InputKind::Notebook);
+            },
             Command::Geometry { request } => return self.prepare_geometry(&mut state, request),
             Command::Question(command) => {
                 let text = match state.apply_question(command) {
@@ -891,6 +898,8 @@ impl Reader {
             bail!("unsupported source-study checkpoint version");
         }
         state.questions.validate_geometry()?;
+        state.notebook.validate_notes()?;
+        state.questions.validate_notes()?;
         Ok(state)
     }
     fn save(&self, state: &State) -> Result<()> {

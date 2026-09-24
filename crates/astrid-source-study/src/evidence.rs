@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 pub enum InputKind {
     SourcePage,
     PrivateWriting,
+    Reflection,
+    Notebook,
     SourceSession,
     Relationships,
     Questions,
@@ -25,6 +27,12 @@ impl InputKind {
     #[must_use]
     pub fn scope(self) -> &'static str {
         match self {
+            Self::Reflection => {
+                "Open introspection: no source page, telemetry snapshot, saved study claim, or private draft was supplied. This is an authored reflection, not a verified mechanism report."
+            },
+            Self::Notebook => {
+                "Explicitly opened authored note and revision history. Retained anchors are historical supplied fragments, not newly supplied source or verified conclusions."
+            },
             Self::Geometry => {
                 "Chosen geometry evidence: frozen ESN activation observations and authored hypotheses, not covariance eigenvectors, verified causes, or felt-state measurements. No control changes or experiments were executed."
             },

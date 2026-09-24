@@ -240,6 +240,15 @@ impl Questions {
             global.record_pages(response, text, pages);
         }
     }
+    pub(crate) fn validate_notes(&self) -> anyhow::Result<()> {
+        for inquiry in self.entries.values() {
+            inquiry.notebook.validate_notes()?;
+        }
+        if let Some(home) = &self.unthreaded {
+            home.validate_notes()?;
+        }
+        Ok(())
+    }
     pub(crate) fn notebook_for<'a>(
         &'a self,
         id: Option<&str>,
