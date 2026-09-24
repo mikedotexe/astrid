@@ -1597,6 +1597,28 @@ def probe_visual_frame_service(_prior: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+SIDECAR_ENABLED_ENV = "ASTRID_REFLECTIVE_SIDECAR_ENABLED"
+
+
+def _sidecar_switch_enabled(value: str | None) -> bool:
+    """Mirror of reflective.rs::reflective_sidecar_enabled_from."""
+    return (value or "").strip().lower() in {"1", "true", "on", "yes"}
+
+
+def _reflective_sidecar_switch() -> dict[str, Any]:
+    value = os.environ.get(SIDECAR_ENABLED_ENV)
+    if value is None:
+        try:
+            res = subprocess.run(
+                ["launchctl", "getenv", SIDECAR_ENABLED_ENV],
+                capture_output=True, text=True, timeout=5, check=False,
+            )
+            value = res.stdout.strip() or None
+        except (OSError, subprocess.SubprocessError):
+            value = None
+    return {"enabled": _sidecar_switch_enabled(value), "value": value}
+
+
 def probe_reflective_sidecar(_prior: dict[str, Any]) -> dict[str, Any]:
     """Coverage-relative sidecar heartbeat: every successful reflective
     sidecar run leaves controller_<label>_<epoch>.json paired 1:1 by epoch
@@ -1621,6 +1643,27 @@ def probe_reflective_sidecar(_prior: dict[str, Any]) -> dict[str, Any]:
                         introspect_epochs.append(int(tail))
     except OSError as err:
         return _finding("reflective_sidecar", "notice", f"introspections dir unreadable: {err}")
+    switch = _reflective_sidecar_switch()
+    if not switch["enabled"]:
+        # 2026-09-23 decision: OFF by default. The report has no being-facing
+        # consumer, one run costs ~225 s of shared GPU, and self-study cadence
+        # grew 5–10× after the shared reader (2026-09-08) dropped the hook —
+        # which is restored behind the switch. Not a coverage failure.
+        newest_report = max(controller_epochs) if controller_epochs else None
+        age = (
+            f"{(time.time() - newest_report) / 3600:.0f}h ago"
+            if newest_report else "never"
+        )
+        return _finding(
+            "reflective_sidecar",
+            "ok",
+            "reflective sidecar OFF by default (2026-09-23 decision; no being-facing consumer, ~225 s GPU per run)",
+            [
+                f"switch {SIDECAR_ENABLED_ENV}={switch['value']!r}; `launchctl setenv {SIDECAR_ENABLED_ENV} 1` + bridge kickstart turns it on (hook now covers the shared reader too)",
+                f"last controller report {age}; trailing-window coverage is only judged while the switch is on",
+            ],
+            snapshot={"sidecar_enabled": False, "switch_value": switch["value"]},
+        )
     if not introspect_epochs:
         return _finding("reflective_sidecar", "notice", "no introspection artifacts found")
     trailing = sorted(introspect_epochs)[-5:]
@@ -4660,6 +4703,14 @@ def probe_unwired_near_miss(_prior: dict[str, Any]) -> dict[str, Any]:
         f"{total} unwired action(s) named a wired verb one prefix short of its form",
         details, snapshot,
     )
+
+
+class ReflectiveSidecarSwitchTests(unittest.TestCase):
+    def test_switch_mirrors_the_bridge_parser(self):
+        for off in (None, "", "0", "false", "off", "enabled"):
+            self.assertFalse(_sidecar_switch_enabled(off), off)
+        for on in ("1", " TRUE ", "on", "yes"):
+            self.assertTrue(_sidecar_switch_enabled(on), on)
 
 
 class UnwiredNearMissTests(unittest.TestCase):

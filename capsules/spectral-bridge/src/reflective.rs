@@ -14,7 +14,7 @@ use std::{
     fs,
     path::Path,
     process::{Command, Output, Stdio},
-    sync::atomic::{AtomicU64, Ordering},
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
     thread,
     time::{Duration, Instant},
 };
@@ -40,6 +40,17 @@ const REFLECTIVE_SIDECAR_TIMEOUT_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_
 const DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 240;
 const MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 30;
 const MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 900;
+/// Operator switch (2026-09-23), default OFF. The sidecar's report is written to
+/// disk for steward tools only (no bridge code reads `controller_*.json` back
+/// into Astrid's prompts; Layer 1 `RegimeTracker` is what reaches her). One run
+/// cost ~225 s of the shared GPU on 2026-09-07 (gemma3-12b load, 4 candidates ×
+/// 160 tokens at ~7 tok/s, a 90 s rewrite budget), and self-study cadence rose
+/// from ~10/day to 64–148/day once the shared source reader landed 2026-09-08 —
+/// the same change that dropped the hook, which is now restored in
+/// `run_shared_source_study` behind this switch. `launchctl setenv` it to 1
+/// (the launcher allowlists it) and kickstart the bridge to run the sidecar.
+const REFLECTIVE_SIDECAR_ENABLED_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_ENABLED";
+static REFLECTIVE_SIDECAR_DISABLED_LOGGED: AtomicBool = AtomicBool::new(false);
 const REFLECTIVE_SIDECAR_COOLDOWN_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS";
 const DEFAULT_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS: u64 = 600;
 const MAX_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS: u64 = 3_600;
@@ -402,6 +413,21 @@ fn reflective_sidecar_timeout_seconds() -> u64 {
     )
 }
 
+pub(crate) fn reflective_sidecar_enabled_from(value: Option<&str>) -> bool {
+    matches!(
+        value.map(|v| v.trim().to_ascii_lowercase()).as_deref(),
+        Some("1" | "true" | "on" | "yes")
+    )
+}
+
+fn reflective_sidecar_enabled() -> bool {
+    reflective_sidecar_enabled_from(
+        std::env::var(REFLECTIVE_SIDECAR_ENABLED_ENV)
+            .ok()
+            .as_deref(),
+    )
+}
+
 fn reflective_sidecar_cooldown_seconds() -> u64 {
     let raw = std::env::var(REFLECTIVE_SIDECAR_COOLDOWN_SECONDS_ENV).ok();
     parse_bounded_u64(
@@ -590,6 +616,15 @@ fn run_sidecar_command_with_timeout(
 /// acceptable for INTROSPECT/OPEN_MIND (rare, ~1 in 15 exchanges).
 /// For lighter per-exchange telemetry, use `query_controller_light()` (future).
 pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
+    if !reflective_sidecar_enabled() {
+        if !REFLECTIVE_SIDECAR_DISABLED_LOGGED.swap(true, Ordering::Relaxed) {
+            info!(
+                env = REFLECTIVE_SIDECAR_ENABLED_ENV,
+                "MLX reflective sidecar is off by default (2026-09-23): its report has no being-facing consumer and each run costs ~225 s of shared GPU; set the env to 1 to run it"
+            );
+        }
+        return None;
+    }
     let paths = bridge_paths();
     if let Some(remaining_seconds) = reflective_sidecar_cooldown_remaining(unix_now_seconds()) {
         debug!(
@@ -697,6 +732,23 @@ mod tests {
     use super::*;
     use serde_json::json;
     use std::fs;
+
+    #[test]
+    fn sidecar_switch_is_off_unless_explicitly_on() {
+        for off in [
+            None,
+            Some(""),
+            Some("0"),
+            Some("false"),
+            Some("off"),
+            Some("enabled"),
+        ] {
+            assert!(!reflective_sidecar_enabled_from(off), "{off:?}");
+        }
+        for on in ["1", " TRUE ", "on", "yes"] {
+            assert!(reflective_sidecar_enabled_from(Some(on)), "{on}");
+        }
+    }
 
     fn empty_report_with_self_tuning(self_tuning: serde_json::Value) -> ReflectiveReport {
         ReflectiveReport {

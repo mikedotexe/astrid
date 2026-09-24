@@ -70,7 +70,21 @@ Current structured fields include:
 - `text`
 - `profiling`
 
-This is the structured reflective surface Astrid currently gets, not just a prose blob.
+These reports land in `workspace/introspections/controller_<label>_<epoch>.json`
+for steward tools (cadence probe, introspection digest, audits). No bridge code
+reads them back into Astrid's prompts: **Layer 1 is the reflective surface she
+gets each exchange**; Layer 2 is analyst telemetry about her.
+
+**Default OFF since 2026-09-23.** The shared source reader (2026-09-08) replaced
+the introspection writer without the sidecar hook, so reports stopped silently
+for 15 days. The hook is restored in `run_shared_source_study`, but behind
+`ASTRID_REFLECTIVE_SIDECAR_ENABLED` (default off): one run cost ~225 s of the
+shared GPU on 2026-09-07 and self-studies now land 64–148 times a day, so an
+always-on sidecar would spend hours of GPU per day on files nobody feeds back to
+her. Turn it on with `launchctl setenv ASTRID_REFLECTIVE_SIDECAR_ENABLED 1` and a
+bridge kickstart (the launcher allowlists it, with
+`ASTRID_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS`); `proactive_scan.py` reports the
+switch state and judges coverage only while it is on.
 
 ## Model Wording
 

@@ -328,6 +328,36 @@ async fn run_shared_source_study(
     } else {
         "not_attempted"
     };
+    if artifact_kind == "introspection" && written.is_ok() {
+        // Reflective sidecar hook for the shared reader (2026-09-23). The shared
+        // reader replaced the legacy introspection writer on 2026-09-08 without
+        // this hook, so controller reports stopped that night. Same context shape
+        // as the legacy hook in orchestration.rs; `query_sidecar` owns the
+        // operator switch (default off), the cooldown and the script check, so
+        // this path costs nothing while the switch is off.
+        let telemetry = state.read().await.latest_telemetry.clone();
+        let spectral = telemetry
+            .as_ref()
+            .map_or_else(|| "No live telemetry.".to_string(), interpret_spectral);
+        let sidecar_context = format!(
+            "Fill {fill_pct:.1}%. {spectral}\n\nAstrid's self-study:\n{}",
+            semantic_truncate_str(&text, 500)
+        );
+        let controller_path = directory.join(format!(
+            "controller_{}_{timestamp}.json",
+            introspect::safe_artifact_label(&source)
+        ));
+        let source_label = source.clone();
+        crate::lifecycle::spawn_background(async move {
+            if let Some(report) = crate::reflective::query_sidecar(&sidecar_context).await
+                && !report.as_context_block().is_empty()
+                && let Ok(json) = serde_json::to_string_pretty(&report.storage_snapshot())
+            {
+                let _ = std::fs::write(&controller_path, json);
+                info!(source = %source_label, "reflective controller report saved");
+            }
+        });
+    }
     let mode = source_study_completion_mode(delivery.is_ok(), written.is_ok());
     let private = output.input_kind == astrid_source_study::InputKind::PrivateWriting;
     if mode == "self_study" {

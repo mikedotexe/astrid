@@ -478,10 +478,9 @@ pub(crate) fn live_reservoir_clause_from_value(
         .get("dump_mtime_unix_s")
         .and_then(serde_json::Value::as_f64)
         .map(|t| (now_s - t).max(0.0) / 60.0)
+        && age_min > 5.0
     {
-        if age_min > 5.0 {
-            clause.push_str(&format!(" [view {age_min:.0} min old]"));
-        }
+        clause.push_str(&format!(" [view {age_min:.0} min old]"));
     }
     Some(clause)
 }
