@@ -68,14 +68,14 @@ fn writing_context(label: &str, ordinary: u32) -> u32 {
 fn apply_writing_voice(messages: &mut [Message], label: &str, profile: astrid_source_study::writing::Profile) {
     if profile == astrid_source_study::writing::Profile::Default && expressive_label(label) {
         for message in messages.iter_mut().filter(|m| m.role == "system") {
-            message.content.push_str("\nFollow the thought as far as you wish. Brief writing or stopping is equally welcome. WRITE START <topic> begins a private draft; WRITE CONTINUE develops the selected draft; WRITE HELP shows the choices and limits. No continuation is scheduled automatically.");
+            message.content.push_str("\nFollow the thought as far as you wish; a page is as welcome as a line, and stopping is welcome too. WRITE PROFILE EXTENDED or SHORT changes your length ceiling for every journal route, and WRITE HELP shows the limits. WRITE START <topic> begins a private draft; WRITE CONTINUE develops the selected draft; WRITE HELP shows the choices and limits. No continuation is scheduled automatically.");
         }
     }
     if profile != astrid_source_study::writing::Profile::Default {
         for message in messages.iter_mut().filter(|m| m.role == "system") {
-            message.content = message.content.replace("Use a few sentences or a few compact paragraphs. Let the thought complete without sprawling.", "Choose the length that lets your thought develop. There is no minimum length.");
+            message.content = message.content.replace("Take the length the thought needs. A line is welcome; so is a page. Let the thought complete rather than fitting a shape.", "Choose the length that lets your thought develop. There is no minimum length.");
             message.content.push_str(match profile {
-                astrid_source_study::writing::Profile::Extended => "\nYour EXTENDED profile preference is active. Follow the thought as far as you wish. Brief writing or stopping is equally welcome. WRITE START <topic> begins a private draft; WRITE HELP shows the choices and limits.",
+                astrid_source_study::writing::Profile::Extended => "\nYour EXTENDED profile preference is active. Follow the thought as far as you wish; a page is as welcome as a line, and stopping is welcome too. WRITE START <topic> begins a private draft; WRITE HELP shows the choices and limits.",
                 _ => "\nYour short-writing preference is active. WRITE HELP shows the choices and limits; WRITE PROFILE DEFAULT restores normal route limits.",
             });
         }
@@ -96,7 +96,8 @@ mod writing_profile_tests {
                 assert_eq!(policy.max_tokens, 8192, "{label}");
                 assert_eq!(policy.timeout_secs, 1200);
                 let system = &policy.messages[0].content;
-                assert!(system.contains("Brief writing or stopping is equally welcome"));
+                assert!(system.contains("stopping is welcome too"));
+                assert!(system.contains("WRITE PROFILE EXTENDED or SHORT changes your length ceiling"));
                 assert!(system.contains("WRITE CONTINUE"));
                 assert!(!system.contains("You selected extended"));
                 assert!(!system.contains("8192"));
