@@ -448,12 +448,160 @@ fn new_commands_parse_without_rewriting_case_sensitive_symbols() {
         "SELF_STUDY QUESTION PARK q1",
         "SELF_STUDY QUESTION RESOLVE q1 Found it.",
         "SELF_STUDY QUESTION --page 2",
+        "SELF_STUDY QUESTION REVIEW q1 --page 2",
     ] {
         let command = Command::parse(text).unwrap();
         let encoded = serde_json::to_string(&command).unwrap();
         let decoded: Command = serde_json::from_str(&encoded).unwrap();
         assert_eq!(command, decoded);
     }
+}
+
+#[test]
+fn review_is_explicit_detached_and_cannot_overwrite_either_inquiry() {
+    let (temp, reader) = setup();
+    let first = reader
+        .prepare_action("SELF_STUDY QUESTION NEW First question?")
+        .unwrap();
+    accept(&reader, &first, "STUDY_NOTE: Original account.");
+    let source = reader
+        .prepare_action(&format!("SELF_STUDY OPEN {SOURCE} 1"))
+        .unwrap();
+    accept(
+        &reader,
+        &source,
+        "STUDY_NOTE: Revised account, uncertainty retained.",
+    );
+    reader
+        .prepare_action("SELF_STUDY QUESTION PARK q1")
+        .unwrap();
+    let second = reader
+        .prepare_action("SELF_STUDY QUESTION NEW Unrelated question?")
+        .unwrap();
+    accept(&reader, &second, "STUDY_NOTE: Unrelated saved note.");
+    let pending = reader
+        .prepare_action(&format!("SELF_STUDY OPEN {SECOND} 20"))
+        .unwrap();
+    let before = state(&temp);
+    let review = reader
+        .prepare_action("SELF_STUDY QUESTION REVIEW q1")
+        .unwrap();
+    assert_eq!(review.input_kind, InputKind::InquiryReview);
+    assert!(review.question_id.is_none());
+    for expected in [
+        "Original account.",
+        "Revised account, uncertainty retained.",
+        "parked",
+        "historical_source_references",
+        "authored_revision",
+    ] {
+        assert!(review.text.contains(expected), "{expected}");
+    }
+    for excluded in [
+        "Unrelated question?",
+        "Unrelated saved note.",
+        "ACTIVE STUDY QUESTION",
+        "RECALLED ACCOUNT",
+        "CURRENT CHOICE",
+    ] {
+        assert!(!review.text.contains(excluded), "{excluded}");
+    }
+    accept(
+        &reader,
+        &review,
+        "STUDY_NOTE: Do not save this as a revised account.\nSTUDY_QUESTION: Do not change the question.\nNEXT: SELF_STUDY CONTINUE",
+    );
+    let after = state(&temp);
+    for key in [
+        "questions",
+        "notebook",
+        "bookmarks",
+        "progress",
+        "last_input",
+        "cursor_owner",
+    ] {
+        assert_eq!(before[key], after[key], "{key}");
+    }
+    assert_eq!(
+        reader.prepare_action("SELF_STUDY CONTINUE").unwrap().page,
+        pending.page
+    );
+}
+
+#[test]
+fn review_pages_history_without_reselection_and_rejects_unknown_or_invalid_requests() {
+    let (temp, reader) = setup();
+    let q = reader
+        .prepare_action("SELF_STUDY QUESTION NEW Why?")
+        .unwrap();
+    accept(&reader, &q, "STUDY_NOTE: First account.");
+    for note in ["Second account.", "Third account.", "Fourth account."] {
+        let out = reader
+            .prepare_action(&format!("SELF_STUDY OPEN {SOURCE} 1"))
+            .unwrap();
+        accept(&reader, &out, &format!("STUDY_NOTE: {note}"));
+    }
+    let before = state(&temp)["questions"].clone();
+    let second = reader
+        .prepare_action("SELF_STUDY QUESTION REVIEW q1 --page 2")
+        .unwrap();
+    assert!(second.text.contains("First account."));
+    assert!(second.text.contains("QUESTION REVIEW q1 --page N"));
+    assert_eq!(state(&temp)["questions"], before);
+    for action in [
+        "SELF_STUDY QUESTION REVIEW q2",
+        "SELF_STUDY QUESTION REVIEW q1 --page 999",
+    ] {
+        assert!(reader.prepare_action(action).is_err());
+        assert_eq!(state(&temp)["questions"], before);
+    }
+    for action in [
+        "SELF_STUDY QUESTION REVIEW",
+        "SELF_STUDY QUESTION REVIEW q1 --page 0",
+        "SELF_STUDY QUESTION REVIEW q1 extra",
+        "SELF_STUDY QUESTION REVIEW ../../private",
+    ] {
+        assert!(Command::parse(action).is_err());
+    }
+}
+
+#[test]
+fn schema_eight_migrates_without_fabricating_history_or_changing_return_revision() {
+    let (temp, reader) = setup();
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW Existing question?")
+        .unwrap();
+    let before = state(&temp);
+    let mut old = before.clone();
+    old["version"] = json!(8);
+    fs::write(
+        temp.path().join("reader/reader-v1.json"),
+        serde_json::to_vec(&old).unwrap(),
+    )
+    .unwrap();
+    let first = reader
+        .prepare_action("SELF_STUDY QUESTION REVIEW q1")
+        .unwrap();
+    let migrated = state(&temp);
+    assert_eq!(migrated["version"], astrid_source_study::SCHEMA_VERSION);
+    assert_eq!(before["questions"], migrated["questions"]);
+    let second = reader
+        .prepare_action("SELF_STUDY QUESTION REVIEW q1")
+        .unwrap();
+    assert_eq!(first.text, second.text);
+    let mut future = state(&temp);
+    future["version"] = json!(astrid_source_study::SCHEMA_VERSION + 1);
+    let bytes = serde_json::to_vec(&future).unwrap();
+    fs::write(temp.path().join("reader/reader-v1.json"), &bytes).unwrap();
+    assert!(
+        reader
+            .prepare_action("SELF_STUDY QUESTION REVIEW q1")
+            .is_err()
+    );
+    assert_eq!(
+        fs::read(temp.path().join("reader/reader-v1.json")).unwrap(),
+        bytes
+    );
 }
 
 #[test]

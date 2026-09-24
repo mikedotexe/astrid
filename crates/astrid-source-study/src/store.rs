@@ -451,6 +451,10 @@ impl Reader {
             },
             Command::Geometry { request } => return self.prepare_geometry(&mut state, request),
             Command::Question(command) => {
+                if let crate::QuestionCommand::Review { id, page } = &command {
+                    let text = state.questions.review(id, *page)?;
+                    return self.output(&mut state, text, None, InputKind::InquiryReview);
+                }
                 let text = match state.apply_question(command) {
                     Ok(text) => text,
                     Err(error) => return self.recovery_map(&mut state, &error),

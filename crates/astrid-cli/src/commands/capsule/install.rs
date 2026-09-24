@@ -2298,7 +2298,11 @@ mod tests {
         let capsule_dir = tempfile::tempdir().unwrap();
         let base = capsule_dir.path();
         // Create a file just over 1 MB
-        let big = vec![b' '; (MAX_SCHEMA_FILE_SIZE as usize) + 1];
+        let size = usize::try_from(MAX_SCHEMA_FILE_SIZE)
+            .unwrap()
+            .checked_add(1)
+            .unwrap();
+        let big = vec![b' '; size];
         std::fs::write(base.join("big.json"), &big).unwrap();
         std::fs::write(
             base.join("Capsule.toml"),

@@ -418,6 +418,31 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 mod source_study_tests {
     use super::*;
     #[test]
+    fn explicit_inquiry_review_does_not_select_or_revise_the_reviewed_question() {
+        let temp = tempfile::tempdir().unwrap();
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
+            temp.path().join("reader"),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        reader.prepare_action("SELF_STUDY QUESTION NEW Retained question?").unwrap();
+        reader.prepare_action("SELF_STUDY QUESTION PARK q1").unwrap();
+        reader.prepare_action("SELF_STUDY QUESTION NEW Unrelated active question?").unwrap();
+        let before: serde_json::Value = serde_json::from_slice(&std::fs::read(temp.path().join("reader/reader-v1.json")).unwrap()).unwrap();
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let action = "SELF_STUDY QUESTION REVIEW q1";
+        next_action::study_navigation::handle_request(&mut conv, "SELF_STUDY", action).unwrap();
+        let output = prepare_shared_study_target(&reader, conv.introspect_target).unwrap();
+        assert_eq!(output.input_kind, astrid_source_study::InputKind::InquiryReview);
+        assert!(output.question_id.is_none());
+        assert!(output.text.contains("Retained question?"));
+        assert!(!output.text.contains("Unrelated active question?"));
+        let request = serde_json::json!({"messages":[{"role":"system","content":output.system_prompt},{"role":"user","content":output.text}]}).to_string();
+        let response = serde_json::json!({"message":{"content":"STUDY_NOTE: Not a saved revision.\nNEXT: REST"},"done":true}).to_string();
+        reader.navigation_delivered(output.navigation_id.as_ref().unwrap(), &request, &response).unwrap();
+        let after: serde_json::Value = serde_json::from_slice(&std::fs::read(temp.path().join("reader/reader-v1.json")).unwrap()).unwrap();
+        assert_eq!(before["questions"], after["questions"]);
+    }
+    #[test]
     fn explicit_introspection_prepares_reflection_not_a_source_page() {
         let temp = tempfile::tempdir().unwrap();
         let reader = astrid_source_study::Reader::new(

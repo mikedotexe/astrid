@@ -25,10 +25,11 @@ impl Reader {
             ));
         }
         let reflection = input_kind == InputKind::Reflection;
+        let detached = reflection || input_kind == InputKind::InquiryReview;
         let question_id = page
             .as_ref()
             .map_or_else(|| state.questions.active.clone(), |p| p.question_id.clone());
-        let question_id = if reflection { None } else { question_id };
+        let question_id = if detached { None } else { question_id };
         let notebook = state
             .questions
             .notebook_for(question_id.as_deref(), &state.notebook);
@@ -51,16 +52,16 @@ impl Reader {
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         let receipt_position = text.len();
         text.push('\n');
-        if !reflection {
+        if !detached {
             text.push_str(&state.questions.render_context(question_id.as_deref()));
         }
         let mut suffix = String::new();
         if let Some(choice) = &state.last_choice
-            && !reflection
+            && !detached
         {
             suffix.push_str(&choice.render(false));
         }
-        let recall = if reflection || input_kind == InputKind::Notebook {
+        let recall = if detached || input_kind == InputKind::Notebook {
             String::new()
         } else {
             study_context(
@@ -73,7 +74,7 @@ impl Reader {
         };
         text.push_str(&recall);
         text.push_str(&suffix);
-        if !reflection {
+        if !detached {
             insert_receipt(&mut text, receipt_position, &receipt);
         }
         if text

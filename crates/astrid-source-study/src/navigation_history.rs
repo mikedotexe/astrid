@@ -114,6 +114,7 @@ impl NavigationHistory {
             InputKind::Questions
                 | InputKind::Reflection
                 | InputKind::Notebook
+                | InputKind::InquiryReview
                 | InputKind::RuntimeTrace
                 | InputKind::Geometry
                 | InputKind::Legacy
@@ -167,6 +168,7 @@ impl NavigationHistory {
                     | InputKind::Questions
                     | InputKind::Reflection
                     | InputKind::Notebook
+                    | InputKind::InquiryReview
                     | InputKind::RuntimeTrace
                     | InputKind::Geometry
             )

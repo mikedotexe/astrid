@@ -94,7 +94,10 @@ impl Reader {
             state.receipts.insert(page.id.clone(), page_receipt);
             state.current = Some(page.source.clone());
         }
-        if output.input_kind != InputKind::Reflection {
+        if !matches!(
+            output.input_kind,
+            InputKind::Reflection | InputKind::InquiryReview
+        ) {
             state.questions.record(
                 output.question_id.as_deref(),
                 &mut state.notebook,
@@ -114,6 +117,7 @@ impl Reader {
                 | InputKind::Questions
                 | InputKind::Reflection
                 | InputKind::Notebook
+                | InputKind::InquiryReview
         ) {
             state.last_input = Some(receipt.clone());
         }

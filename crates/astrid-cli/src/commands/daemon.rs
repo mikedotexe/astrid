@@ -251,6 +251,38 @@ fn print_status(format: OutputFormat, status: &astrid_types::kernel::DaemonStatu
     );
     println!("  Clients:    {}", status.connected_clients);
     println!("  Capsules:   {} loaded", status.loaded_capsules.len());
+    match &status.capsule_lifecycle {
+        None => println!("  Lifecycle: observations unavailable (older daemon or no report)"),
+        Some(observations) => {
+            if let Some(batch) = &observations.discovery {
+                println!(
+                    "  Readiness: last completed advisory batch at {} ms uptime; all reported ready: {}",
+                    batch.observed_at_uptime_ms, batch.all_reported_ready
+                );
+                for capsule in &batch.capsules {
+                    println!(
+                        "    {}: load={:?}, readiness={:?}",
+                        capsule.name, capsule.load, capsule.readiness
+                    );
+                }
+            } else {
+                println!("  Readiness: no completed discovery observation");
+            }
+            println!(
+                "  Cleanup:   {} unacknowledged unload(s) this boot; {} older restart record(s) omitted",
+                observations.unacknowledged_unloads, observations.omitted_restarts
+            );
+            if let Some(attempt) = observations.restarts.last() {
+                println!(
+                    "    Last restart {}: unload={:?}, replacement={:?}, readiness={:?}; child exit not independently verified",
+                    attempt.cleanup.name,
+                    attempt.cleanup.outcome,
+                    attempt.replacement,
+                    attempt.readiness
+                );
+            }
+        },
+    }
     let health = &status.capsule_runtime_health;
     println!(
         "  Runtime:    {} installed, {} discovered, {} Component Model, {} accepted legacy",

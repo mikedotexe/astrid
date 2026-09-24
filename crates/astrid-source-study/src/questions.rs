@@ -10,6 +10,7 @@ mod observations;
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum QuestionCommand {
     List { page: usize },
+    Review { id: String, page: usize },
     New(String),
     Focus(String),
     Home,
@@ -28,6 +29,23 @@ impl QuestionCommand {
         }
         Ok(match verb {
             "" => Self::List { page: 1 },
+            "REVIEW" => {
+                let mut parts = rest.split_whitespace();
+                let id = parts.next().unwrap_or_default();
+                let page = match parts.next() {
+                    None => 1,
+                    Some("--page") => parts.next().context("review page required")?.parse()?,
+                    _ => bail!("use QUESTION REVIEW qN [--page N]"),
+                };
+                anyhow::ensure!(
+                    valid_id(id) && page > 0 && parts.next().is_none(),
+                    "use QUESTION REVIEW qN [--page N], pages start at 1"
+                );
+                Self::Review {
+                    id: id.into(),
+                    page,
+                }
+            },
             "NEW" if !rest.trim().is_empty() && rest.len() <= 350 => Self::New(rest.trim().into()),
             "HOME" => Self::Home,
             "PARK" if valid_id(rest) => Self::Park(rest.into()),
@@ -43,7 +61,7 @@ impl QuestionCommand {
             },
             id if rest.is_empty() && valid_id(id) => Self::Focus(id.into()),
             _ => bail!(
-                "use QUESTION, QUESTION NEW <question, up to 350 bytes>, QUESTION qN, QUESTION HOME, QUESTION PARK qN, or QUESTION RESOLVE qN [finding]"
+                "use QUESTION, QUESTION REVIEW qN [--page N], QUESTION NEW <question, up to 350 bytes>, QUESTION qN, QUESTION HOME, QUESTION PARK qN, or QUESTION RESOLVE qN [finding]"
             ),
         })
     }
@@ -79,6 +97,26 @@ struct Reference {
     line: usize,
 }
 impl Questions {
+    pub(crate) fn review(&self, id: &str, page: usize) -> Result<String> {
+        let inquiry = self
+            .entries
+            .get(id)
+            .context("question not found; use SELF_STUDY QUESTION")?;
+        let mut note: serde_json::Value = serde_json::from_str(&inquiry.notebook.note_view(page)?)?;
+        note["navigation"] = format!("SELF_STUDY QUESTION REVIEW {id} --page N").into();
+        Ok(serde_json::to_string_pretty(&serde_json::json!({
+            "scope": "Explicit inquiry review. Historical authored accounts and supplied-source references only; not current source, verified understanding, or complete experimental history. Review does not select, reopen, resolve, or revise this inquiry. Its response cannot change saved notes; choose the inquiry and source explicitly to revise.",
+            "id": id,
+            "authored_revision": self.target_revision(id)?,
+            "question": inquiry.question,
+            "status": inquiry.status,
+            "finding": inquiry.finding,
+            "note_history": note,
+            "historical_source_references": inquiry.sources,
+            "select_command": format!("SELF_STUDY QUESTION {id}"),
+            "experimental_records": "Geometry and confirmed observations remain separately inspectable; this view does not export them."
+        }))?)
+    }
     pub(crate) fn geometry(&mut self, id: &str) -> Result<(&str, &mut crate::geometry::History)> {
         let inquiry = self
             .entries
@@ -142,6 +180,7 @@ impl Questions {
         }
         match command {
             QuestionCommand::List { page } => return self.render_list(page),
+            QuestionCommand::Review { id, page } => return self.review(&id, page),
             QuestionCommand::New(question) => {
                 self.next = self.next.checked_add(1).context("question IDs exhausted")?;
                 let id = format!("q{}", self.next);
@@ -292,7 +331,7 @@ impl Questions {
         out
     }
     fn render_list(&self, page: usize) -> Result<String> {
-        let mut rows=vec!["Your study questions. Select qN to restore its notebook and saved reading position. NEW starts a question; PARK leaves it available; RESOLVE records your conclusion, without verifying it. HOME returns to unthreaded browsing. Historical questions without a saved position require an explicit source selection.".into()];
+        let mut rows=vec!["Your study questions. Select qN to restore its notebook and saved reading position. QUESTION REVIEW qN [--page N] inspects an inquiry without selecting or revising it. NEW starts a question; PARK leaves it available; RESOLVE records your conclusion, without verifying it. HOME returns to unthreaded browsing. Historical questions without a saved position require an explicit source selection.".into()];
         rows.extend(self.entries.iter().map(|(id, q)| {
             format!(
                 "SELF_STUDY QUESTION {id} — {}{} — {}",

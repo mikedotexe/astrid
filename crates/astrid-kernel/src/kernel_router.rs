@@ -199,6 +199,7 @@ async fn handle_request(kernel: &Arc<crate::Kernel>, topic: String, req: KernelR
             let uptime = kernel.boot_time.elapsed().as_secs();
             let reg = kernel.capsules.read().await;
             let loaded: Vec<String> = reg.list().iter().map(ToString::to_string).collect();
+            drop(reg);
             let capsule_runtime_health =
                 crate::capsule_runtime_health::summarize(&kernel.workspace_root, &loaded);
             let status = astrid_events::kernel_api::DaemonStatus {
@@ -209,6 +210,7 @@ async fn handle_request(kernel: &Arc<crate::Kernel>, topic: String, req: KernelR
                 connected_clients: u32::try_from(kernel.connection_count()).unwrap_or(u32::MAX),
                 loaded_capsules: loaded,
                 capsule_runtime_health,
+                capsule_lifecycle: Some(kernel.lifecycle.read().await.clone()),
             };
             KernelResponse::Status(status)
         },

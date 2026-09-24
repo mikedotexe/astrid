@@ -73,6 +73,7 @@ async fn exercise_router() {
     let kernel = astrid_kernel::Kernel::new(SessionId::new(), home)
         .await
         .unwrap();
+    exercise_lifecycle_status(&kernel).await;
     let mut responses = kernel.event_bus.subscribe_topic("astrid.v1.response.*");
     // Include the old prefix inside the suffix: only the leading namespace maps.
     let topic = "astrid.v1.request.kernel.request.approval";
@@ -112,4 +113,66 @@ async fn exercise_router() {
             );
         }
     }
+}
+
+async fn lifecycle_status(
+    kernel: &astrid_kernel::Kernel,
+) -> astrid_events::kernel_api::DaemonStatus {
+    let mut responses = kernel
+        .event_bus
+        .subscribe_topic("astrid.v1.response.status");
+    kernel.event_bus.publish(AstridEvent::Ipc {
+        metadata: EventMetadata::new("router_test"),
+        message: IpcMessage::new(
+            "astrid.v1.request.status",
+            IpcPayload::RawJson(serde_json::to_value(KernelRequest::GetStatus).unwrap()),
+            kernel.session_id.0,
+        ),
+    });
+    let event = responses.recv().await.unwrap();
+    let AstridEvent::Ipc { message, .. } = &*event else {
+        panic!("expected IPC");
+    };
+    let IpcPayload::RawJson(payload) = &message.payload else {
+        panic!("expected JSON");
+    };
+    let KernelResponse::Status(status) = serde_json::from_value(payload.clone()).unwrap() else {
+        panic!("expected status");
+    };
+    status
+}
+
+async fn exercise_lifecycle_status(kernel: &astrid_kernel::Kernel) {
+    let before = lifecycle_status(kernel).await.capsule_lifecycle.unwrap();
+    assert!(before.discovery.is_none());
+    let mut legacy = kernel
+        .event_bus
+        .subscribe_topic("astrid.v1.capsules_loaded");
+    let mut observations = kernel
+        .event_bus
+        .subscribe_topic("astrid.v1.lifecycle.observed");
+    kernel.load_all_capsules().await;
+    let after = lifecycle_status(kernel).await.capsule_lifecycle.unwrap();
+    let report = after.discovery.unwrap();
+    assert!(report.advisory);
+    assert!(report.capsules.is_empty());
+    assert!(!report.all_reported_ready);
+    let event = observations.recv().await.unwrap();
+    let AstridEvent::Ipc { message, .. } = &*event else {
+        panic!("expected observation");
+    };
+    let IpcPayload::RawJson(payload) = &message.payload else {
+        panic!("expected JSON");
+    };
+    assert_eq!(payload["kind"], "discovery");
+    assert_eq!(payload["report"], serde_json::to_value(report).unwrap());
+    let event = legacy.recv().await.unwrap();
+    let AstridEvent::Ipc { message, .. } = &*event else {
+        panic!("expected legacy notification");
+    };
+    let IpcPayload::RawJson(payload) = &message.payload else {
+        panic!("expected JSON");
+    };
+    // Compatibility notification is not the new per-capsule readiness report.
+    assert_eq!(*payload, serde_json::json!({"status":"ready"}));
 }

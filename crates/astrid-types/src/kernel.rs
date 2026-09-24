@@ -2,6 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
+#[path = "kernel_lifecycle.rs"]
+mod lifecycle;
+pub use lifecycle::*;
+
 /// The well-known system session UUID string used by the background daemon.
 ///
 /// All kernel-internal IPC messages are published with this `source_id`.
@@ -88,6 +92,9 @@ pub struct DaemonStatus {
     /// Capsule install/discovery/runtime compatibility summary.
     #[serde(default)]
     pub capsule_runtime_health: CapsuleRuntimeHealth,
+    /// Process-local lifecycle observations. None means unavailable, not success.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub capsule_lifecycle: Option<CapsuleLifecycleStatus>,
 }
 
 /// Capsule runtime compatibility summary for daemon health/status output.

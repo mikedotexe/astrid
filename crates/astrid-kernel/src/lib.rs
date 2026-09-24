@@ -16,6 +16,7 @@ mod capsule_runtime_health;
 /// The Management API router listening to the `EventBus`.
 pub mod kernel_router;
 mod lifecycle_checks;
+mod lifecycle_evidence;
 mod maintenance;
 /// The Unix Domain Socket manager.
 pub mod socket;
@@ -93,6 +94,8 @@ pub struct Kernel {
     pub allowance_store: Arc<astrid_approval::AllowanceStore>,
     /// System-wide identity store for platform user resolution.
     identity_store: Arc<dyn astrid_storage::IdentityStore>,
+    /// Historical lifecycle observations; never consulted for admission decisions.
+    lifecycle: RwLock<astrid_events::kernel_api::CapsuleLifecycleStatus>,
 }
 
 impl Kernel {
@@ -230,6 +233,7 @@ impl Kernel {
             token_path,
             allowance_store,
             identity_store,
+            lifecycle: RwLock::new(astrid_events::kernel_api::CapsuleLifecycleStatus::default()),
         });
 
         spawn_kernel_tasks(&kernel);
@@ -337,9 +341,7 @@ impl Kernel {
                 .ok_or_else(|| anyhow::anyhow!("capsule '{id}' has no source directory"))?
         };
 
-        // Unregister and explicitly unload. There is no Drop impl that
-        // calls unload() (it's async), so we must do it here to avoid
-        // leaking MCP subprocesses and other engine resources.
+        // Unregister, then attempt unload. No async Drop guarantees retirement.
         let old_capsule = {
             let mut registry = self.capsules.write().await;
             registry
@@ -348,10 +350,26 @@ impl Kernel {
         };
         // Best effort only: shared ownership skips unload; neither a skip nor
         // an unload error prevents reloading. This is not an in-flight drain.
-        lifecycle_checks::unload_for_restart(old_capsule).await;
+        let cleanup = lifecycle_checks::unload_for_restart(old_capsule).await;
+        let mut observation = astrid_events::kernel_api::CapsuleRestartReport {
+            schema_version: 1,
+            attempt_id: uuid::Uuid::new_v4().to_string(),
+            observed_at_uptime_ms: self.lifecycle_uptime_ms(),
+            cleanup,
+            replacement: astrid_events::kernel_api::CapsuleLoadOutcome::Pending,
+            readiness: astrid_events::kernel_api::CapsuleReadinessOutcome::NotChecked,
+        };
+        self.observe_restart(&observation).await;
 
-        // Re-load from disk.
-        self.load_capsule(source_dir).await?;
+        // Preserve the existing reload policy; cleanup debt remains independently visible.
+        let reload = self.load_capsule(source_dir).await;
+        observation.replacement = if reload.is_ok() {
+            astrid_events::kernel_api::CapsuleLoadOutcome::Loaded
+        } else {
+            astrid_events::kernel_api::CapsuleLoadOutcome::Failed
+        };
+        self.observe_restart(&observation).await;
+        reload?;
 
         // Signal the newly loaded capsule to clean up ephemeral state
         // from the previous incarnation. Capsules that don't implement
@@ -438,39 +456,14 @@ impl Kernel {
         let (uplinks, others): (Vec<_>, Vec<_>) =
             sorted.into_iter().partition(|(m, _)| m.capabilities.uplink);
 
-        // Load uplinks first so their event bus subscriptions are ready.
-        let uplink_names: Vec<String> = uplinks
-            .iter()
-            .map(|(m, _)| m.package.name.clone())
-            .collect();
-        for (manifest, dir) in &uplinks {
-            if let Err(e) = self.load_capsule(dir.clone()).await {
-                tracing::warn!(
-                    capsule = %manifest.package.name,
-                    error = %e,
-                    "Failed to load uplink capsule during discovery"
-                );
-            }
-        }
-
-        // Attempt bounded readiness waits before loading non-uplinks. A
-        // timeout/crash is logged and loading continues; subscriptions may not
-        // be active. Missing registry entries are skipped by the helper.
-        self.await_capsule_readiness(&uplink_names).await;
-
-        for (manifest, dir) in &others {
-            if let Err(e) = self.load_capsule(dir.clone()).await {
-                tracing::warn!(
-                    capsule = %manifest.package.name,
-                    error = %e,
-                    "Failed to load capsule during discovery"
-                );
-            }
-        }
-
-        // Apply the same advisory wait to non-uplink run-loop capsules.
-        let other_names: Vec<String> = others.iter().map(|(m, _)| m.package.name.clone()).collect();
-        self.await_capsule_readiness(&other_names).await;
+        // Preserve partition order and advisory waits, including unsuccessful loads.
+        let mut outcomes = self.load_discovery_group(&uplinks).await;
+        outcomes.extend(self.load_discovery_group(&others).await);
+        self.observe_discovery(lifecycle_evidence::discovery_report(
+            outcomes,
+            self.lifecycle_uptime_ms(),
+        ))
+        .await;
 
         // Signal completion of loading attempts. The legacy "ready" payload
         // does not certify that every capsule loaded or signaled readiness.
@@ -558,37 +551,16 @@ impl Kernel {
             let mut reg = self.capsules.write().await;
             reg.drain()
         };
-        for mut arc in capsules {
-            let id = arc.id().clone();
-            let mut unloaded = false;
-
-            for retry in 0..20_u32 {
-                if let Some(capsule) = Arc::get_mut(&mut arc) {
-                    if let Err(e) = capsule.unload().await {
-                        tracing::warn!(
-                            capsule_id = %id,
-                            error = %e,
-                            "Failed to unload capsule during shutdown"
-                        );
-                    }
-                    unloaded = true;
-                    break;
-                }
-                if retry < 19 {
-                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                }
-            }
-
-            if !unloaded {
-                tracing::warn!(
-                    capsule_id = %id,
-                    strong_count = Arc::strong_count(&arc),
-                    "Dropping capsule without explicit unload after retries exhausted; \
-                     MCP child processes may be orphaned"
-                );
-            }
-            drop(arc);
+        let mut outcomes = Vec::with_capacity(capsules.len());
+        for arc in capsules {
+            outcomes.push(lifecycle_checks::unload_for_shutdown(arc).await);
         }
+        self.observe_shutdown(astrid_events::kernel_api::CapsuleShutdownReport {
+            schema_version: 1,
+            observed_at_uptime_ms: self.lifecycle_uptime_ms(),
+            capsules: outcomes,
+        })
+        .await;
 
         // 3. Flush the persistent KV store.
         if let Err(e) = self.kv.close().await {
@@ -605,42 +577,9 @@ impl Kernel {
         let _ = std::fs::remove_file(&self.token_path);
         crate::socket::remove_readiness_file();
 
-        tracing::info!("Kernel shutdown complete");
-    }
-
-    /// Wait for a set of capsules to signal readiness, in parallel.
-    ///
-    /// Collects `Arc<dyn Capsule>` handles under a short-lived read lock,
-    /// then drops the lock before awaiting. Capsules without a run loop
-    /// return `Ready` immediately and don't contribute to wait time.
-    /// The 500 ms timeout is passed to implementations, not independently enforced
-    /// here. Timeout/crash results are diagnostic and do not reject loading.
-    async fn await_capsule_readiness(&self, names: &[String]) {
-        if names.is_empty() {
-            return;
-        }
-
-        let capsules: Vec<(String, std::sync::Arc<dyn astrid_capsule::capsule::Capsule>)> = {
-            let registry = self.capsules.read().await;
-            names
-                .iter()
-                .filter_map(
-                    |name| match astrid_capsule::capsule::CapsuleId::new(name.clone()) {
-                        Ok(capsule_id) => registry.get(&capsule_id).map(|c| (name.clone(), c)),
-                        Err(e) => {
-                            tracing::warn!(
-                                capsule = %name,
-                                error = %e,
-                                "Invalid capsule ID, skipping readiness wait"
-                            );
-                            None
-                        },
-                    },
-                )
-                .collect()
-        };
-
-        lifecycle_checks::await_readiness(capsules).await;
+        tracing::info!(
+            "Kernel shutdown attempts complete; consult lifecycle outcomes for cleanup debt"
+        );
     }
 }
 
@@ -954,7 +893,7 @@ async fn attempt_capsule_restart(
     let capsule_id = astrid_capsule::capsule::CapsuleId::from_static(id_str);
     match kernel.restart_capsule(&capsule_id).await {
         Ok(()) => {
-            tracing::info!(capsule_id = %id_str, attempt, "Capsule restarted successfully");
+            tracing::info!(capsule_id = %id_str, attempt, "Capsule replacement loaded; cleanup outcome recorded separately");
             true
         },
         Err(e) => {

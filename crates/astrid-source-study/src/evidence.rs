@@ -8,6 +8,7 @@ pub enum InputKind {
     PrivateWriting,
     Reflection,
     Notebook,
+    InquiryReview,
     SourceSession,
     Relationships,
     Questions,
@@ -32,6 +33,9 @@ impl InputKind {
             },
             Self::Notebook => {
                 "Explicitly opened authored note and revision history. Retained anchors are historical supplied fragments, not newly supplied source or verified conclusions."
+            },
+            Self::InquiryReview => {
+                "Explicit review of a retained inquiry: authored notes, revisions and historical references. No new source or private draft is supplied. Review does not select the inquiry or revise its account."
             },
             Self::Geometry => {
                 "Chosen geometry evidence: frozen ESN activation observations and authored hypotheses, not covariance eigenvectors, verified causes, or felt-state measurements. No control changes or experiments were executed."

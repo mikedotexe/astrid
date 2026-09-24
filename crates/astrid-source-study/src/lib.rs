@@ -47,7 +47,7 @@ pub use store::{ActivityRequest, ActivityResponse, DeliveryReceipt, Reader, Stud
 
 pub const STUDY_PROMPT: &str = include_str!("../prompt.txt");
 
-pub const SCHEMA_VERSION: u32 = 8;
+pub const SCHEMA_VERSION: u32 = 9;
 /// Whole system + reference input, shared by every provider adapter.
 pub const MAX_INPUT_BYTES: usize = 48_000;
 /// Byte-safe room for the protected input, framing and 8,192 output tokens.

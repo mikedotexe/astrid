@@ -9,6 +9,13 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Added - lifecycle evidence and selective inquiry recall (2026-09-24)
+
+- Report capsule loading and advisory readiness separately in daemon status and a new lifecycle IPC observation. Preserve the legacy loading notification and existing admission policy; missing handles and failed readiness tasks are explicit, not successful readiness.
+- Record acknowledged, failed and ownership-skipped unload attempts independently from replacement loading. Keep bounded restart history and cumulative unacknowledged cleanup counts; successful replacement does not erase cleanup debt or certify child exit.
+- Add explicit `SELF_STUDY QUESTION REVIEW qN [--page N]` over current native inquiry notes, revisions and source references, without selection, automatic journal recall, private-draft access or implicit note revision. Reader schema 9 retains existing state and refuses downgrade writers. Both real adapters have synthetic coverage.
+- Keep older sensory tracing separate after source review: useful admission/selection evidence still lacks capture joins, retention and post-transform application acknowledgements. No engine changes imported. Approved paired rollout and separate kernel/CLI rollout verified: bridge 87077, Minime agent 86528, kernel 87998; no forced termination or protected-service restart. Qualification and boundaries: `docs/steward-notes/2026-09-24-lifecycle-evidence-and-selective-recall.md`.
+
 ### Fixed - source counterevidence and voluntary note revision (2026-09-24)
 
 - Correct kernel comments that described advisory import/readiness checks and best-effort unloads as guaranteed gates. Test the production failure paths without changing loading, restart, shutdown or approval policy.
