@@ -4827,8 +4827,18 @@ pub fn spawn_autonomous_loop(
                         );
                         save_astrid_journal(&notice, "private_writing_notice", fill_pct);
                     }
-                    let writing_continuation = next_action::normalized_private_writing_next(mode_name, &response_text);
-                    if writing_continuation.is_some() {
+                    let study_continuation = next_action::normalized_study_continue_next(mode_name, &response_text);
+                    if let Some(normalized) = study_continuation {
+                        // Reference notice only: her authored NEXT stays as written in the
+                        // journal; the bare CONTINUE is dispatched as the study bookmark.
+                        let notice = format!(
+                            "Runtime study-choice feedback (reference only): bare CONTINUE in a self_study turn normalized to {normalized}; the normalized command passes through the ordinary action checks."
+                        );
+                        save_astrid_journal(&notice, "self_study_carriage_notice", fill_pct);
+                    }
+                    let writing_continuation = next_action::normalized_private_writing_next(mode_name, &response_text)
+                        .or(study_continuation);
+                    if writing_continuation.is_some() && study_continuation.is_none() {
                         let feedback = astrid_source_study::response_choice::inspect_response(&response_text, true);
                         let notice = format!(
                             "Runtime writing-choice feedback (reference only): {} Normalized command will pass through the ordinary action checks; this notice does not establish dispatch or completion.",

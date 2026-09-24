@@ -41,7 +41,7 @@ mod workspace;
 mod writing_choice;
 
 pub(crate) use action_syntax::strip_action;
-pub(crate) use writing_choice::normalized_private_writing_next;
+pub(crate) use writing_choice::{normalized_private_writing_next, normalized_study_continue_next};
 
 pub(crate) fn division_action_prompt_note(workspace: Option<&std::path::Path>) -> Option<String> {
     division::prompt_note(workspace)

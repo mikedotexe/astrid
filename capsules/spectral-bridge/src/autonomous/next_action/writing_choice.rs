@@ -19,9 +19,53 @@ pub(crate) fn normalized_private_writing_next(mode: &str, text: &str) -> Option<
     .then_some("WRITE CONTINUE")
 }
 
+/// Study shorthand (2026-09-23): a bare `CONTINUE` chosen from a self-study
+/// turn means the study bookmark, exactly as it means the private draft in a
+/// private-writing turn. It was rejected as unwired 29 times in 14 days while
+/// the recovery note kept telling her the long form. Normalization only; her
+/// authored text is unchanged and a reference notice records the mapping.
+pub(crate) fn normalized_study_continue_next(mode: &str, text: &str) -> Option<&'static str> {
+    if mode != "self_study" {
+        return None;
+    }
+    super::parse_next_action(text)
+        .is_some_and(|action| action.eq_ignore_ascii_case("CONTINUE"))
+        .then_some("SELF_STUDY CONTINUE")
+}
+
 #[cfg(test)]
 mod tests {
-    use super::normalized_private_writing_next;
+    use super::{normalized_private_writing_next, normalized_study_continue_next};
+
+    #[test]
+    fn bare_continue_in_a_study_turn_means_the_study_bookmark() {
+        for text in ["NEXT: CONTINUE", "The page ends mid-item.\nNEXT: continue"] {
+            assert_eq!(
+                normalized_study_continue_next("self_study", text),
+                Some("SELF_STUDY CONTINUE")
+            );
+            for mode in [
+                "private_writing",
+                "dialogue_live",
+                "self_study_carriage_notice",
+                "write",
+            ] {
+                assert_eq!(normalized_study_continue_next(mode, text), None, "{mode}");
+            }
+        }
+        for text in [
+            "NEXT: SELF_STUDY CONTINUE",
+            "NEXT: CONTINUE d88",
+            "NEXT: FINISH",
+            "I would like to continue.",
+        ] {
+            assert_eq!(
+                normalized_study_continue_next("self_study", text),
+                None,
+                "{text}"
+            );
+        }
+    }
 
     #[test]
     fn continuation_is_scoped_to_explicit_verified_private_choice() {
