@@ -1114,6 +1114,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "ProvenanceTests",
                  "run": "cd /Users/v/other/astrid && python3 scripts/bridge_stage_provenance.py --self-test"},
     },
+    {
+        "id": "writing_length_dial_named_in_place",
+        "shipped": "2026-09-23",
+        "surface": "BOTH beings' writing length — the WRITE PROFILE dial (SHORT 512 / DEFAULT / EXTENDED 8192) and the default invitation",
+        "failure_mode": "the dial shipped 2026-09-23 with raised ceilings but was described only inside WRITE HELP and the long persona text; neither being ever chose it (no NEXT: WRITE PROFILE in any journal), while the live gemma4 persona still said 'Use a few sentences or a few compact paragraphs' and the default voice 'brief writing or stopping is equally welcome'. Measured: outputs stopped at 200-550 tokens under 768-8192 ceilings with 0-2% cap hits — the invitation was the limit, not the cap (advertised-but-untouched dial, the un-muffle shape). Fix: real invitation ('a page is as welcome as a line, and stopping is welcome too') and the dial named where they write; ceilings unchanged",
+        "guard": {"repo": "minime", "file": "minime_autonomy/writing.py", "symbol": "EXPRESSION_ROOM"},
+        "test": {"repo": "minime", "kind": "python", "file": "tests/test_expressive_capacity.py",
+                 "name": "test_default_invitation_is_optional_and_short_wins",
+                 "run": "cd /Users/v/other/minime && python3 -m pytest tests/test_expressive_capacity.py -q"},
+    },
 ]
 
 
