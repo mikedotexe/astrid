@@ -96,7 +96,7 @@ impl Reader {
         }
         if !matches!(
             output.input_kind,
-            InputKind::Reflection | InputKind::InquiryReview
+            InputKind::Reflection | InputKind::InquiryReview | InputKind::RevisionRecovery
         ) {
             state.questions.record(
                 output.question_id.as_deref(),
@@ -118,6 +118,7 @@ impl Reader {
                 | InputKind::Reflection
                 | InputKind::Notebook
                 | InputKind::InquiryReview
+                | InputKind::RevisionRecovery
         ) {
             state.last_input = Some(receipt.clone());
         }

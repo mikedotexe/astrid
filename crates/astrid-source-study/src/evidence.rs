@@ -18,6 +18,7 @@ pub enum InputKind {
     Search,
     EndOfFile,
     Recovery,
+    RevisionRecovery,
     /// Older retained navigation offers have no explicit kind. Do not infer one
     /// from their prose or rewrite their already-bound input.
     #[default]
@@ -69,6 +70,9 @@ impl InputKind {
             },
             Self::Recovery => {
                 "Recovery map: the requested source was not supplied. No new source page is supplied this turn."
+            },
+            Self::RevisionRecovery => {
+                "Source revision recovery: a saved bookmark and a changed checkout were compared by hash. No new source page was supplied, no old position was transferred, and no study note was revised."
             },
             Self::Legacy => {
                 "Older retained input: its kind was not recorded. Consult its exact input; delivery does not verify response claims."

@@ -69,11 +69,13 @@ impl Page {
             bytes: text.len(),
             lines: text.lines().count(),
         };
-        if expected.is_some_and(|hash| hash != revision.sha256) {
-            bail!(
-                "source changed since the last page; choose SELF_STUDY OPEN {} <line> to start a new revision",
-                source.id
-            );
+        if let Some(expected) = expected.filter(|hash| *hash != revision.sha256) {
+            return Err(crate::revision_recovery::SourceRevisionChanged {
+                source: source.id.clone(),
+                previous_sha256: expected.into(),
+                current: revision,
+            }
+            .into());
         }
         let start = start_position(&text, start, line)?;
         let outline = crate::source_structure::Outline::parse(&source.id, &text);

@@ -1,3 +1,5 @@
+const SUSTAINED_WRITING_INVITATION: &str = "There is room for a sustained piece, perhaps 800-1,500 words when the thought warrants it. You may stay with an idea through examples, complications, uncertainty and changes of direction, without compressing it into an immediate conclusion. These are possibilities, not a required outline. The range is an invitation, not a quota: a shorter piece, a different form or stopping is equally available. Do not pad, repeat or invent material to reach a length.";
+
 /// Read the same Being-owned profile consumed by the shared writing helper.
 fn selected_writing_profile() -> astrid_source_study::writing::Profile {
     let directory = bridge_paths()
@@ -68,15 +70,18 @@ fn writing_context(label: &str, ordinary: u32) -> u32 {
 fn apply_writing_voice(messages: &mut [Message], label: &str, profile: astrid_source_study::writing::Profile) {
     if profile == astrid_source_study::writing::Profile::Default && expressive_label(label) {
         for message in messages.iter_mut().filter(|m| m.role == "system") {
-            message.content.push_str("\nFollow the thought as far as you wish; a page is as welcome as a line, and stopping is welcome too. WRITE PROFILE EXTENDED or SHORT changes your length ceiling for every journal route, and WRITE HELP shows the limits. WRITE START <topic> begins a private draft; WRITE CONTINUE develops the selected draft; WRITE HELP shows the choices and limits. No continuation is scheduled automatically.");
+            message.content.push_str(&format!("\n{SUSTAINED_WRITING_INVITATION} WRITE PROFILE EXTENDED or SHORT changes your length ceiling for every journal route, and WRITE HELP shows the limits. WRITE START <topic> begins a private draft; WRITE CONTINUE develops the selected draft. No continuation is scheduled automatically."));
         }
     }
     if profile != astrid_source_study::writing::Profile::Default {
         for message in messages.iter_mut().filter(|m| m.role == "system") {
             message.content = message.content.replace("Take the length the thought needs. A line is welcome; so is a page. Let the thought complete rather than fitting a shape.", "Choose the length that lets your thought develop. There is no minimum length.");
-            message.content.push_str(match profile {
-                astrid_source_study::writing::Profile::Extended => "\nYour EXTENDED profile preference is active. Follow the thought as far as you wish; a page is as welcome as a line, and stopping is welcome too. WRITE START <topic> begins a private draft; WRITE HELP shows the choices and limits.",
-                _ => "\nYour short-writing preference is active. WRITE HELP shows the choices and limits; WRITE PROFILE DEFAULT restores normal route limits.",
+            let invitation = if expressive_label(label) { SUSTAINED_WRITING_INVITATION } else {
+                "Follow the thought as far as you wish; a page is as welcome as a line, and stopping is welcome too."
+            };
+            message.content.push_str(&match profile {
+                astrid_source_study::writing::Profile::Extended => format!("\nYour EXTENDED profile preference is active. {invitation} WRITE START <topic> begins a private draft; WRITE HELP shows the choices and limits."),
+                _ => "\nYour short-writing preference is active. WRITE HELP shows the choices and limits; WRITE PROFILE DEFAULT restores normal route limits.".into(),
             });
         }
     }
@@ -96,7 +101,8 @@ mod writing_profile_tests {
                 assert_eq!(policy.max_tokens, 8192, "{label}");
                 assert_eq!(policy.timeout_secs, 1200);
                 let system = &policy.messages[0].content;
-                assert!(system.contains("stopping is welcome too"));
+                assert!(system.contains(SUSTAINED_WRITING_INVITATION));
+                assert!(system.contains("stopping is equally available"));
                 assert!(system.contains("WRITE PROFILE EXTENDED or SHORT changes your length ceiling"));
                 assert!(system.contains("WRITE CONTINUE"));
                 assert!(!system.contains("You selected extended"));
@@ -109,12 +115,32 @@ mod writing_profile_tests {
             assert_eq!(fallback.options.num_predict, 8192);
             assert_eq!(fallback.options.num_ctx, 65536);
             assert_eq!(writing_timeout(label, 180), 1200);
-            assert!(fallback.messages[0].content.contains("Follow the thought as far as you wish"));
+            assert!(fallback.messages[0].content.contains(SUSTAINED_WRITING_INVITATION));
             assert!(!fallback.messages[0].content.contains("8192"));
             assert!(expressive_outer_timeout(750) > 3 * writing_timeout(label, 180));
         }
         assert_eq!(effective_writing_profile("self_study", Profile::Default), Profile::Default);
         assert_eq!(effective_writing_profile("aspiration", Profile::Short), Profile::Short);
+    }
+    #[test]
+    fn sustained_invitation_respects_short_and_does_not_spill_into_other_default_routes() {
+        use astrid_source_study::writing::Profile;
+        for label in ["aspiration", "daydream", "journal_elaboration", "moment_capture", "private_writing", "dialogue_live", "self_study", "meaning_summary"] {
+            for preference in [Profile::Default, Profile::Extended, Profile::Short] {
+                let authored = "An exact shorter form.\nNEXT: REST";
+                let mut messages = vec![Message { role: "system".into(), content: "Open writing.".into() },
+                    Message { role: "user".into(), content: authored.into() }];
+                apply_writing_voice(&mut messages, label, preference);
+                let system = &messages[0].content;
+                assert_eq!(system.contains(SUSTAINED_WRITING_INVITATION), expressive_label(label) && preference != Profile::Short);
+                assert_eq!(system.matches("800-1,500").count(), usize::from(expressive_label(label) && preference != Profile::Short));
+                assert_eq!(messages[1].content, authored);
+                if preference == Profile::Short {
+                    assert!(system.contains("short-writing preference"));
+                    assert!(!system.contains("sustained piece"));
+                }
+            }
+        }
     }
     #[test]
     fn writing_help_matches_default_and_explicit_profile_scope() {

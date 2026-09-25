@@ -78,10 +78,28 @@ fn source_study_prepare_notice(
     error: &anyhow::Error,
 ) -> (&'static str, String, String) {
     (
-        if private_request { "private_writing_notice" } else { "introspect_notice" },
+        if private_request { "private_writing_notice" } else { "source_study_runtime_notice" },
         if private_request { format!("Private writing: {error:#}. WRITE HELP lists your choices; WRITE CONTINUE retries a pending draft turn.") } else { format!("Source study: {error:#}. Use SELF_STUDY MAP or SELF_STUDY FIND <text>.") },
         String::new(),
     )
+}
+
+fn retain_study_runtime_notice(directory: &std::path::Path, text: &str) -> std::io::Result<std::path::PathBuf> {
+    std::fs::create_dir_all(directory)?;
+    let document = format!("=== SOURCE STUDY RUNTIME NOTICE ===\nAccount: runtime-generated diagnostic, not Astrid's authored reflection.\nNo source delivery or understanding is established by this notice.\n\n{text}\n");
+    write_collision_safe_journal_document(directory, "runtime_notice", &chrono_timestamp(), &document)
+}
+
+fn project_study_response(conv: &mut ConversationState, mode: &str, text: &str, notice_directory: &std::path::Path) -> (String, bool) {
+    if mode != "source_study_runtime_notice" {
+        return project_mailbox_response(text);
+    }
+    if let Err(error) = retain_study_runtime_notice(notice_directory, text) {
+        warn!(%error, "source-study runtime notice could not be retained");
+    }
+    conv.push_receipt("SOURCE_STUDY_RUNTIME", vec![text.into()]);
+    // No runtime error is authored prose, a peer/sensory signal or an executable NEXT.
+    (String::new(), false)
 }
 
 async fn run_shared_source_study(
@@ -201,7 +219,7 @@ async fn run_shared_source_study(
             "source_study_generation_unavailable",
             None,
         );
-        return (if private_request { "private_writing_notice" } else { "introspect_notice" }, if private_request { "Writing generation was unavailable; WRITE CONTINUE retries the pending draft turn.".into() } else { "Source-study generation was unavailable. The page remains pending; SELF_STUDY CONTINUE retries it.".into() }, source);
+        return (if private_request { "private_writing_notice" } else { "source_study_runtime_notice" }, if private_request { "Writing generation was unavailable; WRITE CONTINUE retries the pending draft turn.".into() } else { "Source-study generation was unavailable; the offered input remains retained. Retry the exact requested action to prepare another attempt.".into() }, source);
     };
     let delivery = completion
         .accepted_delivery
@@ -305,7 +323,8 @@ async fn run_shared_source_study(
         "open reflection; no source inspection supplied"
     } else { "local checkout; deployed behavior not established" };
     let artifact = format!(
-        "=== ASTRID INTROSPECTION ===\nSource: {source}\nSource revision: {revision}\nSource scope: {source_scope}\nInput evidence: {}\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
+        "=== {} ===\nSource: {source}\nSource revision: {revision}\nSource scope: {source_scope}\nInput evidence: {}\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
+        if output.input_kind == astrid_source_study::InputKind::RevisionRecovery { "ASTRID STUDY NAVIGATION RESPONSE" } else { "ASTRID INTROSPECTION" },
         output.evidence_scope,
         authorship.witness_id()
     );
@@ -417,6 +436,71 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 #[cfg(test)]
 mod source_study_tests {
     use super::*;
+    #[test]
+    fn changed_source_reaches_the_real_bridge_preparation_and_requires_reselection() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("astrid");
+        let source = root.join("crates/example/src/lib.rs");
+        std::fs::create_dir_all(source.parent().unwrap()).unwrap();
+        std::fs::write(&source, format!("pub fn before() {{}}\n{}", "// old source\n".repeat(1500))).unwrap();
+        let directory = temp.path().join("reader");
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), root)])).unwrap(),
+            directory.clone(),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let prepare = |action: &str, operation: &str| {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            next_action::study_navigation::handle_request(&mut conv, "SELF_STUDY", action).unwrap();
+            conv.introspect_target.as_mut().unwrap().operation_id = Some(operation.into());
+            prepare_shared_study_target(&reader, conv.introspect_target).unwrap()
+        };
+        let deliver = |output: &astrid_source_study::StudyOutput, text: &str| {
+            let request = serde_json::json!({"messages":[{"role":"user","content":output.text}]}).to_string();
+            let response = serde_json::json!({"message":{"content":text},"done":true}).to_string();
+            if let Some(page) = &output.page {
+                reader.delivered(&page.id, &request, &response).unwrap();
+            } else {
+                reader.navigation_delivered(output.navigation_id.as_ref().unwrap(), &request, &response).unwrap();
+            }
+        };
+        let open = "SELF_STUDY OPEN astrid/crates/example/src/lib.rs 1";
+        let old = prepare(open, "old");
+        deliver(&old, "STUDY_NOTE: Original account.\nNEXT: SELF_STUDY CONTINUE");
+        let before: Value = serde_json::from_slice(&std::fs::read(directory.join("reader-v1.json")).unwrap()).unwrap();
+        std::fs::write(&source, "// changed\n".repeat(1500)).unwrap();
+        let recovery = prepare("SELF_STUDY CONTINUE", "changed");
+        assert_eq!(recovery.input_kind, astrid_source_study::InputKind::RevisionRecovery);
+        assert_eq!(recovery, prepare("SELF_STUDY CONTINUE", "changed"));
+        assert!(recovery.page.is_none() && recovery.text.contains(open));
+        deliver(&recovery, &format!("STUDY_NOTE: Not an implicit revision.\nNEXT: {open}"));
+        let after: Value = serde_json::from_slice(&std::fs::read(directory.join("reader-v1.json")).unwrap()).unwrap();
+        for key in ["bookmarks", "progress", "notebook", "questions", "last_input"] {
+            assert_eq!(before[key], after[key]);
+        }
+        let selected = prepare(open, "selected");
+        assert_ne!(selected.page.as_ref().unwrap().revision, old.page.unwrap().revision);
+        deliver(&selected, "NEXT: SELF_STUDY CONTINUE");
+        let resumed = prepare("SELF_STUDY CONTINUE", "resumed");
+        assert_eq!(resumed.page.unwrap().start, selected.page.unwrap().end);
+    }
+
+    #[test]
+    fn runtime_failure_notice_has_no_authored_or_telemetry_framing() {
+        let temp = tempfile::tempdir().unwrap();
+        let (mode, text, _) = source_study_prepare_notice(false, &anyhow::anyhow!("unreadable checkpoint; preserved"));
+        assert_eq!(mode, "source_study_runtime_notice");
+        let path = retain_study_runtime_notice(temp.path(), &text).unwrap();
+        let saved = std::fs::read_to_string(path).unwrap();
+        assert!(saved.contains("runtime-generated diagnostic, not Astrid's authored reflection"));
+        assert!(!saved.contains("Fill:") && !saved.contains("ASTRID JOURNAL"));
+        assert!(!text.contains("CONTINUE retries"));
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let (ordinary, shared) = project_study_response(&mut conv, mode, "unavailable\nNEXT: REST", temp.path());
+        assert!(ordinary.is_empty() && !shared);
+        assert!(parse_next_action(&ordinary).is_none());
+        let (authored, _) = project_study_response(&mut conv, "self_study", "Chosen reply.\nNEXT: REST", temp.path());
+        assert_eq!(authored, "Chosen reply.\nNEXT: REST");
+    }
     #[test]
     fn explicit_inquiry_review_does_not_select_or_revise_the_reviewed_question() {
         let temp = tempfile::tempdir().unwrap();

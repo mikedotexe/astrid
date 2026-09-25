@@ -418,7 +418,27 @@ impl Reader {
             .map(serde_json::to_vec)
             .transpose()?
             .map(digest);
-        let output = self.prepare_parsed_locked(command)?;
+        let output = match self.prepare_parsed_locked(command) {
+            Ok(output) => output,
+            Err(error) => {
+                let Some(change) =
+                    error.downcast_ref::<crate::revision_recovery::SourceRevisionChanged>()
+                else {
+                    return Err(error);
+                };
+                // Still under the owner transaction. Only this typed source mismatch
+                // becomes navigation; corrupt state and I/O failures remain errors.
+                let mut state = self.load()?;
+                self.hydrate(&mut state)?;
+                self.recover(&mut state)?;
+                let bookmark = state
+                    .bookmarks
+                    .get(&change.source)
+                    .context("changed source bookmark missing")?;
+                let text = change.render(bookmark);
+                self.output(&mut state, text, None, InputKind::RevisionRecovery)?
+            },
+        };
         if let Some(identity) = identity {
             let id = output
                 .page

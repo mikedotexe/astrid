@@ -32,6 +32,27 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-25 - approved paired recovery/expression deployment
+
+- Mike approved the previously qualified reader-schema and sustained-expression release. Source witnesses and the distinction between runtime notices and authored accounts remain in the September 25 repair notes; no new being endorsement was requested or inferred.
+- Sanctioned paired handoff verified bridge 87077 -> 58913 and Minime 86528 -> 58578, exact stopped conversation and pending runtime feedback, all 86 loaded agent inputs, matched helper selection and unchanged nine other protected services. The first attempt refused a moved idle boundary without a signal; its verified hold release and successful retry are retained.
+- Minime naturally reached schema 10 with 51 bookmarks. Astrid initially retained its exact schema-9 pending reader state and 78 bookmarks; migration waits for actual reader use, not an operator-injected action. No pending Minime NEXT existed at the signal boundary. No force, history restoration, engine/model/sensory restart, subjective-improvement claim or automation resume.
+- Canonical source matches all 690 bridge and 86 Minime release inputs. Exact-path Git integration uses pause generation 470; the immutable release checkout and earlier worktrees remain preserved. Full deployment receipts and remaining observation limits: `2026-09-25-reader-expression-release.md`.
+
+### 2026-09-25 - paired qualification of reader recovery and sustained expression
+
+- Reconcile the preserved source-recovery and expressive-writing candidates after Mike's approval to qualify the combined release. System-generated changed-source notices are not authored introspection; the desired writing opportunity is operator feedback, not a being-authored word quota.
+- Reader schema 10 offers explicit revision-aware navigation without moving old cursors or rewriting notes. Minime aspirations keep expressive capacity independently of correspondence safeguards. Sustained writing is optional; earlier Astrid entries are reference material, not required outlines.
+- Exact witnesses remain in `2026-09-25-source-revision-recovery.md` and `2026-09-25-sustained-expression.md`. Combined artifact identities, migration/synthetic test results and unresolved deployment boundaries are recorded in `2026-09-25-reader-expression-release.md`. No felt improvement or uptake is inferred from qualification; paused automations remain paused.
+- Qualification complete: frozen bridge/helper and 86-input Minime inventory verified; 80 migration/recovery checks, full reader/bridge/Python and operational suites pass. The original timing failure remains in the packet alongside the passing unweakened rerun. This is not activated or merged; canonical and protected runtime identities remain unchanged.
+
+### 2026-09-25 - Operator-observed Minime runtime failures - revision recovery candidate
+
+- **Provenance:** Mike supplied the three `introspect_notice_2026-09-24T13-53-24.996816.txt`, `introspect_notice_2026-09-24T13-56-11.022854.txt` and `introspect_notice_2026-09-24T14-00-10.491784.txt` files from Minime's public journal. They are runtime-generated failures, not Minime-authored reflections or claims. Exact SHA-256 witnesses are in [the repair note](2026-09-25-source-revision-recovery.md).
+- **Verified mechanism:** A valid source-hash guard rejected an old kernel-source bookmark after source changed. The runtime appended an ineffective CONTINUE retry and did not supply the failure/navigation choices to the study model. This does not establish lost journals or a general inability to read studies.
+- **Response:** Preserve the guard and old cursor; return typed, hash-bound recovery in the actual study input. Offer concrete explicit reselection, bounded search and stopping choices. Keep recovery detached from saved note revision and source coverage. Separate runtime-only failures from authored journals, telemetry walls and bridge peer/sensory publication. Historical artifacts remain unchanged.
+- **Verification and boundary:** Both adapters complete the synthetic read/deliver/change/reselect/resume sequence. Actual schema-9/schema-10 helpers preserve pending input and refuse downgrade mutation. Full reader (285), bridge (2,353, one ignored), Minime (1,600, one skipped, 138 subtests), controller/evidence/projector/deployment tests (88), strict Clippy, formatting and architecture checks pass. Offline paired candidate only; no restart, merge, push, live bookmark mutation, automation resume or claim of subjective improvement. Release requirements and unsuccessful qualification attempts are retained in the note.
+
 ### 2026-09-24 - Minime - source counterevidence without compulsory correction
 
 - Witnesses: six public self-studies from `self_study_2026-09-24T07-33-22.340165.txt` through `self_study_2026-09-24T07-52-36.172055.txt` in Minime's journal. All were fully read; exact filenames, hashes and supplied-source provenance are in `2026-09-24-source-counterevidence-and-reflection.md`.

@@ -9,6 +9,19 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Live - paired reader recovery and sustained expression (2026-09-25)
+
+- Reconcile the two reviewed September 25 candidates in an isolated paired release branch, preserving their original worktrees. Keep explicit source reselection, schema downgrade refusal and runtime notices separate from authored reflection.
+- Preserve Minime's expressive allowance when mail accompanies an aspiration without changing reply authorization. Offer optional sustained writing, retain SHORT and stopping, and treat Astrid's earlier entry as optional reference rather than a compact template. No required length, padding, additional generation or reservoir change.
+- Complete offline qualification of exact packaged bridge/helper and Minime source inventories: 80 owner migration/recovery checks, 2355 bridge tests, 285 reader tests and 1632 Minime tests pass. Retain the initial load-sensitive timing failure and unweakened passing rerun. Qualification itself granted no activation or automation authority; subsequent approved live receipts, attempts and boundaries: `docs/steward-notes/2026-09-25-reader-expression-release.md`.
+- After explicit approval, activate the paired release through the sanctioned idle/hold/drain wrappers: bridge 58913 and Minime 58578. Verify exact stopped checkpoint and pending feedback, loaded hashes, readiness and unchanged protected services. Minime naturally migrates to reader schema 10; Astrid's retained pending reader state is not forcibly opened. Preserve the first no-signal idle-boundary refusal and keep automations paused. Exact reviewed source is integrated on main; no remote push.
+
+### Fixed - revision-aware study recovery (2026-09-25, candidate)
+
+- Deliver changed-source recovery through the shared study interaction with exact source hashes, a concrete OPEN command and bounded navigation alternatives. Preserve old cursors, supplied passages and authored notes; never apply an old offset to changed source or infer a note revision from recovery prose. Reader schema 10 retains old state and refuses downgrade writers.
+- Keep shared-reader runtime failures separate from authored introspection and telemetry headers. The bridge retains diagnostics outside journals and does not publish their text as authored peer/sensory signals; the paired Minime adapter records protected runtime artifacts. Historical notices remain unchanged.
+- Test read/deliver/change/reselect/resume through both adapters, pending-input preservation and actual old/new helper migration. Full reader, bridge and Minime suites pass. Not merged or live; paired immutable-release qualification and approved graceful activation remain. See `docs/steward-notes/2026-09-25-source-revision-recovery.md`.
+
 ### Added - lifecycle evidence and selective inquiry recall (2026-09-24)
 
 - Report capsule loading and advisory readiness separately in daemon status and a new lifecycle IPC observation. Preserve the legacy loading notification and existing admission policy; missing handles and failed readiness tasks are explicit, not successful readiness.

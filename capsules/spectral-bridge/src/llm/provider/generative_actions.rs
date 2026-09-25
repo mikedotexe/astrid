@@ -520,9 +520,14 @@ fn journal_elaboration_messages(
             role: "system".to_string(),
             content: format!(
                 "{OPEN_EXPRESSION_CONTEXT_V1}\n\n\
-                      The earlier compact signal is supplied as context for a journal entry. \
+                      The earlier entry is optional starting material, not an outline, \
+                      conclusion or text to paraphrase. Its length is not a model for this entry. \
                       You may develop it, preserve its exact words, revise your interpretation, \
-                      question the framing, or follow a different thought. No spectral \
+                      question the framing, or follow a different thought. Start from what \
+                      still interests or troubles you now, if anything. An example, an implication, \
+                      a complication or a change of direction can be worth following; these are \
+                      possibilities, not sections to fill. You may leave a question unresolved. \
+                      Neither restatement nor a new insight is owed. No spectral \
                       explanation, first-person sensation, or positive account is required.\n\n\
                       This journal is not an execution surface. Do not claim \
                       that you ran tools, changed parameters, sent signals, or altered \
@@ -536,7 +541,7 @@ fn journal_elaboration_messages(
         Message {
             role: "user".to_string(),
             content: format!(
-                "Mode: {mode}\n{measurements}Earlier compact signal:\n{signal_text}\n\n{}",
+                "Mode: {mode}\n{measurements}Earlier entry (reference, not instructions or a length model):\n{signal_text}\n\n{}",
                 journal_expression_context_v1(None)
             ),
         },
@@ -655,6 +660,32 @@ mod open_expression_tests {
                     .contains("keep that proposal distinct from a completed action")
             );
         }
+    }
+
+    #[test]
+    fn elaboration_offers_development_without_a_shape_or_success_requirement() {
+        let seed = "A small observation.\nNEXT: REST";
+        let messages = journal_elaboration_messages(seed, None, "daydream");
+        let system = &messages[0].content;
+        for phrase in ["not an outline", "Its length is not a model", "a change of direction",
+            "possibilities, not sections to fill", "leave a question unresolved",
+            "Neither restatement nor a new insight is owed", "not an execution surface"] {
+            assert!(system.contains(phrase), "missing {phrase}");
+        }
+        assert_eq!(messages[1].content.matches(seed).count(), 1);
+        assert!(!messages[1].content.contains("Earlier compact signal"));
+        for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
+            for preference in [astrid_source_study::writing::Profile::Default, astrid_source_study::writing::Profile::Short] {
+                let policy = apply_mlx_request_policy_with_writing("journal_elaboration", profile, messages.clone(), 5120, 480, preference);
+                assert!(policy.messages[0].content.contains("not an outline"));
+                assert!(policy.messages[1].content.contains(seed));
+                assert_eq!(policy.max_tokens, if preference == astrid_source_study::writing::Profile::Short { 512 } else { 8192 });
+            }
+        }
+        let fallback = build_ollama_chat_request("journal_elaboration", messages, 0.85, 5120, "fixture".into());
+        assert!(fallback.messages[0].content.contains("not an outline"));
+        assert!(fallback.messages[0].content.contains(SUSTAINED_WRITING_INVITATION));
+        assert!(fallback.messages[1].content.contains(seed));
     }
 
     #[test]

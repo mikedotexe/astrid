@@ -103,13 +103,12 @@ fn source_changes_are_explicit_and_restart_keeps_pending() {
         "changed\n".repeat(3000),
     )
     .unwrap();
-    assert!(
-        restarted
-            .prepare(Command::Continue)
-            .unwrap_err()
-            .to_string()
-            .contains("source changed")
+    let recovery = restarted.prepare(Command::Continue).unwrap();
+    assert_eq!(
+        recovery.input_kind,
+        astrid_source_study::InputKind::RevisionRecovery
     );
+    assert!(recovery.page.is_none());
     assert_ne!(
         restarted.prepare(open()).unwrap().page.unwrap().revision,
         first.revision
@@ -294,19 +293,18 @@ fn changed_revision_at_eof_is_not_silently_treated_as_finished() {
         "short\nnew mechanism\n",
     )
     .unwrap();
-    assert!(
-        reader
-            .prepare(Command::Continue)
-            .unwrap_err()
-            .to_string()
-            .contains("source changed")
+    assert_eq!(
+        reader.prepare(Command::Continue).unwrap().input_kind,
+        astrid_source_study::InputKind::RevisionRecovery
     );
-    assert!(
+    assert_eq!(
         reader
             .prepare(Command::Resume {
                 source: SOURCE.into()
             })
-            .is_err()
+            .unwrap()
+            .input_kind,
+        astrid_source_study::InputKind::RevisionRecovery
     );
 }
 

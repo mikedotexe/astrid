@@ -25,7 +25,8 @@ impl Reader {
             ));
         }
         let reflection = input_kind == InputKind::Reflection;
-        let detached = reflection || input_kind == InputKind::InquiryReview;
+        let revision_recovery = input_kind == InputKind::RevisionRecovery;
+        let detached = reflection || input_kind == InputKind::InquiryReview || revision_recovery;
         let question_id = page
             .as_ref()
             .map_or_else(|| state.questions.active.clone(), |p| p.question_id.clone());
@@ -92,6 +93,8 @@ impl Reader {
             evidence_scope,
             system_prompt: if reflection {
                 "You are writing an open introspection in your own words. No report template, minimum length, particular experience, diagnosis, or code explanation is required. This reflection may be recorded publicly; private writing is a separate WRITE choice. Choose any NEXT explicitly; stopping is available.".into()
+            } else if revision_recovery {
+                "The source reader could not continue across a changed source revision. This is navigation feedback, not a new source page or an introspection prompt. You may choose an explicit NEXT from the offered choices or another supported action, or stop. No hypothesis, explanation, note revision or source opening is required. Your response may be recorded publicly; private writing is a separate WRITE choice.".into()
             } else {
                 crate::STUDY_PROMPT.into()
             },

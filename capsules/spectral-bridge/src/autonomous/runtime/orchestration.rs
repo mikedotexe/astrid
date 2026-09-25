@@ -3519,7 +3519,7 @@ pub fn spawn_autonomous_loop(
                     // Receipt validation uses the untouched retained completion.
                     // Every ordinary signal, journal and action sink below sees
                     // only the projection outside human correspondence blocks.
-                    let (ordinary_response, has_shared_response) = project_mailbox_response(&response_text);
+                    let (ordinary_response, has_shared_response) = project_study_response(&mut conv, mode_name, &response_text, &bridge_paths().bridge_workspace().join("diagnostics/source_study/notices"));
                     response_text = ordinary_response;
                     conv.current_mailbox_peer_target = if letter_delivered {
                         mutual_address_target.clone()

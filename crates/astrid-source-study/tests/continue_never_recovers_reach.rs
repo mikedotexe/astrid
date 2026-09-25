@@ -32,8 +32,10 @@
 //! study turn ran.
 //!
 //! These tests pin the source fact the steward attribution rests on, across
-//! every state `CONTINUE` can meet: no bookmark, an undelivered pending page, a
-//! delivered page mid-file, and end of file. They assert reachability and input
+//! the unchanged-source states: no bookmark, an undelivered pending page, a
+//! delivered page mid-file, and end of file. Changed revisions now have their own
+//! `RevisionRecovery` input, covered in `revision_recovery.rs`, never a recovery map.
+//! These tests assert reachability and input
 //! kind only. No recovery text, navigation behaviour, target-selection rule or
 //! being-facing prompt is changed here, and nothing here asserts what she should
 //! choose.
