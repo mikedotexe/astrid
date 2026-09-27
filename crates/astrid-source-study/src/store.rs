@@ -355,6 +355,23 @@ impl Reader {
     /// # Errors
     /// Returns source or checkpoint errors; recovery cannot bypass reader integrity.
     pub fn prepare_action(&self, action: &str) -> Result<StudyOutput> {
+        let words: Vec<_> = action.split_whitespace().take(2).collect();
+        if words
+            .first()
+            .is_some_and(|word| word.eq_ignore_ascii_case("QUESTION"))
+        {
+            return self.unavailable_question(&anyhow::anyhow!("QUESTION requires the SELF_STUDY prefix. The authored command was not executed; choose SELF_STUDY QUESTION to inspect existing IDs."));
+        }
+        if words.first() == Some(&"SELF_STUDY")
+            && words
+                .get(1)
+                .is_some_and(|word| word.eq_ignore_ascii_case("QUESTION"))
+        {
+            match Command::parse(action) {
+                Ok(command) => return self.prepare_parsed(Ok(command)),
+                Err(error) => return self.unavailable_question(&error),
+            }
+        }
         if let Some(json) = action.trim().strip_prefix("WRITE OBSERVE ") {
             return self.prepare_observation(json, action);
         }
@@ -477,7 +494,7 @@ impl Reader {
                 }
                 let text = match state.apply_question(command) {
                     Ok(text) => text,
-                    Err(error) => return self.recovery_map(&mut state, &error),
+                    Err(error) => return self.question_recovery(&mut state, &error),
                 };
                 // Context selection is an explicit Action. Pending source offers keep their original question identity.
                 self.save(&state)?;

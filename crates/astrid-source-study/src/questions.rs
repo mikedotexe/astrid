@@ -309,6 +309,10 @@ impl Questions {
             "\nACTIVE STUDY QUESTION {id} — your inquiry, not a verified conclusion.\nSaved inquiry question: {}\nYou may pursue, revise, resolve or park it. Browsing elsewhere is allowed.\nOptional: SELF_STUDY QUESTION PARK {id} | SELF_STUDY QUESTION HOME\nPARK records a pause; HOME returns to unthreaded browsing. Neither declares an answer.\n",
             q.question
         );
+        let _ = writeln!(
+            out,
+            "Optional authored closure: SELF_STUDY QUESTION RESOLVE {id} [finding]. This records your judgment, not verified understanding."
+        );
         if !q.finding.is_empty() {
             let excerpt = &q.finding[..q.finding.floor_char_boundary(q.finding.len().min(200))];
             let suffix = if excerpt.len() < q.finding.len() {
@@ -329,6 +333,32 @@ impl Questions {
             out.push_str(&line);
         }
         out
+    }
+
+    pub(crate) fn decision_context(&self, id: Option<&str>, notebook: &Notebook) -> String {
+        let mut text = if let Some((id, inquiry)) =
+            id.and_then(|id| self.entries.get(id).map(|inquiry| (id, inquiry)))
+        {
+            format!(
+                "Selected inquiry {id}; authored status: {}.\nSaved inquiry question: {}\nYou may choose SELF_STUDY QUESTION PARK {id}, SELF_STUDY QUESTION HOME, or SELF_STUDY QUESTION RESOLVE {id} [finding]. Closure records your judgment, not verified understanding. SELF_STUDY QUESTION REVIEW {id} explicitly reviews its saved account.\n",
+                inquiry.status,
+                serde_json::to_string(&inquiry.question).unwrap_or_default()
+            )
+        } else {
+            let mut text = String::from(
+                "No numbered inquiry is selected. A saved notebook question is a separate field, not an addressable qN inquiry.\n",
+            );
+            if let Some(question) = notebook.question_text() {
+                let _ = writeln!(
+                    text,
+                    "Saved notebook question: {}\nYou may revise it with STUDY_QUESTION: <your words>, or clear that field with STUDY_QUESTION: -. Clearing does not declare an answer or resolve a numbered inquiry.",
+                    serde_json::to_string(question).unwrap_or_default()
+                );
+            }
+            text
+        };
+        text.push_str("SELF_STUDY QUESTION lists existing inquiry IDs. SELF_STUDY QUESTION NEW <your question> explicitly creates a numbered inquiry. RESOLVE and PARK require an existing qN; response_sha256 and source hashes are not inquiry IDs. No ID is inferred from a saved question.\n");
+        text
     }
     fn render_list(&self, page: usize) -> Result<String> {
         let mut rows=vec!["Your study questions. Select qN to restore its notebook and saved reading position. QUESTION REVIEW qN [--page N] inspects an inquiry without selecting or revising it. NEW starts a question; PARK leaves it available; RESOLVE records your conclusion, without verifying it. HOME returns to unthreaded browsing. Historical questions without a saved position require an explicit source selection.".into()];

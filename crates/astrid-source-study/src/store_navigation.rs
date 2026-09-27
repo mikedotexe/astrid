@@ -2,13 +2,49 @@
 use super::*;
 
 impl Reader {
-    #[allow(clippy::too_many_lines)] // One bounded, atomic offer with shared identity and framing.
+    pub(super) fn question_recovery(
+        &self,
+        state: &mut State,
+        reason: &anyhow::Error,
+    ) -> Result<StudyOutput> {
+        self.output_framed(
+            state,
+            format!(
+                "Study command rejected; no question was changed.\nReason: {}\n",
+                serde_json::to_string(&format!("{reason:#}"))?
+            ),
+            None,
+            InputKind::Recovery,
+            true,
+        )
+    }
+
+    pub(super) fn unavailable_question(&self, reason: &anyhow::Error) -> Result<StudyOutput> {
+        let _lock = self.lock()?;
+        let mut state = self.load()?;
+        self.hydrate(&mut state)?;
+        self.recover(&mut state)?;
+        self.question_recovery(&mut state, reason)
+    }
+
     pub(super) fn output(
+        &self,
+        state: &mut State,
+        text: String,
+        page: Option<Page>,
+        input_kind: InputKind,
+    ) -> Result<StudyOutput> {
+        self.output_framed(state, text, page, input_kind, false)
+    }
+
+    #[allow(clippy::too_many_lines)] // One bounded, atomic offer with shared identity and framing.
+    fn output_framed(
         &self,
         state: &mut State,
         mut text: String,
         page: Option<Page>,
         input_kind: InputKind,
+        decision: bool,
     ) -> Result<StudyOutput> {
         let input_kind = if page.as_ref().is_some_and(|p| p.start.byte == p.end.byte) {
             InputKind::EndOfFile
@@ -16,6 +52,7 @@ impl Reader {
             input_kind
         };
         let evidence_scope = input_kind.scope().to_string();
+        let decision = decision || input_kind == InputKind::EndOfFile;
         if let Some(page) = &page {
             text.push_str(&crate::coverage::render(
                 state.progress.as_ref().unwrap_or(&Progress::new()),
@@ -53,7 +90,14 @@ impl Reader {
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         let receipt_position = text.len();
         text.push('\n');
-        if !detached {
+        if decision {
+            text.push_str(
+                &state
+                    .questions
+                    .decision_context(question_id.as_deref(), notebook),
+            );
+            text.push_str("\nChoose a next activity explicitly. SELF_STUDY MAP browses sources; SELF_STUDY OPEN <exact source path> 1 deliberately rereads. Bare SELF_STUDY or CONTINUE returns the same exhausted position at EOF. REST skips one action; it does not resolve a question or prevent a later study choice. No investigation is declared complete by reaching EOF.\n");
+        } else if !detached {
             text.push_str(&state.questions.render_context(question_id.as_deref()));
         }
         let mut suffix = String::new();
@@ -62,7 +106,7 @@ impl Reader {
         {
             suffix.push_str(&choice.render(false));
         }
-        let recall = if detached || input_kind == InputKind::Notebook {
+        let recall = if detached || decision || input_kind == InputKind::Notebook {
             String::new()
         } else {
             study_context(
@@ -91,7 +135,9 @@ impl Reader {
             require_complete_input: true,
             input_kind,
             evidence_scope,
-            system_prompt: if reflection {
+            system_prompt: if decision {
+                "This is a study continuation decision, not a new source-analysis turn. Use the supplied command outcome and current inquiry state to choose an explicit NEXT, or REST. No source summary, architectural conclusion, note revision, or declaration of understanding is required. Response hashes are provenance, never inquiry IDs. You may retain uncertainty, revise the saved question voluntarily, browse another source, deliberately reread, or leave this study. Your choice is not proof of its execution.".into()
+            } else if reflection {
                 "You are writing an open introspection in your own words. No report template, minimum length, particular experience, diagnosis, or code explanation is required. This reflection may be recorded publicly; private writing is a separate WRITE choice. Choose any NEXT explicitly; stopping is available.".into()
             } else if revision_recovery {
                 "The source reader could not continue across a changed source revision. This is navigation feedback, not a new source page or an introspection prompt. You may choose an explicit NEXT from the offered choices or another supported action, or stop. No hypothesis, explanation, note revision or source opening is required. Your response may be recorded publicly; private writing is a separate WRITE choice.".into()

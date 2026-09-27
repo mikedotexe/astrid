@@ -56,6 +56,29 @@ class HandoffTests(unittest.TestCase):
             for path in OVERLAY:
                 self.assertEqual((root / "receipt.source-before" / path).read_text(), "# old\n")
 
+    def test_new_reviewed_modules_install_under_hold_without_invented_backups(self):
+        with tempfile.TemporaryDirectory() as tmp, patch("paired_minime_handoff.time.sleep"), patch(
+                "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}):
+            root = Path(tmp).resolve()
+            backend, packet, snapshot = self.install_fixture(root)
+            added = ("minime_autonomy/moment_context.py", "minime_autonomy/study_feedback.py")
+            for name in added:
+                (backend.root / name).unlink()
+            value = json.loads(packet.read_text())
+            value["canonical_inputs"] = backend.inputs()
+            packet.write_text(json.dumps(value))
+            handoff = PairedHandoff(root, root / "receipt.jsonl", "synthetic")
+            events = []
+            handoff.install(backend, packet, 10, events.append)
+            self.assertEqual(backend.inputs(), inventory(snapshot))
+            self.assertEqual(backend.signals, [])
+            handoff.assert_hold()
+            for name in added:
+                self.assertFalse((root / "receipt.source-before" / name).exists())
+                intent = next(e for e in events if e["phase"] == "source_install_intent" and e["path"] == name)
+                self.assertIsNone(intent["before"])
+                self.assertEqual(intent["after"], value["selected_inputs"][name])
+
     def test_installer_source_drift_fails_before_hold_or_write(self):
         with tempfile.TemporaryDirectory() as tmp, patch(
                 "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}):

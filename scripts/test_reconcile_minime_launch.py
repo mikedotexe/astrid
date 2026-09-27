@@ -42,7 +42,7 @@ class ReconciliationTests(unittest.TestCase):
     def run_tool(self):
         return tool.reconcile(self.canonical, self.candidate, self.installed, self.status, self.root / "out")
 
-    def test_six_file_overlay_keeps_newer_visual_service_and_assets(self):
+    def test_reviewed_overlay_keeps_newer_visual_service_and_assets(self):
         for name in tool.OVERLAY:
             (self.candidate / name).write_text("# candidate\n")
         (self.canonical / "visual_frame_service.py").write_text("# newer live visual\n")
@@ -57,6 +57,19 @@ class ReconciliationTests(unittest.TestCase):
         self.assertTrue(all((tree / name).read_text() == "# candidate\n" for name in tool.OVERLAY))
         self.assertFalse(tree.stat().st_mode & 0o222)
         self.assertTrue((tree / tool.ASSETS[0]).exists())
+
+    def test_new_reviewed_modules_are_snapshotted_without_canonical_writes(self):
+        added = ("minime_autonomy/moment_context.py", "minime_autonomy/study_feedback.py")
+        for name in added:
+            (self.canonical / name).unlink()
+        self.refresh_status()
+        before = tool.inventory(self.canonical)
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(set(result["selected_inputs"]) - set(before), set(added))
+        for name in added:
+            self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                             (self.candidate / name).read_bytes())
 
     def test_unreviewed_difference_fails(self):
         (self.candidate / "unexpected.py").write_text("# foreign\n")

@@ -23,7 +23,10 @@ pub fn recover_local_navigation(action: &str) -> Option<NavigationRecovery> {
         return None;
     }
     let mut commands = Vec::new();
-    let explanation = if verb.eq_ignore_ascii_case("RELATE") {
+    let explanation = if verb.eq_ignore_ascii_case("QUESTION") && !prefixed {
+        commands.push("SELF_STUDY QUESTION".into());
+        "QUESTION requires the SELF_STUDY prefix. Inspect existing inquiry IDs before resolving or parking one; response hashes are provenance, not qN IDs. No question was changed by this selected command."
+    } else if verb.eq_ignore_ascii_case("RELATE") {
         let valid_query = matches!(crate::Command::parse(&format!("RELATE {rest}")), Ok(crate::Command::Relate { symbol, .. }) if crate::relationships::valid_symbol(&symbol));
         if valid_query {
             if prefixed {

@@ -288,6 +288,16 @@ pub fn inspect_response(text: &str, private_writing: bool) -> ChoiceFeedback {
             }
         }
     }
+    if let Some(action) = selected
+        && action
+            .split_whitespace()
+            .next()
+            .is_some_and(|verb| verb.eq_ignore_ascii_case("QUESTION"))
+        && let Some(recovery) = crate::recover_local_navigation(action)
+    {
+        result.recovery_commands.extend(recovery.commands);
+        result.explanation = Some(recovery.explanation);
+    }
     result
 }
 

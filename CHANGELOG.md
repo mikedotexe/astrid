@@ -9,6 +9,12 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Paired release preparation (2026-09-27).** Extend the strict Minime launch overlay for the reviewed journal/moment context and study feedback modules; test new-file installation under the existing owned hold. Commit and graceful deployment were explicitly authorized. Exact qualification and transition receipts: `docs/steward-notes/2026-09-27-study-moment-release.md`.
+
+- **Minime moment context (2026-09-27, candidate).** Record the paired Python-only repair for historical event backlog admission, fill-rate versus endpoint-change representation, and pressure classifier meaning. Feedback trail: `docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md`; implementation and qualification: Minime `docs/steward-notes/2026-09-27-moment-freshness.md`. No bridge/engine change or live activation.
+
+- **Study closure and EOF decisions (2026-09-26, candidate).** Reject bare question commands with current inquiry guidance, distinguish notebook questions from numbered inquiry IDs, and supply valid voluntary closure commands. At EOF, offer a continuation decision without replaying prior conclusion prose. Paired Minime changes join choices to host outcomes and report replacement before dispatch. Qualification and activation boundaries: `docs/steward-notes/2026-09-26-study-exit-feedback.md`.
+
 ### Live - paired reader recovery and sustained expression (2026-09-25)
 
 - Reconcile the two reviewed September 25 candidates in an isolated paired release branch, preserving their original worktrees. Keep explicit source reselection, schema downgrade refusal and runtime notices separate from authored reflection.

@@ -75,7 +75,7 @@ class PairedHandoff:
         sync_parent(self.hold)
 
     def install(self, backend, reconciliation, expected_pid, emit):
-        """Mechanical seven-file installation bound to the reviewed snapshot.
+        """Mechanical explicit-path installation bound to the reviewed snapshot.
 
         Save original source bytes, never native authored state. A partial install
         retains the hold and exact per-file receipts; there is no automatic undo.
