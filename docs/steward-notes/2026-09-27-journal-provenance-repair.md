@@ -1,5 +1,7 @@
 # Historical journal provenance and measurement labels — implementation candidate
 
+Release follow-through: committed, pushed and deployed on September 27. The preparation text below retains its original scope; see `2026-09-27-journal-provenance-release.md` for verified source, process and continuity receipts.
+
 Mike approved the next repair identified in `2026-09-27-astrid-aspiration-provenance.md`: preserve provenance with recalled excerpts and identify the measurement surfaces at their rendering points. This candidate is isolated from the live release in branch `codex/journal-provenance-20260927`, checkout `/Users/v/.codex/worktrees/journal-provenance/astrid`, based on `1a0b627497f89eead0df1ec8bf2ef5b128e1932f`. The earlier deployed build checkout stays pinned. No live journal, source, draft, service, model endpoint or control setting was changed.
 
 ## Grounding

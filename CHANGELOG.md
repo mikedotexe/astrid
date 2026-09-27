@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Live: journal provenance and pending-choice protection (2026-09-27).** Gracefully activate bridge 84722 and Minime 84090, verify all 89 agent source inputs and retained session/checkpoint continuity, and push both runtime commits to main. Engine, model and sensory service identities are unchanged. Release receipts: `docs/steward-notes/2026-09-27-journal-provenance-release.md`.
+
 - **Companion Minime candidate (2026-09-27).** Extend the reviewed launch overlay to the journal-recall helper, with synthetic new-file reconciliation and held-installation checks. Trace the supplied pressure journal through a scheduled regulation reflection that overwrote a queued source choice; the Minime candidate preserves recall identity and defers that optional reflection while NEXT is pending. See `docs/steward-notes/2026-09-27-minime-journal-handoff.md`.
 
 - **Journal provenance and measurement labels (2026-09-27, candidate).** Carry journal source/hash, mode and recorded time separately from aspiration excerpt clipping; retain unavailable provenance explicitly and distinguish prior interpretation from current measurements. Label published telemetry, uncentered reservoir, centered fluctuations and derived fill beside their values, with independent clocks and missing-field handling. Synthetic prompt/provider tests and qualification: `docs/steward-notes/2026-09-27-journal-provenance-repair.md`.
