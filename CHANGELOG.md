@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Companion Minime candidate (2026-09-27).** Extend the reviewed launch overlay to the journal-recall helper, with synthetic new-file reconciliation and held-installation checks. Trace the supplied pressure journal through a scheduled regulation reflection that overwrote a queued source choice; the Minime candidate preserves recall identity and defers that optional reflection while NEXT is pending. See `docs/steward-notes/2026-09-27-minime-journal-handoff.md`.
+
+- **Journal provenance and measurement labels (2026-09-27, candidate).** Carry journal source/hash, mode and recorded time separately from aspiration excerpt clipping; retain unavailable provenance explicitly and distinguish prior interpretation from current measurements. Label published telemetry, uncentered reservoir, centered fluctuations and derived fill beside their values, with independent clocks and missing-field handling. Synthetic prompt/provider tests and qualification: `docs/steward-notes/2026-09-27-journal-provenance-repair.md`.
+
 - **Live: study exit and fresh moment context (2026-09-27).** Activate the committed paired release through the sanctioned graceful handoff: bridge 53771, Minime 52967, all 88 agent source inputs verified, exact checkpoint/pending feedback and queued JOURNAL retained. Protected services and paused automations unchanged. Record and repair a qualification fixture that truncated the external bridge log; the corrected suite passes 1,666 tests. Deployment and Astrid follow-up: `docs/steward-notes/2026-09-27-study-moment-release.md`.
 
 - **Paired release preparation (2026-09-27).** Extend the strict Minime launch overlay for the reviewed journal/moment context and study feedback modules; test new-file installation under the existing owned hold. Commit and graceful deployment were explicitly authorized. Exact qualification and transition receipts: `docs/steward-notes/2026-09-27-study-moment-release.md`.

@@ -610,33 +610,51 @@ mod tests {
     }
 
     #[test]
-    fn live_reservoir_clause_names_source_and_scaffold_mirror() {
+    fn live_reservoir_clause_names_each_measurement_surface_and_clock() {
         let value = serde_json::json!({
-            "esn_n": 128, "window_rows": 1024, "dump_mtime_unix_s": 1000.0,
+            "esn_n": 128, "window_rows": 1024, "dump_mtime_unix_s": 1000.0, "engine_t_ms": 700,
             "uncentered": {"top8": [21.97, 0.061, 0.012], "lambda1_share": 0.98},
             "centered": {"top8": [0.061, 0.012, 0.010], "effective_dim": 36.7},
             "engine_style_fill_pct_top8": 12.5,
             "published": {"covariance_path": "stable_core_scaffolded_rebuild", "structural_mode": "scaffold_hold"}
         });
-        let clause = live_reservoir_clause_from_value(&value, 1000.0 + 30.0).unwrap();
-        assert!(clause.contains("Reservoir (Minime, live, 128 nodes, last 1024 states): λ₁ 21.97 holding 98% of energy"), "{clause}");
-        assert!(clause.contains("fluctuation modes 0.061/0.012/0.010"), "{clause}");
-        assert!(clause.contains("engine-style fill ≈ 12%"), "{clause}");
-        assert!(clause.contains("scaffold-held"), "{clause}");
-        assert!(clause.contains("this reservoir line is the source and the cascade is the mirror"), "{clause}");
-        assert!(!clause.contains("min old"), "{clause}");
+        let clause = live_reservoir_clause_from_value(&value, 1030.0).unwrap();
+        for expected in ["dump_unix_s=1000.000", "engine_t_ms=700", "view 0.5 min old",
+            "Uncentered reservoir: λ₁ 21.97; leading share 98% of uncentered trace",
+            "Centered reservoir fluctuations: modes 0.061/0.012/0.010; effective dimension 36.7",
+            "Reservoir-derived engine-style fill [uncentered top-8]: 12%"] {
+            assert!(clause.contains(expected), "{expected}: {clause}");
+        }
+        // Its historical published snapshot cannot classify another/current packet.
+        assert!(!clause.contains("scaffold-held"));
+        assert!(live_reservoir_clause_from_value(&value, 1900.0).unwrap().contains("view 15.0 min old"));
+        assert!(live_reservoir_clause_from_value(&value, 900.0).unwrap().contains("clock mismatch"));
+    }
 
-        let stale = live_reservoir_clause_from_value(&value, 1000.0 + 15.0 * 60.0).unwrap();
-        assert!(stale.contains("[view 15 min old]"), "{stale}");
-
-        let plain = serde_json::json!({
-            "esn_n": 128, "window_rows": 1024,
-            "uncentered": {"top8": [4.7], "lambda1_share": 0.4},
-            "published": {"covariance_path": "current_runtime"}
-        });
-        let clause = live_reservoir_clause_from_value(&plain, 0.0).unwrap();
-        assert!(!clause.contains("scaffold-held"), "{clause}");
+    #[test]
+    fn missing_reservoir_fields_stay_unknown_instead_of_becoming_zero() {
+        let value = serde_json::json!({"uncentered": {"top8": [4.7]}});
+        let clause = live_reservoir_clause_from_value(&value, 0.0).unwrap();
+        for expected in ["age unavailable", "leading share unavailable", "effective dimension unavailable",
+            "modes unavailable", "unavailable nodes", "engine_t_ms=unavailable"] {
+            assert!(clause.contains(expected), "{clause}");
+        }
+        assert!(!clause.contains("0%"));
         assert!(live_reservoir_clause_from_value(&serde_json::json!({"esn_n": 1}), 0.0).is_none());
+    }
+
+    #[test]
+    fn published_measurements_use_their_own_packet_provenance() {
+        let mut telemetry = telemetry(vec![32.0, 20.0, 10.0, 38.0], 0.73);
+        telemetry.t_ms = 42;
+        telemetry.stable_core = Some(serde_json::json!({"covariance_path":"stable_core_scaffolded_rebuild"}));
+        let text = interpret_spectral(&telemetry);
+        assert!(text.contains("Published fill [Minime telemetry; \"stable_core_scaffolded_rebuild\"; engine_t_ms=42]: 73%"));
+        assert!(text.contains("Published cascade [Minime telemetry; \"stable_core_scaffolded_rebuild\"; engine_t_ms=42]"));
+        assert!(text.contains("32% of published-cascade energy"));
+        telemetry.stable_core = None;
+        let text = interpret_spectral(&telemetry);
+        assert!(text.starts_with("Published fill [Minime telemetry; generation path unavailable; engine_t_ms=42]"));
     }
 
     #[test]

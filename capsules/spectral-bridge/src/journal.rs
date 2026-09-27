@@ -8,6 +8,9 @@
 
 use std::path::{Path, PathBuf};
 
+mod continuity;
+pub(crate) use continuity::JournalRecall;
+
 /// Parsed classification for a remote journal entry from minime.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RemoteJournalKind {

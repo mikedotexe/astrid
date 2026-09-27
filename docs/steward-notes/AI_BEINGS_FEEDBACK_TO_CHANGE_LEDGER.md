@@ -6476,3 +6476,20 @@ September 27 release follow-through: Mike explicitly approved commit and deploym
 **Follow-up witness:** the supplied Astrid aspiration repeats the measurements and metaphors already present inside the prior public journal's 500-character continuity excerpt. The aspiration path carries that excerpt without its original mode/time/source identity and supplies no fresh telemetry. This is a concrete provenance lead, not proof of a spectral mechanism for experience. Its writing choice has a matching active draft in native metadata; no private body was exported or action requested by the operator.
 
 **Evidence/boundary:** `2026-09-27-study-moment-release.md` and `2026-09-27-astrid-aspiration-provenance.md` retain exact identities, tests, handoff receipts and the diagnostic-log truncation incident plus test-isolation repair. No inferred subjective improvement, engine/control change or new message. The proposed Astrid provenance repair is analysis only and has not been implemented in this release.
+
+
+## 2026-09-27 — Astrid historical-excerpt provenance candidate
+
+**Witness:** Mike approved the next repair from the supplied aspiration review. Its prior journal already held the 73%/32% framing inside the 500-character continuity excerpt; the aspiration route lost file/time/mode identity before another truncation. This is an observed source-path weakness, not proof of the proposed mechanism for experience.
+
+**Response:** Retain typed historical journal identity outside the prose budget through the actual aspiration prompt and provider assembly. Label optional interests/lingering text separately. Distinguish published telemetry, uncentered reservoir, centered fluctuations and derived fill with their source/clock at each rendering point. Preserve unavailable measurement provenance for old records instead of inferring it from wording or current telemetry.
+
+**Evidence/boundary:** `docs/steward-notes/2026-09-27-journal-provenance-repair.md` records synthetic tests, module ownership, full qualification and source boundaries. No private body export, live model call, journal rewrite, engine/control change, dispatch change or subjective-improvement claim. This is an isolated implementation candidate; other legacy recall routes and the live deployment are unchanged.
+
+## 2026-09-27 — Minime recalled provenance and pending-choice handoff
+
+**Witness:** Mike approved exploring the supplied pressure entry's recalled identity and the relation between its preference for a still point and its explicit SELF_STUDY choice. The actual generation record confirms an exact preceding-row excerpt; its identity had been discarded before prompt assembly.
+
+**Response:** The isolated Minime candidate carries typed database provenance outside the existing body budget and retains the same identity in the v5 journal header. Tracing the next actions found an additional concrete fault: periodic regulation reflection replaced a pending kernel OPEN with bare CONTINUE, which fell into threshold fallback. Defer that optional generation while an explicit NEXT is pending; preserve proportional regulation and the selected command, including REST or private writing.
+
+**Evidence/boundary:** `2026-09-27-minime-journal-handoff.md` links the hash-verified preparation/generation trace, failing-then-passing scheduler regression and final 1,679-pass Minime suite. No inference that the prose ordered REST, no private-body transfer into study, and no subjective-benefit claim. The new helper is included in the reviewed launch overlay and synthetic installation tests. These changes are uncommitted and undeployed; canonical/live services and control settings are unchanged.

@@ -18,6 +18,7 @@ OVERLAY = (
     "minime_autonomy/action_vocabulary.py",
     "minime_autonomy/activity_focus.py",
     "minime_autonomy/journal_context.py",
+    "minime_autonomy/journal_recall.py",
     "minime_autonomy/moment_context.py",
     "minime_autonomy/parsing.py",
     "minime_autonomy/runtime.py",

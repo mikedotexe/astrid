@@ -2402,27 +2402,13 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                         Mode::Aspiration => {
-                            // Growth reflection — what does Astrid want?
-                            // Deliberately minime-free. Astrid's own desires + interests.
-                            let mut own_context_parts = Vec::new();
-                            if let Some(j) = read_astrid_journal(1).into_iter().next() {
-                                own_context_parts.push(format!("Something you wrote recently:\n{}", j.chars().take(500).collect::<String>()));
-                            }
-                            if !conv.interests.is_empty() {
-                                let interests = conv.interests.iter()
-                                    .map(|i| format!("  - {i}")).collect::<Vec<_>>().join("\n");
-                                own_context_parts.push(format!("Your ongoing interests:\n{interests}"));
-                            }
-                            if let Some(ref resonance) = conv.peripheral_resonance {
-                                own_context_parts.push(format!("A thread that lingered from earlier:\n{resonance}"));
-                            }
-                            let enriched_context = if own_context_parts.is_empty() { None } else { Some(own_context_parts.join("\n\n")) };
-                            conv.peripheral_resonance = None;
-                            let own_journal = enriched_context;
+                            // Keep historical identity outside the prose budget until prompt assembly.
+                            let own_journal = read_astrid_journal_recall();
+                            let resonance = conv.peripheral_resonance.take();
                             let aspiration = match tokio::time::timeout(
                                 Duration::from_secs(crate::llm::expressive_outer_timeout(750)),
-                                crate::llm::generate_aspiration(
-                                    own_journal.as_deref(),
+                                crate::llm::generate_aspiration_with_context(
+                                    own_journal.as_ref(), &conv.interests, resonance.as_deref(),
                                 )
                             ).await {
                                 Ok(r) => r,

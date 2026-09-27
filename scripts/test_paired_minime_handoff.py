@@ -61,7 +61,8 @@ class HandoffTests(unittest.TestCase):
                 "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}):
             root = Path(tmp).resolve()
             backend, packet, snapshot = self.install_fixture(root)
-            added = ("minime_autonomy/moment_context.py", "minime_autonomy/study_feedback.py")
+            added = ("minime_autonomy/moment_context.py", "minime_autonomy/study_feedback.py",
+                     "minime_autonomy/journal_recall.py")
             for name in added:
                 (backend.root / name).unlink()
             value = json.loads(packet.read_text())

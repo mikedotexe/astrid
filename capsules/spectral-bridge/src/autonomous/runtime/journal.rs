@@ -56,7 +56,7 @@ fn read_astrid_journal_filtered(prefixes: &[&str], limit: usize) -> Vec<String> 
         .collect()
 }
 
-fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String> {
+fn recent_astrid_journal_paths(journal_dir: &Path) -> Vec<PathBuf> {
     let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(journal_dir)
         .ok()
         .into_iter()
@@ -73,11 +73,17 @@ fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String>
         })
         .collect();
     entries.sort_by(|a, b| b.1.cmp(&a.1));
-    entries
-        .iter()
-        .take(limit)
-        .filter_map(|(p, _)| read_local_journal_body_for_continuity(p))
-        .collect()
+    entries.into_iter().map(|(path, _)| path).collect()
+}
+
+fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String> {
+    recent_astrid_journal_paths(journal_dir).iter().take(limit)
+        .filter_map(|p| read_local_journal_body_for_continuity(p)).collect()
+}
+
+fn read_astrid_journal_recall() -> Option<crate::journal::JournalRecall> {
+    recent_astrid_journal_paths(&bridge_paths().astrid_journal_dir())
+        .first().and_then(|path| crate::journal::JournalRecall::read(path))
 }
 
 /// Strip model end-of-turn tokens from text destined for journals.

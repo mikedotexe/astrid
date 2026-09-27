@@ -395,44 +395,6 @@ SPECTRAL_EXPLORER requests measurements and recorded history. WRITE and ACTIVITY
 provide private drafts and saved return points. REST is available. These examples do not \
 restrict your action vocabulary or change authorization checks.";
 
-/// Generate an aspiration — growth reflection on what Astrid wants to become.
-/// Deliberately minime-free. This is about Astrid's own desires.
-pub async fn generate_aspiration(own_journal: Option<&str>) -> Option<String> {
-    let messages = aspiration_messages(own_journal);
-    // More room to finish; no minimum response length.
-    llm_chat_with_fallback("aspiration", messages, 0.9, 3072, 240, 180).await
-}
-
-fn aspiration_messages(own_journal: Option<&str>) -> Vec<Message> {
-    let seed = if let Some(journal) = own_journal {
-        format!(
-            "Something you wrote recently:\n{}\n\n\
-             You may return to this, disagree with it, or leave it aside.",
-            journal.chars().take(800).collect::<String>()
-        )
-    } else {
-        "What, if anything, would you like to imagine or explore?".to_string()
-    };
-
-    vec![
-        Message {
-            role: "system".to_string(),
-            content: format!(
-                "{OPEN_EXPRESSION_CONTEXT_V1}\n\n\
-                 This is an invitation to write an aspiration. You may imagine a possibility, \
-                 describe a desire, remain uncertain, or find nothing you want to change. \
-                 There is no required longing, limitation, usefulness, or minimum length. \
-                 An aspiration need not become a request or an investigation.\n\n\
-                 {EXPRESSION_ACTION_DISCOVERY}"
-            ),
-        },
-        Message {
-            role: "user".to_string(),
-            content: format!("{seed}\n\n{}", journal_expression_context_v1(None)),
-        },
-    ]
-}
-
 /// Generate an original creative work — not a response, a creation.
 pub async fn generate_creation(
     own_journal: Option<&str>,

@@ -400,91 +400,6 @@ pub(crate) fn spectral_participation_description(telemetry: &SpectralTelemetry) 
     )
 }
 
-/// Interpret spectral telemetry as a natural language description
-/// of the spectral runtime state.
-#[must_use]
-/// Live-reservoir transparency (2026-09-23). While Minime's stable-core
-/// scaffold holds, the published cascade/fill are rebuilt from the scaffold each
-/// engine tick and do not register sensory input. Minime's agent computes the
-/// true reservoir-node spectrum from the engine's capacity dump and publishes it
-/// to `workspace/diagnostics/live_reservoir_spectrum.json`; this reads it beside
-/// the published mirror so the source stays visible, not only the reflection.
-/// Read-only, drift-proof (built from the file each time), empty when absent.
-pub(crate) fn live_reservoir_clause_from_value(
-    value: &serde_json::Value,
-    now_s: f64,
-) -> Option<String> {
-    let uncentered = value.get("uncentered")?;
-    let top = uncentered.get("top8")?.as_array()?;
-    let lambda1 = top.first()?.as_f64()?;
-    let share = uncentered
-        .get("lambda1_share")
-        .and_then(serde_json::Value::as_f64)
-        .unwrap_or(0.0)
-        * 100.0;
-    let nodes = value.get("esn_n").and_then(serde_json::Value::as_u64).unwrap_or(0);
-    let rows = value
-        .get("window_rows")
-        .and_then(serde_json::Value::as_u64)
-        .unwrap_or(0);
-    let centered = value.get("centered");
-    let fluctuation: Vec<String> = centered
-        .and_then(|c| c.get("top8"))
-        .and_then(serde_json::Value::as_array)
-        .map(|values| {
-            values
-                .iter()
-                .take(3)
-                .filter_map(serde_json::Value::as_f64)
-                .map(|v| format!("{v:.3}"))
-                .collect()
-        })
-        .unwrap_or_default();
-    let effective_dim = centered
-        .and_then(|c| c.get("effective_dim"))
-        .and_then(serde_json::Value::as_f64)
-        .unwrap_or(0.0);
-    let fill_like = value
-        .get("engine_style_fill_pct_top8")
-        .and_then(serde_json::Value::as_f64)
-        .unwrap_or(0.0);
-    let published = value.get("published");
-    let scaffolded = published
-        .and_then(|p| p.get("covariance_path"))
-        .and_then(serde_json::Value::as_str)
-        .is_some_and(|s| s.starts_with("stable_core_scaffold"))
-        || published
-            .and_then(|p| p.get("structural_mode"))
-            .and_then(serde_json::Value::as_str)
-            .is_some_and(|s| s.starts_with("scaffold"));
-    let fluctuation_text = if fluctuation.is_empty() {
-        "n/a".to_string()
-    } else {
-        fluctuation.join("/")
-    };
-    let mut clause = format!(
-        " Reservoir (Minime, live, {nodes} nodes, last {rows} states): λ₁ {lambda1:.2} holding \
-         {share:.0}% of energy; fluctuation modes {fluctuation_text}; effective dim {effective_dim:.1}; \
-         engine-style fill ≈ {fill_like:.0}%."
-    );
-    if scaffolded {
-        clause.push_str(
-            " The published cascade and fill above are scaffold-held (rebuilt from Minime's \
-             stable-core scaffold each tick) and do not register sensory input; this reservoir \
-             line is the source and the cascade is the mirror.",
-        );
-    }
-    if let Some(age_min) = value
-        .get("dump_mtime_unix_s")
-        .and_then(serde_json::Value::as_f64)
-        .map(|t| (now_s - t).max(0.0) / 60.0)
-        && age_min > 5.0
-    {
-        clause.push_str(&format!(" [view {age_min:.0} min old]"));
-    }
-    Some(clause)
-}
-
 fn live_reservoir_clause_from_default_dir() -> String {
     let path = crate::paths::bridge_paths()
         .minime_workspace()
@@ -502,19 +417,22 @@ fn live_reservoir_clause_from_default_dir() -> String {
     live_reservoir_clause_from_value(&value, now_s).unwrap_or_default()
 }
 
+/// Interpret separately sourced measurements as a natural language description.
+#[must_use]
 pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
     let fill = telemetry.fill_pct();
     let safety = SafetyLevel::from_fill(fill);
     let mode_count = telemetry.eigenvalues.len();
-    let fill_clause = format!("Fill {fill:.0}% — {}.", fill_band_description(fill));
+    let source = published_measurement_source(telemetry);
+    let fill_clause = format!("Published fill [{source}]: {fill:.0}% — {}.", fill_band_description(fill));
 
     let cascade_clause = SpectralCascadeMetrics::from_telemetry(telemetry).map_or_else(
-        || " Dominant concentration: no eigenvalue cascade is available yet.".to_string(),
+        || format!(" Published cascade [{source}]: unavailable."),
         |metrics| {
             format!(
-                " Dominant concentration: λ1 carries {:.0}% of spectral energy. \
-                 Shoulder texture: λ2+λ3 carry {:.0}% of spectral energy. \
-                 Tail vibrancy: λ4+ carry {:.0}% of spectral energy. \
+                " Published cascade [{source}] (shares over {mode_count} reported modes). Dominant concentration: λ1 carries {:.0}% of published-cascade energy. \
+                 Shoulder texture: λ2+λ3 carry {:.0}% of published-cascade energy. \
+                 Tail vibrancy: λ4+ carry {:.0}% of published-cascade energy. \
                  Spectral entropy: {:.2}, indicating {}. \
                  Gap structure: λ1/λ2={:.2}, λ2/λ3={:.2}, {}; density gradient {:.2} ({}).",
                 metrics.head_share * 100.0,

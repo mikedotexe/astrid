@@ -39,6 +39,7 @@ include!("focus_evidence.rs");
 include!("structural_evidence.rs");
 include!("structure.rs");
 include!("cascade.rs");
+include!("measurement_context.rs");
 include!("feedback.rs");
 include!("visual.rs");
 include!("tests.rs");

@@ -59,7 +59,8 @@ class ReconciliationTests(unittest.TestCase):
         self.assertTrue((tree / tool.ASSETS[0]).exists())
 
     def test_new_reviewed_modules_are_snapshotted_without_canonical_writes(self):
-        added = ("minime_autonomy/moment_context.py", "minime_autonomy/study_feedback.py")
+        added = ("minime_autonomy/moment_context.py", "minime_autonomy/study_feedback.py",
+                 "minime_autonomy/journal_recall.py")
         for name in added:
             (self.canonical / name).unlink()
         self.refresh_status()
