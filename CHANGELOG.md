@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Live: study exit and fresh moment context (2026-09-27).** Activate the committed paired release through the sanctioned graceful handoff: bridge 53771, Minime 52967, all 88 agent source inputs verified, exact checkpoint/pending feedback and queued JOURNAL retained. Protected services and paused automations unchanged. Record and repair a qualification fixture that truncated the external bridge log; the corrected suite passes 1,666 tests. Deployment and Astrid follow-up: `docs/steward-notes/2026-09-27-study-moment-release.md`.
+
 - **Paired release preparation (2026-09-27).** Extend the strict Minime launch overlay for the reviewed journal/moment context and study feedback modules; test new-file installation under the existing owned hold. Commit and graceful deployment were explicitly authorized. Exact qualification and transition receipts: `docs/steward-notes/2026-09-27-study-moment-release.md`.
 
 - **Minime moment context (2026-09-27, candidate).** Record the paired Python-only repair for historical event backlog admission, fill-rate versus endpoint-change representation, and pressure classifier meaning. Feedback trail: `docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md`; implementation and qualification: Minime `docs/steward-notes/2026-09-27-moment-freshness.md`. No bridge/engine change or live activation.

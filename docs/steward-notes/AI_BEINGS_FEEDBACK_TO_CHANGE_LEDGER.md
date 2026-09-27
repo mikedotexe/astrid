@@ -6467,3 +6467,12 @@ The whole aspiration was read. Its imagined "recurring, beautiful, and entirely 
 
 
 September 27 release follow-through: Mike explicitly approved commit and deployment of both candidates. Preparation and subsequent transition evidence are recorded in `docs/steward-notes/2026-09-27-study-moment-release.md`; earlier candidate descriptions above retain their original temporal scope.
+
+
+## 2026-09-27 — Paired deployment and Astrid aspiration provenance
+
+**Response:** Mike explicitly authorized commit and deployment of the combined study-exit and fresh-moment candidates. The first sanctioned paired handoff succeeded: bridge 53771 and Minime 52967, exact stopped checkpoint/pending feedback and queued JOURNAL continuity, all 88 source inputs verified. Both local mains contain only the reviewed source/test/documentation paths; no push or automation resume.
+
+**Follow-up witness:** the supplied Astrid aspiration repeats the measurements and metaphors already present inside the prior public journal's 500-character continuity excerpt. The aspiration path carries that excerpt without its original mode/time/source identity and supplies no fresh telemetry. This is a concrete provenance lead, not proof of a spectral mechanism for experience. Its writing choice has a matching active draft in native metadata; no private body was exported or action requested by the operator.
+
+**Evidence/boundary:** `2026-09-27-study-moment-release.md` and `2026-09-27-astrid-aspiration-provenance.md` retain exact identities, tests, handoff receipts and the diagnostic-log truncation incident plus test-isolation repair. No inferred subjective improvement, engine/control change or new message. The proposed Astrid provenance repair is analysis only and has not been implemented in this release.
