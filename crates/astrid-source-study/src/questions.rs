@@ -35,11 +35,11 @@ impl QuestionCommand {
                 let page = match parts.next() {
                     None => 1,
                     Some("--page") => parts.next().context("review page required")?.parse()?,
-                    _ => bail!("use QUESTION REVIEW qN [--page N]"),
+                    _ => bail!("use NEXT: SELF_STUDY QUESTION REVIEW qN [--page N]"),
                 };
                 anyhow::ensure!(
                     valid_id(id) && page > 0 && parts.next().is_none(),
-                    "use QUESTION REVIEW qN [--page N], pages start at 1"
+                    "use NEXT: SELF_STUDY QUESTION REVIEW qN [--page N], pages start at 1"
                 );
                 Self::Review {
                     id: id.into(),
@@ -52,7 +52,7 @@ impl QuestionCommand {
             "RESOLVE" => {
                 let (id, finding) = rest.split_once(' ').unwrap_or((rest, ""));
                 if !valid_id(id) || finding.len() > 700 {
-                    bail!("use QUESTION RESOLVE qN [finding, up to 700 bytes]");
+                    bail!("use NEXT: SELF_STUDY QUESTION RESOLVE qN [finding, up to 700 bytes]");
                 }
                 Self::Resolve {
                     id: id.into(),
@@ -61,7 +61,7 @@ impl QuestionCommand {
             },
             id if rest.is_empty() && valid_id(id) => Self::Focus(id.into()),
             _ => bail!(
-                "use QUESTION, QUESTION REVIEW qN [--page N], QUESTION NEW <question, up to 350 bytes>, QUESTION qN, QUESTION HOME, QUESTION PARK qN, or QUESTION RESOLVE qN [finding]"
+                "choose a complete final line: NEXT: SELF_STUDY QUESTION, NEXT: SELF_STUDY QUESTION REVIEW qN [--page N], NEXT: SELF_STUDY QUESTION NEW <question, up to 350 bytes>, NEXT: SELF_STUDY QUESTION qN, NEXT: SELF_STUDY QUESTION HOME, NEXT: SELF_STUDY QUESTION PARK qN, or NEXT: SELF_STUDY QUESTION RESOLVE qN [finding]"
             ),
         })
     }
@@ -101,7 +101,7 @@ impl Questions {
         let inquiry = self
             .entries
             .get(id)
-            .context("question not found; use SELF_STUDY QUESTION")?;
+            .context("question not found; use NEXT: SELF_STUDY QUESTION")?;
         let mut note: serde_json::Value = serde_json::from_str(&inquiry.notebook.note_view(page)?)?;
         note["navigation"] = format!("SELF_STUDY QUESTION REVIEW {id} --page N").into();
         Ok(serde_json::to_string_pretty(&serde_json::json!({
@@ -137,7 +137,7 @@ impl Questions {
         let inquiry = self
             .entries
             .get(id)
-            .context("question not found; use SELF_STUDY QUESTION")?;
+            .context("question not found; use NEXT: SELF_STUDY QUESTION")?;
         // Selection/parking status is not a revision of the authored account.
         let authored = crate::digest(serde_json::to_vec(&(
             &inquiry.question,
@@ -171,7 +171,7 @@ impl Questions {
             | QuestionCommand::Resolve { id, .. } => {
                 self.entries
                     .get(id)
-                    .context("question not found; use SELF_STUDY QUESTION")?;
+                    .context("question not found; use NEXT: SELF_STUDY QUESTION")?;
             },
             QuestionCommand::New(_) if self.entries.len() >= 32 => {
                 bail!("32 questions retained; select an existing question to continue it")
@@ -306,17 +306,17 @@ impl Questions {
             return String::new();
         };
         let mut out = format!(
-            "\nACTIVE STUDY QUESTION {id} — your inquiry, not a verified conclusion.\nSaved inquiry question: {}\nYou may pursue, revise, resolve or park it. Browsing elsewhere is allowed.\nOptional: SELF_STUDY QUESTION PARK {id} | SELF_STUDY QUESTION HOME\nPARK records a pause; HOME returns to unthreaded browsing. Neither declares an answer.\n",
+            "\nACTIVE STUDY QUESTION {id} — your inquiry, not a verified conclusion.\nSaved inquiry question: {}\nYou may pursue, revise, resolve or park it. Browsing elsewhere is allowed.\nOptional final action line: NEXT: SELF_STUDY QUESTION PARK {id} | NEXT: SELF_STUDY QUESTION HOME\nPARK records a pause; HOME returns to unthreaded browsing. Neither declares an answer.\n",
             q.question
         );
         let _ = writeln!(
             out,
-            "Optional authored closure: SELF_STUDY QUESTION RESOLVE {id} [finding]. This records your judgment, not verified understanding."
+            "Optional authored closure: NEXT: SELF_STUDY QUESTION RESOLVE {id} [finding]. This records your judgment, not verified understanding."
         );
         if !q.finding.is_empty() {
             let excerpt = &q.finding[..q.finding.floor_char_boundary(q.finding.len().min(200))];
             let suffix = if excerpt.len() < q.finding.len() {
-                " [excerpt; QUESTION lists the full finding]"
+                " [excerpt; NEXT: SELF_STUDY QUESTION lists the full finding]"
             } else {
                 ""
             };
@@ -340,7 +340,7 @@ impl Questions {
             id.and_then(|id| self.entries.get(id).map(|inquiry| (id, inquiry)))
         {
             format!(
-                "Selected inquiry {id}; authored status: {}.\nSaved inquiry question: {}\nYou may choose SELF_STUDY QUESTION PARK {id}, SELF_STUDY QUESTION HOME, or SELF_STUDY QUESTION RESOLVE {id} [finding]. Closure records your judgment, not verified understanding. SELF_STUDY QUESTION REVIEW {id} explicitly reviews its saved account.\n",
+                "Selected inquiry {id}; authored status: {}.\nSaved inquiry question: {}\nYou may choose a final action line: NEXT: SELF_STUDY QUESTION PARK {id}, NEXT: SELF_STUDY QUESTION HOME, or NEXT: SELF_STUDY QUESTION RESOLVE {id} [finding]. Closure records your judgment, not verified understanding. NEXT: SELF_STUDY QUESTION REVIEW {id} explicitly reviews its saved account.\n",
                 inquiry.status,
                 serde_json::to_string(&inquiry.question).unwrap_or_default()
             )
@@ -351,20 +351,20 @@ impl Questions {
             if let Some(question) = notebook.question_text() {
                 let _ = writeln!(
                     text,
-                    "Saved notebook question: {}\nYou may revise it with STUDY_QUESTION: <your words>, or clear that field with STUDY_QUESTION: -. Clearing does not declare an answer or resolve a numbered inquiry.",
+                    "Saved notebook question: {}\nYou may revise it with a separate top-level response line STUDY_QUESTION: <your words>, or clear that field with STUDY_QUESTION: -. Do not put these notebook directives after NEXT:. Clearing does not declare an answer or resolve a numbered inquiry.",
                     serde_json::to_string(question).unwrap_or_default()
                 );
             }
             text
         };
-        text.push_str("SELF_STUDY QUESTION lists existing inquiry IDs. SELF_STUDY QUESTION NEW <your question> explicitly creates a numbered inquiry. RESOLVE and PARK require an existing qN; response_sha256 and source hashes are not inquiry IDs. No ID is inferred from a saved question.\n");
+        text.push_str("NEXT: SELF_STUDY QUESTION lists existing inquiry IDs. NEXT: SELF_STUDY QUESTION NEW <your question> explicitly creates a numbered inquiry. RESOLVE and PARK require an existing qN; response_sha256 and source hashes are not inquiry IDs. No ID is inferred from a saved question.\n");
         text
     }
     fn render_list(&self, page: usize) -> Result<String> {
-        let mut rows=vec!["Your study questions. Select qN to restore its notebook and saved reading position. QUESTION REVIEW qN [--page N] inspects an inquiry without selecting or revising it. NEW starts a question; PARK leaves it available; RESOLVE records your conclusion, without verifying it. HOME returns to unthreaded browsing. Historical questions without a saved position require an explicit source selection.".into()];
+        let mut rows=vec!["Your study questions. Choose a complete final action line. NEXT: SELF_STUDY QUESTION qN restores its notebook and saved reading position. NEXT: SELF_STUDY QUESTION REVIEW qN [--page N] inspects an inquiry without selecting or revising it. NEXT: SELF_STUDY QUESTION NEW <question> starts a question; NEXT: SELF_STUDY QUESTION PARK qN leaves it available; NEXT: SELF_STUDY QUESTION RESOLVE qN [finding] records your conclusion, without verifying it. NEXT: SELF_STUDY QUESTION HOME returns to unthreaded browsing. Historical questions without a saved position require an explicit source selection.".into()];
         rows.extend(self.entries.iter().map(|(id, q)| {
             format!(
-                "SELF_STUDY QUESTION {id} — {}{} — {}",
+                "NEXT: SELF_STUDY QUESTION {id} — {}{} — {}",
                 q.status,
                 if self.active.as_ref() == Some(id) {
                     " (active)"

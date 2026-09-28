@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Study command boundary (2026-09-28, candidate).** Align inquiry guidance with complete NEXT syntax, retain non-executing feedback for missing prefixes, and reject misplaced notebook directives before action splitting or fallback. Keep finding prose and question arguments intact, preserving voluntary continuation and storage guards. Paired qualification and activation: `docs/steward-notes/2026-09-28-study-command-boundary.md`.
+
 - **Live: Minime historical recall consumers (2026-09-28).** Push Minime `4be737c` and Astrid tooling `a74227d`, gracefully replace only Minime with PID 12214, and verify all 89 loaded inputs. The exact pending study continuation resumed and reached a handled receipt; bridge 84722 and protected services stayed unchanged. Qualification: 1,692 Minime tests, 141 subtests, one existing skip, and 38 launch tests. Receipts: `docs/steward-notes/2026-09-28-recall-consumers-release.md`.
 
 - **Agent-only release handoff (2026-09-28).** Reuse the reviewed source installer, launch hold and idle/readiness checks while retaining the existing bridge and all protected process identities. Explicit `--agent-only` mode refuses source/configuration/job/stage/hold drift and never invokes bridge activation. Synthetic full handoff and refusal tests cover the new mode.

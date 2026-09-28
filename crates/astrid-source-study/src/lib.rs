@@ -6,6 +6,7 @@
 
 mod catalog;
 mod command;
+pub mod command_boundary;
 mod coverage;
 mod evidence;
 pub mod focus;

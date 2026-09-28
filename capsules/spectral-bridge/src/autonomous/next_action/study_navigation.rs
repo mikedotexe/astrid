@@ -2,6 +2,17 @@
 use super::{ConversationState, NextActionOutcome, strip_action};
 use crate::autonomous::state::{IntrospectOffsetV2, IntrospectTargetV2};
 
+pub(super) fn reject_notebook_action(
+    conv: &mut ConversationState,
+    original: &str,
+) -> Option<NextActionOutcome> {
+    let message = astrid_source_study::command_boundary::notebook_action_feedback(original)?;
+    let outcome = NextActionOutcome::blocked("study_notebook_update", message)
+        .with_stage_visibility("rejected", "protected_summary");
+    retain(conv, original, &outcome);
+    Some(outcome)
+}
+
 fn request_target(base: &str, original: &str) -> Option<Option<IntrospectTargetV2>> {
     let argument = strip_action(original, base);
     let target = match base {

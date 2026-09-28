@@ -47,6 +47,10 @@ fn handle_next_action_with_author(
     let stage = action_continuity_stage_for_base(base_action.as_str());
     let visibility = action_continuity_visibility_for_base(base_action.as_str());
 
+    if let Some(outcome) = study_navigation::reject_notebook_action(conv, &original) {
+        return outcome;
+    }
+
     if is_action_preflight_base(base_action.as_str()) {
         let report = action_preflight_report(&original);
         let message = report.render();

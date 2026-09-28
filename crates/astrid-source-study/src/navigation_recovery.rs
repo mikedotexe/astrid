@@ -72,7 +72,11 @@ pub fn recover_local_navigation(action: &str) -> Option<NavigationRecovery> {
     }
     let text = format!(
         "Local study navigation help: {explanation}\nAvailable exact commands (choose one if useful):\n{}\nNo substitute command was executed or queued. You can retry, read elsewhere, reread, or stop.",
-        commands.join("\n")
+        commands
+            .iter()
+            .map(|command| format!("NEXT: {command}"))
+            .collect::<Vec<_>>()
+            .join("\n")
     );
     Some(NavigationRecovery {
         explanation: explanation.into(),

@@ -141,6 +141,7 @@ pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
     if let Some(action) = astrid_source_study::response_choice::final_explicit_next(text) {
         if action.starts_with("AFTERIMAGE_KEEP ")
             || astrid_source_study::response_choice::is_geometry_action(action)
+            || astrid_source_study::command_boundary::has_study_payload(action)
         {
             return Some(action);
         }
@@ -456,13 +457,18 @@ fn is_action_token_like(token: &str) -> bool {
 ///   "EXAMINE foo AND DEFER reason"           → ["EXAMINE foo", "DEFER reason"]
 ///   "A AND B AND C AND D"                    → ["A", "B", "C AND D"]  (truncated to 3)
 fn split_multi_action(original: &str) -> Vec<String> {
-    if astrid_source_study::response_choice::is_geometry_action(original) {
+    if astrid_source_study::response_choice::is_geometry_action(original)
+        || astrid_source_study::command_boundary::has_study_payload(original)
+    {
         return vec![original.into()];
     }
     const MAX_MULTI_ACTION_SEGMENTS: usize = 3;
     let mut segments: Vec<String> = Vec::new();
     let mut remaining = original;
     while segments.len() + 1 < MAX_MULTI_ACTION_SEGMENTS {
+        if astrid_source_study::command_boundary::has_study_payload(remaining) {
+            break;
+        }
         // Search for next case-insensitive " AND " whose post-segment
         // begins with an action-token-like word. Iterate occurrences
         // until we find one that satisfies the gate; if none, stop.
@@ -1160,6 +1166,7 @@ fn normalize_feedback_shadow_model_alias(
 fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     if leading_action_token(next_action.trim_start()) == "AFTERIMAGE_KEEP"
         || astrid_source_study::response_choice::is_geometry_action(next_action)
+        || astrid_source_study::command_boundary::has_study_payload(next_action)
     {
         return (
             leading_action_token(next_action.trim_start()),

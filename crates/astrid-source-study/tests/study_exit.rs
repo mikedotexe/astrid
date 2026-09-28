@@ -176,3 +176,90 @@ fn invalid_selection_receipt_supplies_recovery_without_substituting_a_choice() {
     let rest = response_choice::inspect_response(&format!("{command}\nNEXT: REST"), false);
     assert_eq!(rest.selected_next.as_deref(), Some("REST"));
 }
+
+#[test]
+fn bare_question_recovery_is_visible_but_never_executes_or_replaces_a_choice() {
+    let (_root, reader) = setup();
+    for command in [
+        "SELF_STUDY QUESTION",
+        "SELF_STUDY QUESTION NEW Where is the gate?",
+    ] {
+        let recovery = reader.prepare_action("QUESTION HOME").unwrap();
+        assert!(recovery.system_prompt.contains("NEXT: SELF_STUDY QUESTION"));
+        accept(&reader, &recovery, command);
+        let next = reader.prepare_action("SELF_STUDY MAP").unwrap();
+        assert!(next.text.contains("unselected_study_command"));
+        assert!(next.text.contains("no NEXT: prefix"));
+        let feedback = response_choice::inspect_response(command, false);
+        assert!(feedback.selected_next.is_none());
+        assert_eq!(feedback.recovery_commands, [command]);
+        for wrapped in [
+            format!("> {command}"),
+            format!("```text\n{command}\n```"),
+            format!("<think>\n{command}\n</think>"),
+        ] {
+            let feedback = response_choice::inspect_response(&wrapped, false);
+            assert!(feedback.selected_next.is_none());
+            assert!(feedback.recovery_commands.is_empty());
+        }
+        assert!(
+            response_choice::inspect_response(command, true)
+                .recovery_commands
+                .is_empty()
+        );
+        let explicit = response_choice::inspect_response(&format!("{command}\nNEXT: REST"), false);
+        assert_eq!(explicit.selected_next.as_deref(), Some("REST"));
+        assert!(explicit.recovery_commands.is_empty());
+    }
+}
+
+#[test]
+fn misplaced_directive_is_rejected_without_storage_and_valid_update_still_works() {
+    let (root, reader) = setup();
+    let page = reader.prepare_action(OPEN).unwrap();
+    accept(
+        &reader,
+        &page,
+        "STUDY_QUESTION: A legacy question.\nNEXT: REST",
+    );
+    let before = state(&root);
+    let directive = "STUDY_FINDING: astrid/crates/example/src/lib.rs:1 | A check and apply_identity_config (authorization).";
+    let choice = response_choice::inspect_response(&format!("NEXT: {directive}"), false);
+    assert_eq!(choice.selected_next.as_deref(), Some(directive));
+    assert!(
+        choice
+            .explanation
+            .unwrap()
+            .contains("Notebook update not applied")
+    );
+    for command in [
+        directive,
+        "STUDY_QUESTION:-",
+        "STUDY_NOTE: A note and TURN_OFF",
+        "STUDY_REVISE: {}",
+        "STUDY_FINDING_DROP: absent",
+        "STUDY_RELATION: hypothesis | missing",
+    ] {
+        assert!(astrid_source_study::command_boundary::has_study_payload(
+            command
+        ));
+        let rejected = reader.prepare_action(command).unwrap();
+        assert_eq!(rejected.input_kind, InputKind::Recovery);
+        assert!(rejected.text.contains("Notebook update not applied"));
+        assert!(rejected.text.contains("without NEXT:"));
+        let after = state(&root);
+        for field in ["notebook", "questions", "bookmarks"] {
+            assert_eq!(before[field], after[field]);
+        }
+    }
+    let page = reader.prepare_action(OPEN).unwrap();
+    accept(
+        &reader,
+        &page,
+        &format!("{directive}\nSTUDY_QUESTION: -\nNEXT: REST"),
+    );
+    assert_eq!(state(&root)["notebook"]["question"], Value::Null);
+    let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert!(map.text.contains("A check and apply_identity_config"));
+    assert!(map.text.contains("1/6 retained"));
+}

@@ -96,7 +96,7 @@ impl Reader {
                     .questions
                     .decision_context(question_id.as_deref(), notebook),
             );
-            text.push_str("\nChoose a next activity explicitly. SELF_STUDY MAP browses sources; SELF_STUDY OPEN <exact source path> 1 deliberately rereads. Bare SELF_STUDY or CONTINUE returns the same exhausted position at EOF. REST skips one action; it does not resolve a question or prevent a later study choice. No investigation is declared complete by reaching EOF.\n");
+            text.push_str("\nChoose a complete final action line: NEXT: SELF_STUDY MAP browses sources; NEXT: SELF_STUDY OPEN <exact source path> 1 deliberately rereads. Bare SELF_STUDY or CONTINUE returns the same exhausted position at EOF. NEXT: REST skips one action; it does not resolve a question or prevent a later study choice. No investigation is declared complete by reaching EOF.\n");
         } else if !detached {
             text.push_str(&state.questions.render_context(question_id.as_deref()));
         }
@@ -136,7 +136,7 @@ impl Reader {
             input_kind,
             evidence_scope,
             system_prompt: if decision {
-                "This is a study continuation decision, not a new source-analysis turn. Use the supplied command outcome and current inquiry state to choose an explicit NEXT, or REST. No source summary, architectural conclusion, note revision, or declaration of understanding is required. Response hashes are provenance, never inquiry IDs. You may retain uncertainty, revise the saved question voluntarily, browse another source, deliberately reread, or leave this study. Your choice is not proof of its execution.".into()
+                "This is a study continuation decision, not a new source-analysis turn. Use the supplied command outcome and current inquiry state to choose a complete final action line such as NEXT: SELF_STUDY QUESTION or NEXT: REST. A bare SELF_STUDY QUESTION command is not selected; the NEXT: prefix is required. No source summary, architectural conclusion, note revision, or declaration of understanding is required. Response hashes are provenance, never inquiry IDs. You may retain uncertainty, revise the saved question voluntarily, browse another source, deliberately reread, or leave this study. Your choice is not proof of its execution.".into()
             } else if reflection {
                 "You are writing an open introspection in your own words. No report template, minimum length, particular experience, diagnosis, or code explanation is required. This reflection may be recorded publicly; private writing is a separate WRITE choice. Choose any NEXT explicitly; stopping is available.".into()
             } else if revision_recovery {

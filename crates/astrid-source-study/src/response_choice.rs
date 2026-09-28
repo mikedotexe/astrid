@@ -277,6 +277,19 @@ pub fn inspect_response(text: &str, private_writing: bool) -> ChoiceFeedback {
             last.filter(|(index, _)| eligible_choice_line_indices(text).contains(index))
         {
             let candidate = last.trim();
+            if !private_writing
+                && candidate.starts_with("SELF_STUDY QUESTION")
+                && candidate.split_whitespace().nth(1) == Some("QUESTION")
+                && candidate.len() <= 600
+            {
+                result.selection_kind = Some("unselected_study_command".into());
+                result.recovery_commands.push(candidate.into());
+                result.explanation = Some(format!(
+                    "Question command not selected: no NEXT: prefix was supplied. No inquiry operation was queued or applied. \
+                     To choose this operation, use the complete final line NEXT: {candidate}. \
+                     The reader will validate its syntax and inquiry ID before any change."
+                ));
+            }
             if let Some(query) = candidate.strip_prefix("FIND ").map(str::trim)
                 && !query.is_empty()
                 && query.len() <= 600
@@ -297,6 +310,9 @@ pub fn inspect_response(text: &str, private_writing: bool) -> ChoiceFeedback {
     {
         result.recovery_commands.extend(recovery.commands);
         result.explanation = Some(recovery.explanation);
+    }
+    if let Some(feedback) = selected.and_then(crate::command_boundary::notebook_action_feedback) {
+        result.explanation = Some(feedback);
     }
     result
 }

@@ -355,12 +355,15 @@ impl Reader {
     /// # Errors
     /// Returns source or checkpoint errors; recovery cannot bypass reader integrity.
     pub fn prepare_action(&self, action: &str) -> Result<StudyOutput> {
+        if let Some(feedback) = crate::command_boundary::notebook_action_feedback(action) {
+            return self.unavailable_question(&anyhow::anyhow!(feedback));
+        }
         let words: Vec<_> = action.split_whitespace().take(2).collect();
         if words
             .first()
             .is_some_and(|word| word.eq_ignore_ascii_case("QUESTION"))
         {
-            return self.unavailable_question(&anyhow::anyhow!("QUESTION requires the SELF_STUDY prefix. The authored command was not executed; choose SELF_STUDY QUESTION to inspect existing IDs."));
+            return self.unavailable_question(&anyhow::anyhow!("QUESTION requires the SELF_STUDY prefix. The authored command was not executed; use the final line NEXT: SELF_STUDY QUESTION to inspect existing IDs."));
         }
         if words.first() == Some(&"SELF_STUDY")
             && words
