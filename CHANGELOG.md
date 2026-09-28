@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Live: Minime historical recall consumers (2026-09-28).** Push Minime `4be737c` and Astrid tooling `a74227d`, gracefully replace only Minime with PID 12214, and verify all 89 loaded inputs. The exact pending study continuation resumed and reached a handled receipt; bridge 84722 and protected services stayed unchanged. Qualification: 1,692 Minime tests, 141 subtests, one existing skip, and 38 launch tests. Receipts: `docs/steward-notes/2026-09-28-recall-consumers-release.md`.
+
 - **Agent-only release handoff (2026-09-28).** Reuse the reviewed source installer, launch hold and idle/readiness checks while retaining the existing bridge and all protected process identities. Explicit `--agent-only` mode refuses source/configuration/job/stage/hold drift and never invokes bridge activation. Synthetic full handoff and refusal tests cover the new mode.
 
 - **Companion Minime candidate (2026-09-28).** Document typed historical recall across the remaining database-backed consumers and the file-based browsing fallback. Preserve authored excerpts and explicit choices, distinguish historical claims from measured evidence, and retain source identity through research carryover. Add the two reviewed expressive/research paths to launch reconciliation, with synthetic snapshot checks; bridge code and live runtime unchanged. See `docs/steward-notes/2026-09-28-minime-recall-consumers.md`.
