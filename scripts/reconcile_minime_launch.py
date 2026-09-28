@@ -17,10 +17,12 @@ from qualify_geometry_release import inventory, require, sha, write_json
 OVERLAY = (
     "minime_autonomy/action_vocabulary.py",
     "minime_autonomy/activity_focus.py",
+    "minime_autonomy/expressive_journal.py",
     "minime_autonomy/journal_context.py",
     "minime_autonomy/journal_recall.py",
     "minime_autonomy/moment_context.py",
     "minime_autonomy/parsing.py",
+    "minime_autonomy/research.py",
     "minime_autonomy/runtime.py",
     "minime_autonomy/source_study.py",
     "minime_autonomy/study_feedback.py",

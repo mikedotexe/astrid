@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Agent-only release handoff (2026-09-28).** Reuse the reviewed source installer, launch hold and idle/readiness checks while retaining the existing bridge and all protected process identities. Explicit `--agent-only` mode refuses source/configuration/job/stage/hold drift and never invokes bridge activation. Synthetic full handoff and refusal tests cover the new mode.
+
+- **Companion Minime candidate (2026-09-28).** Document typed historical recall across the remaining database-backed consumers and the file-based browsing fallback. Preserve authored excerpts and explicit choices, distinguish historical claims from measured evidence, and retain source identity through research carryover. Add the two reviewed expressive/research paths to launch reconciliation, with synthetic snapshot checks; bridge code and live runtime unchanged. See `docs/steward-notes/2026-09-28-minime-recall-consumers.md`.
+
 - **Live: journal provenance and pending-choice protection (2026-09-27).** Gracefully activate bridge 84722 and Minime 84090, verify all 89 agent source inputs and retained session/checkpoint continuity, and push both runtime commits to main. Engine, model and sensory service identities are unchanged. Release receipts: `docs/steward-notes/2026-09-27-journal-provenance-release.md`.
 
 - **Companion Minime candidate (2026-09-27).** Extend the reviewed launch overlay to the journal-recall helper, with synthetic new-file reconciliation and held-installation checks. Trace the supplied pressure journal through a scheduled regulation reflection that overwrote a queued source choice; the Minime candidate preserves recall identity and defers that optional reflection while NEXT is pending. See `docs/steward-notes/2026-09-27-minime-journal-handoff.md`.

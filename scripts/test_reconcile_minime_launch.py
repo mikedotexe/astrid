@@ -72,6 +72,20 @@ class ReconciliationTests(unittest.TestCase):
             self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
                              (self.candidate / name).read_bytes())
 
+    def test_legacy_recall_consumers_are_selected_without_touching_live_sources(self):
+        names = ("minime_autonomy/expressive_journal.py", "minime_autonomy/research.py")
+        for name in names:
+            (self.canonical / name).write_text("# old recall consumer\n")
+            (self.candidate / name).write_text("# typed recall consumer\n")
+        self.refresh_status()
+        before = tool.inventory(self.canonical)
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        for name in names:
+            self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+            self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                             (self.candidate / name).read_bytes())
+
     def test_unreviewed_difference_fails(self):
         (self.candidate / "unexpected.py").write_text("# foreign\n")
         with self.assertRaisesRegex(ValueError, "unreviewed"):

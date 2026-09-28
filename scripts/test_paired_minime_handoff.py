@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from paired_minime_handoff import BRIDGE, PairedHandoff, verified_protected
+from paired_minime_handoff import BRIDGE, AgentOnlyHandoff, PairedHandoff, verified_protected
 from restart_minime_agent import reload_agent
 from test_restart_minime_agent import Backend
 from reconcile_minime_launch import OVERLAY, inventory
@@ -108,6 +108,58 @@ class HandoffTests(unittest.TestCase):
             self.assertEqual((backend.root / OVERLAY[0]).read_text(), "foreign\n")
             self.assertEqual((backend.root / "scripts/launchd_autonomous_agent.sh").read_bytes(),
                              (snapshot / "scripts/launchd_autonomous_agent.sh").read_bytes())
+
+    def test_agent_only_installs_and_reloads_without_bridge_activation(self):
+        with tempfile.TemporaryDirectory() as tmp, patch("paired_minime_handoff.time.sleep"), patch(
+                "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}), patch(
+                "paired_minime_handoff.subprocess.run", side_effect=AssertionError("peer activation")):
+            root = Path(tmp).resolve()
+            backend, packet, snapshot = self.install_fixture(root)
+            protected = backend.protected()
+            handoff = AgentOnlyHandoff(root, root / "receipt.jsonl", "synthetic")
+            events = []
+            handoff.install(backend, packet, 10, events.append)
+            self.assertTrue(handoff.owned)
+            result = reload_agent(backend, 10, timeout_s=30, quiet_s=10,
+                now=lambda: backend.clock, sleep=backend.sleep, handoff=handoff,
+                expected_inputs=inventory(snapshot), emit=events.append)
+            self.assertEqual(backend.signals, [10])
+            self.assertEqual(result["protected"], protected)
+            self.assertEqual(result["new_pid"], 11)
+            self.assertFalse(handoff.owned)
+            self.assertFalse(handoff.hold.exists())
+            self.assertIn("agent_only_boundary_verified", [event["phase"] for event in events])
+
+    def test_agent_only_refuses_drift_and_retains_owned_hold(self):
+        for drift in ("source", "config", "protected", "jobs", "stage", "hold"):
+            with self.subTest(drift=drift), tempfile.TemporaryDirectory() as tmp, patch(
+                    "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}) as stage, patch(
+                    "paired_minime_handoff.subprocess.run", side_effect=AssertionError("peer activation")):
+                root = Path(tmp).resolve()
+                backend, _, _ = self.install_fixture(root)
+                # begin pins the canonical launcher, independently of installation.
+                launcher = backend.root / "scripts/launchd_autonomous_agent.sh"
+                launcher.write_bytes((MINIME / "scripts/launchd_autonomous_agent.sh").read_bytes())
+                handoff = AgentOnlyHandoff(root, root / "receipt.jsonl", "synthetic")
+                protected = backend.protected()
+                handoff.begin(backend, backend.inputs(), backend.config(), protected, lambda e: None)
+                if drift == "source":
+                    (backend.root / "minime_autonomy/runtime.py").write_text("# drift\n")
+                elif drift == "config":
+                    backend.settings["changed"] = True
+                elif drift == "protected":
+                    backend.services["changed"] = True
+                elif drift == "jobs":
+                    backend.jobs = lambda: {"active": [{"status": "running"}]}
+                elif drift == "stage":
+                    stage.return_value = {"manifest_sha256": "changed"}
+                else:
+                    handoff.hold.write_text('{"foreign":true}')
+                with self.assertRaises(RuntimeError):
+                    handoff.transition(backend, protected, lambda e: None)
+                self.assertTrue(handoff.owned)
+                self.assertTrue(handoff.hold.exists())
+                self.assertEqual(backend.signals, [])
 
     def test_handoff_runs_once_only_after_old_exit_before_readiness(self):
         backend = Backend()

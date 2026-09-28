@@ -191,6 +191,35 @@ class PairedHandoff:
         return protected
 
 
+
+class AgentOnlyHandoff(PairedHandoff):
+    """Use the qualified installer/reload gates while retaining every peer process."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.guard["mode"] = "agent_only"
+
+    def transition(self, backend, protected, emit):
+        # reload_agent invokes this only after the validated old PID has exited.
+        self.assert_hold()
+        backend.maintenance()
+        if backend.jobs()["active"]:
+            raise RuntimeError("old agent left active jobs; agent-only hold retained")
+        if (backend.inputs() != self.inputs or backend.config() != self.config
+                or backend.protected() != protected):
+            raise RuntimeError("agent-only boundary changed; hold retained")
+        if bridge_stage.verify_stage(self.stage) != self.ready:
+            raise RuntimeError("retained bridge stage changed; agent-only hold retained")
+        self.assert_hold()
+        emit({"phase": "agent_only_boundary_verified", "protected": protected,
+              "retained_bridge_stage": str(self.stage), "manifest_sha256": self.ready["manifest_sha256"]})
+        self.hold.unlink()
+        sync_parent(self.hold)
+        self.owned = False
+        emit({"phase": "replacement_admission_released", "mode": "agent_only"})
+        return protected
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--expected-pid", type=int, required=True)
@@ -200,10 +229,13 @@ def main():
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--ack", required=True)
     parser.add_argument("--install-reviewed-overlay", action="store_true")
+    parser.add_argument("--agent-only", action="store_true",
+                        help="retain the current bridge stage and all protected processes; reload only Minime")
     args = parser.parse_args()
     if not args.ack.strip():
         parser.error("nonempty acknowledgement required")
-    handoff = PairedHandoff(args.bridge_stage, args.receipt, args.ack)
+    handoff_type = AgentOnlyHandoff if args.agent_only else PairedHandoff
+    handoff = handoff_type(args.bridge_stage, args.receipt, args.ack)
     with args.receipt.open("x") as handle:
         def emit(event):
             event = {"recorded_at": datetime.now(timezone.utc).isoformat(), **event}
