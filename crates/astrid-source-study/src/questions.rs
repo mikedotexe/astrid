@@ -178,6 +178,7 @@ impl Questions {
             },
             _ => {},
         }
+        let mut transition = String::new();
         match command {
             QuestionCommand::List { page } => return self.render_list(page),
             QuestionCommand::Review { id, page } => return self.review(&id, page),
@@ -213,8 +214,14 @@ impl Questions {
                 self.active = Some(id);
             },
             QuestionCommand::Home => {
-                if self.active.take().is_some() {
+                if let Some(id) = self.active.take() {
                     *notebook = self.unthreaded.clone().unwrap_or_default();
+                    transition = format!(
+                        "Left numbered inquiry {id}; its authored status is unchanged. Returned to unthreaded browsing.\n"
+                    );
+                } else {
+                    transition =
+                        "Already in unthreaded browsing; HOME did not change selection.\n".into();
                 }
             },
             QuestionCommand::Park(id) => {
@@ -226,6 +233,9 @@ impl Questions {
                     self.active = None;
                     *notebook = self.unthreaded.clone().unwrap_or_default();
                 }
+                transition = format!(
+                    "Marked {id} parked; its question, findings and reading position remain available.\n"
+                );
             },
             QuestionCommand::Resolve { id, finding } => {
                 let inquiry = self.entries.get_mut(&id).context("question not found")?;
@@ -235,7 +245,16 @@ impl Questions {
                     self.active = None;
                     *notebook = self.unthreaded.clone().unwrap_or_default();
                 }
+                transition = format!(
+                    "Marked {id} resolved by you and retained your finding. This records your conclusion, not verified understanding.\n"
+                );
             },
+        }
+        if !transition.is_empty() {
+            // Report the chosen operation without replaying every old finding as
+            // fresh study material. Listing/review remain explicit choices.
+            transition.push_str("Saved inquiries remain available through NEXT: SELF_STUDY QUESTION or NEXT: SELF_STUDY QUESTION REVIEW qN. No new source was supplied by this operation.\n");
+            return Ok(transition);
         }
         self.render_list(1)
     }
@@ -346,7 +365,7 @@ impl Questions {
             )
         } else {
             let mut text = String::from(
-                "No numbered inquiry is selected. A saved notebook question is a separate field, not an addressable qN inquiry.\n",
+                "No numbered inquiry is selected. You are in unthreaded browsing. A saved notebook question is a separate field, not an addressable qN inquiry. HOME leaves that field intact; it does not select a new source or end self-study scheduling.\n",
             );
             if let Some(question) = notebook.question_text() {
                 let _ = writeln!(

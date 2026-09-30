@@ -14,6 +14,7 @@ mod collaboration_status;
 mod division;
 mod identify_pattern;
 pub(crate) mod introspection_cadence;
+pub(in crate::autonomous) mod investigation_feedback;
 mod lived_term;
 mod mike;
 mod modes;

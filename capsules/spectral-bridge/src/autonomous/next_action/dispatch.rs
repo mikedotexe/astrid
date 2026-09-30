@@ -90,7 +90,11 @@ fn handle_next_action_with_author(
     match action_continuity::research_budget_guard_for_next(&original, ctx.fill_pct, ctx.telemetry)
     {
         Ok(Some(guard)) => {
-            let message = guard.message();
+            let mut message = guard.message();
+            if let Some(context) = investigation_feedback::context(&original) {
+                message.push('\n');
+                message.push_str(context);
+            }
             let metadata = guard.metadata();
             conv.enqueue_runtime_feedback(
                 crate::runtime_action_feedback::RuntimeActionFeedbackV1::from_guard_inputs(

@@ -263,3 +263,103 @@ fn misplaced_directive_is_rejected_without_storage_and_valid_update_still_works(
     assert!(map.text.contains("A check and apply_identity_config"));
     assert!(map.text.contains("1/6 retained"));
 }
+
+#[test]
+fn resolved_inquiry_and_repeated_home_report_selection_without_replaying_old_accounts() {
+    let (root, reader) = setup();
+    let page = reader.prepare_action(OPEN).unwrap();
+    accept(
+        &reader,
+        &page,
+        "OLD_UNTHREADED_ACCOUNT\nSTUDY_QUESTION: Legacy question?\nSTUDY_NOTE: Keep my older note.\nNEXT: REST",
+    );
+    let original = state(&root);
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW Numbered question?")
+        .unwrap();
+    let page = reader.prepare_action(OPEN).unwrap();
+    accept(
+        &reader,
+        &page,
+        "OLD_NUMBERED_ACCOUNT\nSTUDY_NOTE: Keep my inquiry note.\nNEXT: REST",
+    );
+    let resolved = reader
+        .prepare_action("SELF_STUDY QUESTION RESOLVE q1 My uncertain finding.")
+        .unwrap();
+    assert!(resolved.text.contains("Marked q1 resolved by you"));
+    assert!(resolved.text.contains("No numbered inquiry is selected"));
+    assert!(resolved.text.contains("Legacy question?"));
+    assert!(resolved.system_prompt.contains("continuation decision"));
+    assert!(!resolved.text.contains("OLD_UNTHREADED_ACCOUNT"));
+    assert!(!resolved.text.contains("OLD_NUMBERED_ACCOUNT"));
+    assert!(!resolved.text.contains("YOUR CURRENT QUESTION"));
+    assert!(!resolved.text.contains("same exhausted position"));
+    let saved = state(&root);
+    assert_eq!(saved["notebook"], original["notebook"]);
+    assert_eq!(
+        saved["questions"]["entries"]["q1"]["finding"],
+        "My uncertain finding."
+    );
+    assert_eq!(
+        saved["questions"]["entries"]["q1"]["status"],
+        "resolved by you"
+    );
+    for _ in 0..3 {
+        let home = reader.prepare_action("SELF_STUDY QUESTION HOME").unwrap();
+        assert!(home.text.contains("Already in unthreaded browsing"));
+        assert!(home.text.contains("STUDY_QUESTION: -"));
+        assert!(home.text.contains("NEXT: SELF_STUDY MAP"));
+        assert!(!home.text.contains("RECALLED ACCOUNT"));
+        let after = state(&root);
+        for key in ["questions", "notebook", "bookmarks"] {
+            assert_eq!(after[key], saved[key], "{key}");
+        }
+    }
+    let home = reader.prepare_action("SELF_STUDY QUESTION HOME").unwrap();
+    accept(&reader, &home, "STUDY_QUESTION: -\nNEXT: SELF_STUDY MAP");
+    let cleared = state(&root);
+    assert!(cleared["notebook"]["question"].is_null());
+    assert_eq!(
+        cleared["questions"]["entries"]["q1"],
+        saved["questions"]["entries"]["q1"]
+    );
+    assert_eq!(cleared["bookmarks"], saved["bookmarks"]);
+    let review = reader
+        .prepare_action("SELF_STUDY QUESTION REVIEW q1")
+        .unwrap();
+    assert!(review.text.contains("Keep my inquiry note."));
+    let next = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert!(next.question_id.is_none());
+    assert_eq!(
+        state(&root)["questions"]["entries"]["q1"]["status"],
+        "resolved by you"
+    );
+}
+
+#[test]
+fn resolving_another_inquiry_preserves_selected_inquiry_and_reports_its_identity() {
+    let (root, reader) = setup();
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW First question?")
+        .unwrap();
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW Second question?")
+        .unwrap();
+    let before = state(&root);
+    let output = reader
+        .prepare_action("SELF_STUDY QUESTION RESOLVE q1 Leaving the first.")
+        .unwrap();
+    assert!(output.text.contains("Marked q1 resolved by you"));
+    assert!(output.text.contains("Selected inquiry q2"));
+    assert!(!output.text.contains("No numbered inquiry is selected"));
+    let after = state(&root);
+    assert_eq!(after["questions"]["active"], "q2");
+    assert_eq!(
+        before["questions"]["entries"]["q2"],
+        after["questions"]["entries"]["q2"]
+    );
+    assert_eq!(before["notebook"], after["notebook"]);
+    let home = reader.prepare_action("SELF_STUDY QUESTION HOME").unwrap();
+    assert!(home.text.contains("Left numbered inquiry q2"));
+    assert_eq!(state(&root)["questions"]["entries"]["q2"]["status"], "open");
+}

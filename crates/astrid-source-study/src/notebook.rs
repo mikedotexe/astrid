@@ -143,7 +143,7 @@ impl Notebook {
         if let Some(question) = &self.question {
             let _ = writeln!(
                 out,
-                "YOUR CURRENT QUESTION — {}\nThis is your saved inquiry, not evidence that its premise is true. STUDY_QUESTION: can revise it; - clears this notebook field without resolving an inquiry.",
+                "YOUR SAVED NOTEBOOK QUESTION — {}\nThis field does not by itself select or resolve a numbered inquiry, or establish that its premise is true. STUDY_QUESTION: can revise it; - clears this notebook field without resolving an inquiry.",
                 question.text,
             );
         }

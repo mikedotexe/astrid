@@ -354,6 +354,39 @@ mod tests {
     }
 
     #[test]
+    fn denied_investigation_survives_restart_until_exact_accepted_delivery() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("pending.json");
+        let mut state = configured(&path);
+        super::super::next_action::investigation_feedback::blocked_authority(
+            &mut state,
+            "SEARCH architecture_overview",
+            "No current exact grant was consumed".into(),
+            "exchange-1",
+        );
+        let mut restored = configured(&path);
+        assert_eq!(
+            restored.pending_runtime_feedback,
+            state.pending_runtime_feedback
+        );
+        let delivered = receipt(directory.path(), &restored.pending_runtime_feedback);
+        super::super::next_action::investigation_feedback::blocked_authority(
+            &mut restored,
+            "SEARCH EventDispatcher interceptors",
+            "No current exact grant was consumed".into(),
+            "exchange-2",
+        );
+        restored.acknowledge_runtime_feedback(&delivered);
+        let pending = configured(&path).pending_runtime_feedback;
+        assert_eq!(pending.len(), 1);
+        assert_eq!(
+            pending[0].requested_action,
+            "SEARCH EventDispatcher interceptors"
+        );
+        assert!(pending[0].message.contains("did not execute"));
+    }
+
+    #[test]
     fn pending_runtime_feedback_roundtrip_has_no_queue_eviction() {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("pending.json");

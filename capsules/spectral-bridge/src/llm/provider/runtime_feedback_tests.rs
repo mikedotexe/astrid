@@ -49,6 +49,14 @@ mod runtime_feedback_tests {
         SubmittedRuntimeFeedbackAttemptV1,
         Option<SubmittedDeliveryAttemptV1>,
     ) {
+        attempt_with_feedback(fallback, protected, &[feedback()])
+    }
+
+    fn attempt_with_feedback(
+        fallback: bool,
+        protected: Option<&ProtectedDialogueInputV1>,
+        feedback: &[RuntimeActionFeedbackV1],
+    ) -> (SubmittedRuntimeFeedbackAttemptV1, Option<SubmittedDeliveryAttemptV1>) {
         let (request_bytes, protected_admission, runtime_admission) = if fallback {
             let mut request = build_ollama_protected_chat_request(
                 "dialogue_live",
@@ -62,7 +70,7 @@ mod runtime_feedback_tests {
                 admit_runtime_feedback_and_protected_content(
                     &mut request.messages,
                     protected,
-                    &[feedback()],
+                    feedback,
                     16_000,
                 )
                 .unwrap();
@@ -85,7 +93,7 @@ mod runtime_feedback_tests {
                 admit_runtime_feedback_and_protected_content(
                     &mut messages,
                     protected,
-                    &[feedback()],
+                    feedback,
                     4_000,
                 )
                 .unwrap();
@@ -126,6 +134,28 @@ mod runtime_feedback_tests {
             protected_admission,
         );
         (runtime, protected)
+    }
+
+    #[test]
+    fn investigation_denial_reaches_primary_and_fallback_as_a_runtime_outcome() {
+        let feedback = RuntimeActionFeedbackV1::from_guard_inputs(
+            Some("recorded-search-turn"), "SEARCH architecture_overview", "volition_authority",
+            "No current exact grant was consumed. This attempt did not execute or produce new research evidence.", None,
+        );
+        for fallback in [false, true] {
+            let foreground = source(ProtectedDialogueKindV1::Letter, "Keep my chosen letter intact.");
+            let (attempt, protected) = attempt_with_feedback(fallback, Some(&foreground), std::slice::from_ref(&feedback));
+            assert!(protected.is_some());
+            let request: serde_json::Value = serde_json::from_str(&attempt.request_json).unwrap();
+            let block = request["messages"][attempt.admission.message_index]["content"].as_str().unwrap();
+            assert!(block.contains("SEARCH architecture_overview"));
+            assert!(block.contains("volition_authority"));
+            assert!(block.contains("did not execute"));
+            let dir = tempfile::tempdir().unwrap();
+            let receipt = retain_runtime_feedback_at(dir.path(), attempt, COMPLETION).unwrap();
+            verify_runtime_feedback_receipt(&receipt).unwrap();
+            assert_eq!(receipt.feedback_ids, std::slice::from_ref(&feedback.id));
+        }
     }
 
     #[test]

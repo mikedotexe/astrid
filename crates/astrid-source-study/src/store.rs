@@ -495,13 +495,14 @@ impl Reader {
                     let text = state.questions.review(id, *page)?;
                     return self.output(&mut state, text, None, InputKind::InquiryReview);
                 }
+                let transition = matches!(command, crate::QuestionCommand::Home | crate::QuestionCommand::Park(_) | crate::QuestionCommand::Resolve { .. });
                 let text = match state.apply_question(command) {
                     Ok(text) => text,
                     Err(error) => return self.question_recovery(&mut state, &error),
                 };
                 // Context selection is an explicit Action. Pending source offers keep their original question identity.
                 self.save(&state)?;
-                return self.output(&mut state, text, None, InputKind::Questions);
+                return self.output_framed(&mut state, text, None, InputKind::Questions, transition);
             },
             Command::Relate { symbol, page } => {
                 return self.prepare_relate(&mut state, &symbol, page);

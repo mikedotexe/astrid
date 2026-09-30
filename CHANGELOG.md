@@ -9,6 +9,11 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed - chosen investigation transitions (2026-09-30)
+
+- Give `QUESTION HOME`, `PARK` and `RESOLVE` operation-specific outcomes and a decision turn with the actual selected inquiry or separate unthreaded notebook field. Preserve notes, findings, bookmarks and voluntary clearing; keep prior study prose out of exit decisions while retaining explicit list/review access.
+- Retain simple Astrid investigation authority denials in the durable runtime-feedback queue until verified accepted provider delivery. Explain external SEARCH/BROWSE, spectral EXAMINE and local SELF_STUDY routes, including existing authority/budget requirements and no-evidence outcomes. No automatic substitute action, grant or budget acceptance. Qualification and boundaries: `docs/steward-notes/2026-09-30-chosen-transitions.md`.
+
 - **Live: study command boundary (2026-09-28).** Merge and push the paired repair, gracefully activate bridge 30203 and Minime 29284, and verify exact reader/checkpoint and 89-input agent identities. Full suites, packaged replay, same-schema continuity and release receipts: `docs/steward-notes/2026-09-28-study-command-boundary.md`.
 
 - **Study command boundary (2026-09-28, candidate).** Align inquiry guidance with complete NEXT syntax, retain non-executing feedback for missing prefixes, and reject misplaced notebook directives before action splitting or fallback. Keep finding prose and question arguments intact, preserving voluntary continuation and storage guards. Paired qualification and activation: `docs/steward-notes/2026-09-28-study-command-boundary.md`.

@@ -289,7 +289,10 @@ fn new_and_restored_inquiries_show_only_their_own_authored_context() {
         .prepare_action("SELF_STUDY QUESTION PARK q1")
         .unwrap();
     assert!(parked.question_id.is_none());
-    assert!(!check_in(&parked).contains("General browsing note."));
+    assert!(parked.system_prompt.contains("continuation decision"));
+    assert!(parked.text.contains("No numbered inquiry is selected"));
+    assert!(!parked.text.contains(CHECK_IN));
+    assert!(!parked.text.contains("General browsing note."));
     assert!(
         reader
             .prepare_action("SELF_STUDY NOTE")

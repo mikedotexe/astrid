@@ -38,7 +38,7 @@ impl Reader {
     }
 
     #[allow(clippy::too_many_lines)] // One bounded, atomic offer with shared identity and framing.
-    fn output_framed(
+    pub(super) fn output_framed(
         &self,
         state: &mut State,
         mut text: String,
@@ -96,7 +96,10 @@ impl Reader {
                     .questions
                     .decision_context(question_id.as_deref(), notebook),
             );
-            text.push_str("\nChoose a complete final action line: NEXT: SELF_STUDY MAP browses sources; NEXT: SELF_STUDY OPEN <exact source path> 1 deliberately rereads. Bare SELF_STUDY or CONTINUE returns the same exhausted position at EOF. NEXT: REST skips one action; it does not resolve a question or prevent a later study choice. No investigation is declared complete by reaching EOF.\n");
+            text.push_str("\nChoose a complete final action line: NEXT: SELF_STUDY MAP browses sources; NEXT: SELF_STUDY OPEN <exact source path> [line] chooses a source; NEXT: SELF_STUDY CONTINUE uses the retained bookmark. NEXT: REST skips one action; it does not resolve a question or prevent a later study choice. No activity change is automatic.\n");
+            if input_kind == InputKind::EndOfFile {
+                text.push_str("Bare SELF_STUDY or CONTINUE returns the same exhausted position at EOF. No investigation is declared complete by reaching EOF.\n");
+            }
         } else if !detached {
             text.push_str(&state.questions.render_context(question_id.as_deref()));
         }
