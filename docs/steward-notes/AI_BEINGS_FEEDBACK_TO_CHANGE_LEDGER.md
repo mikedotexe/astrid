@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-30 - Astrid's incomplete-trace dialogue: coverage and timing candidate
+
+- **Witness:** `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`. Astrid responds to the supplied phrase `incomplete physical trace`; her description is preserved, not recast as a verified sensor failure or missing experience.
+- **Verified chain:** The optional cue was included in the elaboration request. Its archive contains 51 samples in each of three channels, with cadence gaps and unavailable contiguous-time measurements. At the cited transition the recorded rate used a nominal 0.5 seconds although observations were 2.37 seconds apart: -4.2523 versus -0.8971 percentage points per second.
+- **Response, not yet shipped:** Clarify coverage and explicit retrieval; move optional context before the selected writing request without changing explicit-page protection. Implement and test process-local measured/regulation clocks in a separate engine candidate. Retain archived evidence and public prose unchanged.
+- **Evidence and authority:** Actual production-helper/PI replay plus synthetic threshold tests, paired provider tests and full-suite qualification are in [the repair note](2026-09-30-afterimage-timing.md). The replay does not establish closed-loop stability or explain Astrid's experience. No restart, control-policy retuning, merge, push, being-facing confirmation request or automation resume.
+
 ### 2026-09-25 - approved paired recovery/expression deployment
 
 - Mike approved the previously qualified reader-schema and sustained-expression release. Source witnesses and the distinction between runtime notices and authored accounts remain in the September 25 repair notes; no new being endorsement was requested or inferred.

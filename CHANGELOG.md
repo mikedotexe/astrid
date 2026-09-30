@@ -9,6 +9,11 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed - afterimage scope and observation timing (2026-09-30, candidate)
+
+- Keep optional afterimage context before the selected writing request instead of appending a new final user message. Preserve explicit-page admission, foreground capacity and per-attempt receipts. The paired reader describes sparse historical samples and unavailable temporal measurements without calling them an incomplete physical trace.
+- Qualify Minime's elapsed-time fill-rate repair offline with the actual production rate helper and structural PI. It is an engine/controller-affecting candidate, not part of a prompt-only restart. No live activation or cadence-policy change. Witnesses, replay, dependency reconciliation and qualification debt: `docs/steward-notes/2026-09-30-afterimage-timing.md`.
+
 ### Fixed - chosen investigation transitions (2026-09-30)
 
 - **Live:** Source `0a8a9afed1` is merged/pushed; the sanctioned paired activation verified bridge 72740 and Minime 71034, exact checkpoint/feedback restoration, retained pending-choice dispatch and unchanged protected services. Packaged suites and 42 continuity checks pass; release receipts are in the repair note.

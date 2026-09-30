@@ -16,22 +16,31 @@ fn admit_feedback_and_afterimages(
         let _ = record_afterimage_request(messages, protected, backend, model, "admission_failed");
         return None;
     }
-    append_afterimage_cue(messages, limit, protected.is_some());
+    prepend_afterimage_cue(messages, limit, protected.is_some());
     admission
 }
 
-fn append_afterimage_cue(messages: &mut Vec<Message>, limit: usize, protected: bool) {
+fn prepend_afterimage_cue(messages: &mut [Message], limit: usize, protected: bool) {
     if protected {
         return;
     }
     if let Some(context) = crate::transition_afterimages::active_cue()
         && let Some(text) = context.selection["text"].as_str()
-        && message_prompt_chars(messages).saturating_add(text.len()) <= limit
     {
-        messages.push(Message {
-            role: "user".into(),
-            content: text.into(),
-        });
+        let prefix = format!(
+            "Optional historical context (reference only, not a new request). \
+             Revisiting it is optional.\n\
+             {text}\nEnd optional memory.\n\n"
+        );
+        if message_prompt_chars(messages).saturating_add(prefix.len()) <= limit
+            && let Some(foreground) = messages
+                .iter_mut()
+                .rev()
+                .find(|message| message.role == "user")
+            && !foreground.content.trim().is_empty()
+        {
+            foreground.content.insert_str(0, &prefix);
+        }
     }
 }
 
@@ -76,6 +85,80 @@ mod afterimage_provider_tests {
     use super::*;
 
     #[tokio::test]
+    async fn optional_cue_preserves_foreground_roles_and_whole_block_budget() {
+        use crate::transition_afterimages::{CueContext, ReaderClient, with_test_cue};
+        let root = tempfile::tempdir().unwrap();
+        let context = CueContext {
+            client: ReaderClient {
+                python: "python3".into(),
+                script: "unused".into(),
+                workspace: root.path().join("astrid"),
+                archive_workspace: root.path().join("minime"),
+            },
+            selection: serde_json::json!({"text":"Past sample | recorded history"}),
+        };
+        with_test_cue(context, async {
+            let original = vec![
+                Message {
+                    role: "system".into(),
+                    content: "Chosen form: dialogue".into(),
+                },
+                Message {
+                    role: "user".into(),
+                    content: "Earlier question".into(),
+                },
+                Message {
+                    role: "assistant".into(),
+                    content: "Earlier response".into(),
+                },
+                Message {
+                    role: "user".into(),
+                    content: "Develop my chosen passage.\nNEXT remains voluntary.".into(),
+                },
+            ];
+            let mut admitted = original.clone();
+            prepend_afterimage_cue(&mut admitted, 1000, false);
+            assert_eq!(admitted.len(), original.len());
+            for (before, after) in original.iter().zip(&admitted).take(3) {
+                assert_eq!(before.role, after.role);
+                assert_eq!(before.content, after.content);
+            }
+            let final_message = admitted.last().unwrap();
+            assert!(
+                final_message
+                    .content
+                    .starts_with("Optional historical context")
+            );
+            assert!(
+                final_message
+                    .content
+                    .ends_with(&original.last().unwrap().content)
+            );
+            let exact_limit = message_prompt_chars(&admitted);
+            let mut exact = original.clone();
+            prepend_afterimage_cue(&mut exact, exact_limit, false);
+            assert_eq!(message_prompt_chars(&exact), exact_limit);
+            for (limit, protected) in [(exact_limit.saturating_sub(1), false), (1000, true)] {
+                let mut omitted = original.clone();
+                prepend_afterimage_cue(&mut omitted, limit, protected);
+                assert_eq!(
+                    serde_json::to_value(omitted).unwrap(),
+                    serde_json::to_value(&original).unwrap()
+                );
+            }
+            for role in ["system", "assistant", "user"] {
+                let mut empty = vec![Message {
+                    role: role.into(),
+                    content: String::new(),
+                }];
+                prepend_afterimage_cue(&mut empty, 1000, false);
+                assert!(empty[0].content.is_empty());
+            }
+        })
+        .await;
+    }
+
+    #[tokio::test]
     async fn transition_afterimage_cue_fallback_is_whole_and_each_attempt_receipted() {
         use crate::transition_afterimages::{CueContext, ReaderClient, with_test_cue};
         let root = tempfile::tempdir().unwrap();
@@ -96,8 +179,10 @@ mod afterimage_provider_tests {
                 role: "user".into(),
                 content: "ambient".into(),
             }];
-            append_afterimage_cue(&mut primary, 400, false);
-            assert_eq!(primary.last().unwrap().content, text);
+            prepend_afterimage_cue(&mut primary, 400, false);
+            assert!(primary.last().unwrap().content.contains(text));
+            assert!(primary.last().unwrap().content.ends_with("ambient"));
+            assert_eq!(primary.len(), 1);
             assert!(
                 record_afterimage_request(
                     &primary,
@@ -112,7 +197,7 @@ mod afterimage_provider_tests {
                 role: "user".into(),
                 content: "ambient".into(),
             }];
-            append_afterimage_cue(&mut fallback, 8, false);
+            prepend_afterimage_cue(&mut fallback, 8, false);
             assert_eq!(fallback.len(), 1);
             assert!(
                 record_afterimage_request(

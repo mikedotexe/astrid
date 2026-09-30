@@ -196,7 +196,7 @@ mod afterimage_feedback_tests {
                 )
                 .unwrap();
                 assert_eq!(
-                    messages.iter().any(|message| message.content == CUE),
+                    messages.iter().any(|message| message.content.contains(CUE)),
                     included
                 );
                 assert_eq!(runtime.unwrap().feedback[0].id, feedback().id);
