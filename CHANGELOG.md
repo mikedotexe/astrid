@@ -11,6 +11,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ### Fixed - chosen investigation transitions (2026-09-30)
 
+- **Live:** Source `0a8a9afed1` is merged/pushed; the sanctioned paired activation verified bridge 72740 and Minime 71034, exact checkpoint/feedback restoration, retained pending-choice dispatch and unchanged protected services. Packaged suites and 42 continuity checks pass; release receipts are in the repair note.
+
 - Give `QUESTION HOME`, `PARK` and `RESOLVE` operation-specific outcomes and a decision turn with the actual selected inquiry or separate unthreaded notebook field. Preserve notes, findings, bookmarks and voluntary clearing; keep prior study prose out of exit decisions while retaining explicit list/review access.
 - Retain simple Astrid investigation authority denials in the durable runtime-feedback queue until verified accepted provider delivery. Explain external SEARCH/BROWSE, spectral EXAMINE and local SELF_STUDY routes, including existing authority/budget requirements and no-evidence outcomes. No automatic substitute action, grant or budget acceptance. Qualification and boundaries: `docs/steward-notes/2026-09-30-chosen-transitions.md`.
 
