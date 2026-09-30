@@ -118,3 +118,36 @@ Controller remains paused at generation 483 with no lease or active projection.
 V2 indexed-tail integrity is valid at sequence 1123137/head
 `0bf44f2ad867ccefddc90958aafb24dfd0cb89c98c1b580bd5a7f85933965bd7`;
 V1 is immutable. This interactive rollout does not claim source-queue catch-up.
+
+## Git Integration and Remaining Boundary
+
+Both canonical main branches fast-forwarded to the reviewed source commits:
+
+- Astrid `4099bbfd10bb7d91a43d0c696967445017569c9f` (25 exact paths).
+- Minime `d5176e862920a0fb15e520a3471561ce5fb09e9d` (11 exact paths).
+
+The installer changed exactly three canonical Minime files. Each was verified
+byte-for-byte against the incoming commit before explicit staging and fast-forward
+integration. No stash, reset, broad staging, history rewrite or foreign cleanup
+was used. All 659 Astrid build inputs and all 89 Minime launch inputs match the
+integrated canonical trees. The deployed manifest truthfully retains its original
+base-commit label and dirty-input witness; byte identity, not relabeling an old
+manifest, establishes alignment.
+
+The original paired timing candidate is also committed on the isolated review
+branches: Astrid `2cf3c40c0ed6d2b35f21580c7f22ff3e339f972a`, Minime
+`e9f2f5f151c89dd6b4a2dc80d5d8d12a60dc20d3`. These original-candidate branches
+are not merged to main. Their prompt subset is already represented in the live
+source commits above; the engine implementation is deliberately not. The six
+focused timing tests passed again with the pinned canonical lock.
+
+[Git alignment evidence](evidence/2026-09-30-paired-quiet-afterimage-git.json)
+lists every exact committed path and confirms all six current canonical/candidate
+worktrees were clean before this documentation closeout. Older unrelated dirty
+worktrees remain untouched. The immutable active stage must remain available
+until a later qualified release replaces it.
+
+Remaining work is substantive, not hidden restart debt: separate closed-loop and
+threshold review for elapsed-rate activation, existing strict engine-Clippy debt,
+and investigation of the measured cadence shortfall. The new study-length and
+navigation recommendations remain proposals rather than silently shipped changes.

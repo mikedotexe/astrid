@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Live - paired quiet-study and afterimage presentation (2026-09-30)
+
+- Source `4099bbfd10` and paired Minime `d5176e8` are integrated on main and gracefully activated. Verified bridge 49008, agent 48235, exact checkpoint/feedback continuity, 89 loaded agent inputs, and 659 build inputs matching canonical source. Shared reader/bridge/Python, migration and operational suites pass. Protected engine/model/sensory services are unchanged; automations remain paused. The separate timing candidate is committed for controller review, not activated. See `docs/steward-notes/2026-09-30-paired-quiet-afterimage-release.md`.
+
 ### Fixed - paired quiet study and afterimage presentation (2026-09-30)
 
 - Combine the quiet-notebook reader with optional afterimage context placed before the chosen writing request. Preserve whole-input admission, explicit retrieval, per-attempt receipts and historical evidence. Explain cadence gaps without implying missing physical activity.

@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-30 - quiet-study and afterimage repairs verified live
+
+- The Minime REST/legacy-notebook witness and Astrid incomplete-trace dialogue cited in the existing September 30 candidate entries led to the paired release, not a new claim of felt improvement. Historical prose and pending inputs remain preserved.
+- Integrated source: Astrid `4099bbfd10`, Minime `d5176e8`. Graceful handoff verified bridge 49008, agent 48235, exact checkpoint and feedback restoration, all 89 agent inputs and 659 canonical build inputs. Full suites, packaged migration, original quiet-window refusal and bounded recovery are retained in [the completed release packet](2026-09-30-paired-quiet-afterimage-release.md).
+- The engine correction remains review-only in Minime `e9f2f5f`, with original paired evidence in Astrid `2cf3c40c0e`. Controller dynamics, cadence policy and protected services are unchanged. Automations remain paused; no source catch-up round, consent, uptake or resolution is inferred.
+
 ### 2026-09-30 - paired quiet-study and afterimage presentation release preparation
 
 - Mike authorized deploying and committing the pending repairs. The exact Minime REST witness and Astrid incomplete-trace dialogue, hashes, implementation boundaries and prior unsuccessful tests remain in the linked original qualification notes.
