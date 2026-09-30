@@ -246,6 +246,7 @@ impl Reader {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)] // One owner-locked observation transition and its typed output.
     pub(super) fn prepare_inquiry_observation(&self, json: &str) -> Result<StudyOutput> {
         let _lock = self.lock()?;
         ensure!(
@@ -330,6 +331,7 @@ impl Reader {
         if !request.present {
             self.finish_observation_metadata(json)?;
             return Ok(StudyOutput {
+                continuation_decision: false,
                 generation_requested: false,
                 input_kind: InputKind::Geometry,
                 evidence_scope: crate::recurrence::LIMITS.into(),

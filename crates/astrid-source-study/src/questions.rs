@@ -14,6 +14,9 @@ pub enum QuestionCommand {
     New(String),
     Focus(String),
     Home,
+    Notebook,
+    ParkNotebook,
+    ReturnNotebook,
     Park(String),
     Resolve { id: String, finding: String },
 }
@@ -47,7 +50,10 @@ impl QuestionCommand {
                 }
             },
             "NEW" if !rest.trim().is_empty() && rest.len() <= 350 => Self::New(rest.trim().into()),
-            "HOME" => Self::Home,
+            "HOME" if rest.is_empty() => Self::Home,
+            "NOTEBOOK" if rest.is_empty() => Self::Notebook,
+            "PARK" if rest == "NOTEBOOK" => Self::ParkNotebook,
+            "RETURN" if rest == "NOTEBOOK" => Self::ReturnNotebook,
             "PARK" if valid_id(rest) => Self::Park(rest.into()),
             "RESOLVE" => {
                 let (id, finding) = rest.split_once(' ').unwrap_or((rest, ""));
@@ -61,7 +67,7 @@ impl QuestionCommand {
             },
             id if rest.is_empty() && valid_id(id) => Self::Focus(id.into()),
             _ => bail!(
-                "choose a complete final line: NEXT: SELF_STUDY QUESTION, NEXT: SELF_STUDY QUESTION REVIEW qN [--page N], NEXT: SELF_STUDY QUESTION NEW <question, up to 350 bytes>, NEXT: SELF_STUDY QUESTION qN, NEXT: SELF_STUDY QUESTION HOME, NEXT: SELF_STUDY QUESTION PARK qN, or NEXT: SELF_STUDY QUESTION RESOLVE qN [finding]"
+                "choose a complete final line: NEXT: SELF_STUDY QUESTION, NEXT: SELF_STUDY QUESTION REVIEW qN [--page N], NEXT: SELF_STUDY QUESTION NEW <question, up to 350 bytes>, NEXT: SELF_STUDY QUESTION qN, NEXT: SELF_STUDY QUESTION HOME, NEXT: SELF_STUDY QUESTION PARK qN, NEXT: SELF_STUDY QUESTION RESOLVE qN [finding], NEXT: SELF_STUDY QUESTION NOTEBOOK, NEXT: SELF_STUDY QUESTION PARK NOTEBOOK, or NEXT: SELF_STUDY QUESTION RETURN NOTEBOOK"
             ),
         })
     }
@@ -71,12 +77,29 @@ fn valid_id(s: &str) -> bool {
         .is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct Questions {
     pub(crate) active: Option<String>,
     next: u64,
     entries: BTreeMap<String, Inquiry>,
     unthreaded: Option<Notebook>,
+    /// Presentation selection only, not an authored status or conclusion.
+    #[serde(default = "default_quiet")]
+    pub(crate) unthreaded_quiet: bool,
+}
+fn default_quiet() -> bool {
+    true
+}
+impl Default for Questions {
+    fn default() -> Self {
+        Self {
+            active: None,
+            next: 0,
+            entries: BTreeMap::new(),
+            unthreaded: None,
+            unthreaded_quiet: true,
+        }
+    }
 }
 #[derive(Serialize, Deserialize)]
 struct Inquiry {
@@ -97,6 +120,17 @@ struct Reference {
     line: usize,
 }
 impl Questions {
+    pub(crate) fn notebook_view(&self, global: &Notebook) -> Result<String> {
+        let notebook = self.notebook_for(None, global);
+        Ok(serde_json::to_string_pretty(&serde_json::json!({
+            "scope": "Explicit inspection of the retained unthreaded notebook question, not newly supplied source or verified conclusions. Inspection does not select it or change reading positions.",
+            "question": notebook.question_view(),
+            "quiet": self.unthreaded_quiet,
+            "return_command": "SELF_STUDY QUESTION RETURN NOTEBOOK",
+            "park_command": "SELF_STUDY QUESTION PARK NOTEBOOK",
+            "position": "Return selects the retained unthreaded reading position, including any deliberate browsing since parking. It does not rewind or open a source automatically. Changed source bytes still require explicit reselection."
+        }))?)
+    }
     pub(crate) fn review(&self, id: &str, page: usize) -> Result<String> {
         let inquiry = self
             .entries
@@ -159,13 +193,8 @@ impl Questions {
             &inquiry.observations,
         ))?))
     }
-    pub(crate) fn apply(
-        &mut self,
-        command: QuestionCommand,
-        notebook: &mut Notebook,
-    ) -> Result<String> {
-        // Validate before changing focus, so an invalid command cannot lose context.
-        match &command {
+    fn validate_command(&self, command: &QuestionCommand, notebook: &Notebook) -> Result<()> {
+        match command {
             QuestionCommand::Focus(id)
             | QuestionCommand::Park(id)
             | QuestionCommand::Resolve { id, .. } => {
@@ -176,12 +205,40 @@ impl Questions {
             QuestionCommand::New(_) if self.entries.len() >= 32 => {
                 bail!("32 questions retained; select an existing question to continue it")
             },
+            QuestionCommand::ReturnNotebook | QuestionCommand::ParkNotebook => {
+                anyhow::ensure!(
+                    self.notebook_for(None, notebook).question_text().is_some(),
+                    "no unthreaded notebook question is retained; inspect SELF_STUDY QUESTION NOTEBOOK"
+                );
+            },
             _ => {},
         }
-        let mut transition = String::new();
+        Ok(())
+    }
+
+    pub(crate) fn apply(
+        &mut self,
+        command: QuestionCommand,
+        notebook: &mut Notebook,
+    ) -> Result<String> {
+        // Validate before changing focus, so an invalid command cannot lose context.
+        self.validate_command(&command, notebook)?;
+        let mut transition: String;
         match command {
             QuestionCommand::List { page } => return self.render_list(page),
             QuestionCommand::Review { id, page } => return self.review(&id, page),
+            QuestionCommand::Notebook => return self.notebook_view(notebook),
+            QuestionCommand::ParkNotebook => {
+                self.unthreaded_quiet = true;
+                transition = "Unthreaded notebook parked quietly. Exact words and reading positions are retained; no numbered inquiry was changed. Explicit inspection: NEXT: SELF_STUDY QUESTION NOTEBOOK. Explicit return: NEXT: SELF_STUDY QUESTION RETURN NOTEBOOK.\n".into();
+            },
+            QuestionCommand::ReturnNotebook => {
+                if self.active.take().is_some() {
+                    *notebook = self.unthreaded.clone().unwrap_or_default();
+                }
+                self.unthreaded_quiet = false;
+                transition = "Selected the retained unthreaded notebook and its current reading position. No source was opened or rewound, and no inquiry was resolved.\n".into();
+            },
             QuestionCommand::New(question) => {
                 self.next = self.next.checked_add(1).context("question IDs exhausted")?;
                 let id = format!("q{}", self.next);
@@ -201,6 +258,9 @@ impl Questions {
                         observations: crate::observations::History::default(),
                     },
                 );
+                transition = format!(
+                    "Created and selected {id}. No other inquiry or finding was replayed.\n"
+                );
                 self.active = Some(id);
                 *notebook = fresh;
             },
@@ -211,9 +271,12 @@ impl Questions {
                 let inquiry = self.entries.get_mut(&id).context("question not found")?;
                 inquiry.status = "open".into();
                 *notebook = inquiry.notebook.clone();
+                transition =
+                    format!("Selected {id} and its retained notebook and reading position.\n");
                 self.active = Some(id);
             },
             QuestionCommand::Home => {
+                self.unthreaded_quiet = true;
                 if let Some(id) = self.active.take() {
                     *notebook = self.unthreaded.clone().unwrap_or_default();
                     transition = format!(
@@ -230,6 +293,7 @@ impl Questions {
                     .context("question not found")?
                     .status = "parked".into();
                 if self.active.as_ref() == Some(&id) {
+                    self.unthreaded_quiet = true;
                     self.active = None;
                     *notebook = self.unthreaded.clone().unwrap_or_default();
                 }
@@ -242,6 +306,7 @@ impl Questions {
                 inquiry.status = "resolved by you".into();
                 inquiry.finding = finding;
                 if self.active.as_ref() == Some(&id) {
+                    self.unthreaded_quiet = true;
                     self.active = None;
                     *notebook = self.unthreaded.clone().unwrap_or_default();
                 }
@@ -295,7 +360,13 @@ impl Questions {
                 .get_or_insert_with(Notebook::default)
                 .record_pages(response, text, pages);
         } else {
+            let prior = global.question_text().map(str::to_owned);
             global.record_pages(response, text, pages);
+            // Only a newly authored question selects this context. Repeating
+            // an unchanged saved field cannot undo an explicit quiet choice.
+            if global.question_text().is_some() && global.question_text() != prior.as_deref() {
+                self.unthreaded_quiet = false;
+            }
         }
     }
     pub(crate) fn validate_notes(&self) -> anyhow::Result<()> {
@@ -335,7 +406,7 @@ impl Questions {
         if !q.finding.is_empty() {
             let excerpt = &q.finding[..q.finding.floor_char_boundary(q.finding.len().min(200))];
             let suffix = if excerpt.len() < q.finding.len() {
-                " [excerpt; NEXT: SELF_STUDY QUESTION lists the full finding]"
+                " [excerpt; NEXT: SELF_STUDY QUESTION REVIEW qN opens the full finding]"
             } else {
                 ""
             };
@@ -368,11 +439,15 @@ impl Questions {
                 "No numbered inquiry is selected. You are in unthreaded browsing. A saved notebook question is a separate field, not an addressable qN inquiry. HOME leaves that field intact; it does not select a new source or end self-study scheduling.\n",
             );
             if let Some(question) = notebook.question_text() {
-                let _ = writeln!(
-                    text,
-                    "Saved notebook question: {}\nYou may revise it with a separate top-level response line STUDY_QUESTION: <your words>, or clear that field with STUDY_QUESTION: -. Do not put these notebook directives after NEXT:. Clearing does not declare an answer or resolve a numbered inquiry.",
-                    serde_json::to_string(question).unwrap_or_default()
-                );
+                if self.unthreaded_quiet {
+                    text.push_str("Notebook commands remain available on request: NEXT: SELF_STUDY QUESTION NOTEBOOK inspects; NEXT: SELF_STUDY QUESTION RETURN NOTEBOOK selects. Inspection does not select a question.\n");
+                } else {
+                    let _ = writeln!(
+                        text,
+                        "Saved notebook question: {}\nNEXT: SELF_STUDY QUESTION PARK NOTEBOOK retains it quietly. You may revise it with a separate top-level response line STUDY_QUESTION: <your words>, or clear that field with STUDY_QUESTION: -. Do not put these notebook directives after NEXT:. Clearing does not declare an answer or resolve a numbered inquiry.",
+                        serde_json::to_string(question).unwrap_or_default()
+                    );
+                }
             }
             text
         };
@@ -396,14 +471,7 @@ impl Questions {
         if let Some(id) = &self.active {
             rows.push(format!("Optional chosen geometry observations: SELF_STUDY GEOMETRY {{\"question\":\"{id}\",\"operation\":{{\"kind\":\"status\"}}}}. No automatic capture or experiment."));
         }
-        for (id, q) in &self.entries {
-            if !q.finding.is_empty() {
-                rows.push(format!(
-                    "{id} — your saved finding (not independently verified): {}",
-                    q.finding
-                ));
-            }
-        }
+        rows.push("Retained unthreaded question: NEXT: SELF_STUDY QUESTION NOTEBOOK inspects without selecting. NEXT: SELF_STUDY QUESTION RETURN NOTEBOOK selects it; NEXT: SELF_STUDY QUESTION PARK NOTEBOOK keeps it quiet. Findings remain available through QUESTION REVIEW qN, not automatically repeated in this index.".into());
         crate::navigation::paginate(rows, "SELF_STUDY QUESTION", page)
     }
 }

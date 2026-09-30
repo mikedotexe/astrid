@@ -369,6 +369,7 @@ impl Writer {
             );
         }
         let output = StudyOutput {
+            continuation_decision: false,
             generation_requested: true,
             input_kind: InputKind::PrivateWriting,
             evidence_scope: InputKind::PrivateWriting.scope().into(),

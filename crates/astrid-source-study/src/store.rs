@@ -26,6 +26,10 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StudyOutput {
+    /// Typed presentation purpose, separate from the kind of supplied evidence.
+    /// Omitted on old offers so their retained wire identity stays unchanged.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub continuation_decision: bool,
     #[serde(
         default = "default_generation_requested",
         skip_serializing_if = "is_generation_requested"
@@ -53,6 +57,10 @@ pub struct StudyOutput {
     #[serde(default)]
     pub navigation_id: Option<String>,
 }
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn is_false(value: &bool) -> bool {
+    !*value
+}
 fn default_generation_requested() -> bool {
     true
 }
@@ -67,6 +75,10 @@ fn default_context_tokens() -> u32 {
     crate::CONTEXT_TOKENS
 }
 impl StudyOutput {
+    #[must_use]
+    pub fn is_continuation_decision(&self) -> bool {
+        self.continuation_decision || self.input_kind == InputKind::EndOfFile
+    }
     /// Verify the entire offered input, including its study notebook.
     /// # Errors
     /// Rejects shortened input or an incomplete provider response.
@@ -491,11 +503,15 @@ impl Reader {
             },
             Command::Geometry { request } => return self.prepare_geometry(&mut state, request),
             Command::Question(command) => {
+                if command == crate::QuestionCommand::Notebook {
+                    let text = state.questions.notebook_view(&state.notebook)?;
+                    return self.output(&mut state, text, None, InputKind::InquiryReview);
+                }
                 if let crate::QuestionCommand::Review { id, page } = &command {
                     let text = state.questions.review(id, *page)?;
                     return self.output(&mut state, text, None, InputKind::InquiryReview);
                 }
-                let transition = matches!(command, crate::QuestionCommand::Home | crate::QuestionCommand::Park(_) | crate::QuestionCommand::Resolve { .. });
+                let transition = matches!(command, crate::QuestionCommand::Home | crate::QuestionCommand::Park(_) | crate::QuestionCommand::Resolve { .. } | crate::QuestionCommand::ParkNotebook | crate::QuestionCommand::ReturnNotebook | crate::QuestionCommand::New(_));
                 let text = match state.apply_question(command) {
                     Ok(text) => text,
                     Err(error) => return self.question_recovery(&mut state, &error),

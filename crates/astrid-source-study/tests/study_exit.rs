@@ -288,7 +288,7 @@ fn resolved_inquiry_and_repeated_home_report_selection_without_replaying_old_acc
         .unwrap();
     assert!(resolved.text.contains("Marked q1 resolved by you"));
     assert!(resolved.text.contains("No numbered inquiry is selected"));
-    assert!(resolved.text.contains("Legacy question?"));
+    assert!(!resolved.text.contains("Legacy question?"));
     assert!(resolved.system_prompt.contains("continuation decision"));
     assert!(!resolved.text.contains("OLD_UNTHREADED_ACCOUNT"));
     assert!(!resolved.text.contains("OLD_NUMBERED_ACCOUNT"));
@@ -307,7 +307,7 @@ fn resolved_inquiry_and_repeated_home_report_selection_without_replaying_old_acc
     for _ in 0..3 {
         let home = reader.prepare_action("SELF_STUDY QUESTION HOME").unwrap();
         assert!(home.text.contains("Already in unthreaded browsing"));
-        assert!(home.text.contains("STUDY_QUESTION: -"));
+        assert!(home.text.contains("SELF_STUDY QUESTION RETURN NOTEBOOK"));
         assert!(home.text.contains("NEXT: SELF_STUDY MAP"));
         assert!(!home.text.contains("RECALLED ACCOUNT"));
         let after = state(&root);

@@ -3497,6 +3497,8 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                     };
+                    let journal_mode_name = mode_name;
+                    let mode_name = study_execution_mode(mode_name);
                     let letter_delivered = finish_activity_turn(
                         &mut conv, &activity_inbox, reading_offer.as_ref(),
                         inbox_reservation.as_ref(), accepted_delivery.as_ref(),
@@ -4592,7 +4594,7 @@ pub fn spawn_autonomous_loop(
                         } else { None };
                         save_astrid_journal_record(
                             &response_text,
-                            mode_name,
+                            journal_mode_name,
                             fill_pct,
                             journal_provenance.as_ref(),
                             expressive_observations.as_ref(),
@@ -4652,7 +4654,7 @@ pub fn spawn_autonomous_loop(
                             );
                         }
 
-                        if mode_name == "self_study"
+                        if journal_mode_name == "self_study"
                             && let Err(e) = save_minime_feedback_inbox(
                                 &response_text,
                                 if journal_source.is_empty() { "unknown source" } else { &journal_source },

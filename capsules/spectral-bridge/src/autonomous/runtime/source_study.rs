@@ -196,7 +196,7 @@ async fn run_shared_source_study(
     let source = output.page.as_ref().map_or_else(
         || {
             if output.session_pages.is_empty() {
-                if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private draft".into() } else if output.input_kind == astrid_source_study::InputKind::Reflection { "open reflection".into() } else if output.input_kind == astrid_source_study::InputKind::Geometry { "chosen geometry evidence".into() } else { "source catalog".into() }
+                if output.is_continuation_decision() { "study continuation choice".into() } else if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private draft".into() } else if output.input_kind == astrid_source_study::InputKind::Reflection { "open reflection".into() } else if output.input_kind == astrid_source_study::InputKind::Geometry { "chosen geometry evidence".into() } else { "source catalog".into() }
             } else {
                 format!(
                     "study session ({} source pages)",
@@ -250,7 +250,7 @@ async fn run_shared_source_study(
     let directory = if output.input_kind == astrid_source_study::InputKind::PrivateWriting {
         bridge_paths().bridge_workspace().join("private_writing/artifacts")
     } else { bridge_paths().introspections_dir() };
-    let artifact_kind = if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private_writing" } else if delivery.is_ok() {
+    let artifact_kind = if output.input_kind == astrid_source_study::InputKind::PrivateWriting { "private_writing" } else if delivery.is_ok() && output.is_continuation_decision() { "study_decision" } else if delivery.is_ok() {
         "introspection"
     } else {
         "source_study_notice"
@@ -319,12 +319,14 @@ async fn run_shared_source_study(
     } else {
         "protected"
     };
-    let source_scope = if output.input_kind == astrid_source_study::InputKind::Reflection {
+    let source_scope = if output.is_continuation_decision() {
+        "continuation choice; no new source analysis supplied"
+    } else if output.input_kind == astrid_source_study::InputKind::Reflection {
         "open reflection; no source inspection supplied"
     } else { "local checkout; deployed behavior not established" };
     let artifact = format!(
         "=== {} ===\nSource: {source}\nSource revision: {revision}\nSource scope: {source_scope}\nInput evidence: {}\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
-        if output.input_kind == astrid_source_study::InputKind::RevisionRecovery { "ASTRID STUDY NAVIGATION RESPONSE" } else { "ASTRID INTROSPECTION" },
+        if output.is_continuation_decision() { "ASTRID STUDY DECISION" } else if output.input_kind == astrid_source_study::InputKind::RevisionRecovery { "ASTRID STUDY NAVIGATION RESPONSE" } else { "ASTRID INTROSPECTION" },
         output.evidence_scope,
         authorship.witness_id()
     );
@@ -389,7 +391,7 @@ async fn run_shared_source_study(
         if let Some(page) = &output.page {
             finish_source_study_invitation(&catalog, &page.source);
         }
-        (if private { "private_writing" } else if output.input_kind == astrid_source_study::InputKind::Reflection { "introspect" } else { mode }, text, source)
+        (source_study_authored_mode(&output), text, source)
     } else {
         next_action::introspection_cadence::mark_failed(
             conv,
@@ -402,6 +404,24 @@ async fn run_shared_source_study(
             source,
         )
     }
+}
+
+fn source_study_authored_mode(output: &astrid_source_study::StudyOutput) -> &'static str {
+    if output.input_kind == astrid_source_study::InputKind::PrivateWriting {
+        "private_writing"
+    } else if output.is_continuation_decision() {
+        "study_decision"
+    } else if output.input_kind == astrid_source_study::InputKind::Reflection {
+        "introspect"
+    } else {
+        "self_study"
+    }
+}
+
+/// A presentation distinction must not change existing study authorization,
+/// NEXT handling, signal encoding or regulation policy.
+fn study_execution_mode(mode: &str) -> &str {
+    if mode == "study_decision" { "self_study" } else { mode }
 }
 
 pub(super) fn source_study_completion_mode(
@@ -436,6 +456,50 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 #[cfg(test)]
 mod source_study_tests {
     use super::*;
+    #[test]
+    fn quiet_notebook_and_decisions_pass_through_real_bridge_preparation() {
+        let temp = tempfile::tempdir().unwrap();
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
+            temp.path().join("reader"),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let prepare = |action: &str, operation: &str| {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            next_action::study_navigation::handle_request(&mut conv, "SELF_STUDY", action).unwrap();
+            conv.introspect_target.as_mut().unwrap().operation_id = Some(operation.into());
+            prepare_shared_study_target(&reader, conv.introspect_target).unwrap()
+        };
+        let first = prepare("SELF_STUDY MAP", "first");
+        let request = serde_json::json!({"messages":[{"role":"user","content":first.text}]}).to_string();
+        let response = serde_json::json!({"message":{"content":"STUDY_QUESTION: Retained synthetic question?\nNEXT: REST"},"done":true}).to_string();
+        reader.navigation_delivered(first.navigation_id.as_ref().unwrap(), &request, &response).unwrap();
+        for (action, id) in [
+            ("SELF_STUDY QUESTION NEW Separate inquiry?", "new"),
+            ("SELF_STUDY QUESTION RESOLVE q1 Still uncertain.", "resolve"),
+            ("SELF_STUDY QUESTION PARK NOTEBOOK", "park"),
+        ] {
+            let output = prepare(action, id);
+            assert_eq!(source_study_authored_mode(&output), "study_decision");
+            assert!(!output.text.contains("Retained synthetic question?"));
+            assert_eq!(output, prepare(action, id));
+        }
+        let inspected = prepare("SELF_STUDY QUESTION NOTEBOOK", "inspect");
+        assert!(inspected.text.contains("Retained synthetic question?"));
+        assert!(!prepare("SELF_STUDY MAP", "quiet").text.contains("Retained synthetic question?"));
+        let returned = prepare("SELF_STUDY QUESTION RETURN NOTEBOOK", "return");
+        assert!(returned.text.contains("Retained synthetic question?"));
+        assert_eq!(source_study_authored_mode(&returned), "study_decision");
+        let execution = study_execution_mode(source_study_authored_mode(&returned));
+        assert_eq!(execution, "self_study");
+        assert!(volition::mode_supports_being_attestation(execution));
+        assert_eq!(next_action::normalized_study_continue_next(execution, "NEXT: CONTINUE"), Some("SELF_STUDY CONTINUE"));
+        assert_eq!(next_action::normalized_study_continue_next(execution, "NEXT: REST"), None);
+        assert_eq!(study_execution_mode("source_study_runtime_notice"), "source_study_runtime_notice");
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let (text, _) = project_study_response(&mut conv, "study_decision", "NEXT: REST", temp.path());
+        assert_eq!(text, "NEXT: REST");
+        assert!(parse_next_action(&text).is_some());
+    }
     #[test]
     fn changed_source_reaches_the_real_bridge_preparation_and_requires_reselection() {
         let temp = tempfile::tempdir().unwrap();

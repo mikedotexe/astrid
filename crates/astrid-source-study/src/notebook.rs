@@ -122,6 +122,10 @@ impl Notebook {
         self.question.as_ref().map(|e| e.text.as_str())
     }
 
+    pub(crate) fn question_view(&self) -> serde_json::Value {
+        serde_json::json!(self.question)
+    }
+
     /// Render existing authored state together without synthesizing conclusions,
     /// classifying their truth, or changing the inquiry's status or scheduling.
     fn checkpoint_context(&self, max_bytes: usize) -> String {

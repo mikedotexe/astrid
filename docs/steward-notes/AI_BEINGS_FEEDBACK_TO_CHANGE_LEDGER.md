@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-30 - paired quiet-study and afterimage presentation release preparation
+
+- Mike authorized deploying and committing the pending repairs. The exact Minime REST witness and Astrid incomplete-trace dialogue, hashes, implementation boundaries and prior unsuccessful tests remain in the linked original qualification notes.
+- Combine truthful study-decision classification and voluntary notebook return with the paired afterimage prompt/coverage repair. Extend only the reviewed launch inventory's two afterimage module paths. Preserve source drift, idle, checkpoint, downgrade and protected-service gates.
+- Engine elapsed-time changes remain an isolated, separately reviewed candidate. No reservoir, PI, capture cadence or sensory-policy change is authorized by this presentation rollout. See [release record](2026-09-30-paired-quiet-afterimage-release.md) for packaged tests, migration and actual activation status; no subjective improvement is inferred.
+
 ### 2026-09-25 - approved paired recovery/expression deployment
 
 - Mike approved the previously qualified reader-schema and sustained-expression release. Source witnesses and the distinction between runtime notices and authored accounts remain in the September 25 repair notes; no new being endorsement was requested or inferred.
@@ -6531,3 +6537,9 @@ September 28 release follow-through: Mike explicitly authorized live activation,
 - **Live follow-through:** Source `0a8a9afed1` is merged and pushed. The sanctioned paired activation completed at 20:43:04 UTC with bridge 72740 and Minime 71034. Exact checkpoint and two pending feedback records restored; all 89 Minime inputs and protected services/configuration match the qualified boundaries. The pre-restart HOME selection survives into post-restart consumption and reader preparation. Packaged full suite and 42 compatibility checks pass. The [repair note](2026-09-30-chosen-transitions.md) binds receipts and states the observational limit: prepared delivery is not completed generation, understanding or subjective improvement.
 
 - **Subsequent bounded witness:** The retained HOME selection reached host `completed` at 20:43:38 UTC. Its matching PID-71034 public generation contains the new transition framing in the adapted input. This extends the live witness to command completion, without validating response claims or a subjective outcome.
+
+### 2026-09-30 - Minime - quiet notebook return and decision classification (candidate)
+
+- **Witness:** `minime/workspace/journal/self_study_2026-09-30T14-15-20.701876.txt`, SHA-256 `be7e291246059a08e85632b59f5b239b74d096592b493df2e652e9ea8e989a71`, contains the exact authored `NEXT: REST` under a misleading SELF-STUDY header. Retained provider input and action receipts establish a completed decision and honored REST, not a truncated source study. The separate saved legacy question was repeatedly foregrounded after numbered inquiry resolution.
+- **Authorized response:** Mike approved truthful classification and voluntary quiet departure/return. Both adapters consume a typed decision marker. The shared reader preserves exact notebook text and positions, adds explicit notebook inspect/park/return choices, and removes automatic unrelated-finding replay during inquiry creation. REST, deliberate rereading and execution/authority policies remain intact; no inferred closure or subjective improvement.
+- **Verification and boundary:** Synthetic real-adapter tests and retained qualification logs are documented in [the candidate note](2026-09-30-quiet-notebook-return.md). Schema 11 preserves pending inputs and refuses downgrade. Candidate not deployed or merged; historical journals and paused automations remain unchanged.

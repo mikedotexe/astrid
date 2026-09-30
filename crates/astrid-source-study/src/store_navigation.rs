@@ -71,9 +71,16 @@ impl Reader {
         let notebook = state
             .questions
             .notebook_for(question_id.as_deref(), &state.notebook);
+        let quiet_notebook = question_id.is_none()
+            && state.questions.unthreaded_quiet
+            && notebook.question_text().is_some();
         let key = crate::navigation_history::question_key(
             question_id.as_deref(),
-            notebook.question_text(),
+            if quiet_notebook {
+                None
+            } else {
+                notebook.question_text()
+            },
         );
         let navigation_offer = crate::navigation_history::NavigationOffer::new(
             key.clone(),
@@ -109,7 +116,8 @@ impl Reader {
         {
             suffix.push_str(&choice.render(false));
         }
-        let recall = if detached || decision || input_kind == InputKind::Notebook {
+        let recall = if detached || decision || input_kind == InputKind::Notebook || quiet_notebook
+        {
             String::new()
         } else {
             study_context(
@@ -134,6 +142,7 @@ impl Reader {
             bail!("complete study input exceeds the shared provider budget; bookmark unchanged");
         }
         let mut output = StudyOutput {
+            continuation_decision: decision,
             generation_requested: true,
             require_complete_input: true,
             input_kind,

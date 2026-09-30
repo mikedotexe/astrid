@@ -91,6 +91,18 @@ class ReconciliationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unreviewed"):
             self.run_tool()
 
+    def test_afterimage_presentation_modules_are_bound_to_reviewed_inventory(self):
+        names = ("minime_autonomy/afterimages.py", "minime_autonomy/afterimage_prompts.py")
+        before = tool.inventory(self.canonical)
+        for name in names:
+            (self.candidate / name).write_text("# reviewed afterimage presentation\n")
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        for name in names:
+            self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+            self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                             (self.candidate / name).read_bytes())
+
     def test_live_loaded_identity_drift_fails(self):
         (self.canonical / "minime_autonomy/runtime.py").write_text("# new unlaunched\n")
         with self.assertRaisesRegex(ValueError, "running source identity"):

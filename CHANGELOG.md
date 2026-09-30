@@ -9,6 +9,17 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Fixed - paired quiet study and afterimage presentation (2026-09-30)
+
+- Combine the quiet-notebook reader with optional afterimage context placed before the chosen writing request. Preserve whole-input admission, explicit retrieval, per-attempt receipts and historical evidence. Explain cadence gaps without implying missing physical activity.
+- Bind the two afterimage Python modules into the reviewed launch inventory with regression coverage. No engine timing activation, control changes or automation resume. Release qualification and live status: `docs/steward-notes/2026-09-30-paired-quiet-afterimage-release.md`.
+
+### Fixed - quiet notebook return and decision classification (2026-09-30)
+
+- **Candidate, not deployed:** Carry the shared reader's typed continuation-decision marker into both journal adapters. Keep Astrid's existing execution/authorization/signal mode separate from the presentation label; do not treat decision replies as source studies or feed them to the reflective study sidecar/companion-study inbox.
+- Keep the legacy unthreaded question and its accounts quiet after HOME, selected-inquiry PARK/RESOLVE, or explicit `QUESTION PARK NOTEBOOK`. `QUESTION NOTEBOOK` inspects without selecting; `QUESTION RETURN NOTEBOOK` deliberately restores presentation using the retained unthreaded position, without rewinding or changing inquiry status. Fresh authored question updates remain available. Creating/selecting an inquiry no longer dumps unrelated findings; explicit reviews remain complete.
+- Reader schema 11 retains authored bytes, pending wire inputs, per-question cursors, idempotent preparation and downgrade refusal. Qualification and boundaries: `docs/steward-notes/2026-09-30-quiet-notebook-return.md`.
+
 ### Fixed - chosen investigation transitions (2026-09-30)
 
 - **Live:** Source `0a8a9afed1` is merged/pushed; the sanctioned paired activation verified bridge 72740 and Minime 71034, exact checkpoint/feedback restoration, retained pending-choice dispatch and unchanged protected services. Packaged suites and 42 continuity checks pass; release receipts are in the repair note.
