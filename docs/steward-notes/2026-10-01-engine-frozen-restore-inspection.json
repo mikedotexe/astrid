@@ -1,0 +1,33 @@
+{
+  "context": {
+    "cold_start_expected": false,
+    "context_path": "/Users/v/other/worktrees/engine-qualification-20261001/review/startup-inputs/regulator_context.json",
+    "file_present": true,
+    "missing_fields": [],
+    "reason": "regulator context restored",
+    "restored_adaptive_target": false,
+    "restored_pi_state": true,
+    "resume_mode": "pi_only_resume",
+    "state": "restored",
+    "summary": "pi_only_resume from /Users/v/other/worktrees/engine-qualification-20261001/review/startup-inputs/regulator_context.json; PI state restored cleanly while adaptive target restore was intentionally disabled."
+  },
+  "covariance_checkpoint_loaded": false,
+  "covariance_restore_scope": "not evaluated; match the separately recorded launch profile",
+  "grants_restart_authority": false,
+  "input_sha256": [
+    "c6e2f42a83fe360e673fca92481ba11134552ad297d3f6f3ba0acd37f3205bec",
+    "e9a85ec68cc9460561020b1ce729614cc250eb034f309343c3f82f135d2ea91b",
+    "3ec37cccfab9205dc370fa594afa997a305a62f5f12f0e8825ed6da358b98626"
+  ],
+  "new_process_rate_unprimed": true,
+  "passed": true,
+  "scaffold": {
+    "dimension": 512,
+    "source": "derived_cold_from_stable",
+    "trace": 512.0
+  },
+  "scaffold_metadata_decoded": true,
+  "schema": "engine_restore_inspection_v1",
+  "scope": "production_decoders_only_not_engine_restart",
+  "source_commit": "e9f2f5f151c89dd6b4a2dc80d5d8d12a60dc20d3"
+}

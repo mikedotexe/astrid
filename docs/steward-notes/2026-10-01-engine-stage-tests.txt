@@ -1,0 +1,16 @@
+test_all_material_tampering_is_rejected (test_minime_engine_stage.StageTests.test_all_material_tampering_is_rejected) ... ok
+test_build_freezes_exact_artifacts_and_refuses_reuse (test_minime_engine_stage.StageTests.test_build_freezes_exact_artifacts_and_refuses_reuse) ... ok
+test_cargo_config_refused (test_minime_engine_stage.StageTests.test_cargo_config_refused) ... ok
+test_complete_witness_remains_non_authorizing (test_minime_engine_stage.StageTests.test_complete_witness_remains_non_authorizing) ... ok
+test_failed_stage_rejected (test_minime_engine_stage.StageTests.test_failed_stage_rejected) ... ok
+test_input_inventory_tracks_new_source (test_minime_engine_stage.StageTests.test_input_inventory_tracks_new_source) ... ok
+test_manifest_change_rejected (test_minime_engine_stage.StageTests.test_manifest_change_rejected) ... ok
+test_metadata_failure_retains_bounded_diagnostics (test_minime_engine_stage.StageTests.test_metadata_failure_retains_bounded_diagnostics) ... ok
+test_path_escape_and_symlink_rejected (test_minime_engine_stage.StageTests.test_path_escape_and_symlink_rejected) ... ok
+test_source_drift_retains_failed_stage (test_minime_engine_stage.StageTests.test_source_drift_retains_failed_stage) ... ok
+test_source_root_symlink_rejected (test_minime_engine_stage.StageTests.test_source_root_symlink_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.034s
+
+OK

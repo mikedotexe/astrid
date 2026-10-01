@@ -1,0 +1,10 @@
+{
+  "schema": "launchd_hold_fixture_v1",
+  "label": "com.codex.engine-hold-fixture.3734d542f5e94b0eaa6e0abf0b084d51",
+  "passed": true,
+  "old_pid": 9762,
+  "held_then_exec_pid": 9774,
+  "no_execution_during_hold": true,
+  "same_pid_after_exec": true,
+  "scope": "owned_sleep_fixture_not_production_drain"
+}

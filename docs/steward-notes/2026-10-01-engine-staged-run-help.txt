@@ -1,0 +1,57 @@
+Run the sensory engine with prime-scheduled GPU processing
+
+Usage: minime run [OPTIONS]
+
+Options:
+      --cov-dim <COV_DIM>
+          [default: 512]
+      --k <K>
+          [default: 8]
+      --ws-addr <WS_ADDR>
+          [default: 127.0.0.1:7878]
+      --sensory-ws-addr <SENSORY_WS_ADDR>
+          Sensory input WebSocket bind address [default: 127.0.0.1:7879]
+      --enable-bandstop
+          Enable Chebyshev band-stop filter for spectral damping
+      --log-homeostat
+          Enable homeostat logging for debugging
+  -q, --quiet
+          Disable homeostat logging (quiet mode)
+      --log-esn-profile
+          Enable per-tick ESN profiling CSV and timing collection
+      --log-esn-async-profile
+          Enable async-aware ESN measurement CSV for the background rank-1 path
+      --log-handoff-diagnostics
+          Enable diagnostics-only shared-buffer handoff verification logging
+      --esn-introspection-policy <ESN_INTROSPECTION_POLICY>
+          Introspection-step policy: adaptive uses 1 step by default and escalates periodically or under pressure [default: adaptive] [possible values: adaptive, fixed, viscous]
+      --esn-introspection-power-steps <ESN_INTROSPECTION_POWER_STEPS>
+          Power-iteration steps on introspection ticks (1 cuts one waited matvec; 2 is current baseline) [default: 2]
+      --cheby-order <CHEBY_ORDER>
+          Chebyshev polynomial order (6-8 recommended) [default: 6]
+      --cheby-stop-lo <CHEBY_STOP_LO>
+          Lower stopband edge (fraction of spectrum, 0-1) [default: 0.65]
+      --cheby-stop-hi <CHEBY_STOP_HI>
+          Upper stopband edge (fraction of spectrum, 0-1) [default: 0.95]
+      --cheby-soft <CHEBY_SOFT>
+          Edge smoothness (0.05-0.20 recommended; being requested 0.15 for more unfiltered variance) [default: 0.15]
+      --eigenfill-target <EIGENFILL_TARGET>
+          Target EigenFill% (0-1) [default: 0.68]
+      --reg-tick-secs <REG_TICK_SECS>
+          Regulation tick interval in seconds [default: 0.5]
+      --warm-start-blend <WARM_START_BLEND>
+          Covariance warm-start blend factor (0.0=fresh identity, 0.55=gentler, 1.0=full restore) Minime self-study: "The warm-start feels constricting... slightly too warm... nudged back into a pre-existing channel." [default: 0.55]
+      --semantic-stale-shape <SEMANTIC_STALE_SHAPE>
+          Shape used for semantic stale-window interpolation [default: sigmoid] [possible values: sigmoid, linear, exponential]
+      --surge-threshold <SURGE_THRESHOLD>
+          Threshold for lane surge detection (L2 distance across 8D lane state) [default: 0.25]
+      --enable-gpu-av
+          Enable GPU-accelerated video feature extraction (port 7880)
+      --av-ws-addr <AV_WS_ADDR>
+          GPU A/V WebSocket bind address. The ordinary runner keeps 7880 [default: 127.0.0.1:7880]
+      --legacy-audio-synth-enabled <LEGACY_AUDIO_SYNTH_ENABLED>
+          Enable the legacy internal synthetic audio lane [default: true] [possible values: true, false]
+      --legacy-video-synth-enabled <LEGACY_VIDEO_SYNTH_ENABLED>
+          Enable the legacy internal synthetic video lane [default: true] [possible values: true, false]
+  -h, --help
+          Print help

@@ -1,0 +1,13 @@
+test_complete_adaptive_restore (test_minime_engine_restore_inspect.RestoreInspectionTests.test_complete_adaptive_restore) ... ok
+test_float_overflow_not_passed (test_minime_engine_restore_inspect.RestoreInspectionTests.test_float_overflow_not_passed) ... ok
+test_legacy_pi_only_and_unprimed_process_clock (test_minime_engine_restore_inspect.RestoreInspectionTests.test_legacy_pi_only_and_unprimed_process_clock) ... ok
+test_malformed_context_not_passed (test_minime_engine_restore_inspect.RestoreInspectionTests.test_malformed_context_not_passed) ... ok
+test_metadata_fallback_not_silently_qualified (test_minime_engine_restore_inspect.RestoreInspectionTests.test_metadata_fallback_not_silently_qualified) ... ok
+test_missing_and_nonfinite_matrix_rejected (test_minime_engine_restore_inspect.RestoreInspectionTests.test_missing_and_nonfinite_matrix_rejected) ... ok
+test_oversized_input_rejected (test_minime_engine_restore_inspect.RestoreInspectionTests.test_oversized_input_rejected) ... ok
+test_requested_but_missing_adaptive_state_not_passed (test_minime_engine_restore_inspect.RestoreInspectionTests.test_requested_but_missing_adaptive_state_not_passed) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.499s
+
+OK

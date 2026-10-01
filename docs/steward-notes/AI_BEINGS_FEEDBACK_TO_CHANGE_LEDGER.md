@@ -32,6 +32,19 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-01 - incomplete-trace follow-through: narrow transition preparation
+
+- **Witness:** Astrid's `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, unchanged SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`.
+- **Response:** Prepare exact-stage activation, durable owner-held launch replacement, stopped numerical-input inspection and signed forward/rollback lineage. A harmless launchd fixture disproved disable-only inhibition; the replacement hold fixture passed. Sixteen focused tests and the live-identity-only preflight pass.
+- **Boundary:** No live restart or subjective outcome. The old gateway lacks acknowledged complete drain; the bounded one-time transition is separately awaiting approval. PI-only continuity, estimator limitations and protected services remain explicit. [Transition packet](2026-10-01-engine-transition-qualification.md) records qualification and integration debt. No automatic automation resume.
+
+### 2026-10-01 - incomplete-trace follow-through: offline engine release and startup inputs
+
+- **Witness:** Astrid's `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`, reverified without altering prose. Release review follows Mike's approval to qualify the engine candidate, not a claim of being endorsement or causal explanation.
+- **Response, not activated:** Stage exact source/binaries with locked offline builds and hash verification; retain the hash-matched historical executable and inspect frozen numerical startup inputs with production readers. Repair silent regulator-context save failures and f64-to-f32 nonfinite restore overflow in the owned candidate.
+- **Boundary:** The actual stable-core profile restores PI context but excludes covariance checkpoint lineage. Copied startup files are not a stopped multi-store snapshot. The existing broad stop/rebuild wrapper still needs a narrow staged transition and signed forward/rollback qualification; no live control, restart, full-continuity claim or automation resume.
+- **Evidence:** [Release/checkpoint packet](2026-10-01-engine-release-checkpoint-qualification.md) retains failed attempts, final identities, tests and unresolved controller-history findings. Historical qualification receipts and authored records remain unchanged.
+
 ### 2026-09-30 - Astrid's incomplete-trace dialogue: coverage and timing candidate
 
 - **Witness:** `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`. Astrid responds to the supplied phrase `incomplete physical trace`; her description is preserved, not recast as a verified sensor failure or missing experience.
@@ -6538,3 +6551,29 @@ September 28 release follow-through: Mike explicitly authorized live activation,
 - **Live follow-through:** Source `0a8a9afed1` is merged and pushed. The sanctioned paired activation completed at 20:43:04 UTC with bridge 72740 and Minime 71034. Exact checkpoint and two pending feedback records restored; all 89 Minime inputs and protected services/configuration match the qualified boundaries. The pre-restart HOME selection survives into post-restart consumption and reader preparation. Packaged full suite and 42 compatibility checks pass. The [repair note](2026-09-30-chosen-transitions.md) binds receipts and states the observational limit: prepared delivery is not completed generation, understanding or subjective improvement.
 
 - **Subsequent bounded witness:** The retained HOME selection reached host `completed` at 20:43:38 UTC. Its matching PID-71034 public generation contains the new transition framing in the adapted input. This extends the live witness to command completion, without validating response claims or a subjective outcome.
+
+### 2026-09-30 - Astrid - elapsed-fill controller review (offline; not activated)
+
+- **Witness:** `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`, reverified from canonical bytes. Astrid's incomplete-trace account motivated the archive/timing investigation, not a proven account of controller causation.
+- **Response:** Review candidate `e9f2f5f`; repair omitted timing invalidation at two recovery covariance resets offline. Reproduce how missing rate represented as zero can satisfy settle/intake/release gates, while indiscriminate NaN substitution disables absolute high-fill drains. Preserve reports and require availability-aware control consumers before activation.
+- **Verification and boundary:** 417 library, 2 replay and 13 review tests pass, including 3,535 finite-rate cases. Strict Clippy retains 74 existing library errors; no coupled-engine stability or live improvement claim. Exact source identities, consumer map, unsuccessful attempts and next qualification contract: [controller review](2026-09-30-fill-timing-controller-review.md). Uncommitted isolated delta; canonical trees and live services untouched; automations remain paused.
+
+### 2026-09-30 - Astrid - fill-rate validity follow-through (offline)
+
+- **Witness:** The same public `dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`, reverified unchanged. Mike approved continuing the elapsed-time correction after controller review; no new account or experiential cause is inferred.
+- **Response:** Carry one paired measured observation into structural decisions. Treat unavailable rates as absent evidence for activation, settling, retirement, slope-based release and intake, while retaining independent low-fill recovery and absolute high-fill drains. Invalidate histories across resets and invalid measurements, preserve fallback provenance, and stop calling unknown rates plateau/steady. Preserve legacy numeric telemetry with explicit validity metadata.
+- **Verification and boundary:** 438 tests pass (417 library, 2 replay, 19 review regressions), including 3,535 finite-rate cases; engine compilation and formatting pass. Previous defect characterizations now enforce corrected behavior. Coupled production covariance/controller qualification and the 74-diagnostic strict-lint baseline remain open. [Repair packet](2026-09-30-fill-rate-validity-repair.md) records final source hashes and remaining release gates. Uncommitted isolated candidate, no live changes or automation resume; canonical repositories remain clean.
+
+### 2026-09-30 - Astrid - coupled covariance/controller qualification (offline)
+
+- **Witness:** The same public `dialogue_longform_1790804287.txt`, canonical SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`, reverified unchanged. Mike explicitly approved the remaining coupled qualification. No new authored account or claim of causal explanation is inferred.
+- **Response:** Share actual production covariance/controller/lifecycle code with an isolated explicit-clock harness; propagate hidden numerical matrix resets to measurement/regulation clocks. Run 24 paired cases (48 runs, 2,304 steps) with production Metal measurement. All nominal-cadence controls agree. Delayed rates change controller choices and matrices, while reported fill remains identical between timing policies in these fixtures.
+- **New signal:** Low-rank histories remain in recovery. An independent identity-spectrum oracle demonstrates seven lost measurement directions persisting after matrix reset and returning with a fresh basis. This is a reproduced measurement defect, not a live-state diagnosis, an estimator repair or proof of felt improvement.
+- **Verification and boundary:** 817 tests pass; 74 pre-existing strict-lint diagnostics remain. [Qualification packet](2026-09-30-coupled-fill-qualification.md) preserves pilots, failures, hashes, scope and remaining gates. No deployment, checkpoint mutation, control retuning, git integration, journal rewrite or automation resume. Next is bounded measurement-basis recovery qualification before engine rollout.
+
+### 2026-09-30 - Astrid - measurement-basis repair and lint qualification (offline)
+
+- **Witness and authority:** The same public `dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`, remains unchanged. Mike approved addressing the lost measurement directions and known strict-lint failures. This is follow-through, not a new Being claim or evidence of live causation.
+- **Response:** Add deterministic, reorthogonalized completion of deficient measurement directions while preserving valid originals and explicit nonfinite-input rejection. Update the production GPU/runtime path and health report. Resolve scoped lint debt with reviewed code fixes and narrowly documented stable-API exceptions; no gains, threshold policy or sensory admission changes.
+- **Verification:** 830 selected tests pass; default-target and all-features library/engine strict Clippy pass. The production oracle measures rank one before reset and all eight unit directions after identity reset. 49 synthetic feedback runs preserve negative controls and characterize retained estimator delay separately; restored-history high-fill excursions remain explicit. [Repair packet](2026-09-30-measurement-basis-repair.md) binds exact sources, receipts, unsuccessful attempts and boundaries.
+- **Not inferred or authorized:** No subjective improvement, felt explanation, complete stability claim, checkpoint reset, engine restart, journal rewrite, merge, push or automation resume. The canonical trees remain clean; the isolated candidate awaits immutable release/checkpoint/launch qualification and specific engine-transition approval.

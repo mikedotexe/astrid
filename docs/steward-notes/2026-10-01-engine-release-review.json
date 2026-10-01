@@ -1,0 +1,43 @@
+{
+  "activation_authorized": false,
+  "archived_staging_tool_matches": true,
+  "current_source_inventory_matches": true,
+  "frozen_restore_passed": true,
+  "live_checkpoint_qualified": false,
+  "receipts": {
+    "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/docs/steward-notes/2026-10-01-engine-frozen-restore-inspection.json": "331b40eb7f577304d982a7642b458b45a87732558a2bbf83049bd381b9332451",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/docs/steward-notes/2026-10-01-engine-release-support-tests.txt": "3519039a0afe9d7c8d79d1293cb66c7b34a3e7f12f135ad125f60e70d6927c1c",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/docs/steward-notes/2026-10-01-engine-restore-inspector-tests.txt": "d002942cf116d0cacd595d56cc182649a71d84446d62c50427b7eb853f782b48",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/docs/steward-notes/2026-10-01-engine-stage-build-03.json": "297fab20363d06dc51a295d76409889375b9c192412c22bafb1c8b05a6931286",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/docs/steward-notes/2026-10-01-engine-stage-verify.json": "297fab20363d06dc51a295d76409889375b9c192412c22bafb1c8b05a6931286",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/docs/steward-notes/2026-10-01-engine-staged-run-help.txt": "68126fede3b7e89e909676a30a3902b64f0903e6cc2a8e3c6c8695c4152bd31e",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/scripts/test_minime_engine_restore_inspect.py": "89d416e917d5574e2a6bc505f61d27ddb17228ce4c5280d9fb79948b7803054b",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/scripts/test_minime_engine_stage.py": "4b1fa7b713616d47f9b6de7add90c42c0e9db81d10c91a3d13f496acd9581767",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/minime/docs/steward-notes/2026-10-01-engine-restore-tests-final.txt": "718ab32e8e67454fc57ca32aa8de4ab7fc9d7a42e96aec9ab4711875492aff3f",
+    "/Users/v/other/worktrees/afterimage-timing-20260930/minime/docs/steward-notes/2026-10-01-engine-stage-clippy-all-features.txt": "223a5788c51db8a8419df7133ddb5f56b6d2bd4b9f41998f9bdd398c72363ca8"
+  },
+  "reviewed_at_unix_s": 1790868565.5649788,
+  "rust_test_executions": 833,
+  "schema": "engine_offline_release_review_v1",
+  "scope": "offline_release_and_copied_startup_decoders_only",
+  "source_head": "e9f2f5f151c89dd6b4a2dc80d5d8d12a60dc20d3",
+  "stage": {
+    "activation_authorized": false,
+    "artifacts": {
+      "engine_restore_inspect": {
+        "path": "bin/engine_restore_inspect",
+        "sha256": "01e926bdf23284302fea46c7342d7684f19b159f450e9283be6fd5e5dd2c0d44"
+      },
+      "minime": {
+        "path": "bin/minime",
+        "sha256": "047362f2f6b1e9fa75016d89de07f158a36186611f31fe988e415c8cf71573d1"
+      }
+    },
+    "input_count": 120,
+    "manifest_sha256": "0d1ab9df81bc072318554147112dc98258b393b2c796a3e1fba2fd54d57cfed8",
+    "schema": "minime_engine_stage_v1",
+    "stage": "/Users/v/other/worktrees/engine-qualification-20261001/release-03",
+    "verified": true
+  },
+  "unchanged_live_engine_sha256": "0e40bcf7ed944f38a65c45ee85b4916484c6938bc8bb665dff53646d762821d6"
+}

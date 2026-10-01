@@ -1,0 +1,18 @@
+{
+  "activation_authorized": false,
+  "artifacts": {
+    "engine_restore_inspect": {
+      "path": "bin/engine_restore_inspect",
+      "sha256": "dac5d59ba035b4704a95029abc824f85689c4ec7e82a5982c01379064577c9ae"
+    },
+    "minime": {
+      "path": "bin/minime",
+      "sha256": "047362f2f6b1e9fa75016d89de07f158a36186611f31fe988e415c8cf71573d1"
+    }
+  },
+  "input_count": 120,
+  "manifest_sha256": "efb1313fbe94142a0987e4b23b4fea2f99fe64eb83a3d239078eb787b5bc9705",
+  "schema": "minime_engine_stage_v1",
+  "stage": "/Users/v/other/worktrees/engine-qualification-20261001/release-02",
+  "verified": true
+}

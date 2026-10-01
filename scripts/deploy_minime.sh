@@ -2,6 +2,13 @@
 # Build and gracefully replace the launchd-managed Minime engine and companions.
 set -euo pipefail
 
+# Exact staged activation is isolated from the legacy broad stop/build path.
+if [ "${1:-}" = "--activate-stage" ]; then
+  shift
+  export ASTRID_SANCTIONED_ENGINE_ACTIVATION=1
+  exec python3 "$(cd "$(dirname "$0")" && pwd)/minime_engine_transition.py" "$@"
+fi
+
 ASTRID="/Users/v/other/astrid"
 MINIME="/Users/v/other/minime"
 WORKSPACE="$ASTRID/capsules/spectral-bridge/workspace"

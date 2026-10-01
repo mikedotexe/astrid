@@ -1,0 +1,9 @@
+{
+  "schema": "launchd_inhibit_fixture_v1",
+  "label": "com.codex.engine-inhibit-fixture.81c12c282a6f45d7aaec86e18cadce4b",
+  "original_pid": 7061,
+  "pid_after_disabled_exit": 7068,
+  "pid_after_enable": 7068,
+  "inhibited": false,
+  "scope": "owned_sleep_fixture_only_not_production_drain"
+}

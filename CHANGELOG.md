@@ -9,6 +9,18 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Narrow staged engine transition (2026-10-01, awaiting activation).** Add owner-held launch replacement, exact mapped-build/source checks, stopped-context inspection, signed handoff and newest-state rollback through the sanctioned wrapper. Qualify KeepAlive holds with a harmless host fixture; reject the disproved disable-only approach. Preserve protected services and existing automation pause. See `docs/steward-notes/2026-10-01-engine-transition-qualification.md`.
+
+- **Offline engine release/checkpoint qualification (2026-10-01).** Add fail-closed engine staging/verification, preserve exact source and binary identities, and inspect copied startup inputs through production decoders. Record paired regulator-context durability and overflow repairs, current PI-only continuity scope and remaining narrow-drain/signed-handoff work. No installation, restart or automation resume. See `docs/steward-notes/2026-10-01-engine-release-checkpoint-qualification.md`.
+
+- **Offline measurement-basis recovery (2026-09-30).** Record the paired Minime repair for lost measurement directions after rank collapse, valid-input gating and versioned health evidence. 830 tests and scoped strict/default/all-features lint pass; 49 synthetic feedback runs separate recovered directions from retained estimator delay. No engine activation or controller retuning. Exact evidence and remaining release gates: `docs/steward-notes/2026-09-30-measurement-basis-repair.md`.
+
+- **Offline coupled-fill qualification (2026-09-30).** Record the shared production controller/covariance harness, additional numerical-reset clock repair, and 48 bounded synthetic runs. Delayed timing changes decisions/matrices without changing paired reported-fill curves in this corpus. Reproduce a separate lost measurement-basis defect after covariance reset; no engine rollout. 817 selected tests pass; existing strict-lint debt remains. See `docs/steward-notes/2026-09-30-coupled-fill-qualification.md`.
+
+- **Offline elapsed-fill validity follow-through (2026-09-30).** Record the paired Minime repair: matched fill/rate endpoints, unavailable observations excluded from stability proofs, preserved absolute safeguards, and provenance-aware phase/telemetry rendering. 438 selected tests pass; no bridge or live engine change. Coupled production qualification and existing strict-lint debt remain explicit in `docs/steward-notes/2026-09-30-fill-rate-validity-repair.md`.
+
+- **Offline fill-timing controller review (2026-09-30).** Record the production-consumer review prompted by Astrid's incomplete-trace account: two engine reset-boundary omissions repaired in the isolated Minime candidate, explicit unavailable-rate gate hazards reproduced, and activation still unqualified. No bridge or live-controller change. See `docs/steward-notes/2026-09-30-fill-timing-controller-review.md`.
+
 ### Fixed - afterimage scope and observation timing (2026-09-30, candidate)
 
 - Keep optional afterimage context before the selected writing request instead of appending a new final user message. Preserve explicit-page admission, foreground capacity and per-attempt receipts. The paired reader describes sparse historical samples and unavailable temporal measurements without calling them an incomplete physical trace.
