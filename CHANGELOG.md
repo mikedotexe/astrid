@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Engine follow-through: semantic settle review (2026-10-01).** Trace the admitted semantic lane and bridge heartbeat, retain a bounded live observation, and qualify paired read-only numerical-eligibility reporting. Synthetic alternatives demonstrate that clearing `semantic_active` changes scaffold lifecycle, not just a label. No bridge/controller policy or live release change. See `docs/steward-notes/2026-10-01-semantic-settle-review.md`.
+
 - **Live: approved engine release-04 (2026-10-01).** Complete the specifically approved bounded engine/gateway/supervisor transition with verified stopped checkpoint, signed state-preserving handoff and 360-second observation. All protected services remain unchanged. Keep `semantic_active` settle-proof wait explicit rather than declaring the controller settled. Exact live hashes and receipts: `docs/steward-notes/2026-10-01-engine-live-transition.md`.
 
 - **Engine candidate merged and pushed, not activated (2026-10-01).** Reconcile release tooling at `63d1f0628f` with paired engine `c428fca`, qualify clean release-04 and preserve unchanged runtime identities. 833 Rust and 148 support tests pass. Record launcher-only manifest alignment without relabelling the old engine; bounded legacy-transition approval remains pending. See `docs/steward-notes/2026-10-01-engine-git-integration.md`.
