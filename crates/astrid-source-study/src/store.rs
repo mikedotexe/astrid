@@ -6,6 +6,8 @@ mod activity;
 mod cursors;
 #[path = "store_geometry.rs"]
 mod geometry;
+#[path = "study_help.rs"]
+mod help;
 #[path = "store_navigation.rs"]
 mod navigation;
 #[path = "store_observations.rs"]
@@ -26,6 +28,10 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StudyOutput {
+    /// Typed presentation purpose, separate from the kind of supplied evidence.
+    /// Omitted on old offers so their retained wire identity stays unchanged.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub continuation_decision: bool,
     #[serde(
         default = "default_generation_requested",
         skip_serializing_if = "is_generation_requested"
@@ -53,6 +59,10 @@ pub struct StudyOutput {
     #[serde(default)]
     pub navigation_id: Option<String>,
 }
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn is_false(value: &bool) -> bool {
+    !*value
+}
 fn default_generation_requested() -> bool {
     true
 }
@@ -67,6 +77,11 @@ fn default_context_tokens() -> u32 {
     crate::CONTEXT_TOKENS
 }
 impl StudyOutput {
+    #[must_use]
+    pub fn is_continuation_decision(&self) -> bool {
+        self.continuation_decision
+            || matches!(self.input_kind, InputKind::EndOfFile | InputKind::Help)
+    }
     /// Verify the entire offered input, including its study notebook.
     /// # Errors
     /// Rejects shortened input or an incomplete provider response.
@@ -359,6 +374,17 @@ impl Reader {
             return self.unavailable_question(&anyhow::anyhow!(feedback));
         }
         let words: Vec<_> = action.split_whitespace().take(2).collect();
+        if words.first() == Some(&"SELF_STUDY")
+            && words
+                .get(1)
+                .is_some_and(|word| word.eq_ignore_ascii_case("NEW"))
+        {
+            let text = crate::recover_local_navigation(action).map_or_else(
+                || "NEW requires SELF_STUDY QUESTION NEW <question, up to 350 bytes>. No question was created or selected; SELF_STUDY HELP notebook shows syntax.".to_string(),
+                |recovery| recovery.text,
+            );
+            return self.unavailable_question(&anyhow::anyhow!(text));
+        }
         if words
             .first()
             .is_some_and(|word| word.eq_ignore_ascii_case("QUESTION"))
@@ -483,6 +509,7 @@ impl Reader {
             Err(error) => return self.recovery_map(&mut state, &error),
         };
         let page = match command {
+            Command::Help { topic } => return self.output(&mut state, help::render(&topic), None, InputKind::Help),
             Command::Reflect => return self.output(&mut state, "You chose open introspection. You may reflect on your thoughts, experience, uncertainty, or anything that matters to you, without connecting it to code or measurements. Nothing specific needs to be felt, explained, or concluded. Length and stopping remain yours to choose.\n\nNEXT choices remain yours: INTROSPECT for another reflection, SELF_STUDY CONTINUE for the retained source bookmark, WRITE START <topic> for private writing, or REST. No continuation is automatic.".into(), None, InputKind::Reflection),
             Command::Note { page } => {
                 let notebook = state.questions.notebook_for(state.questions.active.as_deref(), &state.notebook);
@@ -491,11 +518,15 @@ impl Reader {
             },
             Command::Geometry { request } => return self.prepare_geometry(&mut state, request),
             Command::Question(command) => {
+                if command == crate::QuestionCommand::Notebook {
+                    let text = state.questions.notebook_view(&state.notebook)?;
+                    return self.output(&mut state, text, None, InputKind::InquiryReview);
+                }
                 if let crate::QuestionCommand::Review { id, page } = &command {
                     let text = state.questions.review(id, *page)?;
                     return self.output(&mut state, text, None, InputKind::InquiryReview);
                 }
-                let transition = matches!(command, crate::QuestionCommand::Home | crate::QuestionCommand::Park(_) | crate::QuestionCommand::Resolve { .. });
+                let transition = matches!(command, crate::QuestionCommand::Home | crate::QuestionCommand::Park(_) | crate::QuestionCommand::Resolve { .. } | crate::QuestionCommand::ParkNotebook | crate::QuestionCommand::ReturnNotebook | crate::QuestionCommand::New(_));
                 let text = match state.apply_question(command) {
                     Ok(text) => text,
                     Err(error) => return self.question_recovery(&mut state, &error),

@@ -1,0 +1,16 @@
+Choose one command with NEXT: on its own final line; these examples do not select anything.
+
+SELF_STUDY MAP [topic] [--page N] shows compact directories and entry points.
+SELF_STUDY LIST repository/directory [--page N] lists descendant files.
+SELF_STUDY FIND <literal text> [--page N] searches exact text, including punctuation.
+SELF_STUDY OPEN repository/path [one-based line] deliberately opens or rereads current source.
+SELF_STUDY RESUME repository/path uses that source's retained bookmark.
+SELF_STUDY CONTINUE resumes the source-code bookmark, never a map page. READ_MORE is a separate document reader. EOF is a position, not completed understanding; deliberately OPEN to reread, choose another source, or leave.
+
+SELF_STUDY RELATE EventDispatcher [--page N] groups exact symbol candidates: non-test call/match sites, definitions, implementation blocks, tests and references. Qualified symbols such as EventBus::new are supported. Syntax does not establish binding, runtime execution or causation. OPEN the candidate for context.
+
+SELF_STUDY SESSION OPEN repository/path line | OPEN repository/path line [| OPEN repository/path line] supplies two or three chosen smaller pages together. Each has its own revision and interval; only verified completion advances them. CONTINUE then follows the last selected page. A caller/definition, failure branch/test or two competing interpretations can be examined together; no comparison is required and missing code remains missing evidence. One substantial response may develop the whole inquiry rather than summarize each page separately.
+
+SELF_STUDY TRACE LAST shows your retained study input, completion and bookmark evidence. TRACE <your exact job_id or action_id> shows available local execution records. A response's NEXT alone does not prove execution; missing links stay unknown.
+
+NAVIGATION RECEIPT counts supplied navigation and named candidates, not required strategy changes. A question may have an untested premise. Filenames, matches and repeated accounts do not prove a handler exists. Source changes require explicit reselection; old offsets are not transplanted. A pending authored study can be explicitly replaced with SELF_STUDY REPLACE <ordinary source-study operation>; merely opening help does not cancel or replace a queued choice.

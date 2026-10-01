@@ -12,6 +12,7 @@ pub enum Command {
     Continue,
     Reflect,
     Note { page: usize },
+    Help { topic: String },
     Relate { symbol: String, page: usize },
     Question(crate::QuestionCommand),
     Session { targets: Vec<(String, usize)> },
@@ -35,6 +36,12 @@ impl Command {
             return Self::parse_replacement(rest);
         }
         match verb.to_ascii_uppercase().as_str() {
+            "HELP" => Ok(Self::Help {
+                topic: rest.trim().to_ascii_lowercase(),
+            }),
+            "NEW" => bail!(
+                "NEW is not a source path or a complete inquiry command. Use SELF_STUDY QUESTION NEW <question, up to 350 bytes>; no question was created."
+            ),
             "NOTE" => {
                 let (rest, page) = page_suffix(rest)?;
                 if !rest.is_empty() {
@@ -149,6 +156,7 @@ impl Command {
                 | "SESSION"
                 | "TRACE"
                 | "NOTE"
+                | "HELP"
         ) {
             bail!(
                 "REPLACE requires one ordinary source-study operation; nested REPLACE and private WRITE are not source-study operations"

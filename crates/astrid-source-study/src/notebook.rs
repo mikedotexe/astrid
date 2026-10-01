@@ -122,12 +122,17 @@ impl Notebook {
         self.question.as_ref().map(|e| e.text.as_str())
     }
 
+    pub(crate) fn question_view(&self) -> serde_json::Value {
+        serde_json::json!(self.question)
+    }
+
     /// Render existing authored state together without synthesizing conclusions,
     /// classifying their truth, or changing the inquiry's status or scheduling.
     fn checkpoint_context(&self, max_bytes: usize) -> String {
         // Leave room for maximum durable fields and exact-path failure receipts
         // inside the shared whole-input budget; this section duplicates recall.
-        const FOOTER: &str = "You can distinguish what you have established from what remains an assumption, including places already checked. Your findings remain yours to retain, qualify or revise.\n";
+        const FOOTER: &str =
+            "SELF_STUDY HELP notebook opens revision and finding syntax. No update is required.\n";
         if self.question.is_none()
             && self.note.is_none()
             && !self.source_findings.has_authored()
@@ -136,20 +141,19 @@ impl Notebook {
         {
             return String::new();
         }
-        let mut out = String::from(
-            "OPTIONAL STUDY CHECK-IN — fresh source or navigation is above; recalled words are below. You may take stock, keep reading, revise or park a question, or choose another activity. No answer or change of direction is required.\n",
-        );
+        let mut out =
+            String::from("OPTIONAL STUDY CHECK-IN — retained context, not a required report.\n");
         out.push_str(&self.source_findings.render_updates(1_200));
         if let Some(question) = &self.question {
             let _ = writeln!(
                 out,
-                "YOUR SAVED NOTEBOOK QUESTION — {}\nThis field does not by itself select or resolve a numbered inquiry, or establish that its premise is true. STUDY_QUESTION: can revise it; - clears this notebook field without resolving an inquiry.",
+                "YOUR SAVED NOTEBOOK QUESTION — {}\nAn authored question, not proof of its premise or an instruction to keep it.",
                 question.text,
             );
         }
         if let Some(note) = &self.note {
             let preview = format!(
-                "Saved note retained, not automatically quoted. Identity: {}. SELF_STUDY NOTE opens it and its revision history. STUDY_NOTE: updates it voluntarily; prior versions remain retained.",
+                "Saved note retained, not automatically quoted. Identity: {}. SELF_STUDY NOTE opens it and its revision history.",
                 note.response_sha256,
             );
             // Full authored words remain protected in the notebook. Omit an
@@ -293,7 +297,7 @@ impl Notebook {
     /// Rendering never edits the durable notebook. Oldest whole accounts are
     /// omitted before the latest account becomes an explicitly marked excerpt.
     pub(crate) fn render_with_budget(&self, max_total_bytes: usize) -> anyhow::Result<String> {
-        const HEADER: &str = "\n\nRECALLED ACCOUNT — your study notebook contains recent visible responses and your saved findings, not source supplied this turn or verified code facts. Recent accounts are oldest first; previous is the latest. complete=false marks an excerpt, never a full answer. It may contain mistakes or truncated context. Source references identify the input behind the earlier account; they do not validate its symbols, line claims or conclusions. A reopen link marks the page behind that account; the question's link is where it was asked, not a known answer location. Reopen checks current source; resume continues the bookmark. Saved note and revision history are omitted here; SELF_STUDY NOTE opens them. source_findings.authored contains your unverified conclusions; each anchor preserves an actually supplied numbered line fragment, its original revision and page identity. supplied_locations are bounded lexical source-location recall, not answers or code supplied this turn. A fragment may omit surrounding scope. OPEN checks current checkout, which may differ from the saved revision.\n";
+        const HEADER: &str = "\n\nRECALLED ACCOUNT — your study notebook: fallible authored history, not source supplied this turn or verified facts. Recent accounts are oldest first; previous is latest; complete=false marks an excerpt. Anchors preserve earlier supplied fragments; source_findings.authored contains your unverified conclusions; supplied_locations are lexical recall only. OPEN checks current checkout, which may differ from the saved revision. SELF_STUDY NOTE opens saved notes/revisions; SELF_STUDY HELP notebook explains these fields.\n";
         const FOOTER: &str = "\nEnd of study notebook.\n";
         if self.note.is_none()
             && self.question.is_none()

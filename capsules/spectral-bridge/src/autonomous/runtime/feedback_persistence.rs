@@ -261,6 +261,7 @@ fn save_astrid_journal_record(
         "witness" => "witness",
         "introspect" => "introspect",
         "self_study" => "self_study",
+        "study_decision" => "study_decision",
         "regulator_audit" => "regulator_audit",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
     };

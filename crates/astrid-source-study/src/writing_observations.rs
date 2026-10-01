@@ -51,7 +51,7 @@ impl Writer {
             .sequence
             .checked_add(1)
             .context("writing sequence exhausted")?;
-        let output=StudyOutput {generation_requested:present,input_kind:InputKind::PrivateWriting,
+        let output=StudyOutput {continuation_decision:false,generation_requested:present,input_kind:InputKind::PrivateWriting,
             evidence_scope:"Private observation receipt. No public delivery or inferred intent. Numerical descriptions are not felt-state conclusions.".into(),
             require_complete_input:true,system_prompt:PROMPT.into(),input_budget_bytes:crate::MAX_INPUT_BYTES,
             context_tokens:crate::CONTEXT_TOKENS,text,page:None,session_pages:Vec::new(),question_id:None,

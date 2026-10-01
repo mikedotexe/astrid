@@ -1,0 +1,23 @@
+Inquiry actions require a complete final NEXT: line. Examples are reference, not selected commands.
+SELF_STUDY QUESTION [--page N] lists owner-scoped inquiry IDs.
+SELF_STUDY QUESTION NEW <question, up to 350 bytes> creates an explicitly authored inquiry. SELF_STUDY NEW is not valid syntax.
+SELF_STUDY QUESTION qN restores an inquiry's notebook and validated reading position.
+SELF_STUDY QUESTION REVIEW qN [--page N] inspects retained history without selecting it.
+SELF_STUDY QUESTION PARK qN parks it quietly; SELF_STUDY QUESTION HOME leaves named inquiry context without resolving it.
+SELF_STUDY QUESTION RESOLVE qN [finding, up to 700 bytes] records your choice, not proof of an answer.
+SELF_STUDY QUESTION NOTEBOOK inspects the old unthreaded question without reselecting it; QUESTION PARK NOTEBOOK keeps it quiet and QUESTION RETURN NOTEBOOK explicitly restores it (each needs the SELF_STUDY prefix).
+
+SELF_STUDY NOTE [--page N] opens the saved note and retained revisions. Prior accounts remain available, not automatically repeated on every page. Notes belong to the delivered input's inquiry, including late deliveries, not an unrelated newer selection.
+
+Notebook directives go on separate top-level response lines WITHOUT NEXT:, never in an AND chain. No update is inferred from ordinary prose. Omission preserves a field; - clears STUDY_NOTE or STUDY_QUESTION. Clearing a field does not leave a named inquiry. Invalid updates receive feedback.
+STUDY_NOTE: <your words, up to 1600 bytes>
+STUDY_QUESTION: <your question, up to 500 bytes>
+STUDY_REVISE: {"prior":"the note's response_sha256","text":"your authored revision","source":"repository/path","line":1}
+The revision's contrary source line must be supplied in that turn; OPEN or SESSION can supply it. Inspect NOTE to obtain the exact prior identity. Revision retains the original account; no question is automatically resolved.
+
+STUDY_FINDING: repository/path:line | your words
+This optionally saves an interpretation of at most 600 bytes beside a supplied OPEN/SESSION line or retained source anchor. Search snippets are not anchors. Each inquiry or unthreaded notebook has six slots; reusing an anchor replaces that finding. STUDY_FINDING_DROP: fID removes its displayed ID. Reading alone never pins or resolves anything.
+STUDY_RELATION: hypothesis | repository/path:line | repository/path:line | your words
+Both anchors must be supplied. Choose hypothesis, flow or neighborhood. Flow is an authored call/data-flow claim, not verified causation; neighborhood verifies only a shared file revision. Relations share six slots, replace by first anchor, and use STUDY_FINDING_DROP for removal. Omission preserves a relation; STUDY_FINDING at its first anchor replaces it with an ordinary finding.
+
+Recalled accounts are oldest first; previous is the latest. complete=false marks an excerpt. Source references and fragments record the input behind earlier words, not their correctness or current deployment. A reopen link marks the earlier page; a question's link marks where it was asked, not a known answer. supplied_locations are bounded lexical recall; source_findings.authored contains your interpretations, not verified conclusions. Comments quoting earlier being reports are attributed history, not independent confirmation.

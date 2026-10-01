@@ -107,10 +107,10 @@ fn a_conclusion_survives_other_pages_and_a_map_with_exact_provenance() {
 fn long_recent_answers_drop_oldest_whole_accounts_before_excerpting_latest() {
     let (_temp, reader) = setup();
     for (n, text) in [
-        "A".repeat(9000),
-        "B".repeat(9000),
-        "C".repeat(9000),
-        "D".repeat(9000),
+        "A".repeat(12000),
+        "B".repeat(12000),
+        "C".repeat(12000),
+        "D".repeat(12000),
     ]
     .iter()
     .enumerate()
@@ -122,7 +122,7 @@ fn long_recent_answers_drop_oldest_whole_accounts_before_excerpting_latest() {
     }
     let output = reader.prepare_action("SELF_STUDY MAP").unwrap();
     let book = notebook(&output);
-    assert_eq!(book["previous"]["text"], "D".repeat(9000));
+    assert_eq!(book["previous"]["text"], "D".repeat(12000));
     assert_eq!(book["previous"]["complete"], true);
     assert!(book["recent"].as_array().unwrap().len() < 3);
     assert!(

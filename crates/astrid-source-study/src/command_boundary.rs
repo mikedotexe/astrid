@@ -30,9 +30,9 @@ pub fn has_study_payload(action: &str) -> bool {
     let first = words.next().unwrap_or_default();
     first.eq_ignore_ascii_case("QUESTION")
         || (first == "SELF_STUDY"
-            && words
-                .next()
-                .is_some_and(|word| word.eq_ignore_ascii_case("QUESTION")))
+            && words.next().is_some_and(|word| {
+                word.eq_ignore_ascii_case("QUESTION") || word.eq_ignore_ascii_case("NEW")
+            }))
 }
 
 /// Explain rejection without replaying the payload as a suggested command.

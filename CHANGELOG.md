@@ -25,6 +25,27 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 - Keep optional afterimage context before the selected writing request instead of appending a new final user message. Preserve explicit-page admission, foreground capacity and per-attempt receipts. The paired reader describes sparse historical samples and unavailable temporal measurements without calling them an incomplete physical trace.
 - Qualify Minime's elapsed-time fill-rate repair offline with the actual production rate helper and structural PI. It is an engine/controller-affecting candidate, not part of a prompt-only restart. No live activation or cadence-policy change. Witnesses, replay, dependency reconciliation and qualification debt: `docs/steward-notes/2026-09-30-afterimage-timing.md`.
+### Added - sustained voluntary source study (2026-09-30)
+
+- **Live and locally merged:** paired source `0dc40d5a46` / Minime `d2c3c6e` passed packaged qualification and graceful activation. Verify bridge 75202, agent 74379, exact checkpoint, 89 loaded agent inputs, unchanged protected services and retained pause. No remote push. Complete receipts are in the sustained-study note.
+- Recover the observed `SELF_STUDY NEW <question>` namespace error with a valid, nonexecuting choice; keep command-like question text intact and never create an inquiry implicitly. Correct the kernel KV comment to describe scoped isolation, not cross-capsule communication.
+- Make sustained comparison and synthesis an ordinary option in source-page and SESSION prompts. Move detailed procedural syntax to explicit `SELF_STUDY HELP navigation|notebook|attention`, reducing the shared routine prompt by 59% without deleting authored history, source distinctions, stopping or quiet return. Help is detached command reference, not new source evidence or a notebook revision.
+- Reader schema 12 preserves pending inputs and refuses downgrade writers. Isolate the test-only BTSP event collector across parallel tests; production events are unchanged. Paired tests, unsuccessful attempts, migration evidence and actual release status: `docs/steward-notes/2026-09-30-sustained-self-study.md`.
+
+### Live - paired quiet-study and afterimage presentation (2026-09-30)
+
+- Source `4099bbfd10` and paired Minime `d5176e8` are integrated on main and gracefully activated. Verified bridge 49008, agent 48235, exact checkpoint/feedback continuity, 89 loaded agent inputs, and 659 build inputs matching canonical source. Shared reader/bridge/Python, migration and operational suites pass. Protected engine/model/sensory services are unchanged; automations remain paused. The separate timing candidate is committed for controller review, not activated. See `docs/steward-notes/2026-09-30-paired-quiet-afterimage-release.md`.
+
+### Fixed - paired quiet study and afterimage presentation (2026-09-30)
+
+- Combine the quiet-notebook reader with optional afterimage context placed before the chosen writing request. Preserve whole-input admission, explicit retrieval, per-attempt receipts and historical evidence. Explain cadence gaps without implying missing physical activity.
+- Bind the two afterimage Python modules into the reviewed launch inventory with regression coverage. No engine timing activation, control changes or automation resume. Release qualification and live status: `docs/steward-notes/2026-09-30-paired-quiet-afterimage-release.md`.
+
+### Fixed - quiet notebook return and decision classification (2026-09-30)
+
+- **Candidate, not deployed:** Carry the shared reader's typed continuation-decision marker into both journal adapters. Keep Astrid's existing execution/authorization/signal mode separate from the presentation label; do not treat decision replies as source studies or feed them to the reflective study sidecar/companion-study inbox.
+- Keep the legacy unthreaded question and its accounts quiet after HOME, selected-inquiry PARK/RESOLVE, or explicit `QUESTION PARK NOTEBOOK`. `QUESTION NOTEBOOK` inspects without selecting; `QUESTION RETURN NOTEBOOK` deliberately restores presentation using the retained unthreaded position, without rewinding or changing inquiry status. Fresh authored question updates remain available. Creating/selecting an inquiry no longer dumps unrelated findings; explicit reviews remain complete.
+- Reader schema 11 retains authored bytes, pending wire inputs, per-question cursors, idempotent preparation and downgrade refusal. Qualification and boundaries: `docs/steward-notes/2026-09-30-quiet-notebook-return.md`.
 
 ### Fixed - chosen investigation transitions (2026-09-30)
 

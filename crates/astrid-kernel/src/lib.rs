@@ -264,8 +264,9 @@ impl Kernel {
         let loader = astrid_capsule::loader::CapsuleLoader::new(self.mcp.clone());
         let mut capsule = loader.create_capsule(manifest, dir.clone())?;
 
-        // Build the context — use the shared kernel KV so capsules can
-        // communicate state through overlapping KV namespaces.
+        // Share the kernel storage backend, not the capsule's key namespace.
+        // This principal/capsule-scoped view isolates keys; it is not an
+        // implicit cross-capsule state-sharing channel.
         let principal = astrid_core::PrincipalId::default();
         let kv = astrid_storage::ScopedKvStore::new(
             Arc::clone(&self.kv) as Arc<dyn astrid_storage::KvStore>,

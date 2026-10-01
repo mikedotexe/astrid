@@ -9,6 +9,7 @@ pub enum InputKind {
     Reflection,
     Notebook,
     InquiryReview,
+    Help,
     SourceSession,
     Relationships,
     Questions,
@@ -29,6 +30,9 @@ impl InputKind {
     #[must_use]
     pub fn scope(self) -> &'static str {
         match self {
+            Self::Help => {
+                "Study help: command reference only, not supplied source or an authored finding. No inquiry is selected, revised or resolved by opening help."
+            },
             Self::Reflection => {
                 "Open introspection: no source page, telemetry snapshot, saved study claim, or private draft was supplied. This is an authored reflection, not a verified mechanism report."
             },

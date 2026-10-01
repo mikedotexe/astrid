@@ -27,7 +27,7 @@ impl Reader {
             .sequence
             .checked_add(1)
             .context("study sequence exhausted")?;
-        let mut text="You chose these source pages together. Inspect their relationship before writing if useful. One freeform response covers this session; no report or minimum length is required. CONTINUE after success follows the last selected page; OPEN or RELATE can choose another direction.\n\n".to_string();
+        let mut text="You chose these source pages together. There is room to compare their evidence, develop competing explanations, inspect a failure path, or write a sustained synthesis rather than one short summary per page. These are possibilities, not required steps; no report, minimum length or conclusion is required. Missing context remains unknown. CONTINUE after success follows the last selected page; OPEN or RELATE can choose another direction.\n\n".to_string();
         for (index, page) in pages.iter_mut().enumerate() {
             let id = digest(format!("session:{}:{index}:{}", state.sequence, page.id));
             page.text = page.text.replace(&page.id, &id);
@@ -96,7 +96,10 @@ impl Reader {
         }
         if !matches!(
             output.input_kind,
-            InputKind::Reflection | InputKind::InquiryReview | InputKind::RevisionRecovery
+            InputKind::Reflection
+                | InputKind::InquiryReview
+                | InputKind::RevisionRecovery
+                | InputKind::Help
         ) {
             state.questions.record(
                 output.question_id.as_deref(),
@@ -118,6 +121,7 @@ impl Reader {
                 | InputKind::Reflection
                 | InputKind::Notebook
                 | InputKind::InquiryReview
+                | InputKind::Help
                 | InputKind::RevisionRecovery
         ) {
             state.last_input = Some(receipt.clone());
