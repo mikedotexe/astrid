@@ -262,6 +262,7 @@ fn save_astrid_journal_record(
         "introspect" => "introspect",
         "self_study" => "self_study",
         "study_decision" => "study_decision",
+        "study_navigation" => "study_navigation",
         "regulator_audit" => "regulator_audit",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
     };

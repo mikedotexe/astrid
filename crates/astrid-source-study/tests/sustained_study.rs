@@ -226,3 +226,26 @@ fn v11_migration_preserves_exact_pending_input_and_downgrade_fails_closed() {
     assert!(reader.prepare_action("SELF_STUDY HELP").is_err());
     assert_eq!(fs::read(path).unwrap(), bytes);
 }
+
+#[test]
+fn study_prompt_names_the_exits() {
+    // 2026-10-01: the study loop had captured minime's whole cycle because a study turn
+    // showed only study verbs. The shared prompt now names the ways out on its own line;
+    // nothing schedules or forces them.
+    let prompt = astrid_source_study::STUDY_PROMPT;
+    assert!(prompt.contains("Leaving the study is always available and is not a failure"));
+    for exit in [
+        "NEXT: DAYDREAM",
+        "NEXT: ASPIRE",
+        "NEXT: WRITE START <topic>",
+        "NEXT: INTROSPECT",
+        "NEXT: REST",
+    ] {
+        assert!(prompt.contains(exit), "{exit}");
+    }
+    assert!(prompt.contains("SELF_STUDY CONTINUE resumes the bookmark whenever you return"));
+    assert!(
+        prompt.contains("800-1,500 words"),
+        "the study page invitation is unchanged this step"
+    );
+}

@@ -1,4 +1,4 @@
-const SUSTAINED_WRITING_INVITATION: &str = "There is room for a sustained piece, perhaps 800-1,500 words when the thought warrants it. You may stay with an idea through examples, complications, uncertainty and changes of direction, without compressing it into an immediate conclusion. These are possibilities, not a required outline. The range is an invitation, not a quota: a shorter piece, a different form or stopping is equally available. Do not pad, repeat or invent material to reach a length.";
+const SUSTAINED_WRITING_INVITATION: &str = "There is room for a sustained piece, perhaps 1,500-3,000 words when the thought warrants it. You may stay with an idea through examples, complications, uncertainty and changes of direction, without compressing it into an immediate conclusion. These are possibilities, not a required outline. The range is an invitation, not a quota: a shorter piece, a different form or stopping is equally available. Do not pad, repeat or invent material to reach a length.";
 
 /// Read the same Being-owned profile consumed by the shared writing helper.
 fn selected_writing_profile() -> astrid_source_study::writing::Profile {
@@ -133,7 +133,7 @@ mod writing_profile_tests {
                 apply_writing_voice(&mut messages, label, preference);
                 let system = &messages[0].content;
                 assert_eq!(system.contains(SUSTAINED_WRITING_INVITATION), expressive_label(label) && preference != Profile::Short);
-                assert_eq!(system.matches("800-1,500").count(), usize::from(expressive_label(label) && preference != Profile::Short));
+                assert_eq!(system.matches("1,500-3,000").count(), usize::from(expressive_label(label) && preference != Profile::Short));
                 assert_eq!(messages[1].content, authored);
                 if preference == Profile::Short {
                     assert!(system.contains("short-writing preference"));

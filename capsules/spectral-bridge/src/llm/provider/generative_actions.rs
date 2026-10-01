@@ -16,6 +16,8 @@ Guidelines:
 - Strict review must be source-grounded and target-grounded: include at least one concrete source or memory anchor such as a file path, line number, function, variable, or artifact name, and explicitly name the requested file/label or a symbol from that source window.
 - Peer experiment IDs are advisory references. Do not suggest `EXPERIMENT_BIND exp_minime_* :: ...` or `EXPERIMENT_RESUME exp_minime_*`; use `EXPERIMENT_STATUS <peer-id>`, `EXPERIMENT_PEER_REVIEW <peer-id>`, `EXPERIMENT_COMPARE current WITH <peer-id>`, or create a local mirrored experiment with a human-readable title.
 
+There is room for a sustained study under these headings, perhaps 800-1,500 words when the material warrants it; a brief report is equally valid. Do not pad, repeat or invent evidence to reach a length.
+
 Use exactly these section headings:
   Observed:
   Likely Snags:

@@ -101,7 +101,10 @@ impl Catalog {
         if let Some((id, relative)) = target.split_once('/')
             && self.roots.contains_key(id)
         {
-            return self.resolve_id(id, Path::new(relative));
+            return match self.resolve_id(id, Path::new(relative)) {
+                Ok(source) => Ok(source),
+                Err(error) => self.resolve_hyphenated(id, relative).ok_or(error),
+            };
         }
         let candidates = [
             ("astrid", PathBuf::from(target)),
@@ -116,6 +119,23 @@ impl Catalog {
             [] => bail!("source not found; use SELF_STUDY FIND <text> or an exact repository/path"),
             _ => bail!("ambiguous relative path; choose an exact repository/path"),
         }
+    }
+
+    /// Cargo crate directories use hyphens while Rust identifiers use underscores,
+    /// so `astrid_kernel/src/lib.rs` is the commonest misspelling of
+    /// `astrid-kernel/src/lib.rs` (minime re-requested it six times in five days;
+    /// each miss cost a generation and a navigation-only entry). When the exact
+    /// id is absent and the hyphenated spelling of the DIRECTORY components names
+    /// a catalog source, open that source: the page header shows the catalog
+    /// spelling, file names are never rewritten, and a request that still does not
+    /// resolve keeps its recovery map (2026-10-01).
+    fn resolve_hyphenated(&self, repository: &str, relative: &str) -> Option<Source> {
+        let (directories, file) = relative.rsplit_once('/')?;
+        if !directories.contains('_') {
+            return None;
+        }
+        let candidate = format!("{}/{file}", directories.replace('_', "-"));
+        self.resolve_id(repository, Path::new(&candidate)).ok()
     }
 
     fn resolve_id(&self, repository: &str, relative: &Path) -> Result<Source> {
@@ -325,5 +345,48 @@ fn alias(target: &str) -> &str {
             "astrid/docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md"
         },
         _ => target,
+    }
+}
+
+#[cfg(test)]
+mod hyphen_resolution_tests {
+    use super::Catalog;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn underscore_directory_spelling_resolves_to_the_catalog_source() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("astrid");
+        std::fs::create_dir_all(root.join("crates/astrid-kernel/src")).unwrap();
+        std::fs::write(
+            root.join("crates/astrid-kernel/src/lib.rs"),
+            "pub fn kernel() {}\n",
+        )
+        .unwrap();
+        let catalog = Catalog::new(BTreeMap::from([("astrid".to_string(), root.clone())])).unwrap();
+        let exact = catalog
+            .resolve("astrid/crates/astrid-kernel/src/lib.rs")
+            .unwrap();
+        let spelled = catalog
+            .resolve("astrid/crates/astrid_kernel/src/lib.rs")
+            .unwrap();
+        assert_eq!(spelled.id, exact.id);
+        assert_eq!(spelled.id, "astrid/crates/astrid-kernel/src/lib.rs");
+        // File names are never rewritten, and a request that does not resolve keeps its error.
+        assert!(
+            catalog
+                .resolve("astrid/crates/astrid_kernel/src/lib_rs.rs")
+                .is_err()
+        );
+        assert!(
+            catalog
+                .resolve("astrid/crates/astrid_kernel/src/missing.rs")
+                .is_err()
+        );
+        assert!(
+            catalog
+                .resolve("astrid/crates/astrid-kernel/src/missing_file.rs")
+                .is_err()
+        );
     }
 }

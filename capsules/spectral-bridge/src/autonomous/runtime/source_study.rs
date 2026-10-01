@@ -413,15 +413,36 @@ fn source_study_authored_mode(output: &astrid_source_study::StudyOutput) -> &'st
         "study_decision"
     } else if output.input_kind == astrid_source_study::InputKind::Reflection {
         "introspect"
+    } else if study_navigation_kind(output.input_kind) {
+        "study_navigation"
     } else {
         "self_study"
     }
 }
 
+/// Inputs that supply no new source page (maps, searches, relationship
+/// listings, inquiry reviews, recovery). Their responses are filed under their
+/// own heading so per-page study notes are not diluted by navigation turns
+/// (2026-10-01; the authored text is unchanged either way).
+fn study_navigation_kind(kind: astrid_source_study::InputKind) -> bool {
+    use astrid_source_study::InputKind;
+    matches!(
+        kind,
+        InputKind::Map
+            | InputKind::Recovery
+            | InputKind::Questions
+            | InputKind::Relationships
+            | InputKind::Search
+            | InputKind::InquiryReview
+            | InputKind::Notebook
+            | InputKind::RevisionRecovery
+    )
+}
+
 /// A presentation distinction must not change existing study authorization,
 /// NEXT handling, signal encoding or regulation policy.
 fn study_execution_mode(mode: &str) -> &str {
-    if mode == "study_decision" { "self_study" } else { mode }
+    if mode == "study_decision" || mode == "study_navigation" { "self_study" } else { mode }
 }
 
 pub(super) fn source_study_completion_mode(
@@ -509,7 +530,10 @@ mod source_study_tests {
         }
         let inspected = prepare("SELF_STUDY QUESTION NOTEBOOK", "inspect");
         assert!(inspected.text.contains("Retained synthetic question?"));
-        assert!(!prepare("SELF_STUDY MAP", "quiet").text.contains("Retained synthetic question?"));
+        let quiet_map = prepare("SELF_STUDY MAP", "quiet");
+        assert!(!quiet_map.text.contains("Retained synthetic question?"));
+        assert_eq!(source_study_authored_mode(&quiet_map), "study_navigation");
+        assert_eq!(study_execution_mode("study_navigation"), "self_study");
         let returned = prepare("SELF_STUDY QUESTION RETURN NOTEBOOK", "return");
         assert!(returned.text.contains("Retained synthetic question?"));
         assert_eq!(source_study_authored_mode(&returned), "study_decision");
