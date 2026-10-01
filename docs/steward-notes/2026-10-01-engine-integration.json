@@ -1,0 +1,258 @@
+{
+  "build_source_dirty": false,
+  "build_source_head": "c428fcaec55090a29b9c3f38c4219b093b1d9172",
+  "canonical_source_inputs_match": true,
+  "current_runtime_manifest": {
+    "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/minime-division-runtime.json",
+    "sha256": "15ba328d830747913bba5c6beba1d490b5f3a5393b7fc12c9d88c10bf041d79c"
+  },
+  "engine_activation_performed": false,
+  "grants_approval": false,
+  "health": {
+    "fill_pct": 73.0282211303711,
+    "fill_rate_v1": null,
+    "measurement_basis_v1": null,
+    "restart_gate_phase": "settled",
+    "session_id": 5320,
+    "snapshot_sequence": 56677,
+    "stage": "elevated",
+    "t_s": 67335.8671875,
+    "target_fill_pct": 68.0,
+    "wall_clock_unix_ms": 1790871085897
+  },
+  "historical_build_manifest": {
+    "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/minime-launcher-alignment.20261001/historical-build-manifest.json",
+    "sha256": "49acf3a94fd3cc3642d854781c0fbbbd0998f8ccfccbb59b9cbf620c80275578"
+  },
+  "launch_source_alignment": {
+    "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/minime-launcher-alignment.20261001/after.json",
+    "sha256": "c71a8a9f696d85b0e4f5b31455433d0eb7a7d3dfa5ba7d5b5093a6daaf06de10"
+  },
+  "legacy_transition_approval_received": false,
+  "live_eligible_now": false,
+  "pause_generation": 485,
+  "protected_processes": [
+    {
+      "label": "com.minime.autonomous-agent",
+      "pid": 74379,
+      "started_at": "Wed Sep 30 17:25:04 2026"
+    },
+    {
+      "label": "com.astrid.spectral-bridge",
+      "pid": 75202,
+      "started_at": "Wed Sep 30 17:26:19 2026"
+    },
+    {
+      "label": "com.reservoir.coupled-astrid",
+      "pid": 3893,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    {
+      "label": "com.minime.visual-frame-service",
+      "pid": 3898,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    {
+      "label": "com.minime.host-sensory",
+      "pid": 3911,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    {
+      "label": "com.minime.camera-client",
+      "pid": 3914,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    {
+      "label": "com.minime.mic-to-sensory",
+      "pid": 3879,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    }
+  ],
+  "qualified_stage": {
+    "activation_authorized": false,
+    "artifacts": {
+      "engine_restore_inspect": {
+        "path": "bin/engine_restore_inspect",
+        "sha256": "3f329e59e94458d8160b58384892348c25d1c92a77e0587ffd0521e1ea86d86b"
+      },
+      "minime": {
+        "path": "bin/minime",
+        "sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8"
+      }
+    },
+    "input_count": 120,
+    "manifest_sha256": "47396e48a469598480dce61ddfc12808682e698b75cbc5eccb845743f25dddbe",
+    "schema": "minime_engine_stage_v1",
+    "stage": "/Users/v/other/worktrees/engine-qualification-20261001/release-04",
+    "verified": true
+  },
+  "recorded_at_unix_s": 1790871085.895437,
+  "repositories": {
+    "astrid": {
+      "base": "94ac0cae46e334f36cb1c42639e28bf60a42835c",
+      "canonical_status": "",
+      "committed_paths": [
+        "CHANGELOG.md",
+        "docs/steward-notes/2026-09-30-afterimage-timing.md",
+        "docs/steward-notes/2026-09-30-coupled-fill-qualification.md",
+        "docs/steward-notes/2026-09-30-fill-rate-validity-repair.md",
+        "docs/steward-notes/2026-09-30-fill-timing-controller-review.md",
+        "docs/steward-notes/2026-09-30-measurement-basis-repair.md",
+        "docs/steward-notes/2026-10-01-engine-frozen-restore-inspection.json",
+        "docs/steward-notes/2026-10-01-engine-launchd-hold.json",
+        "docs/steward-notes/2026-10-01-engine-launchd-inhibit.json",
+        "docs/steward-notes/2026-10-01-engine-release-checkpoint-qualification.md",
+        "docs/steward-notes/2026-10-01-engine-release-review.json",
+        "docs/steward-notes/2026-10-01-engine-release-support-tests.txt",
+        "docs/steward-notes/2026-10-01-engine-restore-inspector-tests.txt",
+        "docs/steward-notes/2026-10-01-engine-stage-build-02.json",
+        "docs/steward-notes/2026-10-01-engine-stage-build-03.json",
+        "docs/steward-notes/2026-10-01-engine-stage-build.json",
+        "docs/steward-notes/2026-10-01-engine-stage-tests.txt",
+        "docs/steward-notes/2026-10-01-engine-stage-verify.json",
+        "docs/steward-notes/2026-10-01-engine-staged-run-help.txt",
+        "docs/steward-notes/2026-10-01-engine-transition-qualification.md",
+        "docs/steward-notes/2026-10-01-engine-transition-support-tests.txt",
+        "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+        "scripts/deploy_minime.sh",
+        "scripts/minime_engine_stage.py",
+        "scripts/minime_engine_transition.py",
+        "scripts/minime_engine_transition_host.py",
+        "scripts/minime_engine_transition_io.py",
+        "scripts/qualify_engine_launchd_hold.py",
+        "scripts/qualify_engine_launchd_inhibit.py",
+        "scripts/test_minime_engine_restore_inspect.py",
+        "scripts/test_minime_engine_stage.py",
+        "scripts/test_minime_engine_transition.py"
+      ],
+      "head": "63d1f0628fd30a6a4eb61f4d0427c0bdd0171304",
+      "remote_main": "63d1f0628fd30a6a4eb61f4d0427c0bdd0171304"
+    },
+    "minime": {
+      "base": "96f64b2b875af9ac4a1c5df1bbaffbf698ed4fb2",
+      "canonical_status": "",
+      "committed_paths": [
+        "CHANGELOG.md",
+        "docs/steward-notes/2026-09-30-afterimage-timing.md",
+        "docs/steward-notes/2026-09-30-basis-repair-clippy-all-features.txt",
+        "docs/steward-notes/2026-09-30-basis-repair-clippy-final.txt",
+        "docs/steward-notes/2026-09-30-basis-repair-clippy-fix-2.txt",
+        "docs/steward-notes/2026-09-30-basis-repair-clippy-fix.txt",
+        "docs/steward-notes/2026-09-30-basis-repair-clippy-review-2.txt",
+        "docs/steward-notes/2026-09-30-basis-repair-clippy-review.txt",
+        "docs/steward-notes/2026-09-30-basis-repair-embedded-sources.sha256",
+        "docs/steward-notes/2026-09-30-basis-repair-receipt-review.json",
+        "docs/steward-notes/2026-09-30-basis-repair-source-inventory.sha256",
+        "docs/steward-notes/2026-09-30-basis-repair-tests.txt",
+        "docs/steward-notes/2026-09-30-coupled-fill-qualification.md",
+        "docs/steward-notes/2026-09-30-fill-coupled-clippy-attempt-1.txt",
+        "docs/steward-notes/2026-09-30-fill-coupled-clippy-final.txt",
+        "docs/steward-notes/2026-09-30-fill-coupled-qualification-attempt-1.json",
+        "docs/steward-notes/2026-09-30-fill-coupled-qualification-attempt-2.json",
+        "docs/steward-notes/2026-09-30-fill-coupled-qualification.json",
+        "docs/steward-notes/2026-09-30-fill-coupled-tests.txt",
+        "docs/steward-notes/2026-09-30-fill-rate-validity-repair.md",
+        "docs/steward-notes/2026-09-30-fill-timing-controller-review.md",
+        "docs/steward-notes/2026-09-30-measurement-basis-qualification.json",
+        "docs/steward-notes/2026-09-30-measurement-basis-repair.md",
+        "docs/steward-notes/2026-10-01-engine-release-checkpoint-qualification.md",
+        "docs/steward-notes/2026-10-01-engine-restore-tests-final.txt",
+        "docs/steward-notes/2026-10-01-engine-restore-tests.txt",
+        "docs/steward-notes/2026-10-01-engine-stage-clippy-all-features.txt",
+        "docs/steward-notes/2026-10-01-engine-stage-clippy.txt",
+        "docs/steward-notes/2026-10-01-engine-transition-qualification.md",
+        "minime/src/activation_trace.rs",
+        "minime/src/av_gpu.rs",
+        "minime/src/av_ws.rs",
+        "minime/src/bin/engine_restore_inspect.rs",
+        "minime/src/bin/fill_coupled_qualification.rs",
+        "minime/src/bin/fill_timing_replay.rs",
+        "minime/src/cheby.rs",
+        "minime/src/covariance_math.rs",
+        "minime/src/db.rs",
+        "minime/src/esn.rs",
+        "minime/src/fill_timing.rs",
+        "minime/src/gpu.rs",
+        "minime/src/handoff_diag.rs",
+        "minime/src/ising_shadow.rs",
+        "minime/src/lib.rs",
+        "minime/src/main.rs",
+        "minime/src/measurement_basis.rs",
+        "minime/src/nn.rs",
+        "minime/src/prime.rs",
+        "minime/src/regulator/core/pi.rs",
+        "minime/src/regulator/core/rate_gate.rs",
+        "minime/src/regulator/core/viscosity.rs",
+        "minime/src/regulator_cartography.rs",
+        "minime/src/rescue_overfill.rs",
+        "minime/src/rescue_scaffold.rs",
+        "minime/src/runtime.rs",
+        "minime/src/runtime/entrypoint.rs",
+        "minime/src/runtime/orchestration.rs",
+        "minime/src/runtime/reviews.rs",
+        "minime/src/runtime/spectral_math.rs",
+        "minime/src/runtime/telemetry_broadcast.rs",
+        "minime/src/runtime/telemetry_evidence.rs",
+        "minime/src/sensory_bus.rs",
+        "minime/src/sovereign_division/gateway.rs",
+        "minime/src/sovereign_division/mod.rs",
+        "minime/src/spectral/eigenfill.rs",
+        "minime/src/stable_core.rs",
+        "minime/src/stable_covariance.rs",
+        "minime/src/startup_restore.rs",
+        "minime/src/transition_afterimage/capture.rs",
+        "minime/src/transition_afterimage/metrics.rs",
+        "minime/src/transition_afterimage/tests.rs",
+        "minime/tests/fill_timing_controller_review.rs",
+        "scripts/launchd_division_gateway.sh",
+        "scripts/launchd_division_supervisor.sh",
+        "scripts/launchd_minime_engine.sh"
+      ],
+      "head": "c428fcaec55090a29b9c3f38c4219b093b1d9172",
+      "remote_main": "c428fcaec55090a29b9c3f38c4219b093b1d9172"
+    }
+  },
+  "running_engine": {
+    "path": "/Users/v/other/minime/minime/target/release/minime",
+    "sha256": "0e40bcf7ed944f38a65c45ee85b4916484c6938bc8bb665dff53646d762821d6"
+  },
+  "running_processes": [
+    {
+      "label": "com.minime.engine",
+      "pid": 3906,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    {
+      "label": "com.minime.division-gateway",
+      "pid": 3887,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    {
+      "label": "com.minime.division-supervisor",
+      "pid": 3897,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    }
+  ],
+  "schema": "engine_git_integration_qualification_v1",
+  "scope": "offline qualification and Git integration; copied-input inspection is not stopped-state or full continuity evidence",
+  "signed_handoff_prepared": false,
+  "source_inputs_unchanged_from_release_03": true,
+  "test_counts": {
+    "domain_boundary_violations": 0,
+    "formatting": "passed",
+    "python_release_support": 148,
+    "rust_selected": 833,
+    "strict_selected_all_features_clippy": "passed"
+  },
+  "test_receipts": [
+    {
+      "path": "/Users/v/other/worktrees/afterimage-timing-20260930/minime/docs/steward-notes/2026-10-01-engine-integrated-tests.txt",
+      "sha256": "9707a67e098b52279809a877e2734cec88044d055bf58d5641c30ec60698179b"
+    },
+    {
+      "path": "/Users/v/other/worktrees/afterimage-timing-20260930/astrid/docs/steward-notes/2026-10-01-engine-integrated-support-tests.txt",
+      "sha256": "dd2ded7be69e7f8f72ed3f6dfd09c95c337e4246ae2b77540a51968807dc5cc6"
+    }
+  ],
+  "witness_only": true
+}

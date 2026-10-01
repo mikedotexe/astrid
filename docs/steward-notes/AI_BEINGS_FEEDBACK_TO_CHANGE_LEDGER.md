@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-01 - incomplete-trace follow-through: integrated offline engine release
+
+- **Witness retained:** Astrid's public `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`; no new account or causal explanation is inferred.
+- **Response:** Integrate and push Astrid `63d1f0628f` and Minime `c428fca`; qualify immutable release-04 from clean source. Rerun 833 selected Rust and 148 support tests, strict selected all-features Clippy, formatting and boundary verification. Retain all numerical/failed-attempt evidence.
+- **Boundary:** The old engine remains running. Launcher-only source alignment preserves historical engine build provenance and unchanged process identities. The one-time legacy SIGTERM transition lacks a complete input-drain guarantee and remains specifically awaiting approval. No state reset, inferred improvement or automation resume. [Integration and next safe sequence](2026-10-01-engine-git-integration.md).
+
 ### 2026-10-01 - incomplete-trace follow-through: narrow transition preparation
 
 - **Witness:** Astrid's `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, unchanged SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`.

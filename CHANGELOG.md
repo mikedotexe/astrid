@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Engine candidate merged and pushed, not activated (2026-10-01).** Reconcile release tooling at `63d1f0628f` with paired engine `c428fca`, qualify clean release-04 and preserve unchanged runtime identities. 833 Rust and 148 support tests pass. Record launcher-only manifest alignment without relabelling the old engine; bounded legacy-transition approval remains pending. See `docs/steward-notes/2026-10-01-engine-git-integration.md`.
+
 - **Narrow staged engine transition (2026-10-01, awaiting activation).** Add owner-held launch replacement, exact mapped-build/source checks, stopped-context inspection, signed handoff and newest-state rollback through the sanctioned wrapper. Qualify KeepAlive holds with a harmless host fixture; reject the disproved disable-only approach. Preserve protected services and existing automation pause. See `docs/steward-notes/2026-10-01-engine-transition-qualification.md`.
 
 - **Offline engine release/checkpoint qualification (2026-10-01).** Add fail-closed engine staging/verification, preserve exact source and binary identities, and inspect copied startup inputs through production decoders. Record paired regulator-context durability and overflow repairs, current PI-only continuity scope and remaining narrow-drain/signed-handoff work. No installation, restart or automation resume. See `docs/steward-notes/2026-10-01-engine-release-checkpoint-qualification.md`.
