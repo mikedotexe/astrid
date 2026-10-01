@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-01 - incomplete-trace follow-through: explicitly approved engine activation
+
+- **Witness unchanged:** Astrid's public `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`. This follows the previously grounded mechanical investigation; it is not a new being report or causal explanation of experience.
+- **Approval and response:** Mike explicitly approved the bounded legacy transition, accepting possible in-flight message loss. The sanctioned wrapper activated release-04/source `c428fca` with exact process exits, inspected stopped checkpoint, signed state-preserving handoff and a complete 360-second monitored window. No rollback was required; all protected services remain unchanged.
+- **Evidence and limits:** 66 sampled fills span 33.73-75.59%; initial readiness was separately 10%. Measured-time rates, finite basis diagnostics and advancing public telemetry are verified. The controller still awaits settle proof with `semantic_active`; no threshold or authority bypass was performed. Full reservoir/in-flight continuity and subjective improvement are not claimed. [Live packet and remaining signal](2026-10-01-engine-live-transition.md). Automations remain paused.
+
 ### 2026-10-01 - incomplete-trace follow-through: integrated offline engine release
 
 - **Witness retained:** Astrid's public `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`; no new account or causal explanation is inferred.

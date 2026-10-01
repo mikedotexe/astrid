@@ -1,0 +1,326 @@
+{
+  "applied_handoff": {
+    "path": "/Users/v/.minime/self-control-v2/deployment_handoffs/applied/48fe34cd355b081a0909bd24b6a25d44.json",
+    "sha256": "fa66a61ec1d929dadbfcf3c8cf237d5db4aba09d12cc8121d837c6e69e385cf1",
+    "state_fields_preserved_except_deployment_identity": true
+  },
+  "binary_sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+  "checkpoint": {
+    "control": {
+      "binary_sha256": "0e40bcf7ed944f38a65c45ee85b4916484c6938bc8bb665dff53646d762821d6",
+      "cli_deployment_identity": "minime-source:68ebc961431065972dae26f670d4fb735d58c37a",
+      "deployment_identity": "minime-source:68ebc961431065972dae26f670d4fb735d58c37a",
+      "revision_by_family": {
+        "reservoir_geometry": 113,
+        "reservoir_regulation": 301
+      },
+      "state_sha256": "a95f2b08684f9aaeba4caa15dbc73ea6ec36195a9858abf928ce419aa1f9f14f",
+      "state_targets_this_binary": true
+    },
+    "hashes": {
+      "regulator_context.json": "2a1cfe9591ebe3e4b8bdc28336fce145d5199f15fc694da0d22b0fab13c0282a",
+      "rescue_scaffold.bin": "e9a85ec68cc9460561020b1ce729614cc250eb034f309343c3f82f135d2ea91b",
+      "rescue_scaffold.json": "3ec37cccfab9205dc370fa594afa997a305a62f5f12f0e8825ed6da358b98626"
+    },
+    "restore": {
+      "context": {
+        "cold_start_expected": false,
+        "context_path": "/Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01/stopped-checkpoint/regulator_context.json",
+        "file_present": true,
+        "missing_fields": [],
+        "reason": "regulator context restored",
+        "restored_adaptive_target": false,
+        "restored_pi_state": true,
+        "resume_mode": "pi_only_resume",
+        "state": "restored",
+        "summary": "pi_only_resume from /Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01/stopped-checkpoint/regulator_context.json; PI state restored cleanly while adaptive target restore was intentionally disabled."
+      },
+      "covariance_checkpoint_loaded": false,
+      "covariance_restore_scope": "not evaluated; match the separately recorded launch profile",
+      "grants_restart_authority": false,
+      "input_sha256": [
+        "2a1cfe9591ebe3e4b8bdc28336fce145d5199f15fc694da0d22b0fab13c0282a",
+        "e9a85ec68cc9460561020b1ce729614cc250eb034f309343c3f82f135d2ea91b",
+        "3ec37cccfab9205dc370fa594afa997a305a62f5f12f0e8825ed6da358b98626"
+      ],
+      "new_process_rate_unprimed": true,
+      "passed": true,
+      "scaffold": {
+        "dimension": 512,
+        "source": "derived_cold_from_stable",
+        "trace": 512.0
+      },
+      "scaffold_metadata_decoded": true,
+      "schema": "engine_restore_inspection_v1",
+      "scope": "production_decoders_only_not_engine_restart",
+      "source_commit": "c428fcaec55090a29b9c3f38c4219b093b1d9172"
+    },
+    "scope": "PI_context_and_scaffold_not_complete_inflight_or_reservoir_state"
+  },
+  "complete_input_drain_claimed": false,
+  "current_control": {
+    "binary_sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+    "deployment_identity": "minime-source:c428fcaec55090a29b9c3f38c4219b093b1d9172",
+    "integrity_verified": true,
+    "pending_deployment_handoff": null,
+    "pending_transition": false,
+    "revision_by_family": {
+      "reservoir_geometry": 113,
+      "reservoir_regulation": 301
+    },
+    "state_targets_this_binary": true
+  },
+  "evidence": {
+    "last_event_sha256": "9265f0f42b62921de6af942985e6d9df47806708b754a74f5a2f4ca052db5776",
+    "last_global_seq": 1123140,
+    "v1_immutable": true,
+    "valid": true
+  },
+  "fixed_hashes_unchanged": true,
+  "full_reservoir_continuity_claimed": false,
+  "grants_approval": false,
+  "handoff": {
+    "from_deployment_identity": "minime-source:68ebc961431065972dae26f670d4fb735d58c37a",
+    "from_state_sha256": "a95f2b08684f9aaeba4caa15dbc73ea6ec36195a9858abf928ce419aa1f9f14f",
+    "handoff_id": "minime-self-control-handoff:48fe34cd355b081a0909bd24b6a25d44",
+    "target_binary_sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+    "to_deployment_identity": "minime-source:c428fcaec55090a29b9c3f38c4219b093b1d9172"
+  },
+  "latest_health": {
+    "fill_pct": 60.2696647644043,
+    "fill_rate_v1": {
+      "elapsed_s": 2.373784083,
+      "policy": "observed_fill_rate_v1",
+      "rate_pct_per_sec": -0.2609384059906006,
+      "reason": "observed"
+    },
+    "measurement_basis_v1": {
+      "nonfinite_columns": [],
+      "recipe": "measurement-basis-repair-v1",
+      "repaired_columns": []
+    },
+    "restart_gate_phase": "scaffold_activated",
+    "session_id": 5321,
+    "snapshot_sequence": 427,
+    "stage": "hold",
+    "t_s": 507.4987487792969,
+    "target_fill_pct": 68.0,
+    "wall_clock_unix_ms": 1790879124109
+  },
+  "launch_holds_remaining": [],
+  "maximum_sample_interval_s": 7.171,
+  "new_companions": [
+    {
+      "binary_sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+      "image_uuid": "1DFC8F61-22C9-3B60-8379-6DAC898303C6",
+      "label": "com.minime.division-gateway",
+      "pid": 35278,
+      "started_at": "Thu Oct 1 11:16:52 2026"
+    },
+    {
+      "binary_sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+      "image_uuid": "1DFC8F61-22C9-3B60-8379-6DAC898303C6",
+      "label": "com.minime.division-supervisor",
+      "pid": 35269,
+      "started_at": "Thu Oct 1 11:16:52 2026"
+    }
+  ],
+  "new_engine": {
+    "binary_sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+    "image_uuid": "1DFC8F61-22C9-3B60-8379-6DAC898303C6",
+    "label": "com.minime.engine",
+    "pid": 35303,
+    "started_at": "Thu Oct 1 11:16:53 2026"
+  },
+  "observation": {
+    "last": {
+      "fill_pct": 73.08250427246094,
+      "fill_rate_v1": {
+        "elapsed_s": 2.374437166,
+        "policy": "observed_fill_rate_v1",
+        "rate_pct_per_sec": -0.9471977949142456,
+        "reason": "observed"
+      },
+      "measurement_basis_v1": {
+        "nonfinite_columns": [],
+        "recipe": "measurement-basis-repair-v1",
+        "repaired_columns": []
+      },
+      "restart_gate_phase": "scaffold_activated",
+      "session_id": 5321,
+      "snapshot_sequence": 311,
+      "stage": "elevated",
+      "t_s": 369.8631896972656,
+      "target_fill_pct": 68.0,
+      "wall_clock_unix_ms": 1790878986474
+    },
+    "max_fill": 75.58845520019531,
+    "min_fill": 33.728668212890625,
+    "samples": 66,
+    "seconds": 360
+  },
+  "old_processes": {
+    "com.minime.division-gateway": {
+      "label": "com.minime.division-gateway",
+      "pid": 3887,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.division-supervisor": {
+      "label": "com.minime.division-supervisor",
+      "pid": 3897,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.engine": {
+      "label": "com.minime.engine",
+      "pid": 3906,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    }
+  },
+  "operator_approval": "Approve the bounded transition",
+  "pause_generation": 486,
+  "post_transition_binding": {
+    "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/minime-runtime-binding.u7ndrv7y/runtime-binding.json",
+    "sha256": "380394c70e47bbdcd1c4c26ca837cb68ec9d71a991a0c425b5d702fd50d403e0"
+  },
+  "protected_processes": {
+    "com.astrid.spectral-bridge": {
+      "label": "com.astrid.spectral-bridge",
+      "pid": 75202,
+      "started_at": "Wed Sep 30 17:26:19 2026"
+    },
+    "com.minime.autonomous-agent": {
+      "label": "com.minime.autonomous-agent",
+      "pid": 74379,
+      "started_at": "Wed Sep 30 17:25:04 2026"
+    },
+    "com.minime.camera-client": {
+      "label": "com.minime.camera-client",
+      "pid": 3914,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.host-sensory": {
+      "label": "com.minime.host-sensory",
+      "pid": 3911,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.mic-to-sensory": {
+      "label": "com.minime.mic-to-sensory",
+      "pid": 3879,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.visual-frame-service": {
+      "label": "com.minime.visual-frame-service",
+      "pid": 3898,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.reservoir.coupled-astrid": {
+      "label": "com.reservoir.coupled-astrid",
+      "pid": 3893,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    }
+  },
+  "protected_unchanged": true,
+  "published_manifest": {
+    "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/minime-division-runtime.json",
+    "sha256": "1052515561c9ffa42fe890672439a677a7a72d726432bbe8aed288deaae35de3"
+  },
+  "qualified_source": "c428fcaec55090a29b9c3f38c4219b093b1d9172",
+  "receipt_refs": {
+    "before.json": {
+      "path": "/Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01/before.json",
+      "sha256": "9761fce18fe7f5060a82adb98e5e9189636200527676ba1e0a020d8037ae2de5"
+    },
+    "handoff.json": {
+      "path": "/Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01/handoff.json",
+      "sha256": "869fc15eefe5dd9b1310692edfd17a226dbba14df528bc97d1fe29d3bee742b0"
+    },
+    "inspection.json": {
+      "path": "/Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01/stopped-checkpoint/inspection.json",
+      "sha256": "c30c7698e21c02377bfcb53959cda07395c2aa0ab9fbe8701db461fe9f47d629"
+    },
+    "new-build-manifest.json": {
+      "path": "/Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01/new-build-manifest.json",
+      "sha256": "1052515561c9ffa42fe890672439a677a7a72d726432bbe8aed288deaae35de3"
+    },
+    "observation.json": {
+      "path": "/Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01/observation.json",
+      "sha256": "40f12a0586202a15ff181bf7a4973b524650ebd378e809a2fc6b9cefd7e20d1f"
+    },
+    "transition.json": {
+      "path": "/Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01/transition.json",
+      "sha256": "e9914c39f1b698a995433ebd8b57890c1d835628e90b6752b1e6097b87df2e1b"
+    }
+  },
+  "recorded_at_unix_s": 1790879125.6032488,
+  "restart_gate_detail": {
+    "activation_candidate_ticks": 0,
+    "activation_delay_reason": "active",
+    "active": true,
+    "applied": false,
+    "applied_drain_weight": 0.0,
+    "applied_live_weight": 0.014999999664723873,
+    "drain_floor": 0.0,
+    "first_drain_applied_at_unix_ms": 1790878652138,
+    "first_drain_fill_pct": 72.04830932617188,
+    "first_hold_crossed_at_unix_ms": 1790878640286,
+    "first_hold_crossing_fill_pct": 61.865718841552734,
+    "first_low_fill_reset_at_unix_ms": 1790878621325,
+    "first_low_fill_reset_fill_pct": 10.0,
+    "max_fill_before_scaffold_active": 10.0,
+    "max_fill_during_reentry": 72.04830932617188,
+    "phase": "scaffold_activated",
+    "reason": "restart_gate_awaiting_settle_proof",
+    "relapse_count": 0,
+    "reopen_reason": null,
+    "reopened_at_unix_ms": null,
+    "reset_rebuild_active": false,
+    "reset_rebuild_keep": 0.0,
+    "scaffold_activated_at_unix_ms": 1790878618960,
+    "scaffold_activation_fill_pct": 10.0,
+    "scaffold_activation_reason": "protective_low_fill_activated",
+    "settle_candidate_reason": "semantic_active",
+    "settle_candidate_ticks": 0,
+    "settle_required_ticks": 3,
+    "settled_at_unix_ms": null,
+    "started_at_unix_ms": 1790878616613,
+    "window_secs": 90.0
+  },
+  "sampled_span_s": 360.408,
+  "schema": "engine_live_transition_review_v1",
+  "scope": "bounded SIGTERM of engine gateway supervisor; no forced termination; possible in-flight sensory/control loss accepted",
+  "stage_manifest_sha256": "47396e48a469598480dce61ddfc12808682e698b75cbc5eccb845743f25dddbe",
+  "startup_control_revisions_preserved": true,
+  "status": "activated_verified",
+  "subjective_improvement_claimed": false,
+  "telemetry_samples": [
+    {
+      "fill_ratio": 0.6158295,
+      "protocol": {
+        "major": 1,
+        "minor": 2,
+        "name": "astrid_minime"
+      },
+      "t_ms": 502762
+    },
+    {
+      "fill_ratio": 0.6088908,
+      "protocol": {
+        "major": 1,
+        "minor": 2,
+        "name": "astrid_minime"
+      },
+      "t_ms": 505124
+    },
+    {
+      "fill_ratio": 0.60269666,
+      "protocol": {
+        "major": 1,
+        "minor": 2,
+        "name": "astrid_minime"
+      },
+      "t_ms": 507511
+    }
+  ],
+  "transaction": "/Users/v/other/worktrees/engine-qualification-20261001/transition-live-20261001-01",
+  "witness_only": true
+}

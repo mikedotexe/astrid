@@ -1,5 +1,8 @@
 # Engine Integration and Restart Handoff
 
+Later approved outcome: [release-04 is now live](2026-10-01-engine-live-transition.md).
+The preparation status below remains the historical record before that approval.
+
 ## Result
 
 October 1, 2026, Codex interactive collaborator. Mike requested progress toward
