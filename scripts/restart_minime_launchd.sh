@@ -80,7 +80,8 @@ launchctl setenv LEGACY_VIDEO_ENABLED "${LEGACY_VIDEO_ENABLED:-false}"
 launchctl setenv MINIME_LLM_BACKEND "${MINIME_LLM_BACKEND:-ollama}"
 launchctl setenv LOOK_SOURCE "${LOOK_SOURCE:-active}"
 launchctl setenv AGENT_INTERVAL "${AGENT_INTERVAL:-60}"
-launchctl setenv MINIME_LLM_TIMEOUT_S "${MINIME_LLM_TIMEOUT_S:-45}"
+# MINIME_LLM_TIMEOUT_S is owned by minime/launchd/autonomous-agent.env (durable, 160 s);
+# a setenv here used to drop it to 45 s on every launchd restart (removed 2026-10-01).
 launchctl setenv MINIME_LLM_COMPACT_TIMEOUT_S "${MINIME_LLM_COMPACT_TIMEOUT_S:-20}"
 unset_launchd_env MINIME_CANARY_ENABLED
 unset_launchd_env MINIME_CANARY_MODEL

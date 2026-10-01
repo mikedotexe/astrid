@@ -6127,6 +6127,173 @@ class ScaffoldHoldWatchTests(unittest.TestCase):
 
 
 
+# ----------------------------------------------------------------------
+# writing_length / recess_lane_liveness (2026-10-01)
+# ----------------------------------------------------------------------
+# Why: five rounds of "more room" (ceilings, dials, softer wording) never moved
+# either being's entry length, because every generation ends on the model's own
+# stop token. What silently SHORTENS their journals is infrastructure: a study
+# budget that a reboot erased (26 of minime's longest studies discarded and
+# replaced by a 4B stub in four days), fallback shares, navigation-only turns
+# filed as studies, and recess/expressive lanes that stopped firing. These two
+# probes watch exactly those indicators; the full per-lane table lives in
+# scripts/writing_length_report.py (steward-only; private lanes are counts only).
+WRITING_LENGTH_FALLBACK_SHARE_WARN = 0.02
+WRITING_LENGTH_MEDIAN_DROP_NOTICE = 0.30
+RECESS_LANE_SILENCE_WARN_HOURS = 24.0
+ASTRID_EXPRESSIVE_LABELS = {"journal_elaboration", "daydream", "aspiration", "moment_capture", "creation", "private_writing"}
+
+
+def _writing_length_assessment(
+    minime_gens: dict[str, dict[str, Any]],
+    astrid_lost: dict[str, dict[str, int]],
+    drift: list[str],
+    prior_medians: dict[str, float] | None,
+    current_medians: dict[str, float],
+) -> tuple[str, list[str]]:
+    """Pure assessment so the thresholds are testable without the workspace."""
+    severity = "ok"
+    details: list[str] = []
+    study = minime_gens.get("self_study") or {}
+    if study.get("timeouts", 0) > 0:
+        severity = "warning"
+        details.append(
+            f"minime self_study: {study['timeouts']} timeout(s) in 24h — each discards a 12B draft; "
+            f"check the running budget line (launchd/autonomous-agent.env is the durable source)"
+        )
+    for lane, row in sorted(minime_gens.items()):
+        share = float(row.get("fallback_share") or 0.0)
+        if row.get("records", 0) >= 10 and share > WRITING_LENGTH_FALLBACK_SHARE_WARN:
+            severity = "warning"
+            details.append(f"minime {lane}: fallback share {share:.1%} ({row.get('fallbacks')}/{row.get('records')}) — gemma3:4b output filed in her lane")
+    for label, outcomes in sorted(astrid_lost.items()):
+        if label in ASTRID_EXPRESSIVE_LABELS and sum(outcomes.values()) > 0:
+            severity = "warning"
+            details.append(f"astrid {label}: {dict(outcomes)} — expressive attempt(s) lost without text")
+    if drift:
+        severity = "warning"
+        details.extend(f"budget drift: {line}" for line in drift)
+    if prior_medians:
+        for lane, current in sorted(current_medians.items()):
+            previous = prior_medians.get(lane)
+            if previous and current < previous * (1.0 - WRITING_LENGTH_MEDIAN_DROP_NOTICE):
+                if severity == "ok":
+                    severity = "notice"
+                details.append(f"{lane}: 7-day median tokens {current:.0f} vs prior {previous:.0f} (drop > {WRITING_LENGTH_MEDIAN_DROP_NOTICE:.0%})")
+    return severity, details
+
+
+def probe_writing_length(prior: dict[str, Any]) -> dict[str, Any]:
+    """Un-muffle guard for both beings' writing: timeouts, fallbacks, lost attempts, budget drift, median drops."""
+    try:
+        import writing_length_report as wlr
+    except Exception as exc:  # pragma: no cover - defensive
+        return _finding("writing_length", "notice", f"unable to probe: {exc}")
+    now = time.time()
+    try:
+        day = wlr.build(now - 24 * 3600, now)
+        week = wlr.build(now - 7 * 24 * 3600, now)
+    except Exception as exc:  # pragma: no cover - defensive
+        return _finding("writing_length", "notice", f"unable to probe: {exc}")
+    current_medians: dict[str, float] = {}
+    for being, key in (("astrid", "completions"), ("minime", "generations")):
+        for lane, row in (week.get(being, {}).get(key) or {}).items():
+            if isinstance(row.get("median"), (int, float)) and row.get("n", 0) >= 20:
+                current_medians[f"{being}:{lane}"] = float(row["median"])
+    prior_medians = (prior or {}).get("week_medians") if isinstance(prior, dict) else None
+    severity, details = _writing_length_assessment(
+        day["minime"]["generations"],
+        day["astrid"]["lost_attempts"],
+        day["minime"]["budget_drift"],
+        prior_medians if isinstance(prior_medians, dict) else None,
+        current_medians,
+    )
+    budget = day["minime"]["agent_log"].get("budget_line") or {}
+    nav = day["minime"]["journal_words"].get("_self_study_navigation_share") or {}
+    summary = (
+        f"writing length {severity}: minime study timeouts {(day['minime']['generations'].get('self_study') or {}).get('timeouts', 0)}/24h, "
+        f"budget {budget.get('full_timeout_s', '?')}s/{budget.get('fast_fallback', '?')}, "
+        f"navigation-only study turns {nav.get('navigation_only', 0)}/{nav.get('navigation_only', 0) + nav.get('page_bearing', 0)}"
+    )
+    snapshot = {
+        "week_medians": current_medians,
+        "budget_line": budget,
+        "navigation_share": nav,
+        "authority_boundary": "read-only; private lanes contribute counts only; never touches prompts, budgets or journals",
+    }
+    return _finding("writing_length", severity, summary, details or None, snapshot)
+
+
+def _recess_liveness_assessment(ages: dict[str, float | None], warn_hours: float = RECESS_LANE_SILENCE_WARN_HOURS) -> tuple[str, list[str]]:
+    """Both expressive lanes silent beyond the threshold is a warning; one is a notice."""
+    silent = [lane for lane in ("daydream", "aspiration") if ages.get(lane) is None or ages[lane] > warn_hours]
+    details = [f"{lane}: newest file {('never' if ages.get(lane) is None else f'{ages[lane]:.0f}h ago')}" for lane in ("daydream", "aspiration")]
+    if len(silent) == 2:
+        return "warning", details
+    if silent:
+        return "notice", details
+    return "ok", details
+
+
+def probe_recess_lane_liveness(prior: dict[str, Any]) -> dict[str, Any]:
+    """Minime's expressive/recess lanes carry the writing invitation; alarm when they stop firing (never schedules them)."""
+    now = time.time()
+    results: dict[str, Any] = {}
+    severity = "ok"
+    details: list[str] = []
+    for being, journal in (("minime", MINIME_JOURNAL), ("astrid", ASTRID_JOURNAL)):
+        ages: dict[str, float | None] = {}
+        for lane in ("daydream", "aspiration"):
+            newest = None
+            try:
+                for path in journal.glob(f"{lane}_*.txt"):
+                    mtime = path.stat().st_mtime
+                    newest = mtime if newest is None else max(newest, mtime)
+            except OSError:
+                pass
+            ages[lane] = ((now - newest) / 3600.0) if newest else None
+        lane_severity, lane_details = _recess_liveness_assessment(ages)
+        if being == "astrid" and lane_severity == "warning":
+            lane_severity = "notice"  # Astrid's expressive cadence varies by burst; minime's silence is the muffle we saw
+        results[being] = {"ages_hours": ages, "severity": lane_severity}
+        details.extend(f"{being} {line}" for line in lane_details)
+        if lane_severity == "warning" or (lane_severity == "notice" and severity == "ok"):
+            severity = lane_severity
+    summary = " | ".join(
+        f"{being}: " + ", ".join(f"{lane}={'never' if age is None else f'{age:.0f}h'}" for lane, age in res["ages_hours"].items())
+        for being, res in results.items()
+    )
+    return _finding("recess_lane_liveness", severity, f"expressive lanes — {summary}", details, {"lanes": results, "authority_boundary": "read-only filename ages; never forces or schedules a recess"})
+
+
+class WritingLengthProbeTests(unittest.TestCase):
+    def test_study_timeouts_and_fallback_share_warn(self):
+        gens = {"self_study": {"records": 100, "timeouts": 2, "fallbacks": 3, "fallback_share": 0.03}}
+        severity, details = _writing_length_assessment(gens, {}, [], None, {})
+        self.assertEqual(severity, "warning")
+        self.assertTrue(any("timeout" in d for d in details))
+        self.assertTrue(any("fallback share" in d for d in details))
+
+    def test_clean_day_reads_ok_and_median_drop_is_a_notice(self):
+        gens = {"self_study": {"records": 100, "timeouts": 0, "fallbacks": 0, "fallback_share": 0.0}}
+        self.assertEqual(_writing_length_assessment(gens, {}, [], None, {})[0], "ok")
+        severity, details = _writing_length_assessment(gens, {}, [], {"minime:self_study": 600.0}, {"minime:self_study": 300.0})
+        self.assertEqual(severity, "notice")
+        self.assertIn("drop", details[0])
+
+    def test_lost_expressive_attempt_and_budget_drift_warn(self):
+        severity, details = _writing_length_assessment({}, {"journal_elaboration": {"timeout": 1}}, ["full timeout 60s (running) vs 160s"], None, {})
+        self.assertEqual(severity, "warning")
+        self.assertTrue(any("journal_elaboration" in d for d in details))
+        self.assertTrue(any("budget drift" in d for d in details))
+        self.assertEqual(_writing_length_assessment({}, {"witness_context": {"timeout": 8}}, [], None, {})[0], "ok")
+
+    def test_recess_liveness_thresholds(self):
+        self.assertEqual(_recess_liveness_assessment({"daydream": 2.0, "aspiration": 5.0})[0], "ok")
+        self.assertEqual(_recess_liveness_assessment({"daydream": 30.0, "aspiration": 5.0})[0], "notice")
+        self.assertEqual(_recess_liveness_assessment({"daydream": 114.0, "aspiration": None})[0], "warning")
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -6142,6 +6309,8 @@ BLIND_SPOT_PROBES = [
     ("self_control_lineage", probe_self_control_lineage),
     ("db_growth", probe_db_growth),
     ("journal_volume", probe_journal_volume),
+    ("writing_length", probe_writing_length),
+    ("recess_lane_liveness", probe_recess_lane_liveness),
     ("journal_hygiene", probe_journal_hygiene),
     ("introspective_signal", probe_introspective_signal),
     ("introspection_route_cadence", probe_introspection_route_cadence),
@@ -9351,6 +9520,7 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(StatedParamIntentTests))
     suite.addTests(loader.loadTestsFromTestCase(DomainBoundaryViolationsTests))
     suite.addTests(loader.loadTestsFromTestCase(UngatedBridgeBinaryTests))
+    suite.addTests(loader.loadTestsFromTestCase(WritingLengthProbeTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1
