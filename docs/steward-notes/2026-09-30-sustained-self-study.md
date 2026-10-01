@@ -148,3 +148,62 @@ script `scripts/qualify_sustained_study.py`, using explicit old/new helper and
 output-directory arguments. It retains failures, verifies helper identity before
 and after, and shares the existing qualification fixture. Immutable staged-helper
 execution remains required before activation.
+
+## Verified Paired Release and Git Integration
+
+Activation completed at 2026-10-01 00:28:31 UTC (September 30 locally), through
+the sanctioned paired installer, idle boundary and acknowledged bridge drain.
+The full quiet window and roughly eleven-minute wait for a naturally available
+agent boundary were retained. Four study jobs completed during the wait. No
+active job was cancelled, no force was used, and no gate was weakened.
+
+- Source commits on local main: Astrid
+  `0dc40d5a460bcb97a65818b305a3cdbc5eaea5cc` (31 exact paths) and Minime
+  `d2c3c6e5c6946e778254ac6f1537061ea279c301` (five exact paths).
+- Immutable stage:
+  `/Users/v/other/worktrees/sustained-study-20260930/deployment/bridge-stage-01`.
+  Manifest SHA-256 `09a992013abc279ea048da2327cb36ec4e1854abe165ddf27acd1053ab935f89`;
+  bridge SHA-256 `16149a9b9fd9224e498d8063d5392172e24e5071e78fd259fa99b7603866ebf4`;
+  reader SHA-256 `54c0dabf3ea1728ee4ba8290a300a3142416c2e3a2f0c21ce7397d58eeecb850`.
+- The actual packaged helper repeats all 24 owner migration checks, rejects
+  corrupt/future state without writes, preserves idempotent preparation, and is
+  selected by the frozen Python adapter. All 89 frozen Python inputs equal the
+  candidate; the full suite with this helper passes 1,710 tests and 141 subtests
+  with one existing skip. A read-only inventory probe first used a relative path
+  and was correctly refused; the corrected canonical-path probe passes.
+- Bridge PID 49008 became 75202; Minime agent PID 48235 became 74379. The agent's
+  launch process starts while held, before Python admission is released. Loaded
+  source hashes, helper selection, readiness and managed configuration were
+  independently verified. Both launch holds are absent.
+- Exact bridge checkpoint
+  `d2916d3f5f2ce24935fd652cf2465cd42115a36797da73c6ed816e33c41dd141`
+  and both pending runtime feedback items were restored. A new saved exchange and
+  model-idle state were observed. Minime retains session 5320 and logs the exact
+  pending source-study choice restored at boot, with boot reflection deferred.
+  Restoration is not a claim that the selected path exists or that the resulting
+  study has completed.
+- Minime naturally writes reader schema 12 with 54 bookmarks. Astrid still holds
+  schema 10, 78 bookmarks and a pending source offer; selecting the new helper is
+  not itself a reader write. That retained work was not forcibly opened, replaced
+  or migrated by the operator. Migration proceeds through normal validated use.
+- All nine other protected process identities/start times match the baseline,
+  including engine PID 3906. Sensory listener ports remain present; the independent
+  postcheck observed telemetry 1.773 seconds old. This does not repair the separate
+  cadence shortfall or qualify the elapsed-rate controller candidate.
+- All 702 captured build inputs, including external local dependencies, match
+  their integrated canonical/source bindings. The two canonical Minime files
+  changed by the installer were byte-verified against the incoming commit before
+  explicit staging and fast-forward integration. No broad staging, reset, stash,
+  foreign cleanup or history rewrite occurred. No remote push was performed.
+
+The bounded [release witness](evidence/2026-09-30-sustained-self-study-release.json)
+lists exact committed paths, identities and durable full-receipt locations.
+Controller pause generation 484 remains active with no lease or projection.
+Indexed-tail V2 integrity is valid at sequence 1123138, head
+`98e9ec873793dc0e619017d687a252f157ef13a57859231a73d2401cc154ba57`;
+V1 sources remain immutable. No productive automation round was recorded.
+
+This completes the requested study interaction tranche. Natural use and richer
+development of ideas remain observations to make, not outcomes inferred from
+synthetic tests or word allowances. The separate engine timing candidate remains
+unmerged and unactivated; previously paused automations remain paused.

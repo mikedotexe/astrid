@@ -1,0 +1,136 @@
+{
+  "status": "verified",
+  "activation_receipt": "/Users/v/other/astrid/.runtime/bridge-deployment/transactions/de4dadd38f784e9992b402bbad699f43/receipt.json",
+  "bridge_pid": 75202,
+  "bridge_started_at": "Wed Sep 30 17:26:19 2026",
+  "agent_pid": 74379,
+  "agent_started_at": "Wed Sep 30 17:25:04 2026",
+  "agent_source_inputs": 89,
+  "manifest_sha256": "09a992013abc279ea048da2327cb36ec4e1854abe165ddf27acd1053ab935f89",
+  "bridge_sha256": "16149a9b9fd9224e498d8063d5392172e24e5071e78fd259fa99b7603866ebf4",
+  "reader_sha256": "54c0dabf3ea1728ee4ba8290a300a3142416c2e3a2f0c21ce7397d58eeecb850",
+  "protected_services": {
+    "com.minime.engine": {
+      "pid": 3906,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.division-gateway": {
+      "pid": 3887,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.division-supervisor": {
+      "pid": 3897,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.reservoir.coupled-astrid": {
+      "pid": 3893,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.astrid.spectral-bridge": {
+      "pid": 75202,
+      "started_at": "Wed Sep 30 17:26:19 2026"
+    },
+    "com.minime.mic-to-sensory": {
+      "pid": 3879,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.camera-client": {
+      "pid": 3914,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.visual-frame-service": {
+      "pid": 3898,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.minime.host-sensory": {
+      "pid": 3911,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    "com.reservoir.astrid-feeder": {
+      "pid": 3878,
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    }
+  },
+  "configuration_unchanged": true,
+  "launch_holds_absent": true,
+  "telemetry_age_s": 1.773,
+  "session_lineage_retained": true,
+  "forced_termination": false,
+  "limits": [
+    "readiness is not felt improvement",
+    "no engine timing repair activated",
+    "automations remain paused"
+  ],
+  "schema": "sustained_study_release_witness_v1",
+  "handoff_receipt": "/Users/v/other/worktrees/sustained-study-20260930/deployment/handoff-01.jsonl",
+  "checkpoint_sha256": "d2916d3f5f2ce24935fd652cf2465cd42115a36797da73c6ed816e33c41dd141",
+  "pending_feedback": {
+    "pending_count": 2,
+    "present": true,
+    "schema": "pending_runtime_action_feedback_v1",
+    "sha256": "efde3087b69e1b7d309b1fcc2e633a52a6bc3c1d769d622f3b37ace79caa5aef"
+  },
+  "pending_next_restored_sha256": "338ca9684fc9f9c6d64d658cb43f684987cddb5d5ee83434a84669afa6dd7fad",
+  "migration_receipt": "/Users/v/other/worktrees/sustained-study-20260930/deployment/packaged-migration/paired-qualification.json",
+  "source_alignment": {
+    "verified": true,
+    "input_count": 702,
+    "canonical_source_matches_stage": true
+  },
+  "pause_generation": 484,
+  "evidence": {
+    "valid": true,
+    "last_global_seq": 1123138,
+    "last_event_sha256": "98e9ec873793dc0e619017d687a252f157ef13a57859231a73d2401cc154ba57",
+    "v1_immutable": true,
+    "verification_mode": "indexed_tail"
+  },
+  "commits": {
+    "astrid": {
+      "sha": "0dc40d5a460bcb97a65818b305a3cdbc5eaea5cc",
+      "paths": [
+        "CHANGELOG.md",
+        "capsules/spectral-bridge/src/autonomous/btsp/signal.rs",
+        "capsules/spectral-bridge/src/autonomous/btsp/signal_tests.rs",
+        "capsules/spectral-bridge/src/autonomous/next_action/study_inquiries_tests.rs",
+        "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs",
+        "crates/astrid-kernel/src/lib.rs",
+        "crates/astrid-source-study/help-attention.txt",
+        "crates/astrid-source-study/help-navigation.txt",
+        "crates/astrid-source-study/help-notebook.txt",
+        "crates/astrid-source-study/prompt.txt",
+        "crates/astrid-source-study/src/command.rs",
+        "crates/astrid-source-study/src/command_boundary.rs",
+        "crates/astrid-source-study/src/evidence.rs",
+        "crates/astrid-source-study/src/lib.rs",
+        "crates/astrid-source-study/src/navigation_history.rs",
+        "crates/astrid-source-study/src/navigation_recovery.rs",
+        "crates/astrid-source-study/src/notebook.rs",
+        "crates/astrid-source-study/src/response_choice.rs",
+        "crates/astrid-source-study/src/store.rs",
+        "crates/astrid-source-study/src/store_navigation.rs",
+        "crates/astrid-source-study/src/store_sessions.rs",
+        "crates/astrid-source-study/src/study_help.rs",
+        "crates/astrid-source-study/tests/context.rs",
+        "crates/astrid-source-study/tests/context_budget.rs",
+        "crates/astrid-source-study/tests/finding_feedback.rs",
+        "crates/astrid-source-study/tests/quiet_notebook.rs",
+        "crates/astrid-source-study/tests/study_checkpoint.rs",
+        "crates/astrid-source-study/tests/sustained_study.rs",
+        "docs/steward-notes/2026-09-30-sustained-self-study.md",
+        "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md",
+        "scripts/qualify_sustained_study.py"
+      ]
+    },
+    "minime": {
+      "sha": "d2c3c6e5c6946e778254ac6f1537061ea279c301",
+      "paths": [
+        "CHANGELOG.md",
+        "docs/steward-notes/2026-09-30-sustained-self-study.md",
+        "minime_autonomy/parsing.py",
+        "minime_autonomy/source_study.py",
+        "tests/test_sustained_study.py"
+      ]
+    }
+  }
+}

@@ -32,6 +32,11 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-30 - sustained self-study release verified live
+
+- The eight public Minime witnesses listed below now connect to source commits Astrid `0dc40d5a46` and Minime `d2c3c6e`, integrated on local main. Packaged tests, real-helper migration and the unweakened graceful handoff verify bridge 75202 and agent 74379, exact checkpoint/feedback continuity and all 89 loaded Python inputs.
+- The shared routine study prompt is 59% shorter, with detailed reference explicitly retrievable; longer synthesis is invited, never required. Existing quiet-notebook return remains preserved. Engine/control behavior, historical journals and paused automations are unchanged. No uptake, understanding or felt improvement is inferred. No remote push. [Full release note and exact-path witness](2026-09-30-sustained-self-study.md).
+
 ### 2026-09-30 - Minime's NEW recovery, KV interpretation and sustained study
 
 - Fully read the eight public decision/study entries from 14:54:06 through 15:22:55. Their exact filenames and SHA-256 witnesses are in [the paired repair note](2026-09-30-sustained-self-study.md). The authored `SELF_STUDY NEW` selected an invalid namespace; the subsequent studies did advance through source. The KV-sharing statement followed our misleading comment, while the actual `ScopedKvStore` isolates namespaces. These are specific mechanical findings, not evidence that the entire inquiry failed.
