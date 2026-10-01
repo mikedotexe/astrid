@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Semantic-settle reporting integrated and release-qualified (2026-10-01).** Merge the read-only engine observation and paired evidence, qualify immutable release-05 and pass no-activation preflight. A fresh bounded-transition acknowledgement remains pending; release-04 stays live. See `docs/steward-notes/2026-10-01-semantic-settle-integration.md`.
+
 - **Engine follow-through: semantic settle review (2026-10-01).** Trace the admitted semantic lane and bridge heartbeat, retain a bounded live observation, and qualify paired read-only numerical-eligibility reporting. Synthetic alternatives demonstrate that clearing `semantic_active` changes scaffold lifecycle, not just a label. No bridge/controller policy or live release change. See `docs/steward-notes/2026-10-01-semantic-settle-review.md`.
 
 - **Live: approved engine release-04 (2026-10-01).** Complete the specifically approved bounded engine/gateway/supervisor transition with verified stopped checkpoint, signed state-preserving handoff and 360-second observation. All protected services remain unchanged. Keep `semantic_active` settle-proof wait explicit rather than declaring the controller settled. Exact live hashes and receipts: `docs/steward-notes/2026-10-01-engine-live-transition.md`.
