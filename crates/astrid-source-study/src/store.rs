@@ -6,6 +6,8 @@ mod activity;
 mod cursors;
 #[path = "store_geometry.rs"]
 mod geometry;
+#[path = "study_help.rs"]
+mod help;
 #[path = "store_navigation.rs"]
 mod navigation;
 #[path = "store_observations.rs"]
@@ -77,7 +79,8 @@ fn default_context_tokens() -> u32 {
 impl StudyOutput {
     #[must_use]
     pub fn is_continuation_decision(&self) -> bool {
-        self.continuation_decision || self.input_kind == InputKind::EndOfFile
+        self.continuation_decision
+            || matches!(self.input_kind, InputKind::EndOfFile | InputKind::Help)
     }
     /// Verify the entire offered input, including its study notebook.
     /// # Errors
@@ -371,6 +374,17 @@ impl Reader {
             return self.unavailable_question(&anyhow::anyhow!(feedback));
         }
         let words: Vec<_> = action.split_whitespace().take(2).collect();
+        if words.first() == Some(&"SELF_STUDY")
+            && words
+                .get(1)
+                .is_some_and(|word| word.eq_ignore_ascii_case("NEW"))
+        {
+            let text = crate::recover_local_navigation(action).map_or_else(
+                || "NEW requires SELF_STUDY QUESTION NEW <question, up to 350 bytes>. No question was created or selected; SELF_STUDY HELP notebook shows syntax.".to_string(),
+                |recovery| recovery.text,
+            );
+            return self.unavailable_question(&anyhow::anyhow!(text));
+        }
         if words
             .first()
             .is_some_and(|word| word.eq_ignore_ascii_case("QUESTION"))
@@ -495,6 +509,7 @@ impl Reader {
             Err(error) => return self.recovery_map(&mut state, &error),
         };
         let page = match command {
+            Command::Help { topic } => return self.output(&mut state, help::render(&topic), None, InputKind::Help),
             Command::Reflect => return self.output(&mut state, "You chose open introspection. You may reflect on your thoughts, experience, uncertainty, or anything that matters to you, without connecting it to code or measurements. Nothing specific needs to be felt, explained, or concluded. Length and stopping remain yours to choose.\n\nNEXT choices remain yours: INTROSPECT for another reflection, SELF_STUDY CONTINUE for the retained source bookmark, WRITE START <topic> for private writing, or REST. No continuation is automatic.".into(), None, InputKind::Reflection),
             Command::Note { page } => {
                 let notebook = state.questions.notebook_for(state.questions.active.as_deref(), &state.notebook);

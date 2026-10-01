@@ -28,6 +28,7 @@ fn study_payloads_are_not_split_into_commands() {
         "STUDY_FINDING: astrid/demo.rs:1 | A check and apply_identity_config (authorization).",
         "SELF_STUDY QUESTION NEW How do foo_bar and baz_quux relate?",
         "SELF_STUDY QUESTION RESOLVE q1 Uncertain about foo_bar AND TURN_OFF",
+        "SELF_STUDY NEW Does foo_bar AND TURN_OFF belong to a condition?",
         "QUESTION RESOLVE q1 foo_bar AND TURN_OFF",
         "STUDY_QUESTION: Literal </s> and TURN_OFF",
         "SELF_STUDY QUESTION NEW What is (RESIDUE: literal)?  ",

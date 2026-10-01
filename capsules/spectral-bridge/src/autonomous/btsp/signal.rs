@@ -1,11 +1,11 @@
+#[cfg(test)]
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 #[cfg(not(test))]
 use std::fs::OpenOptions;
 #[cfg(not(test))]
 use std::io::Write;
 use std::path::{Path, PathBuf};
-#[cfg(test)]
-use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -47,7 +47,10 @@ const ROLE_WATCH_ONLY: &str = "watch_only";
 const ROLE_CONTEXT_ONLY: &str = "context_only";
 
 #[cfg(test)]
-static TEST_SIGNAL_EVENTS: Mutex<Vec<Value>> = Mutex::new(Vec::new());
+thread_local! {
+    // Synchronous test callers must not drain another test thread's events.
+    static TEST_SIGNAL_EVENTS: RefCell<Vec<Value>> = const { RefCell::new(Vec::new()) };
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub(super) struct SignalCatalog {
@@ -387,9 +390,7 @@ pub(super) fn append_signal_event(event_type: &str, payload: Value) {
         .or_insert_with(|| json!("bridge_runtime"));
     #[cfg(test)]
     {
-        if let Ok(mut events) = TEST_SIGNAL_EVENTS.lock() {
-            events.push(Value::Object(object));
-        }
+        TEST_SIGNAL_EVENTS.with(|events| events.borrow_mut().push(Value::Object(object)));
     }
     #[cfg(not(test))]
     {
@@ -408,10 +409,7 @@ pub(super) fn append_signal_event(event_type: &str, payload: Value) {
 
 #[cfg(test)]
 pub(super) fn drain_test_signal_events() -> Vec<Value> {
-    TEST_SIGNAL_EVENTS
-        .lock()
-        .map(|mut events| std::mem::take(&mut *events))
-        .unwrap_or_default()
+    TEST_SIGNAL_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut()))
 }
 
 pub(super) fn maybe_record_note_read(path: &Path, owner: &str, content: &str) {

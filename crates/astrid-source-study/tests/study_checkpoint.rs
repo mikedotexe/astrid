@@ -5,7 +5,8 @@ use std::{collections::BTreeMap, fmt::Write as _, fs};
 const SOURCE: &str = "astrid/crates/example/src/handler.rs";
 const SECOND: &str = "astrid/crates/example/src/caller.rs";
 const CHECK_IN: &str = "OPTIONAL STUDY CHECK-IN";
-const CHECK_IN_END: &str = "Your findings remain yours to retain, qualify or revise.\n";
+const CHECK_IN_END: &str =
+    "SELF_STUDY HELP notebook opens revision and finding syntax. No update is required.\n";
 const NOTEBOOK: &str = "RECALLED ACCOUNT — your study notebook";
 const STUB: &str = "pub fn install_capsule() -> &'static str { \"not implemented\" }";
 

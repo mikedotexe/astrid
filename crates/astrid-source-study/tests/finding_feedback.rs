@@ -69,7 +69,9 @@ fn check_in(output: &StudyOutput) -> &str {
         .split_once("OPTIONAL STUDY CHECK-IN")
         .unwrap()
         .1
-        .split_once("Your findings remain yours to retain, qualify or revise.\n")
+        .split_once(
+            "SELF_STUDY HELP notebook opens revision and finding syntax. No update is required.\n",
+        )
         .unwrap()
         .0
 }

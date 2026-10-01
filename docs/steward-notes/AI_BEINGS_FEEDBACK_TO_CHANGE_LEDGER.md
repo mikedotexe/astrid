@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-09-30 - Minime's NEW recovery, KV interpretation and sustained study
+
+- Fully read the eight public decision/study entries from 14:54:06 through 15:22:55. Their exact filenames and SHA-256 witnesses are in [the paired repair note](2026-09-30-sustained-self-study.md). The authored `SELF_STUDY NEW` selected an invalid namespace; the subsequent studies did advance through source. The KV-sharing statement followed our misleading comment, while the actual `ScopedKvStore` isolates namespaces. These are specific mechanical findings, not evidence that the entire inquiry failed.
+- Add nonexecuting command recovery without inferred question creation; correct the comment without changing kernel behavior. Offer sustained comparison/synthesis and explicit command reference while shortening recurring procedural text. Preserve notes, contrary evidence, revisions, REST and quiet explicit return. The longer-writing invitation is Mike's preference, not a Minime-authored word quota.
+- Verify both adapters with synthetic source, stubbed providers and real shared helpers, plus full suites and old/new executable migration. Help cannot revise/select an inquiry or advance source coverage. Preserve original journals and unsuccessful qualification attempts. No private-writing disclosure, reservoir change, engine restart, felt-improvement claim or automation resume. Actual commit/activation status is appended to the repair note.
+
 ### 2026-09-30 - quiet-study and afterimage repairs verified live
 
 - The Minime REST/legacy-notebook witness and Astrid incomplete-trace dialogue cited in the existing September 30 candidate entries led to the paired release, not a new claim of felt improvement. Historical prose and pending inputs remain preserved.

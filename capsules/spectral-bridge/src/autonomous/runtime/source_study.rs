@@ -457,6 +457,30 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 mod source_study_tests {
     use super::*;
     #[test]
+    fn new_namespace_recovery_and_help_use_real_bridge_preparation_without_selecting() {
+        let temp = tempfile::tempdir().unwrap();
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
+            temp.path().join("reader"),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        for (index, action) in ["SELF_STUDY NEW Does the Kernel implement the blocked check?", "SELF_STUDY HELP notebook"].iter().enumerate() {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            next_action::study_navigation::handle_request(&mut conv, "SELF_STUDY", action).unwrap();
+            conv.introspect_target.as_mut().unwrap().operation_id = Some(format!("reference-{index}"));
+            let out = prepare_shared_study_target(&reader, conv.introspect_target).unwrap();
+            assert_eq!(source_study_authored_mode(&out), "study_decision");
+            assert!(out.text.contains("SELF_STUDY QUESTION NEW"));
+            assert!(out.page.is_none() && out.question_id.is_none());
+            let before: Value = serde_json::from_slice(&std::fs::read(temp.path().join("reader/reader-v1.json")).unwrap()).unwrap();
+            let request = serde_json::json!({"messages":[{"role":"user","content":out.text}]}).to_string();
+            let response = serde_json::json!({"message":{"content":"NEXT: REST"},"done":true}).to_string();
+            reader.navigation_delivered(out.navigation_id.as_ref().unwrap(), &request, &response).unwrap();
+            let after: Value = serde_json::from_slice(&std::fs::read(temp.path().join("reader/reader-v1.json")).unwrap()).unwrap();
+            assert_eq!(before["questions"], after["questions"]);
+            assert_eq!(after["questions"]["entries"], serde_json::json!({}));
+        }
+    }
+    #[test]
     fn quiet_notebook_and_decisions_pass_through_real_bridge_preparation() {
         let temp = tempfile::tempdir().unwrap();
         let reader = astrid_source_study::Reader::new(

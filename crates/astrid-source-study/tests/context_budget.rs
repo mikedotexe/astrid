@@ -42,7 +42,7 @@ fn legal_full_notebook_and_named_sources_fit_without_shortening_saved_thoughts()
     for letter in ['A', 'B', 'C', 'D'] {
         let response = format!(
             "STUDY_QUESTION: {question}\nSTUDY_NOTE: {note}\n{}\nNEXT: SELF_STUDY OPEN astrid/crates/demo/src/{first} 1",
-            letter.to_string().repeat(7200)
+            letter.to_string().repeat(12000)
         );
         accept(&reader, &output, &response);
         output = reader
@@ -74,14 +74,14 @@ fn legal_full_notebook_and_named_sources_fit_without_shortening_saved_thoughts()
             .contains(&note)
     );
     assert_eq!(rendered["question"]["text"], question);
-    assert_eq!(rendered["previous"]["text"], "D".repeat(7200));
+    assert_eq!(rendered["previous"]["text"], "D".repeat(12000));
     assert_eq!(rendered["previous"]["complete"], true);
     assert!(rendered["recent"].as_array().unwrap().len() < 3);
     let state: Value =
         serde_json::from_slice(&fs::read(tmp.path().join("reader/reader-v1.json")).unwrap())
             .unwrap();
     assert_eq!(state["notebook"]["recent"].as_array().unwrap().len(), 3);
-    assert_eq!(state["notebook"]["previous"]["text"], "D".repeat(7200));
+    assert_eq!(state["notebook"]["previous"]["text"], "D".repeat(12000));
     assert_eq!(state["notebook"]["note"]["text"], note);
     assert_eq!(state["notebook"]["question"]["text"], question);
     assert!(state["bookmarks"].as_object().unwrap().is_empty());

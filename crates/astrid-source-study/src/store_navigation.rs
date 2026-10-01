@@ -63,7 +63,9 @@ impl Reader {
         }
         let reflection = input_kind == InputKind::Reflection;
         let revision_recovery = input_kind == InputKind::RevisionRecovery;
-        let detached = reflection || input_kind == InputKind::InquiryReview || revision_recovery;
+        let help = input_kind == InputKind::Help;
+        let detached =
+            reflection || input_kind == InputKind::InquiryReview || revision_recovery || help;
         let question_id = page
             .as_ref()
             .map_or_else(|| state.questions.active.clone(), |p| p.question_id.clone());
@@ -142,12 +144,14 @@ impl Reader {
             bail!("complete study input exceeds the shared provider budget; bookmark unchanged");
         }
         let mut output = StudyOutput {
-            continuation_decision: decision,
+            continuation_decision: decision || help,
             generation_requested: true,
             require_complete_input: true,
             input_kind,
             evidence_scope,
-            system_prompt: if decision {
+            system_prompt: if help {
+                "You explicitly opened source-study help. This is command reference, not source evidence or a request for a report. You may choose a final NEXT, ask for another help topic, or stop. Examples are inert; nothing is executed automatically. Notebook directives in a help response do not revise study records. Your response may be public; private writing remains a separate WRITE choice.".into()
+            } else if decision {
                 "This is a study continuation decision, not a new source-analysis turn. Use the supplied command outcome and current inquiry state to choose a complete final action line such as NEXT: SELF_STUDY QUESTION or NEXT: REST. A bare SELF_STUDY QUESTION command is not selected; the NEXT: prefix is required. No source summary, architectural conclusion, note revision, or declaration of understanding is required. Response hashes are provenance, never inquiry IDs. You may retain uncertainty, revise the saved question voluntarily, browse another source, deliberately reread, or leave this study. Your choice is not proof of its execution.".into()
             } else if reflection {
                 "You are writing an open introspection in your own words. No report template, minimum length, particular experience, diagnosis, or code explanation is required. This reflection may be recorded publicly; private writing is a separate WRITE choice. Choose any NEXT explicitly; stopping is available.".into()

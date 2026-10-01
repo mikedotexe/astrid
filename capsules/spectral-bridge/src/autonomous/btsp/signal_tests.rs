@@ -4,6 +4,28 @@ use serde_json::json;
 
 use super::*;
 
+#[test]
+fn parallel_test_callers_keep_independent_event_receipts() {
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
+    let workers: Vec<_> = (0..2)
+        .map(|worker| {
+            let barrier = barrier.clone();
+            std::thread::spawn(move || {
+                assert!(drain_test_signal_events().is_empty());
+                append_signal_event("test_receipt", json!({"worker": worker}));
+                barrier.wait();
+                let events = drain_test_signal_events();
+                assert_eq!(events.len(), 1);
+                assert_eq!(events[0]["worker"], worker);
+                assert!(drain_test_signal_events().is_empty());
+            })
+        })
+        .collect();
+    for worker in workers {
+        worker.join().expect("isolated test event collector");
+    }
+}
+
 fn artifact(name: &str, text: &str) -> TextArtifact {
     TextArtifact {
         _path: PathBuf::from(name),

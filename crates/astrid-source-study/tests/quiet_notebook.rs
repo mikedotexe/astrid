@@ -178,9 +178,9 @@ fn migration_is_quiet_preserves_pending_wire_and_rejects_newer_state() {
         state(&root)["notebook"]["question"],
         old["notebook"]["question"]
     );
-    assert_eq!(state(&root)["version"], 11);
+    assert_eq!(state(&root)["version"], astrid_source_study::SCHEMA_VERSION);
     let mut unsupported = state(&root);
-    unsupported["version"] = 12.into();
+    unsupported["version"] = (astrid_source_study::SCHEMA_VERSION + 1).into();
     let bytes = serde_json::to_vec(&unsupported).unwrap();
     fs::write(&path, &bytes).unwrap();
     assert!(
