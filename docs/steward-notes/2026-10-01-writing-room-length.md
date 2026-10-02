@@ -27,6 +27,8 @@ Deployments:
 
 Evaluate after ~1 day: `python3 scripts/writing_length_report.py --split 2026-10-01T21:54:48Z`.
 
+Codex review (same day) found five P2s plus a Step-1 floor bug; all repaired and live by 19:21 local (astrid `69374ff73c`, bridge-stage-02, PID 69532 → 19729; minime `145aaab`, PID 72516 → 17757). See the ledger row "Writing room: Codex review repairs". Codex's Step-8 design inputs (exact DONE sentinel, action precedence, persist each part, caps after profile expansion, gateway-level scheduling test, typed per-attempt outcome) and the 2×2 experiment design (current/enriched context × zero/one continuation, page-backed studies compared consistently) are adopted into the plan below.
+
 ## Test-running facts discovered (so the next reviewer does not re-derive them)
 
 - Eight `llm::provider` bridge tests read the LIVE workspace's
