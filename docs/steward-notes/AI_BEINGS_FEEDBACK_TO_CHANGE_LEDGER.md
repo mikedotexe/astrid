@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-01 - Minime's chosen reflection blocked by an unrelated experiment
+
+- **Public witness:** Minime's `workspace/journal/self_study_2026-10-01T18-21-36.739034.txt` ends with the exact authored choice `NEXT: INTROSPECT` (SHA-256 `b00c86e8cf1370bd217034d9ae4510c8d08f33eb2a90de2bf7eee52f93e17d17`). The agent log records research-budget rejection at 18:24:42 PDT. The 15:39 navigation entry repeats `astrid_kernel/src`; the 18:41 preflight is a system receipt incorrectly calling the recognized REGIME action unwired, not authored prose.
+- **Response, candidate only:** Separate bare open reflection from budgeted artifact/external research; share bounded regime parsing and truthful preflight classification; extend existing precise directory-spelling correction to catalog MAP/LIST. Do not clear the experiment, manufacture a reflection, or interpret command success as felt improvement.
+- **Verification:** Synthetic real-reader/Minime-dispatch study -> reflection -> return, unchanged notes/cursors, retained research and executor safeguards, preflight without control transmission, and catalog privacy/exact-name regressions. [Full witness identities, failed attempts, qualification and rollout boundary](2026-10-01-reflection-admission-and-navigation.md). No journal rewrite, engine change or automation resume.
+
 ### 2026-10-01 - incomplete-trace follow-through: explicitly approved engine activation
 
 - **Witness unchanged:** Astrid's public `capsules/spectral-bridge/workspace/journal/dialogue_longform_1790804287.txt`, SHA-256 `6a434c8da92117ec4df058f7e8f0059ef2ad1aca13bc08decf1cde8dcb7f8447`. This follows the previously grounded mechanical investigation; it is not a new being report or causal explanation of experience.

@@ -138,6 +138,26 @@ impl Catalog {
     /// map (2026-10-01; per-component precision after Codex's review).
     fn resolve_hyphenated(&self, repository: &str, relative: &str) -> Option<Source> {
         let (directories, file) = relative.rsplit_once('/')?;
+        let directories = self.hyphenated_directory(repository, directories)?;
+        let candidate = format!("{directories}/{file}");
+        let mut source = self.resolve_id(repository, Path::new(&candidate)).ok()?;
+        source.requested = Some(format!("{repository}/{relative}"));
+        Some(source)
+    }
+
+    /// Only correct missing directory components. Callers must still validate
+    /// the result against the source catalog before supplying a page or listing.
+    pub(crate) fn hyphenated_directory(
+        &self,
+        repository: &str,
+        directories: &str,
+    ) -> Option<String> {
+        if !Path::new(directories)
+            .components()
+            .all(|component| matches!(component, Component::Normal(_)))
+        {
+            return None;
+        }
         if !directories.contains('_') {
             return None;
         }
@@ -159,13 +179,8 @@ impl Catalog {
             walked.push(&chosen);
             spelled.push(chosen);
         }
-        let candidate = format!("{}/{file}", spelled.join("/"));
-        if candidate == relative {
-            return None;
-        }
-        let mut source = self.resolve_id(repository, Path::new(&candidate)).ok()?;
-        source.requested = Some(format!("{repository}/{relative}"));
-        Some(source)
+        let candidate = spelled.join("/");
+        (candidate != directories).then_some(candidate)
     }
 
     fn resolve_id(&self, repository: &str, relative: &Path) -> Result<Source> {

@@ -91,6 +91,17 @@ class ReconciliationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unreviewed"):
             self.run_tool()
 
+    def test_reflection_authority_repair_is_in_exact_reviewed_launch_inventory(self):
+        name = "minime_autonomy/authority.py"
+        self.assertIn(name, tool.OVERLAY)
+        before = tool.inventory(self.canonical)
+        (self.candidate / name).write_text("# reviewed reflection admission\n")
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+        self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                         (self.candidate / name).read_bytes())
+
     def test_afterimage_presentation_modules_are_bound_to_reviewed_inventory(self):
         names = ("minime_autonomy/afterimages.py", "minime_autonomy/afterimage_prompts.py")
         before = tool.inventory(self.canonical)

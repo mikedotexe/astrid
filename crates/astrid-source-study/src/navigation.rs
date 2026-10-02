@@ -12,6 +12,9 @@ impl Catalog {
         current: Option<&str>,
     ) -> Result<String> {
         let topic = topic.trim_end_matches('/');
+        if let Some(output) = self.directory_spelling(topic, page, progress, current, false) {
+            return Ok(output);
+        }
         let mut lines = Vec::new();
         let mut scoped = false;
         if topic.is_empty() {
@@ -68,6 +71,9 @@ impl Catalog {
         current: Option<&str>,
     ) -> Result<String> {
         let topic = topic.trim_end_matches('/');
+        if let Some(output) = self.directory_spelling(topic, page, progress, current, true) {
+            return Ok(output);
+        }
         let prefix = format!("{topic}/");
         let lines = self
             .sources()?
@@ -79,6 +85,34 @@ impl Catalog {
             bail!("no catalog entries for {topic}; use SELF_STUDY MAP");
         }
         self.catalog_page("LIST", topic, page, lines, progress, current, true)
+    }
+
+    fn directory_spelling(
+        &self,
+        requested: &str,
+        page: usize,
+        progress: &Progress,
+        current: Option<&str>,
+        recursive: bool,
+    ) -> Option<String> {
+        let (repository, relative) = requested.split_once('/')?;
+        let directory = self.hyphenated_directory(repository, relative)?;
+        let corrected = format!("{repository}/{directory}");
+        // Rendering through the normal catalog keeps exclusion rules and page
+        // bounds intact. An empty/private directory remains ordinary recovery.
+        let listing = if recursive {
+            self.list(&corrected, page, progress, current)
+        } else {
+            self.map(&corrected, page, progress, current)
+        };
+        let listing = listing.ok()?;
+        let disclosure = format!(
+            "Directory spelling: requested `{requested}`; listing `{corrected}`. Only missing directory components changed from underscores to hyphens. No source page was opened and the saved reading position is unchanged.\n\n"
+        );
+        if disclosure.len().saturating_add(listing.len()) > MAX_PAGE_BYTES {
+            return None;
+        }
+        Some(format!("{disclosure}{listing}"))
     }
 
     fn directory_entries(&self, topic: &str, progress: &Progress) -> Result<Vec<String>> {

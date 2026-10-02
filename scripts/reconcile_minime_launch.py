@@ -19,6 +19,7 @@ OVERLAY = (
     "minime_autonomy/activity_focus.py",
     "minime_autonomy/afterimage_prompts.py",
     "minime_autonomy/afterimages.py",
+    "minime_autonomy/authority.py",
     "minime_autonomy/expressive_journal.py",
     "minime_autonomy/journal_context.py",
     "minime_autonomy/journal_recall.py",
