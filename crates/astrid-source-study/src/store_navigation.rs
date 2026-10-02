@@ -194,7 +194,7 @@ impl Reader {
             if reflection {
                 let _ = writeln!(
                     output.text,
-                    "\nContinuity orientation: this runtime retains public entries and owner-scoped private drafts across jobs, not continuous model activation. Stored text is not automatically present here. Bare INTROSPECT starts fresh. To develop this response privately, choose NEXT: WRITE FROM_REFLECTION {id}; after verified delivery it carries the exact prose, excluding executable NEXT lines, into a new draft. WRITE CONTINUE develops that draft; WRITE PARK keeps it quiet. WRITE HELP explains passage selection, listing and return. Nothing continues or is shared automatically."
+                    "\nContinuity orientation: this runtime retains public entries and owner-scoped private drafts across jobs, not continuous model activation. Stored text is not automatically present here beyond your previous public reflection when one is shown above; private drafts and older entries are not. Bare INTROSPECT starts a new reflection. To develop this response privately, choose NEXT: WRITE FROM_REFLECTION {id}; after verified delivery it carries the exact prose, excluding executable NEXT lines, into a new draft. WRITE CONTINUE develops that draft; WRITE PARK keeps it quiet. WRITE HELP explains passage selection, listing and return. Nothing continues or is shared automatically."
                 );
             }
             if output

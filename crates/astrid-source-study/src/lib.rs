@@ -27,6 +27,7 @@ mod progress;
 mod question_sources;
 mod questions;
 mod recurrence;
+mod reflection_recall;
 mod relationships;
 pub mod response_choice;
 mod revision_recovery;

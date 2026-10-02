@@ -518,10 +518,28 @@ impl Reader {
             Err(error) => return self.recovery_map(&mut state, &error),
         };
         let page = match command {
-            Command::Help { topic } => return self.output(&mut state, help::render(&topic), None, InputKind::Help),
-            Command::Reflect => return self.output(&mut state, "You chose open introspection. You may reflect on your thoughts, experience, uncertainty, or anything that matters to you, without connecting it to code or measurements. Nothing specific needs to be felt, explained, or concluded. Length and stopping remain yours to choose.\n\nNEXT choices remain yours: INTROSPECT for another reflection, SELF_STUDY CONTINUE for the retained source bookmark, WRITE START <topic> for private writing, or REST. No continuation is automatic.".into(), None, InputKind::Reflection),
+            Command::Help { topic } => {
+                return self.output(&mut state, help::render(&topic), None, InputKind::Help);
+            },
+            Command::Reflect => {
+                let previous = self.runtime.as_ref().map_or_else(String::new, |r| {
+                    crate::reflection_recall::render(&r.workspace)
+                });
+                return self.output(
+                    &mut state,
+                    format!(
+                        "{}\n\n{previous}{}",
+                        crate::reflection_recall::REFLECTION_INTRO,
+                        crate::reflection_recall::REFLECTION_EXITS
+                    ),
+                    None,
+                    InputKind::Reflection,
+                );
+            },
             Command::Note { page } => {
-                let notebook = state.questions.notebook_for(state.questions.active.as_deref(), &state.notebook);
+                let notebook = state
+                    .questions
+                    .notebook_for(state.questions.active.as_deref(), &state.notebook);
                 let text = notebook.note_view(page)?;
                 return self.output(&mut state, text, None, InputKind::Notebook);
             },
@@ -535,14 +553,28 @@ impl Reader {
                     let text = state.questions.review(id, *page)?;
                     return self.output(&mut state, text, None, InputKind::InquiryReview);
                 }
-                let transition = matches!(command, crate::QuestionCommand::Home | crate::QuestionCommand::Park(_) | crate::QuestionCommand::Resolve { .. } | crate::QuestionCommand::ParkNotebook | crate::QuestionCommand::ReturnNotebook | crate::QuestionCommand::New(_));
+                let transition = matches!(
+                    command,
+                    crate::QuestionCommand::Home
+                        | crate::QuestionCommand::Park(_)
+                        | crate::QuestionCommand::Resolve { .. }
+                        | crate::QuestionCommand::ParkNotebook
+                        | crate::QuestionCommand::ReturnNotebook
+                        | crate::QuestionCommand::New(_)
+                );
                 let text = match state.apply_question(command) {
                     Ok(text) => text,
                     Err(error) => return self.question_recovery(&mut state, &error),
                 };
                 // Context selection is an explicit Action. Pending source offers keep their original question identity.
                 self.save(&state)?;
-                return self.output_framed(&mut state, text, None, InputKind::Questions, transition);
+                return self.output_framed(
+                    &mut state,
+                    text,
+                    None,
+                    InputKind::Questions,
+                    transition,
+                );
             },
             Command::Relate { symbol, page } => {
                 return self.prepare_relate(&mut state, &symbol, page);

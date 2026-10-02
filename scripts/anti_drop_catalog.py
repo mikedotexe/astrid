@@ -1314,6 +1314,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "WritingLengthProbeTests",
                  "run": "cd /Users/v/other/astrid && python3 scripts/proactive_scan.py --self-test"},
     },
+    {
+        "id": "reflection_turn_exits_and_previous_reflection",
+        "shipped": "2026-10-02",
+        "surface": "shared reader reflection turn (bare INTROSPECT, both beings) — exits named and the previous published reflection offered as optional material",
+        "failure_mode": "the reflection turn listed INTROSPECT first and no DAYDREAM/ASPIRE, and began with none of the being's own text present: minime chose INTROSPECT 296/296 times from inside a reflection (~20/h), re-deriving the same essay (one opening reused 31×) and naming the restart herself. The lane only showed its own door — the same shape as the study loop opened the day before",
+        "guard": {"repo": "astrid", "file": "crates/astrid-source-study/src/reflection_recall.rs", "symbol": "REFLECTION_EXITS"},
+        "test": {"repo": "astrid", "kind": "rust", "file": "crates/astrid-source-study/tests/reflection_recall.rs",
+                 "name": "reflection_turn_names_the_exits_and_offers_the_previous_published_reflection",
+                 "run": "cargo test -p astrid-source-study --test reflection_recall"},
+    },
 ]
 
 
