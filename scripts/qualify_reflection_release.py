@@ -51,12 +51,22 @@ def qualify(old, new, minime, reconciliation, out):
             f.check(after["version"] == before["version"], "no schema migration")
             for key in ("questions", "notebook", "bookmarks"):
                 f.check(after[key] == before[key], f"{key} survives reflection and navigation unchanged")
-            f.check(f.prepare(f.new, "SELF_STUDY CONTINUE") == pending,
-                    "reflection and navigation do not replace pending source input")
-            f.deliver(f.new, pending, "Synthetic source continuation.\nNEXT: REST")
+            resumed = f.prepare(f.new, "SELF_STUDY CONTINUE")
+            f.check({k: v for k, v in resumed.items() if k != "text"} ==
+                    {k: v for k, v in pending.items() if k != "text"},
+                    "reflection and navigation retain the pending page identity")
+            marker = "PREVIOUS RESPONSE CHOICE"
+            f.check(resumed["text"].split(marker)[0] == pending["text"].split(marker)[0],
+                    "source and notebook presentation remain exact before choice provenance")
+            f.check(marker in resumed["text"] and
+                    '"selected_next":"SELF_STUDY CONTINUE"' in resumed["text"].split(marker)[1],
+                    "choice provenance reflects the delivered reflection, not the earlier study")
+            f.deliver(f.new, resumed, "Synthetic source continuation.\nNEXT: REST")
             f.check(f.checkpoint()["bookmarks"][SOURCE]["end"] == pending["page"]["end"],
                     "accepted pending source delivery advances the exact page")
-            f.deliver(f.new, private, "Synthetic private continuation.\nNEXT: REST")
+            current_private = f.prepare(f.new, "WRITE CONTINUE")
+            f.check(PRIVATE in current_private["text"], "returned private offer retains original prose")
+            f.deliver(f.new, current_private, "Synthetic private continuation.\nNEXT: REST")
             f.check(PRIVATE in f.prepare(f.new, "WRITE CONTINUE")["text"],
                     "private original prose survives accepted continuation")
             f.prepare(f.old, "SELF_STUDY MAP")
