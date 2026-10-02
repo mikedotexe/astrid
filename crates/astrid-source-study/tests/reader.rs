@@ -760,26 +760,38 @@ fn component_map_exposes_directories_beyond_curated_entry_points() {
     );
 }
 
+/// An underscore crate-directory spelling opens the catalog source (2026-10-01).
+/// A failing request (a line past the end of the file) behaves exactly as it
+/// does for the exact spelling and never advances the pending bookmark.
 #[test]
-fn misspelled_crate_path_suggests_exact_identity_without_opening_or_advancing() {
+fn misspelled_crate_path_opens_the_catalog_spelling_and_a_failed_open_does_not_advance() {
     let (temp, _, reader) = setup("source\n");
     let directory = temp.path().join("astrid/crates/astrid-capsule/src");
     fs::create_dir_all(&directory).unwrap();
     fs::write(directory.join("security.rs"), "struct Gate;\n").unwrap();
     let pending = reader.prepare(open()).unwrap().page.unwrap();
-    let recovery = reader
-        .prepare_action("SELF_STUDY OPEN astrid/crates/astrid_capsule/src/security.rs 262")
-        .unwrap();
-    assert!(recovery.page.is_none());
-    assert!(
-        recovery
-            .text
-            .contains("SELF_STUDY OPEN astrid/crates/astrid-capsule/src/security.rs 1")
-    );
+    let exact =
+        reader.prepare_action("SELF_STUDY OPEN astrid/crates/astrid-capsule/src/security.rs 262");
+    let spelled =
+        reader.prepare_action("SELF_STUDY OPEN astrid/crates/astrid_capsule/src/security.rs 262");
+    assert_eq!(exact.is_ok(), spelled.is_ok());
+    if let (Ok(exact), Ok(spelled)) = (&exact, &spelled) {
+        assert_eq!(exact.input_kind, spelled.input_kind);
+        assert_eq!(exact.page.is_some(), spelled.page.is_some());
+    }
     assert_eq!(
         reader.prepare(Command::Continue).unwrap().page.unwrap(),
-        pending
+        pending,
+        "a failed open never advances the pending bookmark"
     );
+    let opened = reader
+        .prepare_action("SELF_STUDY OPEN astrid/crates/astrid_capsule/src/security.rs 1")
+        .unwrap();
+    let page = opened.page.expect("the alias opens the catalog spelling");
+    assert_eq!(page.source, "astrid/crates/astrid-capsule/src/security.rs");
+    assert!(opened.text.contains(
+        "Requested as astrid/crates/astrid_capsule/src/security.rs; opened the catalog spelling"
+    ));
 }
 
 /// Astrid's navigation shape in `introspection_source_catalog_1788931359`: a source

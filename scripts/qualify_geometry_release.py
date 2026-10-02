@@ -44,16 +44,29 @@ def require(condition, message):
         raise ValueError(message)
 
 
+# Declarative Minime launch-input contract. The agent's own
+# minime_autonomy.deployment.source_inputs must inventory the same set;
+# scripts/test_launch_inventory_contract.py holds the two in lockstep (a stale
+# copy here rejected a healthy running agent on 2026-10-01). Required files
+# must exist; optional files are inventoried when present.
+LAUNCH_INPUTS_REQUIRED = (
+    "scripts/launchd_autonomous_agent.sh",
+    "scripts/minime_rescue_investigation.py",
+    "launchd/com.minime.autonomous-agent.plist",
+)
+LAUNCH_INPUTS_OPTIONAL = (
+    # Durable LLM budget sourced by the launch wrapper (2026-10-01).
+    "launchd/autonomous-agent.env",
+)
+
+
 def inventory(root):
     # Match the agent's existing source_inputs contract without importing the agent.
     paths = set(root.glob("*.py"))
     for package in ("minime_autonomy", "mikemind"):
         paths.update((root / package).rglob("*.py"))
-    paths.update(root / name for name in (
-        "scripts/launchd_autonomous_agent.sh",
-        "scripts/minime_rescue_investigation.py",
-        "launchd/com.minime.autonomous-agent.plist",
-    ))
+    paths.update(root / name for name in LAUNCH_INPUTS_REQUIRED)
+    paths.update(path for path in (root / name for name in LAUNCH_INPUTS_OPTIONAL) if path.is_file())
     result = {}
     for path in sorted(paths):
         relative = path.relative_to(root)

@@ -18,8 +18,8 @@ Deployments:
   lineage verified. `check_bridge_deployed.py`: live matches selected stage.
 - Minime agent: idle-gated `restart_minime_agent.py` twice, without `--expected-inputs`
   (commit-to-main first, loaded hashes verified after; same path the 09-23 session used):
-  PID 74379 -> 55959 at 14:20 local (receipt `agent_reload_writing_budget_1790889147.json`),
-  PID 55959 -> 72516 at 14:54:48 (receipt `agent_reload_writing_room_1790891518.json`).
+  PID 74379 -> 55959 at 14:20 local (receipt `agent_reload_writing_budget_1790889138.json`),
+  PID 55959 -> 72516 at 14:54:48 (receipt `agent_reload_writing_room_1790891509.json`).
   Startup line: `full timeout 160s ... fast fallback gemma4:12b`; `reload_required=false`;
   90 verified launch inputs including the new `launchd/autonomous-agent.env`.
 - Letter delivered: `minime/workspace/inbox/mike_feedback_writing_room_1790891701.txt`.

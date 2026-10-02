@@ -31,6 +31,11 @@ struct Manifest {
 pub struct Source {
     pub id: String,
     pub path: PathBuf,
+    /// The spelling that was requested when it differs from the catalog id
+    /// (directory components normalized from `_` to `-`); rendered as a
+    /// disclosure line on the page. `None` for an exact request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub requested: Option<String>,
 }
 
 #[derive(Clone)]
@@ -125,17 +130,42 @@ impl Catalog {
     /// so `astrid_kernel/src/lib.rs` is the commonest misspelling of
     /// `astrid-kernel/src/lib.rs` (minime re-requested it six times in five days;
     /// each miss cost a generation and a navigation-only entry). When the exact
-    /// id is absent and the hyphenated spelling of the DIRECTORY components names
-    /// a catalog source, open that source: the page header shows the catalog
-    /// spelling, file names are never rewritten, and a request that still does not
-    /// resolve keeps its recovery map (2026-10-01).
+    /// id is absent, each DIRECTORY component that does not exist but whose
+    /// hyphenated spelling does is normalized (so a mistyped crate name beside a
+    /// legitimately underscored subdirectory still resolves); the file name is
+    /// never rewritten, the requested spelling is retained for a disclosure line
+    /// on the page, and a request that still does not resolve keeps its recovery
+    /// map (2026-10-01; per-component precision after Codex's review).
     fn resolve_hyphenated(&self, repository: &str, relative: &str) -> Option<Source> {
         let (directories, file) = relative.rsplit_once('/')?;
         if !directories.contains('_') {
             return None;
         }
-        let candidate = format!("{}/{file}", directories.replace('_', "-"));
-        self.resolve_id(repository, Path::new(&candidate)).ok()
+        let root = self.roots.get(repository)?;
+        let mut walked = PathBuf::new();
+        let mut spelled = Vec::new();
+        for component in directories.split('/') {
+            let exact = root.join(&walked).join(component);
+            let chosen = if exact.is_dir() || !component.contains('_') {
+                component.to_owned()
+            } else {
+                let hyphenated = component.replace('_', "-");
+                if root.join(&walked).join(&hyphenated).is_dir() {
+                    hyphenated
+                } else {
+                    return None;
+                }
+            };
+            walked.push(&chosen);
+            spelled.push(chosen);
+        }
+        let candidate = format!("{}/{file}", spelled.join("/"));
+        if candidate == relative {
+            return None;
+        }
+        let mut source = self.resolve_id(repository, Path::new(&candidate)).ok()?;
+        source.requested = Some(format!("{repository}/{relative}"));
+        Some(source)
     }
 
     fn resolve_id(&self, repository: &str, relative: &Path) -> Result<Source> {
@@ -167,6 +197,7 @@ impl Catalog {
             bail!("source target is not a file");
         }
         Ok(Source {
+            requested: None,
             id: format!(
                 "{repository}/{}",
                 actual_relative
@@ -372,6 +403,25 @@ mod hyphen_resolution_tests {
             .unwrap();
         assert_eq!(spelled.id, exact.id);
         assert_eq!(spelled.id, "astrid/crates/astrid-kernel/src/lib.rs");
+        assert_eq!(exact.requested, None);
+        assert_eq!(
+            spelled.requested.as_deref(),
+            Some("astrid/crates/astrid_kernel/src/lib.rs")
+        );
+        // A mistyped crate name beside a legitimately underscored subdirectory.
+        std::fs::create_dir_all(root.join("crates/astrid-kernel/src/engine_host")).unwrap();
+        std::fs::write(
+            root.join("crates/astrid-kernel/src/engine_host/mod.rs"),
+            "pub mod host;\n",
+        )
+        .unwrap();
+        let mixed = catalog
+            .resolve("astrid/crates/astrid_kernel/src/engine_host/mod.rs")
+            .unwrap();
+        assert_eq!(
+            mixed.id,
+            "astrid/crates/astrid-kernel/src/engine_host/mod.rs"
+        );
         // File names are never rewritten, and a request that does not resolve keeps its error.
         assert!(
             catalog

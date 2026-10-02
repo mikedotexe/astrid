@@ -98,6 +98,7 @@ COMPONENTS = {
             "scripts/launchd_autonomous_agent.sh",
             "scripts/minime_rescue_investigation.py",
             "launchd/com.minime.autonomous-agent.plist",
+            "launchd/autonomous-agent.env",
         ),
         "external_roots": (),
     },

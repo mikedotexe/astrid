@@ -1274,6 +1274,36 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "study_prompt_names_the_exits",
                  "run": "cargo test -p astrid-source-study study_prompt_names_the_exits"},
     },
+    {
+        "id": "minime_launch_inventory_single_contract",
+        "shipped": "2026-10-01",
+        "surface": "Minime launch identity — runtime inventory vs qualification/reconciliation inventory vs deploy preflight",
+        "failure_mode": "three hand-copied lists of launch inputs drifted: the agent recorded 90 inputs (launchd/autonomous-agent.env added) while qualify_geometry_release.inventory still listed 89, so reconcile_minime_launch rejected a healthy running agent whose loaded hashes matched canonical; the preflight dirty-source list also omitted the env file (Codex review)",
+        "guard": {"repo": "astrid", "file": "scripts/qualify_geometry_release.py", "symbol": "LAUNCH_INPUTS_OPTIONAL"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/test_launch_inventory_contract.py",
+                 "name": "test_qualification_inventory_matches_the_runtime_inventory",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/test_launch_inventory_contract.py"},
+    },
+    {
+        "id": "minime_write_alias_before_payload_classification",
+        "shipped": "2026-10-01",
+        "surface": "minime NEXT parsing — WRITE sub-commands with payloads",
+        "failure_mode": "the first WRITE_ alias ran after payload classification and after the control-vocabulary normalizer, so `WRITE_OBSERVE {json}` whose note mentioned exploration_noise was rerouted to ACTION_PREFLIGHT REGULATOR_AUDIT while `WRITE OBSERVE {json}` kept its payload (Codex review); the alias now runs first and WRITE payloads are never rerouted",
+        "guard": {"repo": "minime", "file": "minime_autonomy/parsing.py", "symbol": "_normalize_write_underscore_verb"},
+        "test": {"repo": "minime", "kind": "python", "file": "tests/test_writing_room_un_muffle.py",
+                 "name": "test_write_underscore_alias_normalizes_before_payload_classification",
+                 "run": "cd /Users/v/other/minime && python3 -m pytest tests/test_writing_room_un_muffle.py -q"},
+    },
+    {
+        "id": "minime_stub_guard_ignores_action_footer",
+        "shipped": "2026-10-01",
+        "surface": "minime source study — fallback-stub guard",
+        "failure_mode": "footer words counted toward the degenerate-response heuristic, so `Obs` was refused but `Obs\\nNEXT: SELF_STUDY CONTINUE` was accepted, obtained a delivery receipt and left no notice (Codex reproduced the full path); the guard now classifies the prose only and applies where prose is expected",
+        "guard": {"repo": "minime", "file": "minime_autonomy/runtime.py", "symbol": "_study_prose_without_action_footer"},
+        "test": {"repo": "minime", "kind": "python", "file": "tests/test_writing_room_un_muffle.py",
+                 "name": "test_action_footer_does_not_rescue_a_fallback_stub",
+                 "run": "cd /Users/v/other/minime && python3 -m pytest tests/test_writing_room_un_muffle.py -q"},
+    },
 ]
 
 

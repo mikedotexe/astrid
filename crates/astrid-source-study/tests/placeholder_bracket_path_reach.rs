@@ -53,34 +53,32 @@ fn candidate_block(text: &str) -> Option<&str> {
         .next()
 }
 
-/// A misspelled rooted path offers its exact catalog spelling first after
-/// underscore/hyphen normalization. Wrapping it in `<...>` makes the reference
-/// malformed: resolution fails and the safe-reference gate rejects candidates.
-/// Neither request opens a suggested source implicitly.
+/// A misspelled rooted path (underscore crate directory) now opens its exact
+/// catalog spelling, disclosing the requested spelling on the page (2026-10-01).
+/// Wrapping it in `<...>` makes the reference malformed: resolution fails and
+/// the safe-reference gate rejects candidates, so nothing opens implicitly.
 #[test]
 fn bracket_wrapped_rooted_path_loses_the_candidate_block_its_bare_twin_receives() {
     let (_temp, reader) = setup();
     let bare = "astrid/crates/astrid_capsule/src/engine/mcp.rs";
 
-    let helped = reader
+    let opened = reader
         .prepare_action(&format!("SELF_STUDY OPEN {bare} 1"))
         .unwrap();
-    assert_eq!(helped.input_kind, InputKind::Recovery);
-    assert!(helped.page.is_none());
-    assert!(helped.text.contains("source unavailable locally"));
-    let candidates = candidate_block(&helped.text).expect("bare rooted path gets candidates");
-    let first = candidates
-        .split_once("not opened):\n")
-        .expect("candidate list header")
-        .1
-        .lines()
-        .next()
-        .expect("at least one candidate");
-    assert_eq!(
-        first,
-        format!("SELF_STUDY OPEN {MCP} 1"),
-        "the exact spelling is offered first, not merely somewhere: {candidates}"
+    assert_eq!(opened.input_kind, InputKind::SourcePage);
+    let page = opened
+        .page
+        .as_ref()
+        .expect("the hyphenated catalog source opens");
+    assert_eq!(page.source, MCP);
+    assert!(
+        opened
+            .text
+            .contains(&format!("Requested as {bare}; opened the catalog spelling")),
+        "the page discloses the requested spelling: {}",
+        opened.text
     );
+    assert!(candidate_block(&opened.text).is_none());
 
     for wrapped in [
         format!("SELF_STUDY OPEN <{bare}> 1"),

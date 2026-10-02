@@ -92,9 +92,14 @@ impl Page {
         let navigation = "Navigation: SELF_STUDY CONTINUE | SELF_STUDY MAP | SELF_STUDY FIND <literal text> | SELF_STUDY OPEN repository/path <line>\n";
         // Reserve actual metadata bytes, a maximum-length range end, and the
         // optional source links before choosing the immutable source interval.
+        let disclosure = source.requested.as_deref().map_or_else(String::new, |requested| {
+            format!(
+                "Requested as {requested}; opened the catalog spelling (crate directories use hyphens). File names are never rewritten.\n"
+            )
+        });
         let header = |id: &str, end: usize, line_interval: &str| {
             format!(
-                "SOURCE {}\nRevision sha256:{}; {} bytes; {} lines. Local checkout source; deployment and understanding are not established.\nPage {}\nExact source bytes {}..{} (end exclusive). {}\n\n{}{}\n",
+                "SOURCE {}\n{disclosure}Revision sha256:{}; {} bytes; {} lines. Local checkout source; deployment and understanding are not established.\nPage {}\nExact source bytes {}..{} (end exclusive). {}\n\n{}{}\n",
                 source.id,
                 revision.sha256,
                 revision.bytes,

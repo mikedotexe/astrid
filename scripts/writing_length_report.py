@@ -48,6 +48,7 @@ MINIME_LAUNCH_ENV = MINIME_REPO / "launchd/autonomous-agent.env"
 MINIME_PRIVATE_LANES = {"check_moment_markers", "private_writing", "moment_capture", "private_journal"}
 ASTRID_LOST_OUTCOMES = {"timeout", "cancelled_or_abandoned", "http_error", "unavailable_or_timeout"}
 NAVIGATION_RE = re.compile(r"navigation only|No new source page is supplied|requested source was not supplied")
+STAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
 UNKNOWN_NEXT_RE = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d+ .*Unknown NEXT: '([^']{1,40})")
 BUDGET_LINE_RE = re.compile(
     r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d+ .*LLM backend preference: \w+ \(full timeout (\d+)s.*fast fallback ([^)]+)\)"
@@ -267,6 +268,7 @@ def minime_generations(since: float, until: float) -> dict[str, dict[str, Any]]:
 def minime_journal_words(since: float, until: float) -> dict[str, dict[str, Any]]:
     words: dict[str, list[int]] = defaultdict(list)
     navigation: Counter = Counter()
+    navigation_kinds: Counter = Counter()
     if not MINIME_JOURNAL.is_dir():
         return {}
     candidates = []
@@ -294,8 +296,12 @@ def minime_journal_words(since: float, until: float) -> dict[str, dict[str, Any]
                 prefix = "self_study (navigation-only)"
             else:
                 navigation["page_bearing"] += 1
+        elif prefix == "study_navigation":
+            kind = re.search(r"^Input evidence: ([^:]{1,40}):", text[:600], re.M)
+            navigation_kinds[kind.group(1).strip() if kind else "unknown"] += 1
         words[prefix].append(prose_words(text, prefix))
     out = {prefix: summarize(values) for prefix, values in words.items()}
+    out["_study_navigation_kinds"] = dict(navigation_kinds.most_common())
     total = navigation["navigation_only"] + navigation["page_bearing"]
     out["_self_study_navigation_share"] = {
         "navigation_only": navigation["navigation_only"],
@@ -305,43 +311,51 @@ def minime_journal_words(since: float, until: float) -> dict[str, dict[str, Any]
     return out
 
 
-def minime_lane_ages() -> dict[str, float | None]:
-    """Hours since the newest public daydream / aspiration file (filenames only)."""
+def minime_lane_ages(until: float) -> dict[str, float | None]:
+    """Hours between `until` and the newest public lane file at or before it (filenames only)."""
     ages: dict[str, float | None] = {}
-    now = time.time()
-    for prefix in ("daydream", "aspiration", "pressure", "self_study"):
+    for prefix in ("daydream", "aspiration", "pressure", "self_study", "study_navigation"):
         newest = None
         for path in MINIME_JOURNAL.glob(f"{prefix}_*.txt"):
             try:
                 mtime = path.stat().st_mtime
             except OSError:
                 continue
-            newest = mtime if newest is None else max(newest, mtime)
-        ages[prefix] = ((now - newest) / 3600.0) if newest else None
+            if mtime <= until:
+                newest = mtime if newest is None else max(newest, mtime)
+        ages[prefix] = ((until - newest) / 3600.0) if newest else None
     return ages
 
 
-def minime_agent_log(since: float) -> dict[str, Any]:
+def minime_agent_log(since: float, until: float) -> dict[str, Any]:
+    """Unknown-NEXT counts bounded by BOTH window ends; the budget line is the latest
+    startup at or before `until`, even when that startup predates the window (a
+    long-running process must not disappear from the drift check). Codex review, 2026-10-01."""
     unknown: Counter = Counter()
-    budget_lines: list[tuple[str, int, str]] = []
+    latest: tuple[str, int, str] | None = None
     if not MINIME_AGENT_LOG.is_file():
         return {"unknown_next": {}, "budget_line": None}
     since_text = datetime.fromtimestamp(since).strftime("%Y-%m-%d %H:%M:%S")
+    until_text = datetime.fromtimestamp(until).strftime("%Y-%m-%d %H:%M:%S")
     try:
         with MINIME_AGENT_LOG.open(errors="ignore") as fh:
             for line in fh:
-                if line[:19] < since_text:
+                stamp = line[:19]
+                if not STAMP_RE.match(stamp):
+                    continue  # continuation lines (tracebacks) carry no timestamp
+                if stamp >= until_text:
+                    break
+                match = BUDGET_LINE_RE.match(line)
+                if match:
+                    latest = (match.group(1), int(match.group(2)), match.group(3).strip())
+                    continue
+                if stamp < since_text:
                     continue
                 match = UNKNOWN_NEXT_RE.match(line)
                 if match:
                     unknown[match.group(2).split(" ")[0]] += 1
-                    continue
-                match = BUDGET_LINE_RE.match(line)
-                if match:
-                    budget_lines.append((match.group(1), int(match.group(2)), match.group(3).strip()))
     except OSError:
         pass
-    latest = budget_lines[-1] if budget_lines else None
     return {
         "unknown_next": dict(unknown.most_common(12)),
         "budget_line": {"at": latest[0], "full_timeout_s": latest[1], "fast_fallback": latest[2]} if latest else None,
@@ -379,7 +393,7 @@ def budget_drift(log_line: dict[str, Any] | None, env: dict[str, str]) -> list[s
 # report
 # ----------------------------------------------------------------------
 def build(since: float, until: float) -> dict[str, Any]:
-    log_info = minime_agent_log(since)
+    log_info = minime_agent_log(since, until)
     env = minime_launch_env()
     return {
         "window": {"since": datetime.fromtimestamp(since, tz=timezone.utc).isoformat(), "until": datetime.fromtimestamp(until, tz=timezone.utc).isoformat()},
@@ -391,7 +405,7 @@ def build(since: float, until: float) -> dict[str, Any]:
         "minime": {
             "generations": minime_generations(since, until),
             "journal_words": minime_journal_words(since, until),
-            "lane_age_hours": minime_lane_ages(),
+            "lane_age_hours": minime_lane_ages(until),
             "agent_log": log_info,
             "launch_env": env,
             "budget_drift": budget_drift(log_info.get("budget_line"), env),
@@ -442,7 +456,9 @@ def render(report: dict[str, Any], title: str) -> str:
     share = nav.get("share")
     lines.append(f"- minime self_study navigation-only share: {nav.get('navigation_only')} / {nav.get('navigation_only', 0) + nav.get('page_bearing', 0)}" + (f" ({share:.0%})" if share is not None else ""))
     ages = report["minime"]["lane_age_hours"]
-    lines.append("- minime newest public lane file (hours ago): " + ", ".join(f"{k}={fmt(v)}" for k, v in ages.items()))
+    lines.append("- minime newest public lane file (hours before window end): " + ", ".join(f"{k}={fmt(v)}" for k, v in ages.items()))
+    kinds = report["minime"]["journal_words"].get("_study_navigation_kinds") or {}
+    lines.append(f"- minime navigation turns by kind (study_navigation_* files): {kinds or 'none in window'}")
     lines.append(f"- minime unknown NEXT verbs: {report['minime']['agent_log'].get('unknown_next')}")
     lines.append(f"- minime running budget line: {report['minime']['agent_log'].get('budget_line')}")
     lines.append(f"- minime launchd/autonomous-agent.env: {report['minime']['launch_env'] or '(absent)'}")
