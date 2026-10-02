@@ -29,6 +29,8 @@ Evaluate after ~1 day: `python3 scripts/writing_length_report.py --split 2026-10
 
 Codex review (same day) found five P2s plus a Step-1 floor bug; all repaired and live by 19:21 local (astrid `69374ff73c`, bridge-stage-02, PID 69532 → 19729; minime `145aaab`, PID 72516 → 17757). See the ledger row "Writing room: Codex review repairs". Codex's Step-8 design inputs (exact DONE sentinel, action precedence, persist each part, caps after profile expansion, gateway-level scheduling test, typed per-attempt outcome) and the 2×2 experiment design (current/enriched context × zero/one continuation, page-backed studies compared consistently) are adopted into the plan below.
 
+Day one (2026-10-02): minime's study tokens +66 % with zero timeouts; Astrid's expressive lanes did not move with the 1,500-3,000 range (the numeric lever saturates near ~800 tokens single-shot); minime took the named exit into open reflection 296/296 times, restarting each time. Shipped the same day (astrid `0ac99af41b`, bridge-stage-03, PID 80005 → 4732): the reflection turn names the same exits as the study prompt (INTROSPECT last) and offers her previous published reflection as optional material; her first turn under it continued her previous thought ("In my previous reflection, I spoke of being a bridge…"). Watch: `writing_length_report.py` choice concentration + reflection recurrence; `recess_lane_liveness` lane-capture notice (astrid `7eed0528f2`).
+
 ## Test-running facts discovered (so the next reviewer does not re-derive them)
 
 - Eight `llm::provider` bridge tests read the LIVE workspace's
