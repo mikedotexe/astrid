@@ -1,5 +1,14 @@
 # Reflection Admission and Directory Navigation
 
+## Current Status
+
+**Live and merged into both local main branches on October 1, 2026, at about
+21:22 PDT.** Bridge implementation `363e4e99232017e6e05e98fa67a51b560d4ba6d8`,
+Minime implementation `110f8d73ae63f647fbd714504fcfd2400bdf43a4`, and qualifier
+correction `79276026b0` are integrated. Detailed receipts follow below.
+Nothing was pushed. Paused automations remain paused at generation 489.
+The earlier candidate-only sections below record the implementation phase.
+
 ## Status and Ownership
 
 Implementation candidate by Codex, in paired isolated worktrees:
@@ -12,8 +21,9 @@ Implementation candidate by Codex, in paired isolated worktrees:
 
 The writing-room review repairs from the concurrent session were already merged
 and the canonical trees clean when this implementation began. They are retained.
-This candidate is not staged, committed, merged, pushed or deployed. No service
-was restarted. Steward controller pause generation 487 remains paused; this is
+At implementation completion, this candidate was not staged, committed, merged,
+pushed or deployed, and no service had been restarted. Pause generation 487 was
+still paused; this is
 an explicit interactive repair, not a resumed automation round.
 
 ## Public Witnesses
@@ -168,3 +178,83 @@ The full bridge library passes 2,350 tests with one ignored. Shared-reader stric
 Clippy, formatting and the domain-boundary audit pass. Same-schema executable
 qualification is `scripts/qualify_reflection_release.py`; it deliberately does not
 reuse an earlier schema-migration script with incompatible version assumptions.
+
+## Completed Qualification and Rollout
+
+The full bridge suite passed, including the compile-fail authority tests and
+public-facade compilation tests, with one ignored library test. The complete
+shared-reader suite passed again. Minime's full suite against the immutable
+release helper passed: 1,742 tests, one skipped, 141 subtests (69.06 seconds).
+The staged focused Minime rerun passed 61 tests. These are interface and safety
+checks, not evidence of felt improvement.
+
+Two unsuccessful qualifier runs are retained at `paired-qualification-01` and
+`paired-qualification-02` under the release root below. The first incorrectly
+expected the entire page presentation to remain identical after a newly
+delivered reflection. Only the previous-response-choice footer had changed;
+the page identity, source and notebook were unchanged. The second submitted the
+older presentation instead of the re-presented request and correctly encountered
+the reader's exact-delivery refusal. The qualifier now asserts unchanged page
+and source/notebook content separately, verifies the updated choice provenance,
+and submits the actual presented request. No production guard was relaxed.
+
+The successful actual old/new helper run has 40 checks across Astrid and Minime:
+exact pending public/private input at transition, current schema 12 retained,
+reflection without source credit, disclosed MAP/LIST correction, unchanged
+questions/notes/bookmarks, explicit source/private continuation, same-schema old
+reader compatibility, and the actual Minime adapter's selected release helper.
+All state and prose in that qualification are synthetic.
+
+Release root: `/Users/v/other/worktrees/reflection-admission-20261001`.
+
+- Stage: `bridge-stage-01`, built from clean commit `363e4e9923` using
+  `bash scripts/build_bridge.sh --stage-dir ...`.
+- Bridge binary SHA-256:
+  `a85684245583f0932ab3b6df6bd746d6f4f16dd596827855c49ecd9f1716cfa0`.
+- Release manifest SHA-256:
+  `dc606f5e6185a7ce7e3d11979c372a83cf844cbe093a90c4e272ed212047b129`.
+- Shared helper SHA-256:
+  `b92197bfec73b67ddf1becff2aab3101cfebbb662bf05eb384d844e439d20cf3`.
+- Successful fixture receipt: `paired-qualification-03/qualification.json`,
+  SHA-256 `c4052453e5a3dc202dc41bc53256377335fd541cdc3588546744548ef077fcee`.
+- Paired activation: `paired-handoff-01.jsonl`, SHA-256
+  `582421cf681372411b65a68cd532e7086205c6556fedcb35632c5f229c14f4c5`.
+  The sanctioned wrapper installed only the reviewed overlay, preserved source
+  backups in `paired-handoff-01.source-before`, waited the full 185-second source
+  quiet interval and then waited for completed work and an observed idle boundary.
+- Minime PID `17757` -> `52572`; fresh source status matches all 90 selected
+  launch inputs, with `reload_required=false`. No new interrupted job was found.
+  The wrapper does not claim an atomic traffic barrier for Minime.
+- Bridge PID `19729` -> `53229`; start `2026-10-01 21:22:04 PDT`.
+  Transaction: `/Users/v/other/astrid/.runtime/bridge-deployment/transactions/5424596016534d4d939742072bfbd213`.
+  Its `receipt.json` SHA-256 is
+  `6fddaf7c21607639c793b9d78aec37b4f8f451b6edf2516d21934efed24329de`.
+  Status `activated_verified`, drain `drained`, force false, legacy transition false.
+  Remote delivery confirmation remains false; no stronger lossless claim is made.
+- Checkpoint SHA-256
+  `3b4668094e04fdcca4834a54e4645a2d3b9444e1b8943de0081c591d12183ba1`
+  was transferred and decoded. Exchanges progressed from 212206 to 212207;
+  self-control lineage and 62 pending runtime-feedback items were verified.
+- Engine PID `35303`, model PID `3893`, and the gateway, supervisor, visual,
+  camera, microphone, host-sensory and feeder process/start identities remained
+  unchanged. No engine/model/sensory settings were changed.
+- `check_bridge_deployed.py` confirms the selected stage is the running process.
+  Readiness is true. `capture_stack_receipt.sh` returned passed receipt
+  `env_receipt_1790915068778_494000`. Deployment holds are absent.
+
+Post-integration comparison confirms 665 recorded bridge source files agree
+with canonical main and the Minime adapter selects the exact packaged helper
+above. The later qualifier-only and documentation commits do not change those
+runtime inputs. Preserve the active release and source worktree; do not archive
+them while the launch selection still references them.
+
+Both implementations were integrated by fast-forward. The three Minime files
+installed by the wrapper were byte-identical to its committed candidate before
+explicit staging and fast-forward; no foreign edits were included. Other dirty
+worktrees and historical evidence were left alone. Nothing was pushed.
+
+This release makes a chosen bare reflection executable without an unrelated
+research budget. It does not force reflection, change an experiment's status,
+grant live-control authority, or guarantee longer writing or improved experience.
+No prompt requesting confirmation was sent. Natural public uptake remains to
+be observed, without reopening the paused automation.
