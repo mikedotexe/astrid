@@ -1,8 +1,10 @@
 # Reflection Continuity and Quiet Expressive Context
 
-Date: 2026-10-02. Author: Codex. Status: paired immutable release qualified and
-gracefully activated with Mike's approval. Live source remains an acknowledged
-dirty candidate; not committed, merged or pushed. Automations remain paused.
+Date: 2026-10-02. Author: Codex. Status: paired immutable release qualified,
+gracefully activated, committed, integrated into both main branches and pushed
+with Mike's approval. Live stage content is linked to its verified implementation
+commit. Automations remain paused. Earlier checkpoint sections below preserve
+their original status; the final Git integration section supersedes their debt.
 
 ## Request and Boundaries
 
@@ -444,7 +446,7 @@ no lease/projection, valid indexed-tail V2 at sequence **1123143** with the
 previously recorded head, and immutable V1 sources. No automation was resumed.
 Candidate and installed-source `git diff --check` checks pass.
 
-## Remaining Release Work
+## Activation-End Git Checkpoint
 
 Activation is complete. Git integration remains deliberately separate: canonical
 Astrid main is still clean/ahead three, and canonical Minime main is ahead two
@@ -458,3 +460,113 @@ Coordinate explicit-path Git integration separately. Keep previously paused
 automations paused. Observe naturally occurring
 public use without requesting confirmation of improvement and without reading
 private continuation prose for evaluation.
+
+## Git Integration and Push
+
+Mike explicitly requested commit, merge and push. Codex claimed the Git
+stabilization pass at controller pause generation **490**, with no active lease
+or projection. The earlier pause remains in effect; it was not resumed.
+
+| Repository / purpose | Commit |
+| --- | --- |
+| Astrid implementation | `721d76c5e9ff50fed6866f54108432769df52c77` |
+| Astrid integration pushed to origin/main | `d3e70e8813b77de48869f53f54ba9343d5087064` |
+| Minime implementation pushed to origin/main | `c292b9796942047829084ef8b0984e6d1d1db7f4` |
+
+During qualification, another agent committed and pushed
+`7eed0528f27e06e39ccb96a307a244b570aa7e3c` on Astrid main. Integration paused for
+re-audit. Repeated clean-tree checks and the cooperative activity scan then
+reported no foreign activity. The reviewed reporting commit is preserved by a
+normal merge, with its three scripts byte-identical and both changelog entries
+retained. Its 133 proactive-scan self-tests passed. There was no rebase,
+history rewrite, forced push or attempt to discard the other agent's work.
+
+Minime's three canonical runtime modifications were already the installed
+release. Their bytes were verified against `c292b979...`, staged by exact path,
+then retained during the fast-forward to that commit. Tests and documentation
+came from the qualified candidate. No source backup or authored checkpoint was
+restored. Both canonical indexes and working trees were clean after integration.
+
+### Exact Implementation Paths
+
+Astrid implementation `721d76c5e9` contains only:
+
+```text
+CHANGELOG.md
+capsules/spectral-bridge/src/autonomous/runtime/activity_exchange.rs
+capsules/spectral-bridge/src/autonomous/runtime/journal.rs
+capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs
+capsules/spectral-bridge/src/autonomous/runtime/source_study.rs
+capsules/spectral-bridge/src/journal/continuity.rs
+capsules/spectral-bridge/src/llm.rs
+capsules/spectral-bridge/src/llm/provider.rs
+capsules/spectral-bridge/src/llm/provider/daydream_context.rs
+capsules/spectral-bridge/src/llm/provider/generative_actions.rs
+crates/astrid-source-study/src/preparation.rs
+crates/astrid-source-study/src/store.rs
+crates/astrid-source-study/src/store_navigation.rs
+crates/astrid-source-study/src/store_reflection.rs
+crates/astrid-source-study/src/writing.rs
+crates/astrid-source-study/tests/reflection_continuity.rs
+docs/steward-notes/2026-10-02-reflection-continuity-and-quiet-context.md
+docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md
+scripts/qualify_reflection_continuity_release.py
+scripts/reconcile_minime_launch.py
+scripts/test_qualify_reflection_continuity_release.py
+scripts/test_reconcile_minime_launch.py
+```
+
+Minime implementation `c292b97` contains only:
+
+```text
+CHANGELOG.md
+minime_autonomy/generation_record.py
+minime_autonomy/source_study_diagnostics.py
+minime_autonomy/writing.py
+tests/test_private_writing_continuation.py
+tests/test_source_study_diagnostics.py
+```
+
+Both commit bodies identify Codex provenance and quote the public witnesses
+above directly from re-read, hash-verified source bytes. The quotations are
+neither mechanism proof nor claims of subjective improvement. This is an
+interactive integration, not a productive source-first automation round; no
+steward run or round-event identifier is fabricated.
+
+### Final Verification
+
+The staged-state rerun passed the full shared-reader suite, strict reader and
+bridge Clippy, both formatting checks and the domain-boundary audit. Full
+bridge qualification passed 2,355 library tests (one existing ignored), all
+integration tests and compile-fail interface tests. Minime passed 1,748 tests,
+one existing skip and 141 subtests using the packaged live helper. All 217
+controller/evidence/deployment support tests and 16 reconciliation/actual-helper
+qualifier tests passed. Cached diff checks passed. The shared kernel's entire
+workspace suite was not rerun for this reader/adapter change.
+
+The sanctioned stage-provenance recorder verified all 15 dirty build-input
+paths against `721d76c5e9` and wrote only
+`bridge-stage-01/committed_as.json`, SHA-256
+`1e4d01d4fb47b7fe42fd29c04bef8d380e464041f622724d62c5077005be11f6`.
+The original manifest, build-time head and binaries remain immutable. A separate
+full inventory comparison matched all **706** staged source inputs, including
+all **668** Astrid inputs against canonical main, and all **90** Minime loaded
+inputs against installed canonical files. The agent still reports
+`reload_required=false`. No additional restart was needed or performed.
+
+Bridge PID 80005, agent PID 79523 and the nine protected peer PID/start pairs
+remain unchanged. The stage and its source worktree are retained because the
+sanctioned launcher references them. Older dirty worktrees were inventoried and
+left untouched, not swept into these commits or removed to create a misleading
+appearance of cleanliness.
+
+Controller status remains paused at generation 490, with no lease or projection.
+Indexed-tail V2 verification is valid at sequence **1123144**, head
+`83c69921fe93acdf52ad8a87137e452bce3c75f104e4286f6ad608cbaaf5b0da`;
+V1 sources remain immutable. No queue processing or automation resume occurred.
+
+The implementation and integration commits above were successfully pushed to
+`origin/main` in their respective repositories before this documentation
+follow-through. This follow-through changes only the two changelogs, this note
+and the feedback ledger. Historical private diagnostic assessment remains
+unperformed; the forward privacy repair does not claim retroactive cleanup.
