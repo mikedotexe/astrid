@@ -655,6 +655,31 @@ mod source_study_tests {
         assert_eq!(shared_study_command(Some(state::IntrospectTargetV2::auto("SELF_STUDY CONTINUE".into()))).unwrap(), astrid_source_study::Command::Continue);
     }
     #[test]
+    fn explicit_reflection_continuation_uses_private_preparation_without_ambient_recall() {
+        let temp = tempfile::tempdir().unwrap();
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
+            temp.path().join("reader"),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let reflection = prepare_shared_study_target(&reader, None).unwrap();
+        let id = reflection.navigation_id.as_ref().unwrap();
+        let action = format!("WRITE FROM_REFLECTION {id}");
+        let request = serde_json::json!({"messages":[{"role":"user","content":reflection.text}]}).to_string();
+        let response = serde_json::json!({"message":{"content":format!("An exact λ passage.\nNEXT: {action}")},"done":true}).to_string();
+        reader.navigation_delivered(id, &request, &response).unwrap();
+        let mut conv = ConversationState::new(Vec::new(), None);
+        next_action::study_navigation::handle_request(&mut conv, "WRITE", &action).unwrap();
+        let target = conv.introspect_target.clone().unwrap();
+        assert!(next_action::study_navigation::private(&target));
+        let private = prepare_shared_study_target(&reader, Some(target)).unwrap();
+        assert_eq!(private.input_kind, astrid_source_study::InputKind::PrivateWriting);
+        assert!(private.text.contains("An exact λ passage."));
+        assert!(!private.text.contains("STUDY_QUESTION:"));
+        let fresh = prepare_shared_study_target(&reader, None).unwrap();
+        assert!(!fresh.text.contains("An exact λ passage."));
+    }
+
+    #[test]
     fn authored_study_preparation_replays_by_dispatch_identity() {
         let temp = tempfile::tempdir().unwrap();
         let reader = astrid_source_study::Reader::new(

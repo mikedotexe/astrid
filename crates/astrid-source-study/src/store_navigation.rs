@@ -1,5 +1,6 @@
 //! Prepared study framing and navigation; source advancement stays in the delivery path.
 use super::*;
+use std::fmt::Write as _;
 
 impl Reader {
     pub(super) fn question_recovery(
@@ -178,10 +179,34 @@ impl Reader {
                 .sequence
                 .checked_add(1)
                 .context("source-study sequence exhausted")?;
-            output.navigation_id = Some(digest(format!(
-                "navigation:{}:{}",
-                state.sequence, output.text
-            )));
+            let owner = self
+                .runtime
+                .as_ref()
+                .map_or("unconfigured", |r| r.being.as_str());
+            let id = if reflection {
+                digest(format!(
+                    "reflection:{owner}:{}:{}",
+                    state.sequence, output.text
+                ))
+            } else {
+                digest(format!("navigation:{}:{}", state.sequence, output.text))
+            };
+            if reflection {
+                let _ = writeln!(
+                    output.text,
+                    "\nContinuity orientation: this runtime retains public entries and owner-scoped private drafts across jobs, not continuous model activation. Stored text is not automatically present here. Bare INTROSPECT starts fresh. To develop this response privately, choose NEXT: WRITE FROM_REFLECTION {id}; after verified delivery it carries the exact prose, excluding executable NEXT lines, into a new draft. WRITE CONTINUE develops that draft; WRITE PARK keeps it quiet. WRITE HELP explains passage selection, listing and return. Nothing continues or is shared automatically."
+                );
+            }
+            if output
+                .text
+                .len()
+                .saturating_add(output.system_prompt.len())
+                .saturating_add(32)
+                > crate::MAX_INPUT_BYTES
+            {
+                bail!("complete input exceeds the shared provider budget; no text was shortened");
+            }
+            output.navigation_id = Some(id);
             state.pending_navigation = Some(output.clone());
         } else {
             state.pending_page_context_stale = false;

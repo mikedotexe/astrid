@@ -12,6 +12,8 @@ mod help;
 mod navigation;
 #[path = "store_observations.rs"]
 mod observations;
+#[path = "store_reflection.rs"]
+mod reflection;
 #[path = "store_sessions.rs"]
 mod sessions;
 use crate::progress::{self, Progress};
@@ -408,6 +410,13 @@ impl Reader {
             return self.prepare_inquiry_observation(json);
         }
         if action.split_whitespace().next() == Some("WRITE") {
+            if action
+                .split_whitespace()
+                .nth(1)
+                .is_some_and(|v| v.eq_ignore_ascii_case("FROM_REFLECTION"))
+            {
+                return self.write_from_reflection(action);
+            }
             return crate::writing::Writer::new(self.directory.join("writing")).prepare(action);
         }
         self.prepare_parsed(Command::parse(action))

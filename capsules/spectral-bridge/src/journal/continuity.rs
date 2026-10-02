@@ -12,6 +12,17 @@ pub(crate) struct JournalRecall {
 }
 
 impl JournalRecall {
+    /// Automatic expressive recall uses record purpose, never keyword judgments
+    /// about authored prose. Explicit retrieval and chosen memories are unaffected.
+    pub(crate) fn eligible_for_expression(&self, now: u64) -> bool {
+        matches!(
+            self.mode.as_deref(),
+            Some("aspiration" | "aspiration_longform" | "daydream" | "daydream_longform")
+        ) && self
+            .recorded_at
+            .is_some_and(|at| now.checked_sub(at).is_some_and(|age| age <= 24 * 60 * 60))
+    }
+
     pub(crate) fn read(path: &Path) -> Option<Self> {
         let content = std::fs::read_to_string(path).ok()?;
         let body = super::extract_journal_body(&content, true)?;
@@ -56,6 +67,44 @@ impl JournalRecall {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn automatic_expression_recall_is_purpose_and_time_bound_not_word_filtered() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("entry.txt");
+        for mode in [
+            "moment_capture",
+            "dialogue_live_longform",
+            "self_study",
+            "witness",
+            "private_writing",
+            "unknown",
+            "aspiration",
+            "daydream_longform",
+        ] {
+            std::fs::write(
+                &path,
+                format!(
+                    "=== ASTRID JOURNAL ===\nMode: {mode}\nTimestamp: 100\n\n{}",
+                    "Authored 71% fill reflection. ".repeat(10)
+                ),
+            )
+            .unwrap();
+            let recall = JournalRecall::read(&path).unwrap();
+            let eligible = matches!(mode, "aspiration" | "daydream_longform");
+            assert_eq!(recall.eligible_for_expression(101), eligible);
+            assert!(!recall.eligible_for_expression(99));
+            assert!(!recall.eligible_for_expression(86_501));
+            // Explicit reading preserves even material excluded from ambient recall.
+            assert!(recall.render(500).contains("71% fill"));
+        }
+        std::fs::write(&path, "=== ASTRID JOURNAL ===\nMode: aspiration\nTimestamp: invalid\n\nA thought long enough to remain available as explicit history.").unwrap();
+        assert!(
+            !JournalRecall::read(&path)
+                .unwrap()
+                .eligible_for_expression(100)
+        );
+    }
 
     #[test]
     fn header_identity_survives_unicode_body_clipping_and_longform_selection() {

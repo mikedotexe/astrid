@@ -82,8 +82,38 @@ fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String>
 }
 
 fn read_astrid_journal_recall() -> Option<crate::journal::JournalRecall> {
-    recent_astrid_journal_paths(&bridge_paths().astrid_journal_dir())
-        .first().and_then(|path| crate::journal::JournalRecall::read(path))
+    expressive_journal_recall_from_dir(&bridge_paths().astrid_journal_dir(), chrono_timestamp().parse().ok()?)
+}
+
+fn expressive_journal_recall_from_dir(journal_dir: &Path, now: u64) -> Option<crate::journal::JournalRecall> {
+    recent_astrid_journal_paths(journal_dir).iter().take(32)
+        .filter_map(|path| crate::journal::JournalRecall::read(path))
+        .find(|recall| recall.eligible_for_expression(now))
+}
+
+#[cfg(test)]
+mod expressive_recall_tests {
+    use super::*;
+
+    #[test]
+    fn automatic_recall_skips_capture_and_receipts_without_erasing_history() {
+        let dir = tempfile::tempdir().unwrap();
+        for (name, mode, body) in [
+            ("moment_99.txt", "moment_capture", "AUTOMATIC_TELEMETRY"),
+            ("action_98.txt", "receipt", "ADMINISTRATIVE_NOTICE"),
+            ("daydream_97.txt", "daydream", "CHOSEN_EXPRESSION with 71% and uncertainty"),
+        ] {
+            std::fs::write(dir.path().join(name), format!("=== ASTRID JOURNAL ===\nMode: {mode}\nTimestamp: 97\n\n{}", body.repeat(10))).unwrap();
+        }
+        let recalled = expressive_journal_recall_from_dir(dir.path(), 100).unwrap().render(500);
+        assert!(recalled.contains("CHOSEN_EXPRESSION"));
+        assert!(recalled.contains("71%"));
+        assert!(recalled.contains("record_sha256"));
+        assert!(!recalled.contains("AUTOMATIC_TELEMETRY"));
+        assert!(!recalled.contains("ADMINISTRATIVE_NOTICE"));
+        assert!(read_local_journal_body_for_continuity(&dir.path().join("moment_99.txt")).unwrap().contains("AUTOMATIC_TELEMETRY"));
+        assert!(expressive_journal_recall_from_dir(dir.path(), 100_000).is_none());
+    }
 }
 
 /// Strip model end-of-turn tokens from text destined for journals.

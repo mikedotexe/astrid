@@ -18,7 +18,7 @@ pub(crate) use provider::{
     derive_browse_anchor, dialogue_outer_timeout_secs, dialogue_retry_tokens,
     estimate_dialogue_prompt_pressure_chars, expressive_outer_timeout, fetch_url,
     format_browse_failure_context, format_browse_read_context, format_dialogue_web_context,
-    format_read_more_context, generate_aspiration_with_context,
+    format_read_more_context, generate_aspiration_with_context, generate_daydream_with_context,
     generate_dialogue_with_runtime_feedback, generate_source_study, generate_source_study_for_job,
     journal_outer_timeout, recover_retained_delivery, recover_retained_delivery_at,
     sanitize_model_control_markers_with_report, set_astrid_aperture, set_astrid_tail_participation,

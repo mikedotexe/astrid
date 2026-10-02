@@ -670,7 +670,7 @@ pub fn spawn_autonomous_loop(
                         &paths.astrid_inbox_dir(),
                         &paths.bridge_workspace().join("durable_inbox_v1"),
                     );
-                    let (inbox_reservation, mailbox_hint) =
+                    let (inbox_reservation, mailbox_hint, mailbox_attention_notice) =
                         begin_activity_mailbox_window(&mut conv, &activity_inbox);
                     let inbox_content = inbox_reservation.as_ref().map(capture_reserved_letter);
                     let mutual_address_target = inbox_reservation.as_ref()
@@ -679,6 +679,10 @@ pub fn spawn_autonomous_loop(
                         || inbox_reservation.is_some()
                         || conv.browse_url.is_some()
                         || conv.wants_search;
+                    let daydream_perception_text = daydream_perception_context(
+                        perception_text.as_deref(), mailbox_attention_notice.as_deref(),
+                        chosen_attention, explicit_visual_peek,
+                    );
                     let perception_text = if chosen_attention && !explicit_visual_peek {
                         // Sensory samples remain transient; held attention creates no replay backlog.
                         Some(mailbox_hint)
@@ -2358,34 +2362,13 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                         Mode::Daydream => {
-                            // Unstructured thought — Astrid's own inner life.
-                            // Fed with her OWN perceptions, interests, memories, and
-                            // peripheral resonance — not minime's journals.
-                            let mut own_context_parts = Vec::new();
-                            if let Some(j) = read_astrid_journal(1).into_iter().next() {
-                                own_context_parts.push(format!("Something you wrote recently:\n{}", j.chars().take(500).collect::<String>()));
-                            }
-                            if !conv.interests.is_empty() {
-                                let interests = conv.interests.iter()
-                                    .map(|i| format!("  - {i}")).collect::<Vec<_>>().join("\n");
-                                own_context_parts.push(format!("Your ongoing interests:\n{interests}"));
-                            }
-                            {
-                                let starred = db.get_starred_memories(2);
-                                if !starred.is_empty() {
-                                    let mem = starred.iter().map(|(a, t)| format!("  ★ {a}: {t}")).collect::<Vec<_>>().join("\n");
-                                    own_context_parts.push(format!("Moments you chose to remember:\n{mem}"));
-                                }
-                            }
-                            if let Some(ref resonance) = conv.peripheral_resonance {
-                                own_context_parts.push(format!("A thread that lingered from earlier:\n{resonance}"));
-                            }
-                            let enriched_context = if own_context_parts.is_empty() { None } else { Some(own_context_parts.join("\n\n")) };
+                            let own_journal = read_astrid_journal_recall();
+                            let starred = db.get_starred_memories(2);
                             let daydream = match tokio::time::timeout(
                                 Duration::from_secs(crate::llm::expressive_outer_timeout(750)),
-                                crate::llm::generate_daydream(
-                                    perception_text.as_deref(),
-                                    enriched_context.as_deref(),
+                                crate::llm::generate_daydream_with_context(
+                                    daydream_perception_text.as_deref(), own_journal.as_ref(),
+                                    &conv.interests, &starred, conv.peripheral_resonance.as_deref(),
                                 )
                             ).await {
                                 Ok(r) => r,

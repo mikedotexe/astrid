@@ -366,6 +366,10 @@ fn daydream_messages(perception_context: Option<&str>, own_journal: Option<&str>
         ));
     }
 
+    daydream_messages_from_context(context)
+}
+
+fn daydream_messages_from_context(context: String) -> Vec<Message> {
     vec![
         Message {
             role: "system".to_string(),
@@ -394,7 +398,7 @@ established personal history. This writing does not execute actions or grant con
 const EXPRESSION_ACTION_DISCOVERY: &str = "For an explicit next choice, use NEXT: followed by one \
 concrete action. FACULTIES opens the action catalog; HELP <action> gives details. \
 SPECTRAL_EXPLORER requests measurements and recorded history. WRITE and ACTIVITY_STATUS \
-provide private drafts and saved return points. REST is available. These examples do not \
+provide private drafts and saved return points. CHECK_MAILBOX opens a chosen receive window. REST is available. These examples do not \
 restrict your action vocabulary or change authorization checks.";
 
 /// Generate an original creative work — not a response, a creation.

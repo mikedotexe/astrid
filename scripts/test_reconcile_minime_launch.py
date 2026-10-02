@@ -91,6 +91,19 @@ class ReconciliationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unreviewed"):
             self.run_tool()
 
+    def test_private_writing_recorders_are_bound_to_reviewed_overlay(self):
+        names = ("minime_autonomy/generation_record.py", "minime_autonomy/source_study_diagnostics.py")
+        before = tool.inventory(self.canonical)
+        for name in names:
+            self.assertIn(name, tool.OVERLAY)
+            (self.candidate / name).write_text("# private-writing diagnostic containment\n")
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        for name in names:
+            self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+            self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                             (self.candidate / name).read_bytes())
+
     def test_reflection_authority_repair_is_in_exact_reviewed_launch_inventory(self):
         name = "minime_autonomy/authority.py"
         self.assertIn(name, tool.OVERLAY)

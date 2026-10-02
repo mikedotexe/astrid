@@ -26,9 +26,9 @@ fn project_mailbox_response(text: &str) -> (String, bool) {
 fn begin_activity_mailbox_window(
     conv: &mut ConversationState,
     inbox: &durable_inbox::DurableInbox,
-) -> (Option<durable_inbox::InboxReservation>, String) {
+) -> (Option<durable_inbox::InboxReservation>, String, Option<String>) {
     if activity_focus::quiet() {
-        return (None, String::new());
+        return (None, String::new(), None);
     }
     if let Err(error) = recover_activity_deliveries(
         &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
@@ -39,6 +39,7 @@ fn begin_activity_mailbox_window(
         return (
             None,
             "Mailbox recovery is unresolved; saved letters remain pending.".into(),
+            Some("Mailbox recovery is unresolved; saved letters remain pending.".into()),
         );
     }
     let mut reservation = None;
@@ -79,11 +80,15 @@ fn begin_activity_mailbox_window(
                         }
                     },
                     Err(error) => {
-                        warn!(%error, "mailbox selection could not be persisted; no body admitted")
+                        warn!(%error, "mailbox selection could not be persisted; no body admitted");
+                        detail = "Mailbox selection could not be saved; no letter was admitted.".into();
                     },
                 }
             },
-            Err(error) => warn!(%error, "mailbox admission unavailable; letters remain pending"),
+            Err(error) => {
+                warn!(%error, "mailbox admission unavailable; letters remain pending");
+                detail = "Mailbox admission unavailable; letters remain pending.".into();
+            },
         }
     }
     let status = match inbox.scan() {
@@ -96,10 +101,44 @@ fn begin_activity_mailbox_window(
         ),
         Err(error) => {
             warn!(%error, "mailbox metadata unavailable");
+            detail.push_str(" Mailbox status unavailable; no acknowledgement was inferred.");
             "Mailbox status unavailable; no acknowledgement was inferred.".into()
         },
     };
-    (reservation, status)
+    let selected_or_error = (!detail.is_empty()).then_some(detail);
+    (reservation, status, selected_or_error)
+}
+
+/// Mailbox counts are not sensory observations. Keep selected receive outcomes
+/// and operational failures available without placing routine counts in daydreams.
+fn daydream_perception_context(perception: Option<&str>, notice: Option<&str>, chosen_attention: bool, explicit_peek: bool) -> Option<String> {
+    merge_hints([
+        // The provider bounds this combined context. Retain operational notices
+        // before optional perception can exhaust its excerpt budget.
+        notice.map(|s| format!("Selected mailbox outcome or operational notice (not sensory input): {s}")),
+        (!chosen_attention || explicit_peek).then_some(perception).flatten().map(str::to_owned),
+    ])
+}
+
+#[cfg(test)]
+mod quiet_daydream_tests {
+    use super::*;
+
+    #[test]
+    fn selected_context_and_errors_survive_without_routine_mailbox_counts() {
+        assert!(daydream_perception_context(None, None, false, false).is_none());
+        let context = daydream_perception_context(Some("Fresh visual observation"), Some("Selected letter exceeds the intact window"), false, false).unwrap();
+        assert!(context.contains("Fresh visual observation"));
+        assert!(context.contains("not sensory input"));
+        assert!(context.contains("exceeds the intact window"));
+        assert!(!context.contains("waiting (") && !context.contains("unreadable sources"));
+        let protected = daydream_perception_context(Some("Unrelated view"), Some("Mailbox recovery unresolved"), true, false).unwrap();
+        assert!(!protected.contains("Unrelated view"));
+        assert!(protected.contains("Mailbox recovery unresolved"));
+        assert!(daydream_perception_context(Some("Explicit peek"), None, true, true).unwrap().contains("Explicit peek"));
+        let long = daydream_perception_context(Some(&"Long perception. ".repeat(300)), Some("Mailbox recovery unresolved"), false, false).unwrap();
+        assert!(long.chars().take(800).collect::<String>().contains("Mailbox recovery unresolved"));
+    }
 }
 
 fn capture_reserved_letter(

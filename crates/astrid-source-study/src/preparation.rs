@@ -347,6 +347,39 @@ mod tests {
     use super::*;
 
     #[test]
+    fn reflection_import_recovers_exactly_once_at_each_preparation_boundary() {
+        for point in 0..3 {
+            let temp = tempfile::tempdir().unwrap();
+            let reader = crate::Reader::new(
+                crate::Catalog::new(BTreeMap::from([("astrid".into(), temp.path().into())]))
+                    .unwrap(),
+                temp.path().join("reader"),
+            )
+            .with_runtime_workspace(temp.path().join("workspace"), "astrid");
+            let reflection = reader.prepare_action("INTROSPECT").unwrap();
+            let id = reflection.navigation_id.as_ref().unwrap();
+            reader.navigation_delivered(id,
+                &serde_json::json!({"messages":[{"role":"user","content":reflection.text}]}).to_string(),
+                &serde_json::json!({"message":{"content":"Exact passage.\nNEXT: REST"},"done":true}).to_string()).unwrap();
+            let action = format!("WRITE FROM_REFLECTION {id}");
+            let revision = reader.preparation_revision().unwrap();
+            FAIL_AT.with(|v| v.set(Some(point)));
+            assert!(reader.prepare_once("import", &revision, &action).is_err());
+            let output = reader.prepare_once("import", &revision, &action).unwrap();
+            assert_eq!(
+                output,
+                reader.prepare_once("import", &revision, &action).unwrap()
+            );
+            let saved: serde_json::Value = serde_json::from_slice(
+                &fs::read(temp.path().join("reader/writing/drafts-v2.json")).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(saved["drafts"].as_object().unwrap().len(), 1);
+            assert_eq!(saved["drafts"]["d1"]["parts"][0], "Exact passage.");
+        }
+    }
+
+    #[test]
     fn interrupted_real_preparation_reopens_once_at_each_commit_boundary() {
         for point in 0..3 {
             let temp = tempfile::tempdir().unwrap();

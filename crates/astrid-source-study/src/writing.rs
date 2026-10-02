@@ -13,6 +13,11 @@ use std::{
 #[path = "writing_observations.rs"]
 mod observations;
 
+pub(crate) struct ReflectionSeed {
+    pub prose: String,
+    pub evidence: String,
+}
+
 pub const EXTENDED_TOKENS: u32 = 8192;
 pub const EXTENDED_TIMEOUT_SECS: u64 = 1200;
 const DOWNGRADE_GUARD: &[u8] =
@@ -174,8 +179,16 @@ impl Writer {
         self.prepare_locked(action)
     }
 
-    #[allow(clippy::too_many_lines)] // One command table shares a single lock/transaction; persistence remains below it.
     pub(crate) fn prepare_locked(&self, action: &str) -> Result<StudyOutput> {
+        self.prepare_with_reflection_locked(action, None)
+    }
+
+    #[allow(clippy::too_many_lines)] // One command table shares a single lock/transaction; persistence remains below it.
+    pub(crate) fn prepare_with_reflection_locked(
+        &self,
+        action: &str,
+        seed: Option<ReflectionSeed>,
+    ) -> Result<StudyOutput> {
         let mut state = self.load()?;
         let rest = action
             .trim()
@@ -198,6 +211,27 @@ impl Writer {
         let mut writing = true;
         let mut replace = false;
         match verb.as_str() {
+            "FROM_REFLECTION" => {
+                let seed =
+                    seed.context("reflection continuation requires verified owner delivery")?;
+                anyhow::ensure!(
+                    crate::preparation::in_transaction(),
+                    "reflection continuation requires idempotent preparation"
+                );
+                let id = format!("d{}", state.drafts.len().saturating_add(1));
+                state.drafts.insert(
+                    id.clone(),
+                    Draft {
+                        topic: "Selected reflection".into(),
+                        evidence: seed.evidence,
+                        parts: vec![seed.prose],
+                        revision: 1,
+                        ..Draft::default()
+                    },
+                );
+                state.active = Some(id);
+                notice = "Your explicitly selected reflection passage is the first draft part. Write only a new passage; the original is preserved. No other draft was replaced and no study question was selected.".into();
+            },
             "PROFILE" => {
                 let selected = match arg.to_ascii_uppercase().as_str() {
                     "EXTENDED" => Profile::Extended,
@@ -303,6 +337,7 @@ impl Writer {
             "" | "HELP" | "LIST" => {
                 writing = false;
                 notice = format!("Drafts (active: {:?}):\n", state.active);
+                notice.push_str("WRITE FROM_REFLECTION <input ID> creates a new private draft from that exact verified open reflection. Optional start_byte end_byte select a nonempty zero-based UTF-8 range, end exclusive, within its authored prose after executable NEXT lines and hidden model blocks are removed. No latest-entry fallback. The source record remains unchanged; quoted command examples stay inert. No other draft or study question is replaced.\n");
                 for (id, draft) in &state.drafts {
                     let _ = writeln!(
                         notice,
@@ -537,7 +572,7 @@ impl Writer {
             .context("private writing delivery not committed")
     }
 }
-fn visible_prose(text: &str) -> String {
+pub(crate) fn visible_prose(text: &str) -> String {
     let mut text = text.to_string();
     for tag in ["think", "analysis"] {
         while let Some(start) = text.find(&format!("<{tag}>")) {

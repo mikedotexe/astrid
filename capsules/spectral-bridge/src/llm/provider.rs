@@ -50,6 +50,7 @@ include!("provider/generation_record_tests.rs");
 include!("provider/witness_tests.rs");
 include!("provider/generative_actions.rs");
 include!("provider/aspiration.rs");
+include!("provider/daydream_context.rs");
 include!("provider/source_study.rs");
 include!("provider/tests.rs");
 include!("provider/context_retrieval_tests.rs");
