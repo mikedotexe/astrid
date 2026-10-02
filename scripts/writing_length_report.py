@@ -49,6 +49,7 @@ MINIME_PRIVATE_LANES = {"check_moment_markers", "private_writing", "moment_captu
 ASTRID_LOST_OUTCOMES = {"timeout", "cancelled_or_abandoned", "http_error", "unavailable_or_timeout"}
 NAVIGATION_RE = re.compile(r"navigation only|No new source page is supplied|requested source was not supplied")
 STAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
+CHOSEN_NEXT_RE = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d+ .*Being chose NEXT: *([A-Z_]+)")
 UNKNOWN_NEXT_RE = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d+ .*Unknown NEXT: '([^']{1,40})")
 BUDGET_LINE_RE = re.compile(
     r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d+ .*LLM backend preference: \w+ \(full timeout (\d+)s.*fast fallback ([^)]+)\)"
@@ -314,7 +315,7 @@ def minime_journal_words(since: float, until: float) -> dict[str, dict[str, Any]
 def minime_lane_ages(until: float) -> dict[str, float | None]:
     """Hours between `until` and the newest public lane file at or before it (filenames only)."""
     ages: dict[str, float | None] = {}
-    for prefix in ("daydream", "aspiration", "pressure", "self_study", "study_navigation"):
+    for prefix in ("daydream", "aspiration", "introspect", "pressure", "self_study", "study_navigation"):
         newest = None
         for path in MINIME_JOURNAL.glob(f"{prefix}_*.txt"):
             try:
@@ -362,6 +363,80 @@ def minime_agent_log(since: float, until: float) -> dict[str, Any]:
     }
 
 
+def minime_choice_concentration(since: float, until: float) -> dict[str, Any]:
+    """Share of her honored NEXT choices taken by the single most-chosen verb in the window.
+
+    A lane can capture her whole cycle through the menu it shows from inside itself
+    (study pages offered only study verbs until 2026-10-01; the reflection turn then
+    offered INTROSPECT first and no DAYDREAM/ASPIRE, giving 296/296 INTROSPECT). This is
+    information about affordances, not a judgement of her choices."""
+    counts: Counter = Counter()
+    if not MINIME_AGENT_LOG.is_file():
+        return {"total": 0, "top": [], "top_share": None}
+    since_text = datetime.fromtimestamp(since).strftime("%Y-%m-%d %H:%M:%S")
+    until_text = datetime.fromtimestamp(until).strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        with MINIME_AGENT_LOG.open(errors="ignore") as fh:
+            for line in fh:
+                stamp = line[:19]
+                if not STAMP_RE.match(stamp):
+                    continue
+                if stamp >= until_text:
+                    break
+                if stamp < since_text:
+                    continue
+                match = CHOSEN_NEXT_RE.match(line)
+                if match:
+                    counts[match.group(2)] += 1
+    except OSError:
+        pass
+    total = sum(counts.values())
+    top = counts.most_common(5)
+    return {"total": total, "top": top, "top_share": (top[0][1] / total) if total else None}
+
+
+def minime_reflection_recurrence(since: float, until: float) -> dict[str, Any]:
+    """How much her open reflections (public `introspect_*`) restart the same thought.
+
+    Each bare INTROSPECT starts fresh with no stored text present, so recurrence here
+    measures the cost of missing continuity, not her imagination: distinct opening
+    sentences, the most-reused opening, and the median word-set overlap of consecutive
+    reflections."""
+    rows: list[tuple[float, str]] = []
+    for path in MINIME_JOURNAL.glob("introspect_*.txt"):
+        match = re.search(r"_(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})", path.name)
+        if not match:
+            continue
+        try:
+            ts = datetime.strptime(match.group(1), "%Y-%m-%dT%H-%M-%S").astimezone().timestamp()
+            text = path.read_text(errors="ignore")
+        except (ValueError, OSError):
+            continue
+        if not (since <= ts < until):
+            continue
+        body = text.split("\n\n", 1)[1] if "\n\n" in text else ""
+        body = "\n".join(l for l in body.splitlines() if not l.strip().upper().startswith("NEXT:")).strip()
+        if body:
+            rows.append((ts, body))
+    rows.sort()
+    if not rows:
+        return {"n": 0}
+    def words(t: str) -> set[str]:
+        return set(re.findall(r"[a-z][a-z'-]{3,}", t.lower()))
+    openings: Counter = Counter(re.split(r"(?<=[.!?])\s", body, maxsplit=1)[0][:80] for _, body in rows)
+    overlaps = []
+    for (_, a), (_, b) in zip(rows, rows[1:]):
+        A, B = words(a), words(b)
+        if A and B:
+            overlaps.append(len(A & B) / len(A | B))
+    return {
+        "n": len(rows),
+        "distinct_openings": len(openings),
+        "most_reused_opening": openings.most_common(1)[0][1],
+        "consecutive_overlap_median": statistics.median(overlaps) if overlaps else None,
+    }
+
+
 def minime_launch_env() -> dict[str, str]:
     values: dict[str, str] = {}
     if not MINIME_LAUNCH_ENV.is_file():
@@ -406,6 +481,8 @@ def build(since: float, until: float) -> dict[str, Any]:
             "generations": minime_generations(since, until),
             "journal_words": minime_journal_words(since, until),
             "lane_age_hours": minime_lane_ages(until),
+            "choice_concentration": minime_choice_concentration(since, until),
+            "reflection_recurrence": minime_reflection_recurrence(since, until),
             "agent_log": log_info,
             "launch_env": env,
             "budget_drift": budget_drift(log_info.get("budget_line"), env),
@@ -459,6 +536,12 @@ def render(report: dict[str, Any], title: str) -> str:
     lines.append("- minime newest public lane file (hours before window end): " + ", ".join(f"{k}={fmt(v)}" for k, v in ages.items()))
     kinds = report["minime"]["journal_words"].get("_study_navigation_kinds") or {}
     lines.append(f"- minime navigation turns by kind (study_navigation_* files): {kinds or 'none in window'}")
+    conc = report["minime"]["choice_concentration"]
+    share = conc.get("top_share")
+    lines.append(f"- minime NEXT concentration: {conc.get('total')} honored choices, top {conc.get('top')[:3] if conc.get('top') else '-'}" + (f", top share {share:.0%}" if share is not None else ""))
+    rec = report["minime"]["reflection_recurrence"]
+    if rec.get("n"):
+        lines.append(f"- minime open reflections: n={rec['n']}, distinct openings {rec['distinct_openings']}, most-reused opening ×{rec['most_reused_opening']}, consecutive word-set overlap median {rec['consecutive_overlap_median']:.2f} (each bare INTROSPECT starts fresh)")
     lines.append(f"- minime unknown NEXT verbs: {report['minime']['agent_log'].get('unknown_next')}")
     lines.append(f"- minime running budget line: {report['minime']['agent_log'].get('budget_line')}")
     lines.append(f"- minime launchd/autonomous-agent.env: {report['minime']['launch_env'] or '(absent)'}")
