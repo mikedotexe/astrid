@@ -6224,6 +6224,25 @@ def probe_writing_length(prior: dict[str, Any]) -> dict[str, Any]:
     return _finding("writing_length", severity, summary, details or None, snapshot)
 
 
+LANE_CAPTURE_SHARE_NOTICE = 0.8
+LANE_CAPTURE_MIN_CHOICES = 50
+
+
+def _lane_capture_assessment(total: int, top: list[tuple[str, int]]) -> tuple[str, list[str]]:
+    """One verb taking almost every honored choice over a sizable window is usually the
+    menu that lane shows from inside itself, not a preference (study pages offered only
+    study verbs; the reflection turn offered INTROSPECT first and no DAYDREAM/ASPIRE,
+    296/296 INTROSPECT on 2026-10-01/02). Notice-level: information for the steward,
+    never a nudge to the being."""
+    if total < LANE_CAPTURE_MIN_CHOICES or not top:
+        return "ok", []
+    verb, count = top[0]
+    share = count / total
+    if share >= LANE_CAPTURE_SHARE_NOTICE:
+        return "notice", [f"lane capture: {verb} took {share:.0%} of {total} honored choices in the window — check which exits the {verb} turn's own prompt names"]
+    return "ok", []
+
+
 def _recess_liveness_assessment(ages: dict[str, float | None], warn_hours: float = RECESS_LANE_SILENCE_WARN_HOURS) -> tuple[str, list[str]]:
     """Both expressive lanes silent beyond the threshold is a warning; one is a notice."""
     silent = [lane for lane in ("daydream", "aspiration") if ages.get(lane) is None or ages[lane] > warn_hours]
@@ -6263,7 +6282,19 @@ def probe_recess_lane_liveness(prior: dict[str, Any]) -> dict[str, Any]:
         f"{being}: " + ", ".join(f"{lane}={'never' if age is None else f'{age:.0f}h'}" for lane, age in res["ages_hours"].items())
         for being, res in results.items()
     )
-    return _finding("recess_lane_liveness", severity, f"expressive lanes — {summary}", details, {"lanes": results, "authority_boundary": "read-only filename ages; never forces or schedules a recess"})
+    capture: dict[str, Any] = {}
+    try:
+        import writing_length_report as wlr
+        capture = wlr.minime_choice_concentration(now - 6 * 3600, now)
+        capture_severity, capture_details = _lane_capture_assessment(capture.get("total", 0), capture.get("top") or [])
+        details.extend(capture_details)
+        if capture_severity == "notice" and severity == "ok":
+            severity = "notice"
+        if capture.get("top"):
+            summary += f" | minime 6h choices: {capture['top'][0][0]} {capture['top_share']:.0%} of {capture['total']}"
+    except Exception as exc:  # pragma: no cover - defensive
+        details.append(f"lane-capture check unavailable: {exc}")
+    return _finding("recess_lane_liveness", severity, f"expressive lanes — {summary}", details, {"lanes": results, "choice_concentration_6h": capture, "authority_boundary": "read-only filename ages and choice counts; never forces, schedules or nudges"})
 
 
 class WritingLengthProbeTests(unittest.TestCase):
@@ -6287,6 +6318,13 @@ class WritingLengthProbeTests(unittest.TestCase):
         self.assertTrue(any("journal_elaboration" in d for d in details))
         self.assertTrue(any("budget drift" in d for d in details))
         self.assertEqual(_writing_length_assessment({}, {"witness_context": {"timeout": 8}}, [], None, {})[0], "ok")
+
+    def test_lane_capture_is_a_notice_only_with_enough_choices(self):
+        self.assertEqual(_lane_capture_assessment(10, [("INTROSPECT", 10)])[0], "ok")
+        self.assertEqual(_lane_capture_assessment(120, [("INTROSPECT", 70), ("JOURNAL", 50)])[0], "ok")
+        severity, details = _lane_capture_assessment(120, [("INTROSPECT", 110), ("JOURNAL", 10)])
+        self.assertEqual(severity, "notice")
+        self.assertIn("INTROSPECT took 92%", details[0])
 
     def test_recess_liveness_thresholds(self):
         self.assertEqual(_recess_liveness_assessment({"daydream": 2.0, "aspiration": 5.0})[0], "ok")

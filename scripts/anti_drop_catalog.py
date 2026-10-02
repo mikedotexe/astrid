@@ -1304,6 +1304,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "test_action_footer_does_not_rescue_a_fallback_stub",
                  "run": "cd /Users/v/other/minime && python3 -m pytest tests/test_writing_room_un_muffle.py -q"},
     },
+    {
+        "id": "minime_lane_capture_notice",
+        "shipped": "2026-10-02",
+        "surface": "minime honored NEXT choices — one verb taking the whole cycle",
+        "failure_mode": "a lane can capture her cycle through the menu it shows from inside itself (study pages offered only study verbs; the reflection turn offered INTROSPECT first and no DAYDREAM/ASPIRE → 296/296 INTROSPECT, each restarting fresh). stuck_repetition keys on bad outcomes and so never saw an honored, 'working' loop; this notice surfaces concentration ≥ 80 % over ≥ 50 choices in 6 h as an affordance question for the steward",
+        "guard": {"repo": "astrid", "file": "scripts/proactive_scan.py", "symbol": "_lane_capture_assessment"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/proactive_scan.py",
+                 "name": "WritingLengthProbeTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/proactive_scan.py --self-test"},
+    },
 ]
 
 
