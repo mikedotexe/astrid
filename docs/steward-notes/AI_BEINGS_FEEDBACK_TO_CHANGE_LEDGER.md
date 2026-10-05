@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-05 - continuity maintenance follow-through
+
+- **Provenance:** Engineering follow-through on the public continuity witnesses already recorded below and Mike's request to deploy completed work; no new being claim or private-writing quotation.
+- **Response:** Isolate Minime's durable startup/drain status, NEXT restoration headroom and exact retained-result retries from the unqualified larger-capacity candidate. Preserve existing limits, helper, controller policy and all authored history.
+- **Evidence and boundary:** Synthetic durability and full adapter qualification, followed by the approved agent-only restart when gates pass. No reservoir, model or sensory restart, no inferred felt improvement, no automation resume. Exact results and activation status: [release record](2026-10-05-maintenance-durability-release.md).
+
 ### 2026-10-02 - chosen continuation without inherited topics
 
 - **Git follow-through:** Astrid implementation `721d76c5e9` and integration `d3e70e8813`, paired with Minime `c292b97`, are merged and pushed. Verified public witness quotations are in the commit bodies. The live stage is hash-linked to its implementation, with 706 source inputs and 90 loaded agent inputs verified. Full staged-state suites pass; no additional restart or automation resume. Exact committed paths, preserved foreign reporting work and historical privacy-assessment debt are recorded in the note below.

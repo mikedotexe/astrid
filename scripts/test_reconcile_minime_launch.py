@@ -91,6 +91,22 @@ class ReconciliationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unreviewed"):
             self.run_tool()
 
+    def test_maintenance_durability_sources_are_exact_and_new_status_is_included(self):
+        names = ("minime_autonomy/llm_access.py", "minime_autonomy/maintenance_next.py",
+                 "minime_autonomy/source_status.py")
+        (self.canonical / names[-1]).unlink()
+        for name in names:
+            (self.candidate / name).write_text("# qualified durability source\n")
+        self.refresh_status()
+        before = tool.inventory(self.canonical)
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(set(result["selected_inputs"]) - set(before), {names[-1]})
+        for name in names:
+            self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+            self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                             (self.candidate / name).read_bytes())
+
     def test_private_writing_recorders_are_bound_to_reviewed_overlay(self):
         names = ("minime_autonomy/generation_record.py", "minime_autonomy/source_study_diagnostics.py")
         before = tool.inventory(self.canonical)
