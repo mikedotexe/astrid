@@ -86,6 +86,8 @@ class PairedHandoff:
                 or packet.get("bindings", {}).get("canonical_root") != str(backend.root)):
             raise RuntimeError("installation is not the exact reviewed overlay")
         snapshot = Path(packet["snapshot_root"])
+        from research_release_compatibility import verify_minime
+        verify_minime(snapshot, backend.root / "workspace")
         expected = packet["canonical_inputs"].copy()
         if inventory(snapshot) != selected or backend.inputs() != expected:
             raise RuntimeError("installation source inventory changed")

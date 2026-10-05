@@ -8,7 +8,7 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
-from restart_minime_agent import LaunchdAgent, job_receipt, qualified_inputs, reload_agent
+from restart_minime_agent import ENV_KEYS, LaunchdAgent, job_receipt, qualified_inputs, reload_agent
 
 
 class Backend:
@@ -72,6 +72,38 @@ class Backend:
 
 
 class ReloadTests(unittest.TestCase):
+    def test_ollama_writing_release_selection_is_in_managed_config(self):
+        self.assertIn("MINIME_OLLAMA_WRITING_RELEASE", ENV_KEYS)
+        self.assertIn("MINIME_OLLAMA_WRITING_RELEASE_SHA256", ENV_KEYS)
+        self.assertEqual(len(ENV_KEYS), len(set(ENV_KEYS)))
+
+    def test_provider_receipt_pin_changes_only_managed_config_digest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            backend = LaunchdAgent(1, "synthetic only")
+            backend.root = root
+            (root / "workspace").mkdir()
+            (root / "workspace/rescue_profile.json").write_text("{}")
+            agents = root / "Library/LaunchAgents"
+            agents.mkdir(parents=True)
+            (agents / "com.minime.autonomous-agent.plist").write_bytes(b"synthetic")
+            pin = "private synthetic pin A"
+
+            def getenv(args):
+                self.assertEqual(args[:2], ["launchctl", "getenv"])
+                return SimpleNamespace(returncode=0, stdout=(
+                    pin if args[2] == "PROVIDER_INPUT_RECEIPT_PIN_V1" else ""))
+
+            with patch("restart_minime_agent.Path.home", return_value=root), \
+                    patch("restart_minime_agent.run", side_effect=getenv):
+                before = backend.config()
+                pin = "private synthetic pin B"
+                after = backend.config()
+            self.assertNotEqual(before["managed_env_sha256"], after["managed_env_sha256"])
+            self.assertEqual(before["profile_sha256"], after["profile_sha256"])
+            self.assertEqual(before["installed_plist_sha256"], after["installed_plist_sha256"])
+            self.assertNotIn("private synthetic", json.dumps([before, after]))
+
     def test_wrong_qualified_inventory_never_signals(self):
         backend = Backend()
         with self.assertRaisesRegex(RuntimeError, "qualified inputs"):

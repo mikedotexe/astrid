@@ -1,6 +1,7 @@
 """Synthetic processes, real launch admission gate; no live services touched."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -13,7 +14,7 @@ from restart_minime_agent import reload_agent
 from test_restart_minime_agent import Backend
 from reconcile_minime_launch import OVERLAY, inventory
 
-MINIME = Path(__file__).resolve().parents[2] / "minime"
+MINIME = Path(os.environ.get("MINIME_SOURCE_ROOT", Path(__file__).resolve().parents[2] / "minime"))
 
 
 class HandoffTests(unittest.TestCase):
@@ -91,6 +92,23 @@ class HandoffTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "inventory changed"):
                 handoff.install(backend, packet, 10, lambda e: None)
             self.assertFalse(handoff.owned)
+            self.assertEqual(backend.inputs(), before)
+
+    def test_installer_refuses_research_downgrade_before_hold_or_source_write(self):
+        with tempfile.TemporaryDirectory() as tmp, patch(
+                "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}):
+            root = Path(tmp).resolve()
+            backend, packet, _ = self.install_fixture(root)
+            requirement = backend.root / "workspace/action_threads/research-transactions-required.json"
+            requirement.parent.mkdir(parents=True)
+            requirement.write_text(json.dumps(dict(schema_version=1, owner="minime",
+                required_research_transaction_version=1)))
+            before = backend.inputs()
+            handoff = PairedHandoff(root, root / "receipt.jsonl", "synthetic")
+            with self.assertRaisesRegex(RuntimeError, "downgrade refused"):
+                handoff.install(backend, packet, 10, lambda e: None)
+            self.assertFalse(handoff.owned)
+            self.assertEqual(backend.signals, [])
             self.assertEqual(backend.inputs(), before)
 
     def test_installer_partial_failure_retains_hold_without_undo(self):

@@ -42,7 +42,8 @@ ENV_KEYS = (
     "MINIME_LLM_COMPACT_TIMEOUT_S", "MINIME_LLM_COMPACT_FALLBACK_TIMEOUT_S",
     "MINIME_OLLAMA_NUM_CTX", "MINIME_OLLAMA_NUM_PREDICT_CAP",
     "MINIME_OLLAMA_FALLBACK_NUM_CTX", "MINIME_OLLAMA_FALLBACK_NUM_PREDICT_CAP",
-    "AGENT_INTERVAL", "FOCUSED_MODE",
+    "MINIME_OLLAMA_WRITING_RELEASE", "MINIME_OLLAMA_WRITING_RELEASE_SHA256",
+    "AGENT_INTERVAL", "FOCUSED_MODE", "PROVIDER_INPUT_RECEIPT_PIN_V1",
 )
 TERMINAL = {"completed", "thin_output", "timeout", "failed", "canceled", "blocked"}
 
@@ -140,6 +141,8 @@ class LaunchdAgent:
 
     def validate(self):
         self.maintenance()
+        from research_release_compatibility import verify_minime
+        verify_minime(self.root, self.root / "workspace")
         source = plistlib.loads((self.root / f"launchd/{LABEL}.plist").read_bytes())
         installed = plistlib.loads((Path.home() / f"Library/LaunchAgents/{LABEL}.plist").read_bytes())
         if source != installed or installed.get("KeepAlive") is not True:
@@ -222,7 +225,27 @@ class LaunchdAgent:
                 "jobs": jobs["jobs"], "no_tcp_connections": no_tcp,
                 "lifecycle_contract": status.get("lifecycle_contract", "legacy_no_handshake"),
                 "legacy_wait_log_sha256": wait_log_sha,
-                "continuity": self.continuity()}
+                "continuity": self.continuity(),
+                "next_handoff": self.next_handoff_identity(status)}
+
+    @staticmethod
+    def next_handoff_identity(status):
+        if status.get("next_handoff_contract") is None:
+            return None  # Legacy runtime: never infer a restoration guarantee.
+        from minime_next_handoff import process
+        return process(status)
+
+    def verify_next_handoff(self, before, pid, expected_inputs):
+        from minime_next_handoff import verify_restore
+        status = read_json(self.root / "workspace/runtime/autonomous_agent_source_status.json")
+        if status.get("pid") != pid:
+            raise RuntimeError("NEXT restoration process changed")
+        return verify_restore(self.root / "workspace", before, status, expected_inputs)
+
+    def verify_next_seal(self, before):
+        from minime_next_handoff import verify_seal
+        status = read_json(self.root / "workspace/runtime/autonomous_agent_source_status.json")
+        return verify_seal(self.root / "workspace", before, status)
 
     def terminate(self, expected_pid):
         # Target the validated PID, never an unexpected launchd replacement.
@@ -266,13 +289,14 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
     deadline = now() + timeout_s
     quiet_start = None
     previous_key = None
+    completed_handoff = None
     while now() < deadline:
         backend.maintenance()
         if backend.pid() != expected_pid or backend.identity(expected_pid) != old_start:
             raise RuntimeError("agent identity changed while waiting; no signal sent")
         observation = backend.observe(expected_pid)
         key = (observation["source_checked_at"], observation["job_index_sha256"],
-               observation["continuity"]["file_sha256"])
+               observation["continuity"]["file_sha256"], observation.get("next_handoff"))
         if not observation["quiet"]:
             quiet_start = None
         elif quiet_start is None or key != previous_key:
@@ -291,7 +315,8 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
     final = backend.observe(expected_pid)
     if (not final["quiet"] or final["source_checked_at"] != observation["source_checked_at"]
             or final["job_index_sha256"] != observation["job_index_sha256"]
-            or final["continuity"] != observation["continuity"]):
+            or final["continuity"] != observation["continuity"]
+            or final.get("next_handoff") != observation.get("next_handoff")):
         raise RuntimeError("idle boundary moved; no signal sent")
     if backend.pid() != expected_pid or backend.identity(expected_pid) != old_start:
         raise RuntimeError("PID changed at signal boundary")
@@ -301,6 +326,7 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
         boundary = backend.observe(expected_pid)
         if (not boundary["quiet"] or any(boundary[k] != final[k] for k in
                 ("source_checked_at", "job_index_sha256", "continuity"))
+                or boundary.get("next_handoff") != final.get("next_handoff")
                 or backend.pid() != expected_pid
                 or backend.identity(expected_pid) != old_start):
             raise RuntimeError("idle boundary moved after launch hold; no signal sent")
@@ -318,6 +344,12 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
                 if backend.identity(expected_pid) is not None:
                     raise RuntimeError("old PID reused during paired handoff")
                 protected = handoff.transition(backend, protected, emit)
+                completed_handoff = handoff
+                replacement_inputs = getattr(handoff, "replacement_inputs", None)
+                if replacement_inputs is not None:
+                    # Only the reviewed handoff may replace the source inventory
+                    # after old-process exit; readiness remains exact-hash bound.
+                    inputs = replacement_inputs
                 handoff = None
                 deadline = now() + timeout_s
             new_pid = backend.pid()
@@ -333,6 +365,11 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
                        and j["job_id"] not in initially_interrupted for j in final_jobs["jobs"]):
                     raise RuntimeError("startup recovered an interrupted job; rollout is not clean")
                 before_ids = {j["job_id"] for j in initial_jobs["jobs"]}
+                handoff_proof = (backend.verify_next_handoff(final["next_handoff"], new_pid, inputs)
+                                 if final.get("next_handoff") else None)
+                legacy_proof = (completed_handoff.verify_restoration(backend, new_pid)
+                                if completed_handoff is not None
+                                and hasattr(completed_handoff, "verify_restoration") else None)
                 return {"schema": "minime_agent_reload_v1", "outcome": "success",
                         "old_pid": expected_pid, "old_started_at": old_start,
                         "new_pid": new_pid, "new_started_at": backend.identity(new_pid),
@@ -340,6 +377,8 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
                         "atomic_traffic_quiescence_claimed": False,
                         "source_inputs": inputs, "config": config, "protected": protected,
                         "pre_signal": final, "post_ready_continuity": backend.continuity(),
+                        "next_handoff": handoff_proof,
+                        "legacy_next_handoff": legacy_proof,
                         "new_jobs_during_rollout": [j for j in final_jobs["jobs"] if j["job_id"] not in before_ids]}
         sleep(1)
     raise RuntimeError("drain/readiness timed out; no forced fallback; inspect live PID")

@@ -1,4 +1,5 @@
 """Staging transaction tests use only owned temporary files and a fake compiler."""
+import ast
 import json
 import os
 from pathlib import Path
@@ -199,6 +200,131 @@ class StageTests(unittest.TestCase):
             shared.unlink()
             missing = stage.input_snapshot(self.source, [self.package])
             self.assertFalse(stage.same_input_contents(before, missing))
+
+    def test_research_compatibility_helper_is_bound_when_present(self):
+        helper = self.source / "scripts/research_release_compatibility.py"
+        with patch.object(stage, "command", side_effect=self.command):
+            historical = stage.input_snapshot(self.source, [self.package])
+            helper.write_text("SUPPORTED = 1\n")
+            current = stage.input_snapshot(self.source, [self.package])
+            row = next(row for row in current["files"] if row["path"] == str(helper))
+            self.assertEqual(row["sha256"], stage.sha(helper))
+            self.assertFalse(stage.same_input_contents(historical, current))
+            helper.write_text("SUPPORTED = 2\n")
+            changed = stage.input_snapshot(self.source, [self.package])
+            self.assertFalse(stage.same_input_contents(current, changed))
+            helper.unlink()
+            self.assertFalse(stage.same_input_contents(
+                current, stage.input_snapshot(self.source, [self.package])))
+            helper.symlink_to(self.root / "absent")
+            with self.assertRaisesRegex(ValueError, "non-regular input"):
+                stage.input_snapshot(self.source, [self.package])
+
+    def test_paired_orchestration_imports_are_in_named_inventory(self):
+        scripts = Path(stage.__file__).parent
+        pending = [scripts / name for name in (
+            "paired_minime_handoff.py", "reconcile_minime_launch.py", "restart_minime_agent.py")]
+        visited = set()
+
+        def add_module(module):
+            pending.extend(path for path in (module.with_suffix(".py"), module / "__init__.py")
+                           if path.is_file())
+            for parent in module.parents:
+                if parent == scripts.parent:
+                    break
+                initializer = parent / "__init__.py"
+                if initializer.is_file():
+                    pending.append(initializer)
+
+        while pending:
+            path = pending.pop()
+            if path in visited:
+                continue
+            visited.add(path)
+            for node in ast.walk(ast.parse(path.read_bytes())):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        add_module(scripts.joinpath(*alias.name.removeprefix("scripts.").split(".")))
+                elif isinstance(node, ast.ImportFrom):
+                    base = path.parent if node.level else scripts
+                    for _ in range(max(0, node.level - 1)):
+                        base = base.parent
+                    if node.module:
+                        base = base.joinpath(*node.module.removeprefix("scripts.").split("."))
+                    add_module(base)
+                    for alias in node.names:
+                        add_module(base / alias.name)
+        # Minime's separately qualified source inventory owns its imports.
+        named = {scripts.parent / name for name in (*stage.TOOLS, *stage.OPTIONAL_TOOLS)}
+        self.assertEqual(visited - named, set())
+
+    def test_optional_tools_detect_each_hash_change_removal_and_symlink(self):
+        recovery = frozenset(str(self.source / name) for name in (
+            "scripts/bridge_activate.py", "scripts/bridge_stage.py", "scripts/bridge_stopped_recovery.py"))
+        for name in stage.OPTIONAL_TOOLS:
+            with self.subTest(name=name), patch.object(stage, "command", side_effect=self.command):
+                helper = self.source / name
+                helper.parent.mkdir(parents=True, exist_ok=True)
+                historical = stage.input_snapshot(self.source, [self.package])
+                helper.write_text("VERSION = 1\n")
+                before = stage.input_snapshot(self.source, [self.package])
+                self.assertFalse(stage.same_input_contents(historical, before))
+                row = next(row for row in before["files"] if row["path"] == str(helper))
+                self.assertEqual(row["sha256"], stage.sha(helper))
+                stamp = helper.stat()
+                helper.write_text("VERSION = 2\n")
+                os.utime(helper, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+                changed = stage.input_snapshot(self.source, [self.package])
+                self.assertFalse(stage.same_input_contents(before, changed))
+                if str(helper) not in recovery:
+                    self.assertFalse(stage.same_input_contents(before, changed, recovery))
+                helper.unlink()
+                missing = stage.input_snapshot(self.source, [self.package])
+                self.assertFalse(stage.same_input_contents(before, missing, recovery))
+                self.assertTrue(stage.same_input_contents(historical, missing))
+                for target in (self.live / "binary", self.root / "absent"):
+                    helper.symlink_to(target)
+                    with self.assertRaisesRegex(ValueError, "non-regular input"):
+                        stage.input_snapshot(self.source, [self.package])
+                    helper.unlink()
+
+    def test_retained_snapshot_without_optional_tools_remains_verifiable(self):
+        ready = self.build()
+        witness = self.directory / "source-inputs.json"
+        original = witness.read_bytes()
+        before = stage.json_file(witness)
+        self.assertFalse({row["path"] for row in before["files"]}
+                         & {str(self.source / name) for name in stage.OPTIONAL_TOOLS})
+        with patch.object(stage, "command", side_effect=self.command):
+            self.assertTrue(stage.same_input_contents(
+                before, stage.input_snapshot(self.source, [self.package])))
+            helper = self.source / "scripts/paired_minime_handoff.py"
+            helper.write_text("# newly installed orchestration\n")
+            self.assertFalse(stage.same_input_contents(
+                before, stage.input_snapshot(self.source, [self.package])))
+        self.assertEqual(stage.verify_stage(self.directory, run_binary=False), ready)
+        self.assertEqual(witness.read_bytes(), original)
+
+    def test_optional_package_directory_symlink_is_refused(self):
+        external = self.root / "external-package"
+        external.mkdir()
+        (external / "config.py").write_text("# fixture\n")
+        (self.source / "scripts/steward_control").symlink_to(external, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlinked tool input directory"):
+            stage.input_snapshot(self.source, [self.package])
+
+    def test_mid_build_orchestration_dependency_change_refuses_stage(self):
+        helper = self.source / "scripts/qualify_geometry_release.py"
+        helper.write_text("# original\n")
+
+        def compiler(args, **kwargs):
+            result = self.compiler(args, **kwargs)
+            helper.write_text("# changed\n")
+            return result
+
+        with self.assertRaisesRegex(ValueError, "changed during compilation"):
+            self.build(compiler)
+        self.assertFalse((self.directory / "ready.json").exists())
 
     def test_mid_build_shared_source_change_or_removal_refuses_stage(self):
         shared = self.source / "capsules/shared/managed_dir.rs"

@@ -196,7 +196,11 @@ class LaunchdBridge(StoppedTransitionMixin):
         result = subprocess.run([str(self.stage / "spectral-bridge-server"), "--deployment-manifest",
                                  str(self.stage / "manifest.json"), *self.args(), *options],
                                 capture_output=True, text=True, check=True, timeout=60)
-        return json.loads(result.stdout)
+        report = json.loads(result.stdout)
+        if "--verify-deployment-inputs" in options:
+            from research_release_compatibility import verify_bridge
+            verify_bridge(self.root / "capsules/spectral-bridge/workspace", report)
+        return report
 
     def verify_bundle(self, *, allow_recovery_tool_changes: bool = False) -> None:
         if stage_tools.verify_stage(self.stage) != self.ready:

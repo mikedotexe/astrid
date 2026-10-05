@@ -26,6 +26,21 @@ TOOLS = ("scripts/build_bridge.sh", "scripts/bridge_stage.py", "scripts/bridge_a
          "scripts/environment_receipts.py", "scripts/deploy_preflight.py", "scripts/steward_mutex.py",
          "scripts/capture_stack_receipt.sh", "scripts/minime_runtime_binding.py",
          *(f"scripts/{name}" for name in HELPERS.values()))
+# Retained source trees can predate these tools. Bind the paired wrappers and
+# their local import closure when present, including package initialization.
+OPTIONAL_TOOLS = (
+    "scripts/bridge_stopped_recovery.py", "scripts/research_release_compatibility.py",
+    "scripts/paired_minime_handoff.py", "scripts/reconcile_minime_launch.py",
+    "scripts/restart_minime_agent.py", "scripts/qualify_geometry_release.py",
+    "scripts/minime_next_handoff.py",
+    "scripts/authority_state.py",
+    *(f"scripts/steward_control/{name}.py" for name in (
+        "__init__", "activity", "config", "controller", "errors", "events", "evidence",
+        "git_state", "lease", "model", "projection", "projection_control",
+        "projection_profile", "projection_state", "projection_types", "session")),
+    *(f"scripts/evidence_store/{name}.py" for name in (
+        "__init__", "adapter", "index", "migration", "model", "store", "verification")),
+)
 # Reviewed #[path] source outside the Cargo package trees. Older checkouts may
 # predate this shared module; once present it must survive the build unchanged.
 SHARED_SOURCES = ("capsules/shared/managed_dir.rs",)
@@ -92,10 +107,12 @@ def input_snapshot(source: Path, packages: list[Path]) -> dict:
                  if (source / name).exists() or (source / name).is_symlink())
     # The shared reader executable inherits the root workspace configuration.
     files.update(source / name for name in ("Cargo.toml", "Cargo.lock") if (source / name).exists())
-    # Retained releases predating this operator helper have no such input.
-    stopped_recovery = source / "scripts/bridge_stopped_recovery.py"
-    if stopped_recovery.exists():
-        files.add(stopped_recovery)
+    for name in OPTIONAL_TOOLS:
+        helper = source / name
+        if helper.exists() or helper.is_symlink():
+            if helper.parent.resolve() != helper.parent:
+                raise ValueError(f"symlinked tool input directory: {helper.parent}")
+            files.add(helper)
     for package in packages:
         for root, directories, names in os.walk(package):
             directories[:] = sorted(name for name in directories if name not in EXCLUDED)
