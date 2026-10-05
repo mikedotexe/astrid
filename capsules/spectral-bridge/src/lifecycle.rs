@@ -12,7 +12,12 @@ mod background;
 pub use background::{
     spawn_background, spawn_background_thread, spawn_blocking_background, wait_background,
 };
+mod frozen_write;
+mod publication_lock;
 pub mod queued;
+pub use frozen_write::FrozenWrite;
+mod recovery;
+pub use recovery::{DrainCheckpoint, retain_on_failure, retry_on_signal};
 
 #[cfg(test)]
 #[path = "lifecycle/process_tests.rs"]
@@ -59,6 +64,12 @@ pub fn atomic_private_write(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
         let _ = std::fs::remove_file(&temporary);
     }
     result
+}
+
+/// Conversation/status writers share exclusion with a frozen drain publication.
+pub fn atomic_checkpoint_write(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    let _lock = publication_lock::acquire(path)?;
+    atomic_private_write(path, bytes)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -141,6 +152,7 @@ impl Status {
                 "authority": "operator_maintenance_witness_only",
                 "remote_delivery_confirmed": false,
                 "automatic_resume": false,
+                "persistence_retry": "bridge_persistence_retry_v1",
             }),
         };
         status.publish("starting", None)?;
@@ -148,21 +160,52 @@ impl Status {
     }
 
     pub fn publish(&self, phase: &str, checkpoint: Option<&Path>) -> Result<()> {
+        self.prepare(phase, checkpoint)?.publish()?;
+        Ok(())
+    }
+
+    pub fn prepare(&self, phase: &str, checkpoint: Option<&Path>) -> Result<FrozenWrite> {
+        let mut value = self.status_value(phase);
+        if let Some(path) = checkpoint {
+            let bytes = std::fs::read(path)?;
+            value["checkpoint"] = checkpoint_descriptor(path, &bytes)?;
+        }
+        Ok(FrozenWrite::new(
+            &self.path,
+            serde_json::to_vec_pretty(&value)?,
+        )?)
+    }
+
+    pub fn prepare_drained(&self, checkpoint: Option<&DrainCheckpoint>) -> Result<FrozenWrite> {
+        let mut value = self.status_value("drained");
+        if let Some(checkpoint) = checkpoint {
+            let saved = &checkpoint.conversation;
+            let feedback = &checkpoint.feedback;
+            value["checkpoint"] = checkpoint_descriptor(saved.path(), saved.bytes())?;
+            value["feedback_checkpoint"] = json!({
+                "path": feedback.path(), "sha256": hex::encode(Sha256::digest(feedback.bytes())),
+            });
+        }
+        Ok(FrozenWrite::new(
+            &self.path,
+            serde_json::to_vec_pretty(&value)?,
+        )?)
+    }
+
+    fn status_value(&self, phase: &str) -> serde_json::Value {
         let mut value = self.identity.clone();
         value["phase"] = json!(phase);
         value["recorded_at_unix_ms"] = json!(chrono::Utc::now().timestamp_millis());
-        if let Some(path) = checkpoint {
-            let bytes = std::fs::read(path)?;
-            let state: serde_json::Value = serde_json::from_slice(&bytes)?;
-            value["checkpoint"] = json!({
-                "path": path,
-                "sha256": hex::encode(Sha256::digest(&bytes)),
-                "exchange_count": state.get("exchange_count"),
-            });
-        }
-        atomic_private_write(&self.path, &serde_json::to_vec_pretty(&value)?)?;
-        Ok(())
+        value
     }
+}
+
+fn checkpoint_descriptor(path: &Path, bytes: &[u8]) -> Result<serde_json::Value> {
+    let state: serde_json::Value = serde_json::from_slice(bytes)?;
+    Ok(
+        json!({"path": path, "sha256": hex::encode(Sha256::digest(bytes)),
+        "exchange_count": state.get("exchange_count")}),
+    )
 }
 
 #[cfg(test)]

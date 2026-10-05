@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-05 - preserve continuation through bridge drain failure
+
+- **Provenance:** Mike's request to finish drain recovery and isolated provider qualification, supporting the larger-writing/NEXT-budget program. No new being report or private source was read or inferred addressed.
+- **Response:** Keep the owning conversation state alive, freeze its checkpoint once, retain verified feedback consumption and retry persistence without executing choices again. Preserve foreign changes and incomplete evidence; bind both state families into a durable drain acknowledgement.
+- **Boundary and evidence:** [Narrow drain-recovery release](2026-10-05-bridge-drain-recovery-release.md) records failure-path tests, source reconciliation, review, runtime boundary and remaining model qualification. Passing tests do not imply deployed behavior, felt improvement or broader control authority. Previously paused automations stay paused.
+
 ### 2026-10-05 - continuity maintenance follow-through
 
 - **Live follow-through:** Minime `ffa511dc` and Astrid operator `3fb01de169` are merged to local main. Sanctioned agent-only transition 76377 -> 1499 verified all 93 loaded inputs, exact empty-queue acknowledgement, preserved session 5321, no newly interrupted job and unchanged protected peers. Source backups and bounded before/after telemetry are retained in the linked release record. This does not activate larger writing capacity or establish felt improvement; automations remain paused.

@@ -23,6 +23,10 @@ pub(super) const PENDING_RUNTIME_FEEDBACK_FILE: &str = "runtime_action_feedback_
 pub(super) struct RuntimeFeedbackPersistence {
     path: Option<PathBuf>,
     last_snapshot: Option<Vec<u8>>,
+    pending_write: Option<crate::lifecycle::FrozenWrite>,
+    pending_consumption: Vec<String>,
+    #[cfg(test)]
+    fail_after_rename: bool,
     refusal: Option<String>,
 }
 
@@ -153,18 +157,45 @@ fn same_descriptor_file(left: &std::fs::Metadata, right: &std::fs::Metadata) -> 
 }
 
 impl RuntimeFeedbackPersistence {
-    fn save(&mut self, pending: &[RuntimeActionFeedbackV1]) -> io::Result<()> {
+    fn save(
+        &mut self,
+        pending: &mut Vec<RuntimeActionFeedbackV1>,
+        consumed: &[String],
+    ) -> io::Result<()> {
+        self.save_with_reader(pending, consumed, read_snapshot_bytes)
+    }
+
+    fn save_with_reader(
+        &mut self,
+        pending: &mut Vec<RuntimeActionFeedbackV1>,
+        consumed: &[String],
+        read_snapshot: impl FnOnce(&Path) -> io::Result<Option<Vec<u8>>>,
+    ) -> io::Result<()> {
         if let Some(reason) = &self.refusal {
             return Err(invalid(reason));
+        }
+        for id in consumed {
+            if pending.iter().any(|item| &item.id == id) && !self.pending_consumption.contains(id) {
+                self.pending_consumption.push(id.clone());
+            }
+        }
+        // A rename may have succeeded without a durable acknowledgement. Finish
+        // that exact publication before considering a subsequent queue version.
+        if let Some(write) = &mut self.pending_write {
+            write.publish()?;
+            self.last_snapshot = Some(write.bytes().to_vec());
+            self.pending_write = None;
         }
         let path = self
             .path
             .as_deref()
             .ok_or_else(|| invalid("pending runtime feedback persistence has not been restored"))?;
-        let current = match read_snapshot_bytes(path) {
+        let current = match read_snapshot(path) {
             Ok(bytes) => bytes,
             Err(error) => {
-                self.refusal = Some(error.to_string());
+                if error.kind() == io::ErrorKind::InvalidData {
+                    self.refusal = Some(error.to_string());
+                }
                 return Err(error);
             },
         };
@@ -173,14 +204,40 @@ impl RuntimeFeedbackPersistence {
             self.refusal = Some(reason.to_owned());
             return Err(invalid(reason));
         }
+        let mut retained = pending.clone();
+        consume_runtime_feedback_ids(&mut retained, &self.pending_consumption);
         let encoded = serde_json::to_vec(&PendingSnapshot {
             schema: SCHEMA.to_owned(),
-            pending_runtime_feedback: pending.to_vec(),
+            pending_runtime_feedback: retained.clone(),
         })?;
-        // Reuse the conversation checkpoint's private file, sync, rename, and
-        // parent-directory sync. A failed acknowledgement never changes memory.
-        crate::lifecycle::atomic_private_write(path, &encoded)?;
+        if self.last_snapshot.as_deref() == Some(encoded.as_slice()) {
+            *pending = retained;
+            self.pending_consumption.clear();
+            return Ok(());
+        }
+        let write = crate::lifecycle::FrozenWrite::new(path, encoded.clone())?;
+        if write.previous_bytes() != self.last_snapshot.as_deref() {
+            let reason = "pending runtime feedback changed while preparing publication";
+            self.refusal = Some(reason.to_owned());
+            return Err(invalid(reason));
+        }
+        self.pending_write = Some(write);
+        #[cfg(test)]
+        if std::mem::take(&mut self.fail_after_rename) {
+            return self
+                .pending_write
+                .as_mut()
+                .expect("prepared feedback")
+                .fail_after_rename();
+        }
+        self.pending_write
+            .as_mut()
+            .expect("prepared feedback")
+            .publish()?;
         self.last_snapshot = Some(encoded);
+        self.pending_write = None;
+        self.pending_consumption.clear();
+        *pending = retained;
         Ok(())
     }
 }
@@ -238,7 +295,7 @@ impl ConversationState {
         }
         if let Err(error) = self
             .runtime_feedback_persistence
-            .save(&self.pending_runtime_feedback)
+            .save(&mut self.pending_runtime_feedback, &[])
         {
             warn!(%error, "runtime feedback remains pending in memory; checkpoint failed");
         }
@@ -249,7 +306,7 @@ impl ConversationState {
     /// unreadable durable state may still contain undelivered events.
     pub(super) fn flush_pending_runtime_feedback_checked(&mut self) -> io::Result<()> {
         self.runtime_feedback_persistence
-            .save(&self.pending_runtime_feedback)?;
+            .save(&mut self.pending_runtime_feedback, &[])?;
         let store = &self.runtime_feedback_persistence;
         let path = store
             .path
@@ -268,6 +325,28 @@ impl ConversationState {
         Ok(())
     }
 
+    pub(super) fn retain_pending_feedback_checkpoint(
+        &self,
+    ) -> io::Result<crate::lifecycle::FrozenWrite> {
+        let store = &self.runtime_feedback_persistence;
+        if store.refusal.is_some()
+            || store.pending_write.is_some()
+            || !store.pending_consumption.is_empty()
+        {
+            return Err(invalid("pending feedback checkpoint is not settled"));
+        }
+        crate::lifecycle::FrozenWrite::retain_existing(
+            store
+                .path
+                .as_deref()
+                .ok_or_else(|| invalid("pending feedback path missing"))?,
+            store
+                .last_snapshot
+                .as_deref()
+                .ok_or_else(|| invalid("pending feedback snapshot missing"))?,
+        )
+    }
+
     /// Inclusion in an accepted, durably retained exact request is the receipt's
     /// scope. It does not claim comprehension, learning, or choice by Astrid.
     pub(super) fn acknowledge_runtime_feedback(&mut self, receipt: &RuntimeFeedbackReceiptV1) {
@@ -281,13 +360,8 @@ impl ConversationState {
         receipt: &RuntimeFeedbackReceiptV1,
     ) -> io::Result<()> {
         crate::llm::verify_runtime_feedback_receipt(receipt)?;
-        let mut retained = self.pending_runtime_feedback.clone();
-        consume_runtime_feedback_ids(&mut retained, &receipt.feedback_ids);
-        if retained == self.pending_runtime_feedback {
-            return Ok(());
-        }
-        self.runtime_feedback_persistence.save(&retained)?;
-        self.pending_runtime_feedback = retained;
+        self.runtime_feedback_persistence
+            .save(&mut self.pending_runtime_feedback, &receipt.feedback_ids)?;
         Ok(())
     }
 }
@@ -529,8 +603,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn pending_runtime_feedback_drain_flushes_memory_before_checkpoint() {
+    #[tokio::test]
+    async fn pending_runtime_feedback_drain_flushes_memory_before_checkpoint() {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("pending.json");
         let mut state = ConversationState::new(Vec::new(), None);
@@ -543,21 +617,27 @@ mod tests {
             .unwrap();
         assert!(!path.exists());
         let called = std::cell::Cell::new(false);
-        super::super::checkpoint_autonomous_drain(&mut state, |_| {
-            assert_eq!(
-                configured(&path).pending_runtime_feedback,
-                vec![item.clone()]
-            );
-            called.set(true);
-            Ok(())
-        })
-        .unwrap();
+        let (_tx, mut retry) = tokio::sync::watch::channel(());
+        super::super::persist_autonomous_drain(
+            &mut state,
+            &directory.path().join("conversation.json"),
+            &mut retry,
+            |_| {
+                assert_eq!(
+                    configured(&path).pending_runtime_feedback,
+                    vec![item.clone()]
+                );
+                called.set(true);
+                Ok(b"{\"exchange_count\":7}".to_vec())
+            },
+        )
+        .await;
         assert!(called.get());
         assert_eq!(state.pending_runtime_feedback, vec![item]);
     }
 
-    #[test]
-    fn pending_runtime_feedback_drain_refuses_unreadable_stale_or_failed_queue() {
+    #[tokio::test]
+    async fn pending_runtime_feedback_drain_refuses_unreadable_stale_or_failed_queue() {
         let directory = tempfile::tempdir().unwrap();
         for case in ["unconfigured", "malformed", "changed", "io-failure"] {
             let path = directory.path().join(format!("{case}.json"));
@@ -591,14 +671,193 @@ mod tests {
             let called = std::cell::Cell::new(false);
             // Test the production drain ordering with an inert checkpoint
             // callback; even a regression cannot touch a production workspace.
-            let result = super::super::checkpoint_autonomous_drain(&mut state, |_| {
-                called.set(true);
-                Ok(())
-            });
+            let (_tx, mut retry) = tokio::sync::watch::channel(());
+            let result = tokio::time::timeout(
+                std::time::Duration::from_millis(15),
+                super::super::persist_autonomous_drain(
+                    &mut state,
+                    &directory.path().join("conversation.json"),
+                    &mut retry,
+                    |_| {
+                        called.set(true);
+                        Ok(b"{}".to_vec())
+                    },
+                ),
+            )
+            .await;
             assert!(result.is_err(), "{case}");
             assert!(!called.get(), "{case}");
             assert_eq!(state.pending_runtime_feedback, before, "{case}");
         }
+    }
+
+    #[test]
+    fn pending_feedback_recovers_visible_but_unacknowledged_publication() {
+        use std::os::unix::fs::MetadataExt as _;
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("pending.json");
+        let mut state = configured(&path);
+        let item = feedback("retained");
+        state.pending_runtime_feedback.push(item.clone());
+        let bytes = serde_json::to_vec(&PendingSnapshot {
+            schema: SCHEMA.to_owned(),
+            pending_runtime_feedback: vec![item.clone()],
+        })
+        .unwrap();
+        let mut publication = crate::lifecycle::FrozenWrite::new(&path, bytes).unwrap();
+        assert!(publication.fail_after_rename().is_err());
+        let inode = std::fs::metadata(&path).unwrap().ino();
+        state.runtime_feedback_persistence.pending_write = Some(publication);
+        state.flush_pending_runtime_feedback_checked().unwrap();
+        assert_eq!(std::fs::metadata(&path).unwrap().ino(), inode);
+        assert_eq!(state.pending_runtime_feedback, vec![item]);
+        assert!(state.runtime_feedback_persistence.pending_write.is_none());
+        assert!(state.runtime_feedback_persistence.refusal.is_none());
+    }
+
+    #[tokio::test]
+    async fn autonomous_drain_retains_state_and_prepares_only_once_on_io_retry() {
+        use std::sync::{
+            Arc,
+            atomic::{AtomicUsize, Ordering},
+        };
+        let root = tempfile::tempdir().unwrap();
+        let pending = root.path().join("pending.json");
+        let checkpoint = root.path().join("conversation.json");
+        std::fs::create_dir(&checkpoint).unwrap();
+        let mut state = configured(&pending);
+        state.enqueue_runtime_feedback(feedback("pending-choice"));
+        state.exchange_count = 7;
+        let prepared = Arc::new(AtomicUsize::new(0));
+        let counted = prepared.clone();
+        let (tx, mut retry) = tokio::sync::watch::channel(());
+        let selected = checkpoint.clone();
+        let task = tokio::spawn(async move {
+            let publication =
+                super::super::persist_autonomous_drain(&mut state, &selected, &mut retry, |conv| {
+                    counted.fetch_add(1, Ordering::SeqCst);
+                    serde_json::to_vec(&serde_json::json!({"exchange_count":conv.exchange_count}))
+                        .map_err(Into::into)
+                })
+                .await;
+            (state, publication)
+        });
+        while prepared.load(Ordering::SeqCst) == 0 {
+            tokio::task::yield_now().await;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        assert!(!task.is_finished());
+        tx.send_replace(());
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        assert!(!task.is_finished());
+        assert_eq!(prepared.load(Ordering::SeqCst), 1);
+        std::fs::remove_dir(&checkpoint).unwrap();
+        tx.send_replace(());
+        let (state, mut publication) =
+            tokio::time::timeout(std::time::Duration::from_secs(2), task)
+                .await
+                .unwrap()
+                .unwrap();
+        assert_eq!(state.exchange_count, 7);
+        assert_eq!(state.pending_runtime_feedback.len(), 1);
+        assert_eq!(prepared.load(Ordering::SeqCst), 1);
+        publication.verify().unwrap();
+        assert_eq!(
+            std::fs::read(checkpoint).unwrap(),
+            b"{\"exchange_count\":7}"
+        );
+    }
+
+    #[test]
+    fn acknowledged_removal_retry_never_requeues_delivered_ids_or_loses_later_enqueue() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("pending.json");
+        let mut state = configured(&path);
+        let first = feedback("delivered");
+        let later = feedback("later");
+        state.enqueue_runtime_feedback(first.clone());
+        let accepted = receipt(root.path(), std::slice::from_ref(&first));
+        state.runtime_feedback_persistence.fail_after_rename = true;
+        assert!(
+            state
+                .acknowledge_runtime_feedback_checked(&accepted)
+                .is_err()
+        );
+        assert_eq!(state.pending_runtime_feedback, vec![first]);
+        state.enqueue_runtime_feedback(later.clone());
+        assert_eq!(state.pending_runtime_feedback, vec![later.clone()]);
+        assert_eq!(configured(&path).pending_runtime_feedback, vec![later]);
+        assert!(
+            state
+                .runtime_feedback_persistence
+                .pending_consumption
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn transient_feedback_read_error_retries_but_invalid_state_stays_refused() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("pending.json");
+        let mut state = configured(&path);
+        state.enqueue_runtime_feedback(feedback("kept"));
+        let before = std::fs::read(&path).unwrap();
+        assert!(
+            state
+                .runtime_feedback_persistence
+                .save_with_reader(&mut state.pending_runtime_feedback, &[], |_| Err(
+                    io::Error::other("transient EIO")
+                ))
+                .is_err()
+        );
+        assert!(state.runtime_feedback_persistence.refusal.is_none());
+        state.flush_pending_runtime_feedback_checked().unwrap();
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+        assert!(
+            state
+                .runtime_feedback_persistence
+                .save_with_reader(&mut state.pending_runtime_feedback, &[], |_| Err(invalid(
+                    "foreign file type"
+                )))
+                .is_err()
+        );
+        assert!(state.flush_pending_runtime_feedback_checked().is_err());
+        assert_eq!(std::fs::read(path).unwrap(), before);
+    }
+
+    #[tokio::test]
+    async fn feedback_drift_during_checkpoint_recovery_never_acknowledges_drain() {
+        let root = tempfile::tempdir().unwrap();
+        let pending = root.path().join("pending.json");
+        let checkpoint = root.path().join("conversation.json");
+        std::fs::create_dir(&checkpoint).unwrap();
+        let mut state = configured(&pending);
+        state.enqueue_runtime_feedback(feedback("must-survive"));
+        let (tx, mut retry) = tokio::sync::watch::channel(());
+        let (prepared_tx, prepared_rx) = tokio::sync::oneshot::channel();
+        let selected = checkpoint.clone();
+        let task = tokio::spawn(async move {
+            super::super::persist_autonomous_drain(&mut state, &selected, &mut retry, |_| {
+                prepared_tx.send(()).unwrap();
+                Ok(b"{}".to_vec())
+            })
+            .await
+        });
+        prepared_rx.await.unwrap();
+        std::fs::write(&pending, b"foreign feedback replacement").unwrap();
+        std::fs::remove_dir(&checkpoint).unwrap();
+        tx.send_replace(());
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        assert!(!task.is_finished());
+        tx.send_replace(());
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        assert!(!task.is_finished());
+        assert_eq!(
+            std::fs::read(pending).unwrap(),
+            b"foreign feedback replacement"
+        );
+        task.abort(); // Only this synthetic test task, never a runtime drain.
+        assert!(task.await.is_err());
     }
 
     #[test]

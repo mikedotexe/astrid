@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Bridge drain recovery (2026-10-05, Codex coordinator).** Preserve autonomous continuation through failed checkpoint writes; retry frozen persistence only on explicit operator signals. Retain conversation and feedback identities, recover uncertain publication and cleanup without replaying work, and preserve acknowledged feedback removals. Add a protocol-bound one-signal recovery command and durable observer checks. This narrow source repair does not activate the larger-writing capacity candidate or alter reservoir controls. Qualification and live boundary: `docs/steward-notes/2026-10-05-bridge-drain-recovery-release.md`.
+
 - **Live: Minime durability overlay (2026-10-05, Codex).** Operator commit `3fb01de169` and Minime `ffa511dc` are fast-forwarded to local main. The agent-only wrapper verifies PID 1499, 93 exact loaded source inputs, preserved session and empty NEXT queue, and unchanged protected peers. No bridge/provider/engine rollout or automation resume. Activation receipt and remaining capacity gates: `docs/steward-notes/2026-10-05-maintenance-durability-release.md`.
 
 - **Agent-only durability release qualification (2026-10-05, Codex).** Extend the explicit Minime reconciliation overlay to the reviewed source-status publisher, NEXT handoff and retained-job receipt fixes. Use existing agent-only graceful reload gates, preserving the deployed bridge/helper and all protected peers. No larger writing limits or provider transition is authorized by this subset. Evidence: `docs/steward-notes/2026-10-05-maintenance-durability-release.md`.

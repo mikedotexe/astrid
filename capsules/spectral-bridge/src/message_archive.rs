@@ -478,7 +478,8 @@ fn write_index(archive_dir: &Path, shard: &ArchiveShardManifest) -> Result<()> {
 }
 
 fn write_status(path: &Path, outcome: &BridgeMessageMaintenanceOutcome) -> Result<()> {
-    write_json_pretty(path, outcome)
+    crate::lifecycle::atomic_checkpoint_write(path, &serde_json::to_vec_pretty(outcome)?)?;
+    Ok(())
 }
 
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<()> {

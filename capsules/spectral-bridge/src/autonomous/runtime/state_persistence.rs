@@ -163,27 +163,52 @@ async fn finish_autonomous_drain(
     conv: &mut ConversationState,
     heartbeat: tokio::task::JoinHandle<()>,
     job_status: tokio::task::JoinHandle<()>,
-) -> anyhow::Result<()> {
+    mut retry: tokio::sync::watch::Receiver<()>,
+) -> anyhow::Result<crate::lifecycle::DrainCheckpoint> {
     // Reached only after the admitted exchange finishes. Auxiliary producers
     // must finish too, before the final durable conversation checkpoint.
-    heartbeat.await?;
-    job_status.await?;
-    checkpoint_autonomous_drain(conv, save_state_checked)?;
+    crate::lifecycle::retain_on_failure("semantic heartbeat", heartbeat.await.map_err(Into::into)).await;
+    crate::lifecycle::retain_on_failure("job status producer", job_status.await.map_err(Into::into)).await;
+    let publication = persist_autonomous_drain(conv, &bridge_paths().state_path(), &mut retry, prepare_state).await;
     info!("autonomous work drained and conversation checkpoint persisted");
-    Ok(())
+    Ok(publication)
 }
 
-fn checkpoint_autonomous_drain(
+pub(super) async fn persist_autonomous_drain(
     conv: &mut ConversationState,
-    checkpoint: impl FnOnce(&mut ConversationState) -> anyhow::Result<()>,
-) -> anyhow::Result<()> {
-    // An earlier enqueue may have survived only in memory. Do not publish a
-    // durable drain if that queue cannot be flushed or safely read back.
-    conv.flush_pending_runtime_feedback_checked()?;
-    checkpoint(conv)
+    state_path: &std::path::Path,
+    retry: &mut tokio::sync::watch::Receiver<()>,
+    prepare: impl FnOnce(&mut ConversationState) -> anyhow::Result<Vec<u8>>,
+) -> crate::lifecycle::DrainCheckpoint {
+    crate::lifecycle::retry_on_signal("pending runtime feedback", retry, || {
+        conv.flush_pending_runtime_feedback_checked().map_err(Into::into)
+    }).await;
+    let feedback = crate::lifecycle::retry_on_signal("retain feedback checkpoint", retry, || {
+        conv.retain_pending_feedback_checkpoint().map_err(Into::into)
+    }).await;
+    // Prepare once: retries must not re-run stale-request deferral, admitted
+    // actions, or read changing telemetry into a different continuation.
+    let bytes = crate::lifecycle::retain_on_failure("prepare conversation", prepare(conv)).await;
+    let mut publication = crate::lifecycle::retry_on_signal("prepare checkpoint publication", retry, || {
+        crate::lifecycle::FrozenWrite::new(state_path, bytes.clone()).map_err(Into::into)
+    }).await;
+    crate::lifecycle::retry_on_signal("conversation checkpoint", retry, || {
+        publication.publish().map_err(Into::into)
+    }).await;
+    let mut checkpoint = crate::lifecycle::DrainCheckpoint { conversation: publication, feedback };
+    crate::lifecycle::retry_on_signal("verify drained state families", retry, || {
+        checkpoint.verify().map_err(Into::into)
+    }).await;
+    checkpoint
 }
 
 fn save_state_checked(conv: &mut ConversationState) -> anyhow::Result<()> {
+    let bytes = prepare_state(conv)?;
+    crate::lifecycle::atomic_checkpoint_write(&bridge_paths().state_path(), &bytes)?;
+    Ok(())
+}
+
+fn prepare_state(conv: &mut ConversationState) -> anyhow::Result<Vec<u8>> {
     // v3.6.6: safety net — auto-defer ("expire") any pending parameter
     // request that has outlived AUTO_DEFER_AFTER_EXCHANGES since Astrid's
     // most recent REVIEW. Runs BEFORE the pending count + snapshot below
@@ -238,7 +263,6 @@ fn save_state_checked(conv: &mut ConversationState) -> anyhow::Result<()> {
         .cloned();
     crate::spectral_viz::set_explore_hint(explore_hint);
 
-    let state_path = bridge_paths().state_path();
     let state = SavedState {
         exchange_count: conv.exchange_count,
         creative_temperature: conv.creative_temperature,
@@ -305,9 +329,7 @@ fn save_state_checked(conv: &mut ConversationState) -> anyhow::Result<()> {
         last_review_parameter_requests_exchange: conv.last_review_parameter_requests_exchange,
         last_test_proposal_exchange: conv.last_test_proposal_exchange,
     };
-    let json = serde_json::to_vec_pretty(&state)?;
-    crate::lifecycle::atomic_private_write(&state_path, &json)?;
-    Ok(())
+    Ok(serde_json::to_vec_pretty(&state)?)
 }
 
 fn restore_state(conv: &mut ConversationState) {

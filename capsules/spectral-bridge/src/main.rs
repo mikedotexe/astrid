@@ -464,6 +464,7 @@ async fn main() -> Result<()> {
     let mut signals = lifecycle::Signals::install()?;
     let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
     let (io_shutdown_tx, io_shutdown_rx) = tokio::sync::watch::channel(false);
+    let (drain_retry_tx, mut drain_retry_rx) = tokio::sync::watch::channel(());
     let lifecycle_status = if cli.autonomous {
         Some(lifecycle::Status::new(
             &resolved_paths
@@ -533,6 +534,7 @@ async fn main() -> Result<()> {
             sensory_tx,
             addressed_sensory_tx,
             shutdown_rx.clone(),
+            drain_retry_rx.clone(),
             Some(resolved_paths.minime_workspace().to_path_buf()),
             Some(resolved_paths.perception_path().to_path_buf()),
         ))
@@ -612,9 +614,10 @@ async fn main() -> Result<()> {
         warn!(%error, "could not publish drain progress");
     }
     let drain = async {
-        if let Some(handle) = autonomous_handle {
-            handle.await??;
-        }
+        let mut saved_checkpoint = match autonomous_handle {
+            Some(handle) => Some(handle.await??),
+            None => None,
+        };
         match mcp_result {
             Some(result) => result??,
             None => mcp_handle.await??,
@@ -629,19 +632,36 @@ async fn main() -> Result<()> {
         let _ = io_shutdown_tx.send(true);
         telemetry_handle.await?;
         lifecycle::queued::wait().await?;
-        message_archive::write_bridge_db_status(db.as_ref(), &maintenance_config)?;
+        lifecycle::retry_on_signal("bridge DB status", &mut drain_retry_rx, || {
+            message_archive::write_bridge_db_status(db.as_ref(), &maintenance_config)
+        })
+        .await;
         if let Some(status) = &lifecycle_status {
-            let checkpoint = resolved_paths.state_path();
-            status.publish(
-                "drained",
-                autonomous_enabled.then_some(checkpoint.as_path()),
-            )?;
+            let mut publication =
+                lifecycle::retry_on_signal("prepare drained status", &mut drain_retry_rx, || {
+                    if let Some(saved) = &mut saved_checkpoint {
+                        saved.verify()?;
+                    }
+                    status.prepare_drained(saved_checkpoint.as_ref())
+                })
+                .await;
+            lifecycle::retry_on_signal("drained status", &mut drain_retry_rx, || {
+                if let Some(saved) = &mut saved_checkpoint {
+                    saved.verify()?;
+                }
+                publication.publish().map_err(Into::into)
+            })
+            .await;
         }
         Ok::<(), anyhow::Error>(())
     };
     let (result, exit_requested) = lifecycle::complete_drain(
         drain,
-        async || signals.next().await,
+        async || {
+            let request = signals.next().await;
+            drain_retry_tx.send_replace(());
+            request
+        },
         request == lifecycle::Request::Exit,
     )
     .await;

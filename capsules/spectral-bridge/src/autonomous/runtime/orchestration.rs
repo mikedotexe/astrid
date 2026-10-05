@@ -95,9 +95,10 @@ pub fn spawn_autonomous_loop(
     sensory_tx: mpsc::Sender<SensoryMsg>,
     addressed_sensory_tx: crate::ws::AddressedSensorySender,
     mut shutdown: tokio::sync::watch::Receiver<bool>,
+    drain_retry: tokio::sync::watch::Receiver<()>,
     workspace_path: Option<PathBuf>,
     perception_path: Option<PathBuf>,
-) -> tokio::task::JoinHandle<anyhow::Result<()>> {
+) -> tokio::task::JoinHandle<anyhow::Result<crate::lifecycle::DrainCheckpoint>> {
     tokio::spawn(async move {
         // Scan journal directory for entries.
         let remote_journal_entries = workspace_path
@@ -4987,6 +4988,6 @@ pub fn spawn_autonomous_loop(
                 }
             }
         }
-        finish_autonomous_drain(&mut conv, semantic_heartbeat, llm_job_status_loop).await
+        finish_autonomous_drain(&mut conv, semantic_heartbeat, llm_job_status_loop, drain_retry).await
     })
 }

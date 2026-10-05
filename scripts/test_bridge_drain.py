@@ -95,6 +95,61 @@ class BridgeDrainTests(unittest.TestCase):
             self.call()
         self.kill.assert_not_called()
 
+    def test_retry_requires_new_protocol_and_active_drain(self):
+        for phase, protocol in [("running", "bridge_persistence_retry_v1"), ("draining", None)]:
+            self.status.update(phase=phase, persistence_retry=protocol)
+            self.publish()
+            with self.assertRaisesRegex(drain.DrainError, "retry requires"):
+                drain.drain(1234, self.binary, self.root, .01, True, retry_persistence=True)
+        self.kill.assert_not_called()
+
+    def test_retry_sends_one_signal_and_does_not_escalate(self):
+        self.status.update(phase="draining", persistence_retry="bridge_persistence_retry_v1")
+        self.publish()
+        with self.assertRaisesRegex(drain.DrainError, "timeout"):
+            drain.drain(1234, self.binary, self.root, .01, True, retry_persistence=True)
+        self.kill.assert_called_once_with(1234, drain.signal.SIGUSR1)
+
+    def test_directory_sync_failure_cannot_report_drained(self):
+        self.status.update(phase="drained", checkpoint={"path": str(self.checkpoint), "sha256": drain.digest(self.checkpoint)})
+        self.publish()
+        with patch.object(drain.os, "fsync", side_effect=OSError("fixture sync failure")):
+            with self.assertRaisesRegex(OSError, "fixture sync failure"):
+                self.call()
+        self.kill.assert_not_called()
+
+    def test_replaced_inode_during_sync_is_rejected(self):
+        self.status.update(phase="drained", checkpoint={"path": str(self.checkpoint), "sha256": drain.digest(self.checkpoint)})
+        self.publish()
+        sync = drain.os.fsync
+        def replace_once(fd):
+            if not getattr(replace_once, "done", False):
+                replacement = self.root / "replacement"
+                replacement.write_bytes(self.checkpoint.read_bytes())
+                replacement.replace(self.checkpoint)
+                replace_once.done = True
+            sync(fd)
+        with patch.object(drain.os, "fsync", side_effect=replace_once):
+            with self.assertRaisesRegex(drain.DrainError, "evidence changed"):
+                self.call()
+        self.kill.assert_not_called()
+
+    def test_retry_capable_drain_requires_exact_feedback_checkpoint(self):
+        self.status.update(phase="drained", persistence_retry="bridge_persistence_retry_v1",
+                           checkpoint={"path": str(self.checkpoint), "sha256": drain.digest(self.checkpoint)})
+        self.publish()
+        with self.assertRaisesRegex(drain.DrainError, "lacks feedback"):
+            self.call()
+        feedback = self.root / "feedback.json"
+        feedback.write_bytes(b"synthetic pending feedback")
+        self.status["feedback_checkpoint"] = {"path": str(feedback), "sha256": drain.digest(feedback)}
+        self.publish()
+        self.assertEqual(self.call()["phase"], "drained")
+        feedback.write_bytes(b"foreign replacement")
+        with self.assertRaisesRegex(drain.DrainError, "feedback checkpoint changed"):
+            self.call()
+        self.kill.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
