@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Live: Minime durability overlay (2026-10-05, Codex).** Operator commit `3fb01de169` and Minime `ffa511dc` are fast-forwarded to local main. The agent-only wrapper verifies PID 1499, 93 exact loaded source inputs, preserved session and empty NEXT queue, and unchanged protected peers. No bridge/provider/engine rollout or automation resume. Activation receipt and remaining capacity gates: `docs/steward-notes/2026-10-05-maintenance-durability-release.md`.
+
 - **Agent-only durability release qualification (2026-10-05, Codex).** Extend the explicit Minime reconciliation overlay to the reviewed source-status publisher, NEXT handoff and retained-job receipt fixes. Use existing agent-only graceful reload gates, preserving the deployed bridge/helper and all protected peers. No larger writing limits or provider transition is authorized by this subset. Evidence: `docs/steward-notes/2026-10-05-maintenance-durability-release.md`.
 
 - **Maintenance NEXT transition live (2026-10-05, Codex).** Agent 79523 drained gracefully and replacement 76377 acknowledged the exact empty legacy queue before scheduling. All 92 loaded Minime inputs match `affae098`; operator tools `1e70116b94` and the runtime are fast-forwarded to local main. No protected peer, model, engine or sensory process changed. The larger writing-capacity/provider release remains unqualified, with current free memory below its approved reserve; no real-model pilot was started. Exact hashes, failed attempts and remaining gates are in `docs/steward-notes/2026-10-05-minime-next-maintenance-transition.md`.

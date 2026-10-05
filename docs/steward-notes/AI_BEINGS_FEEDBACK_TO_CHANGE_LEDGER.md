@@ -34,6 +34,8 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ### 2026-10-05 - continuity maintenance follow-through
 
+- **Live follow-through:** Minime `ffa511dc` and Astrid operator `3fb01de169` are merged to local main. Sanctioned agent-only transition 76377 -> 1499 verified all 93 loaded inputs, exact empty-queue acknowledgement, preserved session 5321, no newly interrupted job and unchanged protected peers. Source backups and bounded before/after telemetry are retained in the linked release record. This does not activate larger writing capacity or establish felt improvement; automations remain paused.
+
 - **Provenance:** Engineering follow-through on the public continuity witnesses already recorded below and Mike's request to deploy completed work; no new being claim or private-writing quotation.
 - **Response:** Isolate Minime's durable startup/drain status, NEXT restoration headroom and exact retained-result retries from the unqualified larger-capacity candidate. Preserve existing limits, helper, controller policy and all authored history.
 - **Evidence and boundary:** Synthetic durability and full adapter qualification, followed by the approved agent-only restart when gates pass. No reservoir, model or sensory restart, no inferred felt improvement, no automation resume. Exact results and activation status: [release record](2026-10-05-maintenance-durability-release.md).
