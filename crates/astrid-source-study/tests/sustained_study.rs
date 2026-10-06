@@ -218,9 +218,12 @@ fn v11_migration_preserves_exact_pending_input_and_downgrade_fails_closed() {
     fs::write(&path, serde_json::to_vec(&old).unwrap()).unwrap();
     assert_eq!(reader.prepare_action("SELF_STUDY CONTINUE").unwrap(), page);
     reader.prepare_action("SELF_STUDY HELP").unwrap();
-    assert_eq!(state(&temp)["version"], json!(12));
+    assert_eq!(
+        state(&temp)["version"],
+        json!(astrid_source_study::SCHEMA_VERSION)
+    );
     let mut future = state(&temp);
-    future["version"] = json!(13);
+    future["version"] = json!(astrid_source_study::SCHEMA_VERSION + 1);
     let bytes = serde_json::to_vec(&future).unwrap();
     fs::write(&path, &bytes).unwrap();
     assert!(reader.prepare_action("SELF_STUDY HELP").is_err());

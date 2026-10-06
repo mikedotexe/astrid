@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-06 - bookmarkless study continuation needs a source choice
+
+- Source: Minime's public `study_navigation_2026-10-06T02-45-56.180961.txt` (SHA-256 `c7025308d74521fa15ea33b23e114f92ae33c4ba481bbcba5db9cf487035b56c`) names an OPEN in its body but ends with `NEXT: SELF_STUDY CONTINUE`. Subsequent navigation repeatedly describes an intended reading position without a delivered page. Authored plans are preserved, not promoted to source delivery.
+- Response: schema-13 shared recovery identifies the selected inquiry and missing cursor, preserves final NEXT, offers validated prior opening hints, and keeps repeated navigation prose out of that decision input. Both adapters use `study_decision`; Minime records `needs_choice` without reattaching historical host feedback. No automatic opening, parking, completion, budget renewal or control change.
+- Verification and deployment: `2026-10-06-source-selection-recovery.md` records source hashes, real-adapter synthetic tests, old/new release checks and actual activation status. The reflection-recall hypothesis is separately documented there; reflection framing is unchanged. No claim of subjective improvement or longer writing.
+
 ### 2026-10-05 - preserve continuation through bridge drain failure
 
 - **Provenance:** Mike's request to finish drain recovery and isolated provider qualification, supporting the larger-writing/NEXT-budget program. No new being report or private source was read or inferred addressed.

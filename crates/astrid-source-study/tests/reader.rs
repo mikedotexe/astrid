@@ -172,12 +172,9 @@ fn search_and_map_share_the_open_catalog_without_marking_pages() {
         })
         .unwrap();
     assert!(map.text.contains(SOURCE));
-    assert!(
-        reader
-            .prepare(Command::Continue)
-            .unwrap()
-            .text
-            .contains("Shared system map")
+    assert_eq!(
+        reader.prepare(Command::Continue).unwrap().input_kind,
+        astrid_source_study::InputKind::SourceSelectionNeeded
     );
 }
 #[test]

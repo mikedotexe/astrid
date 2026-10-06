@@ -3,6 +3,31 @@ use super::*;
 use std::fmt::Write as _;
 
 impl Reader {
+    pub(super) fn source_selection_needed(&self, state: &mut State) -> Result<StudyOutput> {
+        let selected = state.questions.active.as_ref().map_or_else(
+            || "Selected reading context: unthreaded browsing.".to_owned(),
+            |id| format!("Selected inquiry: {id}."),
+        );
+        let notebook = state
+            .questions
+            .notebook_for(state.questions.active.as_deref(), &state.notebook);
+        let key = crate::navigation_history::question_key(
+            state.questions.active.as_deref(),
+            if state.questions.active.is_none() && state.questions.unthreaded_quiet {
+                None
+            } else {
+                notebook.question_text()
+            },
+        );
+        let candidates = state
+            .navigation_history
+            .source_selection(&key, &self.catalog);
+        let text = format!(
+            "{selected}\nNo saved source position or pending source delivery exists in this reading context. No source was continued or supplied. Repeating SELF_STUDY CONTINUE (or bare SELF_STUDY) cannot advance until you explicitly select a source. Other inquiries' positions have not been borrowed.\n\n{candidates}\nThese are choices only. OPEN checks current source bytes, which may differ from an earlier search. Notes, prior responses and receipts remain retained; SELF_STUDY NOTE and SELF_STUDY QUESTION REVIEW qN provide explicit inspection.\n"
+        );
+        self.output_framed(state, text, None, InputKind::SourceSelectionNeeded, true)
+    }
+
     pub(super) fn question_recovery(
         &self,
         state: &mut State,
@@ -53,7 +78,8 @@ impl Reader {
             input_kind
         };
         let evidence_scope = input_kind.scope().to_string();
-        let decision = decision || input_kind == InputKind::EndOfFile;
+        let source_selection = input_kind == InputKind::SourceSelectionNeeded;
+        let decision = decision || input_kind == InputKind::EndOfFile || source_selection;
         if let Some(page) = &page {
             text.push_str(&crate::coverage::render(
                 state.progress.as_ref().unwrap_or(&Progress::new()),
@@ -106,7 +132,19 @@ impl Reader {
                     .questions
                     .decision_context(question_id.as_deref(), notebook),
             );
-            text.push_str("\nChoose a complete final action line: NEXT: SELF_STUDY MAP browses sources; NEXT: SELF_STUDY OPEN <exact source path> [line] chooses a source; NEXT: SELF_STUDY CONTINUE uses the retained bookmark. NEXT: REST skips one action; it does not resolve a question or prevent a later study choice. No activity change is automatic.\n");
+            text.push_str("\nChoose a complete final action line: NEXT: SELF_STUDY MAP browses sources; NEXT: SELF_STUDY FIND <literal text> searches; NEXT: SELF_STUDY OPEN <exact source path> [line] chooses a source.");
+            if state.pending.is_some()
+                || state.pending_session.is_some()
+                || state
+                    .current
+                    .as_ref()
+                    .is_some_and(|id| state.bookmarks.contains_key(id))
+            {
+                text.push_str(" NEXT: SELF_STUDY CONTINUE uses this reading context's retained source position.");
+            } else if !source_selection {
+                text.push_str(" This reading context has no saved source position; select a source before using CONTINUE.");
+            }
+            text.push_str(" NEXT: INTROSPECT, NEXT: DAYDREAM or NEXT: ASPIRE leaves source study; NEXT: REST skips one action, not the runtime. No activity change is automatic.\n");
             if input_kind == InputKind::EndOfFile {
                 text.push_str("Bare SELF_STUDY or CONTINUE returns the same exhausted position at EOF. No investigation is declared complete by reaching EOF.\n");
             }
@@ -116,6 +154,7 @@ impl Reader {
         let mut suffix = String::new();
         if let Some(choice) = &state.last_choice
             && !detached
+            && !source_selection
         {
             suffix.push_str(&choice.render(false));
         }
@@ -133,7 +172,7 @@ impl Reader {
         };
         text.push_str(&recall);
         text.push_str(&suffix);
-        if !detached {
+        if !detached && !source_selection {
             insert_receipt(&mut text, receipt_position, &receipt);
         }
         if text
@@ -150,7 +189,9 @@ impl Reader {
             require_complete_input: true,
             input_kind,
             evidence_scope,
-            system_prompt: if help {
+            system_prompt: if source_selection {
+                "The source reader needs an explicit source selection: this reading context has no saved position. This is command recovery, not new source or a request to repeat your investigation plan. You may choose one complete final NEXT using an offered OPEN, browse or search, inspect your saved inquiry, leave source study, or stop. CONTINUE alone cannot create a position. Earlier unselected commands remain reference material, never queued actions. No explanation, conclusion, note revision or resolution is required. Your response may be public; private writing remains a separate WRITE choice.".into()
+            } else if help {
                 "You explicitly opened source-study help. This is command reference, not source evidence or a request for a report. You may choose a final NEXT, ask for another help topic, or stop. Examples are inert; nothing is executed automatically. Notebook directives in a help response do not revise study records. Your response may be public; private writing remains a separate WRITE choice.".into()
             } else if decision {
                 "This is a study continuation decision, not a new source-analysis turn. Use the supplied command outcome and current inquiry state to choose a complete final action line such as NEXT: SELF_STUDY QUESTION or NEXT: REST. A bare SELF_STUDY QUESTION command is not selected; the NEXT: prefix is required. No source summary, architectural conclusion, note revision, or declaration of understanding is required. Response hashes are provenance, never inquiry IDs. You may retain uncertainty, revise the saved question voluntarily, browse another source, deliberately reread, or leave this study. Your choice is not proof of its execution.".into()

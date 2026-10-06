@@ -82,7 +82,10 @@ impl StudyOutput {
     #[must_use]
     pub fn is_continuation_decision(&self) -> bool {
         self.continuation_decision
-            || matches!(self.input_kind, InputKind::EndOfFile | InputKind::Help)
+            || matches!(
+                self.input_kind,
+                InputKind::EndOfFile | InputKind::Help | InputKind::SourceSelectionNeeded
+            )
     }
     /// Verify the entire offered input, including its study notebook.
     /// # Errors
@@ -691,8 +694,7 @@ impl Reader {
             .as_ref()
             .and_then(|id| state.bookmarks.get(id))
         else {
-            let text = self.map(state, "", 1)?;
-            return self.output(state, text, None, InputKind::Map);
+            return self.source_selection_needed(state);
         };
         if last.eof {
             Page::read(

@@ -324,8 +324,9 @@ async fn run_shared_source_study(
     } else if output.input_kind == astrid_source_study::InputKind::Reflection {
         "open reflection; no source inspection supplied"
     } else { "local checkout; deployed behavior not established" };
+    let reader_outcome = if output.is_continuation_decision() { "needs_choice" } else { "reader_prepared" };
     let artifact = format!(
-        "=== {} ===\nSource: {source}\nSource revision: {revision}\nSource scope: {source_scope}\nInput evidence: {}\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
+        "=== {} ===\nSource: {source}\nSource revision: {revision}\nSource scope: {source_scope}\nInput evidence: {}\nReader outcome: {reader_outcome}; not a claim of action execution or source delivery\nAccount: Astrid’s response to this input, not independently verified code facts.\nTimestamp: {timestamp}\nArtifact kind: {artifact_kind}\nVisibility: {visibility}\nLived-state witness: {}\nDelivery: {delivery_status}\n\n{text}",
         if output.is_continuation_decision() { "ASTRID STUDY DECISION" } else if output.input_kind == astrid_source_study::InputKind::RevisionRecovery { "ASTRID STUDY NAVIGATION RESPONSE" } else { "ASTRID INTROSPECTION" },
         output.evidence_scope,
         authorship.witness_id()
@@ -477,6 +478,55 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 #[cfg(test)]
 mod source_study_tests {
     use super::*;
+    #[test]
+    fn bookmarkless_command_conflict_uses_real_bridge_preparation_and_delivery() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("astrid");
+        let source = root.join("crates/example/src/lib.rs");
+        std::fs::create_dir_all(source.parent().unwrap()).unwrap();
+        std::fs::write(source, "pub struct RestartTracker;\n// fixture\n".repeat(1000)).unwrap();
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), root)])).unwrap(),
+            temp.path().join("reader"),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let open = "SELF_STUDY OPEN astrid/crates/example/src/lib.rs 1";
+        let steps = [
+            ("SELF_STUDY QUESTION NEW Does RestartTracker stop retries?", "NEXT: SELF_STUDY OPEN RestartTracker::new [837]".to_owned()),
+            ("SELF_STUDY OPEN RestartTracker::new [837]", "NEXT: SELF_STUDY FIND RestartTracker".into()),
+            ("SELF_STUDY FIND RestartTracker", format!("NAVIGATION_PROSE_MARKER\n{open}\nNEXT: SELF_STUDY CONTINUE")),
+            ("SELF_STUDY CONTINUE", "NEXT: SELF_STUDY CONTINUE".into()),
+            ("SELF_STUDY", format!("NEXT: {open}")),
+            (open, "An exact authored finding.\nNEXT: REST".into()),
+        ];
+        for (index, (action, text)) in steps.iter().enumerate() {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            next_action::study_navigation::handle_request(&mut conv, "SELF_STUDY", action).unwrap();
+            conv.introspect_target.as_mut().unwrap().operation_id = Some(format!("selection-{index}"));
+            let target = conv.introspect_target.clone();
+            let out = prepare_shared_study_target(&reader, target.clone()).unwrap();
+            assert_eq!(out, prepare_shared_study_target(&reader, target).unwrap());
+            if (3..=4).contains(&index) {
+                assert_eq!(out.input_kind, astrid_source_study::InputKind::SourceSelectionNeeded);
+                assert_eq!(source_study_authored_mode(&out), "study_decision");
+                assert!(out.text.contains(open) && out.text.contains("was not selected"));
+                assert!(!out.text.contains("NAVIGATION_PROSE_MARKER"));
+                assert!(!out.text.contains("NAVIGATION RECEIPT"));
+                assert!(out.page.is_none() && out.continuation_decision);
+            }
+            let request = serde_json::json!({"messages":[{"role":"system","content":out.system_prompt},{"role":"user","content":out.text}]}).to_string();
+            let response = serde_json::json!({"message":{"content":text},"done":true}).to_string();
+            if let Some(page) = &out.page {
+                assert_eq!(index, 5);
+                reader.delivered(&page.id, &request, &response).unwrap();
+            } else {
+                reader.navigation_delivered(out.navigation_id.as_ref().unwrap(), &request, &response).unwrap();
+            }
+            let state: Value = serde_json::from_slice(&std::fs::read(temp.path().join("reader/reader-v1.json")).unwrap()).unwrap();
+            assert_eq!(state["bookmarks"].as_object().unwrap().is_empty(), index < 5);
+            assert_eq!(parse_next_action(text),
+                astrid_source_study::response_choice::inspect_response(text, false).selected_next.as_deref());
+        }
+    }
     #[test]
     fn new_namespace_recovery_and_help_use_real_bridge_preparation_without_selecting() {
         let temp = tempfile::tempdir().unwrap();

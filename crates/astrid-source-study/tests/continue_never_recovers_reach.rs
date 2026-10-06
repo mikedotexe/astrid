@@ -20,7 +20,8 @@
 //! `Store::prepare_parsed` routes that variant straight into `prepare_continue`
 //! (`src/store.rs:522`), which is the one command arm with no recovery branch:
 //! it returns a pending page, a bookmark-advanced page, an end-of-file notice,
-//! or the root map (`src/store.rs:547-591`). Only the arms that resolve a
+//! or (at that revision) the root map. Bookmarkless continuation now returns
+//! `SourceSelectionNeeded`, still not a failed named-target recovery. Only the arms that resolve a
 //! *named* target reach `recovery_map` / `source_recovery` / the
 //! `no catalog entries` branch (`src/store.rs:439-474`, `527-541`).
 //!
@@ -87,12 +88,12 @@ fn continue_never_yields_a_recovery_input_in_any_reader_state() {
     // This remains long enough that the first page cannot reach end of file.
     let (_temp, reader) = setup(&"// row of ordinary source\n".repeat(4000));
 
-    // 1. No bookmark at all: the root map, not a recovery.
+    // 1. No bookmark: an explicit selection decision, not a failed named target.
     let fresh = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
-    assert_eq!(fresh.input_kind, InputKind::Map);
+    assert_eq!(fresh.input_kind, InputKind::SourceSelectionNeeded);
     assert!(
         !fresh.evidence_scope.starts_with(RECOVERY_HEADER),
-        "a first CONTINUE is a map, never a recovery: {}",
+        "a first CONTINUE needs a selection, never a failed target: {}",
         fresh.evidence_scope
     );
 

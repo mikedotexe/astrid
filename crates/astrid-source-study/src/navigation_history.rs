@@ -10,6 +10,8 @@ pub(crate) struct NavigationHistory {
     question_key: String,
     without_source: u32,
     candidates: Vec<Candidate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    conflict: Option<SourceConflict>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -24,6 +26,26 @@ struct Candidate {
     source: String,
     command: String,
     input_id: String,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct SourceConflict {
+    candidate: Candidate,
+    selected_next: String,
+}
+
+impl Candidate {
+    fn available(&self, catalog: &Catalog) -> bool {
+        let Ok(Command::Open { source, line }) = Command::parse(&self.command) else {
+            return false;
+        };
+        source == self.source
+            && catalog
+                .resolve(&source)
+                .ok()
+                .and_then(|source| crate::Page::read(&source, None, line, None).ok())
+                .is_some_and(|page| page.start.byte < page.end.byte)
+    }
 }
 
 pub(crate) fn question_key(id: Option<&str>, question: Option<&str>) -> String {
@@ -75,7 +97,7 @@ impl NavigationOffer {
             if source.len() > 400
                 || source.chars().any(char::is_whitespace)
                 || catalog.resolve(&source).is_err()
-                || candidates.iter().any(|c: &Candidate| c.source == source)
+                || candidates.iter().any(|c: &Candidate| c.command == command)
             {
                 continue;
             }
@@ -105,6 +127,7 @@ impl NavigationHistory {
         {
             self.without_source = 0;
             self.candidates.clear();
+            self.conflict = None;
         }
     }
 
@@ -132,9 +155,23 @@ impl NavigationHistory {
         if matches!(offer.kind, InputKind::SourcePage | InputKind::SourceSession) {
             self.without_source = 0;
             self.candidates.clear();
+            self.conflict = None;
             return;
         }
         self.without_source = self.without_source.saturating_add(1);
+        let feedback = crate::response_choice::inspect_response(response, false);
+        if let Some(selected) = feedback.selected_next.as_deref()
+            && matches!(Command::parse(selected), Ok(Command::Continue))
+            && let Some(earlier) = feedback.earlier_source_command.as_deref()
+            && let Some(candidate) = offer.candidates.iter().find(|c| c.command == earlier)
+        {
+            let mut candidate = candidate.clone();
+            candidate.input_id = input_id.into();
+            self.conflict = Some(SourceConflict {
+                candidate,
+                selected_next: selected.into(),
+            });
+        }
         let visible = crate::response_choice::eligible_lines(response).join("\n");
         let terms = crate::notebook::inquiry_terms(&visible);
         let named_sources = terms
@@ -144,12 +181,19 @@ impl NavigationHistory {
                     candidate.source == *term || candidate.source.ends_with(&format!("/{term}"))
                 });
                 let first = matches.next()?;
-                matches.next().is_none().then(|| first.source.clone())
+                matches
+                    .all(|candidate| candidate.source == first.source)
+                    .then(|| first.source.clone())
             })
             .collect::<Vec<_>>();
         for mut candidate in offer.candidates {
             let named = named_sources.contains(&candidate.source);
-            if !named || self.candidates.iter().any(|c| c.source == candidate.source) {
+            if !named
+                || self
+                    .candidates
+                    .iter()
+                    .any(|c| c.command == candidate.command)
+            {
                 continue;
             }
             candidate.input_id = input_id.into();
@@ -158,6 +202,44 @@ impl NavigationHistory {
                 self.candidates.remove(0);
             }
         }
+    }
+
+    pub(crate) fn source_selection(&self, key: &str, catalog: &Catalog) -> String {
+        if self.question_key != key {
+            return String::new();
+        }
+        let conflict = self
+            .conflict
+            .as_ref()
+            .filter(|c| c.candidate.available(catalog));
+        let mut text = String::new();
+        if let Some(conflict) = conflict {
+            let _ = writeln!(
+                text,
+                "Retained verified choice conflict (input {}): your final choice was {:?}; the earlier {:?} was not selected. Neither this reference nor its suggestion executes it.",
+                conflict.candidate.input_id, conflict.selected_next, conflict.candidate.command
+            );
+        }
+        let mut shown = Vec::new();
+        for candidate in conflict
+            .into_iter()
+            .map(|c| &c.candidate)
+            .chain(self.candidates.iter())
+        {
+            if shown.contains(&candidate.command) || !candidate.available(catalog) {
+                continue;
+            }
+            let _ = writeln!(
+                text,
+                "Previously offered location (input {}; current-checkout navigation hint, not delivered source or a bookmark): NEXT: {}",
+                candidate.input_id, candidate.command
+            );
+            shown.push(candidate.command.clone());
+            if shown.len() == MAX_CANDIDATES {
+                break;
+            }
+        }
+        text
     }
 
     pub(crate) fn render(&self, key: &str, kind: InputKind, catalog: &Catalog) -> String {
@@ -175,6 +257,7 @@ impl NavigationHistory {
                     | InputKind::RevisionRecovery
                     | InputKind::RuntimeTrace
                     | InputKind::Geometry
+                    | InputKind::SourceSelectionNeeded
             )
         {
             return String::new();
