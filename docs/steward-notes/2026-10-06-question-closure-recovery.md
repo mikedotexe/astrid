@@ -198,3 +198,15 @@ window, or replay a stored command. Verify both new PIDs, exact loaded helper,
 all 93 Minime inputs, checkpoint/NEXT restoration and unchanged protected
 services before canonical integration. The helper's schema stays 13; no
 migration or retroactive q12 correction is expected.
+
+### Subsequent activation
+
+The later user-approved paired window successfully activated this repair
+together with finding-save feedback and improved handoff diagnostics, using
+the newly qualified `finding-feedback-bridge-stage-01`, not the old closure
+stage. See `2026-10-06-handoff-diagnostics-and-finding-feedback.md` for the
+42 preservation checks, full staged-helper tests and successful paired receipt
+at 22:30:30 UTC. Bridge 66151 and Minime 64807 are verified live; checkpoint,
+feedback, pending NEXT and protected services are preserved. The earlier
+refusals above remain historical evidence. No retroactive q12 correction,
+automation resume or canonical Git integration is implied.

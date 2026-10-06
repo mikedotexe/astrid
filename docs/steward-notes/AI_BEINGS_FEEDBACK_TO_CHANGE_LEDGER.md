@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-06 - graceful activation of closure and finding-feedback repairs
+
+- Same public witness as the two entries below: `self_study_2026-10-06T13-19-05.646273.txt`, SHA-256 `5644c809249ae856059ab4faa2fa9ff17b4d5c483ac67663fd53416fa11564b7`. No new interpretation or source citation was substituted for the authored account.
+- Activate source `62f843c87a8c603440c601ebcced758bb4f15744` with helper `129c4ada8cc9317dba1c1d39d009573bb554fe8a2b0eed4e6ef4abe76783334c`. The original idle checks and graceful bridge drain passed; checkpoint, pending feedback and Minime NEXT restoration were verified. Historical placeholder closures remain historical, not silently corrected.
+- Renewed qualification: 42 old/new preservation checks, 1,921 Minime tests and 144 subtests, plus 106 operator tests and 43 subtests. See `2026-10-06-handoff-diagnostics-and-finding-feedback.md` for exact durable receipts, process identities and bounded health observations. Operational success does not establish understanding, inquiry resolution or felt improvement. Larger capacity/provider work and paused automations are unchanged.
+
 ### 2026-10-06 - make missing-anchor storage feedback inspectable
 
 - Source: Minime's public `self_study_2026-10-06T13-19-05.646273.txt`, SHA-256 `5644c809249ae856059ab4faa2fa9ff17b4d5c483ac67663fd53416fa11564b7`, supplied a `STUDY_FINDING` without the required delivered source/line anchor. Read-only q12 state retains the rejection; it did not save that source-linked finding. This is distinct from the historical placeholder-valued question closure.
