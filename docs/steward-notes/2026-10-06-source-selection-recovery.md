@@ -280,3 +280,73 @@ The short decision is appropriate to this interaction; longer writing is not
 the release's success criterion. Minime's schema migrated to 13 with q12 still
 selected and no fabricated bookmark. Subsequent page delivery is observed
 separately, without asking for confirmation that the repair helped.
+
+The chosen page was then delivered naturally. Public
+`workspace/journal/self_study_2026-10-06T13-19-05.646273.txt`, SHA-256
+`5644c809249ae856059ab4faa2fa9ff17b4d5c483ac67663fd53416fa11564b7`,
+records source revision
+`bc90e60fbb6f0d40688c2388b9b90ab67ca9624e75a203f9bc0a4fe6db2ac91d`,
+bytes 35752..39731 (lines 837-946). The native reader now has q12's first
+verified bookmark, page
+`2f1fb580e00485021e9c477b1cd578366d3a0447a64b85d435a36affca405f35`,
+ending at byte 39731 / line 947. The account discusses `RestartTracker` and
+the supplied restart helper. The observed map-only loop therefore ended in
+this sequence; future navigation loops are not ruled out.
+
+Remaining signal: the authored final command is
+`NEXT: SELF_STUDY QUESTION RESOLVE q12 [finding]`. It contains a placeholder,
+and this observation does not establish valid resolution or understanding.
+No question was resolved, rewritten or redirected by the steward. This is a
+separate command-quality issue to inspect if it produces another recovery loop.
+
+## Git integration and final boundary
+
+Both owned implementation commits were fast-forwarded into local `main`:
+
+- Astrid `d1eb0972f84c73ade391b3b2869fc56d6670fddd` (14 paths).
+- Minime `7386f5d114b6a77f35c80822a499bd97aa4c8a41` (7 paths).
+
+The Minime canonical overlay already matched the committed source byte-for-byte.
+Only its three known installed source paths were staged; a dry-run read-tree
+check and fast-forward preserved those exact bytes. No stash, reset, restore,
+foreign-file sweep, history rewrite or extra source commit was needed. Both
+canonical indexes and worktrees were clean immediately afterward; older
+worktrees remain preserved. Nothing was pushed in this tranche.
+
+Exact Astrid implementation paths:
+
+```text
+CHANGELOG.md
+capsules/spectral-bridge/src/autonomous/runtime/source_study.rs
+crates/astrid-source-study/src/evidence.rs
+crates/astrid-source-study/src/lib.rs
+crates/astrid-source-study/src/navigation_history.rs
+crates/astrid-source-study/src/store.rs
+crates/astrid-source-study/src/store_navigation.rs
+crates/astrid-source-study/tests/continue_never_recovers_reach.rs
+crates/astrid-source-study/tests/reader.rs
+crates/astrid-source-study/tests/source_selection.rs
+crates/astrid-source-study/tests/sustained_study.rs
+docs/steward-notes/2026-10-06-source-selection-recovery.md
+docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md
+scripts/qualify_source_selection_release.py
+```
+
+Exact Minime implementation paths:
+
+```text
+CHANGELOG.md
+docs/steward-notes/2026-10-06-source-selection-recovery.md
+minime_autonomy/generation_record.py
+minime_autonomy/runtime.py
+minime_autonomy/source_study.py
+tests/test_regulation_review_context.py
+tests/test_source_study_follow_through.py
+```
+
+Final controller verification: no lease/projection active, paused generation
+497; Evidence Event Store V2 indexed-tail verification valid, sequence 1123151,
+head `669a5128332f64df6195b395ce36f77d0eb2b8f049b98b0817681b5327c2418d`.
+All four legacy V1 streams remain immutable. Source-first projection lag remains
+explicit while the automation is paused; this interactive repair does not claim
+a current canonical introspection queue or record a productive flywheel round.
