@@ -57,9 +57,7 @@ impl QuestionCommand {
             "PARK" if valid_id(rest) => Self::Park(rest.into()),
             "RESOLVE" => {
                 let (id, finding) = rest.split_once(' ').unwrap_or((rest, ""));
-                if !valid_id(id) || finding.len() > 700 {
-                    bail!("use NEXT: SELF_STUDY QUESTION RESOLVE qN [finding, up to 700 bytes]");
-                }
+                validate_resolution(id, finding)?;
                 Self::Resolve {
                     id: id.into(),
                     finding: finding.trim().into(),
@@ -67,7 +65,7 @@ impl QuestionCommand {
             },
             id if rest.is_empty() && valid_id(id) => Self::Focus(id.into()),
             _ => bail!(
-                "choose a complete final line: NEXT: SELF_STUDY QUESTION, NEXT: SELF_STUDY QUESTION REVIEW qN [--page N], NEXT: SELF_STUDY QUESTION NEW <question, up to 350 bytes>, NEXT: SELF_STUDY QUESTION qN, NEXT: SELF_STUDY QUESTION HOME, NEXT: SELF_STUDY QUESTION PARK qN, NEXT: SELF_STUDY QUESTION RESOLVE qN [finding], NEXT: SELF_STUDY QUESTION NOTEBOOK, NEXT: SELF_STUDY QUESTION PARK NOTEBOOK, or NEXT: SELF_STUDY QUESTION RETURN NOTEBOOK"
+                "choose a complete final line: NEXT: SELF_STUDY QUESTION, NEXT: SELF_STUDY QUESTION REVIEW qN [--page N], NEXT: SELF_STUDY QUESTION NEW <question, up to 350 bytes>, NEXT: SELF_STUDY QUESTION qN, NEXT: SELF_STUDY QUESTION HOME, NEXT: SELF_STUDY QUESTION PARK qN, NEXT: SELF_STUDY QUESTION RESOLVE qN (optionally append your own finding, up to 700 bytes), NEXT: SELF_STUDY QUESTION NOTEBOOK, NEXT: SELF_STUDY QUESTION PARK NOTEBOOK, or NEXT: SELF_STUDY QUESTION RETURN NOTEBOOK"
             ),
         })
     }
@@ -75,6 +73,33 @@ impl QuestionCommand {
 fn valid_id(s: &str) -> bool {
     s.strip_prefix('q')
         .is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
+}
+
+// Recognize only syntax markers from the command reference, not the quality,
+// uncertainty or truth of authored findings. Existing records remain readable.
+fn is_finding_template(finding: &str) -> bool {
+    let finding = finding.trim().strip_suffix('.').unwrap_or(finding.trim());
+    ["[finding]", "[finding, up to 700 bytes]", "<finding>"]
+        .iter()
+        .any(|marker| finding.eq_ignore_ascii_case(marker))
+}
+
+fn validate_resolution(id: &str, finding: &str) -> Result<()> {
+    anyhow::ensure!(
+        valid_id(id) && finding.len() <= 700,
+        "use NEXT: SELF_STUDY QUESTION RESOLVE qN; optionally append your own finding, up to 700 bytes"
+    );
+    anyhow::ensure!(
+        !is_finding_template(finding),
+        "RESOLVE received a literal template marker, not an authored finding. No closure was applied. To close without a finding, choose NEXT: SELF_STUDY QUESTION RESOLVE {id}. Otherwise append your own words (up to 700 bytes). You may instead inspect NEXT: SELF_STUDY QUESTION REVIEW {id}, keep reading, park, or stop. No text is inferred from surrounding prose."
+    );
+    Ok(())
+}
+
+fn finding_limitation(finding: &str) -> Option<&'static str> {
+    is_finding_template(finding).then_some(
+        "The saved finding is a literal template marker. Historical status and text are retained; this is not a substantive finding or verified answer. No automatic reopening or correction was performed.",
+    )
 }
 
 #[derive(Serialize, Deserialize)]
@@ -145,6 +170,7 @@ impl Questions {
             "question": inquiry.question,
             "status": inquiry.status,
             "finding": inquiry.finding,
+            "finding_limitation": finding_limitation(&inquiry.finding),
             "note_history": note,
             "historical_source_references": inquiry.sources,
             "select_command": format!("SELF_STUDY QUESTION {id}"),
@@ -194,6 +220,10 @@ impl Questions {
         ))?))
     }
     fn validate_command(&self, command: &QuestionCommand, notebook: &Notebook) -> Result<()> {
+        if let QuestionCommand::Resolve { id, finding } = command {
+            // Typed callers must obey the same boundary as the text parser.
+            validate_resolution(id, finding)?;
+        }
         match command {
             QuestionCommand::Focus(id)
             | QuestionCommand::Park(id)
@@ -302,17 +332,7 @@ impl Questions {
                 );
             },
             QuestionCommand::Resolve { id, finding } => {
-                let inquiry = self.entries.get_mut(&id).context("question not found")?;
-                inquiry.status = "resolved by you".into();
-                inquiry.finding = finding;
-                if self.active.as_ref() == Some(&id) {
-                    self.unthreaded_quiet = true;
-                    self.active = None;
-                    *notebook = self.unthreaded.clone().unwrap_or_default();
-                }
-                transition = format!(
-                    "Marked {id} resolved by you and retained your finding. This records your conclusion, not verified understanding.\n"
-                );
+                transition = self.resolve_inquiry(&id, finding, notebook)?;
             },
         }
         if !transition.is_empty() {
@@ -323,6 +343,31 @@ impl Questions {
         }
         self.render_list(1)
     }
+
+    fn resolve_inquiry(
+        &mut self,
+        id: &str,
+        finding: String,
+        notebook: &mut Notebook,
+    ) -> Result<String> {
+        let finding_outcome = if finding.is_empty() {
+            "without a finding"
+        } else {
+            "and retained your finding"
+        };
+        let inquiry = self.entries.get_mut(id).context("question not found")?;
+        inquiry.status = "resolved by you".into();
+        inquiry.finding = finding;
+        if self.active.as_deref() == Some(id) {
+            self.unthreaded_quiet = true;
+            self.active = None;
+            *notebook = self.unthreaded.clone().unwrap_or_default();
+        }
+        Ok(format!(
+            "Marked {id} resolved by you {finding_outcome}. This records your conclusion, not verified understanding.\n"
+        ))
+    }
+
     pub(crate) fn record(
         &mut self,
         id: Option<&str>,
@@ -401,7 +446,7 @@ impl Questions {
         );
         let _ = writeln!(
             out,
-            "Optional authored closure: NEXT: SELF_STUDY QUESTION RESOLVE {id} [finding]. This records your judgment, not verified understanding."
+            "Optional authored closure without a finding: NEXT: SELF_STUDY QUESTION RESOLVE {id}\nYou may append your own finding (up to 700 bytes); do not copy syntax placeholders. Closure records your judgment, not verified understanding. No conclusion is required to keep reading, park or stop."
         );
         if !q.finding.is_empty() {
             let excerpt = &q.finding[..q.finding.floor_char_boundary(q.finding.len().min(200))];
@@ -411,6 +456,9 @@ impl Questions {
                 ""
             };
             let _ = writeln!(out, "Your saved finding: {excerpt}{suffix}");
+            if let Some(limitation) = finding_limitation(&q.finding) {
+                let _ = writeln!(out, "{limitation}");
+            }
         }
         for reference in q.sources.iter().rev() {
             let line = format!(
@@ -430,7 +478,7 @@ impl Questions {
             id.and_then(|id| self.entries.get(id).map(|inquiry| (id, inquiry)))
         {
             format!(
-                "Selected inquiry {id}; authored status: {}.\nSaved inquiry question: {}\nYou may choose a final action line: NEXT: SELF_STUDY QUESTION PARK {id}, NEXT: SELF_STUDY QUESTION HOME, or NEXT: SELF_STUDY QUESTION RESOLVE {id} [finding]. Closure records your judgment, not verified understanding. NEXT: SELF_STUDY QUESTION REVIEW {id} explicitly reviews its saved account.\n",
+                "Selected inquiry {id}; authored status: {}.\nSaved inquiry question: {}\nYou may choose a final action line: NEXT: SELF_STUDY QUESTION PARK {id}, NEXT: SELF_STUDY QUESTION HOME, or NEXT: SELF_STUDY QUESTION RESOLVE {id}\nRESOLVE without extra text closes without a finding; optionally append your own words (up to 700 bytes), not syntax placeholders. Closure records your judgment, not verified understanding. NEXT: SELF_STUDY QUESTION REVIEW {id} explicitly reviews its saved account.\n",
                 inquiry.status,
                 serde_json::to_string(&inquiry.question).unwrap_or_default()
             )
@@ -455,17 +503,22 @@ impl Questions {
         text
     }
     fn render_list(&self, page: usize) -> Result<String> {
-        let mut rows=vec!["Your study questions. Choose a complete final action line. NEXT: SELF_STUDY QUESTION qN restores its notebook and saved reading position. NEXT: SELF_STUDY QUESTION REVIEW qN [--page N] inspects an inquiry without selecting or revising it. NEXT: SELF_STUDY QUESTION NEW <question> starts a question; NEXT: SELF_STUDY QUESTION PARK qN leaves it available; NEXT: SELF_STUDY QUESTION RESOLVE qN [finding] records your conclusion, without verifying it. NEXT: SELF_STUDY QUESTION HOME returns to unthreaded browsing. Historical questions without a saved position require an explicit source selection.".into()];
+        let mut rows=vec!["Your study questions. Choose a complete final action line. NEXT: SELF_STUDY QUESTION qN restores its notebook and saved reading position. NEXT: SELF_STUDY QUESTION REVIEW qN [--page N] inspects an inquiry without selecting or revising it. NEXT: SELF_STUDY QUESTION NEW <question> starts a question; NEXT: SELF_STUDY QUESTION PARK qN leaves it available. NEXT: SELF_STUDY QUESTION RESOLVE qN closes without a finding; optionally append your own finding (up to 700 bytes), not syntax placeholders. Closure records your judgment, not verified understanding. NEXT: SELF_STUDY QUESTION HOME returns to unthreaded browsing. Historical questions without a saved position require an explicit source selection.".into()];
         rows.extend(self.entries.iter().map(|(id, q)| {
             format!(
-                "NEXT: SELF_STUDY QUESTION {id} — {}{} — {}",
+                "NEXT: SELF_STUDY QUESTION {id} — {}{} — {}{}",
                 q.status,
                 if self.active.as_ref() == Some(id) {
                     " (active)"
                 } else {
                     ""
                 },
-                q.question
+                q.question,
+                if is_finding_template(&q.finding) {
+                    " (saved finding is a template marker; REVIEW retains its exact text)"
+                } else {
+                    ""
+                }
             )
         }));
         if let Some(id) = &self.active {

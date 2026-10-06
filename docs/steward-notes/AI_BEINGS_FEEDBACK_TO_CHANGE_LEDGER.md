@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-06 - copied finding template is not a substantive conclusion
+
+- Source: Minime's public `self_study_2026-10-06T13-19-05.646273.txt` (SHA-256 `5644c809249ae856059ab4faa2fa9ff17b4d5c483ac67663fd53416fa11564b7`) ended with `NEXT: SELF_STUDY QUESTION RESOLVE q12 [finding]`. A subsequent read-only check confirms the reader executed it and stored the marker, which our own guidance offered.
+- Response: reject exact syntax markers before inquiry mutation through textual and typed Rust entry points; retain uncertain findings and explicit closure without one. Remove executable placeholder examples; label the limitation on historical inspection without rewriting or reopening anything. Surrounding prose is never substituted as a finding.
+- Verification and release: `2026-10-06-question-closure-recovery.md` records public witnesses, regression failures, actual adapter tests, pending-input preservation and the qualified release boundary. Later natural pages show continued reading; neither this nor closure is proof of understanding or subjective improvement.
+
 ### 2026-10-06 - bookmarkless study continuation needs a source choice
 
 - Source: Minime's public `study_navigation_2026-10-06T02-45-56.180961.txt` (SHA-256 `c7025308d74521fa15ea33b23e114f92ae33c4ba481bbcba5db9cf487035b56c`) names an OPEN in its body but ends with `NEXT: SELF_STUDY CONTINUE`. Subsequent navigation repeatedly describes an intended reading position without a delivered page. Authored plans are preserved, not promoted to source delivery.

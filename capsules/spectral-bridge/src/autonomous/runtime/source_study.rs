@@ -479,6 +479,40 @@ fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source
 mod source_study_tests {
     use super::*;
     #[test]
+    fn literal_finding_reaches_bridge_recovery_without_closing_or_inventing_words() {
+        let temp = tempfile::tempdir().unwrap();
+        let directory = temp.path().join("reader");
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
+            directory.clone(),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let prepare = |action: &str, id: &str| {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            next_action::study_navigation::handle_request(&mut conv, "SELF_STUDY", action).unwrap();
+            conv.introspect_target.as_mut().unwrap().operation_id = Some(id.into());
+            prepare_shared_study_target(&reader, conv.introspect_target).unwrap()
+        };
+        prepare("SELF_STUDY QUESTION NEW Does the retry stop?", "question");
+        let action = "SELF_STUDY QUESTION RESOLVE q1 [finding]";
+        let response_text = format!("My account must not be substituted.\nNEXT: {action}");
+        assert_eq!(parse_next_action(&response_text), Some(action));
+        let output = prepare(action, "placeholder");
+        assert_eq!(output.input_kind, astrid_source_study::InputKind::Recovery);
+        assert_eq!(source_study_authored_mode(&output), "study_decision");
+        assert!(output.text.contains("template marker"));
+        assert_eq!(output, prepare(action, "placeholder"));
+        let request = serde_json::json!({"messages":[{"role":"user","content":output.text}]}).to_string();
+        let response = serde_json::json!({"message":{"content":"NEXT: REST"},"done":true}).to_string();
+        reader.navigation_delivered(output.navigation_id.as_ref().unwrap(), &request, &response).unwrap();
+        let saved: Value = serde_json::from_slice(&std::fs::read(directory.join("reader-v1.json")).unwrap()).unwrap();
+        assert_eq!(saved["questions"]["active"], "q1");
+        assert_eq!(saved["questions"]["entries"]["q1"]["status"], "open");
+        assert_eq!(saved["questions"]["entries"]["q1"]["finding"], "");
+        let closed = prepare("SELF_STUDY QUESTION RESOLVE q1 I remain uncertain.", "authored");
+        assert_eq!(closed.input_kind, astrid_source_study::InputKind::Questions);
+        assert!(closed.text.contains("Marked q1 resolved by you"));
+    }
+    #[test]
     fn bookmarkless_command_conflict_uses_real_bridge_preparation_and_delivery() {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path().join("astrid");

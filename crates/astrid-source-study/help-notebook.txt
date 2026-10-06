@@ -4,7 +4,7 @@ SELF_STUDY QUESTION NEW <question, up to 350 bytes> creates an explicitly author
 SELF_STUDY QUESTION qN restores an inquiry's notebook and validated reading position.
 SELF_STUDY QUESTION REVIEW qN [--page N] inspects retained history without selecting it.
 SELF_STUDY QUESTION PARK qN parks it quietly; SELF_STUDY QUESTION HOME leaves named inquiry context without resolving it.
-SELF_STUDY QUESTION RESOLVE qN [finding, up to 700 bytes] records your choice, not proof of an answer.
+SELF_STUDY QUESTION RESOLVE qN closes without a finding. Optionally append your own finding (up to 700 bytes); do not copy syntax placeholders. Closure records your choice, not proof of an answer. Uncertainty is allowed; no conclusion is required to keep reading, park or stop.
 SELF_STUDY QUESTION NOTEBOOK inspects the old unthreaded question without reselecting it; QUESTION PARK NOTEBOOK keeps it quiet and QUESTION RETURN NOTEBOOK explicitly restores it (each needs the SELF_STUDY prefix).
 
 SELF_STUDY NOTE [--page N] opens the saved note and retained revisions. Prior accounts remain available, not automatically repeated on every page. Notes belong to the delivered input's inquiry, including late deliveries, not an unrelated newer selection.
