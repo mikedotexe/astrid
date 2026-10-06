@@ -130,13 +130,26 @@ impl Findings {
         if self.updates.is_empty() {
             return out;
         }
+        out.push_str(&self.render_results(max_bytes.saturating_sub(out.len())));
+        out
+    }
+
+    /// Operation receipts only: no authored findings, source fragments or recap.
+    pub(crate) fn render_results(&self, max_bytes: usize) -> String {
+        if self.updates.is_empty() {
+            return String::new();
+        }
+        let mut out = String::new();
         out.push_str("LATEST FINDING SAVE/REMOVE RESULTS — from your most recent explicit update, retained until another finding update. Newest result first. These report storage, not whether a conclusion is correct.\n");
         let omitted = |count| {
             format!(
-                "{count} earlier result(s) remain whole in source_findings.updates in the full notebook below.\n"
+                "{count} earlier result(s) remain whole in source_findings.updates; SELF_STUDY NOTE or QUESTION REVIEW for that inquiry opens retained results.\n"
             )
         };
         let omission_reserve = omitted(self.updates.len()).len();
+        if out.len().saturating_add(omission_reserve) > max_bytes {
+            return String::new();
+        }
         let mut shown = 0_usize;
         for (index, update) in self.updates.iter().enumerate().rev() {
             let row = format!("Result {}: {update}\n", index.saturating_add(1));

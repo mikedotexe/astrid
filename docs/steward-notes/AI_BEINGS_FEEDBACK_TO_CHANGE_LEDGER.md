@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-06 - make missing-anchor storage feedback inspectable
+
+- Source: Minime's public `self_study_2026-10-06T13-19-05.646273.txt`, SHA-256 `5644c809249ae856059ab4faa2fa9ff17b4d5c483ac67663fd53416fa11564b7`, supplied a `STUDY_FINDING` without the required delivered source/line anchor. Read-only q12 state retains the rejection; it did not save that source-linked finding. This is distinct from the historical placeholder-valued question closure.
+- Response: explicit NOTE/QUESTION REVIEW now includes the retained finding family, and rejected-command recovery includes only bounded same-inquiry operation results, not recalled narrative or a guessed anchor. Quiet source-selection, parked work and reflection are unchanged. Historical journals and q12 state remain untouched.
+- Operator follow-through: the previous paired activation refusal had insufficient field-level evidence. Add private-safe boundary diagnostics and a check-only path; preserve the original quiet interval, source/process/continuity comparisons and refusal behavior. No forced termination or automatic retry.
+- Qualification and live boundary: `2026-10-06-handoff-diagnostics-and-finding-feedback.md`. Source/test candidate only until explicitly recorded otherwise; no inferred understanding, felt improvement or control authority.
+
 ### 2026-10-06 - copied finding template is not a substantive conclusion
 
 - Source: Minime's public `self_study_2026-10-06T13-19-05.646273.txt` (SHA-256 `5644c809249ae856059ab4faa2fa9ff17b4d5c483ac67663fd53416fa11564b7`) ended with `NEXT: SELF_STUDY QUESTION RESOLVE q12 [finding]`. A subsequent read-only check confirms the reader executed it and stored the marker, which our own guidance offered.

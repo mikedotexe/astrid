@@ -486,6 +486,9 @@ mod source_study_tests {
             astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
             directory.clone(),
         ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let source = temp.path().join("crates/example/src/lib.rs");
+        std::fs::create_dir_all(source.parent().unwrap()).unwrap();
+        std::fs::write(&source, "pub fn fixture() {}\n").unwrap();
         let prepare = |action: &str, id: &str| {
             let mut conv = ConversationState::new(Vec::new(), None);
             next_action::study_navigation::handle_request(&mut conv, "SELF_STUDY", action).unwrap();
@@ -496,10 +499,16 @@ mod source_study_tests {
         let action = "SELF_STUDY QUESTION RESOLVE q1 [finding]";
         let response_text = format!("My account must not be substituted.\nNEXT: {action}");
         assert_eq!(parse_next_action(&response_text), Some(action));
+        let page = prepare("SELF_STUDY OPEN astrid/crates/example/src/lib.rs 1", "page");
+        let request = serde_json::json!({"messages":[{"role":"user","content":page.text}]}).to_string();
+        let response = serde_json::json!({"message":{"content":format!("STUDY_FINDING: Missing source anchor.\n{response_text}")},"done":true}).to_string();
+        reader.delivered(&page.page.as_ref().unwrap().id, &request, &response).unwrap();
         let output = prepare(action, "placeholder");
         assert_eq!(output.input_kind, astrid_source_study::InputKind::Recovery);
         assert_eq!(source_study_authored_mode(&output), "study_decision");
         assert!(output.text.contains("template marker"));
+        assert!(output.text.contains("Finding not saved"));
+        assert!(!output.text.contains("My account must not be substituted."));
         assert_eq!(output, prepare(action, "placeholder"));
         let request = serde_json::json!({"messages":[{"role":"user","content":output.text}]}).to_string();
         let response = serde_json::json!({"message":{"content":"NEXT: REST"},"done":true}).to_string();
@@ -511,6 +520,8 @@ mod source_study_tests {
         let closed = prepare("SELF_STUDY QUESTION RESOLVE q1 I remain uncertain.", "authored");
         assert_eq!(closed.input_kind, astrid_source_study::InputKind::Questions);
         assert!(closed.text.contains("Marked q1 resolved by you"));
+        let review = prepare("SELF_STUDY QUESTION REVIEW q1", "review");
+        assert!(review.text.contains("Finding not saved"));
     }
     #[test]
     fn bookmarkless_command_conflict_uses_real_bridge_preparation_and_delivery() {

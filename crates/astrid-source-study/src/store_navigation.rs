@@ -152,6 +152,11 @@ impl Reader {
             text.push_str(&state.questions.render_context(question_id.as_deref()));
         }
         let mut suffix = String::new();
+        // A rejected command must not hide the selected inquiry's save result.
+        // Quiet browsing/EOF/selection decisions still omit historical recaps.
+        if input_kind == InputKind::Recovery && !quiet_notebook {
+            suffix.push_str(&notebook.finding_feedback());
+        }
         if let Some(choice) = &state.last_choice
             && !detached
             && !source_selection

@@ -77,6 +77,98 @@ fn check_in(output: &StudyOutput) -> &str {
 }
 
 #[test]
+fn missing_anchor_result_survives_rejected_closure_and_is_explicitly_inspectable() {
+    let (temp, reader) = setup();
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW Where is the gate?")
+        .unwrap();
+    let page = reader
+        .prepare_action(&format!("SELF_STUDY OPEN {SOURCE} 1"))
+        .unwrap();
+    accept(
+        &reader,
+        &page,
+        "Narrative canary, not a citation.\nSTUDY_NOTE: Exact authored note.\nSTUDY_FINDING: A claim without an anchor.\nNEXT: SELF_STUDY QUESTION RESOLVE q1 [finding]",
+    );
+    let before: Value = serde_json::from_slice(&state_bytes(&temp)).unwrap();
+    let recovery = reader
+        .prepare_action("SELF_STUDY QUESTION RESOLVE q1 [finding]")
+        .unwrap();
+    assert_eq!(
+        recovery.input_kind,
+        astrid_source_study::InputKind::Recovery
+    );
+    assert!(recovery.text.contains("Finding not saved"));
+    assert!(
+        recovery
+            .text
+            .contains("cite a supplied numbered source line")
+    );
+    assert!(recovery.text.contains("most recent explicit update"));
+    assert!(!recovery.text.contains("Narrative canary"));
+    assert!(!recovery.text.contains("Exact authored note."));
+    assert!(!recovery.text.contains("FINDING CAPACITY"));
+    accept(&reader, &recovery, "NEXT: REST");
+    let note = reader.prepare_action("SELF_STUDY NOTE").unwrap();
+    assert!(note.text.contains("Finding not saved"));
+    assert!(note.text.contains("Exact authored note."));
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW Unrelated question?")
+        .unwrap();
+    let unrelated = reader
+        .prepare_action("SELF_STUDY QUESTION RESOLVE q2 [finding]")
+        .unwrap();
+    assert!(!unrelated.text.contains("Finding not saved"));
+    let quiet = reader.prepare_action("SELF_STUDY CONTINUE").unwrap();
+    assert!(!quiet.text.contains("Finding not saved"));
+    let review = reader
+        .prepare_action("SELF_STUDY QUESTION REVIEW q1")
+        .unwrap();
+    assert!(review.text.contains("Finding not saved"));
+    assert!(review.text.contains("Exact authored note."));
+    let after: Value = serde_json::from_slice(&state_bytes(&temp)).unwrap();
+    assert_eq!(after["questions"]["active"], "q2");
+    assert_eq!(
+        after["questions"]["entries"]["q1"]["notebook"]["source_findings"],
+        before["questions"]["entries"]["q1"]["notebook"]["source_findings"]
+    );
+    assert_eq!(
+        after["questions"]["entries"]["q1"]["finding"],
+        before["questions"]["entries"]["q1"]["finding"]
+    );
+}
+
+#[test]
+fn explicit_review_keeps_all_bounded_finding_receipts_without_reopening_closed_inquiry() {
+    let (temp, reader) = setup();
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW My original question?")
+        .unwrap();
+    let page = reader
+        .prepare_action(&format!("SELF_STUDY OPEN {SOURCE} 1"))
+        .unwrap();
+    accept(
+        &reader,
+        &page,
+        &format!("STUDY_FINDING: {SOURCE}:1 | Exact retained words.\nSTUDY_FINDING: No citation."),
+    );
+    reader
+        .prepare_action("SELF_STUDY QUESTION RESOLVE q1 Still uncertain.")
+        .unwrap();
+    let before: Value = serde_json::from_slice(&state_bytes(&temp)).unwrap();
+    let review = reader
+        .prepare_action("SELF_STUDY QUESTION REVIEW q1")
+        .unwrap();
+    assert!(review.text.contains("Exact retained words."));
+    assert!(review.text.contains("Finding not saved"));
+    assert!(review.text.contains("pub fn supplied_1() {}"));
+    assert!(review.text.len() < astrid_source_study::MAX_INPUT_BYTES);
+    let after: Value = serde_json::from_slice(&state_bytes(&temp)).unwrap();
+    assert_eq!(after["questions"], before["questions"]);
+    assert_eq!(after["bookmarks"], before["bookmarks"]);
+}
+
+#[test]
 fn rejection_is_visible_without_a_note_or_finding_and_persists_until_an_explicit_update() {
     let (temp, reader) = setup();
     let map = reader.prepare_action("SELF_STUDY MAP").unwrap();

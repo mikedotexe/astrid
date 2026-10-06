@@ -245,7 +245,8 @@ def main():
             handle.flush()
             os.fsync(handle.fileno())
             print(json.dumps({k: v for k, v in event.items() if k in
-                {"phase", "outcome", "old_pid", "new_pid", "error", "recorded_at"}}), flush=True)
+                {"phase", "outcome", "old_pid", "new_pid", "error", "recorded_at",
+                 "boundary", "diagnostic"}}), flush=True)
         try:
             backend = LaunchdAgent(args.pause_generation, args.ack)
             if args.install_reviewed_overlay:

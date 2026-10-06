@@ -12,6 +12,7 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import plistlib
@@ -68,6 +69,46 @@ def qualified_inputs(path):
 
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+
+
+def idle_diagnostic(before, after, *, elapsed_s=0):
+    """Describe failed comparisons, never serialize snapshot values or prose."""
+    changed = []
+    for field in ("quiet", "source_checked_at", "job_index_sha256", "continuity", "next_handoff"):
+        if before and before.get(field) != after.get(field):
+            changed.append(field)
+    for parent, fields in (
+        ("continuity", ("file_sha256", "session_id", "pending_next_sha256",
+                        "pending_next_present", "cycle_count")),
+        ("next_handoff", ("boot_id", "pid", "started_at", "source_sha256")),
+    ):
+        left, right = before.get(parent), after.get(parent)
+        if isinstance(left, dict) and isinstance(right, dict):
+            changed.extend(f"{parent}.{key}" for key in fields if left.get(key) != right.get(key))
+
+    def snapshot(value):
+        checks = value.get("quiet_checks", {})
+        result = {"quiet": value.get("quiet") if type(value.get("quiet")) is bool else None,
+                  "checks": {key: checks.get(key) if type(checks.get(key)) is bool else None
+                             for key in ("in_idle_window", "no_tcp_connections",
+                                         "indexed_jobs_idle", "summary_jobs_idle")}}
+        phase = value.get("lifecycle_phase")
+        result["lifecycle_phase"] = (phase if phase in (
+            "initializing", "busy", "idle", "draining", "exited", "recovery_blocked") else "unknown")
+        contract = value.get("lifecycle_contract")
+        result["idle_contract"] = (contract if contract in (
+            "agent_drain_v1", "legacy_no_handshake") else "unknown")
+        for key in ("source_status_age_s", "agent_interval_s"):
+            number = value.get(key)
+            result[key] = (number if type(number) in (int, float)
+                           and math.isfinite(number) and abs(number) <= 1e9 else None)
+        return result
+
+    return {"schema": "minime_idle_boundary_diagnostic_v1", "changed_fields": changed,
+            "comparison_available": bool(before),
+            "before": snapshot(before), "after": snapshot(after),
+            "boundary_check_elapsed_s": round(elapsed_s, 3),
+            "signal_sent": False, "atomic_traffic_quiescence_claimed": False}
 
 
 def run(args):
@@ -222,8 +263,13 @@ class LaunchdAgent:
                  and summary.get("active_count") == 0)
         return {"quiet": quiet, "source_checked_at": status["checked_at"],
                 "source_status_age_s": round(age, 3), "job_index_sha256": jobs["index_sha256"],
+                "agent_interval_s": interval,
+                "quiet_checks": {"in_idle_window": in_window, "no_tcp_connections": no_tcp,
+                                 "indexed_jobs_idle": not jobs["active"],
+                                 "summary_jobs_idle": summary.get("active_count") == 0},
                 "jobs": jobs["jobs"], "no_tcp_connections": no_tcp,
                 "lifecycle_contract": status.get("lifecycle_contract", "legacy_no_handshake"),
+                "lifecycle_phase": phase,
                 "legacy_wait_log_sha256": wait_log_sha,
                 "continuity": self.continuity(),
                 "next_handoff": self.next_handoff_identity(status)}
@@ -270,7 +316,7 @@ class LaunchdAgent:
 
 def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
                  now=time.monotonic, sleep=time.sleep, emit=lambda event: None,
-                 expected_inputs=None, handoff=None):
+                 expected_inputs=None, handoff=None, check_idle_only=False):
     if expected_pid <= 0 or not 30 <= timeout_s <= 1800 or not 10 <= quiet_s <= 30:
         raise ValueError("invalid bounded reload request")
     backend.validate()
@@ -290,6 +336,7 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
     quiet_start = None
     previous_key = None
     completed_handoff = None
+    observation = {}
     while now() < deadline:
         backend.maintenance()
         if backend.pid() != expected_pid or backend.identity(expected_pid) != old_start:
@@ -306,7 +353,10 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
             break
         sleep(1)
     else:
+        emit({"phase": "idle_boundary_refused", "boundary": "waiting_timeout",
+              "diagnostic": idle_diagnostic({}, observation)})
         raise RuntimeError("no bounded idle window; no signal sent")
+    boundary_started = now()
     backend.validate()
     if backend.jobs()["active"]:
         raise RuntimeError("canonical active jobs remain; no signal sent")
@@ -317,10 +367,18 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
             or final["job_index_sha256"] != observation["job_index_sha256"]
             or final["continuity"] != observation["continuity"]
             or final.get("next_handoff") != observation.get("next_handoff")):
+        emit({"phase": "idle_boundary_refused", "boundary": "pre_signal",
+              "diagnostic": idle_diagnostic(observation, final, elapsed_s=now() - boundary_started)})
         raise RuntimeError("idle boundary moved; no signal sent")
     if backend.pid() != expected_pid or backend.identity(expected_pid) != old_start:
         raise RuntimeError("PID changed at signal boundary")
+    if check_idle_only:
+        return {"schema": "minime_agent_idle_check_v1", "outcome": "idle_verified_no_signal",
+                "old_pid": expected_pid, "forced_termination": False,
+                "launch_hold_created": False,
+                "diagnostic": idle_diagnostic(observation, final, elapsed_s=now() - boundary_started)}
     if handoff is not None:
+        boundary_started = now()
         handoff.begin(backend, inputs, config, protected, emit)
         # Hold installation is I/O; repeat the actual admission boundary checks.
         boundary = backend.observe(expected_pid)
@@ -329,6 +387,11 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
                 or boundary.get("next_handoff") != final.get("next_handoff")
                 or backend.pid() != expected_pid
                 or backend.identity(expected_pid) != old_start):
+            diagnostic = idle_diagnostic(final, boundary, elapsed_s=now() - boundary_started)
+            diagnostic["process_identity_changed"] = (
+                backend.pid() != expected_pid or backend.identity(expected_pid) != old_start)
+            emit({"phase": "idle_boundary_refused", "boundary": "after_launch_hold",
+                  "diagnostic": diagnostic})
             raise RuntimeError("idle boundary moved after launch hold; no signal sent")
     # Retain evidence before any signal, including failures after this point.
     emit({"phase": "signal_boundary", "observation": final,
@@ -391,6 +454,8 @@ def main():
     parser.add_argument("--ack", required=True)
     parser.add_argument("--receipt", required=True, type=Path)
     parser.add_argument("--timeout-secs", default=900, type=int)
+    parser.add_argument("--check-idle-only", action="store_true",
+                        help="exercise pre-signal checks only; never install a hold or send a signal")
     parser.add_argument("--expected-inputs", type=Path,
                         help="reconciliation receipt whose selected_inputs must match canonical launch sources")
     args = parser.parse_args()
@@ -404,10 +469,12 @@ def main():
             handle.flush()
             os.fsync(handle.fileno())
             print(json.dumps({k: v for k, v in event.items() if k in {
-                "phase", "recorded_at", "outcome", "old_pid", "new_pid", "signal", "error"}}), flush=True)
+                "phase", "recorded_at", "outcome", "old_pid", "new_pid", "signal", "error",
+                "boundary", "diagnostic"}}), flush=True)
         try:
             result = reload_agent(LaunchdAgent(args.pause_generation, args.ack),
                                   args.expected_pid, timeout_s=args.timeout_secs, emit=emit,
+                                  check_idle_only=args.check_idle_only,
                                   expected_inputs=(qualified_inputs(args.expected_inputs)
                                                    if args.expected_inputs else None))
             emit(result)

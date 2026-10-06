@@ -110,6 +110,8 @@ impl Notebook {
         let value = serde_json::json!({
             "scope":"Owner's authored note and revisions; source anchors establish supplied fragments, not correctness. No inquiry selected, resolved, or scheduled.",
             "current_note":self.note,
+            "source_findings":self.source_findings,
+            "finding_results_scope":"Latest explicit finding update, retained until another update; storage results, not correctness or a new delivery. No source is chosen or citation inferred.",
             "changes_newest_first":changes,
             "total_changes":self.note_history.len(),
             "page":page,

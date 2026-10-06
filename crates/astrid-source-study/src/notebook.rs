@@ -126,6 +126,10 @@ impl Notebook {
         serde_json::json!(self.question)
     }
 
+    pub(crate) fn finding_feedback(&self) -> String {
+        self.source_findings.render_results(1_200)
+    }
+
     /// Render existing authored state together without synthesizing conclusions,
     /// classifying their truth, or changing the inquiry's status or scheduling.
     fn checkpoint_context(&self, max_bytes: usize) -> String {

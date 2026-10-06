@@ -8,7 +8,7 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
-from restart_minime_agent import ENV_KEYS, LaunchdAgent, job_receipt, qualified_inputs, reload_agent
+from restart_minime_agent import ENV_KEYS, LaunchdAgent, idle_diagnostic, job_receipt, qualified_inputs, reload_agent
 
 
 class Backend:
@@ -66,9 +66,9 @@ class Backend:
     def sleep(self, amount):
         self.clock += amount
 
-    def reload(self):
+    def reload(self, **kwargs):
         return reload_agent(self, 10, timeout_s=30, quiet_s=10,
-                            now=lambda: self.clock, sleep=self.sleep)
+                            now=lambda: self.clock, sleep=self.sleep, **kwargs)
 
 
 class ReloadTests(unittest.TestCase):
@@ -168,6 +168,91 @@ class ReloadTests(unittest.TestCase):
         backend.observe = observe
         with self.assertRaisesRegex(RuntimeError, "idle boundary moved"):
             backend.reload()
+        self.assertEqual(backend.signals, [])
+
+    def test_boundary_diagnostic_is_bounded_and_contains_no_snapshot_values(self):
+        before = {"quiet": True, "source_checked_at": "first", "job_index_sha256": "first",
+                  "continuity": {"file_sha256": "first", "pending_next_sha256": "first"},
+                  "next_handoff": {"source_sha256": "first"}}
+        after = {"quiet": False, "source_checked_at": "private text", "job_index_sha256": "private text",
+                 "continuity": {"file_sha256": "private text", "pending_next_sha256": "private text",
+                                "private title": "private text"},
+                 "next_handoff": {"source_sha256": "private text"},
+                 "source_status_age_s": float("nan"), "agent_interval_s": "private text",
+                 "quiet_checks": {"in_idle_window": False, "no_tcp_connections": True,
+                                  "indexed_jobs_idle": False, "summary_jobs_idle": "private text",
+                                  "private title": "private text"},
+                 "jobs": [{"error": "private text"}]}
+        diagnostic = idle_diagnostic(before, after, elapsed_s=7)
+        encoded = json.dumps(diagnostic, allow_nan=False)
+        self.assertNotIn("private", encoded)
+        self.assertLess(len(encoded), 1400)
+        self.assertIn("continuity.pending_next_sha256", diagnostic["changed_fields"])
+        self.assertIn("next_handoff.source_sha256", diagnostic["changed_fields"])
+        self.assertIsNone(diagnostic["after"]["checks"]["summary_jobs_idle"])
+        self.assertIsNone(diagnostic["after"]["source_status_age_s"])
+        self.assertIsNone(diagnostic["before"]["checks"]["in_idle_window"])
+        self.assertEqual(diagnostic["before"]["idle_contract"], "unknown")
+
+    def test_every_existing_boundary_guard_still_refuses_and_names_change(self):
+        for field, value in (("quiet", False), ("source_checked_at", "next-cycle"),
+                             ("job_index_sha256", "next-job"), ("continuity", {"file_sha256": "next"}),
+                             ("next_handoff", {"boot_id": "next"})):
+            with self.subTest(field=field):
+                backend, events = Backend(), []
+                original = backend.observe
+                def observe(pid):
+                    observation = original(pid)
+                    if backend.validations == 2:
+                        observation[field] = value
+                    return observation
+                backend.observe = observe
+                with self.assertRaisesRegex(RuntimeError, "idle boundary moved"):
+                    backend.reload(emit=events.append, check_idle_only=True)
+                self.assertEqual(events[-1]["boundary"], "pre_signal")
+                self.assertIn(field, events[-1]["diagnostic"]["changed_fields"])
+                self.assertEqual(backend.signals, [])
+
+    def test_check_only_never_installs_hold_or_signals(self):
+        backend = Backend()
+        def forbidden(*args):
+            self.fail("check-only attempted launch hold")
+        result = backend.reload(check_idle_only=True, handoff=SimpleNamespace(begin=forbidden))
+        self.assertEqual(result["outcome"], "idle_verified_no_signal")
+        self.assertFalse(result["launch_hold_created"])
+        self.assertEqual(backend.signals, [])
+
+    def test_post_hold_change_has_separate_diagnostic_and_no_signal(self):
+        backend, events = Backend(), []
+        original = backend.observe
+        held = False
+        def begin(*args):
+            nonlocal held
+            held = True
+        def observe(pid):
+            result = original(pid)
+            if held:
+                result["quiet"] = False
+                result["quiet_checks"] = {"in_idle_window": False}
+            return result
+        backend.observe = observe
+        with self.assertRaisesRegex(RuntimeError, "after launch hold"):
+            backend.reload(emit=events.append, handoff=SimpleNamespace(begin=begin))
+        self.assertEqual(events[-1]["boundary"], "after_launch_hold")
+        self.assertFalse(events[-1]["diagnostic"]["after"]["checks"]["in_idle_window"])
+        self.assertFalse(events[-1]["diagnostic"]["process_identity_changed"])
+        self.assertEqual(backend.signals, [])
+
+    def test_timeout_reports_last_observation_not_invented_idle_proof(self):
+        backend, events = Backend(), []
+        backend.active_until = 100
+        with self.assertRaisesRegex(RuntimeError, "idle window"):
+            backend.reload(emit=events.append, check_idle_only=True)
+        self.assertEqual(events[-1]["boundary"], "waiting_timeout")
+        self.assertEqual(events[-1]["diagnostic"]["changed_fields"], [])
+        self.assertFalse(events[-1]["diagnostic"]["comparison_available"])
+        self.assertFalse(events[-1]["diagnostic"]["after"]["quiet"])
+        self.assertIsNone(events[-1]["diagnostic"]["after"]["checks"]["in_idle_window"])
         self.assertEqual(backend.signals, [])
 
     def test_changed_pid_aborts(self):
