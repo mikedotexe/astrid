@@ -25,6 +25,9 @@ impl JournalRecall {
 
     pub(crate) fn read(path: &Path) -> Option<Self> {
         let content = std::fs::read_to_string(path).ok()?;
+        if super::is_peer_mirror_record(&content) {
+            return None;
+        }
         let body = super::extract_journal_body(&content, true)?;
         // Read metadata only from the initial header, never matching authored body lines.
         let header = if content.starts_with("=== ASTRID JOURNAL ===\n") {

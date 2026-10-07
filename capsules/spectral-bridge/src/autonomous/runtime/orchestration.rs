@@ -833,6 +833,7 @@ pub fn spawn_autonomous_loop(
                     };
                     let mut reading_offer = None;
                     let mut accepted_delivery = None;
+                    let mut mirror_excerpt = None;
 
                     let (mode_name, mut response_text, journal_source) = match mode {
                         Mode::Mirror => {
@@ -852,13 +853,14 @@ pub fn spawn_autonomous_loop(
                                 for offset in 0..5 {
                                     let idx = (start_idx + offset) % n;
                                     let entry = &conv.remote_journal_entries[idx];
-                                    if let Some(body) = read_journal_entry(&entry.path) {
+                                    if let Some(excerpt) = crate::journal::MirrorExcerpt::read(&entry.path) {
                                         source = entry.path
                                             .file_name()
                                             .unwrap_or_default()
                                             .to_string_lossy()
                                             .to_string();
-                                        text = Some(body);
+                                        text = Some(sanitize_remote_journal_for_astrid_context(&excerpt.text));
+                                        mirror_excerpt = Some(excerpt);
                                         break;
                                     }
                                 }
@@ -3477,9 +3479,9 @@ pub fn spawn_autonomous_loop(
                     } else {
                         None
                     };
-                    let mirror_source_text =
-                        (mode_name == "mirror").then(|| response_text.clone());
-                    let shadow_input_provenance = if matches!(mode, Mode::Mirror) {
+                    let mirror_source_text = mirror_excerpt.as_ref()
+                        .map(|excerpt| sanitize_remote_journal_for_astrid_context(&excerpt.text));
+                    let shadow_input_provenance = if mode_name == "mirror" {
                         crate::astrid_shadow::AstridShadowInputProvenanceV1::minime_mirror(
                             &journal_source,
                         )
@@ -4508,6 +4510,9 @@ pub fn spawn_autonomous_loop(
                     }
 
                     if has_shared_response {
+                        let mirror_publication = mirror_excerpt.as_ref().map(|excerpt| {
+                            retain_mirror_journal_record(&journal_source, excerpt, &response_text, fill_pct)
+                        });
                         // Log and publish ordinary prose only. A human-only reply
                         // has its own retained artifact; NEXT alone is no signal.
                         let exchange_log = serde_json::json!({
@@ -4520,6 +4525,8 @@ pub fn spawn_autonomous_loop(
                             "fill_pct": fill_pct,
                             "fill_delta": fill_delta,
                             "mirror_source_fidelity_v1": mirror_source_fidelity,
+                            "mirror_excerpt_v1": mirror_excerpt,
+                            "peer_mirror_publication_v1": mirror_publication,
                             "codec_delivery_fidelity_v1": codec_delivery_fidelity_for_review,
                             "cross_spectral_friction_review_v1": cross_spectral_friction_for_review,
                             "semantic_focus_expansion_preview_v1": semantic_focus_expansion_preview_for_review,
@@ -4535,11 +4542,11 @@ pub fn spawn_autonomous_loop(
 
                         // Save Astrid's signal journal entry with lineage tracing.
                         info!(lineage = %lineage_id, mode = mode_name, "exchange complete");
-                        let journal_provenance = match mode {
-                            Mode::Mirror => Some(AstridJournalProvenanceV1::minime_mirror(
+                        let journal_provenance = match (mode, mode_name) {
+                            (Mode::Mirror, "mirror") => Some(AstridJournalProvenanceV1::minime_mirror(
                                 &journal_source,
                             )),
-                            Mode::Witness => {
+                            (Mode::Witness, _) => {
                                 let guard = state.read().await;
                                 Some(AstridJournalProvenanceV1::astrid_witness(
                                     guard.witness_frame_v1(),
@@ -4555,13 +4562,15 @@ pub fn spawn_autonomous_loop(
                                     expressive_snapshot(guard.latest_telemetry.as_ref()),
                             }))
                         } else { None };
-                        save_astrid_journal_record(
-                            &response_text,
-                            journal_mode_name,
-                            fill_pct,
-                            journal_provenance.as_ref(),
-                            expressive_observations.as_ref(),
-                        );
+                        if mode_name != "mirror" {
+                            save_astrid_journal_record(
+                                &response_text,
+                                journal_mode_name,
+                                fill_pct,
+                                journal_provenance.as_ref(),
+                                expressive_observations.as_ref(),
+                            );
+                        }
 
                         // v5.1 Phase D — Hook A: auto-promote synchronously for
                         // modes that DON'T spawn elaboration. moment_capture +

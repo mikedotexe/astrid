@@ -745,25 +745,8 @@ pub fn render_resolution_inbox_note(request: &AgencyRequest) -> String {
     note
 }
 
-fn local_journal_entries(journal_dir: &Path) -> Vec<(PathBuf, SystemTime, String)> {
-    let mut entries: Vec<(PathBuf, SystemTime, String)> = fs::read_dir(journal_dir)
-        .ok()
-        .into_iter()
-        .flatten()
-        .filter_map(|entry| entry.ok())
-        .filter_map(|entry| {
-            let path = entry.path();
-            if path.extension().is_none_or(|ext| ext != "txt") {
-                return None;
-            }
-            let modified = entry.metadata().ok()?.modified().ok()?;
-            let content = fs::read_to_string(&path).ok()?;
-            Some((path, modified, content))
-        })
-        .collect();
-    entries.sort_by(|a, b| b.1.cmp(&a.1));
-    entries
-}
+mod journal_selection;
+use journal_selection::local_journal_entries;
 
 async fn call_introspector_tool(
     script_path: PathBuf,

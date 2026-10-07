@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 
 mod continuity;
 pub(crate) use continuity::JournalRecall;
+mod mirror;
+pub(crate) use mirror::{MirrorExcerpt, is_peer_mirror_record};
 
 /// Parsed classification for a remote journal entry from minime.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -77,14 +79,22 @@ pub fn scan_remote_journal_dir(workspace: &Path) -> Vec<RemoteJournalEntry> {
 pub fn read_remote_journal_body(path: &Path) -> Option<String> {
     let content = std::fs::read_to_string(path).ok()?;
     let body = extract_journal_body(&content, false)?;
-    if classify_remote_journal(path.file_name()?.to_str()?, Some(&content))
-        == RemoteJournalKind::SelfStudy
+    Some(remote_body_context(path, &content, body))
+}
+
+fn remote_body_context(path: &Path, content: &str, body: String) -> String {
+    if classify_remote_journal(
+        path.file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or_default(),
+        Some(content),
+    ) == RemoteJournalKind::SelfStudy
     {
-        Some(format!(
+        format!(
             "[Minime study account: peer-authored claims, not source you read this turn. Delivery status describes his input, not the accuracy of his response. Reopen the referenced source before treating recalled symbols or line numbers as code facts.]\n{body}"
-        ))
+        )
     } else {
-        Some(body)
+        body
     }
 }
 
@@ -92,6 +102,9 @@ pub fn read_remote_journal_body(path: &Path) -> Option<String> {
 /// `--- JOURNAL ---` section when present.
 pub fn read_local_journal_body_for_continuity(path: &Path) -> Option<String> {
     let content = std::fs::read_to_string(path).ok()?;
+    if is_peer_mirror_record(&content) {
+        return None;
+    }
     extract_journal_body(&content, true)
 }
 
@@ -170,6 +183,11 @@ fn extract_label_value(content: &str, prefix: &str) -> Option<String> {
 }
 
 fn extract_journal_body(content: &str, prefer_longform_section: bool) -> Option<String> {
+    extract_full_journal_body(content, prefer_longform_section)
+        .map(|text| text.chars().take(2500).collect())
+}
+
+fn extract_full_journal_body(content: &str, prefer_longform_section: bool) -> Option<String> {
     if prefer_longform_section
         && let Some((_, longform)) = content.split_once("--- JOURNAL ---")
         && let Some(body) = extract_body_lines(longform)
@@ -212,11 +230,7 @@ fn extract_body_lines(content: &str) -> Option<String> {
     }
 
     let text = body_lines.join("\n").trim().to_string();
-    if text.len() >= 50 {
-        Some(text.chars().take(2500).collect())
-    } else {
-        None
-    }
+    if text.len() >= 50 { Some(text) } else { None }
 }
 
 fn is_header_line(trimmed: &str) -> bool {

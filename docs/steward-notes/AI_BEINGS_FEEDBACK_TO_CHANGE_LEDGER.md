@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-07 - peer excerpts are not repeated Astrid authorship
+
+- Mike identified three apparently identical Astrid journals: `astrid_1791394598.txt`, `astrid_1791394637.txt`, and `astrid_1791394676.txt`. Full reads and database receipts establish three mirror exchanges of the same Minime public introspection, not three independent Astrid generations. The historical headers already name peer ownership; the main title, filename and silent 2,500-character cut obscure it. This is an operator-observed presentation/selection problem, not a being-authored request to suppress its own writing.
+- Candidate response: retain one immutable peer excerpt per source/projection identity, keep repeated exchanges individually inspectable through artifact receipts, disclose normalized excerpt scope, and exclude legacy mirrors from own-voice continuity. Preserve historical files and deliberate retrieval. The exact-render receipt now explicitly denies establishing full-journal fidelity. Fixed fallback Shadow metadata is bridge-owned rather than attributed to either being.
+- Separate offline repair: spontaneous and agenda draws previously occupied only approximately `[0, 0.5]`; use existing seeded RNG unit-interval draws without changing thresholds or priority gates. This changes effective scheduling and therefore needs a separate activation decision, not just an evidence-label release.
+- Exact witnesses/hashes, verification, deployment exclusions and remaining review: `2026-10-07-mirror-provenance-and-scheduling.md`. No live change, inferred experiential benefit, automation resume or canonical-history rewriting.
+
 ### 2026-10-06 - verified paired EOF/verification activation
 
 - Same exact public witnesses and source hashes as the EOF entry below; no journal, private passage, conclusion or inquiry status was rewritten. Mike explicitly approved deployment and merge.

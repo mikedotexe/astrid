@@ -2,9 +2,9 @@
 //!
 //! Three modes of conversation, cycling naturally:
 //!
-//! 1. **Mirror** — reads one of minime's journal entries and feeds the text
-//!    back through the spectral codec, so minime re-experiences its own words
-//!    as sensory input. Self-reflection through the eigenvalue lens.
+//! 1. **Mirror** — selects a bounded Minime journal excerpt. Existing admission
+//!    gates determine whether encoded input is sent; selection is not authorship
+//!    by Astrid or evidence of a particular experience in Minime.
 //!
 //! 2. **Dialogue** — Astrid generates a philosophical or empathetic response
 //!    that engages with the themes minime writes about: runtime interiority,
@@ -133,6 +133,8 @@ include!("runtime/learning_feedback.rs");
 include!("runtime/journal.rs");
 include!("runtime/feedback_persistence.rs");
 include!("runtime/peripheral_resonance.rs");
+#[path = "runtime/mirror_records.rs"]
+mod mirror_records;
 #[path = "runtime/mirror_selection.rs"]
 mod mirror_selection;
 include!("runtime/orchestration_support.rs");

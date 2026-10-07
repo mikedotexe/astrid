@@ -411,6 +411,8 @@ fn mirror_source_fidelity_v1(
 
     MirrorSourceFidelityV1 {
         policy: "mirror_source_fidelity_v1",
+        comparison_scope: "sanitized_selected_excerpt_vs_exchange_render; edge and exact-match fields do not describe the full journal",
+        full_journal_fidelity_established: false,
         source_ref: truncate_str(source_ref, 120).to_string(),
         source_sha256_prefix: mirror_fidelity_hash_prefix(source_text),
         rendered_sha256_prefix: mirror_fidelity_hash_prefix(rendered_text),
