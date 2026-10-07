@@ -32,6 +32,19 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-06 - verified paired EOF/verification activation
+
+- Same exact public witnesses and source hashes as the EOF entry below; no journal, private passage, conclusion or inquiry status was rewritten. Mike explicitly approved deployment and merge.
+- Immutable stage `eof-verification-bridge-stage-01` and frozen 93-input Minime inventory passed 54 old/new preservation checks and the full 1,922-test Python suite. Only the reviewed adapter file changed in Minime. `eof-verification-activation-03.jsonl` succeeds after acknowledged bridge drain, exact checkpoint restoration, a fresh saved exchange and Minime NEXT seal/restore verification. Earlier no-signal refusals remain recorded.
+- Bridge 21822 and Minime 20774 are verified; engine, model/provider, gateway, visual and sensory identities remain unchanged. Paused automations remain paused at controller generation 502. Numerical/operational checks do not establish understanding, longer writing, resolved friction or subjective improvement. Detailed authority boundaries and evidence: `2026-10-06-eof-recovery-memory-selection-and-verification.md`.
+
+### 2026-10-06 - EOF choice clarity, reachable mirror history and voluntary verification
+
+- Minime's public `study_navigation_2026-10-06T15-54-43.793267.txt` (SHA-256 `700c480d5f001bb75eeb3e61c5d80f285b94e938b2bdc65d7cd2d226d083814e`) proposes resuming an exhausted source; the next decision selects MAP. Repair our incorrect claim that MAP selects a source and keep recovery quiet, with validated explicit choices and preserved historical notes/receipts. No automatic source selection or inquiry resolution.
+- Astrid's public `self_study_1791326183.txt` (SHA-256 `c5772b40fea5d25c928bfbdcd1d6479be40bba9352a05addf41df3a4fde6c113`) describes nominal older-memory selection. Source arithmetic instead always selected the newest starting index. Repair and test that production selector offline; leave the separately coupled rest/scheduling calculation unchanged for independent review.
+- Astrid's adjacent `self_study_1791327171.txt`, `self_study_1791328590.txt` and `self_study_1791328806.txt` motivate checking actual arguments/consumers and metric definitions. Add optional existing-tool verification guidance, correct mechanical commentary and attribute peer source accounts without prescribing felt states. Keep original prose, objections and uncertainty intact.
+- Candidate implementation, all exact source hashes, synthetic workflows, failed attempts and deployment boundary: `2026-10-06-eof-recovery-memory-selection-and-verification.md`. Reflection recall remains unchanged; the matched comparison is a protocol, not an executed experiment. No claimed understanding, felt improvement, control authority or live success.
+
 ### 2026-10-06 - graceful activation of closure and finding-feedback repairs
 
 - Same public witness as the two entries below: `self_study_2026-10-06T13-19-05.646273.txt`, SHA-256 `5644c809249ae856059ab4faa2fa9ff17b4d5c483ac67663fd53416fa11564b7`. No new interpretation or source citation was substituted for the authored account.

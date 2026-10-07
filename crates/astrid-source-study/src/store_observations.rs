@@ -331,6 +331,7 @@ impl Reader {
         if !request.present {
             self.finish_observation_metadata(json)?;
             return Ok(StudyOutput {
+                host_feedback_policy: HostFeedbackPolicy::Default,
                 continuation_decision: false,
                 generation_requested: false,
                 input_kind: InputKind::Geometry,

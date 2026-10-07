@@ -597,6 +597,53 @@ mod source_study_tests {
         }
     }
     #[test]
+    fn eof_map_recovery_uses_real_bridge_preparation_without_advancing() {
+        let temp = tempfile::tempdir().unwrap();
+        std::fs::write(temp.path().join("build.rs"), "pub fn first() {}\n").unwrap();
+        std::fs::create_dir_all(temp.path().join("tests")).unwrap();
+        std::fs::write(temp.path().join("tests/other.rs"), "pub fn other() {}\n").unwrap();
+        let reader = astrid_source_study::Reader::new(
+            astrid_source_study::Catalog::new(std::collections::BTreeMap::from([("astrid".into(), temp.path().into())])).unwrap(),
+            temp.path().join("reader"),
+        ).with_runtime_workspace(temp.path().join("workspace"), "astrid");
+        let steps = [
+            ("SELF_STUDY OPEN astrid/build.rs 1", "NEXT: SELF_STUDY CONTINUE"),
+            ("SELF_STUDY CONTINUE", "NEXT: SELF_STUDY MAP astrid"),
+            ("SELF_STUDY MAP astrid", "RETAINED_NAVIGATION_PROSE\nNEXT: SELF_STUDY CONTINUE"),
+            ("SELF_STUDY CONTINUE", "NEXT: SELF_STUDY OPEN astrid/tests/other.rs 1"),
+            ("SELF_STUDY OPEN astrid/tests/other.rs 1", "NEXT: REST"),
+        ];
+        let mut bookmarks = Value::Null;
+        for (index, (action, text)) in steps.iter().enumerate() {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            next_action::study_navigation::handle_request(&mut conv, "SELF_STUDY", action).unwrap();
+            conv.introspect_target.as_mut().unwrap().operation_id = Some(format!("eof-{index}"));
+            let out = prepare_shared_study_target(&reader, conv.introspect_target).unwrap();
+            if index == 0 || index == 4 {
+                assert_eq!(out.input_kind, astrid_source_study::InputKind::SourcePage);
+                assert!(out.page.is_some());
+            }
+            if (1..=3).contains(&index) {
+                assert!(out.page.is_none());
+                assert!(!out.text.contains("RETAINED_NAVIGATION_PROSE"));
+                assert!(!out.text.contains("NAVIGATION RECEIPT"));
+                assert!(!out.text.contains("NEXT: SELF_STUDY CONTINUE uses"));
+                assert_eq!(source_study_authored_mode(&out), if index == 2 { "study_navigation" } else { "study_decision" });
+            }
+            let request = serde_json::json!({"messages":[{"role":"user","content":out.text}]}).to_string();
+            let response = serde_json::json!({"message":{"content":text},"done":true}).to_string();
+            if let Some(page) = &out.page {
+                reader.delivered(&page.id, &request, &response).unwrap();
+            } else {
+                reader.navigation_delivered(out.navigation_id.as_ref().unwrap(), &request, &response).unwrap();
+            }
+            let saved: Value = serde_json::from_slice(&std::fs::read(temp.path().join("reader/reader-v1.json")).unwrap()).unwrap();
+            if index == 0 { bookmarks = saved["bookmarks"].clone(); }
+            if (1..=3).contains(&index) { assert_eq!(saved["bookmarks"], bookmarks); }
+            assert_eq!(parse_next_action(text), astrid_source_study::response_choice::inspect_response(text, false).selected_next.as_deref());
+        }
+    }
+    #[test]
     fn quiet_notebook_and_decisions_pass_through_real_bridge_preparation() {
         let temp = tempfile::tempdir().unwrap();
         let reader = astrid_source_study::Reader::new(

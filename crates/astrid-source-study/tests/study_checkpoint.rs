@@ -382,7 +382,7 @@ fn omitting_only_the_check_in_cannot_earn_source_or_navigation_delivery_credit()
         let end = output.text.find(CHECK_IN_END).unwrap() + CHECK_IN_END.len();
         let mut shortened = output.text.clone();
         shortened.replace_range(start..end, "");
-        assert!(shortened.contains(NOTEBOOK));
+        assert_eq!(shortened.contains(NOTEBOOK), output.page.is_some());
         let (request, response) = wire(&output, &shortened, "A shortened-input account.");
         if let Some(page) = &output.page {
             assert!(shortened.contains(&page.text));

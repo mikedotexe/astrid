@@ -362,7 +362,7 @@ fn ambiguous_basename_does_not_claim_a_precise_previously_named_source() {
 
 #[test]
 fn empty_source_session_does_not_claim_that_code_was_supplied() {
-    let (_tmp, catalog, reader) = setup();
+    let (tmp, catalog, reader) = setup();
     for name in ["publisher.rs", "consumer.rs"] {
         let path = catalog
             .resolve(&format!("astrid/crates/events/src/{name}"))
@@ -380,11 +380,14 @@ fn empty_source_session_does_not_claim_that_code_was_supplied() {
         astrid_source_study::InputKind::EndOfFile
     );
     accept(&reader, &session, "Both files are empty.");
-    assert!(
-        reader
-            .prepare_action(MAP)
-            .unwrap()
-            .text
-            .contains("4 consecutive verified study inputs")
+    let map = reader.prepare_action(MAP).unwrap();
+    assert_eq!(
+        map.host_feedback_policy,
+        astrid_source_study::HostFeedbackPolicy::ReaderOnly
     );
+    assert!(!map.text.contains("consecutive verified study inputs"));
+    let saved: Value =
+        serde_json::from_slice(&fs::read(tmp.path().join("reader/reader-v1.json")).unwrap())
+            .unwrap();
+    assert_eq!(saved["navigation_history"]["without_source"], 4);
 }

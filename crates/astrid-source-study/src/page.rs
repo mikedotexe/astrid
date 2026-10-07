@@ -3,6 +3,11 @@ use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::fs;
 
+const MORE_SOURCE: &str =
+    "More source follows; CONTINUE resumes at the exact next byte after verified delivery.";
+const NAVIGATION: &str = "Navigation: SELF_STUDY CONTINUE | SELF_STUDY MAP | SELF_STUDY FIND <literal text> | SELF_STUDY OPEN repository/path <line>\n";
+const EOF_NAVIGATION: &str = "EOF after verified delivery: CONTINUE has no next bytes. MAP browses; OPEN repository/path <line> selects or rereads.\n";
+
 /// A declaration name actually included in the numbered, delivered source.
 /// This records syntax, not execution, correctness, or an authored conclusion.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -87,9 +92,6 @@ impl Page {
         );
         let use_evidence = crate::source_provenance::render(&outline, &source.id, start.byte, 650);
         let links_budget = if budget < MAX_PAGE_BYTES { 400 } else { 700 };
-        let footer =
-            "More source follows; CONTINUE resumes at the exact next byte after verified delivery.";
-        let navigation = "Navigation: SELF_STUDY CONTINUE | SELF_STUDY MAP | SELF_STUDY FIND <literal text> | SELF_STUDY OPEN repository/path <line>\n";
         // Reserve actual metadata bytes, a maximum-length range end, and the
         // optional source links before choosing the immutable source interval.
         let disclosure = source.requested.as_deref().map_or_else(String::new, |requested| {
@@ -121,8 +123,8 @@ impl Page {
         );
         let overhead = header(&"0".repeat(64), text.len(), &max_line_interval)
             .len()
-            .saturating_add(footer.len())
-            .saturating_add(navigation.len())
+            .saturating_add(MORE_SOURCE.len())
+            .saturating_add(NAVIGATION.len().max(EOF_NAVIGATION.len()))
             .saturating_add(links_budget)
             .saturating_add(4);
         let (end, body) = numbered_source(&text, &start, budget.saturating_sub(overhead));
@@ -145,9 +147,10 @@ impl Page {
             links_budget.saturating_sub(end_scope.len()),
         );
         let rendered = format!(
-            "{}{body}\n{}{end_scope}\n{links}{navigation}",
+            "{}{body}\n{}{end_scope}\n{links}{}",
             header(&id, end.byte, &delivered_lines(&text, &start, &end)),
-            if eof { "End of file." } else { footer }
+            if eof { "End of file." } else { MORE_SOURCE },
+            if eof { EOF_NAVIGATION } else { NAVIGATION }
         );
         if rendered.len() > budget {
             bail!("source page exceeds the protected delivery budget");

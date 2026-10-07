@@ -404,6 +404,7 @@ impl Writer {
             );
         }
         let output = StudyOutput {
+            host_feedback_policy: crate::HostFeedbackPolicy::Default,
             continuation_decision: false,
             generation_requested: true,
             input_kind: InputKind::PrivateWriting,

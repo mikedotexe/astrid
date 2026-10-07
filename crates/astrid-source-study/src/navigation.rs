@@ -42,6 +42,7 @@ impl Catalog {
                 ));
             }
             lines.push("Includes implementation, tests, manifests, interfaces, shaders and architecture docs. Excludes runtime/private artifacts, credentials and generated build output. Source is the local checkout, not proof of deployed behavior.".into());
+            lines.push("Delivery-history counts describe this reader's recorded coverage of listed entry points, not component size, importance, capability or understanding. Zero does not mean a component is absent.".into());
         } else if let Some(component) = self.components.iter().find(|c| c.id == topic) {
             lines.push(component.title.clone());
             for id in &component.sources {

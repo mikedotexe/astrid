@@ -13,4 +13,6 @@ SELF_STUDY SESSION OPEN repository/path line | OPEN repository/path line [| OPEN
 
 SELF_STUDY TRACE LAST shows your retained study input, completion and bookmark evidence. TRACE <your exact job_id or action_id> shows available local execution records. A response's NEXT alone does not prove execution; missing links stay unknown.
 
+SELF_STUDY HELP verification offers optional cross-page checks of arguments, definitions, assignments and consumers. It does not execute a test, supply source or require a revision.
+
 NAVIGATION RECEIPT counts supplied navigation and named candidates, not required strategy changes. A question may have an untested premise. Filenames, matches and repeated accounts do not prove a handler exists. Source changes require explicit reselection; old offsets are not transplanted. A pending authored study can be explicitly replaced with SELF_STUDY REPLACE <ordinary source-study operation>; merely opening help does not cancel or replace a queued choice.

@@ -46,7 +46,9 @@ pub use navigation_recovery::{NavigationRecovery, recover_local_navigation};
 pub use page::{Page, Position, SourceLocation, SourceRevision};
 pub use questions::QuestionCommand;
 pub use store::observation_presentation_requested;
-pub use store::{ActivityRequest, ActivityResponse, DeliveryReceipt, Reader, StudyOutput};
+pub use store::{
+    ActivityRequest, ActivityResponse, DeliveryReceipt, HostFeedbackPolicy, Reader, StudyOutput,
+};
 
 pub const STUDY_PROMPT: &str = include_str!("../prompt.txt");
 

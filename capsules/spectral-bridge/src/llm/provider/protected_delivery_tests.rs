@@ -7,7 +7,7 @@ mod protected_delivery_tests {
     #[test]
     fn study_map_evidence_and_recalled_account_survive_primary_and_fallback() {
         let root = tempfile::tempdir().unwrap();
-        std::fs::write(root.path().join("Cargo.toml"), "[workspace]\nmembers=[]\n").unwrap();
+        std::fs::write(root.path().join("Cargo.toml"), format!("[workspace]\nmembers=[]\n{}", "# synthetic catalog source\n".repeat(500))).unwrap();
         let catalog = astrid_source_study::Catalog::new(std::collections::BTreeMap::from([(
             "astrid".into(),
             root.path().into(),
@@ -19,6 +19,7 @@ mod protected_delivery_tests {
             .unwrap();
         let request =
             serde_json::json!({"messages":[{"role":"user","content":page.text}]}).to_string();
+        assert!(!page.page.as_ref().unwrap().eof);
         let response = serde_json::json!({"done":true,"message":{"content":"I recall identity-context at 348 and auth-token at 355.\nNEXT: SELF_STUDY MAP"}}).to_string();
         reader
             .delivered(&page.page.unwrap().id, &request, &response)

@@ -30,6 +30,10 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StudyOutput {
+    /// Presentation only; adapters must not append unrelated host history.
+    /// Absent on old retained offers, whose presentation remains unchanged.
+    #[serde(default, skip_serializing_if = "HostFeedbackPolicy::is_default")]
+    pub host_feedback_policy: HostFeedbackPolicy,
     /// Typed presentation purpose, separate from the kind of supplied evidence.
     /// Omitted on old offers so their retained wire identity stays unchanged.
     #[serde(default, skip_serializing_if = "is_false")]
@@ -60,6 +64,19 @@ pub struct StudyOutput {
     pub question_id: Option<String>,
     #[serde(default)]
     pub navigation_id: Option<String>,
+}
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum HostFeedbackPolicy {
+    #[default]
+    Default,
+    ReaderOnly,
+}
+impl HostFeedbackPolicy {
+    #[allow(clippy::trivially_copy_pass_by_ref)] // Serde's skip predicate receives a reference.
+    fn is_default(&self) -> bool {
+        *self == Self::Default
+    }
 }
 #[allow(clippy::trivially_copy_pass_by_ref)]
 fn is_false(value: &bool) -> bool {

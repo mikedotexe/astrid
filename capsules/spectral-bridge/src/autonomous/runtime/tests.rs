@@ -1821,7 +1821,7 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         )
         .unwrap();
 
-        assert_eq!(resolved.path, fixture.path());
+        assert_eq!(resolved.path, fixture.path().canonicalize().unwrap());
     }
 
     #[test]
@@ -1836,7 +1836,7 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         )
         .unwrap();
 
-        assert_eq!(resolved.path, fixture.path());
+        assert_eq!(resolved.path, fixture.path().canonicalize().unwrap());
     }
 
     #[test]
@@ -1849,7 +1849,7 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
 
         assert_eq!(
             resolved.path,
-            bridge_paths().minime_root().join("minime/src/esn.rs")
+            bridge_paths().minime_root().join("minime/src/esn.rs").canonicalize().unwrap()
         );
     }
 

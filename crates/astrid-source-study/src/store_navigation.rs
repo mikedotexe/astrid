@@ -80,6 +80,21 @@ impl Reader {
         let evidence_scope = input_kind.scope().to_string();
         let source_selection = input_kind == InputKind::SourceSelectionNeeded;
         let decision = decision || input_kind == InputKind::EndOfFile || source_selection;
+        let exhausted = state
+            .current
+            .as_ref()
+            .and_then(|id| state.bookmarks.get(id))
+            .filter(|p| p.eof && state.pending.is_none() && state.pending_session.is_none());
+        let quiet_eof = input_kind == InputKind::EndOfFile
+            || (input_kind == InputKind::Map && exhausted.is_some());
+        if input_kind == InputKind::Map
+            && let Some(saved) = exhausted
+        {
+            text.insert_str(0, &format!(
+                "Saved source position: end of {} at revision {}. CONTINUE has no next page in that saved revision; a map does not change this position. OPEN explicitly selects current source bytes, including deliberate rereading. No new source is supplied by this map.\n\n",
+                saved.source, saved.revision.sha256
+            ));
+        }
         if let Some(page) = &page {
             text.push_str(&crate::coverage::render(
                 state.progress.as_ref().unwrap_or(&Progress::new()),
@@ -126,27 +141,37 @@ impl Reader {
         text.insert_str(0, &format!("THIS TURN — {evidence_scope}\n\n"));
         let receipt_position = text.len();
         text.push('\n');
-        if decision {
+        if decision || quiet_eof {
             text.push_str(
                 &state
                     .questions
                     .decision_context(question_id.as_deref(), notebook),
             );
             text.push_str("\nChoose a complete final action line: NEXT: SELF_STUDY MAP browses sources; NEXT: SELF_STUDY FIND <literal text> searches; NEXT: SELF_STUDY OPEN <exact source path> [line] chooses a source.");
-            if state.pending.is_some()
-                || state.pending_session.is_some()
-                || state
-                    .current
-                    .as_ref()
-                    .is_some_and(|id| state.bookmarks.contains_key(id))
+            if input_kind != InputKind::EndOfFile
+                && (state.pending.is_some()
+                    || state.pending_session.is_some()
+                    || state
+                        .current
+                        .as_ref()
+                        .and_then(|id| state.bookmarks.get(id))
+                        .is_some_and(|p| !p.eof))
             {
                 text.push_str(" NEXT: SELF_STUDY CONTINUE uses this reading context's retained source position.");
-            } else if !source_selection {
+            } else if !source_selection && !quiet_eof {
                 text.push_str(" This reading context has no saved source position; select a source before using CONTINUE.");
             }
             text.push_str(" NEXT: INTROSPECT, NEXT: DAYDREAM or NEXT: ASPIRE leaves source study; NEXT: REST skips one action, not the runtime. No activity change is automatic.\n");
             if input_kind == InputKind::EndOfFile {
-                text.push_str("Bare SELF_STUDY or CONTINUE returns the same exhausted position at EOF. No investigation is declared complete by reaching EOF.\n");
+                text.push_str("This source position is exhausted: bare SELF_STUDY or CONTINUE cannot advance it. MAP only browses; an explicit OPEN selects another source or deliberately rereads. No investigation is declared complete by reaching EOF.\n");
+            }
+            if quiet_eof {
+                text.push_str(
+                    &state
+                        .navigation_history
+                        .source_selection(&key, &self.catalog),
+                );
+                text.push_str("Notes and prior accounts remain available through SELF_STUDY NOTE or SELF_STUDY QUESTION REVIEW qN; they are not replayed in this navigation turn.\n");
             }
         } else if !detached {
             text.push_str(&state.questions.render_context(question_id.as_deref()));
@@ -160,10 +185,19 @@ impl Reader {
         if let Some(choice) = &state.last_choice
             && !detached
             && !source_selection
+            && !quiet_eof
         {
             suffix.push_str(&choice.render(false));
         }
-        let recall = if detached || decision || input_kind == InputKind::Notebook || quiet_notebook
+        let recall = if quiet_eof && input_kind == InputKind::Map && !quiet_notebook {
+            // Keep explicit notebook save/rejection results inspectable without
+            // replaying the recent navigation accounts from Notebook::render.
+            notebook.study_choices(&self.catalog, None, &navigation, 4_500)
+        } else if detached
+            || decision
+            || quiet_eof
+            || input_kind == InputKind::Notebook
+            || quiet_notebook
         {
             String::new()
         } else {
@@ -177,7 +211,7 @@ impl Reader {
         };
         text.push_str(&recall);
         text.push_str(&suffix);
-        if !detached && !source_selection {
+        if !detached && !source_selection && !quiet_eof {
             insert_receipt(&mut text, receipt_position, &receipt);
         }
         if text
@@ -189,6 +223,11 @@ impl Reader {
             bail!("complete study input exceeds the shared provider budget; bookmark unchanged");
         }
         let mut output = StudyOutput {
+            host_feedback_policy: if quiet_eof || source_selection {
+                HostFeedbackPolicy::ReaderOnly
+            } else {
+                HostFeedbackPolicy::Default
+            },
             continuation_decision: decision || help,
             generation_requested: true,
             require_complete_input: true,
@@ -200,6 +239,8 @@ impl Reader {
                 "You explicitly opened source-study help. This is command reference, not source evidence or a request for a report. You may choose a final NEXT, ask for another help topic, or stop. Examples are inert; nothing is executed automatically. Notebook directives in a help response do not revise study records. Your response may be public; private writing remains a separate WRITE choice.".into()
             } else if decision {
                 "This is a study continuation decision, not a new source-analysis turn. Use the supplied command outcome and current inquiry state to choose a complete final action line such as NEXT: SELF_STUDY QUESTION or NEXT: REST. A bare SELF_STUDY QUESTION command is not selected; the NEXT: prefix is required. No source summary, architectural conclusion, note revision, or declaration of understanding is required. Response hashes are provenance, never inquiry IDs. You may retain uncertainty, revise the saved question voluntarily, browse another source, deliberately reread, or leave this study. Your choice is not proof of its execution.".into()
+            } else if quiet_eof {
+                "You opened a source map with an exhausted saved reading position. This is navigation, not a new source-analysis turn. MAP does not advance the source bookmark, and CONTINUE cannot advance its exhausted revision. Choose an exact offered OPEN to read, FIND to search, inspect your inquiry, deliberately reread, leave the study, or stop. No explanation, source summary or note revision is required. Previously offered commands are reference material, never automatically executed.".into()
             } else if reflection {
                 "You are writing an open introspection in your own words. No report template, minimum length, particular experience, diagnosis, or code explanation is required. There is room for a sustained reflection, perhaps 800-1,500 words when the thought warrants it; a line is equally welcome. Do not pad, repeat or invent material to reach a length. This reflection may be recorded publicly; private writing is a separate WRITE choice. Choose any NEXT explicitly; stopping is available.".into()
             } else if revision_recovery {

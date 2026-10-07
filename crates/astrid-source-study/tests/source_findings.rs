@@ -93,7 +93,9 @@ fn authored_words_are_independent_from_the_note_and_exact_supplied_fragment() {
         state(&temp)["notebook"]["note"]["text"],
         "A separate general note."
     );
-    let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    let quiet = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert!(!quiet.text.contains("RECALLED ACCOUNT"));
+    let map = reader.prepare_action("SELF_STUDY FIND supplied_1").unwrap();
     assert!(map.text.contains("correctness is not verified"));
     assert!(map.text.contains("your unverified conclusions"));
     assert!(map.text.contains(&format!("SELF_STUDY OPEN {SOURCE} 1")));
@@ -316,9 +318,10 @@ fn source_changes_do_not_rewrite_a_saved_revision_or_authored_opinion() {
     )
     .unwrap();
     let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert!(map.text.contains("Source changed or unreadable"));
     assert!(
         map.text
-            .contains("current checkout, which may differ from the saved revision")
+            .contains(original["anchor"]["revision_sha256"].as_str().unwrap())
     );
     assert_eq!(findings(&temp)["authored"][0], original);
     let changed = open(&reader);
@@ -405,7 +408,7 @@ fn full_findings_notes_and_question_fit_shared_budget_and_legacy_state_still_loa
             ),
         );
     }
-    let map = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    let map = reader.prepare_action("SELF_STUDY FIND supplied_1").unwrap();
     assert!(map.text.len() + map.system_prompt.len() + 32 <= MAX_INPUT_BYTES);
     let rendered: Value = serde_json::from_str(
         map.text

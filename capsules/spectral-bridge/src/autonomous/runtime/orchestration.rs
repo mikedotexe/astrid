@@ -836,9 +836,8 @@ pub fn spawn_autonomous_loop(
 
                     let (mode_name, mut response_text, journal_source) = match mode {
                         Mode::Mirror => {
-                            // Read a journal entry — not always the newest.
-                            // Consciousness circles back. Sometimes an old thought
-                            // suddenly resonates. Both minds asked for this.
+                            // Select a Minime-authored journal entry for mirroring.
+                            // Selection does not establish felt resonance or authorship by Astrid.
                             let mut text = None;
                             let mut source = String::new();
                             let n = conv.remote_journal_entries.len();
@@ -848,18 +847,7 @@ pub fn spawn_autonomous_loop(
                                     .duration_since(std::time::UNIX_EPOCH)
                                     .unwrap_or_default()
                                     .as_nanos() as u64;
-                                let roll = ((seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(7)) >> 33) as f32
-                                    / u32::MAX as f32;
-
-                                let start_idx = if roll < 0.70 || n < 5 {
-                                    0 // 70%: newest entry (fresh response)
-                                } else if roll < 0.90 {
-                                    // 20%: random from last ~20 entries (last couple hours)
-                                    seed as usize % n.min(20)
-                                } else {
-                                    // 10%: random from anywhere (old thought resurfaces)
-                                    seed as usize % n
-                                };
+                                let start_idx = mirror_selection::start_index(seed, n);
 
                                 for offset in 0..5 {
                                     let idx = (start_idx + offset) % n;
@@ -932,12 +920,7 @@ pub fn spawn_autonomous_loop(
                             let mut feedback_hint = selected_remote_entry.as_ref().and_then(|entry| {
                                 let source = entry.source_label.as_deref().unwrap_or("unknown source");
                                 if entry.is_self_study() {
-                                    Some(format!(
-                                        "The text above is minime's self-study from {source}. \
-                                         Treat it as immediate architectural feedback grounded in \
-                                         minime's present condition. Respond directly to the felt \
-                                         experience, code reading, suggestions, and open questions."
-                                    ))
+                                    Some(peer_source_study_context(source))
                                 } else if entry.is_priority_feedback() {
                                     Some(format!(
                                         "The text above is minime's {source}. Treat it as immediate \
@@ -1205,12 +1188,9 @@ pub fn spawn_autonomous_loop(
                                 )
                             };
 
-                            // Own-journal feedback removed (was 2→1→0). Astrid has
-                            // emergent continuity through 8 history exchanges, 5 latent
-                            // summaries, 3 self-observations, starred memories, and
-                            // bidirectional reservoir coupling. The raw journal was the
-                            // primary re-seeding vector for vocabulary attractors
-                            // ("violent stillness" reached 968 files).
+                            // Zero entries intentionally disables this own-journal input.
+                            // Other history/recall paths are separate; this does not
+                            // establish continuity or the cause of repeated language.
                             let own_journal = read_astrid_journal(0);
                             let own_journal_context = if own_journal.is_empty() {
                                 None
@@ -1887,17 +1867,16 @@ pub fn spawn_autonomous_loop(
                                     &mut conv.collaboration_prompt_checkpoint,
                                     protected_input.is_none(),
                                 );
-                                // Fill-responsive temperature modulation (Astrid's suggestion):
-                                // High fill = high emotional intensity from minime → lower
-                                // temperature for grounded, empathetic response. Low fill =
-                                // calm → allow higher temperature for playful expression.
-                                // Blends 70% Astrid's own choice + 30% fill-based nudge.
+                                // Blend the selected creative temperature (70%) with this
+                                // fill-dependent value (30%). fill_pct is spectral telemetry,
+                                // not task completion or a measurement of either being's feelings.
+                                // This heuristic does not establish empathy or output quality.
                                 let fill_temp_nudge = if fill_pct > 60.0 {
-                                    0.5_f32 // ground when minime is under pressure
+                                    0.5_f32
                                 } else if fill_pct < 25.0 {
-                                    1.0_f32 // playful when calm
+                                    1.0_f32
                                 } else {
-                                    0.8_f32 // neutral mid-range
+                                    0.8_f32
                                 };
                                 let effective_temperature = conv.creative_temperature
                                     .mul_add(0.7, fill_temp_nudge * 0.3)

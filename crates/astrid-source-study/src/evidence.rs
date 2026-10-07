@@ -71,7 +71,7 @@ impl InputKind {
                 "Search: matching excerpts and navigation only. These snippets are not a complete source page; OPEN a result to inspect its context and revision."
             },
             Self::EndOfFile => {
-                "End of file: no new source bytes are supplied this turn. OPEN deliberately rereads; MAP chooses another source."
+                "End of file: no new source bytes are supplied this turn. MAP browses without moving the saved position; OPEN explicitly selects a source or deliberately rereads."
             },
             Self::Recovery => {
                 "Recovery map: the requested source was not supplied. No new source page is supplied this turn."

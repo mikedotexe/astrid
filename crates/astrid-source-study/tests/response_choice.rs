@@ -248,8 +248,12 @@ fn late_page_delivery_and_idempotent_retry_do_not_replace_newer_choice() {
     let page_id = &page.page.as_ref().unwrap().id;
     reader.delivered(page_id, &request, &response).unwrap();
     reader.delivered(page_id, &request, &response).unwrap();
-    let next = reader.prepare_action("SELF_STUDY MAP").unwrap();
-    let choice = receipt_in(&next.text);
+    let quiet = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert!(!quiet.text.contains("PREVIOUS RESPONSE CHOICE"));
+    let reread = reader
+        .prepare_action("SELF_STUDY OPEN astrid/Cargo.toml 1")
+        .unwrap();
+    let choice = receipt_in(&reread.text);
     assert_eq!(choice.input_id, latest.page_id);
     assert_eq!(choice.feedback.selected_next.as_deref(), Some("REST"));
 }

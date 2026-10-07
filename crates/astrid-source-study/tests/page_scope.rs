@@ -381,7 +381,7 @@ fn a_declaration_name_cut_by_the_page_boundary_is_not_saved_as_delivered() {
 }
 
 #[test]
-fn delivered_test_location_keeps_its_test_marker_in_notebook_recall() {
+fn delivered_test_location_keeps_its_test_marker_in_explicit_notebook_inspection() {
     let source = "#[cfg(test)]\nmod checks {\n    #[test]\n    fn ack_serializes() {\n        assert_eq!(1, 1);\n    }\n}\n";
     let (_temp, reader, id) = setup("crates/example/src/sample.rs", source);
     let out = open(&reader, &id, 1);
@@ -395,7 +395,9 @@ fn delivered_test_location_keeps_its_test_marker_in_notebook_recall() {
         .unwrap();
     assert_eq!(location.kind, "function; test syntax: #[test] at line 3");
     accept(&reader, &out);
-    let recalled = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    let quiet = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert!(!quiet.text.contains("candidate: ack_serializes"));
+    let recalled = reader.prepare_action("SELF_STUDY NOTE").unwrap();
     assert!(
         recalled
             .text

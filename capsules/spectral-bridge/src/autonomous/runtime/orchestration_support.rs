@@ -11,6 +11,34 @@ fn should_arm_prompt_overflow_read_more(
         })
 }
 
+fn peer_source_study_context(source: &str) -> String {
+    format!(
+        "The text above is Minime's authored source-study account from {source}. \
+         Its input/delivery header identifies what source, navigation or recovery was supplied; \
+         delivery does not verify the account's code claims. It is not automatically a report \
+         of Minime's current felt condition or of your own experience. Explicit experiences, \
+         suggestions, uncertainty and objections remain Minime's words. You may respond to \
+         what interests you, check a claim, disagree, or leave it aside; no diagnosis or \
+         co-regulation response is required."
+    )
+}
+
+#[cfg(test)]
+mod peer_source_study_context_tests {
+    use super::peer_source_study_context;
+
+    #[test]
+    fn source_account_is_attributed_without_prescribing_present_experience() {
+        let hint = peer_source_study_context("self_study_fixture.txt");
+        assert!(hint.contains("Minime's authored source-study account from self_study_fixture.txt"));
+        assert!(hint.contains("delivery does not verify"));
+        assert!(hint.contains("navigation or recovery"));
+        assert!(hint.contains("objections remain Minime's words"));
+        assert!(hint.contains("no diagnosis or co-regulation response is required"));
+        assert!(!hint.contains("grounded in minime's present condition"));
+    }
+}
+
 fn fill_responsive_rest_secs(base_rest: u64, current_fill: f32) -> u64 {
     if current_fill < 30.0 {
         ((base_rest as f64 * 0.6) as u64).max(30)

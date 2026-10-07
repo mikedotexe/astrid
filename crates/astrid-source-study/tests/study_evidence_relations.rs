@@ -177,7 +177,9 @@ fn typed_relations_keep_two_delivery_anchors_and_remain_authored_across_reload()
             output.page.as_ref().unwrap().id
         );
     }
-    let next = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    let quiet = reader.prepare_action("SELF_STUDY MAP").unwrap();
+    assert!(!quiet.text.contains("RECALLED ACCOUNT"));
+    let next = reader.prepare_action("SELF_STUDY FIND act").unwrap();
     assert!(next.text.contains("Authored call/data-flow claim"));
     assert!(next.text.contains("relation unverified"));
     assert!(next.text.contains("\"hypothesis\""));
