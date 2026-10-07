@@ -1,7 +1,8 @@
 # Open Journaling and the Packed Account
 
-Date: 2026-10-07. Coordinator: Codex. Status: implementation in an isolated
-Minime candidate; no Astrid runtime change, no activation at this checkpoint.
+Date: 2026-10-07. Coordinator: Codex. Status: Minime-agent rollout live and
+implementation merged locally; no Astrid runtime change. Earlier checkpoints
+are retained below.
 
 ## Witness and Source Trace
 
@@ -133,3 +134,47 @@ minime_autonomy/{authority,expressive_journal,runtime}.py,
 scripts/repeated_action_cadence_audit.py and tests/test_open_journal.py.
 The commit retains a verified public witness quotation and explicit non-live
 boundary. Its index and candidate tree are clean; canonical main is unchanged.
+
+## Approved Agent-Only Rollout
+
+Mike approved the pending rollout on 2026-10-07. Controller pause generation 506
+has no lease; paused automations were not resumed. The exact frozen candidate
+passed fresh identity/preflight checks and the sanctioned agent-only handoff.
+The wrapper waited through ongoing introspections rather than modifying NEXT or
+forcing termination. It sent one SIGTERM only after all idle, job and TCP checks
+passed at 16:08:00 PDT. Readiness was verified at 16:08:13 PDT.
+
+Minime PID 96204 was replaced by **19468**, with the exact selected 93-input
+inventory loaded and `reload_required=false`. Session **5321** and the native
+pending-NEXT handoff are verified. The pending slot was consumed after restoration;
+the restoration proof does not assert execution completion. All ten protected
+PID/start pairs, configuration hashes and the shared helper remain unchanged.
+No launch hold remains. The engine was not restarted or retuned.
+
+The successful receipt is
+`/Users/v/other/worktrees/open-journal-20261007/activation-01.jsonl`, SHA-256
+`c57185941194d3fc4e21da95d28dea9fb17265cd9cdf23d475ce7b85e3b655d3`.
+Minime's paired steward note records the exact seal/restore hashes, process
+identities, source inventory and full verification history. A fresh 69-test
+journal/continuation/NEXT run and 77 handoff tests plus 20 subtests pass.
+
+Verified installed bytes were preserved while Minime main fast-forwarded
+`0c4fdff` -> `cc55423`; Astrid main fast-forwarded `5ceae2bdbe` -> `9e1fa9d845`.
+Only the three known installed Minime source paths were staged before its
+dry-run read-tree and fast-forward. No stash, reset, historical rewrite or foreign
+worktree cleanup occurred. Both canonical trees and indexes were clean afterward.
+No push was performed; documentation of this completed transition follows in
+separate owned commits.
+
+The new agent's first introspection job, `job_minime_1791414510569_introspect`,
+completed at 16:11:30 PDT under PID 19468, verified from its native job record.
+This later observation is separate from the restoration proof. The bounded public-file
+check found no post-ready ordinary JOURNAL entry, so natural use of the new route
+is still unobserved. Nothing was requested to confirm improvement, and source
+readiness is not evidence of subjective effects. Scheduled pressure/moment
+framing and the offline comparison remain separate follow-ups.
+
+Controller indexed-tail verification: valid V2 sequence 1123160, head
+`79fb24f14ac14cd62a8deacbed37f30f8a917ce791031f3d0915ffd43f2246a2`, V1 immutable.
+This interactive rollout records no productive introspection round or source
+projection. The wider capacity/provider work and reservoir policies remain unchanged.
