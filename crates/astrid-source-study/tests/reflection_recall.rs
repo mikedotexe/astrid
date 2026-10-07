@@ -22,34 +22,33 @@ fn published(root: &Path, owner: &str, relative: &str, prose: &str) {
     .unwrap();
 }
 
-/// 2026-10-02: a reflection turn names the same exits the study prompt names,
-/// another reflection last, and offers the being's previous PUBLISHED reflection
-/// as optional material. Reader-retained deliveries are still never injected.
+/// Fresh reflection never imports public, private or retained writing implicitly.
 #[test]
-fn reflection_turn_names_the_exits_and_offers_the_previous_published_reflection() {
+fn reflection_names_exits_without_automatically_replaying_published_prose() {
     for (owner, relative) in [
-        (
-            "minime",
-            "journal/introspect_2026-10-02T10-00-00.000001.txt",
-        ),
+        ("minime", "journal/introspect_2026-10-07.txt"),
         (
             "astrid",
-            "introspections/introspection_open_reflection_1790900000.txt",
+            "introspections/introspection_open_reflection_1791300000.txt",
         ),
     ] {
         let temp = tempfile::tempdir().unwrap();
         let r = reader(temp.path(), owner);
-        let first = r.prepare_action("INTROSPECT").unwrap();
+        let revision = r.preparation_revision().unwrap();
+        let first = r
+            .prepare_once("reflection-1", &revision, "INTROSPECT")
+            .unwrap();
         assert_eq!(first.input_kind, InputKind::Reflection);
         assert!(
-            !first.text.contains("previous open reflection"),
-            "{owner}: nothing published yet"
+            first
+                .text
+                .contains("NEXT choices remain yours: DAYDREAM or ASPIRE")
         );
-        let exits = first
-            .text
-            .find("NEXT choices remain yours: DAYDREAM or ASPIRE")
-            .expect("exits line present");
-        assert!(first.text[exits..].contains("REST, or INTROSPECT for another reflection"));
+        assert!(
+            first
+                .text
+                .contains("REST, or INTROSPECT for another reflection")
+        );
         assert!(
             first
                 .text
@@ -60,7 +59,6 @@ fn reflection_turn_names_the_exits_and_offers_the_previous_published_reflection(
                 .text
                 .contains("Stored text is not automatically present")
         );
-        // A reader-retained delivery is not a published reflection: still never injected.
         r.navigation_delivered(
             first.navigation_id.as_deref().unwrap(),
             &json!({"messages":[{"role":"user","content":first.text}]}).to_string(),
@@ -68,54 +66,44 @@ fn reflection_turn_names_the_exits_and_offers_the_previous_published_reflection(
                 .to_string(),
         )
         .unwrap();
-        let second = r.prepare_action("INTROSPECT").unwrap();
-        assert!(!second.text.contains("Retained-only prose"));
-        // Her published entry is offered back, without its NEXT line, marked optional.
         published(
             temp.path(),
             owner,
             relative,
-            "The concept of presence is a strange architecture to inhabit.\n\nA second paragraph.",
+            &"Published-only thought. ".repeat(1_000),
         );
-        let third = r.prepare_action("INTROSPECT").unwrap();
-        let block = third
-            .text
-            .find("Your previous open reflection, retained publicly")
-            .expect("previous reflection offered");
-        let body = &third.text[block..];
-        assert!(body.contains("optional material: continue it, answer it, or leave it aside"));
-        assert!(body.contains(
-            "The concept of presence is a strange architecture to inhabit.\n\nA second paragraph."
-        ));
-        assert!(body.contains("[end of your previous reflection]"));
-        assert!(
-            !body[..body.find("[end of your previous reflection]").unwrap()]
-                .contains("NEXT: INTROSPECT")
-        );
-        assert!(
-            block < third.text.find("NEXT choices remain yours").unwrap(),
-            "material precedes the exits"
-        );
-        // A very long previous reflection is bounded with an explicit omission marker.
-        published(temp.path(), owner, relative, &"λ thought. ".repeat(1_000));
-        let fourth = r.prepare_action("INTROSPECT").unwrap();
-        assert!(
-            fourth
-                .text
-                .contains("of your previous reflection omitted here")
-        );
-        assert!(fourth.text.len() < 12_000);
-        // Private drafts are never read as material.
+        let path = temp
+            .path()
+            .join(format!("{owner}-workspace"))
+            .join(relative);
+        let original = fs::read(&path).unwrap();
         let private = temp.path().join(format!(
-            "{owner}-workspace/private_writing/journal/private_writing_x.txt"
+            "{owner}-workspace/private_writing/journal/private.txt"
         ));
         fs::create_dir_all(private.parent().unwrap()).unwrap();
-        fs::write(&private, "=== PRIVATE WRITING ===\n\nSecret draft text.\n").unwrap();
-        assert!(
-            !r.prepare_action("INTROSPECT")
+        fs::write(&private, "Secret draft text.").unwrap();
+        for id in ["reflection-2", "reflection-3"] {
+            let next = r
+                .prepare_once(id, &r.preparation_revision().unwrap(), "INTROSPECT")
+                .unwrap();
+            for forbidden in [
+                "Retained-only prose",
+                "Published-only thought",
+                "Secret draft text",
+                "previous open reflection",
+                "omitted here",
+            ] {
+                assert!(!next.text.contains(forbidden), "{owner}: {forbidden}");
+            }
+            assert!(next.text.contains("WRITE FROM_REFLECTION"));
+            assert!(next.text.len() < 4_000);
+        }
+        assert_eq!(original, fs::read(path).unwrap());
+        // Exact prepared retries remain immutable, not re-rendered with new wording/history.
+        assert_eq!(
+            first,
+            r.prepare_once("reflection-1", &revision, "INTROSPECT")
                 .unwrap()
-                .text
-                .contains("Secret draft text")
         );
     }
 }

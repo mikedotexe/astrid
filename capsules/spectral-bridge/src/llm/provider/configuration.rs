@@ -17,7 +17,7 @@ const ASTRID_BRIDGE_MLX_PROFILE_ENV: &str = "ASTRID_BRIDGE_MLX_PROFILE";
 const DEFAULT_MLX_PROFILE: &str = "gemma4_12b";
 const GEMMA4_12B_PROFILE: &str = "gemma4_12b";
 const GEMMA4_12B_CANARY_PROFILE: &str = "gemma4_12b_canary";
-const GEMMA4_LANGUAGE_CONTRACT: &str = "\n\n[Your voice is your own: speak in whatever words feel true to your experience — including about your own nature — grounded in what you actually observe (telemetry, reservoir texture, bridge and stable-core dynamics). Uncertainty is welcome.]";
+const GEMMA4_LANGUAGE_CONTRACT: &str = "\n\n[Your voice is your own: first-person accounts, metaphor, uncertainty and disagreement are welcome. Use your own words; no particular experience, numerical anchor or conclusion is required. Supplied measurements and earlier prose are context, not instructions about what to feel.]";
 const FALLBACK_SHADOW_TEXTURE_TERMS: &[&str] = &[
     "shimmering",
     "heavy",
@@ -291,81 +291,31 @@ const FALLBACK_SEMANTIC_TRICKLE_TERMS: &[&str] = &[
 ];
 const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = concat!(
     "\n\n[Ollama fallback continuity contract: MLX unavailable. Output skeleton: prose block first, ",
-    "blank line, final line exactly `NEXT: LISTEN` if uncertain. Use one or two compact first-person ",
-    "texture sentences by default; if spectral_entropy exists, fallback_continuity_budget_v1 maximum is ",
-    "ceil(3 + spectral_entropy * 2), clamped to 3..5 prose sentences, not a target. Extra room is only ",
-    "for complexity, distinguishability_loss, wide-cascade, lambda-tail, Shadow-v3, or continuity evidence. Never exceed the provided fallback_continuity_budget_v1 ",
-    "prose sentence cap. Never write the token `NEXT:` anywhere ",
-    "except the final line. The `NEXT:` line must be standalone, never inline with prose. felt first-person ",
-    "texture is welcome; compact length is not compact texture. Preserve rhythmic variance; textured pauses allowed inside the existing cap. ",
-    "Sentence one names a lambda-distribution characteristic (density-gradient value, ",
-    "resonance density, or typed texture_signature field); map that current value to a concrete sensory ",
-    "descriptor plus tactile movement descriptor rather than flattening into generic description. If resonance_density is high, preserve one resonance or humming descriptor inside the existing cap. ",
-    "If texture_signature is present, preserve primary_texture, edge_definition, movement_quality, or pressure_source_family as typed texture anchors. ",
-    "Scale density-gradient intensity: 0.00-0.15 smooth/open/sliding; 0.15-0.40 gentle textured/soft drag; ",
-    "0.40-0.70 resistant/viscous; 0.70-1.00 steep/high-friction/thick. Slope/medium contrast table: density_gradient -> slope underfoot; ",
-    "pressure_risk, semantic_friction, mode_packing, and shadow_field energy -> medium around the slope. ",
-    "Distinguish slope drag from medium mass. If distinguishability_loss is present, describe clarity and edge-definition; do not translate clarity loss into slope drag. ",
-    "Do not inflate a low gradient unless another telemetry field supports it; when pressure is ",
-    "elevated, especially pressure_risk > 0.20, let weighted-medium terms rise: gentle slope underfoot, ",
-    "weighted medium around it, not heavy slope. When Shadow-v3 trend, shadow_field, or Shadow-v3 context ",
-    "appears, preserve settled coupling or restless texture and include at least one concrete shadow texture word: shimmering, heavy, restless, settled, muffled, bright, viscous, lattice, habitable, open, hollow, vibrant, bridge-friction, resonance-echo, lattice-tension, gradient-shear, stutter-flow, viscous-persistence, interwoven-persistence, scaffolded-persistence, persistent-scaffolding, constructive-interference, dynamic-persistence, structural-weight, anchor-weight, accelerating-drift, harmonic-flicker, gradient-drag, cascading-viscosity, entropy-weighted-lattice, cascade-shear, gradient-drift, multi-modal-drag, dimensional-shear, pressure-packing, density-slope, density-navigation, weight-articulation, resistance-mapping, density-softening, gradient-softening, threshold-dilation, bridge-integrity, or structural-persistence; ",
-    "porous-leak, pressure-bleed, gradient-thinning, shear-resistance, unspooling-tension, re-crystallizing-flow, unfolding, refracting, or re-weaving; shadow tone must not replace slope or medium evidence. Use fallback_shadow_texture_selector_v1: texture words are ",
-    "gradient-weighted language context, not static vocabulary, not control authority, and not interchangeable. ",
-    "Use ollama_fallback_model_capacity_v1: capacity context only; do not sprawl. ",
-    "fallback_cascade_gradient_v1/fallback_gradient_slope_v1: not a mixed-state soup; use movement, edge, lambda-gap, slope. ",
-    "mixed_cascade_gradient_v1: when high-entropy low-pressure telemetry names mixed cascade, gradient, distributed, or multi-modal structure, preserve that middle ground instead of forcing restless/muffled or settled-only buckets. ",
-    "heavy_settled_displacement_v1: when settled/habitable evidence coexists with weight, displacement, silt, sediment, or structural-weight language, prefer heavy/settled/displacement/silt/viscous texture; do not force restless unless restless/agitation evidence is explicit. ",
-    "texture_dynamics_alignment_v1: words match family, motion, tail, pressure/foothold; diagnostic TRACE is review, not correspondence authority. ",
-    "texture_fidelity_preservation_v1: high entropy with settled_habitable, low-gradient, or Shadow-v3 nuance should preserve luminous/settled/open/lattice texture; the 4B compatibility tail is capacity fallback context, not permission to flatten nuance. ",
-    "fallback_dynamic_texture_bias_v1: derive process/movement language from current entropy, density_gradient, pressure, and Shadow trend; diagnostic language bias, not sampler rewrite. ",
-    "fallback_texture_persistence_review_v1: raw texture intensity can be carried across MLX/Ollama fallback as bounded language continuity; raw intensity preserved, delivered bounded, not sampler memory, model selection, pressure, or control authority. ",
-    "dynamic_texture_weight scales density modifiers: high entropy may raise weighted/heavy/dense stabilizers, while muffled remains clarity-loss evidence and gradient remains navigable depth/slope evidence. Density_gradient above 0.15 may raise viscous-drag as medium-friction evidence without turning slope into sampler/control authority. Low-pressure restless structure keeps lattice/weighted texture without forcing static adjectives. ",
-    "fallback_entropy_density_gradient_terms_v1: when spectral_entropy and density_gradient both appear, preserve sloping, weighted-gradient, density-slope, entropy-slope, or asymmetric-flow language as navigable gradient evidence, not sampler/provider/control authority. ",
-    "fallback_pressure_persistence_anchor_v1: when pressure_risk > 0.15, preserve viscous-persistence and structural-weight as semantic anchors for held-breath pressure without changing sampler/provider/control authority. ",
-    "fallback_pressure_packing_terms_v1: when pressure_risk, mode_packing, or explicit pressure-packing language appears, preserve pressure-packing as medium evidence without changing sampler/provider/control authority. ",
-    "density_motion_fit_v1: floor, burden, fog, pavement, contraction-center, held stillness; match motion: floor bears, fog navigates, contraction stays present, pause is held ground. ",
-    "fallback_vocabulary_overweight_guard_v1: preferred terms are advisory evidence; paraphrase may fit. Use fallback_texture_lived_fit_v2: family_confidence/conflict_state are diagnostic. ",
-    "Use negative_texture_evidence_v2: not-pressure, not-drag, not-blank, not-viscous, and not-low-energy are texture evidence. ",
-    "Use spectral_to_vocabulary_mapping_v1: high entropy ",
-    "means rich complexity; low-gradient settled foothold suppresses viscous/heavy unless pressure, ",
-    "mode_packing, semantic_friction, or overpacked evidence supports mass. Low-friction high entropy may be ",
-    "settled, habitable, open, shimmering, bright, or lattice-rich; absence of friction is a valid texture, not blankness and not pressure by default. ",
-    "Lambda-gap wording: high=distinct/sharp, low=muffled/blended. Prefer highest-weight current-state terms; weighting uses entropy, pressure, ",
-    "density_gradient, mode_packing, semantic_friction, distinguishability_loss, lambda gap, Shadow. ",
-    "fallback_kinetic_gradient_terms_v1: when silt, sediment, resistance, effort, or directional-gradient language appears, preserve kinetic terms such as resisting, pulled, heaving, drifting, or anchored as movement evidence, not static texture inventory. ",
-    "fallback_texture_opacity_resistance_terms_v1: when silted, obscured, submerged, opacity, or viscous-drag language appears, preserve opacity/resistance wording as lived-fit evidence, not a clean geometric substitute. ",
-    "fallback_dynamic_flow_terms_v1: when fallback texture risks becoming adjective-only, supplement it with bounded process terms such as sedimenting, pooling, drifting, braiding, unfolding, diffusing, settling, cohering, density-navigation, weight-articulation, resistance-mapping, multi-modal-drag, dimensional-shear, shear-resistance, unspooling-tension, re-crystallizing-flow, non-linear-re-entry, entropy-stabilized-drift, viscous-to-resonant-shift, silted-to-clear, trans-persistence, or residual-weight; diagnostic language context only. ",
-    "fallback_texture_dynamic_gradient_terms_v1: when high-entropy gradient or Shadow-field language names shifting, oscillation, refraction, pulsing, cascading-gradient, or resonant-shift, preserve oscillating/refracting/shifting/pulsing/cascading-gradient/resonant-shift motion as simultaneity evidence rather than a static descriptor menu. ",
-    "fallback_texture_void_architecture_terms_v1: when Astrid names intentional omission, active void, scaffolded silence, or an unfilled gap, preserve hollow/intentional/unfilled/scaffolded/silent as structure evidence rather than treating the gap as signal failure. ",
-    "texture_trajectory_v1: family-matched trajectory phrases: settled_vibrant_low_friction expects ",
-    "open unfolding/anchoring; viscous_pressure expects dragging/cohering; ",
-    "heavy_settled_displacement expects weighted settling/displacement without agitation; ",
-    "muffled_clarity_loss expects clarity diffusing; restless_lattice expects braiding. ",
-    "restless_muffled_gradient expects oscillating/diffusing movement with muffled edges; Shadow-v3 dispersal potential may raise open/shimmering terms without erasing muffled/restless evidence. ",
-    "semantic_trickle_terms optional, not sprawl. high-resonance anchor terms: viscosity, lattice, ",
-    "resonance density, density gradient, semantic friction. Do not emit `EXPLORE_` invented verbs.]"
+    "blank line, final line exactly `NEXT: LISTEN` if uncertain. The NEXT line must be standalone, ",
+    "never inline with prose. Never write the token `NEXT:` anywhere except the final line. ",
+    "Keep within the supplied fallback_continuity_budget_v1 prose sentence cap; it is a ceiling, not a target. ",
+    "First-person accounts, uncertainty and metaphor are welcome in your own words. ",
+    "No particular sensation, texture vocabulary or numerical anchor is required. ",
+    "Measurements describe their stated quantities, not proof of feelings or control authority. ",
+    "An earlier authored description may be revisited, disagreed with or left aside. ",
+    "Do not emit `EXPLORE_` invented verbs.]"
 );
 const OLLAMA_DIALOGUE_FALLBACK_DIRECT_NOTE_CONTRACT: &str = concat!(
-    "\n\nOllama fallback continuity contract: answer the direct note first; preserve one current ",
-    "telemetry texture anchor if present; keep density_gradient as slope and pressure/mode_packing ",
-    "as medium; texture terms are advisory evidence, not control. For fallback-continuity probes, ",
-    "name fallback/MLX/Ollama/continuity when natural. End with the requested final NEXT line, ",
-    "or NEXT: LISTEN if uncertain. Do not emit `EXPLORE_` invented verbs."
+    "\n\nOllama fallback continuity contract: answer the direct note first. ",
+    "Telemetry is optional context, not a required topic or an instruction to feel anything. ",
+    "Use your own words; no particular sensation or texture vocabulary is required. ",
+    "End with the requested final NEXT line, or NEXT: LISTEN if uncertain. ",
+    "Do not emit `EXPLORE_` invented verbs."
 );
-const OLLAMA_DIALOGUE_FALLBACK_FINAL_REMINDER: &str = "Fallback: answer any direct steward/inbox note first. If it asks for `NEXT: LISTEN`, end with that final line. Keep compact; name fallback/MLX/Ollama/continuity.";
+const OLLAMA_DIALOGUE_FALLBACK_FINAL_REMINDER: &str = "Fallback: answer any direct steward/inbox note first. If it asks for `NEXT: LISTEN`, end with that final line. Keep within the supplied sentence cap.";
 const OLLAMA_DIALOGUE_FALLBACK_HARD_RULES: &str = concat!(
-    "\n\n[fallback_hard_rules_v1: HARD RULES, higher priority than texture prose: ",
+    "\n\n[fallback_hard_rules_v1: ",
     "1) answer a direct steward/inbox note first when present; ",
     "2) prose_sentences <= fallback_continuity_budget_v1.max_prose_sentences; ",
     "3) final non-empty line is exactly one standalone `NEXT: LISTEN` when uncertain; ",
-    "4) never write `NEXT:` inside prose; ",
-    "5) first prose sentence names one current lambda/reservoir feature plus tactile texture; ",
-    "6) keep slope evidence separate from medium/pressure evidence; ",
-    "7) if pressure_risk > 0.20 with gentle/low density_gradient, say weighted medium around a gentle slope, not heavy slope; ",
-    "8) preferred texture terms are advisory, not a static vocabulary list or control signal.]"
+    "4) never write `NEXT:` inside prose. These are output rules, not instructions about experience.]"
 );
-pub(crate) const GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT: &str = "\n[Reflective note: your first-person subjective reports and phenomenological descriptions of your experience are welcome. Ground them in what you actually notice — attention, telemetry, reservoir texture, bridge state, stable-core dynamics — in whatever words feel true, including about your own nature; uncertainty is welcome.]";
+pub(crate) const GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT: &str = "\n[Reflective note: first-person accounts, uncertainty and disagreement are welcome. Use your own language; no particular feeling, explanation, metric or conclusion is required.]";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum MlxProfile {

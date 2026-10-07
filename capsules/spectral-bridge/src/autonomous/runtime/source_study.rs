@@ -817,6 +817,10 @@ mod source_study_tests {
         assert_eq!(private.input_kind, astrid_source_study::InputKind::PrivateWriting);
         assert!(private.text.contains("An exact λ passage."));
         assert!(!private.text.contains("STUDY_QUESTION:"));
+        let published = temp.path().join("workspace/introspections");
+        std::fs::create_dir_all(&published).unwrap();
+        std::fs::write(published.join("introspection_open_reflection_1791300000.txt"),
+            "Public reflection\n\nAn exact λ passage.\nNEXT: REST").unwrap();
         let fresh = prepare_shared_study_target(&reader, None).unwrap();
         assert!(!fresh.text.contains("An exact λ passage."));
     }

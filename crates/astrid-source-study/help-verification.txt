@@ -3,11 +3,11 @@ Optional ways to check an explanation across pages. This is command reference, n
 A comment states an author's description or intention. A function name suggests a role. Neither establishes that a branch is reachable, an argument is nonzero, a calculated value is consumed, or the code is deployed. A before/after difference alone does not establish what caused it.
 
 For an implementation claim, you may inspect the argument at the call, the definition and the later consumer together:
-SELF_STUDY RELATE qualified::symbol
+SELF_STUDY RELATE symbol
 SELF_STUDY FIND exact_variable_or_expression
 SELF_STUDY SESSION OPEN repository/caller.rs 120 | OPEN repository/helper.rs 40 | OPEN repository/caller.rs 180
 
-Those locations are placeholders, not existing source choices. Use the exact OPEN locations returned by your own search. RELATE supplies syntax candidates, not a resolved call graph. FIND can find assignments or shadowing which a call-only search misses. A SESSION changes the subsequent reading position to its last selected page; retain or explicitly reselect your desired return location.
+Those locations are placeholders, not existing source choices. Use the exact OPEN locations returned by your own search. RELATE currently accepts a bare identifier, not a qualified path. It supplies name candidates, not a resolved call graph; receivers and same-named functions can be ambiguous. Use FIND for a qualified expression, assignments or shadowing which a call-only search misses. A SESSION changes the subsequent reading position to its last selected page; retain or explicitly reselect your desired return location.
 
 Examples of distinct questions: Is the value calculated? Is it overwritten before the consumer? Can this condition be reached for the actual argument range? Does zero disable this particular input, while another input remains active? Where is a metric defined, and what does its producer actually measure? Missing context stays missing; a familiar name such as fill is not a definition of task progress or experience.
 

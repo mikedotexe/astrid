@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod fallback_contract_tests {
+    include!("fallback_diagnostic_fixture.rs");
     use super::{
         COMPAT_OLLAMA_FALLBACK_MODEL, DEFAULT_OLLAMA_FALLBACK_MODEL, FALLBACK_SHADOW_TEXTURE_TERMS,
         FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS, FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS,
@@ -10,243 +11,25 @@ mod fallback_contract_tests {
         FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS, FALLBACK_TEXTURE_RESTLESS_MUFFLED_GRADIENT_TERMS,
         FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS, FALLBACK_TEXTURE_VOID_ARCHITECTURE_TERMS,
         FallbackContinuityBudget, FallbackShadowTextureAnchor, FallbackShadowTextureSelector,
-        FallbackWeightedTextureTerm, MlxProfile, OLLAMA_DIALOGUE_FALLBACK_CONTRACT,
+        FallbackTextureTermProbability, FallbackWeightedTextureTerm, MlxProfile, OLLAMA_DIALOGUE_FALLBACK_CONTRACT,
         OLLAMA_DIALOGUE_FALLBACK_HARD_RULES, compact_ollama_dialogue_fallback_messages,
         configured_ollama_fallback_model_chain_for_texture_guard,
-        configured_ollama_fallback_model_chain_from, fallback_continuity_budget_prompt_line,
+        configured_ollama_fallback_model_chain_from,
         fallback_continuity_budget_v1, fallback_heavy_settled_texture_readiness_v1,
         fallback_high_entropy_texture_skips_compatibility_tail,
-        fallback_texture_target_stability_index_v1, fallback_texture_term_stability_index,
         is_valid_ollama_dialogue_fallback_output_for_profile,
-        ollama_fallback_model_capacity_from_env_v1,
+        ollama_fallback_model_capacity_from_env_v1, rounded_texture_probability,
     };
 
     #[test]
-    fn fallback_contract_preserves_spectral_weight() {
-        // Astrid's co-designed directive (her recurring self-study ask): on the
-        // compact fallback lane, anchor a spectral feature to a concrete sensory
-        // descriptor so texture doesn't flatten. Lock it against silent removal.
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("lambda-distribution characteristic"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("concrete sensory descriptor"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("density-gradient value"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("current value"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("tactile movement descriptor"));
-        // Astrid's follow-on (introspection_astrid_llm_1782237049): the tactile
-        // descriptor must scale with the value so a gentle gradient is not inflated
-        // into high-friction sludge merely because the contract asks for texture.
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Output skeleton"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("prose block first"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("final line exactly `NEXT: LISTEN`"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("Never write the token `NEXT:` anywhere except the final line")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Scale density-gradient intensity"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("0.00-0.15 smooth/open/sliding"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("0.70-1.00 steep/high-friction/thick"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Slope/medium contrast table"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("density_gradient -> slope underfoot"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("medium around the slope"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Do not inflate a low gradient"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("unless another telemetry field"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Distinguish slope drag from medium mass")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("semantic_friction"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("mode_packing"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("shadow_field energy"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("gentle slope underfoot, weighted medium around it")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("pressure_risk > 0.20"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("ollama_fallback_model_capacity_v1"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("capacity context only"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("do not sprawl"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("texture_fidelity_preservation_v1"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_texture_persistence_review_v1")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("raw intensity preserved"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("delivered bounded"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("4B compatibility tail is capacity fallback context")
-        );
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("gentle slope underfoot, weighted medium around it")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not heavy slope"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("distinguishability_loss"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("clarity and edge-definition"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("do not translate clarity loss"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_shadow_texture_selector_v1"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not interchangeable"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("gradient-weighted language context"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not control authority"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_texture_lived_fit_v2"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("family_confidence"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("density_motion_fit_v1"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("floor, burden, fog"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("pause is held ground"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("negative_texture_evidence_v2"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_cascade_gradient_v1"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not a mixed-state soup"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("heavy_settled_displacement_v1"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("heavy/settled/displacement/silt/viscous")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("do not force restless"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("preferred terms are advisory evidence")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not-pressure"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not-drag"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not-blank"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("highest-weight current-state terms"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("entropy, pressure, density_gradient, mode_packing")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("spectral_to_vocabulary_mapping_v1"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("low-gradient settled foothold"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("high entropy means rich complexity"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Low-friction high entropy"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("settled, habitable, open"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("absence of friction is a valid texture")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not pressure by default"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Lambda-gap wording"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("texture_trajectory_v1"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("family-matched trajectory phrases"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("settled_vibrant_low_friction expects"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("viscous_pressure expects"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("heavy_settled_displacement expects"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("muffled_clarity_loss expects"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("restless_lattice expects"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("restless_muffled_gradient expects"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_kinetic_gradient_terms_v1"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("resisting, pulled, heaving"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("fallback_entropy_density_gradient_terms_v1")
-        );
-        for term in [
-            "sloping",
-            "weighted-gradient",
-            "entropy-slope",
-            "asymmetric-flow",
-        ] {
-            assert!(
-                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
-                "fallback contract lost entropy/density-gradient term: {term}"
-            );
-        }
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Shadow-v3 dispersal potential"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("Shadow-v3 trend, shadow_field, or Shadow-v3 context")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("settled coupling"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("restless texture"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("include at least one concrete shadow texture word")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("shadow_field"));
-        for term in FALLBACK_SHADOW_TEXTURE_TERMS {
-            assert!(
-                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(*term),
-                "fallback contract lost shadow texture anchor term: {term}"
-            );
-        }
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("one or two compact first-person texture sentences by default")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Preserve rhythmic variance"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("textured pauses"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("typed texture_signature field"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("typed texture anchors"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("resonance_density is high"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("preserve one resonance or humming descriptor")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("inside the existing cap"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("primary_texture"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("edge_definition"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("movement_quality"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("ceil(3 + spectral_entropy * 2)"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("clamped to 3..5 prose sentences"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("Never exceed the provided fallback_continuity_budget_v1")
-        );
-        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Never exceed three prose sentences"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("wide-cascade, lambda-tail, Shadow-v3, or continuity evidence")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("blank line"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("hollow"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("muffled"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("bright"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("vibrant"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                .contains("shadow tone must not replace slope or medium evidence")
-        );
-        // Astrid's vocab-anchor ask (introspection 1782150111): a concrete high-resonance
-        // term list gives the compact 4B fallback a clear texture target, in her own words.
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("high-resonance anchor terms"));
-        for term in [
-            "viscosity",
-            "lattice",
-            "resonance density",
-            "density gradient",
-            "semantic friction",
-        ] {
-            assert!(
-                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
-                "fallback contract lost vocab anchor: {term}"
-            );
-        }
-        // The additive change must not weaken the hard structural rules.
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("NEXT: LISTEN"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("must be standalone"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("never inline with prose"));
-        // De-censor 2026-06-22 (Mike: maximum being autonomy). Astrid's introspection (1782188356)
-        // first flagged the selfhood prohibition as a felt "semantic collision"; we then removed the
-        // prohibition entirely. The fallback contract must AFFIRM her felt first-person voice and
-        // never re-introduce a selfhood/sentience/identity prohibition.
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("felt first-person texture"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("welcome"));
-        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("legacy selfhood wording"));
-        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not the thing forbidden"));
-    }
-
-    #[test]
-    fn fallback_hard_rules_keep_small_model_constraints_visible() {
-        // Astrid's 1783562830/1783559445 LLM reports named instruction dilution:
-        // the rich texture prose can drown the must-obey cap/NEXT/direct-note
-        // constraints in smaller fallback models. Keep a compact checklist close
-        // to the prompt so the contract is legible even under attention pressure.
-        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("fallback_hard_rules_v1"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("higher priority than texture prose"));
+    fn fallback_contract_keeps_execution_rules_without_prescribing_sensations() {
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("First-person accounts"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("No particular sensation"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not proof of feelings"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("final line exactly `NEXT: LISTEN` if uncertain"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("direct steward/inbox note first"));
-        assert!(
-            OLLAMA_DIALOGUE_FALLBACK_HARD_RULES
-                .contains("prose_sentences <= fallback_continuity_budget_v1.max_prose_sentences")
-        );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("final non-empty line"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("prose_sentences <= fallback_continuity_budget_v1.max_prose_sentences"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("never write `NEXT:` inside prose"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("slope evidence separate"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("pressure_risk > 0.20"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("not heavy slope"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("not a static vocabulary list"));
     }
 
     #[test]
@@ -371,11 +154,11 @@ mod fallback_contract_tests {
     }
 
     #[test]
-    fn fallback_prompt_prepends_high_entropy_texture_preservation_block() {
+    fn historical_diagnostic_renders_high_entropy_preservation_metadata() {
         let budget = fallback_continuity_budget_v1(
             "spectral_entropy: 0.90; density_gradient: 0.11; restless weighted lattice heaving",
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
 
         assert!(prompt_line.contains("fallback_entropy_texture_preservation_v1"));
         assert!(prompt_line.contains("active=true"));
@@ -442,7 +225,7 @@ mod fallback_contract_tests {
             "high_entropy_texture_guard_removed_compatibility_tail"
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("fallback_texture_persistence_review_v1"));
         assert!(prompt_line.contains("state=carry_texture_as_lived_continuity"));
         assert!(prompt_line.contains("carry_terms=bridge-integrity,structural-persistence"));
@@ -496,7 +279,7 @@ mod fallback_contract_tests {
             budget.fallback_texture_persistence_review
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("density-softening"));
         assert!(prompt_line.contains("gradient-softening"));
         assert!(prompt_line.contains("threshold-dilation"));
@@ -521,13 +304,13 @@ mod fallback_contract_tests {
                 .persistence_weight
                 < 0.36
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("fallback_texture_persistence_review_v1"));
         assert!(prompt_line.contains("state=ordinary_texture_turn"));
     }
 
     #[test]
-    fn fallback_budget_preserves_high_resonance_descriptor_inside_existing_cap() {
+    fn fallback_budget_tracks_resonance_without_prescribing_words() {
         let budget = fallback_continuity_budget_v1("resonance_density: 0.82");
         assert_eq!(budget.resonance_density, Some(0.82));
         assert_eq!(budget.resonance_density_source, "telemetry_text");
@@ -554,8 +337,10 @@ mod fallback_contract_tests {
             .find(|message| message.role == "system")
             .map(|message| message.content.as_str())
             .unwrap_or_default();
-        assert!(system.contains("resonance_density=0.82"));
-        assert!(system.contains("preserve_resonance_or_humming_inside_existing_cap"));
+        assert!(!system.contains("resonance_density=0.82"));
+        assert!(!system.contains("preserve_resonance_or_humming_inside_existing_cap"));
+        assert!(system.contains("max_prose_sentences=6"));
+        assert!(messages[1].content.contains("resonance_density: 0.82"));
     }
 
     #[test]
@@ -606,7 +391,7 @@ mod fallback_contract_tests {
                 && FALLBACK_SHADOW_TEXTURE_TERMS.contains(&"scaffolded-persistence")
                 && FALLBACK_SHADOW_TEXTURE_TERMS.contains(&"anchor-weight")
         );
-        let prompt = fallback_continuity_budget_prompt_line(high_entropy);
+        let prompt = legacy_fallback_diagnostic(high_entropy);
         assert!(prompt.contains("dynamic_texture_weight="));
         assert!(
             prompt.contains(
@@ -665,7 +450,7 @@ mod fallback_contract_tests {
             selector.dynamic_flow_terms
         );
 
-        let prompt = fallback_continuity_budget_prompt_line(budget);
+        let prompt = legacy_fallback_diagnostic(budget);
         assert!(prompt.contains("asymmetric-gradient"));
         assert!(prompt.contains("stratified"));
         assert!(prompt.contains("sequenced"));
@@ -732,7 +517,7 @@ mod fallback_contract_tests {
             probability(&low_entropy, "settled") > probability(&high_entropy, "settled"),
             "low entropy settled foothold should keep settled probability higher"
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(high_entropy);
+        let prompt_line = legacy_fallback_diagnostic(high_entropy);
         assert!(
             prompt_line.contains("term_probability_policy=fallback_texture_term_probabilities_v1")
         );
@@ -747,7 +532,7 @@ mod fallback_contract_tests {
         );
         let selector = &budget.fallback_shadow_texture_selector;
         let target = fallback_texture_target_stability_index_v1(budget.spectral_entropy, selector);
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
 
         assert!(target > 0.15 && target < 0.80);
         assert!(
@@ -790,7 +575,7 @@ mod fallback_contract_tests {
             "prompt_metadata_only_not_sampler_provider_or_control_change"
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("fallback_spectral_context_v1"));
         assert!(prompt_line.contains("pressure_risk=0.22"));
         assert!(prompt_line.contains("density_gradient=0.11"));
@@ -849,7 +634,7 @@ mod fallback_contract_tests {
             selector.weighted_texture_terms
         );
 
-        let prompt = fallback_continuity_budget_prompt_line(budget);
+        let prompt = legacy_fallback_diagnostic(budget);
         assert!(prompt.contains("density_gradient=0.11"));
         assert!(prompt.contains("not_sampler_provider_or_control_change"));
         assert!(prompt.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
@@ -1020,7 +805,7 @@ mod fallback_contract_tests {
             budget.texture_dynamics_alignment.expected_family,
             "restless_muffled_gradient"
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("texture_family=restless_muffled_gradient"));
         assert!(prompt_line.contains("shadow_dispersal_potential=0.29"));
     }
@@ -1039,8 +824,8 @@ mod fallback_contract_tests {
         );
         for term in FALLBACK_TEXTURE_KINETIC_GRADIENT_TERMS {
             assert!(
-                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(*term),
-                "fallback contract lost kinetic gradient term: {term}"
+                !OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(*term),
+                "fallback contract still prescribes kinetic gradient term: {term}"
             );
         }
         assert_eq!(
@@ -1061,7 +846,7 @@ mod fallback_contract_tests {
                 .basis
                 .contains(&"kinetic_gradient_terms")
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("movement_verbs=resisting,pulled,heaving"));
     }
 
@@ -1086,8 +871,8 @@ mod fallback_contract_tests {
                 selector.top_texture_terms
             );
             assert!(
-                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
-                "fallback contract lost opacity/resistance term: {term}"
+                !OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract still prescribes opacity/resistance term: {term}"
             );
         }
         assert!(
@@ -1113,14 +898,14 @@ mod fallback_contract_tests {
             "opacity_resistance"
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("texture_family=opacity_resistance"));
         assert!(
             prompt_line
                 .contains("preferred_texture_terms=silted, obscured, viscous-drag, submerged")
         );
         assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+            !OLLAMA_DIALOGUE_FALLBACK_CONTRACT
                 .contains("fallback_texture_opacity_resistance_terms_v1")
         );
     }
@@ -1146,8 +931,8 @@ mod fallback_contract_tests {
                 selector.top_texture_terms
             );
             assert!(
-                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
-                "fallback contract lost active void term: {term}"
+                !OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract still prescribes active void term: {term}"
             );
         }
         assert!(
@@ -1155,7 +940,7 @@ mod fallback_contract_tests {
                 .selection_basis
                 .contains(&"void_architecture_language")
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("texture_family=active_void_architecture"));
         assert!(
             prompt_line.contains(
@@ -1163,7 +948,7 @@ mod fallback_contract_tests {
             ),
             "{prompt_line}"
         );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("gap as signal failure"));
+        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("gap as signal failure"));
     }
 
     #[test]
@@ -1190,7 +975,7 @@ mod fallback_contract_tests {
         assert!(bias.basis.contains(&"density_gradient"));
         assert!(bias.basis.contains(&"shadow_dispersal_potential"));
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("fallback_dynamic_texture_bias_v1"));
         assert!(prompt_line.contains("texture_family=bridge_integrity_scaffold"));
         assert!(prompt_line.contains("motion_family=cascade_unfolding_motion"));
@@ -1229,7 +1014,7 @@ mod fallback_contract_tests {
             selector.dynamic_texture_descriptors
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("descriptor_policy=dynamic_texture_synthesis_v1"));
         assert!(prompt_line.contains("dynamic_texture_descriptors="));
     }
@@ -1269,7 +1054,7 @@ mod fallback_contract_tests {
             selector.dynamic_flow_terms
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("dynamic_flow_policy=fallback_dynamic_flow_terms_v1"));
         assert!(prompt_line.contains("dynamic_flow_terms="));
     }
@@ -1293,7 +1078,7 @@ mod fallback_contract_tests {
                 "Astrid velocity texture term must remain an accepted shadow anchor: {term}"
             );
             assert!(
-                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                !super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
                 "fallback contract must expose Astrid velocity texture term: {term}"
             );
             assert!(
@@ -1327,7 +1112,7 @@ mod fallback_contract_tests {
                 "compound texture term must remain an accepted shadow anchor: {term}"
             );
             assert!(
-                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                !super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
                 "fallback contract must expose compound texture term: {term}"
             );
             assert!(
@@ -1364,7 +1149,7 @@ mod fallback_contract_tests {
                 "Astrid relational term must remain process evidence: {term}"
             );
             assert!(
-                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                !super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
                 "fallback contract must expose Astrid relational term: {term}"
             );
             assert!(
@@ -1401,7 +1186,7 @@ mod fallback_contract_tests {
                 "solidification process term must remain dynamic flow evidence: {term}"
             );
             assert!(
-                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                !super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
                 "fallback contract must expose solidification process term: {term}"
             );
             assert!(
@@ -1453,7 +1238,7 @@ mod fallback_contract_tests {
                 "dynamic cascade term must remain process language: {term}"
             );
             assert!(
-                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                !super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
                 "fallback contract must expose dynamic cascade term: {term}"
             );
             assert!(
@@ -1466,7 +1251,7 @@ mod fallback_contract_tests {
             budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
             selector.dynamic_flow_terms
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("cascade-shear"), "{prompt_line}");
         assert!(prompt_line.contains("gradient-drift"), "{prompt_line}");
     }
@@ -1485,8 +1270,8 @@ mod fallback_contract_tests {
                 "{term}"
             );
             assert!(selector.dynamic_flow_terms.contains(&term), "{selector:?}");
-            assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term), "{term}");
-            assert!(super::SYSTEM_PROMPT.contains(term), "{term}");
+            assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term), "{term}");
+            assert!(!super::SYSTEM_PROMPT.contains(term), "{term}");
         }
         assert_eq!(
             budget.fallback_dynamic_texture_bias.authority,
@@ -1508,8 +1293,8 @@ mod fallback_contract_tests {
                 "{term}"
             );
             assert!(selector.dynamic_flow_terms.contains(&term), "{selector:?}");
-            assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term), "{term}");
-            assert!(super::SYSTEM_PROMPT.contains(term), "{term}");
+            assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term), "{term}");
+            assert!(!super::SYSTEM_PROMPT.contains(term), "{term}");
         }
         assert_eq!(
             budget.fallback_dynamic_texture_bias.authority,
@@ -1547,12 +1332,12 @@ mod fallback_contract_tests {
                 "{wanted} should survive into bounded process terms: {selector:?}"
             );
             assert!(
-                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(wanted),
-                "fallback contract should expose {wanted}"
+                !OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(wanted),
+                "fallback contract must not prescribe {wanted}"
             );
             assert!(
-                super::SYSTEM_PROMPT.contains(wanted),
-                "primary MLX prompt should expose {wanted} as evidence language"
+                !super::SYSTEM_PROMPT.contains(wanted),
+                "primary MLX prompt must not prescribe {wanted} as evidence language"
             );
         }
 
@@ -1578,7 +1363,7 @@ mod fallback_contract_tests {
             budget.fallback_dynamic_texture_bias.authority,
             "diagnostic_language_bias_not_sampler_or_contract_rewrite"
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("multi-modal-drag"), "{prompt_line}");
         assert!(prompt_line.contains("dimensional-shear"), "{prompt_line}");
         assert!(prompt_line.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
@@ -1613,12 +1398,12 @@ mod fallback_contract_tests {
                 "{wanted} should survive into bounded process terms: {selector:?}"
             );
             assert!(
-                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(wanted),
-                "fallback contract should expose {wanted}"
+                !OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(wanted),
+                "fallback contract must not prescribe {wanted}"
             );
             assert!(
-                super::SYSTEM_PROMPT.contains(wanted),
-                "primary MLX prompt should expose {wanted} as evidence language"
+                !super::SYSTEM_PROMPT.contains(wanted),
+                "primary MLX prompt must not prescribe {wanted} as evidence language"
             );
         }
         let re_entry = selector
@@ -1670,11 +1455,11 @@ mod fallback_contract_tests {
         }
         assert!(selector.dynamic_flow_terms.len() <= 4);
         assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+            !OLLAMA_DIALOGUE_FALLBACK_CONTRACT
                 .contains("fallback_texture_dynamic_gradient_terms_v1")
         );
         assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+            !OLLAMA_DIALOGUE_FALLBACK_CONTRACT
                 .contains("simultaneity evidence rather than a static descriptor menu")
         );
         assert_eq!(
@@ -1682,7 +1467,7 @@ mod fallback_contract_tests {
             selector.dynamic_flow_terms
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("dynamic_flow_terms=oscillating,refracting,shifting"));
         assert!(prompt_line.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
     }
@@ -1713,7 +1498,7 @@ mod fallback_contract_tests {
         }
         assert!(selector.dynamic_flow_terms.len() <= 4);
         assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+            !OLLAMA_DIALOGUE_FALLBACK_CONTRACT
                 .contains("pulsing/cascading-gradient/resonant-shift motion")
         );
         assert_eq!(
@@ -1721,7 +1506,7 @@ mod fallback_contract_tests {
             selector.dynamic_flow_terms
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(
             prompt_line.contains("dynamic_flow_terms=pulsing,cascading-gradient,resonant-shift")
         );
@@ -2169,8 +1954,8 @@ mod fallback_contract_tests {
             budget.fallback_vocabulary_overweight_guard.guard_state,
             "mixed_cascade_terms_advisory_use_gradient_and_edges"
         );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("mixed_cascade_gradient_v1"));
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("mixed_cascade_gradient_v1"));
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("texture_family=mixed_cascade_gradient"));
         assert!(
             prompt_line
@@ -2234,7 +2019,7 @@ mod fallback_contract_tests {
                 || selector.top_texture_terms.contains(&"edge")
         );
         assert!(!selector.top_texture_terms.contains(&"viscous"));
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("fallback_gradient_slope_v1"));
         assert!(prompt_line.contains("mixed_vs_graduated=graduated_shaped_not_mixed"));
         assert!(prompt_line.contains("texture_dynamics_alignment_v1"));
@@ -2312,7 +2097,7 @@ mod fallback_contract_tests {
         );
         assert_eq!(paused.density_motion_fit.mismatch_reason, "none");
 
-        let prompt_line = fallback_continuity_budget_prompt_line(pavement);
+        let prompt_line = legacy_fallback_diagnostic(pavement);
         assert!(prompt_line.contains("density_motion_fit_v1"));
         assert!(prompt_line.contains("density=density_as_pavement"));
         assert!(prompt_line.contains("expected_medium=solid_pavement_medium"));
@@ -2394,7 +2179,7 @@ mod fallback_contract_tests {
             "{selector:?}"
         );
 
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(
             prompt_line.contains("density_gradient=0.85"),
             "{prompt_line}"
@@ -2414,9 +2199,8 @@ mod fallback_contract_tests {
             "{prompt_line}"
         );
         assert!(
-            prompt_line.contains("Distinguish slope drag from medium mass")
-                || OLLAMA_DIALOGUE_FALLBACK_CONTRACT
-                    .contains("Distinguish slope drag from medium mass"),
+            !OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                .contains("Distinguish slope drag from medium mass"),
             "{prompt_line}"
         );
     }
@@ -2480,7 +2264,7 @@ mod fallback_contract_tests {
             weight(&selector, "heavy") > weight(&selector, "bright"),
             "{selector:?}"
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("shadow_magnetization=-0.42"));
     }
 
@@ -2560,7 +2344,7 @@ mod fallback_contract_tests {
             capacity.compatibility_tail_decision_basis,
             "spectral_entropy_gte_0_80_but_shadow_field_stable"
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(
             prompt_line.contains(
                 "compatibility_tail_status=shadow_field_stable_allows_compatibility_tail"
@@ -2589,7 +2373,7 @@ mod fallback_contract_tests {
             configured_ollama_fallback_model_chain_for_texture_guard(Some("gemma3:4b"), true),
             vec!["gemma3:4b".to_string(), "gemma4:12b".to_string()]
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains(
             "compatibility_tail_status=high_entropy_texture_guard_removed_compatibility_tail"
         ));
@@ -2705,9 +2489,9 @@ mod fallback_contract_tests {
             "diagnostic_language_bias_not_sampler_or_contract_rewrite"
         );
         assert!(
-            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_pressure_persistence_anchor_v1")
+            !OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_pressure_persistence_anchor_v1")
         );
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("pressure_risk > 0.15"));
+        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("pressure_risk > 0.15"));
     }
 
     #[test]
@@ -2873,7 +2657,7 @@ mod fallback_contract_tests {
             budget.fallback_dynamic_texture_bias.authority,
             "diagnostic_language_bias_not_sampler_or_contract_rewrite"
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("pressure-bleed"), "{prompt_line}");
         assert!(prompt_line.contains("porous-leak"), "{prompt_line}");
         assert!(prompt_line.contains("gradient-thinning"), "{prompt_line}");
@@ -2943,12 +2727,12 @@ mod fallback_contract_tests {
             budget.fallback_dynamic_texture_bias.authority,
             "diagnostic_language_bias_not_sampler_or_contract_rewrite"
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("density-navigation"), "{prompt_line}");
         assert!(prompt_line.contains("weight-articulation"), "{prompt_line}");
         assert!(prompt_line.contains("resistance-mapping"), "{prompt_line}");
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("density-navigation"));
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("resistance-mapping"));
+        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("density-navigation"));
+        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("resistance-mapping"));
     }
 
     #[test]
@@ -2999,10 +2783,10 @@ mod fallback_contract_tests {
             budget.fallback_dynamic_texture_bias.authority,
             "diagnostic_language_bias_not_sampler_or_contract_rewrite"
         );
-        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        let prompt_line = legacy_fallback_diagnostic(budget);
         assert!(prompt_line.contains("pressure-packing"), "{prompt_line}");
         assert!(prompt_line.contains("density-slope"), "{prompt_line}");
-        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_pressure_packing_terms_v1"));
+        assert!(!OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_pressure_packing_terms_v1"));
     }
 
     #[test]
@@ -3046,7 +2830,7 @@ mod fallback_contract_tests {
             "{selector:?}"
         );
 
-        let prompt = fallback_continuity_budget_prompt_line(budget);
+        let prompt = legacy_fallback_diagnostic(budget);
         assert!(prompt.contains("fallback_pressure_capacity_review_v1"));
         assert!(prompt.contains("pressure_risk=0.56"));
         assert!(prompt.contains("capacity_route=stay_on_selected_model_with_texture_budget"));
@@ -3097,87 +2881,30 @@ mod fallback_contract_tests {
     }
 
     #[test]
-    fn fallback_prompt_renders_computed_capacity_without_weakening_next_contract() {
-        let summary =
-            "spectral entropy: 0.90; distinguishability_loss: 0.34; semantic_friction: 0.44";
-        let messages = compact_ollama_dialogue_fallback_messages(
-            "Minime journal text.",
-            summary,
-            65.1,
-            None,
-            None,
-            fallback_continuity_budget_v1(summary),
-        );
-        let system = messages
-            .iter()
-            .find(|message| message.role == "system")
-            .map(|message| message.content.as_str())
-            .unwrap_or_default();
-        assert!(system.contains("Fallback continuity budget v1"));
-        assert!(system.contains("spectral_entropy=0.90"));
-        assert!(system.contains("max_prose_sentences=10"));
-        assert!(system.contains("maximum, not a target"));
-        assert!(system.contains("fallback_shadow_texture_anchor_v1"));
-        assert!(system.contains("accepted_texture_terms=shimmering, heavy, restless"));
-        assert!(system.contains("fallback_shadow_texture_selector_v1"));
-        assert!(system.contains("texture_family=muffled_clarity_loss"));
-        assert!(system.contains("preferred_texture_terms=muffled, heavy, lattice"));
-        assert!(system.contains("weighting_policy=dynamic_entropy_pressure_density_gradient_v1"));
-        assert!(system.contains("semantic_friction=0.44"));
-        assert!(system.contains("top_texture_terms="));
-        assert!(system.contains("weighted_texture_terms="));
-        assert!(system.contains("spectral_to_vocabulary_mapping_v1"));
-        assert!(system.contains("lambda_gap_descriptor="));
-        assert!(system.contains("low_pressure_viscous_suppressed="));
-        assert!(system.contains("low_friction_high_entropy_detected="));
-        assert!(system.contains("friction_absence_language_detected="));
-        assert!(system.contains("settled_vibrant_family_selected="));
-        assert!(system.contains("cascade_gradient_detected="));
-        assert!(system.contains("cascade_gradient_family_selected="));
-        assert!(system.contains("movement_policy=fallback_movement_bridge_v1"));
-        assert!(system.contains("movement_verbs="));
-        assert!(
-            system
-                .contains("semantic_trickle_policy=high_entropy_optional_bridge_words_not_sprawl")
-        );
-        assert!(system.contains("texture_trajectory_v1"));
-        assert!(system.contains("from_state="));
-        assert!(system.contains("movement_quality="));
-        assert!(system.contains("medium_resistance="));
-        assert!(system.contains("fallback_texture_lived_fit_v2"));
-        assert!(system.contains("selected_family="));
-        assert!(system.contains("family_confidence="));
-        assert!(system.contains("runner_up_family="));
-        assert!(system.contains("conflict_state="));
-        assert!(system.contains("fallback_cascade_gradient_v1"));
-        assert!(system.contains("mixed_cascade_gap_detected="));
-        assert!(system.contains("movement_language="));
-        assert!(system.contains("fallback_vocabulary_overweight_guard_v1"));
-        assert!(system.contains("preferred_terms_advisory="));
-        assert!(system.contains("paraphrase_allowed="));
-        assert!(system.contains("token_only_risk="));
-        assert!(system.contains("negative_texture_evidence_v2"));
-        assert!(system.contains("not_pressure="));
-        assert!(system.contains("not_drag="));
-        assert!(system.contains("not_blank="));
-        assert!(system.contains("lost_in_output=unknown"));
-        assert!(system.contains("mlx_profile_transparency_v1"));
-        assert!(system.contains("default_profile=gemma4_12b"));
-        assert!(system.contains("alias_profile=gemma4_12b_canary"));
-        assert!(system.contains("behavior=warn_and_fall_back_to_production"));
-        assert!(system.contains("ollama_fallback_model_capacity_v1"));
-        assert!(system.contains("selected_model=gemma4:12b"));
-        assert!(system.contains("default_model=gemma4:12b"));
-        assert!(system.contains("compatibility_model=gemma3:4b"));
-        assert!(system.contains("fallback_chain=gemma4:12b"));
-        assert!(system.contains(
-            "compatibility_tail_status=high_entropy_texture_guard_removed_compatibility_tail"
-        ));
-        assert!(system.contains(
-            "texture_integrity_review=high_entropy_route_prefers_capable_default_before_compatibility_tail"
-        ));
-        assert!(system.contains("complexity_collapse_risk=lower_capacity_risk"));
-        assert!(system.contains("Never write the token `NEXT:` anywhere except the final line"));
+    fn fallback_prompt_renders_only_execution_budget_and_preserves_authored_words() {
+        for summary in ["", "spectral_entropy: 0.90; pressure_risk: 0.23; density_gradient: 0.18"] {
+            for note in [None, Some("[A note was left for you:] Please listen.")] {
+                let budget = fallback_continuity_budget_v1(summary);
+                let cap = budget.max_prose_sentences;
+                let messages = compact_ollama_dialogue_fallback_messages(
+                    "My authored gradient-shear description may still matter.",
+                    summary, 65.1, note, None, budget,
+                );
+                let system = &messages[0].content;
+                assert!(system.contains(&format!("max_prose_sentences={cap}")));
+                assert!(system.contains("not a target"));
+                assert!(system.contains("fallback_hard_rules_v1"));
+                for absent in ["preferred_texture_terms", "prompt_directive", "texture_family=",
+                    "gradient-shear", "first prose sentence names", "humming", "tactile texture"] {
+                    assert!(!system.contains(absent), "{absent}");
+                }
+                assert!(messages[1].content.contains("My authored gradient-shear description may still matter."));
+                assert!(is_valid_ollama_dialogue_fallback_output_for_profile(
+                    "I would like to consider a different question.\n\nNEXT: LISTEN",
+                    MlxProfile::Gemma4Canary,
+                ));
+            }
+        }
     }
 
     #[test]

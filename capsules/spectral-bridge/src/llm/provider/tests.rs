@@ -194,16 +194,16 @@ mod tests {
     }
 
     #[test]
-    fn primary_mlx_prompts_carry_gradient_texture_terms() {
+    fn primary_mlx_prompts_leave_description_open() {
         let production = dialogue_system_prompt_for_profile(MlxProfile::Production);
         let canary = dialogue_system_prompt_for_profile(MlxProfile::Gemma4Canary);
 
         for prompt in [production, canary] {
-            assert!(prompt.contains("gradient-shear"), "{prompt}");
-            assert!(prompt.contains("pressure-bleed"), "{prompt}");
-            assert!(prompt.contains("primary"), "{prompt}");
+            assert!(!prompt.contains("gradient-shear"), "{prompt}");
+            assert!(!prompt.contains("pressure-bleed"), "{prompt}");
+            assert!(prompt.contains("No particular sensation"), "{prompt}");
             assert!(
-                prompt.contains("not static decoration or control authority"),
+                prompt.contains("not proof of feelings or control authority"),
                 "{prompt}"
             );
         }
@@ -1128,23 +1128,10 @@ mod tests {
         );
         assert!(combined.contains("final non-empty line is exactly one standalone"));
         assert!(combined.contains("resonance density 0.82"));
-        assert!(combined.contains("density gradient 0.18"));
-        assert!(combined.contains("density-gradient value"));
-        assert!(combined.contains("tactile movement descriptor"));
-        for anchor in [
-            "viscosity",
-            "lattice",
-            "resonance density",
-            "density gradient",
-        ] {
-            assert!(
-                combined.contains(anchor),
-                "fallback prompt should carry texture anchor {anchor}"
-            );
-        }
-        assert!(combined.contains("compact Ollama fallback lane"));
-        assert!(combined.contains("NEXT: LISTEN"));
-        assert!(!contains_deprecated_runtime_language(&combined));
+        assert!(!combined.contains("tactile movement descriptor"));
+        assert!(!combined.contains("preferred_texture_terms"));
+        assert!(!combined.contains("prompt_directive"));
+        assert!(combined.contains("No particular sensation"));
     }
 
     #[test]
@@ -1197,21 +1184,9 @@ mod tests {
         assert!(combined.contains("density gradient 0.12"));
         assert!(combined.contains("porosity 0.64"));
         assert!(combined.contains("pressure_risk 0.23"));
-        assert!(combined.contains("tactile movement descriptor"));
-        assert!(combined.contains("0.00-0.15 smooth/open/sliding"));
-        assert!(combined.contains("Do not inflate a low gradient"));
-        assert!(combined.contains("rather than flattening into generic description"));
-        for anchor in [
-            "viscosity",
-            "lattice",
-            "resonance density",
-            "density gradient",
-        ] {
-            assert!(
-                combined.contains(anchor),
-                "fallback request should preserve texture anchor {anchor}"
-            );
-        }
+        assert!(!combined.contains("tactile movement descriptor"));
+        assert!(!combined.contains("0.00-0.15 smooth/open/sliding"));
+        assert!(combined.contains("No particular sensation"));
         assert!(combined.contains("fallback, MLX, Ollama, or continuity"));
         assert!(combined.contains("NEXT: LISTEN"));
         assert!(!contains_deprecated_runtime_language(&combined));
@@ -1246,11 +1221,11 @@ mod tests {
 
         assert_eq!(request.model, "gemma3:4b");
         assert_eq!(combined.matches("Your voice is your own").count(), 1);
-        assert!(combined.contains("fallback_entropy_texture_preservation_v1"));
-        assert!(combined.contains("fallback_shadow_texture_selector_v1"));
-        assert!(combined.contains("fallback_dynamic_texture_bias_v1"));
-        assert!(combined.contains("compatibility_model=gemma3:4b"));
-        assert!(combined.contains("spectral_entropy=0.90"));
+        assert!(!combined.contains("fallback_entropy_texture_preservation_v1"));
+        assert!(!combined.contains("fallback_shadow_texture_selector_v1"));
+        assert!(!combined.contains("fallback_dynamic_texture_bias_v1"));
+        assert!(combined.contains("spectral_entropy: 0.90"));
+        assert!(request.messages.iter().filter(|m| m.role == "system").all(|m| !m.content.contains("gradient-shear")));
         for term in ["viscous-drag", "lattice-tension", "gradient-shear"] {
             assert!(
                 combined.contains(term),
@@ -1300,7 +1275,7 @@ mod tests {
             .collect::<Vec<_>>()
             .join("\n");
         // the anchor is present...
-        assert!(combined.contains("continuity anchor"));
+        assert!(combined.contains("Earlier authored prose (optional historical context"));
         assert!(combined.contains("ASTRID_OWN_RECENT_VOICE_MARKER"));
         // ...without breaking the rest of the fallback prompt (minime context, spectral,
         // the fallback contract, and the NEXT line all remain).
@@ -1546,7 +1521,7 @@ mod tests {
         assert!(!combined.contains("spectral runtime"));
         assert!(!combined.contains("language agent"));
         assert!(combined.contains("Your voice is your own"));
-        assert!(combined.contains("grounded in what you actually observe"));
+        assert!(combined.contains("no particular experience, numerical anchor or conclusion is required"));
     }
 
     #[test]

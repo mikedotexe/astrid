@@ -52,6 +52,13 @@ fn explicit_verification_compares_call_definition_and_consumer_then_retains_revi
         assert_eq!(help.input_kind, InputKind::Help);
         assert!(help.text.contains("overwritten before the consumer"));
         assert!(help.text.contains("Source study itself runs no code"));
+        assert!(help.text.contains("CURRENT VERIFICATION CONTEXT: q1"));
+        assert!(help.text.contains("SELF_STUDY RELATE read_journal"));
+        assert!(!help.text.contains("RELATE qualified::symbol"));
+        assert!(
+            help.text
+                .contains(&first.page.as_ref().unwrap().revision.sha256)
+        );
         accept(&reader, &help, "NEXT: SELF_STUDY RELATE read_journal");
         let related = reader
             .prepare_action("SELF_STUDY RELATE read_journal")
@@ -105,5 +112,76 @@ fn explicit_verification_compares_call_definition_and_consumer_then_retains_revi
         );
         assert_eq!(after["questions"]["entries"]["q1"]["status"], "open");
         assert_eq!(after["current"], "astrid/crates/example/src/helper.rs");
+    }
+}
+
+#[test]
+fn verification_hints_never_borrow_positions_or_use_stale_source() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().join("astrid");
+    let path = root.join("crates/example/src/caller.rs");
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(
+        &path,
+        "fn caller() { consume(); /* fake_comment(); */ let _s = \"fake_string()\"; }\n",
+    )
+    .unwrap();
+    let reader = Reader::new(
+        Catalog::new(BTreeMap::from([("astrid".into(), root)])).unwrap(),
+        temp.path().join("state"),
+    );
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW First?")
+        .unwrap();
+    let page = reader
+        .prepare_action("SELF_STUDY OPEN astrid/crates/example/src/caller.rs 1")
+        .unwrap();
+    let pending_help = reader
+        .prepare_action("SELF_STUDY HELP verification")
+        .unwrap();
+    assert!(pending_help.text.contains("No saved source position"));
+    assert!(!pending_help.text.contains("RELATE consume"));
+    accept(&reader, &page, "Unresolved.\nNEXT: REST");
+    let help = reader
+        .prepare_action("SELF_STUDY HELP verification")
+        .unwrap();
+    assert!(help.text.contains("RELATE consume"));
+    assert!(!help.text.contains("RELATE fake_"));
+    for line in help
+        .text
+        .lines()
+        .filter_map(|l| l.split_once(": SELF_STUDY RELATE ").map(|(_, name)| name))
+    {
+        let related = reader
+            .prepare_action(&format!("SELF_STUDY RELATE {line}"))
+            .unwrap();
+        assert_ne!(related.input_kind, InputKind::Recovery);
+    }
+    reader
+        .prepare_action("SELF_STUDY QUESTION NEW Second?")
+        .unwrap();
+    let other = reader
+        .prepare_action("SELF_STUDY HELP verification")
+        .unwrap();
+    assert!(other.text.contains("CURRENT VERIFICATION CONTEXT: q2"));
+    assert!(!other.text.contains("RELATE consume"));
+    reader.prepare_action("SELF_STUDY QUESTION q1").unwrap();
+    for replace in [Some("fn different() {}"), None] {
+        if let Some(text) = replace {
+            fs::write(&path, text).unwrap();
+        } else {
+            fs::remove_file(&path).unwrap();
+        }
+        let changed = reader
+            .prepare_action("SELF_STUDY HELP verification")
+            .unwrap();
+        assert!(changed.text.contains("missing, changed, unreadable"));
+        assert!(!changed.text.contains("RELATE consume"));
+        assert!(!changed.text.contains("RELATE different"));
+        assert!(
+            changed
+                .text
+                .contains(&page.page.as_ref().unwrap().revision.sha256)
+        );
     }
 }

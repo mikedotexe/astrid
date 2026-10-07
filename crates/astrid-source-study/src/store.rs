@@ -539,18 +539,16 @@ impl Reader {
         };
         let page = match command {
             Command::Help { topic } => {
-                return self.output(&mut state, help::render(&topic), None, InputKind::Help);
+                let text = help::render(&topic, &state, &self.catalog);
+                return self.output(&mut state, text, None, InputKind::Help);
             },
             Command::Reflect => {
-                let previous = self.runtime.as_ref().map_or_else(String::new, |r| {
-                    crate::reflection_recall::render(&r.workspace)
-                });
                 return self.output(
                     &mut state,
                     format!(
-                        "{}\n\n{previous}{}",
-                        crate::reflection_recall::REFLECTION_INTRO,
-                        crate::reflection_recall::REFLECTION_EXITS
+                        "{}\n\n{}",
+                        crate::reflection_context::REFLECTION_INTRO,
+                        crate::reflection_context::REFLECTION_EXITS
                     ),
                     None,
                     InputKind::Reflection,

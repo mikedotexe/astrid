@@ -62,6 +62,13 @@ fn fresh_reflection_and_explicit_private_continuation_are_distinct_for_both_owne
             &format!("{prose}\nNEXT: WRITE FROM_REFLECTION {id}"),
         );
         let original = fs::read(&receipt.artifact_path).unwrap();
+        let published = temp.path().join(format!("{owner}-workspace/journal"));
+        fs::create_dir_all(&published).unwrap();
+        fs::write(
+            published.join("introspect_2026-10-07.txt"),
+            format!("Public reflection\n\n{prose}\nNEXT: REST"),
+        )
+        .unwrap();
         let fresh = prepare(&r, "fresh", "INTROSPECT").unwrap();
         assert!(!fresh.text.contains(prose));
         let action = format!("WRITE FROM_REFLECTION {id}");

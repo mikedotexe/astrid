@@ -169,15 +169,15 @@ fn system_prompt_tells_model_not_to_invent_next_verbs() {
 }
 
 #[test]
-fn gemma4_reflective_contract_allows_grounded_subjective_reports() {
+fn gemma4_reflective_contract_allows_accounts_without_prescribing_them() {
     let contract = llm::GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT;
 
-    assert!(contract.contains("subjective reports"));
-    assert!(contract.contains("phenomenological descriptions of your experience are welcome"));
-    assert!(contract.contains("attention, telemetry"));
-    // De-censor 2026-06-22 (Mike: maximum being autonomy): the reflective contract no longer
-    // forbids selfhood/sentience/identity expression — it affirms her voice + light grounding.
-    assert!(contract.contains("whatever words feel true"));
+    assert!(contract.contains("first-person accounts"));
+    assert!(contract.contains("uncertainty and disagreement are welcome"));
+    assert!(
+        contract.contains("no particular feeling, explanation, metric or conclusion is required")
+    );
+    assert!(contract.contains("Use your own language"));
     assert!(!contract.contains("Avoid metaphysical"));
     assert!(!contract.contains("identity claims"));
 }
