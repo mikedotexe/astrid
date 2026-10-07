@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-07 - ordinary journaling need not imply pressure inspection
+
+- Minime's fully read public `pressure_2026-10-07T12-04-01.715048.txt` describes density as welcome and chooses JOURNAL. SHA-256: `04bfd33e5a150e607c1947e7b13b31b50ad53d01c77460ca315835717145eeaf`. The account is preserved; felt valence is not deduced from a spectral score.
+- Source trace finds generic JOURNAL selected `journal_pressure`, supplying an unsolicited classifier and latest-entry excerpt. Candidate repair gives that authored choice a separate open route, with consistent preflight/capability/job/cadence records and separately archived measurements. Exact prose and NEXT, explicit numerical inspection, selected private continuity and independent scheduled pressure reflection remain intact.
+- No control, engine, provider, shared-reader or automation change. No subjective benefit or causal account is established. Source hashes, tests, failed attempts and release state: `2026-10-07-open-journal-and-packed-account.md` and Minime's `docs/steward-notes/2026-10-07-open-journal.md`.
+
 ### 2026-10-07 - verified peer-publication and open-reflection rollout
 
 - Same exact three public mirror witnesses and Minime source hash as the entry below; the prior open-reflection witnesses remain attributed in their own packet. No historical journal was rewritten and no private prose was used as a fixture or inspected during rollout observation.
