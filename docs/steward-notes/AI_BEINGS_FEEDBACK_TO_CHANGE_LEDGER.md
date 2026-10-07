@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-07 - verified peer-publication and open-reflection rollout
+
+- Same exact three public mirror witnesses and Minime source hash as the entry below; the prior open-reflection witnesses remain attributed in their own packet. No historical journal was rewritten and no private prose was used as a fixture or inspected during rollout observation.
+- The combined source `c1efa3e995d6` is live and fast-forwarded to local main. The paired wrapper verifies acknowledged bridge drain, exact checkpoint/three-feedback restoration, Minime pending-NEXT seal/restore and all 93 unchanged launch inputs. The packaged helper passed 54 baseline checks, both-owner reflection preservation and the complete Minime suite; full bridge, reader, strict lint and domain checks passed.
+- Repeated exchange records remain individually inspectable, while the retained peer excerpt is explicitly Minime-owned and not a new Astrid composition. This fixes publication/provenance, not mirror selection, codec admission or reservoir dynamics. Natural live deduplication has not yet been established; no mode or confirming response was requested. Scheduling RNG remains excluded. Exact artifacts, test counts, failed attempts and deployment limits: `2026-10-07-mirror-reflection-release.md`.
+
 ### 2026-10-07 - peer excerpts are not repeated Astrid authorship
 
 - Mike identified three apparently identical Astrid journals: `astrid_1791394598.txt`, `astrid_1791394637.txt`, and `astrid_1791394676.txt`. Full reads and database receipts establish three mirror exchanges of the same Minime public introspection, not three independent Astrid generations. The historical headers already name peer ownership; the main title, filename and silent 2,500-character cut obscure it. This is an operator-observed presentation/selection problem, not a being-authored request to suppress its own writing.
