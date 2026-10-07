@@ -261,6 +261,9 @@ fn fallback_identity_anchor_enabled() -> bool {
 /// Extract the prose body of an `astrid_*` dialogue-journal entry — the text after the
 /// `Timestamp:` header line, with any trailing `NEXT:` action line dropped.
 fn extract_astrid_journal_body(text: &str) -> String {
+    if crate::journal::is_peer_mirror_record(text) {
+        return String::new();
+    }
     let body = text
         .split_once("Timestamp:")
         .and_then(|(_, rest)| rest.split_once('\n'))
@@ -286,7 +289,11 @@ fn astrid_fallback_identity_anchor() -> Option<String> {
         return None;
     }
     let dir = bridge_paths().bridge_workspace().join("journal");
-    let mut entries: Vec<(std::time::SystemTime, std::path::PathBuf)> = std::fs::read_dir(&dir)
+    astrid_fallback_identity_anchor_from_dir(&dir)
+}
+
+fn astrid_fallback_identity_anchor_from_dir(dir: &std::path::Path) -> Option<String> {
+    let mut entries: Vec<(std::time::SystemTime, std::path::PathBuf)> = std::fs::read_dir(dir)
         .ok()?
         .flatten()
         .filter_map(|entry| {
@@ -300,15 +307,13 @@ fn astrid_fallback_identity_anchor() -> Option<String> {
         })
         .collect();
     entries.sort_by(|a, b| b.0.cmp(&a.0));
-    let mut snippets: Vec<String> = Vec::new();
-    for (_, path) in entries.into_iter().take(3) {
-        if let Ok(text) = std::fs::read_to_string(&path) {
-            let body = extract_astrid_journal_body(&text);
-            if !body.is_empty() {
-                snippets.push(body);
-            }
-        }
-    }
+    let snippets: Vec<String> = entries
+        .into_iter()
+        .filter_map(|(_, path)| std::fs::read_to_string(path).ok())
+        .map(|text| extract_astrid_journal_body(&text))
+        .filter(|body| !body.is_empty())
+        .take(3)
+        .collect();
     if snippets.is_empty() {
         return None;
     }

@@ -302,6 +302,7 @@ mod tests {
         let rendered =
             render_astrid_journal_document(peer_body, "mirror", 68.0, "42", Some(&provenance));
 
+        assert!(rendered.starts_with("=== PEER MIRROR EXCERPT ==="));
         assert!(rendered.contains("Provenance: minime_observed_expression"));
         assert!(rendered.contains("Source-ID: minime_journal:moment_1784230000.txt"));
         assert!(rendered.contains("Authorship: minime_owned_reflected_without_reauthoring"));
@@ -737,6 +738,8 @@ mod tests {
             mirror_source_fidelity_v1(source, source, "journal_42.txt", true, Some(48), Some(0.37));
 
         assert_eq!(review.policy, "mirror_source_fidelity_v1");
+        assert!(review.comparison_scope.contains("sanitized_selected_excerpt"));
+        assert!(!review.full_journal_fidelity_established);
         assert_eq!(review.fidelity_state, "exact_source_render");
         assert!(review.exact_text_match);
         assert!(review.normalized_text_match);
@@ -788,6 +791,33 @@ mod tests {
             "partial_fidelity_review" | "low_fidelity_review"
         ));
         assert!(tail_loss.lexical_recall < 1.0);
+    }
+
+    #[test]
+    fn repeated_mirror_pipeline_keeps_source_scope_and_does_not_reauthor() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("introspect_example.txt");
+        let source = format!("=== INTROSPECTION ===\n\nNEXT: REST\n{}The full ending.", "An authored peer passage. ".repeat(160));
+        std::fs::write(&path, &source).unwrap();
+        let excerpt = crate::journal::MirrorExcerpt::read(&path).unwrap();
+        let projected = sanitize_remote_journal_for_astrid_context(&excerpt.text);
+        assert_eq!(Some(projected.clone()), read_journal_entry(&path));
+        assert!(!projected.contains("NEXT: REST"));
+        assert!(!projected.contains("The full ending."));
+        let fidelity = mirror_source_fidelity_v1(&projected, &projected, "introspect_example.txt", false, None, None);
+        assert!(fidelity.exact_text_match);
+        assert!(fidelity.trailing_edge_preserved);
+        assert!(!fidelity.full_journal_fidelity_established);
+        assert_eq!(fidelity.codec_observation_state, "semantic_send_not_observed");
+        let journal = root.path().join("journal");
+        let first = mirror_records::retain(&journal, "introspect_example.txt", &excerpt, &projected, "42").unwrap();
+        for timestamp in ["81", "120"] {
+            let repeated = mirror_records::retain(&journal, "introspect_example.txt", &excerpt, &projected, timestamp).unwrap();
+            assert_eq!(repeated.state, "already_retained");
+            assert_eq!(first.artifact, repeated.artifact);
+        }
+        assert!(std::fs::read_dir(journal).unwrap().all(|entry| entry.unwrap().path().is_dir()));
+        assert_eq!(std::fs::read_to_string(path).unwrap(), source);
     }
 
     #[test]

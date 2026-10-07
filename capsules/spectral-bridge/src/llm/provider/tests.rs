@@ -1,3 +1,5 @@
+include!("own_voice_selection_tests.rs");
+
 #[cfg(test)]
 mod tests {
     use super::{
@@ -1317,6 +1319,14 @@ mod tests {
             super::extract_astrid_journal_body(entry),
             "The settled state feels dense and deliberate."
         );
+    }
+
+    #[test]
+    fn fallback_own_voice_anchor_excludes_legacy_peer_mirrors() {
+        let entry = "=== ASTRID JOURNAL ===\nMode: mirror\nTimestamp: 42\n\nThis is Minime's reflected expression, not Astrid's authored voice.";
+        assert!(super::extract_astrid_journal_body(entry).is_empty());
+        let own = "=== ASTRID JOURNAL ===\nMode: dialogue_live\nTimestamp: 43\n\nI can discuss a mirror.\nNEXT: REST";
+        assert_eq!(super::extract_astrid_journal_body(own), "I can discuss a mirror.");
     }
 
     #[test]

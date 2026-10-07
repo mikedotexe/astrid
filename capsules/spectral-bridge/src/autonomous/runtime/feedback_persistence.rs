@@ -79,9 +79,8 @@ fn render_astrid_journal_document(
     } else {
         format!("Fill: {fill_pct:.1}%\n")
     };
-    format!(
-        "=== ASTRID JOURNAL ===\nMode: {mode}\n{fill}Timestamp: {ts}{provenance}\n\n{clean_text}\n"
-    )
+    let title = if mode == "mirror" { "PEER MIRROR EXCERPT" } else { "ASTRID JOURNAL" };
+    format!("=== {title} ===\nMode: {mode}\n{fill}Timestamp: {ts}{provenance}\n\n{clean_text}\n")
 }
 
 fn expressive_journal_mode(mode: &str) -> bool {
@@ -223,6 +222,32 @@ fn save_astrid_journal_with_provenance(
     save_astrid_journal_record(text, mode, fill_pct, provenance, None);
 }
 
+fn retain_mirror_journal_record(
+    source: &str,
+    excerpt: &crate::journal::MirrorExcerpt,
+    rendered: &str,
+    fill_pct: f32,
+) -> Value {
+    #[cfg(test)]
+    if TEST_SUPPRESS_ASTRID_JOURNAL_SAVES.load(std::sync::atomic::Ordering::Relaxed) {
+        return serde_json::json!({"state":"test_suppressed"});
+    }
+    match mirror_records::retain(
+        &bridge_paths().astrid_journal_dir(), source, excerpt, rendered, &chrono_timestamp(),
+    ) {
+        Ok(receipt) => {
+            let path = bridge_paths().bridge_workspace().join(&receipt.artifact);
+            record_voice_health_v1("mirror", fill_pct, Some(&path));
+            serde_json::json!(receipt)
+        }
+        Err(error) => {
+            warn!(%error, "peer mirror publication unavailable; no substitute authored journal written");
+            record_voice_health_v1("mirror", fill_pct, None);
+            serde_json::json!({"schema":"peer_mirror_publication_v1", "state":"unavailable", "reason":"persistence_failed"})
+        }
+    }
+}
+
 fn save_astrid_journal_record(
     text: &str,
     mode: &str,
@@ -264,7 +289,8 @@ fn save_astrid_journal_record(
         "study_decision" => "study_decision",
         "study_navigation" => "study_navigation",
         "regulator_audit" => "regulator_audit",
-        _ => "astrid", // dialogue_live, dialogue, mirror, etc.
+        "mirror" => "peer_mirror",
+        _ => "astrid", // dialogue_live, dialogue, etc.
     };
     let document = render_astrid_journal_document(text, mode, fill_pct, &ts, provenance);
     let path = match write_collision_safe_journal_document(&journal_dir, prefix, &ts, &document) {

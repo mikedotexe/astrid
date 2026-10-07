@@ -28,7 +28,15 @@ fn read_astrid_journal(limit: usize) -> Vec<String> {
 /// next prompt.
 fn read_astrid_journal_filtered(prefixes: &[&str], limit: usize) -> Vec<String> {
     let journal_dir = bridge_paths().astrid_journal_dir();
-    let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(&journal_dir)
+    read_astrid_journal_filtered_from_dir(&journal_dir, prefixes, limit)
+}
+
+fn read_astrid_journal_filtered_from_dir(
+    journal_dir: &Path,
+    prefixes: &[&str],
+    limit: usize,
+) -> Vec<String> {
+    let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(journal_dir)
         .ok()
         .into_iter()
         .flatten()
@@ -51,8 +59,8 @@ fn read_astrid_journal_filtered(prefixes: &[&str], limit: usize) -> Vec<String> 
     entries.sort_by(|a, b| b.1.cmp(&a.1));
     entries
         .iter()
-        .take(limit)
         .filter_map(|(p, _)| read_local_journal_body_for_continuity(p))
+        .take(limit)
         .collect()
 }
 
@@ -77,8 +85,11 @@ fn recent_astrid_journal_paths(journal_dir: &Path) -> Vec<PathBuf> {
 }
 
 fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String> {
-    recent_astrid_journal_paths(journal_dir).iter().take(limit)
-        .filter_map(|p| read_local_journal_body_for_continuity(p)).collect()
+    recent_astrid_journal_paths(journal_dir)
+        .iter()
+        .filter_map(|p| read_local_journal_body_for_continuity(p))
+        .take(limit)
+        .collect()
 }
 
 fn read_astrid_journal_recall() -> Option<crate::journal::JournalRecall> {
@@ -86,14 +97,54 @@ fn read_astrid_journal_recall() -> Option<crate::journal::JournalRecall> {
 }
 
 fn expressive_journal_recall_from_dir(journal_dir: &Path, now: u64) -> Option<crate::journal::JournalRecall> {
-    recent_astrid_journal_paths(journal_dir).iter().take(32)
+    recent_astrid_journal_paths(journal_dir)
+        .iter()
         .filter_map(|path| crate::journal::JournalRecall::read(path))
+        // Bound the own-record window, not the rejected peer candidates.
+        .take(32)
         .find(|recall| recall.eligible_for_expression(now))
 }
 
 #[cfg(test)]
 mod expressive_recall_tests {
     use super::*;
+
+    fn retained_entry(dir: &Path, name: &str, mode: &str, modified: u64) {
+        let path = dir.join(name);
+        std::fs::write(&path, format!("=== ASTRID JOURNAL ===\nMode: {mode}\nTimestamp: 97\n\n{}", "OWN_OR_PEER_BODY ".repeat(10))).unwrap();
+        std::fs::File::open(path).unwrap().set_modified(
+            std::time::UNIX_EPOCH.checked_add(std::time::Duration::from_secs(modified)).unwrap(),
+        ).unwrap();
+    }
+
+    #[test]
+    fn legacy_mirrors_do_not_consume_continuity_or_expression_slots() {
+        let dir = tempfile::tempdir().unwrap();
+        retained_entry(dir.path(), "astrid_owned.txt", "daydream", 1);
+        for index in 0_u64..40 {
+            retained_entry(dir.path(), &format!("astrid_mirror_{index}.txt"), "mirror", index.saturating_add(2));
+        }
+        assert_eq!(read_astrid_journal_from_dir(dir.path(), 1).len(), 1);
+        assert_eq!(read_astrid_journal_filtered_from_dir(dir.path(), &["astrid_"], 1).len(), 1);
+        let recall = expressive_journal_recall_from_dir(dir.path(), 100).unwrap().render(500);
+        assert!(recall.contains("astrid_owned.txt"));
+        assert!(read_astrid_journal_from_dir(dir.path(), 0).is_empty());
+        assert!(crate::journal::read_remote_journal_body(
+            &dir.path().join("astrid_mirror_39.txt"),
+        ).is_some());
+    }
+
+    #[test]
+    fn expression_window_remains_bounded_to_32_own_records() {
+        let dir = tempfile::tempdir().unwrap();
+        retained_entry(dir.path(), "daydream_owned.txt", "daydream", 1);
+        for index in 0_u64..32 {
+            retained_entry(dir.path(), &format!("astrid_owned_{index}.txt"), "dialogue_live", index.saturating_add(2));
+        }
+        assert!(expressive_journal_recall_from_dir(dir.path(), 100).is_none());
+        std::fs::remove_file(dir.path().join("astrid_owned_0.txt")).unwrap();
+        assert!(expressive_journal_recall_from_dir(dir.path(), 100).is_some());
+    }
 
     #[test]
     fn automatic_recall_skips_capture_and_receipts_without_erasing_history() {

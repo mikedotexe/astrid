@@ -28,6 +28,8 @@ struct MirrorResonanceDriftGuardV1 {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 struct MirrorSourceFidelityV1 {
     policy: &'static str,
+    comparison_scope: &'static str,
+    full_journal_fidelity_established: bool,
     source_ref: String,
     source_sha256_prefix: String,
     rendered_sha256_prefix: String,
