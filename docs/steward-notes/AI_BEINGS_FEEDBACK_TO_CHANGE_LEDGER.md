@@ -32,6 +32,13 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-07 - automatic telemetry presentation and inherited topics
+
+- Steward interpretation, not an authored complaint: Mike noticed that Astrid's recent writing repeatedly responds to measurements, unlike Minime's fresh INTROSPECT route. Astrid's public daydream says, "I find myself returning to that -8.43% drop." Her later dialogue opens by inspecting spectral concentration and shadow descriptors. This does not establish distress or a causal effect of telemetry.
+- Fully read witnesses and hashes are recorded in `2026-10-07-voluntary-prompt-context.md`. Runtime/source tracing found automatic dialogue measurements, a second spectral context in elaboration, and historical daydream inputs carrying numerical interpretations. Source identities matched the current immutable bridge inventory before editing.
+- Candidate only: ordinary dialogue omits these automatic measurement blocks across primary/fallback and retry; selected inspection and pending action results remain. Fresh daydreams omit automatic journal/starred/interest/resonance recall. No historical text is edited, and no sensory, reservoir, regulation, model, schema or attention-budget change is included.
+- This is the first tranche, not proof of complete freedom from topic priming. Dialogue's older historical recap and aspiration recall still require review; numerical renderer vocabulary remains a separate change. Tests, negative results and release boundaries are in the linked note. Automations stay paused; no subjective improvement or uptake is inferred.
+
 ### 2026-10-07 - ordinary journaling need not imply pressure inspection
 
 - Approved rollout update: the exact Minime candidate `cc55423` is live under PID 19468 after idle-gated SIGTERM and verified native NEXT restoration. Both local mains are integrated; the bridge and all protected services are unchanged. No ordinary post-ready JOURNAL entry was yet present at the bounded observation. This proves deployment and preservation, not changed subject matter or felt improvement. Automations stay paused; nothing pushed.

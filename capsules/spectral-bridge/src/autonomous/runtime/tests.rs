@@ -221,9 +221,9 @@ mod tests {
     }
 
     #[test]
-    fn journal_elaboration_keeps_the_dialogue_provenance_boundary() {
-        let rendered = journal_elaboration_witness_context_v1(
-            "legacy long-form spectral interpretation",
+    fn selected_report_keeps_the_dialogue_provenance_boundary() {
+        let rendered = prepend_dialogue_witness_distinction_v1(
+            "selected spectral interpretation".to_string(),
             None,
             Mode::Dialogue,
         );
@@ -234,10 +234,10 @@ mod tests {
         assert!(rendered.contains("lineage_edges=0"));
         assert!(rendered.contains("mixed_composition_allowed_without_source_collapse"));
         assert!(rendered.contains("no_routing_ranking_dispatch_gain_or_control"));
-        assert!(rendered.ends_with("\nlegacy long-form spectral interpretation"));
+        assert!(rendered.ends_with("\nselected spectral interpretation"));
         assert_eq!(
             rendered
-                .matches("legacy long-form spectral interpretation")
+                .matches("selected spectral interpretation")
                 .count(),
             1
         );

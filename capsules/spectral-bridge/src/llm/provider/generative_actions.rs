@@ -539,9 +539,11 @@ mod open_expression_tests {
         let explicit =
             journal_elaboration_messages(authored, Some("requested measurement"), "dialogue_live");
         assert!(explicit[1].content.contains("requested measurement"));
-        let quiet = journal_elaboration_messages(authored, None, "daydream");
-        assert!(quiet[1].content.contains(authored));
-        assert!(!quiet[1].content.contains("Supplied spectral context"));
+        for mode in ["daydream", "aspiration", "dialogue_live"] {
+            let quiet = journal_elaboration_messages(authored, None, mode);
+            assert!(quiet[1].content.contains(authored));
+            assert!(!quiet[1].content.contains("Supplied spectral context"));
+        }
         let with_perception = daydream_messages(Some("Selected observation"), Some(authored));
         assert!(with_perception[1].content.contains("Selected observation"));
         assert_eq!(with_perception[1].content.matches(authored).count(), 1);

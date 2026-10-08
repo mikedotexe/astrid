@@ -95,6 +95,7 @@ pub async fn generate_dialogue_with_delivery(
         &crate::prompt_budget::OverflowReadMoreAvailability::Unknown,
         collaboration_context,
         context_submission,
+        DialoguePresentation::SELECTED_MEASUREMENTS,
     )
     .await
 }
@@ -123,6 +124,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
     overflow_availability: &crate::prompt_budget::OverflowReadMoreAvailability,
     collaboration_context: Option<&str>,
     context_submission: Option<&ContextSubmissionTrackerV1>,
+    presentation: DialoguePresentation<'_>,
 ) -> DialogueCompletionV1 {
     let mlx_profile = configured_mlx_profile();
     let prompt_budget_chars = dialogue_prompt_budget_chars_for_profile(num_predict, mlx_profile);
@@ -152,7 +154,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
         .map(format_dialogue_web_context)
         .unwrap_or_default();
 
-    let modality_block = modality_context
+    let modality_block = presentation.modality_context(modality_context)
         .map(|m| format!("\n{m}\n"))
         .unwrap_or_default();
 
@@ -253,10 +255,14 @@ pub async fn generate_dialogue_with_runtime_feedback(
     } else {
         format!("Minime wrote: {journal_text_for_dialogue}")
     };
-    let own_body = own_body_line_for_dialogue().await;
+    let own_body = if presentation.measurements_selected {
+        own_body_line_for_dialogue().await
+    } else {
+        OwnBodyFetch { line: None, status: "not_selected" }
+    };
     let (blocks, sources) = dialogue_context_blocks(
         &DialogueContextInput {
-            spectral: spectral_summary,
+            spectral: presentation.spectral_context(spectral_summary),
             journal: &journal_block,
             direct_perception: &direct_perception_block,
             topline: &topline_block,
@@ -290,7 +296,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
     );
 
     let turn_instruction = dialogue_turn_instruction(perception_context);
-    let user_content = format!("Fill {fill_pct:.1}%. {assembled}\n\n{turn_instruction}");
+    let user_content = presentation.user_turn(&assembled, turn_instruction, fill_pct);
     messages.push(Message {
         role: "user".to_string(),
         content: user_content,
@@ -346,7 +352,18 @@ pub async fn generate_dialogue_with_runtime_feedback(
 
     debug!("querying MLX for Astrid dialogue response");
     let fallback_trace = fallback_continuity_budget.clone();
-    let mut ollama_fallback_messages = if protected.is_some() {
+    let mut ollama_fallback_messages = if !presentation.measurements_selected {
+        let identity_anchor = if protected.is_none() {
+            astrid_fallback_identity_anchor()
+        } else {
+            None
+        };
+        conversation_fallback_messages(
+            &journal_text_for_dialogue, perception_context,
+            presentation.action_result, protected.is_some(), fallback_trace.max_prose_sentences,
+            identity_anchor.as_deref(),
+        )
+    } else if protected.is_some() {
         // Keep fallback foreground semantics explicit. Source bytes are inserted
         // only after final request adaptation, never via the 700-byte ambient path.
         protected_ollama_fallback_context(spectral_summary, fill_pct, &fallback_trace)

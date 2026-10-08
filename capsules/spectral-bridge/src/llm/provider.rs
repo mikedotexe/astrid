@@ -42,6 +42,7 @@ include!("provider/generation_record.rs");
 include!("provider/own_body.rs");
 include!("provider/dialogue_runtime.rs");
 include!("provider/dialogue_generation.rs");
+include!("provider/dialogue_presentation.rs");
 include!("provider/research.rs");
 include!("provider/embeddings.rs");
 include!("provider/witness.rs");

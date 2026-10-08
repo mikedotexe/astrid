@@ -834,6 +834,7 @@ pub fn spawn_autonomous_loop(
                     let mut reading_offer = None;
                     let mut accepted_delivery = None;
                     let mut mirror_excerpt = None;
+                    let mut selected_journal_measurements = None;
 
                     let (mode_name, mut response_text, journal_source) = match mode {
                         Mode::Mirror => {
@@ -876,6 +877,9 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                         Mode::Dialogue => {
+                            let measurements_selected = conv.wants_decompose
+                                || conv.wants_spectral_explorer || conv.force_all_viz;
+                            let mut pending_action_result = String::new();
                             // Try to generate an authentic response via Ollama.
                             let source_activity_selected = conv.activity.foreground_reader.is_some()
                                 || inbox_reservation.is_some() || conv.browse_url.is_some();
@@ -900,8 +904,8 @@ pub fn spawn_autonomous_loop(
                             } else if conv.echo_muted {
                                 Some(String::from(
                                     "(minime's journal echo is muted by your own \
-                                     ECHO_OFF choice — respond from your own state, \
-                                     spectral context, and history. Use NEXT: ECHO_ON \
+                                     ECHO_OFF choice — no peer excerpt is supplied. \
+                                     Choose your own subject. Use NEXT: ECHO_ON \
                                      to restore the journal feed.)"
                                 ))
                             } else {
@@ -1114,9 +1118,8 @@ pub fn spawn_autonomous_loop(
                                     summary.push('\n');
                                     summary.push_str(&gift_line);
                                 }
-                                // Perturb temporal feedback: if Astrid perturbed last
-                                // exchange, show the before/after delta so she can
-                                // feel the ripple effect of her own action.
+                                // Action-result context remains available without ambient telemetry.
+                                let action_result_start = summary.len();
                                 if let Some(baseline) = conv.perturb_baseline.take() {
                                     let elapsed = baseline.timestamp.elapsed();
                                     let df = fill_pct - baseline.fill_pct;
@@ -1147,11 +1150,7 @@ pub fn spawn_autonomous_loop(
                                         summary.push_str(&format!("\nCascade delta: [{}]", deltas.join(", ")));
                                     }
                                 }
-                                // Disperse temporal feedback: if Astrid dispersed
-                                // last exchange, pair the shadow-field post-state
-                                // against the pre so she can read what the
-                                // dispersal actually did (the closed loop she
-                                // asked for: inhabit the response, not just map it).
+                                // Before/after observations do not establish causation or felt effect.
                                 if let Some(baseline) = conv.disperse_baseline.take() {
                                     let elapsed = baseline.timestamp.elapsed();
                                     let post = telemetry
@@ -1174,7 +1173,8 @@ pub fn spawn_autonomous_loop(
                                         ));
                                     }
                                 }
-                                // One-line controller status for ambient awareness.
+                                pending_action_result.push_str(&summary[action_result_start..]);
+                                // This report is shown only for selected measurement inspection.
                                 if let Some(ref health) = controller_health {
                                     summary.push('\n');
                                     summary.push_str(&format_controller_oneliner(health));
@@ -1188,6 +1188,13 @@ pub fn spawn_autonomous_loop(
                                     guard.witness_frame_v1(),
                                     mode,
                                 )
+                            };
+                            if measurements_selected {
+                                selected_journal_measurements = Some(spectral_summary.clone());
+                            }
+                            let dialogue_presentation = crate::llm::DialoguePresentation {
+                                measurements_selected,
+                                action_result: &pending_action_result,
                             };
 
                             // Zero entries intentionally disables this own-journal input.
@@ -1341,44 +1348,8 @@ pub fn spawn_autonomous_loop(
                                 ));
                             }
 
-                            // Inject regime classification every exchange.
-                            continuity_parts.push(
-                                crate::reflective::RegimeTracker::format_context(&regime)
-                            );
-
-                            // Self-model: compact conditions + attention so Astrid
-                            // always knows her own state without having to ask.
-                            {
-                                let self_model = crate::self_model::snapshot_self_model(
-                                    conv.creative_temperature,
-                                    conv.response_length,
-                                    conv.noise_level,
-                                    conv.semantic_gain_override,
-                                    conv.burst_target,
-                                    conv.rest_range,
-                                    conv.senses_snoozed,
-                                    conv.ears_closed,
-                                    conv.self_reflect_paused,
-                                    conv.self_reflect_override_ttl,
-                                    &conv.codec_weights,
-                                    conv.breathing_coupled,
-                                    conv.echo_muted,
-                                    conv.warmth_intensity_override,
-                                    conv.seen_video,
-                                    conv.seen_audio,
-                                    &conv.interests,
-                                    &conv.condition_receipts,
-                                    &conv.attention,
-                                    crate::llm::astrid_aperture(),
-                                    crate::llm::astrid_tail_participation(),
-                                    crate::llm::astrid_vibrancy_aperture(),
-                                    // render_compact does not surface continuity; her live
-                                    // readout is pulled via STATE (operations.rs), so pass None.
-                                    conv.self_continuity_readout,
-                                    None,
-                                );
-                                continuity_parts.push(self_model.render_compact());
-                            }
+                            // STATE and explicit diagnostic actions retain these readings.
+                            // Do not republish regime/tuning measurements during ordinary dialogue.
 
                             if let Some(thread_summary) = crate::action_continuity::prompt_summary() {
                                 continuity_parts.push(thread_summary);
@@ -1953,6 +1924,7 @@ pub fn spawn_autonomous_loop(
                                         &overflow_availability,
                                         collaboration_delivery.context(),
                                         collaboration_delivery.submission(),
+                                        dialogue_presentation,
                                     );
                                 // Each provider request has its own deadline. A selected
                                 // source gets the complete bounded primary/fallback chain;
@@ -2004,6 +1976,7 @@ pub fn spawn_autonomous_loop(
                                                 &overflow_availability,
                                                 collaboration_delivery.retry_context(),
                                                 collaboration_delivery.submission(),
+                                                dialogue_presentation,
                                             )
                                         ).await {
                                             Ok(completion) => unpack_activity_completion(
@@ -2344,20 +2317,17 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                         Mode::Daydream => {
-                            let own_journal = read_astrid_journal_recall();
-                            let starred = db.get_starred_memories(2);
                             let daydream = match tokio::time::timeout(
                                 Duration::from_secs(crate::llm::expressive_outer_timeout(750)),
                                 crate::llm::generate_daydream_with_context(
-                                    daydream_perception_text.as_deref(), own_journal.as_ref(),
-                                    &conv.interests, &starred, conv.peripheral_resonance.as_deref(),
+                                    daydream_perception_text.as_deref(), None,
+                                    &[], &[], None,
                                 )
                             ).await {
                                 Ok(r) => r,
                                 Err(_) => { warn!("daydream: 25s timeout"); None }
                             };
-                            // Consume peripheral resonance once used
-                            conv.peripheral_resonance = None;
+                            // Saved prose and interests remain stored, not automatically supplied.
                             match daydream {
                                 Some(text) => ("daydream", text, String::new()),
                                 None => {
@@ -4648,17 +4618,8 @@ pub fn spawn_autonomous_loop(
                         // files are public reflective artifacts, not private drafts.
                         if matches!(mode_name, "dialogue_live" | "daydream" | "aspiration") {
                             let signal_for_journal = response_text.clone();
-                            // Stage B is a second Dialogue surface, not a provenance-free
-                            // afterthought. Keep the same read-only self/other boundary in
-                            // the long-form continuation that framed the compact signal.
-                            let summary_for_journal = if mode_name == "dialogue_live" {
-                                let guard = state.read().await;
-                                Some(journal_elaboration_witness_context_v1(
-                                    &spectral_interpretation,
-                                    guard.witness_frame_v1(),
-                                    mode,
-                                ))
-                            } else { None };
+                            // Carry only explicitly selected evidence, not a fresh automatic snapshot.
+                            let summary_for_journal = selected_journal_measurements;
                             let mode_for_journal = mode_name.to_string();
                             let fill_for_journal = fill_pct;
                             let exchange_for_journal = conv.exchange_count;

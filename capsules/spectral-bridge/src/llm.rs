@@ -4,11 +4,11 @@
 mod provider;
 
 pub use provider::{
-    Exchange, craft_gesture_from_intention, embed_text, generate_agency_request,
-    generate_aspiration, generate_creation, generate_daydream, generate_dialogue,
-    generate_initiation, generate_introspection, generate_introspection_detailed,
-    generate_journal_elaboration, generate_moment_capture, generate_witness, repair_introspection,
-    repair_introspection_detailed, self_reflect,
+    DialoguePresentation, Exchange, craft_gesture_from_intention, embed_text,
+    generate_agency_request, generate_aspiration, generate_creation, generate_daydream,
+    generate_dialogue, generate_initiation, generate_introspection,
+    generate_introspection_detailed, generate_journal_elaboration, generate_moment_capture,
+    generate_witness, repair_introspection, repair_introspection_detailed, self_reflect,
 };
 
 pub(crate) use provider::{

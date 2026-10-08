@@ -51,6 +51,21 @@ mod daydream_context_tests {
     use super::*;
 
     #[test]
+    fn fresh_daydream_has_no_automatic_history_and_survives_provider_adaptation() {
+        let messages = daydream_messages_with_context(None, None, &[], &[], None);
+        for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
+            let policy = apply_mlx_request_policy_with_writing("daydream", profile, messages.clone(), 3072, 240, astrid_source_study::writing::Profile::Default);
+            let input = policy.messages.iter().filter(|m| m.role == "user").map(|m| m.content.as_str()).collect::<Vec<_>>().join("\n");
+            assert!(input.contains("No perception or journal excerpt"));
+            for absent in ["Historical own-journal", "starred memory", "Saved interests", "Earlier lingering thread", "Published fill"] {
+                assert!(!input.contains(absent), "{absent}: {input}");
+            }
+        }
+        let fallback = build_ollama_chat_request("daydream", messages, 1.0, 3072, "fixture".into());
+        assert!(fallback.messages.iter().any(|m| m.content.contains("No perception or journal excerpt")));
+    }
+
+    #[test]
     fn chosen_history_keeps_provenance_numbers_and_full_wrapper() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("daydream_42.txt");
