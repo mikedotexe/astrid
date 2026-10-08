@@ -110,3 +110,68 @@ or process mismatch requires a fresh review, not a broad service restart.
 Operational readiness does not establish controller settling, felt benefit,
 consent or any readiness for Division rehearsal. The prior semantic-active
 settle-proof limitation remains a separate observation.
+
+## Completed Live Transition
+
+The approved `transition-01` completed successfully at
+**2026-10-08T17:15:11.767Z**. Tooling commit:
+`dd8be5e7f693f95439e7e23cba33b1c9bf17a607`. Final focused qualification was
+87 tests, including passive telemetry validation; the separate 162-test group
+and native qualification above also passed. No engine or bridge code was
+rebuilt for this unchanged-release restart.
+
+The new manifest SHA-256 is
+`58fd6abbdbd08cba72e3e942621228502d014ed163f14d27e268d0d80452000a`.
+It was frozen at **2026-10-08T17:05:18.619Z** and expires at
+**2026-11-07T17:05:18.619Z**. Exact old/new comparison confirms that only
+`created_at_unix_ms` and `expires_at_unix_ms` changed. Current-lifetime CLI
+verification passes; runtime health is verified separately, not by that CLI.
+
+- Supervisor PID **86833** and gateway PID **86873**, both launch-process
+  starts at 10:13:23 PDT, have the verified unchanged native image UUID. Their
+  status and parent-authority record match the new manifest. The supervisor
+  is freshly `idle_parent_authoritative`, has no children or matching intents,
+  and does not recommend handoff/commit or grant live authority.
+- Gateway stop intent to verified replacement: **6.971 seconds**, not a
+  measured lossless-input interval. Ports 7878/7879/7880/7882/7883 belong to the
+  replacement; 7900/7901/7902 remain with engine **35303**. Two passive packets
+  advance from t_ms 601001693 to 601004064, with eight finite eigenvalues each.
+  The unchanged provider reports ready, queue zero and reservoir connected.
+- Bridge **66851 -> 87519**, new process start 10:13:50 PDT, retains binary
+  `450d8410eb912462528f411209f217992d582c970689b0e1574e6b3cc660a627`.
+  It restores the exact stopped checkpoint at exchange **218110**, with one
+  pending action-feedback record, verified self-control lineage and no force.
+  Fresh saved exchange **218111** follows. Activation receipt:
+  `/Users/v/other/astrid/.runtime/bridge-deployment/transactions/4a0621efafa84dedbebaaa4345e1e7ba/receipt.json`.
+- Minime agent **19468 -> 85094**, with all **93** launch inputs unchanged.
+  The held shell started at 10:10:41 PDT; the Python runtime's new boot began
+  at **10:15:07 PDT**, after bridge verification. These are distinct clocks.
+  Native handoff verifies pending NEXT preservation, not its execution.
+  Seal: `c488a0852cacb63bf67639f9a1654f1d5078f905de33401755c854d28af9348e`.
+  Restore: `33495593aa717ca18a5585a1a4a588fb6765dc16e3a538dc36328ed1907527d8`.
+- Parent engine **35303**, provider **3893**, visual **3898**, camera **3914**,
+  microphone **3879**, feeder **3878** and host-sensory **31613** retain their
+  exact PID/start identities. Engine session **5321** continues from sequence
+  506467 / t_s 600504.6875 to at least 507021 / t_s 601160.375. No state reset,
+  reservoir control change or model request was used as a health probe.
+- Sampled health remained below the 80% refusal boundary; observed examples
+  ranged from 65.21% to 73.04%. These are bounded samples, not proof of all-time
+  stability. The later `scaffold_activated` phase is preserved as a separate
+  controller observation; deployment readiness does not imply settled control.
+- Bounded post-start logs contain 24 timestamped bridge and 16 agent lines
+  without ERROR/Traceback/panic markers. Division logs did not change after
+  their new starts, so current readiness comes from status/identity/ports,
+  not an inference from quiet logs. No authored or private prose is quoted.
+
+All owned agent and Division launch holds are absent after completion. No
+daughter launch job, daughter listener or ceremony ledger was created.
+Paused automations remain paused at generation **511**; no active lease or
+projection. Evidence V2 indexed-tail verification remains valid at sequence
+**1123165**, head
+`34c9dffbee5fda25c78b3ccdef57d9d8435baf7bad9af666a4ae077612103f23`,
+with all four V1 imports immutable. This is not a new full historical audit,
+source-first projection, productive flywheel round or read-current claim.
+
+The live bridge's original release-linked checkout remains pinned and is not
+relabeled as built from the operator-tooling commit. No writing improvement,
+Division consent or future renewal authority is inferred. No push performed.
