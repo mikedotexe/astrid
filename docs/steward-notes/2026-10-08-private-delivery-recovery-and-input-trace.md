@@ -2,7 +2,9 @@
 
 Date: 2026-10-08. Author: Codex interactive collaborator.
 Status: approved bridge-only recovery is live and verified as PID 66851.
-Source remains in the isolated candidate, not committed, merged or pushed.
+Source is now committed and fast-forwarded into local main as `21087ebadabe`;
+nothing pushed. Integration and the separate Division verifier repair are in
+`2026-10-08-recovery-integration-and-division-expiry.md`.
 The earlier sections retain pre-approval findings; the approved continuation
 and final verification below supersede their pending deployment status.
 
