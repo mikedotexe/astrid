@@ -1,6 +1,7 @@
 """Fail-closed packet boundaries; actual staged checks run in the qualifier."""
 import json
 from pathlib import Path
+from types import SimpleNamespace
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -9,6 +10,33 @@ import qualify_open_reflection_release as tool
 
 
 class QualificationTests(unittest.TestCase):
+    def test_old_recall_contract_is_explicit_and_recorded(self):
+        for expected in ("present", "absent"):
+            with self.subTest(expected=expected), tempfile.TemporaryDirectory() as temporary:
+                with patch.object(tool.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
+                    receipt = tool.reflection_preservation(Path("old"), Path("new"),
+                                                           Path(temporary), expected)
+                self.assertEqual(run.call_args.kwargs["env"]["QUALIFICATION_OLD_REFLECTION_RECALL"], expected)
+                self.assertEqual(receipt["old_reflection_recall"], expected)
+
+    def test_default_preserves_legacy_transition_contract(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with patch.object(tool.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
+                receipt = tool.reflection_preservation(Path("old"), Path("new"), Path(temporary))
+            self.assertEqual(run.call_args.kwargs["env"]["QUALIFICATION_OLD_REFLECTION_RECALL"], "present")
+            self.assertEqual(receipt["old_reflection_recall"], "present")
+
+    def test_unknown_recall_contract_fails_before_running_or_writing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with patch.object(tool.subprocess, "run") as run:
+                with self.assertRaisesRegex(ValueError, "unknown old reflection recall"):
+                    tool.reflection_preservation(Path("old"), Path("new"), root, "automatic")
+                with self.assertRaisesRegex(ValueError, "unknown old reflection recall"):
+                    tool.qualify(root, root, root, root, root, old_reflection_recall="automatic")
+            run.assert_not_called()
+            self.assertEqual(list(root.iterdir()), [])
+
     def test_failure_is_retained_without_success_or_activation(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -15,6 +15,8 @@ class CurrentReflectionPreservation(unittest.TestCase):
     def test_both_owners_keep_old_pending_input_and_choose_new_continuation(self):
         old = Path(os.environ["QUALIFICATION_OLD_READER"])
         new = Path(os.environ["ASTRID_SOURCE_STUDY_BIN"])
+        old_recall = os.environ.get("QUALIFICATION_OLD_REFLECTION_RECALL", "present")
+        self.assertIn(old_recall, ("present", "absent"))
         with tempfile.TemporaryDirectory() as temporary:
             for owner in ("astrid", "minime"):
                 with self.subTest(owner=owner):
@@ -32,7 +34,8 @@ class CurrentReflectionPreservation(unittest.TestCase):
                     before = f.checkpoint()
                     self.assertEqual(before["version"], 13)
                     prepared, retry = once(f, old, "pending-old", "INTROSPECT")
-                    self.assertIn("PUBLIC_PRIOR_SENTINEL", prepared["text"])
+                    self.assertEqual("PUBLIC_PRIOR_SENTINEL" in prepared["text"],
+                                     old_recall == "present", "old helper recall contract")
                     self.assertEqual(f.call(new, **retry), prepared)
                     authored = "Exact selected passage, including λ. No conclusion."
                     action = "WRITE FROM_REFLECTION " + prepared["navigation_id"]

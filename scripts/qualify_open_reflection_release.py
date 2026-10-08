@@ -20,10 +20,12 @@ from qualify_geometry_release import (
 )
 
 
-def reflection_preservation(old, new, out):
+def reflection_preservation(old, new, out, old_reflection_recall="present"):
+    require(old_reflection_recall in ("present", "absent"), "unknown old reflection recall contract")
     script = Path(__file__).with_name("test_open_reflection_preservation.py")
     env = {key: os.environ[key] for key in ("HOME", "PATH", "TMPDIR") if key in os.environ}
     env.update(QUALIFICATION_OLD_READER=str(old), ASTRID_SOURCE_STUDY_BIN=str(new),
+               QUALIFICATION_OLD_REFLECTION_RECALL=old_reflection_recall,
                PYTHONDONTWRITEBYTECODE="1")
     log = out / "schema-13-preservation.log"
     with log.open("x") as handle:
@@ -33,7 +35,8 @@ def reflection_preservation(old, new, out):
         handle.flush()
         os.fsync(handle.fileno())
     require(result.returncode == 0, "schema-13 reflection preservation failed; inspect retained log")
-    return dict(status="passed", owners=["astrid", "minime"], log_sha256=sha(log),
+    return dict(status="passed", owners=["astrid", "minime"],
+                old_reflection_recall=old_reflection_recall, log_sha256=sha(log),
                 test_sha256=sha(script))
 
 
@@ -113,7 +116,8 @@ print(json.dumps({'same_immutable_helper': True, 'source_bound_help': True,
     return json.loads(result.stdout)
 
 
-def qualify(old, new, minime, reconciliation, out):
+def qualify(old, new, minime, reconciliation, out, *, old_reflection_recall="present"):
+    require(old_reflection_recall in ("present", "absent"), "unknown old reflection recall contract")
     stages = {"old": verify_stage(old), "new": verify_stage(new)}
     inputs = inventory(minime)
     binding = verify_launch_binding(reconciliation, inputs)
@@ -126,7 +130,8 @@ def qualify(old, new, minime, reconciliation, out):
     try:
         baseline = qualify_eof(old, new, minime, reconciliation, out / "eof-baseline")
         reflection = reflection_preservation(old / "helpers/astrid-source-study",
-                                             new / "helpers/astrid-source-study", out)
+                                             new / "helpers/astrid-source-study", out,
+                                             old_reflection_recall)
         adapter = adapter_probe(minime, new, out / "adapter")
         require(inventory(minime) == inputs, "frozen Minime input drift")
         require(verify_launch_binding(reconciliation, inputs) == binding, "launch binding drift")
@@ -143,7 +148,8 @@ def qualify(old, new, minime, reconciliation, out):
         write_json(out / "qualification.json", receipt)
         return receipt
     except Exception as error:
-        write_json(out / "failure.json", dict(error=str(error), activation_performed=False))
+        write_json(out / "failure.json", dict(error=str(error), activation_performed=False,
+                                             old_reflection_recall=old_reflection_recall))
         raise
 
 
@@ -151,10 +157,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("old-stage", "new-stage", "minime-source", "reconciliation", "out"):
         parser.add_argument("--" + name, type=Path, required=True)
+    parser.add_argument("--old-reflection-recall", choices=("present", "absent"), default="present",
+                        help="Expected prior-public-reflection input of the pinned old helper")
     args = parser.parse_args()
     result = qualify(args.old_stage.resolve(strict=True), args.new_stage.resolve(strict=True),
                      args.minime_source.resolve(strict=True), args.reconciliation.resolve(strict=True),
-                     args.out.absolute())
+                     args.out.absolute(), old_reflection_recall=args.old_reflection_recall)
     print(json.dumps(dict(status=result["status"], receipt=str(args.out / "qualification.json"),
                           activation_performed=False)))
 

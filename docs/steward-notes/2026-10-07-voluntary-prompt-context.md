@@ -1,5 +1,10 @@
 # Voluntary Prompt Context: First Tranche
 
+Current checkpoint: candidate `a09d212ff8` is committed and immutably packaged;
+compile-contract and preactivation qualification pass. No activation, merge or
+push has occurred. See **Immutable release qualification** below. Earlier
+sections retain the preceding checkpoints and their unsuccessful attempts.
+
 ## Status and ownership
 
 Candidate implementation, not deployed, committed, merged or pushed.
@@ -245,3 +250,94 @@ cache (2.1 GiB). The initial force-style removal command was rejected and made
 no change; the scoped Cargo cache operation succeeded. No source fixture,
 historical evidence, older cache or immutable release was removed. Available
 disk space recovered to approximately 5.3 GiB before staging the release.
+
+## Immutable release qualification
+
+Implementation commit: `a09d212ff8e04d99fc0f632fcebfa21063301db2`, twelve
+explicitly staged owned paths, verified full diff, clean index and worktree.
+The quoted public daydream was reread and its exact bytes/hash verified before
+committing. The shared Git author is not agent attribution; the commit records
+Codex interactive provenance. No archival flywheel round was invented.
+
+The sanctioned `scripts/build_bridge.sh --stage-dir` built an immutable release
+from that pinned candidate. No manual live build, service signal or launch hold
+was used. Evidence root:
+`/Users/v/other/worktrees/voluntary-prompt-context-release-20261007`.
+
+| Evidence / artifact | SHA-256 |
+| --- | --- |
+| `bridge-stage-01/manifest.json` | `9b36d3607ccde60440d79a678fd2f3cf8a5ac2fa35edc5fe0e7ecb8748734ab9` |
+| `bridge-stage-01/spectral-bridge-server` | `90dfd82ab0bf200dd88a58115eee4c92d1f8dc1fc2c40027b6433cd727a07edf` |
+| `bridge-stage-01/helpers/astrid-source-study` | `32f7b0cec0f867f2d30b4b1bfc2b10de873c7fcb7f87643ee92ea99a94031367` |
+| `bridge-stage-01/source-inputs.json` | `55b4dc985a6981d5c279fa0fd1921c69181c3e003482d0574b0830fab61096f5` |
+| `source-comparison.json` | `c0f1b2240453a740aaed736205c2999ff96641e570e03b98023f55e704867ed3` |
+| `paired-qualification-01/failure.json` | `da7bfe330b3b0e4f2f5ec5154efa6ebf93892a553edc81e610a64d2ce2a4e692` |
+| `paired-qualification-01/schema-13-preservation.log` | `9d4ddc3a0937d52d953ee730797d770d5b84f6772680361e2d94e5439399dba3` |
+| `paired-qualification-02/qualification.json` | `0340ec215b6bcff130fa3ed346412463f31de432ab70d7cf12455403dda2019e` |
+| `readonly-preactivation-01.json` | `87ed0f8473cc251d3aed9a8bb5d3c966c38a95bed1a2d4270fe183f51bf9cfc8` |
+
+The reader artifact is byte-identical to the currently selected live helper.
+There is no reader-schema transition and no Minime-agent change in this release.
+The source comparison confirms the nine reviewed source paths, unchanged
+toolchain, no removed inputs and no other live-source differences.
+
+The first paired attempt passed the EOF baseline, then failed both owner
+subtests because the historical open-reflection qualifier expected prior public
+prose in the old helper's input. Both supplied helpers are already the newer
+quiet version. This was a wrong qualification expectation, not lost writing.
+The failed packet and log remain immutable; they are not relabelled successful.
+
+The harness is repaired on the separate branch
+`codex/prompt-context-qualification-20261007`, in `qualification-source` under
+the evidence root, leaving the built worktree's HEAD and input bytes fixed.
+`--old-reflection-recall present|absent` now selects the expected old contract
+explicitly and records it in the receipt. The default remains `present` for
+the original transition. Unsupported values fail before execution or writes.
+The test asserts the selected expectation rather than skipping it, and every
+pending-input, authored-state, cursor, artifact and quiet-return assertion
+remains. The failed first attempt also demonstrates rejection of the wrong
+expectation against the actual immutable helper.
+
+The second attempt explicitly selects `absent` and passes: 54 baseline checks,
+both owner preservation paths, and frozen Minime adapter probes for exact
+chosen continuation, quiet parking/return, source-bound help, stale-source
+feedback and no automatic publication. All fixtures are synthetic; providers
+are stubbed. Five qualifier unit tests pass, including the unchanged default,
+explicit receipt binding and fail-closed unknown values. The combined qualifier
+and eight deployment safeguard suites pass **162 tests**. No test failures
+remain for this candidate after the documented expectation correction.
+
+The target bridge's read-only native verifier decoded live checkpoint exchange
+217583, including eight pending runtime-feedback records, and verified the
+self-control state integrity. The state still names the old deployment, as
+expected before the sanctioned handoff. This is compatibility evidence, not a
+drain, a completed pending action, or an activation authorization. Activation
+must capture the actual stopped checkpoint and feedback and verify exact
+startup continuity; this earlier moving-state snapshot must not replace it.
+
+The process baseline retains the bridge PID 96634 and ten protected PID/start
+pairs, including Minime agent 19468, engine 35303, gateway 35278, supervisor
+35269, coupled provider 3893 and the existing visual/sensory processes. The
+controller remains paused at generation 507, without a lease or projection.
+Indexed-tail V2 verification is valid at sequence 1123161, head
+`eaa49c0b17b2248ed70ef1469c811ef320de8030111ba54820f2b90b2a3bf65d`;
+the imported V1 history is immutable. Stream counts are preserved in
+`controller-qualification.json`; no source-first automation round was recorded.
+
+## Next approved transition
+
+The bridge-only graceful-activation and Git-integration question remains
+pending. Before acting on approval, recheck controller pause/no lease, both
+canonical trees, foreign activity, staged source identities and the exact live
+PID. Use the pinned candidate's `scripts/build_bridge.sh --activate-stage`
+against `bridge-stage-01`, with the fresh expected PID and the scoped approval
+acknowledgement. Do not force a failed drain, restore old state over new work,
+restart Minime or protected services, or resume automations.
+
+After a successful transition, verify the new process, loaded manifest/helper
+hashes, startup/stopped checkpoint and pending-feedback continuity, readiness,
+new checkpoint progress, logs and unchanged protected PID/start pairs. Then
+integrate the qualified branch under the single Git coordinator and record the
+actual activation receipt separately. Keep the built candidate branch pinned;
+do not change its HEAD merely to append rollout documentation. Natural public
+use remains unobserved for this candidate; no confirming response is requested.
