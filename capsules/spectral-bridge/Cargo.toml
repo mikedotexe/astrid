@@ -34,6 +34,7 @@ futures-util = "0.3"
 fs2 = "0.4"
 hex = "0.4"
 hound = "3.5.1"
+libc = "0.2"
 nalgebra = "0.34.2"
 prime_esn_wasm = { path = "../../../prime_esn_wasm", default-features = false }
 rand = { version = "0.8", features = ["std_rng"] }

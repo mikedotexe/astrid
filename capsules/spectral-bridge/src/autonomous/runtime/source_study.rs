@@ -91,6 +91,11 @@ fn retain_study_runtime_notice(directory: &std::path::Path, text: &str) -> std::
 }
 
 fn project_study_response(conv: &mut ConversationState, mode: &str, text: &str, notice_directory: &std::path::Path) -> (String, bool) {
+    if private_writing_mode(mode) {
+        // Preserve exact draft prose/NEXT, including letter-shaped passages.
+        // No ordinary exchange, peer publication or shadow analysis is admitted.
+        return (text.to_owned(), false);
+    }
     if mode != "source_study_runtime_notice" {
         return project_mailbox_response(text);
     }

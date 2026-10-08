@@ -51,6 +51,10 @@ struct Cli {
     #[arg(long, requires = "deployment_manifest", conflicts_with_all = ["verify_deployment_manifest", "prepare_self_control_deployment_handoff"])]
     verify_deployment_inputs: bool,
 
+    /// Stage an exact operator-reviewed unresolved dispatch; does not start services.
+    #[arg(long, requires = "deployment_manifest", conflicts_with_all = ["autonomous", "verify_deployment_inputs", "verify_deployment_manifest", "prepare_self_control_deployment_handoff", "approve_request", "approve_research_budget", "maintenance_once", "maintenance_dry_run"])]
+    stage_uncertain_study_review: Option<PathBuf>,
+
     /// Minime telemetry `WebSocket` address (outbound eigenvalue stream).
     #[arg(long, default_value = "ws://127.0.0.1:7878")]
     minime_telemetry: String,
@@ -214,6 +218,12 @@ async fn main() -> Result<()> {
         reflective_sidecar_script: cli.reflective_sidecar_script.clone(),
     });
     deployment::configure(cli.deployment_manifest.as_deref()).map_err(anyhow::Error::msg)?;
+    if let Some(path) = cli.stage_uncertain_study_review {
+        let receipt =
+            autonomous::stage_uncertain_study_review(&path).map_err(anyhow::Error::msg)?;
+        println!("{}", serde_json::to_string_pretty(&receipt)?);
+        return Ok(());
+    }
     if cli.verify_deployment_manifest {
         println!(
             "{}",
@@ -680,4 +690,34 @@ async fn main() -> Result<()> {
 
     info!("spectral bridge stopped");
     Ok(())
+}
+
+#[cfg(test)]
+mod review_cli_tests {
+    use super::*;
+
+    #[test]
+    fn operator_review_requires_manifest_and_cannot_start_services_or_other_operations() {
+        assert!(
+            Cli::try_parse_from(["bridge", "--stage-uncertain-study-review", "review.json"])
+                .is_err()
+        );
+        let base = [
+            "bridge",
+            "--deployment-manifest",
+            "manifest.json",
+            "--stage-uncertain-study-review",
+            "review.json",
+        ];
+        assert!(Cli::try_parse_from(base).is_ok());
+        for incompatible in [
+            "--autonomous",
+            "--verify-deployment-inputs",
+            "--verify-deployment-manifest",
+            "--maintenance-once",
+            "--maintenance-dry-run",
+        ] {
+            assert!(Cli::try_parse_from(base.into_iter().chain([incompatible])).is_err());
+        }
+    }
 }

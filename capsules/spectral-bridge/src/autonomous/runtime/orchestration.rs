@@ -3471,7 +3471,7 @@ pub fn spawn_autonomous_loop(
                         "autonomous: {} | {} '{}'",
                         spectral_interpretation,
                         mode_name,
-                        truncate_str(&response_text, 80)
+                        truncate_str(public_response_text(mode_name, &response_text), 80)
                     );
 
                     // Input sovereignty: check if minime is signaling distress
@@ -4707,7 +4707,7 @@ pub fn spawn_autonomous_loop(
                     // Scan for inline REMEMBER in the response body.
                     // Astrid sometimes writes "REMEMBER the moment..." mid-text,
                     // separate from her NEXT: choice. Both forms are valid.
-                    for line in response_text.lines() {
+                    for line in public_response_text(mode_name, &response_text).lines() {
                         let trimmed = line.trim();
                         if trimmed.starts_with("REMEMBER ") && !trimmed.starts_with("NEXT:") {
                             let note = trimmed.strip_prefix("REMEMBER").unwrap_or("").trim().to_string();
@@ -4727,13 +4727,13 @@ pub fn spawn_autonomous_loop(
                     if let Some(ref pending) = operator_override {
                         if let Some(ref response_next) = response_next_action {
                             info!(
-                                response_next = %canonicalize_next_action_text(response_next),
-                                operator_next = %canonicalize_next_action_text(&pending.action),
+                                response_next = astrid_source_study::response_choice::diagnostic_action(&canonicalize_next_action_text(response_next)),
+                                operator_next = astrid_source_study::response_choice::diagnostic_action(&canonicalize_next_action_text(&pending.action)),
                                 "operator pending NEXT will run separately after Astrid's authored action"
                             );
                         } else {
                             info!(
-                                operator_next = %canonicalize_next_action_text(&pending.action),
+                                operator_next = astrid_source_study::response_choice::diagnostic_action(&canonicalize_next_action_text(&pending.action)),
                                 "operator pending NEXT will run as an operator-authored action"
                             );
                         }
@@ -4870,7 +4870,7 @@ pub fn spawn_autonomous_loop(
                             &next_outcome,
                             fill_pct,
                             &telemetry,
-                            &response_text,
+                            public_response_text(mode_name, &response_text),
                         ) {
                             warn!("action continuity record failed: {err:#}");
                         }

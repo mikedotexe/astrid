@@ -112,6 +112,11 @@ pub fn prepare_self_control_deployment_handoff(
     self_control_v2::prepare_deployment_handoff(operator_actor, operator_ack)
 }
 
+/// Stage an exact operator review; no inference, delivery acknowledgement or NEXT.
+pub fn stage_uncertain_study_review(path: &std::path::Path) -> Result<serde_json::Value, String> {
+    study_handoff::stage_configured_review(path).map_err(|error| error.to_string())
+}
+
 include!("runtime/text.rs");
 include!("runtime/continuity.rs");
 include!("runtime/introspection_freshness.rs");
@@ -127,6 +132,7 @@ include!("runtime/interpretation.rs");
 include!("runtime/inbox.rs");
 include!("runtime/activity_delivery.rs");
 include!("runtime/activity_recovery.rs");
+include!("runtime/private_exchange.rs");
 include!("runtime/activity_exchange.rs");
 include!("runtime/state_persistence.rs");
 include!("runtime/learning_feedback.rs");

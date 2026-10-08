@@ -32,6 +32,8 @@ struct Job {
     intent: String,
     output: Option<String>,
     phase: Phase,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    uncertainty_review: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -43,11 +45,15 @@ enum Phase {
     Delivered,
     Failed,
     Superseded,
+    RetiredUnresolved,
 }
 
 impl Phase {
     fn terminal(self) -> bool {
-        matches!(self, Self::Delivered | Self::Failed | Self::Superseded)
+        matches!(
+            self,
+            Self::Delivered | Self::Failed | Self::Superseded | Self::RetiredUnresolved
+        )
     }
 }
 
@@ -109,6 +115,11 @@ impl HandoffState {
         );
         for (id, job) in &self.jobs {
             ensure!(
+                (job.phase == Phase::RetiredUnresolved) == job.uncertainty_review.is_some()
+                    && job.uncertainty_review.as_deref().is_none_or(valid_hash),
+                "invalid unresolved study review binding"
+            );
+            ensure!(
                 id.strip_prefix("study-job-").is_some_and(valid_hash)
                     && valid_hash(&job.intent)
                     && job.output.as_deref().is_none_or(valid_hash),
@@ -117,7 +128,7 @@ impl HandoffState {
             ensure!(
                 !matches!(
                     job.phase,
-                    Phase::Prepared | Phase::Claimed | Phase::Delivered
+                    Phase::Prepared | Phase::Claimed | Phase::Delivered | Phase::RetiredUnresolved
                 ) || job.output.is_some(),
                 "study handoff input missing"
             );
@@ -205,6 +216,7 @@ fn read<T: serde::de::DeserializeOwned>(store: &ActionContinuityStore, hash: &st
 }
 
 fn intent(store: &ActionContinuityStore, id: &str, job: &Job) -> Result<IntrospectTargetV2> {
+    review::verify_retired(store, id, job)?;
     let record: Intent = read(store, &job.intent)?;
     ensure!(
         record.owner_root == store.root() && record.target.operation_id.as_deref() == Some(id),
@@ -283,6 +295,7 @@ pub(super) fn queue(
             intent: hash,
             output: None,
             phase: Phase::Queued,
+            uncertainty_review: None,
         },
     );
     handoff.active = Some(id);
@@ -565,10 +578,15 @@ pub(super) fn reconcile(
         "ordinary study and protected focus require explicit reconciliation"
     );
     if job.phase == Phase::Claimed {
-        let (receipt, _) =
-            crate::llm::recover_retained_delivery_at(deliveries, &content_id(id), 0)?.context(
-                "study provider outcome uncertain; retained choice is blocked, not retried",
-            )?;
+        let recovered = crate::llm::recover_retained_delivery_at(deliveries, &content_id(id), 0)?;
+        let Some((receipt, _)) = recovered else {
+            if review::apply_staged_review(store, conv, &selection, id)? {
+                return Ok(());
+            }
+            anyhow::bail!(
+                "study provider outcome uncertain; retained choice is blocked, not retried"
+            );
+        };
         delivered(store, conv, id, reader, &receipt)?;
         conv.introspect_target = None;
         conv.wants_introspect = false;
@@ -581,6 +599,10 @@ pub(super) fn reconcile(
     }
     Ok(())
 }
+
+#[path = "study_handoff_review.rs"]
+mod review;
+pub(crate) use review::stage_configured_review;
 
 pub(super) fn reconcile_configured(conv: &mut ConversationState) -> Result<()> {
     reconcile(

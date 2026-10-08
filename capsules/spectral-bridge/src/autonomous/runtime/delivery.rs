@@ -53,6 +53,9 @@ fn begin_signal_shadow_v1(
     response_text: &str,
     reservation: Option<(String, SignalJourneyOriginV1)>,
 ) -> SignalShadowRuntimeV1 {
+    if private_writing_mode(mode_name) {
+        return None;
+    }
     let (reserved_journey_id, journey_origin) = reservation.map_or_else(
         || (None, SignalJourneyOriginV1::autonomous()),
         |(journey_id, origin)| (Some(journey_id), origin),

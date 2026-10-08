@@ -2726,6 +2726,7 @@ dependencies = [
  "hex",
  "hound",
  "image",
+ "libc",
  "nalgebra",
  "prime_esn_wasm",
  "rand 0.8.8",
