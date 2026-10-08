@@ -1,11 +1,12 @@
 # Voluntary Prompt Context: First Tranche
 
-Current checkpoint: candidate `a09d212ff8` is committed and immutably packaged;
-compile-contract and preactivation qualification pass. No activation, merge or
-push has occurred. See **Immutable release qualification** below. Earlier
-sections retain the preceding checkpoints and their unsuccessful attempts.
+Current checkpoint: Mike approved the bridge-only transition; immutable source
+`a09d212ff8` is verified live under bridge PID 42184. Local main is fast-forwarded
+through qualification commit `67018148c9`. Nothing is pushed; automations remain
+paused. See **Approved activation and integration** below. Earlier sections
+retain the preceding checkpoints and their unsuccessful attempts.
 
-## Status and ownership
+## Initial status and ownership
 
 Candidate implementation, not deployed, committed, merged or pushed.
 Codex is working in the previously clean attached worktree
@@ -161,7 +162,7 @@ The test selection is
 the lint selection is
 `cargo clippy --manifest-path capsules/spectral-bridge/Cargo.toml --all-targets --all-features -- -D warnings`.
 
-## Final repository and evidence state
+## Initial repository and evidence state
 
 Both canonical trees remain clean. Candidate edits remain unstaged on the
 isolated branch. No historical journal, native draft, reader schema, canonical
@@ -324,7 +325,7 @@ Indexed-tail V2 verification is valid at sequence 1123161, head
 the imported V1 history is immutable. Stream counts are preserved in
 `controller-qualification.json`; no source-first automation round was recorded.
 
-## Next approved transition
+## Pre-approval transition plan (historical)
 
 The bridge-only graceful-activation and Git-integration question remains
 pending. Before acting on approval, recheck controller pause/no lease, both
@@ -341,3 +342,120 @@ integrate the qualified branch under the single Git coordinator and record the
 actual activation receipt separately. Keep the built candidate branch pinned;
 do not change its HEAD merely to append rollout documentation. Natural public
 use remains unobserved for this candidate; no confirming response is requested.
+
+## Approved activation and integration
+
+Mike's October 7 request, "great let's do these now, friend and lead
+collaborator," approved the pending bridge-only rollout and merge. This does
+not authorize a Minime, engine, provider, model, visual or sensory restart,
+reservoir-policy change, push or automation resume. Codex is the single Git
+coordinator for this integration; existing worktrees and milestone tags remain
+untouched.
+
+The interactive stabilization pause advanced to generation **508**, with no
+active lease or projection. Repeated status checks found both canonical trees
+and both candidate trees clean; cooperative preflight found no foreign edit.
+Remote main tips were inspected, not updated: Astrid
+`a66f7e190e0ecd3a0a4988abbcf6b0bf2cfb2a32`, Minime
+`9072abff9ed839851709300b3c3eaae3afaf669e`. No automation round was recorded.
+
+Activation used the pinned candidate's sanctioned wrapper:
+
+```text
+bash scripts/build_bridge.sh --actor codex-astra-interactive \
+  --activate-stage /Users/v/other/worktrees/voluntary-prompt-context-release-20261007/bridge-stage-01 \
+  --expected-pid 96634 --timeout-secs 600 \
+  --ack '<scoped Mike-approved bridge-only activation and merge acknowledgement>'
+```
+
+The durable transaction is
+`/Users/v/other/astrid/.runtime/bridge-deployment/transactions/3f07a7e6228c46f49ff7778110fba965`.
+The wrapper exited successfully with **activated_verified**. Old bridge 96634
+acknowledged its drain, received SIGTERM and exited normally. No force,
+legacy-transition exception, automatic rollback or old-state restoration was
+used. New bridge **42184** started at **2026-10-07 17:23:09 PDT** from the
+qualified immutable stage. The owned launch hold is absent.
+
+| Durable transition evidence | SHA-256 |
+| --- | --- |
+| `receipt.json` | `80bd353bc78d5c8a084ec54918f0dd53f58d4f1ad9d7e39b1806ce691436d7a3` |
+| `handoff.json` | `99bb38a579b12289668743239836bc417ae4fe1555af5d50d66fe0592c3ba97f` |
+| `inputs.before.json` | `f566f0d07f6f7c14dc16dafdc296a585499cbf630cd7f39c92f29b176382c8be` |
+
+The actual stopped checkpoint contained exchange **217588**, hash
+`eace3f81b2b0e64eade5dc8d2e31aaeb7added36825934e8c1db13fadbeb2cbf`.
+Startup verified that exact checkpoint using the runtime schema, not the earlier
+moving-state compatibility snapshot. Its runtime-feedback checkpoint was
+present with **zero** pending records and hash
+`b7f6550afaaba35a871411e40aa6c6f226f3b2a7e2e144399dc58f1e57eee4c9`.
+The signed self-control handoff passed integrity checks and targets the actual
+new binary; this establishes state lineage, not new control authority.
+The wrapper then observed fresh saved exchange **217589** and an idle model.
+A subsequent native read-only verification decoded exchange **217590** with
+the same empty-feedback identity and valid self-control binding. The receipt
+explicitly does **not** claim lossless remote delivery or completion of every
+earlier pending action.
+
+Post-start inspection verified the canonical manifest hash
+`9b36d3607ccde60440d79a678fd2f3cf8a5ac2fa35edc5fe0e7ecb8748734ab9`,
+running bridge hash
+`90dfd82ab0bf200dd88a58115eee4c92d1f8dc1fc2c40027b6433cd727a07edf`
+and release selection. The helper remains byte-identical to the prior live
+reader (`32f7b0cec0f867f2d30b4b1bfc2b10de873c7fcb7f87643ee92ea99a94031367`);
+there was no reader migration or Minime restart. Minime PID 19468 reports no
+reload requirement and all 93 loaded source identities match the frozen
+reconciliation snapshot. All ten protected PID/start pairs match
+`protected-process-baseline.json`, including the engine, gateway, provider,
+Minime agent and visual/sensory services. Gateway PID 35278 still owns both
+7878 and 7879. Provider live/readiness checks passed, with an empty queue,
+connected reservoir and no last-generation error at the sampled check.
+
+The bounded post-start log review found 43 INFO, three WARN and zero ERROR
+records. All three warnings were existing Green-to-Yellow safety-throttle
+events at fills 75.0073%, 75.4444% and 75.0068%; they were not suppressed or
+relabelled successful regulation. A later health sample reported valid fill
+61.8638%, target 68%, and `restart_gate_awaiting_settle_proof`. Readiness does
+not establish controller settling, long-term stability or subjective effects.
+No new completed ordinary dialogue/daydream artifact or PID-42184 dialogue
+generation record was present at the bounded observation. No generation,
+confirmation or activity switch was requested to create an observation.
+
+Local Astrid main fast-forwarded from `5c5cfd951d` to `67018148c9`, including
+implementation `a09d212ff8` and its separate qualification follow-through.
+Minime main remains `69add3aac1e77feb48d0cd1e416722315fd5c687`.
+The pinned build tree stays at `a09d212ff8`; its HEAD and release inputs were
+not changed to append this report. All **755** staged input paths match their
+canonical counterparts by hash, size and mode, and the toolchain matches.
+The first broad canonical-inventory equality assertion failed on two additional
+ignored historical backup files, not a changed staged input:
+
+- `capsules/spectral-bridge/backups/bridge.db.20260506-1401-main-attractor-pulse`
+- `capsules/spectral-bridge/backups/consciousness-bridge-server.release.20260506-1401-main-attractor-pulse`
+
+Both have May 6 creation/modification times and are covered by the existing
+backups ignore rule. They are not referenced by the checked bridge source,
+manifest or release launchers. Neither was removed, staged or treated as a
+new runtime input. The immutable running stage is unaffected. This distinction
+is retained rather than claiming the entire canonical directory is identical
+to the isolated source tree.
+
+The complete Rust, compile-contract, lint and synthetic preservation results
+above qualify the unchanged production candidate. Domain-boundary verification
+was repeated before integration and passed with zero violations. Rollout-note
+changes are documentation only. On integrated main, all **162** deployment and
+qualifier tests pass again (2.898 seconds), both experiential-epistemics self-tests
+pass, and whitespace checks pass. A second, direct verification of all 755
+staged input counterparts finds zero hash/size/mode mismatches, preserving the
+explicit distinction about the two unrelated canonical backups above.
+The evidence commit owns exactly `CHANGELOG.md`, this steward note and
+`docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md`; no Minime change,
+historical backup, runtime artifact or foreign path is included.
+
+Read-only controller verification remains valid at Evidence V2 sequence
+**1123162**, head
+`04f8227fcfd698dbafa4816e12b7438cfcd0e1dadaff8cc2f6dcb35907e94b00`.
+All four imported V1 sources remain immutable. Pause generation 508 remains
+in force; no source-first projection or read-current claim is inferred from
+this interactive release. Remaining follow-ups are the historical dialogue
+recap, aspiration recall and metric-renderer wording described above, plus
+naturally occurring use. Deployment does not resolve those questions.
