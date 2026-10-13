@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Candidate: finish-accepted-work drain (2026-10-12, Codex).** Add exact-source-bound, agent-only v2 drain qualification; verify terminal worker evidence and native NEXT sealing before replacement release. Preserve the legacy idle gate and refuse busy drain of old v1 runtimes. Paired Minime admission fences preserve unadmitted choices and finish accepted calls. No live activation, force or automation resume. Evidence and first-bootstrap boundary: `docs/steward-notes/2026-10-12-finish-accepted-work-drain.md`.
+
 - Locally integrate the paired mailbox/context repair as Astrid `17dd537bae102d` and Minime `b51c7e1fa5c2`, preserving live file bytes and original build-source pins. Both mains are clean; nothing pushed. The final Minime runtime-only correction still has explicit restart/owned-hold debt, distinct from the already-live paired release.
 
 - Final paired mailbox review closes bare-command admission and generic choice-metadata leakage in the Minime adapter. Explicit eligible NEXT is the only continuation source; final immutable qualification passes 2,137 Python tests and 92 paired checks. This final adapter-only correction is installed but not loaded: idle-gated retries sent no signal and retain an owned replacement hold. The earlier paired repairs are live. Exact restart debt and recovery boundary: `docs/steward-notes/2026-10-12-mailbox-paired-release-qualification.md`.

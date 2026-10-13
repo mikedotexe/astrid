@@ -97,7 +97,7 @@ def idle_diagnostic(before, after, *, elapsed_s=0):
             "initializing", "busy", "idle", "draining", "exited", "recovery_blocked") else "unknown")
         contract = value.get("lifecycle_contract")
         result["idle_contract"] = (contract if contract in (
-            "agent_drain_v1", "legacy_no_handshake") else "unknown")
+            "agent_drain_v1", "agent_drain_v2", "legacy_no_handshake") else "unknown")
         for key in ("source_status_age_s", "agent_interval_s"):
             number = value.get(key)
             result[key] = (number if type(number) in (int, float)
@@ -133,11 +133,46 @@ def job_receipt(root, *, full=False):
         status = job.get("status")
         if status not in TERMINAL | {"queued", "running", "cancel_requested"}:
             raise ValueError("unrecognized job status")
-        rows.append({k: job.get(k) for k in (
+        row = {k: job.get(k) for k in (
             "job_id", "status", "worker_pid", "action_id", "finished_at", "error",
-        )})
-    active = [r for r in rows if r["status"] not in TERMINAL]
+            "worker_status", "completed_at",
+        )}
+        row.update(job_outcome_proof(jobs / "jobs" / ident, job))
+        rows.append(row)
+    active = [r for r in rows if r["status"] not in TERMINAL
+              or r.get("worker_status") in {"queued", "running"}]
     return {"active": active, "index_sha256": digest(index), "jobs": rows}
+
+
+def job_outcome_proof(directory, job):
+    """Verify terminal worker evidence without returning its private content."""
+    outcome = job.get("outcome")
+    proof = {"outcome_status": None, "outcome_verified": False}
+    if not isinstance(outcome, dict) or outcome.get("status") not in TERMINAL:
+        return proof
+    proof["outcome_status"] = outcome["status"]
+    evidence = {key: value for key, value in outcome.items() if key != "result_path"}
+    try:
+        raw = json.dumps(evidence, sort_keys=True, allow_nan=False).encode()
+        if hashlib.sha256(raw).hexdigest() != job.get("outcome_sha256"):
+            return proof
+        retained = outcome.get("result_path")
+        if retained is not None:
+            path = Path(retained)
+            allowed = {directory / "result.txt", directory / "late_result.txt"}
+            if path not in allowed or path.resolve() != path:
+                return proof
+            from minime_next_handoff import read_owned
+            result = read_owned(path, 64 * 1024 * 1024)
+            if hashlib.sha256(result).hexdigest() != outcome.get("result_sha256"):
+                return proof
+        elif outcome.get("result_sha256") is not None:
+            return proof
+        proof["outcome_verified"] = (job.get("worker_status") == outcome["status"]
+                                     and bool(job.get("completed_at")))
+    except (OSError, ValueError, RuntimeError, TypeError):
+        pass
+    return proof
 
 
 class LaunchdAgent:
@@ -240,7 +275,7 @@ class LaunchdAgent:
         no_tcp = tcp.returncode == 1 and not tcp.stdout.strip()
         phase = status.get("lifecycle_phase")
         wait_log_sha = None
-        if status.get("lifecycle_contract") == "agent_drain_v1":
+        if status.get("lifecycle_contract") in {"agent_drain_v1", "agent_drain_v2"}:
             in_window = phase == "idle" and 0 <= age <= interval - 8
         else:
             # The legacy active-job branch logs this line, writes status, then
@@ -291,6 +326,8 @@ class LaunchdAgent:
     def verify_next_seal(self, before):
         from minime_next_handoff import verify_seal
         status = read_json(self.root / "workspace/runtime/autonomous_agent_source_status.json")
+        if status.get("reason") != "drained" or status.get("lifecycle_phase") != "exited":
+            raise RuntimeError("NEXT seal lacks completed-drain acknowledgement")
         return verify_seal(self.root / "workspace", before, status)
 
     def terminate(self, expected_pid):
@@ -308,7 +345,7 @@ class LaunchdAgent:
                 and status.get("source_inputs_at_start") == expected_inputs
                 and status.get("reload_required") is False
                 and status.get("reason") in {"loop", "idle"}
-                and status.get("lifecycle_contract") == "agent_drain_v1")
+                and status.get("lifecycle_contract") in {"agent_drain_v1", "agent_drain_v2"})
 
     def jobs(self):
         return job_receipt(self.root, full=True)
@@ -406,6 +443,8 @@ def reload_agent(backend, expected_pid, *, timeout_s=900, quiet_s=15,
             if handoff is not None:
                 if backend.identity(expected_pid) is not None:
                     raise RuntimeError("old PID reused during paired handoff")
+                if final.get("next_handoff"):
+                    backend.verify_next_seal(final["next_handoff"])
                 protected = handoff.transition(backend, protected, emit)
                 completed_handoff = handoff
                 replacement_inputs = getattr(handoff, "replacement_inputs", None)
