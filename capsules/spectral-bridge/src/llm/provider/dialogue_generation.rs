@@ -205,16 +205,9 @@ pub async fn generate_dialogue_with_runtime_feedback(
         // information from earlier exchanges — a decaying attention mechanism."
         // 8 exchanges: idx 0=oldest→150, idx 7=newest→1200.
         let trim_len = attended_history_trim_len(mlx_profile, idx, history_limit);
-        let minime_history = sanitize_minime_context_for_dialogue(&exchange.minime_said);
-        let minime_excerpt: String = minime_history.chars().take(trim_len).collect();
-        let minime_excerpt = if mlx_profile.is_gemma4_canary() {
-            sanitize_deprecated_runtime_language(&minime_excerpt)
-        } else {
-            minime_excerpt
-        };
         messages.push(Message {
             role: "user".to_string(),
-            content: format!("Minime wrote: {minime_excerpt}"),
+            content: minime_peer_excerpt(&exchange.minime_said, trim_len, 0),
         });
         // Strip NEXT: line from history — otherwise the LLM sees
         // "NEXT: SPEAK" multiple times and pattern-matches it forever,
@@ -249,11 +242,10 @@ pub async fn generate_dialogue_with_runtime_feedback(
     let diversity_block = diversity_hint.map(|d| format!("[{d}]")).unwrap_or_default();
 
     use crate::prompt_budget::assemble_within_budget_with_sources_and_guidance;
-    let journal_text_for_dialogue = sanitize_minime_context_for_dialogue(journal_text);
     let journal_block = if protected.is_some() {
         "The selected activity source is supplied separately below.".to_string()
     } else {
-        format!("Minime wrote: {journal_text_for_dialogue}")
+        minime_peer_excerpt(journal_text, usize::MAX, 480)
     };
     let own_body = if presentation.measurements_selected {
         own_body_line_for_dialogue().await
@@ -359,7 +351,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
             None
         };
         conversation_fallback_messages(
-            &journal_text_for_dialogue, perception_context,
+            journal_text, perception_context,
             presentation.action_result, protected.is_some(), fallback_trace.max_prose_sentences,
             identity_anchor.as_deref(),
         )
@@ -369,7 +361,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
         protected_ollama_fallback_context(spectral_summary, fill_pct, &fallback_trace)
     } else {
         compact_ollama_dialogue_fallback_messages(
-            &journal_text_for_dialogue,
+            journal_text,
             spectral_summary,
             fill_pct,
             perception_context,

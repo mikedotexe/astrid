@@ -417,6 +417,44 @@ fn live_reservoir_clause_from_default_dir() -> String {
     live_reservoir_clause_from_value(&value, now_s).unwrap_or_default()
 }
 
+fn rounded_eigenvector_measurement(value: f32, available: bool) -> String {
+    if !available {
+        "unknown (unavailable)".to_string()
+    } else if !value.is_finite() {
+        "unknown (non-finite)".to_string()
+    } else {
+        format!("{value:.2}")
+    }
+}
+
+fn eigenvector_measurement_clause(
+    field: &crate::spectral_schema::EigenvectorFieldV1,
+    reported: &serde_json::Value,
+) -> String {
+    let orientation = rounded_eigenvector_measurement(
+        field.summary.mean_orientation_delta,
+        field.direct_eigenvectors_available
+            && field.mode_count > 0
+            && field.summary.previous_overlap_available
+            && reported
+                .pointer("/summary/mean_orientation_delta")
+                .is_some_and(serde_json::Value::is_number),
+    );
+    let overlap = rounded_eigenvector_measurement(
+        field.summary.max_pairwise_overlap,
+        field.direct_eigenvectors_available
+            && field.mode_count > 1
+            && reported
+                .pointer("/summary/max_pairwise_overlap")
+                .is_some_and(serde_json::Value::is_number),
+    );
+    format!(
+        " Eigenvector field: {} modes, mean orientation delta {orientation}, max pairwise overlap {overlap}. \
+         Values rounded to 0.01; displayed zero does not establish exact zero, immobility, or independence.",
+        field.mode_count,
+    )
+}
+
 /// Interpret separately sourced measurements as a natural language description.
 #[must_use]
 pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
@@ -462,14 +500,12 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         })
         .unwrap_or_default();
     let eigenvector_clause = telemetry
-        .eigenvector_field_view()
-        .map(|field| {
-            format!(
-                " Eigenvector field: {} modes, mean orientation delta {:.2}, max pairwise overlap {:.2}.",
-                field.mode_count,
-                field.summary.mean_orientation_delta,
-                field.summary.max_pairwise_overlap,
-            )
+        .eigenvector_field
+        .as_ref()
+        .and_then(|reported| {
+            telemetry
+                .eigenvector_field_view()
+                .map(|field| eigenvector_measurement_clause(&field, reported))
         })
         .unwrap_or_default();
     let resonance_clause = telemetry

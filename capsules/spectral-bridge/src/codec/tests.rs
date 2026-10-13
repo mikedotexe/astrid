@@ -3,6 +3,74 @@ mod tests {
     use super::*;
 
     #[test]
+    fn eigenvector_rounding_does_not_assert_exact_zero_or_immobility() {
+        let mut state = telemetry(vec![9.0, 1.0], 0.68);
+        state.eigenvector_field = Some(serde_json::json!({
+            "policy": "eigenvector_field_v1",
+            "direct_eigenvectors_available": true,
+            "mode_count": 2,
+            "pairwise_overlaps": [{"left": 0, "right": 1, "abs_cosine": 0.004}],
+            "summary": {
+                "mean_orientation_delta": 0.003,
+                "max_pairwise_overlap": 0.004,
+                "previous_overlap_available": true
+            }
+        }));
+        let original = state.eigenvector_field.clone();
+        let text = interpret_spectral(&state);
+        assert!(text.contains("mean orientation delta 0.00, max pairwise overlap 0.00"));
+        assert!(text.contains("Values rounded to 0.01"));
+        assert!(text.contains(
+            "displayed zero does not establish exact zero, immobility, or independence"
+        ));
+        assert_eq!(state.eigenvector_field, original);
+        assert_eq!(rounded_eigenvector_measurement(0.006, true), "0.01");
+        assert_eq!(rounded_eigenvector_measurement(0.0, true), "0.00");
+    }
+
+    #[test]
+    fn eigenvector_missing_reference_or_measurement_is_unknown_not_default_zero() {
+        let mut state = telemetry(vec![9.0, 1.0], 0.68);
+        state.eigenvector_field = Some(serde_json::json!({
+            "policy": "eigenvector_field_v1",
+            "direct_eigenvectors_available": true,
+            "mode_count": 2
+        }));
+        let text = interpret_spectral(&state);
+        assert!(text.contains("mean orientation delta unknown (unavailable)"));
+        assert!(text.contains("max pairwise overlap unknown (unavailable)"));
+        let mut field = state.eigenvector_field_view().unwrap();
+        field.summary.previous_overlap_available = true;
+        field.direct_eigenvectors_available = false;
+        assert!(
+            eigenvector_measurement_clause(&field, state.eigenvector_field.as_ref().unwrap())
+                .contains("mean orientation delta unknown")
+        );
+        state.eigenvector_field.as_mut().unwrap()["summary"] = serde_json::json!({
+            "previous_overlap_available": true
+        });
+        let text = interpret_spectral(&state);
+        assert!(text.contains("mean orientation delta unknown (unavailable)"));
+        assert!(text.contains("max pairwise overlap unknown (unavailable)"));
+        state.eigenvector_field = None;
+        assert!(!interpret_spectral(&state).contains("Eigenvector field:"));
+    }
+
+    #[test]
+    fn eigenvector_nonfinite_values_are_unknown_without_changing_measurements() {
+        for value in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+            assert_eq!(
+                rounded_eigenvector_measurement(value, true),
+                "unknown (non-finite)"
+            );
+            assert_eq!(
+                rounded_eigenvector_measurement(value, false),
+                "unknown (unavailable)"
+            );
+        }
+    }
+
+    #[test]
     fn participation_provenance_follows_reported_typed_legacy_then_raw_precedence() {
         let mut state = telemetry(vec![9.0, 1.0], 0.68);
         let mut slots = vec![0.0; 32];

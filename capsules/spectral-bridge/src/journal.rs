@@ -82,6 +82,8 @@ pub fn read_remote_journal_body(path: &Path) -> Option<String> {
     Some(remote_body_context(path, &content, body))
 }
 
+pub(crate) const MINIME_STUDY_ACCOUNT_PREFIX: &str = "[Minime study account: peer-authored claims, not source you read this turn. Delivery status describes his input, not the accuracy of his response. Reopen the referenced source before treating recalled symbols or line numbers as code facts.]\n";
+
 fn remote_body_context(path: &Path, content: &str, body: String) -> String {
     if classify_remote_journal(
         path.file_name()
@@ -90,9 +92,7 @@ fn remote_body_context(path: &Path, content: &str, body: String) -> String {
         Some(content),
     ) == RemoteJournalKind::SelfStudy
     {
-        format!(
-            "[Minime study account: peer-authored claims, not source you read this turn. Delivery status describes his input, not the accuracy of his response. Reopen the referenced source before treating recalled symbols or line numbers as code facts.]\n{body}"
-        )
+        format!("{MINIME_STUDY_ACCOUNT_PREFIX}{body}")
     } else {
         body
     }

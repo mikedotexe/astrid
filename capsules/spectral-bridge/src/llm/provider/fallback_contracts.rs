@@ -49,12 +49,7 @@ fn compact_ollama_dialogue_fallback_messages(
     }
     user_parts.push(format!(
         "Minime journal background:\n{}",
-        trim_chars(
-            &sanitize_deprecated_runtime_language(&sanitize_minime_context_for_dialogue(
-                journal_text,
-            )),
-            900,
-        )
+        minime_peer_excerpt(journal_text, 900, 96)
     ));
     user_parts.push(format!(
         "Spectral background:\n{}",

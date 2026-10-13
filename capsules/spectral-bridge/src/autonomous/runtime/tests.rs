@@ -5350,4 +5350,38 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
             "what the \"<end_of_turn>\" boundary feels like from inside"
         );
     }
+
+    #[test]
+    fn minime_exchange_retention_keeps_prose_after_long_runtime_header() {
+        let header = format!(
+            "Source revision: not applicable; no source or measurements supplied\n\
+             Input evidence: Open introspection: {}\n\
+             Account: Minime\u{2019}s response to this input, not independently verified code facts.\n\
+             Delivery: verified input delivery; response claims and understanding not verified",
+            "No source page supplied. ".repeat(20),
+        );
+        let prose = "\u{03bb} Exact authored words.\n".repeat(50);
+        let journal = format!("{header}\n\n{prose}");
+        let exchange = crate::llm::Exchange {
+            minime_said: crate::llm::minime_history_context(&journal, 300),
+            astrid_said: "My reply.".into(),
+        };
+        let (retained_header, retained_prose) = exchange.minime_said.split_once("\n\n").unwrap();
+        assert_eq!(retained_header, header);
+        assert_eq!(retained_prose, prose.chars().take(300).collect::<String>());
+        assert_eq!(journal, format!("{header}\n\n{prose}"));
+    }
+
+    #[test]
+    fn minime_exchange_retention_does_not_invent_missing_legacy_prose() {
+        let legacy = "Source revision: not applicable; no source or measurements supplied\n\
+                      Input evidence: Open introspection: no source page supplied.\n\
+                      Account: Minime";
+        assert_eq!(crate::llm::minime_history_context(legacy, 300), legacy);
+        let plain = "Historical plain journal. \u{03bb}\n".repeat(30);
+        assert_eq!(
+            crate::llm::minime_history_context(&plain, 300),
+            plain.chars().take(300).collect::<String>(),
+        );
+    }
 }

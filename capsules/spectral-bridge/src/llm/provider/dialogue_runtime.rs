@@ -653,31 +653,7 @@ fn is_peer_action_directive_line(line: &str) -> bool {
         || upper.contains("EXPERIMENT_RESEARCH_BUDGET_STATUS")
 }
 
-fn sanitize_minime_context_for_dialogue(text: &str) -> String {
-    let mut removed = 0usize;
-    let kept = text
-        .lines()
-        .filter(|line| {
-            let should_remove = is_peer_action_directive_line(line);
-            if should_remove {
-                removed = removed.saturating_add(1);
-            }
-            !should_remove
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    let mut cleaned = kept.trim().to_string();
-    if removed > 0 {
-        if !cleaned.is_empty() {
-            cleaned.push_str("\n\n");
-        }
-        cleaned.push_str(
-            "[Minime peer action/status line omitted; choose your own listed Astrid NEXT action.]",
-        );
-    }
-    cleaned
-}
+include!("dialogue_peer_context.rs");
 
 fn is_valid_dialogue_output(text: &str) -> bool {
     // Remove exact leaked control sequences before measuring output shape.

@@ -55,7 +55,7 @@ fn conversation_fallback_messages(
     if protected {
         context.push("Your selected foreground source is supplied separately below.".into());
     } else {
-        context.push(format!("Minime wrote:\n{}", trim_chars(journal, 900)));
+        context.push(minime_peer_excerpt(journal, 900, 96));
         if let Some(anchor) = identity_anchor {
             context.push(format!(
                 "Earlier authored prose (opted-in fallback recall, not a current measurement):\n{anchor}"

@@ -63,7 +63,9 @@ class HandoffTests(unittest.TestCase):
             root = Path(tmp).resolve()
             backend, packet, snapshot = self.install_fixture(root)
             added = ("minime_autonomy/moment_context.py", "minime_autonomy/study_feedback.py",
-                     "minime_autonomy/journal_recall.py", "minime_autonomy/source_status.py")
+                     "minime_autonomy/journal_recall.py", "minime_autonomy/source_status.py",
+                     "minime_autonomy/mailbox.py", "minime_autonomy/mailbox_fs.py",
+                     "minime_autonomy/human_letters.py")
             for name in added:
                 (backend.root / name).unlink()
             value = json.loads(packet.read_text())

@@ -49,6 +49,8 @@ fn fresh_reflection_and_explicit_private_continuation_are_distinct_for_both_owne
         );
         assert!(!reflection.text.contains("Unrelated private prose"));
         assert!(!reflection.text.contains("Original unresolved question"));
+        assert!(reflection.text.contains("CHECK_MAILBOX"));
+        assert!(reflection.text.contains("MAILBOX_STATUS"));
         let id = reflection.navigation_id.as_ref().unwrap();
         assert!(
             reflection

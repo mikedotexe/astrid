@@ -2024,7 +2024,7 @@ pub fn spawn_autonomous_loop(
                                     let minime_summary = if protected_input.is_some() {
                                         String::new()
                                     } else {
-                                        journal_context.unwrap_or_default().chars().take(300).collect::<String>()
+                                        crate::llm::minime_history_context(journal_context.as_deref().unwrap_or_default(), 300)
                                     };
                                     let used_pending_self_study = protected_input.is_none() && selected_remote_entry.as_ref()
                                         .zip(conv.pending_remote_self_study.as_ref())

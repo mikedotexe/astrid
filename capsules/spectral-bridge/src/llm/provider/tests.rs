@@ -39,7 +39,7 @@ mod tests {
         model_qos_v1, normalize_provider_output_v1, reinforce_ollama_fallback_contract,
         repair_ollama_dialogue_fallback_next,
         sanitize_deprecated_runtime_language, sanitize_gemma4_canary_output_for_label,
-        sanitize_minime_context_for_dialogue, sanitize_model_control_markers,
+        minime_peer_excerpt, sanitize_model_control_markers,
         sanitize_model_control_markers_with_report, sha256_parts,
         split_dialogue_perception_context, temperature_for_mlx_profile,
         uses_ollama_fallback_for_label,
@@ -302,10 +302,14 @@ mod tests {
             .as_deref()
             .map(format_dialogue_ambient_perception_block)
             .unwrap_or_default();
-        let journal_text_for_dialogue = sanitize_minime_context_for_dialogue(&format!(
-            "Minime writes from a dense reservoir shelf. {}",
-            "journal texture ".repeat(180)
-        ));
+        let journal_text_for_dialogue = minime_peer_excerpt(
+            &format!(
+                "Minime writes from a dense reservoir shelf. {}",
+                "journal texture ".repeat(180)
+            ),
+            usize::MAX,
+            96,
+        );
 
         let blocks = vec![
             PromptBlock {
@@ -322,7 +326,7 @@ mod tests {
                 label: "journal",
                 content: super::cap_dialogue_block(
                     "journal",
-                    &format!("Minime wrote: {journal_text_for_dialogue}"),
+                    &journal_text_for_dialogue,
                     DIALOGUE_JOURNAL_CAP,
                 ),
                 priority: 1,
@@ -1311,7 +1315,7 @@ mod tests {
                    BTSP_OBSERVED_NEXT EXPERIMENT_RESEARCH_BUDGET_STATUS resbud_minime_local\n\
                    [Internal-topology cooldown: consider EXPERIMENT_RESEARCH_BUDGET_STATUS latest]\n\
                    The report itself should remain.";
-        let cleaned = sanitize_minime_context_for_dialogue(raw);
+        let cleaned = minime_peer_excerpt(raw, usize::MAX, 96);
 
         assert!(cleaned.contains("The pressure felt jagged."));
         assert!(cleaned.contains("The report itself should remain."));

@@ -91,6 +91,25 @@ class ReconciliationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unreviewed"):
             self.run_tool()
 
+    def test_mailbox_import_closure_is_frozen_without_live_installation(self):
+        added = ("minime_autonomy/mailbox.py", "minime_autonomy/mailbox_fs.py",
+                 "minime_autonomy/human_letters.py")
+        for name in added:
+            self.assertIn(name, tool.OVERLAY)
+            (self.canonical / name).unlink()
+        name = "minime_autonomy/inbox_delivery.py"
+        self.assertIn(name, tool.OVERLAY)
+        (self.candidate / name).write_text("# durable mailbox publication\n")
+        self.refresh_status()
+        before = tool.inventory(self.canonical)
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(set(result["selected_inputs"]) - set(before), set(added))
+        for name in (*added, "minime_autonomy/inbox_delivery.py"):
+            self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+            self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                             (self.candidate / name).read_bytes())
+
     def test_maintenance_durability_sources_are_exact_and_new_status_is_included(self):
         names = ("minime_autonomy/llm_access.py", "minime_autonomy/maintenance_next.py",
                  "minime_autonomy/source_status.py")
