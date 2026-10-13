@@ -4233,6 +4233,14 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         let legacy: SavedState = serde_json::from_value(base.clone()).expect("legacy state");
         assert!(!legacy.wants_introspect);
         assert_eq!(legacy.introspect_target, None);
+        assert_eq!(legacy.last_peer_dialogue_fingerprint, None);
+
+        let mut presented = base.clone();
+        presented["last_peer_dialogue_fingerprint"] = serde_json::json!("a".repeat(64));
+        let saved: SavedState = serde_json::from_value(presented).unwrap();
+        let reloaded: SavedState = serde_json::from_slice(&serde_json::to_vec(&saved).unwrap()).unwrap();
+        assert_eq!(reloaded.last_peer_dialogue_fingerprint, Some("a".repeat(64)));
+        assert_eq!(reloaded.exchange_count, 42);
 
         let mut with_pending = base.clone();
         with_pending["wants_introspect"] = serde_json::Value::Bool(true);

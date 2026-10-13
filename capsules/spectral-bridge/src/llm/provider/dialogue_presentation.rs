@@ -4,6 +4,7 @@ pub struct DialoguePresentation<'a> {
     pub measurements_selected: bool,
     pub action_result: &'a str,
     pub journal_continuation: Option<&'a str>,
+    pub peer_submission: Option<&'a ContextSubmissionTrackerV1>,
 }
 
 impl DialoguePresentation<'_> {
@@ -11,6 +12,7 @@ impl DialoguePresentation<'_> {
         measurements_selected: true,
         action_result: "",
         journal_continuation: None,
+        peer_submission: None,
     };
 
     fn spectral_context<'a>(&'a self, spectral: &'a str) -> &'a str {
@@ -111,6 +113,7 @@ mod voluntary_dialogue_presentation_tests {
             measurements_selected: false,
             action_result: "PERTURB result: request rejected; no mutation",
             journal_continuation: None,
+            peer_submission: None,
         };
         let spectral = "UNSELECTED_SPECTRUM restless texture 68%";
         assert_eq!(
@@ -152,6 +155,7 @@ mod voluntary_dialogue_presentation_tests {
                 measurements_selected: selected,
                 action_result: "RESULT: source missing",
                 journal_continuation: None,
+                peer_submission: None,
             };
             let assembled = format!(
                 "{}\n{peer}",
@@ -260,6 +264,7 @@ mod voluntary_dialogue_presentation_tests {
             measurements_selected: false,
             action_result: "",
             journal_continuation: Some(&hint),
+            peer_submission: None,
         };
         let primary = vec![Message {
             role: "user".into(),

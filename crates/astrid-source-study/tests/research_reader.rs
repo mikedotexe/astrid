@@ -521,10 +521,58 @@ fn oversized_and_nonregular_files_are_refused() {
         .unwrap()
         .set_len(MAX_CHECKPOINT_BYTES.saturating_add(1))
         .unwrap();
-    unchanged(&fixture, || assert!(fixture.reader().list(1, 20).is_err()));
+    let error = fixture.reader().list(1, 20).unwrap_err().to_string();
+    assert!(error.contains("size bound"));
+    assert!(error.contains(&MAX_CHECKPOINT_BYTES.to_string()));
     fs::remove_file(fixture.checkpoint()).unwrap();
     fs::create_dir(fixture.checkpoint()).unwrap();
     unchanged(&fixture, || assert!(fixture.reader().list(1, 20).is_err()));
+}
+
+#[test]
+fn archive_above_old_ceiling_supports_metadata_and_exact_selection_without_writes() {
+    let mut fixture = Fixture::new();
+    // Synthetic archive larger than the observed 34,513,493-byte checkpoint.
+    // No live draft is copied into qualification fixtures.
+    let part = "Synthetic retained prose.\n".repeat(2048);
+    for number in 2..=700 {
+        let mut draft = fixture.state["drafts"]["d1"].clone();
+        draft["parts"] = json!([part]);
+        fixture.state["drafts"][format!("d{number}")] = draft;
+    }
+    fixture.save();
+    assert!(fs::metadata(fixture.checkpoint()).unwrap().len() > 34_513_493);
+    unchanged(&fixture, || {
+        let page = fixture.reader().list(35, 20).unwrap();
+        assert_eq!(page.total_drafts, 700);
+        assert_eq!(page.drafts[0].id, "d681");
+        let output = serde_json::to_string(&page).unwrap();
+        assert!(!output.contains("Synthetic retained"));
+        assert!(!output.contains("PRIVATE_"));
+        let selected = fixture
+            .reader()
+            .show("d1", &page.snapshot_sha256, Section::Passages)
+            .unwrap();
+        assert_eq!(serde_json::to_value(selected).unwrap()["parts"][0], PASSAGE);
+        // Snapshot identities remain compatible with the original byte-hash contract.
+        let expected = hash(
+            serde_json::to_vec(&(
+                "writing-research-snapshot-v1",
+                "astrid",
+                hash(fs::read(fixture.root.join("preparation-owner-v1.json")).unwrap()),
+                hash(GUARD),
+                hash(fs::read(fixture.checkpoint()).unwrap()),
+            ))
+            .unwrap(),
+        );
+        assert_eq!(page.snapshot_sha256, expected);
+    });
+    let mut file = fs::OpenOptions::new()
+        .append(true)
+        .open(fixture.checkpoint())
+        .unwrap();
+    std::io::Write::write_all(&mut file, b" invalid trailing bytes").unwrap();
+    assert!(fixture.reader().list(1, 20).is_err());
 }
 
 #[test]

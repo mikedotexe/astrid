@@ -176,6 +176,7 @@ async fn mlx_chat_with_runtime_feedback(
     if let Some(tracker) = context_submission {
         tracker.mark_final_messages(&request.messages);
     }
+    record_peer_submission(&request.messages);
     let mut observation = ProviderAttemptObserver::begin(
         label,
         "mlx",
@@ -462,6 +463,7 @@ async fn ollama_chat_with_runtime_feedback(
         if let Some(tracker) = context_submission {
             tracker.mark_final_messages(&request.messages);
         }
+        record_peer_submission(&request.messages);
         let mut observation = ProviderAttemptObserver::begin(
             label,
             "ollama",

@@ -402,7 +402,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
     let primary_observation =
         ProviderObservationContext::configured(Some(&generation_record_ctx.generation_id), Some(0));
     let primary_started = std::time::Instant::now();
-    let primary_response = mlx_chat_with_runtime_feedback(
+    let primary_response = with_peer_submission(presentation.peer_submission, mlx_chat_with_runtime_feedback(
         "dialogue_live",
         messages,
         temperature,
@@ -413,7 +413,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
         runtime_feedback,
         context_submission,
         Some(&primary_observation),
-    )
+    ))
     .await;
     let primary_elapsed_s = primary_started.elapsed().as_secs_f64();
     let primary_raw = primary_response
@@ -471,7 +471,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 Some(1),
             );
             let fallback_started = std::time::Instant::now();
-            let fallback_response = ollama_chat_with_runtime_feedback(
+            let fallback_response = with_peer_submission(presentation.peer_submission, ollama_chat_with_runtime_feedback(
                 "dialogue_live",
                 ollama_fallback_messages,
                 temperature,
@@ -482,7 +482,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 runtime_feedback,
                 context_submission,
                 Some(&fallback_observation),
-            )
+            ))
             .await;
             let fallback_elapsed_s = fallback_started.elapsed().as_secs_f64();
             let fallback_model = fallback_response

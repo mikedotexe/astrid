@@ -145,6 +145,8 @@ include!("runtime/peripheral_resonance.rs");
 mod mirror_records;
 #[path = "runtime/mirror_selection.rs"]
 mod mirror_selection;
+#[path = "runtime/peer_presentation.rs"]
+mod peer_presentation;
 include!("runtime/orchestration_support.rs");
 include!("runtime/source_study.rs");
 include!("runtime/orchestration.rs");

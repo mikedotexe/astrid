@@ -3,6 +3,14 @@ use crate::{digest, store::completion_text};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
+/// Prose-only reference view using the writer's established visible-text rules.
+/// This never replaces the retained response or changes its executable choice.
+/// Quoted and fenced NEXT examples remain prose; top-level NEXT lines do not.
+#[must_use]
+pub fn prose_reference(text: &str) -> String {
+    crate::writing::visible_prose(text)
+}
+
 /// Withhold private observation payloads from general diagnostics, without changing execution bytes.
 #[must_use]
 pub fn diagnostic_action(text: &str) -> &str {

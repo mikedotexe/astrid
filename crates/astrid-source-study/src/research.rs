@@ -12,15 +12,17 @@
 
 use anyhow::{Context as _, Result, bail, ensure};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest as _, Sha256};
 use std::{
     collections::BTreeMap,
     fs::{self, File, Metadata},
-    io::Read as _,
+    io::{BufReader, Read},
     path::{Component, Path, PathBuf},
 };
 
-/// Hard ceiling; larger stores are refused, never partially parsed or truncated.
-pub const MAX_CHECKPOINT_BYTES: u64 = 16 * 1024 * 1024;
+/// Bounded archive allowance, independent of provider input or individual draft limits.
+/// Checkpoints are streamed; larger stores are refused, never truncated.
+pub const MAX_CHECKPOINT_BYTES: u64 = 128 * 1024 * 1024;
 pub const MAX_PAGE_SIZE: usize = 20;
 const OWNER: &str = "preparation-owner-v1.json";
 const JOURNAL: &str = "preparation-transaction-v1.json";
@@ -244,18 +246,22 @@ impl ResearchReader {
             downgrade.bytes == DOWNGRADE_GUARD,
             "research downgrade guard mismatch"
         );
-        let checkpoint = guard.read(CHECKPOINT, MAX_CHECKPOINT_BYTES)?;
-        let state: State = decode(&checkpoint.bytes)?;
+        guard.verify_paths()?;
+        let (state, checkpoint) = read_checkpoint(&guard.root.join(CHECKPOINT))?;
         state.validate(&self.owner)?;
         let snapshot = crate::digest(serde_json::to_vec(&(
             "writing-research-snapshot-v1",
             &self.owner,
             crate::digest(&owner.bytes),
             crate::digest(&downgrade.bytes),
-            crate::digest(&checkpoint.bytes),
+            &checkpoint.sha256,
         ))?);
         let result = select(&state, &snapshot)?;
-        guard.verify(&[(OWNER, owner), (GUARD, downgrade), (CHECKPOINT, checkpoint)])?;
+        guard.verify(&[
+            (OWNER, owner.stamp()),
+            (GUARD, downgrade.stamp()),
+            (CHECKPOINT, checkpoint),
+        ])?;
         Ok(result)
     }
 }
@@ -537,6 +543,82 @@ struct ReadFile {
     bytes: Vec<u8>,
     metadata: Metadata,
 }
+
+struct FileStamp {
+    metadata: Metadata,
+    sha256: String,
+}
+
+impl ReadFile {
+    fn stamp(&self) -> FileStamp {
+        FileStamp {
+            metadata: self.metadata.clone(),
+            sha256: crate::digest(&self.bytes),
+        }
+    }
+}
+
+// Hash the exact stored bytes during parsing, without keeping a second archive
+// buffer. The second bounded pass verifies those same bytes before any output.
+struct HashReader<R> {
+    inner: R,
+    hash: Sha256,
+    bytes: u64,
+}
+
+impl<R> HashReader<R> {
+    fn new(inner: R) -> Self {
+        Self {
+            inner,
+            hash: Sha256::new(),
+            bytes: 0,
+        }
+    }
+}
+
+impl<R: Read> Read for HashReader<R> {
+    fn read(&mut self, output: &mut [u8]) -> std::io::Result<usize> {
+        let count = self.inner.read(output)?;
+        self.bytes = self
+            .bytes
+            .checked_add(u64::try_from(count).map_err(std::io::Error::other)?)
+            .ok_or_else(|| std::io::Error::other("research byte count overflow"))?;
+        self.hash.update(&output[..count]);
+        Ok(count)
+    }
+}
+
+fn read_checkpoint(path: &Path) -> Result<(State, FileStamp)> {
+    let (file, metadata) = open_regular(path, MAX_CHECKPOINT_BYTES)?;
+    let mut input = HashReader::new((&file).take(MAX_CHECKPOINT_BYTES.saturating_add(1)));
+    let state = serde_json::from_reader(BufReader::new(&mut input))
+        .map_err(|_| anyhow::anyhow!("invalid research checkpoint JSON"))?;
+    ensure!(
+        input.bytes == metadata.len() && same_metadata(&metadata, &file.metadata()?),
+        "research checkpoint changed during read"
+    );
+    Ok((
+        state,
+        FileStamp {
+            metadata,
+            sha256: format!("{:x}", input.hash.finalize()),
+        },
+    ))
+}
+
+fn read_stamp(path: &Path, maximum: u64) -> Result<FileStamp> {
+    let (file, metadata) = open_regular(path, maximum)?;
+    let mut input = HashReader::new((&file).take(maximum.saturating_add(1)));
+    std::io::copy(&mut input, &mut std::io::sink()).context("research verification read failed")?;
+    ensure!(
+        input.bytes == metadata.len() && same_metadata(&metadata, &file.metadata()?),
+        "research checkpoint changed during read"
+    );
+    Ok(FileStamp {
+        metadata,
+        sha256: format!("{:x}", input.hash.finalize()),
+    })
+}
 struct ReadGuard {
     root: PathBuf,
     directories: Vec<(PathBuf, Metadata)>,
@@ -573,13 +655,18 @@ impl ReadGuard {
         read_file(&self.root.join(relative), maximum)
     }
 
-    fn verify(&self, files: &[(&str, ReadFile)]) -> Result<()> {
+    fn verify(&self, files: &[(&str, FileStamp)]) -> Result<()> {
         self.verify_paths()?;
         for (name, original) in files {
-            let current = self.read(name, MAX_CHECKPOINT_BYTES)?;
+            let maximum = if *name == CHECKPOINT {
+                MAX_CHECKPOINT_BYTES
+            } else {
+                4096
+            };
+            let current = read_stamp(&self.root.join(name), maximum)?;
             ensure!(
                 same_metadata(&original.metadata, &current.metadata)
-                    && original.bytes == current.bytes,
+                    && original.sha256 == current.sha256,
                 "research checkpoint changed during read"
             );
         }
@@ -642,9 +729,11 @@ fn no_transaction(root: &Path) -> Result<()> {
 
 fn open_regular(path: &Path, maximum: u64) -> Result<(File, Metadata)> {
     let before = fs::symlink_metadata(path).context("required research file unavailable")?;
+    ensure!(before.is_file(), "research file is nonregular or symlinked");
     ensure!(
-        before.is_file() && before.len() <= maximum,
-        "research file is nonregular, symlinked, or oversized"
+        before.len() <= maximum,
+        "research file exceeds read-only size bound: {} bytes; maximum {maximum} bytes",
+        before.len()
     );
     let file = File::open(path).context("research file unavailable")?;
     let after = file
@@ -737,9 +826,9 @@ mod tests {
             }
             let guard = ReadGuard::acquire(&root).unwrap();
             let files = [
-                (OWNER, guard.read(OWNER, 4096).unwrap()),
-                (GUARD, guard.read(GUARD, 4096).unwrap()),
-                (CHECKPOINT, guard.read(CHECKPOINT, 4096).unwrap()),
+                (OWNER, guard.read(OWNER, 4096).unwrap().stamp()),
+                (GUARD, guard.read(GUARD, 4096).unwrap().stamp()),
+                (CHECKPOINT, guard.read(CHECKPOINT, 4096).unwrap().stamp()),
             ];
             match change {
                 "checkpoint" => fs::write(root.join(CHECKPOINT), b"after!").unwrap(),

@@ -900,6 +900,7 @@ pub fn spawn_autonomous_loop(
                             // her here). Use a sentinel string so the LLM call
                             // still runs, just without minime's journal text.
                             // Astrid: "I want to break free from that tether."
+                            let mut peer_presentation_fingerprint = None;
                             let journal_context = if source_activity_selected {
                                 None
                             } else if conv.echo_muted {
@@ -910,10 +911,20 @@ pub fn spawn_autonomous_loop(
                                      to restore the journal feed.)"
                                 ))
                             } else {
-                                selected_remote_entry.as_ref()
-                                    .and_then(|entry| read_journal_entry(&entry.path))
+                                selected_remote_entry.as_ref().and_then(|entry| {
+                                    read_journal_entry(&entry.path).map(|text| {
+                                        let (context, fingerprint) = peer_presentation::present(
+                                            text, &entry.path,
+                                            conv.last_peer_dialogue_fingerprint.as_deref(),
+                                            entry.is_priority_feedback(),
+                                        );
+                                        peer_presentation_fingerprint = fingerprint;
+                                        context
+                                    })
+                                })
                             };
                             let dialogue_source = selected_remote_entry.as_ref()
+                                .filter(|_| peer_presentation_fingerprint.is_some())
                                 .map(|entry| {
                                     entry.source_label.clone().unwrap_or_else(|| {
                                         entry.path
@@ -924,7 +935,8 @@ pub fn spawn_autonomous_loop(
                                     })
                                 })
                                 .unwrap_or_default();
-                            let mut feedback_hint = selected_remote_entry.as_ref().and_then(|entry| {
+                            let mut feedback_hint = selected_remote_entry.as_ref()
+                                .filter(|_| peer_presentation_fingerprint.is_some()).and_then(|entry| {
                                 let source = entry.source_label.as_deref().unwrap_or("unknown source");
                                 if entry.is_self_study() {
                                     Some(peer_source_study_context(source))
@@ -1830,14 +1842,19 @@ pub fn spawn_autonomous_loop(
                             let activity_journal = protected_input.as_ref().map(|_| {
                                 "No peer journal is required for this chosen activity."
                             });
+                            let mut peer_submission = None;
                             let llm_response = if activity_recovery_ready
                                 && let Some(journal) = activity_journal.or(journal_context.as_deref()) {
                                 if protected_input.is_none() {
                                     journal_continuation = journal_continuation::reserve_configured(&lineage_id, "dialogue_live");
                                 }
+                                peer_submission = peer_presentation_fingerprint.as_ref()
+                                    .filter(|_| protected_input.is_none())
+                                    .map(|_| crate::llm::ContextSubmissionTrackerV1::for_peer_journal(journal));
                                 let dialogue_presentation = crate::llm::DialoguePresentation {
                                     measurements_selected, action_result: &pending_action_result,
                                     journal_continuation: journal_continuation.as_ref().map(journal_continuation::ReservedJournal::hint),
+                                    peer_submission: peer_submission.as_ref(),
                                 };
                                 let collaboration_delivery = DialogueCollaborationDeliveryV1::prepare(
                                     &mut conv.collaboration_prompt_checkpoint,
@@ -2024,7 +2041,7 @@ pub fn spawn_autonomous_loop(
                                 Some(text) => {
                                     let (ordinary_text, has_ordinary_text) = project_mailbox_response(&text);
                                     // Record this exchange for statefulness.
-                                    let minime_summary = if protected_input.is_some() {
+                                    let minime_summary = if protected_input.is_some() || peer_presentation_fingerprint.is_none() {
                                         String::new()
                                     } else {
                                         crate::llm::minime_history_context(journal_context.as_deref().unwrap_or_default(), 300)
@@ -2098,12 +2115,11 @@ pub fn spawn_autonomous_loop(
                                         }
                                         let should_reflect = !conv.self_reflect_paused;
                                         let response_for_reflect = ordinary_text;
-                                        let journal_for_reflect: String = if protected_input.is_some() {
+                                        let journal_for_reflect: String = if protected_input.is_some() || peer_presentation_fingerprint.is_none() {
                                             String::new()
                                         } else {
-                                            conv.remote_journal_entries.first()
-                                                .and_then(|entry| read_journal_entry(&entry.path))
-                                                .unwrap_or_default().chars().take(200).collect()
+                                            journal_context.as_deref().unwrap_or_default()
+                                                .chars().take(200).collect()
                                         };
                                         let fill_for_reflect = fill_pct;
                                         let db_for_reflect = Arc::clone(&db);
@@ -2127,6 +2143,11 @@ pub fn spawn_autonomous_loop(
                                         }); }
                                     }
 
+                                    if protected_input.is_none()
+                                        && peer_submission.as_ref().is_some_and(crate::llm::ContextSubmissionTrackerV1::submitted)
+                                        && let Some(fingerprint) = peer_presentation_fingerprint {
+                                        conv.last_peer_dialogue_fingerprint = Some(fingerprint);
+                                    }
                                     if used_pending_self_study {
                                         conv.pending_remote_self_study = None;
                                     }

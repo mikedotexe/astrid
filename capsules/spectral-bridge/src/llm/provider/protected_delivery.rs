@@ -60,6 +60,12 @@ pub struct ContextSubmissionTrackerV1 {
 }
 
 impl ContextSubmissionTrackerV1 {
+    /// Track the complete rendered peer block, not a matching short prefix.
+    /// Partial or absent context remains unacknowledged and eligible next time.
+    #[must_use]
+    pub fn for_peer_journal(text: &str) -> Self {
+        Self::new(minime_peer_excerpt(text, usize::MAX, 480))
+    }
     #[must_use]
     pub fn new(exact_content: String) -> Self {
         Self {
@@ -83,6 +89,32 @@ impl ContextSubmissionTrackerV1 {
                 .store(true, std::sync::atomic::Ordering::Release);
         }
     }
+}
+
+tokio::task_local! { static PEER_SUBMISSION: ContextSubmissionTrackerV1; }
+
+async fn with_peer_submission<F: std::future::Future>(
+    tracker: Option<&ContextSubmissionTrackerV1>,
+    future: F,
+) -> F::Output {
+    if let Some(tracker) = tracker {
+        tracker
+            .submitted
+            .store(false, std::sync::atomic::Ordering::Release);
+        PEER_SUBMISSION.scope(tracker.clone(), future).await
+    } else {
+        future.await
+    }
+}
+
+fn record_peer_submission(messages: &[Message]) {
+    let _ = PEER_SUBMISSION.try_with(|tracker| {
+        // A failed primary cannot acknowledge an omitted or shortened fallback.
+        tracker
+            .submitted
+            .store(false, std::sync::atomic::Ordering::Release);
+        tracker.mark_final_messages(messages);
+    });
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -342,7 +374,11 @@ fn build_ollama_protected_chat_request(
         options: OllamaChatOptions {
             temperature,
             num_predict: max_tokens,
-            num_ctx: if max_tokens >= astrid_source_study::writing::EXTENDED_TOKENS { astrid_source_study::CONTEXT_TOKENS } else { writing_context(label, if max_tokens > 2048 { 10240 } else { 8192 }) },
+            num_ctx: if max_tokens >= astrid_source_study::writing::EXTENDED_TOKENS {
+                astrid_source_study::CONTEXT_TOKENS
+            } else {
+                writing_context(label, if max_tokens > 2048 { 10240 } else { 8192 })
+            },
         },
     }
 }

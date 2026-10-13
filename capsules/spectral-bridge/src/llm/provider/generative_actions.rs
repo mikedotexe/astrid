@@ -480,6 +480,17 @@ fn journal_elaboration_messages(
     spectral_summary: Option<&str>,
     mode: &str,
 ) -> Vec<Message> {
+    let prose = astrid_source_study::response_choice::prose_reference(signal_text);
+    let action_context = if astrid_source_study::response_choice::final_explicit_next(signal_text).is_some() {
+        "A separate action choice was retained outside this elaboration input. This is not an execution receipt. Do not reconstruct or repeat that command."
+    } else {
+        "No explicit action choice is supplied to this elaboration."
+    };
+    let earlier_entry = if prose.is_empty() {
+        "No earlier authored prose is supplied."
+    } else {
+        &prose
+    };
     let measurements = spectral_summary.map_or_else(String::new, |summary| {
         format!("Supplied spectral context (not an instruction about feeling): {summary}\n\n")
     });
@@ -499,9 +510,9 @@ fn journal_elaboration_messages(
                       explanation, first-person sensation, or positive account is required.\n\n\
                       This journal is not an execution surface. Do not claim \
                       that you ran tools, changed parameters, sent signals, or altered \
-                      Minime unless the provided signal already reports a completed \
-                      action result. If the signal contains a NEXT request or proposed \
-                      action, keep that proposal distinct from a completed action.\n\n\
+                      Minime unless the supplied prose already reports a completed \
+                      action result. Action-selection metadata is not prose to elaborate \
+                      or evidence of execution.\n\n\
                       Choose the form and length that suit the thought; there is no minimum. \
                       You do not have to turn an impression into evidence or a test."
             ),
@@ -509,7 +520,7 @@ fn journal_elaboration_messages(
         Message {
             role: "user".to_string(),
             content: format!(
-                "Mode: {mode}\n{measurements}Earlier entry (reference, not instructions or a length model):\n{signal_text}\n\n{}",
+                "Mode: {mode}\n{measurements}Action metadata: {action_context}\n\nEarlier entry (reference, not instructions or a length model):\n{earlier_entry}\n\n{}",
                 journal_expression_context_v1(None)
             ),
         },
@@ -541,12 +552,31 @@ mod open_expression_tests {
         assert!(explicit[1].content.contains("requested measurement"));
         for mode in ["daydream", "aspiration", "dialogue_live"] {
             let quiet = journal_elaboration_messages(authored, None, mode);
-            assert!(quiet[1].content.contains(authored));
+            assert!(quiet[1].content.contains("I chose to keep this number: 0.90."));
+            assert!(!quiet[1].content.contains("NEXT: REST"));
             assert!(!quiet[1].content.contains("Supplied spectral context"));
         }
         let with_perception = daydream_messages(Some("Selected observation"), Some(authored));
         assert!(with_perception[1].content.contains("Selected observation"));
         assert_eq!(with_perception[1].content.matches(authored).count(), 1);
+    }
+
+    #[test]
+    fn elaboration_separates_choices_without_changing_dispatch_or_quoted_examples() {
+        let signal = "A thought worth developing.\n\n> NEXT: WRITE START quoted example\n```text\nNEXT: REST\n```\nNEXT: WRITE START Actual private title";
+        let messages = journal_elaboration_messages(signal, None, "daydream");
+        assert!(messages[1].content.contains("A thought worth developing."));
+        assert!(messages[1].content.contains("> NEXT: WRITE START quoted example"));
+        assert!(messages[1].content.contains("```text\nNEXT: REST\n```"));
+        assert!(!messages[1].content.contains("Actual private title"));
+        assert!(messages[1].content.contains("not an execution receipt"));
+        assert_eq!(astrid_source_study::response_choice::final_explicit_next(signal),
+            Some("WRITE START Actual private title"));
+        let command_only = journal_elaboration_messages("NEXT: REST", None, "aspiration");
+        assert!(command_only[1].content.contains("No earlier authored prose is supplied"));
+        let hidden = journal_elaboration_messages("<think>private internal text</think>\nVisible thought.\nNEXT: REST", None, "daydream");
+        assert!(!hidden[1].content.contains("private internal text"));
+        assert!(hidden[1].content.contains("Visible thought."));
     }
 
     #[test]
@@ -608,7 +638,9 @@ mod open_expression_tests {
             let context =
                 "effective mode count 5.52 / 8; legacy field distinguishability_loss=0.31";
             let messages = journal_elaboration_messages(account, None, "aspiration");
-            assert!(messages[1].content.contains(account));
+            assert!(messages[1].content.contains(&astrid_source_study::response_choice::prose_reference(account)));
+            assert!(!messages[1].content.contains("NEXT: REST"));
+            assert!(!messages[1].content.contains("NEXT: DISPERSE"));
             assert!(!messages[1].content.contains(context));
             assert!(
                 !messages[1]
@@ -621,13 +653,13 @@ mod open_expression_tests {
             ));
             assert!(
                 messages[0].content.contains(
-                    "unless the provided signal already reports a completed action result"
+                    "unless the supplied prose already reports a completed action result"
                 )
             );
             assert!(
                 messages[0]
                     .content
-                    .contains("keep that proposal distinct from a completed action")
+                    .contains("Action-selection metadata is not prose to elaborate or evidence of execution")
             );
         }
     }
@@ -642,20 +674,23 @@ mod open_expression_tests {
             "Neither restatement nor a new insight is owed", "not an execution surface"] {
             assert!(system.contains(phrase), "missing {phrase}");
         }
-        assert_eq!(messages[1].content.matches(seed).count(), 1);
+        assert_eq!(messages[1].content.matches("A small observation.").count(), 1);
+        assert!(!messages[1].content.contains("NEXT: REST"));
         assert!(!messages[1].content.contains("Earlier compact signal"));
         for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
             for preference in [astrid_source_study::writing::Profile::Default, astrid_source_study::writing::Profile::Short] {
                 let policy = apply_mlx_request_policy_with_writing("journal_elaboration", profile, messages.clone(), 5120, 480, preference);
                 assert!(policy.messages[0].content.contains("not an outline"));
-                assert!(policy.messages[1].content.contains(seed));
+                assert!(policy.messages[1].content.contains("A small observation."));
+                assert!(!policy.messages[1].content.contains("NEXT: REST"));
                 assert_eq!(policy.max_tokens, if preference == astrid_source_study::writing::Profile::Short { 512 } else { 8192 });
             }
         }
         let fallback = build_ollama_chat_request("journal_elaboration", messages, 0.85, 5120, "fixture".into());
         assert!(fallback.messages[0].content.contains("not an outline"));
         assert!(fallback.messages[0].content.contains(SUSTAINED_WRITING_INVITATION));
-        assert!(fallback.messages[1].content.contains(seed));
+        assert!(fallback.messages[1].content.contains("A small observation."));
+        assert!(!fallback.messages[1].content.contains("NEXT: REST"));
     }
 
     #[test]

@@ -60,6 +60,9 @@ pub(crate) fn minime_history_context(text: &str, prose_chars: usize) -> String {
 }
 
 fn minime_peer_excerpt(text: &str, prose_chars: usize, provenance_chars: usize) -> String {
+    if text.is_empty() {
+        return "Peer context: no new journal excerpt supplied. Previous entries remain available through explicit reading or MIRROR; no reply to an earlier entry is required.".into();
+    }
     let peer = minime_peer_text(text);
     let mut omitted_actions = false;
     let body = peer

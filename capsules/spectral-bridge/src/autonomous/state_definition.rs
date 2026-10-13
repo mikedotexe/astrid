@@ -12,6 +12,8 @@ pub(in crate::autonomous) struct ConversationState {
     /// Cached remote minime journal entries (newest first, periodically rescanned).
     /// This is intentionally distinct from Astrid's own journal directory.
     pub remote_journal_entries: Vec<RemoteJournalEntry>,
+    /// Exact peer publication presented in the last successful ordinary dialogue.
+    pub last_peer_dialogue_fingerprint: Option<String>,
     /// Number of remote journal entries at last scan (to detect new entries).
     pub remote_journal_count_at_scan: usize,
     /// Index into the dialogue pool (rotates).

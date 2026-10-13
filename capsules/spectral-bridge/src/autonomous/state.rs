@@ -1079,6 +1079,7 @@ impl ConversationState {
             last_mode: Mode::Witness,
             witness_depth: WitnessDepthV1::Summary,
             remote_journal_entries,
+            last_peer_dialogue_fingerprint: None,
             remote_journal_count_at_scan: count,
             dialogue_cursor: 0,
             remote_workspace,

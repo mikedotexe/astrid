@@ -42,6 +42,8 @@ struct SavedState {
     recent_focus_themes: Vec<String>,
     history: Vec<SavedExchange>,
     #[serde(default)]
+    last_peer_dialogue_fingerprint: Option<String>,
+    #[serde(default)]
     astrid_motif_cooldown: Option<state::AstridMotifCooldown>,
     // Sovereignty fields (serde(default) for backward compat with old state.json)
     #[serde(default)]
@@ -299,6 +301,7 @@ fn prepare_state(conv: &mut ConversationState) -> anyhow::Result<Vec<u8>> {
         agenda: conv.agenda.clone(),
         last_remote_glimpse_12d: conv.last_remote_glimpse_12d.clone(),
         last_remote_memory_id: conv.last_remote_memory_id.clone(),
+        last_peer_dialogue_fingerprint: conv.last_peer_dialogue_fingerprint.clone(),
         last_remote_memory_role: conv.last_remote_memory_role.clone(),
         remote_memory_bank: conv.remote_memory_bank.clone(),
         recent_browse_urls: conv.recent_browse_urls.iter().cloned().collect(),
@@ -413,6 +416,7 @@ fn restore_state_from_paths(
     conv.agenda.resanitize();
     conv.last_remote_glimpse_12d = state.last_remote_glimpse_12d;
     conv.last_remote_memory_id = state.last_remote_memory_id;
+    conv.last_peer_dialogue_fingerprint = state.last_peer_dialogue_fingerprint;
     conv.last_remote_memory_role = state.last_remote_memory_role;
     conv.remote_memory_bank = state.remote_memory_bank;
     conv.recent_browse_urls = state.recent_browse_urls.into_iter().collect();

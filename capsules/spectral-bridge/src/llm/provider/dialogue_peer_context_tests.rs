@@ -21,16 +21,30 @@ fn actual_remote_study_read_retains_authored_prose_in_history_and_fallbacks() {
     let retained = minime_history_context(&received, 300);
     let parsed = minime_peer_text(&retained);
     assert_eq!(parsed.body, prose.chars().take(300).collect::<String>());
-    assert!(parsed.provenance.unwrap().contains("not the accuracy of his response"));
+    assert!(
+        parsed
+            .provenance
+            .unwrap()
+            .contains("not the accuracy of his response")
+    );
     let excerpt = minime_peer_excerpt(&retained, 180, 0);
     assert!(excerpt.starts_with("Minime authored excerpt:\nA source passage"));
     for messages in [
         conversation_fallback_messages(&received, None, "", false, 3, None),
         compact_ollama_dialogue_fallback_messages(
-            &received, "", 68.0, None, None, fallback_continuity_budget_v1(""),
+            &received,
+            "",
+            68.0,
+            None,
+            None,
+            fallback_continuity_budget_v1(""),
         ),
     ] {
-        assert!(messages[1].content.contains("Minime authored excerpt:\nA source passage"));
+        assert!(
+            messages[1]
+                .content
+                .contains("Minime authored excerpt:\nA source passage")
+        );
     }
     assert_eq!(std::fs::read_to_string(path).unwrap(), original);
 }
@@ -41,7 +55,10 @@ fn study_wrapper_alone_or_with_incomplete_envelope_is_not_stripped() {
     for text in [
         format!("{prefix}Historical authored text without a recognized envelope."),
         format!("{prefix}Source revision: incomplete\n\nRetained authored words."),
-        format!("[Minime study account: an authored metaphor]\n{}", wrapped("My words.")),
+        format!(
+            "[Minime study account: an authored metaphor]\n{}",
+            wrapped("My words.")
+        ),
     ] {
         let peer = minime_peer_text(&text);
         assert!(peer.provenance.is_none());
@@ -59,7 +76,10 @@ fn actual_remote_introspection_retains_its_prose_without_a_study_wrapper() {
     let received = crate::journal::read_remote_journal_body(&path).unwrap();
     assert!(!received.starts_with(crate::journal::MINIME_STUDY_ACCOUNT_PREFIX));
     let retained = minime_history_context(&received, 300);
-    assert_eq!(minime_peer_text(&retained).body, prose.chars().take(300).collect::<String>());
+    assert_eq!(
+        minime_peer_text(&retained).body,
+        prose.chars().take(300).collect::<String>()
+    );
     assert_eq!(std::fs::read_to_string(path).unwrap(), original);
 }
 
@@ -244,4 +264,57 @@ fn primary_provider_adaptation_retains_authored_excerpt_and_attribution() {
                 .contains("Runtime provenance (recognized")
         );
     }
+}
+#[test]
+fn absent_peer_excerpt_is_host_context_not_attributed_prose_in_either_provider_lane() {
+    let excerpt = super::minime_peer_excerpt("", 900, 96);
+    assert!(excerpt.starts_with("Peer context: no new journal excerpt supplied."));
+    assert!(!excerpt.contains("Minime journal excerpt"));
+    assert!(excerpt.contains("explicit reading or MIRROR"));
+    let fallback = super::conversation_fallback_messages("", None, "", false, 4, None);
+    assert!(fallback[1].content.contains(&excerpt));
+    assert_eq!(super::minime_history_context("", 300), "");
+}
+
+#[tokio::test]
+async fn only_complete_final_peer_context_is_acknowledged_and_fallback_resets_primary() {
+    use super::*;
+    let tracker = ContextSubmissionTrackerV1::for_peer_journal("Exact peer prose.");
+    let complete = Message {
+        role: "user".into(),
+        content: minime_peer_excerpt("Exact peer prose.", usize::MAX, 480),
+    };
+    with_peer_submission(Some(&tracker), async {
+        record_peer_submission(std::slice::from_ref(&complete));
+        assert!(tracker.submitted());
+        // A later adapted request containing only part of the block is not enough.
+        record_peer_submission(&[Message {
+            role: "user".into(),
+            content: "Exact peer".into(),
+        }]);
+        assert!(!tracker.submitted());
+        record_peer_submission(std::slice::from_ref(&complete));
+    })
+    .await;
+    assert!(tracker.submitted());
+    // A fallback that fails admission without submission cannot inherit primary evidence.
+    with_peer_submission(Some(&tracker), async {}).await;
+    assert!(!tracker.submitted());
+    record_peer_submission(std::slice::from_ref(&complete));
+    assert!(
+        !tracker.submitted(),
+        "out-of-scope requests cannot acknowledge this turn"
+    );
+    let other = ContextSubmissionTrackerV1::for_peer_journal("Another entry.");
+    with_peer_submission(Some(&tracker), async {
+        with_peer_submission(Some(&other), async {
+            record_peer_submission(std::slice::from_ref(&complete));
+        })
+        .await;
+        assert!(!other.submitted());
+        record_peer_submission(std::slice::from_ref(&complete));
+    })
+    .await;
+    assert!(tracker.submitted());
+    assert!(!other.submitted());
 }
