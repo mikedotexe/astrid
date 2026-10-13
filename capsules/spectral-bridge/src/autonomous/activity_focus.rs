@@ -34,7 +34,8 @@ pub(super) fn store_observation(
     operation: &str,
 ) -> Result<astrid_source_study::StudyOutput> {
     ensure!(
-        astrid_source_study::observation_presentation_requested(action)? == Some(false),
+        astrid_source_study::writing_storage_only(action)
+            || astrid_source_study::observation_presentation_requested(action)? == Some(false),
         "storage-only observation required"
     );
     ensure!(

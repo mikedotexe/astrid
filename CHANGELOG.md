@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Live: dependable writing continuity (2026-10-13, Codex).** Make save-only WRITE actions durable without model generation; add truthful finished/oversized-input recovery, verified exact public-journal transfer, and an operator-only read-only draft browser. Preserve pending work, cue preferences, private routing and the 48,000-byte allowance. Writing schema 5 refuses older writers after migration. Approved paired graceful activation verified bridge PID 67583, Minime PID 66979, exact checkpoint/NEXT restoration and unchanged protected services. Evidence: `docs/steward-notes/2026-10-13-dependable-writing-continuity.md`.
+
 - **Live: drain-v2 first transition (2026-10-13, Codex).** Complete the approved idle-only replacement of Minime PID 26862 with 95712, verifying the exact native NEXT seal/restoration, all 96 loaded inputs, and unchanged bridge/engine/provider/sensory processes. The last mailbox choice/privacy correction is now loaded too. Original hold released; no force, replay, push or automation resume. Evidence: `docs/steward-notes/2026-10-13-drain-v2-first-transition.md`.
 
 - **Reviewed first transition: drain v2 (2026-10-13, Codex).** Reconcile loaded, installed and qualified replacement identities separately. Keep the existing idle-only gate; install only the reviewed runtime after stopped-process and native NEXT-seal verification, under the retained owned hold. Qualification and actual activation outcome are recorded in `docs/steward-notes/2026-10-13-drain-v2-first-transition.md`; preparation alone is not activation.

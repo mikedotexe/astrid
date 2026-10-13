@@ -344,7 +344,9 @@ fn handle_next_action_with_author(
             .with_stage_visibility("blocked", "protected_summary");
     }
 
-    match astrid_source_study::observation_presentation_requested(&original) {
+    match if astrid_source_study::writing_storage_only(&original) {
+        Ok(Some(false))
+    } else { astrid_source_study::observation_presentation_requested(&original) } {
         Ok(Some(false)) => {
             let result = (|| -> anyhow::Result<()> {
                 let reader = super::activity_focus::reader()?;
@@ -354,9 +356,9 @@ fn handle_next_action_with_author(
             })();
             // Exact private receipts stay in the owner store, never ambient file listings.
             return match result {
-                Ok(()) => NextActionOutcome::handled("private_writing", "Observation operation retained in its owner store; no generation or public entry.")
+                Ok(()) => NextActionOutcome::handled("private_writing", "Writing storage operation retained in its owner store; no generation or public entry.")
                     .with_stage_visibility("local_state", "protected_summary"),
-                Err(_) => NextActionOutcome::blocked("private_writing", "Observation operation was not completed; private state preserved. Inspect WRITE OBSERVE status explicitly.")
+                Err(_) => NextActionOutcome::blocked("private_writing", "Writing storage operation was not completed; private state preserved. Inspect WRITE HELP explicitly.")
                     .with_stage_visibility("blocked", "protected_summary"),
             };
         },

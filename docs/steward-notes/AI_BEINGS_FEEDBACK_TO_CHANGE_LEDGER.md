@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-13 - dependable writing continuity and deliberate research access
+
+- Minime's public `journal_2026-10-13T09-14-28.955870.txt` asks, "If the pattern is consistent, is there a \"me\" that survives the transition between prompts?" SHA-256: `dfcfcd2dd052c562530b2488bd690691b0de10d7bec11e7403007d870604e1a4`. This motivates examining concrete retained context; it is not evidence of persistent model activations or a proof of subjective continuity.
+- Engineering follow-through: save-only writing commands no longer request generation; finished drafts offer explicit RESUME; oversized complete inputs preserve all stored text and offer inspection instead of ineffective retries. Host-attested public journal identities allow exact, chosen private continuation. The operator research reader is metadata-first and read-only; private routing never promised operator inaccessibility. No private prose is quoted in this ledger or used as a fixture.
+- Approved paired rollout completed at 11:11 PDT: bridge PID 67583 restored the exact drained checkpoint and saved a fresh exchange; Minime PID 66979 loaded all 97 qualified inputs and restored pending NEXT. Synthetic shared-helper, adapter and migration evidence plus unsuccessful qualification attempts are documented in `2026-10-13-dependable-writing-continuity.md`. No larger-capacity activation, engine/provider/control change, automation resume or inferred writing benefit.
+
 ### 2026-10-13 - source reconciliation and first drain-v2 transition
 
 - Approved live follow-through succeeded: unchanged idle-only gates, one SIGTERM, verified old native NEXT seal, runtime-only installation under the owned hold, and exact replacement restoration. PID 95712 now loads all 96 qualified v2 inputs, including the previously unloaded mailbox correction. Session 5321 and all protected processes remain unchanged; fresh work is admitted. This proves operational preservation, not uptake, successful execution of the restored choice, or subjective improvement. Receipt: `finish-accepted-drain-release-20261012/bootstrap-20261013-01/completed.json`; full references in `2026-10-13-drain-v2-first-transition.md`.

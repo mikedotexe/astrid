@@ -820,6 +820,7 @@ pub fn spawn_autonomous_loop(
                     // Causal lineage: unique ID per exchange for provenance tracking.
                     // Audit: "neither being has a unified event lineage."
                     let lineage_id = format!("ex-{}-{}", conv.exchange_count, chrono_timestamp());
+                    let mut journal_continuation = None;
 
                     // Ownership follows the exchange future, including cancellation.
                     let exchange_pause = if matches!(mode, Mode::Contemplate) {
@@ -1192,11 +1193,6 @@ pub fn spawn_autonomous_loop(
                             if measurements_selected {
                                 selected_journal_measurements = Some(spectral_summary.clone());
                             }
-                            let dialogue_presentation = crate::llm::DialoguePresentation {
-                                measurements_selected,
-                                action_result: &pending_action_result,
-                            };
-
                             // Zero entries intentionally disables this own-journal input.
                             // Other history/recall paths are separate; this does not
                             // establish continuity or the cause of repeated language.
@@ -1836,6 +1832,13 @@ pub fn spawn_autonomous_loop(
                             });
                             let llm_response = if activity_recovery_ready
                                 && let Some(journal) = activity_journal.or(journal_context.as_deref()) {
+                                if protected_input.is_none() {
+                                    journal_continuation = journal_continuation::reserve_configured(&lineage_id, "dialogue_live");
+                                }
+                                let dialogue_presentation = crate::llm::DialoguePresentation {
+                                    measurements_selected, action_result: &pending_action_result,
+                                    journal_continuation: journal_continuation.as_ref().map(journal_continuation::ReservedJournal::hint),
+                                };
                                 let collaboration_delivery = DialogueCollaborationDeliveryV1::prepare(
                                     &mut conv.collaboration_prompt_checkpoint,
                                     protected_input.is_none(),
@@ -2317,11 +2320,13 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                         Mode::Daydream => {
+                            journal_continuation = journal_continuation::reserve_configured(&lineage_id, "daydream");
                             let daydream = match tokio::time::timeout(
                                 Duration::from_secs(crate::llm::expressive_outer_timeout(750)),
                                 crate::llm::generate_daydream_with_context(
                                     daydream_perception_text.as_deref(), None,
                                     &[], &[], None,
+                                    journal_continuation.as_ref().map(journal_continuation::ReservedJournal::hint),
                                 )
                             ).await {
                                 Ok(r) => r,
@@ -2337,6 +2342,7 @@ pub fn spawn_autonomous_loop(
                             }
                         }
                         Mode::Aspiration => {
+                            journal_continuation = journal_continuation::reserve_configured(&lineage_id, "aspiration");
                             // Keep historical identity outside the prose budget until prompt assembly.
                             let own_journal = read_astrid_journal_recall();
                             let resonance = conv.peripheral_resonance.take();
@@ -2344,6 +2350,7 @@ pub fn spawn_autonomous_loop(
                                 Duration::from_secs(crate::llm::expressive_outer_timeout(750)),
                                 crate::llm::generate_aspiration_with_context(
                                     own_journal.as_ref(), &conv.interests, resonance.as_deref(),
+                                    journal_continuation.as_ref().map(journal_continuation::ReservedJournal::hint),
                                 )
                             ).await {
                                 Ok(r) => r,
@@ -4533,13 +4540,14 @@ pub fn spawn_autonomous_loop(
                             }))
                         } else { None };
                         if mode_name != "mirror" {
-                            save_astrid_journal_record(
+                            let saved = save_astrid_journal_record(
                                 &response_text,
                                 journal_mode_name,
                                 fill_pct,
                                 journal_provenance.as_ref(),
                                 expressive_observations.as_ref(),
                             );
+                            journal_continuation::publish_saved(journal_continuation.as_ref(), journal_mode_name, &response_text, saved);
                         }
 
                         // v5.1 Phase D — Hook A: auto-promote synchronously for
@@ -4649,7 +4657,7 @@ pub fn spawn_autonomous_loop(
                                                 expressive_snapshot(guard.latest_telemetry.as_ref()),
                                         })
                                     };
-                                    save_astrid_journal_record(
+                                    let _ = save_astrid_journal_record(
                                         &journal_text,
                                         &longform_mode,
                                         fill_for_journal,

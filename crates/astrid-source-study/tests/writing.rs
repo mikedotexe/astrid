@@ -12,6 +12,14 @@ fn wire(output: &StudyOutput, text: &str) -> (String, String) {
 }
 fn accept(writer: &Writer, out: &StudyOutput, text: &str) {
     let (request, response) = wire(out, text);
+    if !out.generation_requested {
+        assert!(
+            writer
+                .delivered(out.navigation_id.as_deref().unwrap(), &request, &response)
+                .is_err()
+        );
+        return;
+    }
     writer
         .delivered(out.navigation_id.as_deref().unwrap(), &request, &response)
         .unwrap();
@@ -191,28 +199,14 @@ fn explicit_preference_roundtrips_and_reader_routes_the_same_private_store() {
         let out = reader
             .prepare_action(&format!("WRITE PROFILE {name}"))
             .unwrap();
-        let ceiling = if expected == Profile::Short {
-            512
-        } else {
-            8192
-        };
-        assert!(
-            out.text
-                .contains(&format!("output ceiling: {ceiling} tokens, no minimum"))
-        );
-        assert_eq!(
-            out.text
-                .contains("Brief writing or stopping is equally welcome"),
-            expected == Profile::Default
-        );
+        assert!(!out.generation_requested);
+        assert!(out.system_prompt.is_empty());
         let (request, response) = wire(&out, "Preference acknowledged.");
         reader
             .navigation_delivered(out.navigation_id.as_deref().unwrap(), &request, &response)
-            .unwrap();
+            .unwrap_err();
         assert_eq!(profile(&directory.join("writing")).unwrap(), expected);
         assert_eq!(expected.tokens(768), tokens);
-        assert!(out.text.contains("WRITE PROFILE DEFAULT uses normal route limits: expressive writing and private drafts allow up to 8192 output tokens; other journal routes keep their own limits."));
-        assert!(out.text.contains("WRITE PROFILE SHORT selects 512; WRITE PROFILE EXTENDED applies 8192 across journal-producing modes."));
         assert!(!out.text.contains("usual entry"));
         assert!(!out.text.contains("sustained piece"));
     }
@@ -232,7 +226,7 @@ fn capacity_error_is_explicit_and_keeps_full_prior_draft() {
             .prepare("WRITE CONTINUE")
             .unwrap_err()
             .to_string()
-            .contains("no text was shortened")
+            .contains("No text was shortened")
     );
     assert_eq!(
         fs::read(temp.path().join("drafts-v2.json")).unwrap(),

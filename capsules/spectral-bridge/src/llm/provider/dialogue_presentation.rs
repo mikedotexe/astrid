@@ -3,12 +3,14 @@
 pub struct DialoguePresentation<'a> {
     pub measurements_selected: bool,
     pub action_result: &'a str,
+    pub journal_continuation: Option<&'a str>,
 }
 
 impl DialoguePresentation<'_> {
     const SELECTED_MEASUREMENTS: Self = Self {
         measurements_selected: true,
         action_result: "",
+        journal_continuation: None,
     };
 
     fn spectral_context<'a>(&'a self, spectral: &'a str) -> &'a str {
@@ -20,15 +22,34 @@ impl DialoguePresentation<'_> {
     }
 
     fn user_turn(&self, assembled: &str, instruction: &str, fill: f32) -> String {
-        if self.measurements_selected {
+        let mut content = if self.measurements_selected {
             format!("Fill {fill:.1}%. {assembled}\n\n{instruction}")
         } else {
             format!("{assembled}\n\n{instruction}")
-        }
+        };
+        append_journal_continuation_text(&mut content, self.journal_continuation);
+        content
     }
 
     fn modality_context<'a>(&self, context: Option<&'a str>) -> Option<&'a str> {
         context.filter(|_| self.measurements_selected)
+    }
+}
+
+fn append_journal_continuation_text(content: &mut String, hint: Option<&str>) {
+    if let Some(hint) = hint.filter(|hint| !hint.is_empty() && hint.len() <= 1024) {
+        content.push_str("\n\n");
+        content.push_str(hint);
+    }
+}
+
+fn append_journal_continuation(messages: &mut [Message], hint: Option<&str>) {
+    if let Some(message) = messages
+        .iter_mut()
+        .rev()
+        .find(|message| message.role == "user")
+    {
+        append_journal_continuation_text(&mut message.content, hint);
     }
 }
 
@@ -89,6 +110,7 @@ mod voluntary_dialogue_presentation_tests {
         let presentation = DialoguePresentation {
             measurements_selected: false,
             action_result: "PERTURB result: request rejected; no mutation",
+            journal_continuation: None,
         };
         let spectral = "UNSELECTED_SPECTRUM restless texture 68%";
         assert_eq!(
@@ -129,6 +151,7 @@ mod voluntary_dialogue_presentation_tests {
             let presentation = DialoguePresentation {
                 measurements_selected: selected,
                 action_result: "RESULT: source missing",
+                journal_continuation: None,
             };
             let assembled = format!(
                 "{}\n{peer}",
@@ -225,5 +248,52 @@ mod voluntary_dialogue_presentation_tests {
             assert_eq!(rendered.contains(anchor), !protected);
             assert!(!rendered.contains("Spectral background"));
         }
+    }
+
+    #[test]
+    fn journal_continuation_hint_survives_primary_and_fallback_without_altering_prose() {
+        let hint = format!(
+            "Optional: NEXT: WRITE FROM_JOURNAL {}. You may stop instead.",
+            "a".repeat(64)
+        );
+        let presentation = DialoguePresentation {
+            measurements_selected: false,
+            action_result: "",
+            journal_continuation: Some(&hint),
+        };
+        let primary = vec![Message {
+            role: "user".into(),
+            content: presentation.user_turn("Exact context.", "Respond or stop", 68.0),
+        }];
+        for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
+            let policy = apply_mlx_request_policy_with_writing(
+                "dialogue_live",
+                profile,
+                primary.clone(),
+                768,
+                210,
+                astrid_source_study::writing::Profile::Default,
+            );
+            assert!(
+                policy
+                    .messages
+                    .iter()
+                    .any(|message| message.content.contains(&hint))
+            );
+        }
+        let mut fallback =
+            conversation_fallback_messages("Peer authored context.", None, "", false, 3, None);
+        append_journal_continuation(&mut fallback, Some(&hint));
+        let request =
+            build_ollama_chat_request("dialogue_live", fallback, 0.8, 768, "fixture".into());
+        assert!(
+            request
+                .messages
+                .iter()
+                .any(|message| message.content.contains(&hint))
+        );
+        let mut unchanged = "Original".to_string();
+        append_journal_continuation_text(&mut unchanged, Some(&"x".repeat(1025)));
+        assert_eq!(unchanged, "Original");
     }
 }

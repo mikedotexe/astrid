@@ -39,6 +39,8 @@ mod deployment_startup;
 mod durable_inbox;
 #[path = "runtime/exchange_pause.rs"]
 mod exchange_pause;
+#[path = "runtime/journal_continuation.rs"]
+mod journal_continuation;
 #[path = "study_handoff.rs"]
 pub(crate) mod study_handoff;
 pub use deployment_startup::{apply_deployment_startup, inspect_deployment_inputs};

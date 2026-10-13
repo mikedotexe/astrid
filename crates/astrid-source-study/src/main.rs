@@ -20,6 +20,17 @@ struct Request {
 #[derive(Deserialize)]
 #[serde(tag = "operation", rename_all = "snake_case")]
 enum Operation {
+    JournalRegistration {
+        request_id: String,
+        expected_revision: String,
+        request: astrid_source_study::JournalRegistration,
+    },
+    WritingPolicy {
+        action: String,
+    },
+    WritingRecovery {
+        input_id: String,
+    },
     PreparationRevision,
     PrepareOnce {
         request_id: String,
@@ -60,6 +71,11 @@ fn run() -> Result<serde_json::Value> {
         .take(16 * 1024 * 1024)
         .read_to_string(&mut input)?;
     let request: Request = serde_json::from_str(&input)?;
+    if let Operation::WritingPolicy { action } = &request.operation {
+        return Ok(
+            serde_json::json!({"storage_only": astrid_source_study::writing_storage_only(action)}),
+        );
+    }
     if let Operation::AnalyzeResponse {
         text,
         private_writing,
@@ -89,6 +105,18 @@ fn run() -> Result<serde_json::Value> {
         reader = reader.with_runtime_workspace(workspace, &being);
     }
     match request.operation {
+        Operation::JournalRegistration {
+            request_id,
+            expected_revision,
+            request,
+        } => Ok(serde_json::to_value(reader.prepare_journal_once(
+            &request_id,
+            &expected_revision,
+            &request,
+        )?)?),
+        Operation::WritingRecovery { input_id } => {
+            Ok(serde_json::to_value(reader.writing_recovery(&input_id)?)?)
+        },
         Operation::PreparationRevision => {
             Ok(serde_json::json!({"revision": reader.preparation_revision()?}))
         },
@@ -112,7 +140,9 @@ fn run() -> Result<serde_json::Value> {
             now_ms,
             request,
         )?)?),
-        Operation::AnalyzeResponse { .. } | Operation::RecoverNavigation { .. } => {
+        Operation::AnalyzeResponse { .. }
+        | Operation::RecoverNavigation { .. }
+        | Operation::WritingPolicy { .. } => {
             unreachable!("handled before constructing a reader")
         },
         Operation::Prepare { action } => Ok(serde_json::to_value(reader.prepare_action(&action)?)?),
@@ -140,7 +170,10 @@ fn main() {
     match run() {
         Ok(value) => println!("{value}"),
         Err(error) => {
-            println!("{}", serde_json::json!({"error": format!("{error:#}")}));
+            println!(
+                "{}",
+                serde_json::json!({"error": format!("{error:#}"), "writing_recovery": error.downcast_ref::<astrid_source_study::WritingRecovery>()})
+            );
             std::process::exit(1);
         },
     }

@@ -43,6 +43,7 @@ enum Phase {
     Prepared,
     Claimed,
     Delivered,
+    Stored,
     Failed,
     Superseded,
     RetiredUnresolved,
@@ -52,7 +53,11 @@ impl Phase {
     fn terminal(self) -> bool {
         matches!(
             self,
-            Self::Delivered | Self::Failed | Self::Superseded | Self::RetiredUnresolved
+            Self::Delivered
+                | Self::Stored
+                | Self::Failed
+                | Self::Superseded
+                | Self::RetiredUnresolved
         )
     }
 }
@@ -128,7 +133,11 @@ impl HandoffState {
             ensure!(
                 !matches!(
                     job.phase,
-                    Phase::Prepared | Phase::Claimed | Phase::Delivered | Phase::RetiredUnresolved
+                    Phase::Prepared
+                        | Phase::Claimed
+                        | Phase::Delivered
+                        | Phase::Stored
+                        | Phase::RetiredUnresolved
                 ) || job.output.is_some(),
                 "study handoff input missing"
             );
@@ -391,11 +400,43 @@ pub(super) fn claim(
         job.phase == Phase::Prepared,
         "study provider invocation already claimed or not prepared"
     );
-    let _: astrid_source_study::StudyOutput = read(
+    let output: astrid_source_study::StudyOutput = read(
         store,
         job.output.as_deref().context("prepared input missing")?,
     )?;
+    ensure!(
+        output.generation_requested,
+        "storage-only operation cannot claim a provider invocation"
+    );
     job.phase = Phase::Claimed;
+    conv.activity = activity_reading::persist_activity(store, &selection)?;
+    Ok(())
+}
+
+/// Retire a retained pre-upgrade storage request without manufacturing delivery.
+pub(super) fn stored(
+    store: &ActionContinuityStore,
+    conv: &mut ConversationState,
+    id: &str,
+) -> Result<()> {
+    let _lock = store.reader_owner_transaction()?;
+    let mut selection = activity_reading::load_activity(store)?;
+    let job = selected(&mut selection, id)?;
+    intent(store, id, job)?;
+    ensure!(
+        job.phase == Phase::Prepared,
+        "storage completion requires prepared input"
+    );
+    let output: astrid_source_study::StudyOutput = read(
+        store,
+        job.output.as_deref().context("storage receipt missing")?,
+    )?;
+    ensure!(
+        !output.generation_requested,
+        "generation work cannot complete as storage"
+    );
+    job.phase = Phase::Stored;
+    selection.study_handoff.active = None;
     conv.activity = activity_reading::persist_activity(store, &selection)?;
     Ok(())
 }

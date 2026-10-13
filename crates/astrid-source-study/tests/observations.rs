@@ -471,7 +471,7 @@ fn cross_owner_and_future_schema_fail_closed_and_next_json_remains_exact() {
     );
     let path = f.root().join("reader/writing/drafts-v2.json");
     let mut value = f.state();
-    value["schema_version"] = json!(5);
+    value["schema_version"] = json!(6);
     let bytes = serde_json::to_vec(&value).unwrap();
     fs::write(&path, &bytes).unwrap();
     assert!(f.action("WRITE LIST").is_err());

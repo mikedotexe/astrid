@@ -29,6 +29,7 @@ mod questions;
 mod recurrence;
 mod reflection_context;
 mod relationships;
+pub mod research;
 pub mod response_choice;
 mod revision_recovery;
 mod source_links;
@@ -38,6 +39,12 @@ mod source_structure;
 mod store;
 mod trace;
 pub mod writing;
+mod writing_recovery;
+pub use store::journal::{
+    JournalByteSpan, JournalPublish, JournalReceipt, JournalRegistration, JournalReserve,
+    JournalSourceKind,
+};
+pub use writing_recovery::{WritingCapacity, WritingRecovery, writing_storage_only};
 
 pub use catalog::{Catalog, Repository, Source};
 pub use command::Command;

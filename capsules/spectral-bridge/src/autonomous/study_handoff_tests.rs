@@ -1,6 +1,31 @@
 use super::*;
 use astrid_source_study::{Catalog, Reader, StudyOutput};
 
+#[test]
+fn retained_storage_command_completes_without_provider_claim_or_delivery() {
+    let mut f = Fixture::new();
+    f.reader
+        .prepare_action("WRITE START synthetic work")
+        .unwrap();
+    let id = f.queue("save-only-finish", "WRITE FINISH", false).unwrap();
+    let output = f.prepare(&id);
+    assert!(!output.generation_requested);
+    assert!(claim(&f.store, &mut f.conv, &id).is_err());
+    stored(&f.store, &mut f.conv, &id).unwrap();
+    f.restart(None);
+    f.recover().unwrap();
+    assert!(!f.conv.activity.study_handoff.pending());
+    assert_eq!(f.conv.activity.study_handoff.jobs[&id].phase, Phase::Stored);
+    assert!(
+        f.reader
+            .prepare_action("WRITE CONTINUE")
+            .unwrap_err()
+            .to_string()
+            .contains("WRITE RESUME d1")
+    );
+    f.reader.prepare_action("WRITE RESUME d1").unwrap();
+}
+
 struct Fixture {
     temp: tempfile::TempDir,
     store: ActionContinuityStore,

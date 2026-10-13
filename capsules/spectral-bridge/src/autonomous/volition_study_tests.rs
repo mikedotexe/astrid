@@ -57,6 +57,17 @@ fn delivered_source_and_navigation_responses_attest_and_dispatch_their_own_next(
             temp.path().join("reader"),
         );
         let offer = reader.prepare_action(request).unwrap();
+        if !offer.generation_requested {
+            assert_eq!(request, "WRITE PROFILE EXTENDED");
+            assert!(
+                reader
+                    .navigation_delivered(offer.navigation_id.as_deref().unwrap(), "{}", "{}")
+                    .is_err()
+            );
+            assert!(offer.system_prompt.is_empty());
+            // Saving a preference supplies no response to attest and chooses no NEXT.
+            continue;
+        }
         let text = format!("I want to trace this connection.\nNEXT: {action}");
         let wire = json!({"messages":[{"role":"user","content":offer.text}]}).to_string();
         let response = json!({"message":{"content":text},"done":true}).to_string();

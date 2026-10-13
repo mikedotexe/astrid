@@ -219,7 +219,7 @@ fn save_astrid_journal_with_provenance(
     fill_pct: f32,
     provenance: Option<&AstridJournalProvenanceV1>,
 ) {
-    save_astrid_journal_record(text, mode, fill_pct, provenance, None);
+    let _ = save_astrid_journal_record(text, mode, fill_pct, provenance, None);
 }
 
 fn retain_mirror_journal_record(
@@ -254,10 +254,10 @@ fn save_astrid_journal_record(
     fill_pct: f32,
     provenance: Option<&AstridJournalProvenanceV1>,
     observations: Option<&Value>,
-) {
+) -> Option<journal_continuation::SavedJournal> {
     #[cfg(test)]
     if TEST_SUPPRESS_ASTRID_JOURNAL_SAVES.load(std::sync::atomic::Ordering::Relaxed) {
-        return;
+        return None;
     }
 
     let journal_dir = if matches!(mode, "private_writing" | "private_writing_notice") {
@@ -335,6 +335,7 @@ fn save_astrid_journal_record(
         );
     }
     record_voice_health_v1(mode, fill_pct, path.as_deref());
+    path.and_then(|path| journal_continuation::SavedJournal::exact(path, &document, text))
 }
 
 fn record_voice_health_v1(mode: &str, fill_pct: f32, latest_journal_path: Option<&Path>) {

@@ -369,6 +369,8 @@ pub async fn generate_dialogue_with_runtime_feedback(
             fallback_continuity_budget,
         )
     };
+    append_journal_continuation(&mut ollama_fallback_messages,
+        presentation.journal_continuation.filter(|_| protected.is_none()));
     // Carry the same authored choice into the fallback lane. Runtime outcomes
     // are inserted independently after that lane's final request adaptation.
     if let Some(emphasis) = emphasis

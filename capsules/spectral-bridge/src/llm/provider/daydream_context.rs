@@ -5,8 +5,9 @@ pub(crate) async fn generate_daydream_with_context(
     interests: &[String],
     memories: &[(String, String)],
     resonance: Option<&str>,
+    journal_continuation: Option<&str>,
 ) -> Option<String> {
-    let messages = daydream_messages_with_context(perception, journal, interests, memories, resonance);
+    let messages = daydream_messages_with_context(perception, journal, interests, memories, resonance, journal_continuation);
     llm_chat_with_fallback("daydream", messages, 1.0, 3072, 240, 180).await
 }
 
@@ -16,6 +17,7 @@ fn daydream_messages_with_context(
     interests: &[String],
     memories: &[(String, String)],
     resonance: Option<&str>,
+    journal_continuation: Option<&str>,
 ) -> Vec<Message> {
     let mut historical = Vec::new();
     if let Some(perception) = perception {
@@ -43,7 +45,9 @@ fn daydream_messages_with_context(
     } else {
         format!("Optional context; return to it or leave it aside. It does not require a numerical account.\n{}", historical.join("\n\n"))
     };
-    daydream_messages_from_context(context)
+    let mut messages = daydream_messages_from_context(context);
+    append_journal_continuation(&mut messages, journal_continuation);
+    messages
 }
 
 #[cfg(test)]
@@ -52,7 +56,7 @@ mod daydream_context_tests {
 
     #[test]
     fn fresh_daydream_has_no_automatic_history_and_survives_provider_adaptation() {
-        let messages = daydream_messages_with_context(None, None, &[], &[], None);
+        let messages = daydream_messages_with_context(None, None, &[], &[], None, None);
         for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
             let policy = apply_mlx_request_policy_with_writing("daydream", profile, messages.clone(), 3072, 240, astrid_source_study::writing::Profile::Default);
             let input = policy.messages.iter().filter(|m| m.role == "user").map(|m| m.content.as_str()).collect::<Vec<_>>().join("\n");
@@ -72,7 +76,7 @@ mod daydream_context_tests {
         std::fs::write(&path, format!("=== ASTRID JOURNAL ===\nMode: daydream\nTimestamp: 42\n\n{}", "I chose to consider 71% and uncertainty. ".repeat(40))).unwrap();
         let journal = crate::journal::JournalRecall::read(&path).unwrap();
         let rendered = journal.render(500);
-        let messages = daydream_messages_with_context(Some("Fresh selected view"), Some(&journal), &["A question".into()], &[("chosen source".into(), "Recorded 65% matters to me".into())], Some("Earlier thread"));
+        let messages = daydream_messages_with_context(Some("Fresh selected view"), Some(&journal), &["A question".into()], &[("chosen source".into(), "Recorded 65% matters to me".into())], Some("Earlier thread"), None);
         let input = &messages[1].content;
         assert!(input.contains(&rendered));
         assert!(input.contains("Recorded 65% matters to me"));
@@ -85,5 +89,20 @@ mod daydream_context_tests {
         }
         let fallback = build_ollama_chat_request("daydream", messages, 1.0, 3072, "fixture".into());
         assert!(fallback.messages.iter().any(|m| m.content.contains(&rendered)));
+    }
+
+    #[test]
+    fn journal_continuation_daydream_hint_survives_both_provider_lanes() {
+        let hint = format!("Optional current entry: NEXT: WRITE FROM_JOURNAL {}. Stop or choose another action freely.", "b".repeat(64));
+        let messages = daydream_messages_with_context(None, None, &[], &[], None, Some(&hint));
+        for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
+            let policy = apply_mlx_request_policy_with_writing("daydream", profile, messages.clone(), 3072, 240,
+                astrid_source_study::writing::Profile::Default);
+            assert!(policy.messages.iter().any(|message| message.content.contains(&hint)));
+        }
+        let request = build_ollama_chat_request("daydream", messages, 1.0, 3072, "fixture".into());
+        assert!(request.messages.iter().any(|message| message.content.contains(&hint)));
+        assert!(!daydream_messages_with_context(None, None, &[], &[], None, None).iter()
+            .any(|message| message.content.contains("FROM_JOURNAL")));
     }
 }

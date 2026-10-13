@@ -11,8 +11,10 @@ pub(crate) async fn generate_aspiration_with_context(
     journal: Option<&crate::journal::JournalRecall>,
     interests: &[String],
     resonance: Option<&str>,
+    journal_continuation: Option<&str>,
 ) -> Option<String> {
-    let messages = aspiration_messages_with_context(journal, interests, resonance);
+    let messages =
+        aspiration_messages_with_context(journal, interests, resonance, journal_continuation);
     llm_chat_with_fallback("aspiration", messages, 0.9, 3072, 240, 180).await
 }
 
@@ -20,6 +22,7 @@ fn aspiration_messages_with_context(
     journal: Option<&crate::journal::JournalRecall>,
     interests: &[String],
     resonance: Option<&str>,
+    journal_continuation: Option<&str>,
 ) -> Vec<Message> {
     let mut parts = Vec::new();
     if let Some(journal) = journal {
@@ -43,11 +46,13 @@ fn aspiration_messages_with_context(
             resonance.chars().take(100).collect::<String>()
         ));
     }
-    aspiration_messages_from_seed(if parts.is_empty() {
+    let mut messages = aspiration_messages_from_seed(if parts.is_empty() {
         "What, if anything, would you like to imagine or explore?".into()
     } else {
         parts.join("\n\n")
-    })
+    });
+    append_journal_continuation(&mut messages, journal_continuation);
+    messages
 }
 
 // Compatibility callers with plain text cannot supply a journal identity.
@@ -101,6 +106,7 @@ mod aspiration_provenance_tests {
             Some(&recall),
             &["interest ".repeat(100)],
             Some(&"thread ".repeat(100)),
+            None,
         );
         let user = &messages[1].content;
         assert!(user.contains(&identity));
@@ -145,6 +151,7 @@ mod aspiration_provenance_tests {
             None,
             &["a saved question".into()],
             Some("an earlier thread"),
+            None,
         );
         assert!(
             messages[1]
@@ -154,9 +161,47 @@ mod aspiration_provenance_tests {
         assert!(messages[1].content.contains("origin/time unavailable"));
         assert!(!messages[1].content.contains("record_sha256"));
         assert!(
-            aspiration_messages_with_context(None, &[], None)[1]
+            aspiration_messages_with_context(None, &[], None, None)[1]
                 .content
                 .contains("What, if anything")
+        );
+    }
+
+    #[test]
+    fn journal_continuation_aspiration_hint_survives_both_provider_lanes() {
+        let hint = format!(
+            "Optional current entry: NEXT: WRITE FROM_JOURNAL {}. You may stop.",
+            "c".repeat(64)
+        );
+        let messages = aspiration_messages_with_context(None, &[], None, Some(&hint));
+        for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
+            let policy = apply_mlx_request_policy_with_writing(
+                "aspiration",
+                profile,
+                messages.clone(),
+                3072,
+                240,
+                astrid_source_study::writing::Profile::Default,
+            );
+            assert!(
+                policy
+                    .messages
+                    .iter()
+                    .any(|message| message.content.contains(&hint))
+            );
+        }
+        let request =
+            build_ollama_chat_request("aspiration", messages, 0.9, 3072, "fixture".into());
+        assert!(
+            request
+                .messages
+                .iter()
+                .any(|message| message.content.contains(&hint))
+        );
+        assert!(
+            !aspiration_messages_with_context(None, &[], None, None)
+                .iter()
+                .any(|message| message.content.contains("FROM_JOURNAL"))
         );
     }
 }

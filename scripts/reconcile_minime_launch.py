@@ -25,6 +25,7 @@ OVERLAY = (
     "minime_autonomy/human_letters.py",
     "minime_autonomy/inbox_delivery.py",
     "minime_autonomy/journal_context.py",
+    "minime_autonomy/journal_continuation.py",
     "minime_autonomy/journal_recall.py",
     "minime_autonomy/llm_access.py",
     "minime_autonomy/mailbox.py",

@@ -222,7 +222,7 @@ impl Reader {
         )
     }
 
-    fn finish_observation_metadata(&self, action: &str) -> Result<()> {
+    pub(super) fn finish_observation_metadata(&self, action: &str) -> Result<()> {
         if !crate::preparation::exists(&self.directory.join("activity-focus-v1.json")) {
             return Ok(());
         }

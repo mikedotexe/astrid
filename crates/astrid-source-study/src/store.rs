@@ -8,6 +8,8 @@ mod cursors;
 mod geometry;
 #[path = "study_help.rs"]
 mod help;
+#[path = "store_journal.rs"]
+pub(crate) mod journal;
 #[path = "store_navigation.rs"]
 mod navigation;
 #[path = "store_observations.rs"]
@@ -430,6 +432,16 @@ impl Reader {
             return self.prepare_inquiry_observation(json);
         }
         if action.split_whitespace().next() == Some("WRITE") {
+            match action
+                .split_whitespace()
+                .nth(1)
+                .map(str::to_ascii_uppercase)
+                .as_deref()
+            {
+                Some("FROM_JOURNAL") => return self.write_from_journal(action),
+                Some("JOURNALS" | "JOURNAL_READ") => return self.journal_presentation(action),
+                _ => {},
+            }
             if action
                 .split_whitespace()
                 .nth(1)
@@ -437,9 +449,22 @@ impl Reader {
             {
                 return self.write_from_reflection(action);
             }
-            return crate::writing::Writer::new(self.directory.join("writing")).prepare(action);
+            let _lock = self.lock()?;
+            let output =
+                crate::writing::Writer::new(self.directory.join("writing")).prepare(action)?;
+            if !output.generation_requested {
+                self.finish_observation_metadata(action)?;
+            }
+            return Ok(output);
         }
         self.prepare_parsed(Command::parse(action))
+    }
+
+    /// Inspect retry eligibility without preparing or executing a new action.
+    /// # Errors
+    /// Refuses invalid writer state.
+    pub fn writing_recovery(&self, input_id: &str) -> Result<crate::WritingRecovery> {
+        crate::writing::Writer::new(self.directory.join("writing")).recovery(input_id)
     }
 
     fn recovery_map(&self, state: &mut State, reason: &anyhow::Error) -> Result<StudyOutput> {

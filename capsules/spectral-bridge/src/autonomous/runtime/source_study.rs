@@ -79,7 +79,7 @@ fn source_study_prepare_notice(
 ) -> (&'static str, String, String) {
     (
         if private_request { "private_writing_notice" } else { "source_study_runtime_notice" },
-        if private_request { format!("Private writing: {error:#}. WRITE HELP lists your choices; WRITE CONTINUE retries a pending draft turn.") } else { format!("Source study: {error:#}. Use SELF_STUDY MAP or SELF_STUDY FIND <text>.") },
+        if private_request { format!("Private writing: {error:#}. WRITE HELP lists your choices. No automatic retry was scheduled.") } else { format!("Source study: {error:#}. Use SELF_STUDY MAP or SELF_STUDY FIND <text>.") },
         String::new(),
     )
 }
@@ -154,6 +154,13 @@ async fn run_shared_source_study(
             return source_study_prepare_notice(private_request, &error);
         },
     };
+    if !output.generation_requested {
+        if let Some(id) = job.as_deref()
+            && let Err(error) = study_handoff::stored(&store, conv, id) {
+                return source_study_prepare_notice(private_request, &error);
+        }
+        return ("private_writing_notice", "Writing storage operation completed; no generation or source delivery was requested. WRITE HELP lists explicit choices.".into(), String::new());
+    }
     let admission = match activity_focus::admit(&reader, &output, &requested_action) {
         Ok(admission) => admission,
         Err(error) => return source_study_prepare_notice(private_request, &error),
@@ -224,7 +231,13 @@ async fn run_shared_source_study(
             "source_study_generation_unavailable",
             None,
         );
-        return (if private_request { "private_writing_notice" } else { "source_study_runtime_notice" }, if private_request { "Writing generation was unavailable; WRITE CONTINUE retries the pending draft turn.".into() } else { "Source-study generation was unavailable; the offered input remains retained. Retry the exact requested action to prepare another attempt.".into() }, source);
+        let notice = if private_request {
+            output.navigation_id.as_deref().and_then(|id| reader.writing_recovery(id).ok()).map_or_else(
+                || "Writing generation unavailable. No verified retry is offered; WRITE HELP lists inspection and return choices.".into(),
+                |recovery| format!("Writing generation unavailable. {recovery}"),
+            )
+        } else { "Source-study generation was unavailable; the offered input remains retained. Retry the exact requested action to prepare another attempt.".into() };
+        return (if private_request { "private_writing_notice" } else { "source_study_runtime_notice" }, notice, source);
     };
     let delivery = completion
         .accepted_delivery

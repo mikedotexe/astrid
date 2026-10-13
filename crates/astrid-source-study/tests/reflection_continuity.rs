@@ -86,7 +86,7 @@ fn fresh_reflection_and_explicit_private_continuation_are_distinct_for_both_owne
         );
         deliver(&r, &private, "A new development.\nNEXT: WRITE PARK");
         let park = prepare(&r, "park", "WRITE PARK").unwrap();
-        deliver(&r, &park, "NEXT: REST");
+        assert!(!park.generation_requested);
         prepare(&r, "unrelated", "INTROSPECT").unwrap();
         let returned = prepare(&r, "return", "WRITE RESUME d2").unwrap();
         assert!(returned.text.contains(prose));

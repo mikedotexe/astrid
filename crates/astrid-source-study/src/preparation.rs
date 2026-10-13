@@ -21,6 +21,7 @@ const CHECKPOINTS: &[&str] = &[
     "writing/drafts-v1.json",
     "writing/drafts-v2.json",
     "writing/profile.json",
+    "journal-sources-v1.json",
     "activity-focus-v1.json",
 ];
 
@@ -250,6 +251,37 @@ impl crate::Reader {
         expected_revision: &str,
         action: &str,
     ) -> Result<crate::StudyOutput> {
+        self.prepare_operation_once(request_id, expected_revision, action, |reader| {
+            reader.prepare_action(action)
+        })
+    }
+
+    /// Register an exact public source inside the same recoverable owner transaction.
+    /// This host-only operation is not part of the authored command grammar.
+    /// # Errors
+    /// Rejects stale or conflicting requests and unverified publications.
+    pub fn prepare_journal_once(
+        &self,
+        request_id: &str,
+        expected_revision: &str,
+        request: &crate::JournalRegistration,
+    ) -> Result<crate::StudyOutput> {
+        let key = format!(
+            "host-journal:{}",
+            crate::digest(serde_json::to_vec(request)?)
+        );
+        self.prepare_operation_once(request_id, expected_revision, &key, |reader| {
+            reader.journal_registration_output(request)
+        })
+    }
+
+    fn prepare_operation_once(
+        &self,
+        request_id: &str,
+        expected_revision: &str,
+        action: &str,
+        build: impl FnOnce(&crate::Reader) -> Result<crate::StudyOutput>,
+    ) -> Result<crate::StudyOutput> {
         let _lock = crate::owner_transaction::OwnerTransaction::acquire(&self.directory)?;
         let root = self.directory.canonicalize()?;
         let owner = &self
@@ -314,7 +346,7 @@ impl crate::Reader {
             .context("configured preparation owner")?;
         let reader = crate::Reader::new(self.catalog.clone(), root.clone())
             .with_runtime_workspace(runtime.workspace.clone(), owner);
-        let output = reader.prepare_action(action)?;
+        let output = build(&reader)?;
         let receipt = Receipt {
             schema: 1,
             owner: owner.clone(),
