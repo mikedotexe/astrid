@@ -32,6 +32,10 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-13 - source reconciliation and first drain-v2 transition
+
+- Operator follow-through from the October 12 mailbox/context work, not a new interpretation of a being's writing: Mike approved source reconciliation, safe idle-only first transition, and local integration. Loaded v1, installed mailbox-corrected v1, and qualified v2 are three distinct, exact 96-input inventories; only `minime_autonomy/runtime.py` differs. Preserve the owned hold and native NEXT proof; do not treat installed code as already running. Preparation, tests, actual transition and integration outcomes are separated in `2026-10-13-drain-v2-first-transition.md`. No reservoir/provider/sensory change, automation resume, message resend or inferred improvement.
+
 ### 2026-10-12 - authored context, mailbox availability and numerical scope
 
 - Operator follow-through, not a new being claim: repeated unsignaled idle-gate refusals prompted finish-accepted-work qualification. Synthetic real-worker tests exposed post-stop queue admission and timeout-versus-worker completion gaps; the isolated v2 candidate repairs admission fences and requires verifiable outcomes and a stopped native NEXT seal before replacement release. The old loaded v1 runtime is not retroactively qualified; original hold/evidence remain. No writing benefit, receipt of Mike's letter, live activation or automation resume is inferred. Full evidence: `2026-10-12-finish-accepted-work-drain.md`.

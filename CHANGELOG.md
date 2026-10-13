@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Reviewed first transition: drain v2 (2026-10-13, Codex).** Reconcile loaded, installed and qualified replacement identities separately. Keep the existing idle-only gate; install only the reviewed runtime after stopped-process and native NEXT-seal verification, under the retained owned hold. Qualification and actual activation outcome are recorded in `docs/steward-notes/2026-10-13-drain-v2-first-transition.md`; preparation alone is not activation.
+
 - **Candidate: finish-accepted-work drain (2026-10-12, Codex).** Add exact-source-bound, agent-only v2 drain qualification; verify terminal worker evidence and native NEXT sealing before replacement release. Preserve the legacy idle gate and refuse busy drain of old v1 runtimes. Paired Minime admission fences preserve unadmitted choices and finish accepted calls. No live activation, force or automation resume. Evidence and first-bootstrap boundary: `docs/steward-notes/2026-10-12-finish-accepted-work-drain.md`.
 
 - Locally integrate the paired mailbox/context repair as Astrid `17dd537bae102d` and Minime `b51c7e1fa5c2`, preserving live file bytes and original build-source pins. Both mains are clean; nothing pushed. The final Minime runtime-only correction still has explicit restart/owned-hold debt, distinct from the already-live paired release.
