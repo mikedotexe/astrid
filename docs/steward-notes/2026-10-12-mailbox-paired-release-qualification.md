@@ -419,3 +419,25 @@ Controller indexed-tail status is valid at sequence 1123166, head
 `8e344aa407a43ecbcd6990ed5c210d812112ff9cb984f9d7a3215c721b69466a`,
 with four immutable V1 imports. Automations remain paused and no flywheel round
 was recorded.
+
+## Local integration completed
+
+The sole Git coordinator committed the exact reviewed sets and fast-forwarded
+both local mains without briefly checking older files into the live directories:
+
+- Astrid implementation: `17dd537bae102df9c188a3b1c470689ba0df01e9`, 27 owned paths.
+- Minime implementation: `b51c7e1fa5c2677e2bac4b43006edf5f235fa050`, 22 owned paths.
+
+Ancestry and expected old/new refs were verified before compare-and-swap reference
+updates; switching to the already advanced main left every integrated file byte
+unchanged. Both canonical indexes and working trees were clean afterward. The
+original Astrid build checkout stays detached at its original HEAD; older and
+foreign worktrees remain untouched. Remote tips were rechecked and nothing pushed.
+
+Commit messages retain the exact previously verified public quotations and hashes,
+agent provenance, tests and authority boundaries. Integration does not complete
+the remaining agent-only restart or remove its owned launch hold. The 96-input
+final disk inventory differs from the running first release only in runtime.py;
+do not describe local main as fully loaded until the documented handoff succeeds.
+The separately recorded final integration receipt binds committed path lists and
+source equivalence under the retained release directory.

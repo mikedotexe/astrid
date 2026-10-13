@@ -34,6 +34,8 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ### 2026-10-12 - authored context, mailbox availability and numerical scope
 
+- Local implementation integration completed as Astrid `17dd537bae102df9c188a3b1c470689ba0df01e9` and Minime `b51c7e1fa5c2677e2bac4b43006edf5f235fa050`, both fast-forwarded to local main with exact owned path lists and unchanged live source bytes. The public witness quotations/hashes were reverified. No push or automation resume. The last runtime-only correction remains unloaded behind the documented owned replacement hold; Git integration does not erase that boundary.
+
 - Engineering review follow-through, not a new being claim: synthetic mailbox reproduction found bare-command admission and unaddressed prose in generic choice metadata. Restrict selection to the final eligible explicit NEXT and clear that metadata while retaining exact private output. All 2,137 Python tests and 92 frozen paired checks pass. The last correction uses a separate agent-only handoff; its first idle wait sent no signal and remains recorded. Final live status is in `2026-10-12-mailbox-paired-release-qualification.md`; no letter delivery or subjective outcome is inferred.
 - Final operational boundary: attempts 03 and 04 also sent no signal; the fresh-tree refusal and later stable-idle timeout are retained. The first paired release remains live, but the last runtime-only correction is qualified/on disk, not loaded. Its owned replacement hold remains, while current agent work and session 5321 continue. A further verified handoff is explicit debt, not a claim of completed deployment. Post-staging 101-test regression passes; local integration preserves this distinction and leaves automations paused.
 
