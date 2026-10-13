@@ -104,3 +104,42 @@ fresh edits in the isolated qualification tree at 07:25:34 local time. Receipt:
 qualification edits must be frozen before the actual attempt. A failed native
 restore after replacement release is reported as uncertainty; no automatic
 rehold, rollback, repeated signal or state restoration is supplied.
+
+### Approved live transition succeeded
+
+`bootstrap-20261013-01/manifest.json` prepared successfully with no live mutation.
+Manifest SHA-256:
+`1bd2cc3d70b45459da379e4b42ccf04a1f76dd3519662c18cdec5ea891224544`.
+The wrapper then independently repeated the unchanged idle-only gates. Old PID
+26862 acknowledged `drained` / `exited` at 07:42:36 local. Only after verifying
+its native seal did the wrapper atomically install the single reviewed runtime,
+verify stopped source and compatibility again, and release the original hold.
+
+`bootstrap-20261013-01/completed.json` records success with no forced termination.
+New PID **95712** loaded all 96 candidate inputs, publishes `agent_drain_v2`, and
+reports `reload_required=false`. Its OS process start is 07:42:36; Python's
+initialization and source-status start is 07:43:12 after the held launcher was
+released. These are distinct clocks.
+
+Native NEXT seal:
+`5467b2e008d9a8306e5c86fdd9be703b3fe814f661646fb1a1ade275f10a20b5`.
+Restoration record:
+`c99c2794ee0658fb7268c29af59ce0c18dbd66cc18c313271b54bec5a96279f5`.
+The pending choice was preserved. `execution_confirmed=false` remains explicit:
+the handoff proves restoration, not successful execution or mailbox uptake.
+Neither the queue nor an authored file was reconstructed from a backup.
+
+`2026-10-13-post-activation-01.json` independently rechecks the exact loaded and
+disk inventories, source configuration, native restoration, absent hold, immutable
+bridge stage and all ten protected PID/start pairs. Bridge 28169 and engine 35303
+are unchanged, as are Division, provider, visual, microphone, camera, host-sensory
+and feeder processes. The shared reader remains the previously qualified stage-02
+artifact; no reader migration or bridge restart occurred in this transition.
+
+Session 5321 continues at cycle 61650. The bounded health observation advanced
+to sequence 863831 with valid fill measurement 70.30% and unchanged target 68%.
+A fresh journal job was admitted after startup. These are operational facts,
+not claims of long-term stability, felt improvement or receipt of Mike's letter.
+This transition also loads the previously installed mailbox explicit-NEXT/privacy
+correction. The RTF/plain-text letter decision and the separate reflection study
+remain outside scope. Controller and automations remain paused.

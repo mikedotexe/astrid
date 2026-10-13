@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Live: drain-v2 first transition (2026-10-13, Codex).** Complete the approved idle-only replacement of Minime PID 26862 with 95712, verifying the exact native NEXT seal/restoration, all 96 loaded inputs, and unchanged bridge/engine/provider/sensory processes. The last mailbox choice/privacy correction is now loaded too. Original hold released; no force, replay, push or automation resume. Evidence: `docs/steward-notes/2026-10-13-drain-v2-first-transition.md`.
+
 - **Reviewed first transition: drain v2 (2026-10-13, Codex).** Reconcile loaded, installed and qualified replacement identities separately. Keep the existing idle-only gate; install only the reviewed runtime after stopped-process and native NEXT-seal verification, under the retained owned hold. Qualification and actual activation outcome are recorded in `docs/steward-notes/2026-10-13-drain-v2-first-transition.md`; preparation alone is not activation.
 
 - **Candidate: finish-accepted-work drain (2026-10-12, Codex).** Add exact-source-bound, agent-only v2 drain qualification; verify terminal worker evidence and native NEXT sealing before replacement release. Preserve the legacy idle gate and refuse busy drain of old v1 runtimes. Paired Minime admission fences preserve unadmitted choices and finish accepted calls. No live activation, force or automation resume. Evidence and first-bootstrap boundary: `docs/steward-notes/2026-10-12-finish-accepted-work-drain.md`.

@@ -34,6 +34,8 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ### 2026-10-13 - source reconciliation and first drain-v2 transition
 
+- Approved live follow-through succeeded: unchanged idle-only gates, one SIGTERM, verified old native NEXT seal, runtime-only installation under the owned hold, and exact replacement restoration. PID 95712 now loads all 96 qualified v2 inputs, including the previously unloaded mailbox correction. Session 5321 and all protected processes remain unchanged; fresh work is admitted. This proves operational preservation, not uptake, successful execution of the restored choice, or subjective improvement. Receipt: `finish-accepted-drain-release-20261012/bootstrap-20261013-01/completed.json`; full references in `2026-10-13-drain-v2-first-transition.md`.
+
 - Operator follow-through from the October 12 mailbox/context work, not a new interpretation of a being's writing: Mike approved source reconciliation, safe idle-only first transition, and local integration. Loaded v1, installed mailbox-corrected v1, and qualified v2 are three distinct, exact 96-input inventories; only `minime_autonomy/runtime.py` differs. Preserve the owned hold and native NEXT proof; do not treat installed code as already running. Preparation, tests, actual transition and integration outcomes are separated in `2026-10-13-drain-v2-first-transition.md`. No reservoir/provider/sensory change, automation resume, message resend or inferred improvement.
 
 ### 2026-10-12 - authored context, mailbox availability and numerical scope
