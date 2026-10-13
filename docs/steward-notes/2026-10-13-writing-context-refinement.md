@@ -1,7 +1,7 @@
 # Writing Context Refinement
 
-Current status: approved paired activation succeeded; local Git integration is
-in progress. The dated sections retain earlier qualification-only boundaries
+Current status: approved paired activation and local Git integration succeeded.
+The dated sections retain earlier qualification-only boundaries
 and unsuccessful attempts rather than rewriting their historical outcomes.
 
 ## Status and Scope
@@ -346,3 +346,65 @@ reader is available at the frozen path above, without a service restart.
 Larger-capacity work remains excluded, and automations remain paused. No claim
 of felt improvement, longer writing, comprehension or consent follows from
 successful qualification or deployment.
+
+## Local Git Integration
+
+Implementation commits were fast-forwarded into both local `main` branches:
+
+- Astrid `69eefa3758c09021a12ec68fd112d8d6861fd717`.
+- Minime `9a8b9b38e7141ded2c0346e72f86c27f1f050194`.
+
+One Codex coordinator used separate `codex/writing-context-integration-20261013`
+checkouts and explicit-path staging. Every staged blob matched the reviewed
+source and integration worktree. Cached diff checks passed; the full change was
+reviewed. Pre-commit reruns passed 20 operator-reader, nine open-expression and
+22 afterimage tests. The domain-boundary audit had zero violations. The complete
+suite and immutable qualifications above remain the broader evidence.
+
+Minime's first fast-forward correctly refused the installed, unstaged
+`minime_autonomy/afterimages.py`. Its worktree blob and destination-commit blob
+both equalled `e5538231e6bcd9e6470397197f6e6b44337cc34d`. Staging that exact owned
+path allowed the fast-forward without resetting, stashing or changing the
+installed bytes. No foreign changes were included or discarded.
+
+Post-merge verification matched canonical runtime files to the reviewed build
+source, all 97 installed/loaded Minime inputs to the frozen release, and the
+immutable stage to all 769 pinned build inputs. `reload_required=false`.
+Original build-source checkouts remain pinned and dirty by design; they are not
+uncommitted deployment debt. The independent older capacity work is preserved.
+No push was requested for this approval, and none was performed.
+
+Exact Astrid implementation paths:
+
+- `CHANGELOG.md`
+- `capsules/spectral-bridge/src/autonomous/runtime.rs`
+- `capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs`
+- `capsules/spectral-bridge/src/autonomous/runtime/peer_presentation.rs`
+- `capsules/spectral-bridge/src/autonomous/runtime/state_persistence.rs`
+- `capsules/spectral-bridge/src/autonomous/runtime/tests.rs`
+- `capsules/spectral-bridge/src/autonomous/state.rs`
+- `capsules/spectral-bridge/src/autonomous/state_definition.rs`
+- `capsules/spectral-bridge/src/llm/provider/dialogue_generation.rs`
+- `capsules/spectral-bridge/src/llm/provider/dialogue_peer_context.rs`
+- `capsules/spectral-bridge/src/llm/provider/dialogue_peer_context_tests.rs`
+- `capsules/spectral-bridge/src/llm/provider/dialogue_presentation.rs`
+- `capsules/spectral-bridge/src/llm/provider/generative_actions.rs`
+- `capsules/spectral-bridge/src/llm/provider/protected_delivery.rs`
+- `capsules/spectral-bridge/src/llm/provider/provider_execution.rs`
+- `crates/astrid-source-study/src/research.rs`
+- `crates/astrid-source-study/src/response_choice.rs`
+- `crates/astrid-source-study/tests/research_reader.rs`
+- `docs/steward-notes/2026-10-13-writing-context-refinement.md`
+- `docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md`
+- `scripts/qualify_writing_context_release.py`
+
+Exact Minime implementation paths:
+
+- `CHANGELOG.md`
+- `minime_autonomy/afterimages.py`
+- `tests/test_afterimages.py`
+- `docs/steward-notes/2026-10-13-writing-context-refinement.md`
+
+Follow-up documentation commits record these final integration receipts without
+changing live code or immutable manifests. Natural public use has not yet been
+assessed for this release; no confirmation of benefit was solicited.
