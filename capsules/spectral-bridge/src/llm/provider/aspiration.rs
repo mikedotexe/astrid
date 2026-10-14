@@ -117,7 +117,7 @@ mod aspiration_provenance_tests {
         ));
         assert!(!user.contains("Live reservoir snapshot"));
         assert!(!user.contains("Published fill ["));
-        assert!(user.chars().count() < 1800);
+        assert!(user.chars().count() < 1800, "bounded recall prompt grew to {} characters", user.chars().count());
         for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
             let policy = apply_mlx_request_policy_with_writing(
                 "aspiration",

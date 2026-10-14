@@ -57,20 +57,32 @@ pub struct DialogueCompletionV1 {
 pub struct ContextSubmissionTrackerV1 {
     exact_content: std::sync::Arc<str>,
     submitted: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    current_turn_only: bool,
 }
 
 impl ContextSubmissionTrackerV1 {
-    /// Track the complete rendered peer block, not a matching short prefix.
-    /// Partial or absent context remains unacknowledged and eligible next time.
+    /// Track peer presentation, not full-source reading or uptake. Each provider
+    /// lane binds its exact prepared excerpt after intentional prompt budgeting.
     #[must_use]
     pub fn for_peer_journal(text: &str) -> Self {
-        Self::new(minime_peer_excerpt(text, usize::MAX, 480))
+        let mut tracker = Self::new(minime_peer_excerpt(text, usize::MAX, 480));
+        tracker.current_turn_only = true;
+        tracker
     }
     #[must_use]
     pub fn new(exact_content: String) -> Self {
         Self {
             exact_content: exact_content.into(),
             submitted: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            current_turn_only: false,
+        }
+    }
+
+    fn for_prepared_peer_excerpt(&self, excerpt: String) -> Self {
+        Self {
+            exact_content: excerpt.into(),
+            submitted: self.submitted.clone(),
+            current_turn_only: true,
         }
     }
 
@@ -80,9 +92,15 @@ impl ContextSubmissionTrackerV1 {
     }
 
     fn mark_final_messages(&self, messages: &[Message]) {
+        let start = if self.current_turn_only {
+            messages.iter().rposition(|message| message.role == "assistant")
+                .map_or(0, |index| index.saturating_add(1))
+        } else { 0 };
         if !self.exact_content.is_empty()
             && messages
                 .iter()
+                .skip(start)
+                .filter(|message| !self.current_turn_only || message.role == "user")
                 .any(|message| message.content.contains(self.exact_content.as_ref()))
         {
             self.submitted

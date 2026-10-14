@@ -270,6 +270,11 @@ pub async fn generate_dialogue_with_runtime_feedback(
         attention,
     );
     let (blocks, sources) = append_own_body_block(blocks, sources, own_body.line.as_deref());
+    let peer_block = blocks.iter().find(|block| block.label == "journal")
+        .map(|block| crate::prompt_budget::PromptBlock {
+            label: block.label, content: block.content.clone(),
+            priority: block.priority, min_chars: block.min_chars,
+        });
     let context_packing_originals = context_packing_original_blocks(&blocks);
     let (assembled, overflow, budget_report) = assemble_within_budget_with_sources_and_guidance(
         blocks,
@@ -278,6 +283,9 @@ pub async fn generate_dialogue_with_runtime_feedback(
         sources.0,
         overflow_availability,
     );
+    let primary_peer_submission = presentation.peer_submission.map(|tracker| {
+        tracker.for_prepared_peer_excerpt(prepared_peer_excerpt(peer_block.as_ref(), budget_report.as_ref()))
+    });
     let context_packing_pressure = context_packing_pressure_diagnostic(
         unix_timestamp_string(),
         user_content_budget,
@@ -402,7 +410,7 @@ pub async fn generate_dialogue_with_runtime_feedback(
     let primary_observation =
         ProviderObservationContext::configured(Some(&generation_record_ctx.generation_id), Some(0));
     let primary_started = std::time::Instant::now();
-    let primary_response = with_peer_submission(presentation.peer_submission, mlx_chat_with_runtime_feedback(
+    let primary_response = with_peer_submission(primary_peer_submission.as_ref(), mlx_chat_with_runtime_feedback(
         "dialogue_live",
         messages,
         temperature,
@@ -471,7 +479,12 @@ pub async fn generate_dialogue_with_runtime_feedback(
                 Some(1),
             );
             let fallback_started = std::time::Instant::now();
-            let fallback_response = with_peer_submission(presentation.peer_submission, ollama_chat_with_runtime_feedback(
+            let fallback_peer_submission = presentation.peer_submission.map(|tracker| {
+                tracker.for_prepared_peer_excerpt(if protected.is_none() && !journal_text.is_empty() {
+                    minime_peer_excerpt(journal_text, 900, 96)
+                } else { String::new() })
+            });
+            let fallback_response = with_peer_submission(fallback_peer_submission.as_ref(), ollama_chat_with_runtime_feedback(
                 "dialogue_live",
                 ollama_fallback_messages,
                 temperature,

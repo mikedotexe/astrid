@@ -8,7 +8,9 @@ const USAGE: &str = "writing-research --state-directory OWNER_DIRECTORY --owner 
 fn run() -> Result<()> {
     let mut args = std::env::args_os().skip(1).peekable();
     if args.len() == 1 && args.peek().is_some_and(|arg| arg == "--help") {
-        println!("{USAGE}");
+        println!(
+            "{USAGE}\nList status is current selection/finish state. not_selected does not establish an explicit parking choice or a later return."
+        );
         return Ok(());
     }
     let mut directory = None;

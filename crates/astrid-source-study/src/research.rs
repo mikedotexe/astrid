@@ -55,7 +55,8 @@ pub struct DraftMetadata {
 #[serde(rename_all = "snake_case")]
 pub enum DraftStatus {
     Active,
-    Parked,
+    /// Selection state only; this does not establish an authored parking choice.
+    NotSelected,
     Finished,
 }
 
@@ -147,7 +148,7 @@ impl ResearchReader {
                         } else if state.active.as_ref() == Some(id) {
                             DraftStatus::Active
                         } else {
-                            DraftStatus::Parked
+                            DraftStatus::NotSelected
                         },
                         part_count: draft.parts.len(),
                         total_bytes: part_bytes.iter().try_fold(0_usize, |sum, n| {

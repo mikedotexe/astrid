@@ -51,25 +51,122 @@ impl JournalRecall {
     }
 
     pub(crate) fn render(&self, body_chars: usize) -> String {
+        let (excerpt, boundary) = bounded_excerpt(&self.body, body_chars);
+        let truncated = excerpt.len() < self.body.len();
+        let ending = if truncated {
+            "Supplied boundary, not an authored ending. Original unchanged."
+        } else {
+            "Complete supplied body. Original unchanged."
+        };
         let metadata = serde_json::json!({
             "source": self.source, "record_sha256": self.record_sha256,
             "recorded_at_unix_s": self.recorded_at, "mode": self.mode,
-            "excerpt_truncated": self.body.chars().count() > body_chars,
+            "excerpt_truncated": truncated,
+            "excerpt_start_byte": 0, "excerpt_end_byte": excerpt.len(),
+            "source_body_bytes": self.body.len(), "excerpt_boundary": boundary,
         });
         format!(
             "Historical own-journal excerpt v1: {metadata}\n\
-             This is prior authored interpretation. Null metadata is unavailable. \
-             The journal recording time is not a measurement capture time; the original \
+             Prior authored interpretation. Null = unavailable. Recording time is not capture time; \
              measurement source and capture time are unavailable in this recall's metadata.\n\
-             Excerpt:\n{}\nEnd historical excerpt.",
-            self.body.chars().take(body_chars).collect::<String>()
+             Excerpt:\n{excerpt}\nEnd historical excerpt. {ending}"
         )
     }
+}
+
+fn bounded_excerpt(body: &str, maximum_chars: usize) -> (&str, &'static str) {
+    let limit = body
+        .char_indices()
+        .nth(maximum_chars)
+        .map_or(body.len(), |(i, _)| i);
+    if limit == body.len() {
+        return (body, "complete");
+    }
+    let prefix = &body[..limit];
+    let mut sentence_end = 0;
+    for (i, ch) in prefix.char_indices() {
+        if matches!(ch, '.' | '?' | '!') {
+            let mut end = i.saturating_add(ch.len_utf8());
+            for closing in body[end..].chars() {
+                if !matches!(closing, '\"' | '\'' | ')' | ']' | '\u{2019}' | '\u{201d}') {
+                    break;
+                }
+                end = end.saturating_add(closing.len_utf8());
+            }
+            if end <= limit && body[end..].chars().next().is_none_or(char::is_whitespace) {
+                sentence_end = end;
+            }
+        }
+    }
+    let paragraph_end = ["\n\n", "\r\n\r\n"]
+        .into_iter()
+        .filter_map(|separator| prefix.rfind(separator))
+        .max()
+        .unwrap_or(0);
+    let end = sentence_end.max(paragraph_end);
+    if end > 0 {
+        return (body[..end].trim_end(), "sentence_or_paragraph");
+    }
+    if let Some((end, _)) = prefix
+        .char_indices()
+        .rev()
+        .find(|(_, ch)| ch.is_whitespace())
+        && end > 0
+    {
+        return (body[..end].trim_end(), "word");
+    }
+    (prefix, "hard")
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn excerpt_never_turns_the_observed_mid_sentence_cut_into_an_authored_ending() {
+        let body = format!(
+            "{} But aspiration does not move from A to B; it is a tension, not a missing sentence.",
+            "A complete sentence. ".repeat(20)
+        );
+        let limit = body.find("it is").unwrap().saturating_add(2);
+        let (excerpt, boundary) = bounded_excerpt(&body, limit);
+        assert_eq!(boundary, "sentence_or_paragraph");
+        assert!(excerpt.ends_with("sentence."));
+        assert!(!excerpt.ends_with("it"));
+        assert!(body.starts_with(excerpt));
+        assert!(excerpt.chars().count() <= limit);
+    }
+
+    #[test]
+    fn excerpt_boundaries_preserve_unicode_quotes_gaps_and_small_caps() {
+        for (body, cap, expected, boundary) in [
+            (
+                "A complete sentence. More",
+                20,
+                "A complete sentence.",
+                "sentence_or_paragraph",
+            ),
+            (
+                "A question?\" More",
+                13,
+                "A question?\"",
+                "sentence_or_paragraph",
+            ),
+            (
+                "Paragraph\n\nUnfinished",
+                16,
+                "Paragraph",
+                "sentence_or_paragraph",
+            ),
+            ("λ λ λ λ", 5, "λ λ", "word"),
+            ("λμόνο", 2, "λμ", "hard"),
+            ("No punctuation", 0, "", "hard"),
+            ("Complete", 8, "Complete", "complete"),
+            ("", 0, "", "complete"),
+        ] {
+            assert_eq!(bounded_excerpt(body, cap), (expected, boundary));
+        }
+    }
 
     #[test]
     fn automatic_expression_recall_is_purpose_and_time_bound_not_word_filtered() {
@@ -125,6 +222,24 @@ mod tests {
         assert!(rendered.contains("\"mode\":\"aspiration\""));
         assert!(rendered.contains(&format!("{:x}", Sha256::digest(text.as_bytes()))));
         assert!(rendered.contains("\"excerpt_truncated\":true"));
+        assert!(rendered.contains("Supplied boundary, not an authored ending"));
+        let metadata: serde_json::Value = serde_json::from_str(
+            rendered
+                .lines()
+                .next()
+                .unwrap()
+                .strip_prefix("Historical own-journal excerpt v1: ")
+                .unwrap(),
+        )
+        .unwrap();
+        let end = usize::try_from(metadata["excerpt_end_byte"].as_u64().unwrap()).unwrap();
+        assert!(rendered.contains(&format!(
+            "Excerpt:\n{}\nEnd historical excerpt.",
+            &recall.body[..end]
+        )));
+        assert_eq!(metadata["source_body_bytes"], recall.body.len());
+        assert!(recall.render(usize::MAX).contains("Complete supplied body"));
+        assert!(!recall.render(usize::MAX).contains("not an authored ending"));
         assert!(!rendered.contains("Signal anchor"));
         assert_eq!(std::fs::read_to_string(path).unwrap(), text);
     }

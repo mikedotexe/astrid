@@ -318,3 +318,85 @@ async fn only_complete_final_peer_context_is_acknowledged_and_fallback_resets_pr
     assert!(tracker.submitted());
     assert!(!other.submitted());
 }
+
+#[tokio::test]
+async fn bounded_peer_presentation_tracks_the_actual_primary_and_fallback_excerpts() {
+    use super::*;
+    let source = "Synthetic public prose, unchanged across automatic turns. ".repeat(100);
+    let tracker = ContextSubmissionTrackerV1::for_peer_journal(&source);
+    let journal = minime_peer_excerpt(&source, usize::MAX, 480);
+    let temp = tempfile::tempdir().unwrap();
+    for budget in [10_000, 800] {
+        let (blocks, sources) = dialogue_context_blocks(
+            &DialogueContextInput { journal: &journal, ..Default::default() }, None,
+        );
+        let selected = blocks.iter().find(|b| b.label == "journal").unwrap();
+        let block = crate::prompt_budget::PromptBlock {
+            label: selected.label, content: selected.content.clone(),
+            priority: selected.priority, min_chars: selected.min_chars,
+        };
+        let (assembled, _, report) = crate::prompt_budget::assemble_within_budget_with_sources(
+            blocks, budget, temp.path(), sources.0,
+        );
+        let excerpt = prepared_peer_excerpt(Some(&block), report.as_ref());
+        assert!(!excerpt.is_empty());
+        assert!(excerpt.len() < journal.len());
+        assert!(assembled.contains(&excerpt));
+        with_peer_submission(Some(&tracker), async {
+            record_peer_submission(&[Message { role: "user".into(), content: assembled.clone() }]);
+            assert!(!tracker.submitted(), "uncapped expectation reproduces the original missed acknowledgement");
+        }).await;
+        let scoped = tracker.for_prepared_peer_excerpt(excerpt.clone());
+        for profile in [MlxProfile::Production, MlxProfile::Gemma4Canary] {
+            let request = apply_mlx_request_policy_with_writing("dialogue_live", profile,
+                vec![Message { role: "system".into(), content: "Synthetic instruction".into() },
+                     Message { role: "user".into(), content: assembled.clone() }],
+                768, 210, astrid_source_study::writing::Profile::Default);
+            with_peer_submission(Some(&scoped), async {
+                record_peer_submission(&request.messages);
+                assert!(tracker.submitted(), "intentional bounded excerpt was dispatched");
+                record_peer_submission(&[Message { role: "user".into(), content: excerpt[..80].into() }]);
+                assert!(!tracker.submitted(), "later shortening cannot acknowledge the prepared excerpt");
+                record_peer_submission(&[
+                    Message { role: "user".into(), content: excerpt.clone() },
+                    Message { role: "assistant".into(), content: "Earlier answer".into() },
+                    Message { role: "user".into(), content: "No peer supplied now".into() },
+                ]);
+                assert!(!tracker.submitted(), "older history is not current presentation");
+            }).await;
+        }
+    }
+    let fallback = conversation_fallback_messages(&source, None, "", false, 3, None);
+    let scoped = tracker.for_prepared_peer_excerpt(minime_peer_excerpt(&source, 900, 96));
+    with_peer_submission(Some(&scoped), async {
+        record_peer_submission(&fallback);
+        assert!(tracker.submitted());
+    }).await;
+    let omitted = tracker.for_prepared_peer_excerpt(String::new());
+    with_peer_submission(Some(&omitted), async {
+        record_peer_submission(&fallback);
+        assert!(!tracker.submitted(), "omitted or unsubmitted fallback resets prior evidence");
+    }).await;
+}
+
+#[test]
+fn omitted_header_only_or_invalid_budget_boundaries_cannot_acknowledge_peer_prose() {
+    use super::*;
+    assert!(prepared_peer_excerpt(None, None).is_empty());
+    let mut block = crate::prompt_budget::PromptBlock {
+        label: "journal", content: minime_peer_excerpt("", 900, 96), priority: 1, min_chars: 0,
+    };
+    assert!(prepared_peer_excerpt(Some(&block), None).is_empty());
+    block.content = "Minime authored excerpt:\n".into();
+    assert!(prepared_peer_excerpt(Some(&block), None).is_empty());
+    block.content.push_str("λ synthetic");
+    let report = |kept_chars, fully_removed| crate::prompt_budget::PromptBudgetReport {
+        budget: 20, total_before: block.content.len(), total_after: kept_chars,
+        trimmed_blocks: vec![crate::prompt_budget::PromptTrimmedBlock {
+            label: "journal".into(), original_chars: block.content.len(), kept_chars,
+            removed_chars: block.content.len().saturating_sub(kept_chars), fully_removed,
+        }],
+    };
+    assert!(prepared_peer_excerpt(Some(&block), Some(&report(0, true))).is_empty());
+    assert!(prepared_peer_excerpt(Some(&block), Some(&report(25, false))).is_empty());
+}

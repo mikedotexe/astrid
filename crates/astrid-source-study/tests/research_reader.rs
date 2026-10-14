@@ -588,7 +588,8 @@ fn listing_is_numeric_bounded_and_has_no_titles_or_prose() {
         assert_eq!(first["drafts"].as_array().unwrap().len(), 20);
         assert_eq!(first["drafts"][9]["id"], "d10");
         assert_eq!(first["drafts"][1]["status"], "finished");
-        assert_eq!(first["drafts"][2]["status"], "parked");
+        assert_eq!(first["drafts"][0]["status"], "active");
+        assert_eq!(first["drafts"][2]["status"], "not_selected");
         assert_eq!(first["next_page"], 2);
         let last = serde_json::to_value(fixture.reader().list(2, 20).unwrap()).unwrap();
         assert_eq!(last["drafts"].as_array().unwrap().len(), 3);
@@ -596,6 +597,26 @@ fn listing_is_numeric_bounded_and_has_no_titles_or_prose() {
         for (page, size) in [(0, 20), (1, 0), (1, 21), (3, 20), (usize::MAX, 20)] {
             assert!(fixture.reader().list(page, size).is_err());
         }
+    });
+}
+
+#[test]
+fn unselected_status_does_not_infer_parking_or_rewrite_historical_state() {
+    let mut fixture = Fixture::new();
+    fixture.state["active"] = serde_json::Value::Null;
+    fixture.save();
+    unchanged(&fixture, || {
+        let page = serde_json::to_value(fixture.reader().list(1, 20).unwrap()).unwrap();
+        assert_eq!(page["drafts"][0]["status"], "not_selected");
+        assert!(!page.to_string().contains("parked"));
+    });
+    fixture.state["schema_version"] = 4.into();
+    fixture.state.as_object_mut().unwrap().remove("operations");
+    fixture.save();
+    unchanged(&fixture, || {
+        let page = serde_json::to_value(fixture.reader().list(1, 20).unwrap()).unwrap();
+        assert_eq!(page["drafts"][0]["status"], "not_selected");
+        assert_eq!(page["schema_version"], 4);
     });
 }
 

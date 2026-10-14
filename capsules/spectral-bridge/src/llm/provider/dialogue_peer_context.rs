@@ -106,6 +106,26 @@ fn minime_peer_excerpt(text: &str, prose_chars: usize, provenance_chars: usize) 
     rendered
 }
 
+/// The assembler reports retained byte boundaries before provider adaptation.
+/// An intentional excerpt can be acknowledged without claiming the rest was read.
+fn prepared_peer_excerpt(
+    block: Option<&crate::prompt_budget::PromptBlock>,
+    report: Option<&crate::prompt_budget::PromptBudgetReport>,
+) -> String {
+    let Some(block) = block.filter(|block| block.label == "journal") else {
+        return String::new();
+    };
+    let trim = report.and_then(|report| report.trimmed_blocks.iter().find(|b| b.label == "journal"));
+    if trim.is_some_and(|trim| trim.fully_removed) {
+        return String::new();
+    }
+    let kept = trim.map_or(block.content.len(), |trim| trim.kept_chars);
+    let Some(excerpt) = block.content.get(..kept) else { return String::new(); };
+    let has_prose = ["Minime authored excerpt:\n", "Minime journal excerpt (unclassified source text):\n"]
+        .into_iter().any(|label| excerpt.strip_prefix(label).is_some_and(|body| !body.trim().is_empty()));
+    if has_prose { excerpt.into() } else { String::new() }
+}
+
 #[cfg(test)]
 #[path = "dialogue_peer_context_tests.rs"]
 mod dialogue_peer_context_tests;

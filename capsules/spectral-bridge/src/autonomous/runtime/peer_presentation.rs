@@ -9,7 +9,9 @@ pub(super) fn present(
     priority_feedback: bool,
 ) -> (String, Option<String>) {
     // Bind both publication and bytes: a fresh reply or changed source is not
-    // suppressed merely because its opening resembles an earlier entry.
+    // suppressed merely because its opening resembles an earlier entry. Previous
+    // means an exact bounded excerpt was submitted, never that the full source
+    // was read. Explicit reading/mirroring remains independent of this gate.
     let identity = serde_json::to_vec(&(source, &text)).expect("source and text serialize");
     let fingerprint = format!("{:x}", Sha256::digest(identity));
     if !priority_feedback && previous == Some(&fingerprint) {
