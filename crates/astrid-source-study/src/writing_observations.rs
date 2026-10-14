@@ -42,8 +42,9 @@ impl Writer {
         action: &str,
         preview: Option<String>,
     ) -> Result<StudyOutput> {
+        let prompt = presentation::prompt(false, false);
         anyhow::ensure!(
-            text.len().saturating_add(PROMPT.len()).saturating_add(32) <= crate::MAX_INPUT_BYTES,
+            text.len().saturating_add(prompt.len()).saturating_add(32) <= crate::MAX_INPUT_BYTES,
             "observation presentation exceeds input limit; evidence preserved"
         );
         let mut state = self.load()?;
@@ -53,7 +54,7 @@ impl Writer {
             .context("writing sequence exhausted")?;
         let output=StudyOutput {host_feedback_policy:crate::HostFeedbackPolicy::Default,continuation_decision:false,generation_requested:present,input_kind:InputKind::PrivateWriting,
             evidence_scope:"Private observation receipt. No public delivery or inferred intent. Numerical descriptions are not felt-state conclusions.".into(),
-            require_complete_input:true,system_prompt:PROMPT.into(),input_budget_bytes:crate::MAX_INPUT_BYTES,
+            require_complete_input:true,system_prompt:prompt,input_budget_bytes:crate::MAX_INPUT_BYTES,
             context_tokens:crate::CONTEXT_TOKENS,text,page:None,session_pages:Vec::new(),question_id:None,
             navigation_id:Some(format!("writing-{}",state.sequence))};
         if present {

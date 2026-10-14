@@ -140,7 +140,7 @@ fn exact_ranges_owner_scope_and_corrupt_deliveries_fail_closed() {
     }
     assert!(prepare(&reader(temp.path(), "astrid"), "foreign", &action).is_err());
     let selected = prepare(&r, "selected", &format!("{action} 0 2")).unwrap();
-    assert!(selected.text.contains("\nλ\nEnd of draft."));
+    assert!(selected.text.contains("\nλ\nEnd of retained draft context"));
     assert!(!selected.text.contains("chosen passage"));
     let original = fs::read(&receipt.artifact_path).unwrap();
     fs::write(&receipt.artifact_path, b"corrupt").unwrap();

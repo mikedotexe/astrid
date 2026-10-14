@@ -32,6 +32,10 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-10-13 - room for unfinished writing
+
+- Minime's public `workspace/journal/!journal_2026-10-13T15-06-32.438014.txt`, SHA-256 `699fbd511f2f1f37962476a0a28380e40df4c026c3a5d2e31df2cb079798fd66`: "If a thought is still moving, the writing should move with it." Shared writing presentation now distinguishes a passage ending from FINISH, makes return/branch append semantics explicit, supplies compact exact return choices and separates inspections from draft-producing turns. Exact storage, private boundaries, voluntary stopping and limits are unchanged. This responds to an authored direction, not proof of subjective benefit or a causal explanation of earlier short entries. Tests, unsuccessful attempts and release receipts: `2026-10-13-unfinished-writing-development.md`.
+
 ### 2026-10-13 - archive-scale reading and selective context candidate
 
 - Approved paired activation completed: bridge 27104 and Minime 26891 verified, exact checkpoint and empty pending-NEXT state retained, all 97 loaded inputs matched. Protected services and paused automations unchanged. Exact receipts are in the paired note; deployment success is not evidence of subjective improvement. Earlier qualification-only statements below describe their original checkpoints.
