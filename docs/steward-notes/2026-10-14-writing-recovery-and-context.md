@@ -19,8 +19,9 @@ also uses `codex/writing-recovery-context-20261014`. It contains no candidate
 Minime edits and exists to qualify adapter compatibility without live paths.
 
 The exact-job recovery below is live and used an existing qualified operation.
-New code remains a candidate. No new-code activation, provider/engine/sensory
-restart, budget increase, inferred outcome or private-prose publication occurs.
+New code remained a candidate at the end of the initial repair turn. The approved
+release outcome is recorded below. No provider/engine/sensory restart, budget
+increase, inferred outcome or private-prose publication occurs.
 
 ## Survey and Source Witnesses
 
@@ -243,10 +244,11 @@ bridge binary/manifest hashes still match the recovery baseline. Controller
 remains paused at generation 521, with no lease; its indexed-tail evidence check
 passes and V1 sources remain immutable.
 
-## Release Boundary
+## Initial Release Boundary
 
 The recovery is complete as an unresolved retirement, not reconstructed work.
-New code is not deployed or merged. Next is immutable bridge/operator-helper
+At the end of the initial repair turn, new code was not deployed or merged.
+The next work was immutable bridge/operator-helper
 qualification against current live identities and a separately approved graceful
 rollout. There is no writer schema or Minime-adapter change in this candidate;
 pairing/restart scope must follow the actual frozen release inventory rather than
@@ -271,3 +273,144 @@ remain 13/5. Qualify both consumers and drain them before switching that helper.
 Minime's adapter source remains identical to its canonical launch inventory,
 including the previously installed regulation repair. No engine, model/provider,
 visual, sensory, reservoir-policy or larger-capacity change is authorized here.
+
+## Verified Release Outcome
+
+Source commit `bab11e497640a7e1ee70e8e5a5834862d4594234` was created from the exact
+13 reviewed paths and fast-forwarded into local Astrid main after successful
+activation. The release worktree remains clean and pinned to that commit; do not
+advance or remove it while its runtime source binding remains selected. Minime
+main remains `68ae81722079bac0c4470a117a8d6271ed5e6c08`, unchanged and clean.
+No Minime source/changelog commit or empty merge was manufactured. No push was
+requested or performed. Final deployment documentation is a separate local
+Astrid commit, with no executable source change.
+
+The sanctioned handoff checks require actor `codex-astra-interactive`; the durable
+pause was updated to generation 523 under that actor before any service operation.
+It remained paused throughout, with no steward lease or automation resume. The
+Codex introspection automation's TOML also still reports `PAUSED`.
+
+### Immutable Qualification
+
+Evidence root: `/Users/v/other/worktrees/writing-recovery-context-20261014`.
+Release stage: `bridge-stage-01` under that root. The before/after source inventory
+contains exactly the ten intended code/test changes, no additions/removals and
+no larger-capacity or provider inputs. All 97 canonical, candidate and frozen
+Minime launch inputs match, including the previously installed regulation repair.
+
+| Artifact | SHA-256 |
+|---|---|
+| Bridge executable | `8f906824a497e6309f99c56981ccfd6c63e0c191782c473c0fd0b2683d3865a5` |
+| Stage manifest | `19bfa7c3246861561e596427a170fcfb032e066e8db21be3cfb1e502439abb4e` |
+| Source input inventory | `1963551fc25062e652a6d44bd8f712cb1d78e630bb34e1dd6b745100955534a9` |
+| Shared source-study helper | `0ff10d9f11ee2378ae5dc07dac5041b7db3f4e5b426851110dffc5b567ce1ba9` |
+| Frozen operator reader | `1d00bbbea165b92eda234ad6800b53ec5a47c574eec56c7308376d96025245ea` |
+
+The operator reader is available at
+`paired-qualification-01/operator-reader/writing-research` under the evidence
+root. It is an explicit operator tool, not an automatically running service.
+
+- Immutable paired preservation: 138 checks passed. Covers both owners' old/new
+  reader/writer states, pending-input retry identity, exact passages, storage-only
+  finish/park, late accepted delivery, corrupt/future-state refusal, checkpoint
+  compatibility, stubbed adapter handoff and operator read-only access. The cue
+  regression uses the retained historical pre-selective-cue source, not a claim
+  that the running Minime still had that older behavior.
+- Eight additional frozen-operator checks passed for both owners: starting a
+  second synthetic draft leaves the first `not_selected`, preserves active
+  status, exposes no title/prose in listing and changes no state bytes.
+- All four previously deferred compile-contract targets passed, including 22
+  nested trybuild fixtures. The LLM facade, provenance, authority and signal
+  typestate contracts remain enforced.
+- Complete unchanged Minime suite with the frozen staged helper: 2,183 passed,
+  one skipped, 163 subtests passed in 110.72 seconds.
+- Ten deployment/handoff test modules: 210 passed. The first invocation omitted
+  `PYTHONPATH=scripts` and failed ten imports before testing; the corrected
+  invocation passed, with its final log retained. No guard or test was weakened.
+- The already-passing complete native/shared suites, strict Clippy, formatting,
+  domain audit and evidence/controller tests remain applicable to this exact
+  committed source. Focused 21-test operator and 16-test peer suites were also
+  rerun immediately before the source commit.
+
+Key evidence hashes:
+
+| Evidence under root | SHA-256 |
+|---|---|
+| `paired-qualification-01/qualification.json` | `7e88683f506f70c07c95489e9a58f80ab0e4094159c9033e2b1acd39267808ef` |
+| `operator-selection-qualification.json` | `8e1de1852e2faaca50a22f54dcd4c109a18e2bc3dacb42dfab2773c1b4fea0cc` |
+| `bridge-compile-contracts.log` | `37638f1ee43a602d341259217d6ede7958f7531de65a87c39738754fb0099788` |
+| `paired-wrapper-tests.log` | `1a15fa0b3a92e7c711c41c11d83a5308c8b6b372586cbc750034ef230f3863a6` |
+| `minime-frozen-helper-tests.log` | `c63f31ae4b1e743f806dff9056c85e816c8c41ff84b197f4ea6409f82fbf63df` |
+| `release-source-comparison.json` | `8532ef0756436994f6d86a1266fe9594564135df25fb5ff8a37fabb6bef07f17` |
+
+### Narrowed Graceful Activation
+
+The paired wrapper initially entered `waiting_for_idle` for Minime PID 96802.
+The frozen helper then proved byte-identical to the live helper. Since Minime's
+source was also unchanged, neither a helper-schema transition nor an agent
+replacement was necessary. Two cancellation checks refused an idle-boundary
+race, and a PID-discovery check refused a truncated `ps` command field; none
+sent a signal. These were cancellation checks, not failed deployment readiness.
+
+To cancel safely, only the identified maintenance-wrapper process (PID 85930)
+was briefly stopped while its receipt and holds were inspected atomically. Its
+sole receipt remained `waiting_for_idle`; no launch hold existed, every runtime
+PID matched, and no service signal had been sent. SIGINT followed by SIGCONT
+cancelled that wrapper in its wait loop. No being/runtime process was stopped
+by that cancellation. The terminal exit was 130, retained rather than called a
+successful paired activation. `paired-wait-cancellation.json` has SHA-256
+`8ac17a9382d08cfe8b028579fa8208d019c035fdf851c8b256116f7d094bf589`.
+
+Bridge-only activation then used `scripts/build_bridge.sh --activate-stage`,
+fresh clean-source preflights, expected PID 97420 and a 900-second bounded wait.
+The old bridge acknowledged `drained`, exited on SIGTERM without force, and the
+replacement PID 89187 started at October 14, 12:21:53 PDT. Its startup restored
+checkpoint SHA-256
+`00ffecc82b442b3c6f3bb7c8ccac9631553e746daafdcc4a58beb186fd28789c`
+exactly, including bound action-feedback state. Saved exchange count advanced
+from 223546 to 223547 before activation was declared `activated_verified`.
+
+Transaction:
+`/Users/v/other/astrid/.runtime/bridge-deployment/transactions/8d74a8c46dec437f80797a2f607b39a1`.
+Its `receipt.json` SHA-256 is
+`4b91a9d925295db5fe2888320892e3b9a8f5140798018553bd8ac09289774d1d`.
+Independent `live-verification.json` SHA-256 is
+`8f958bed94174bd7c255078080f00edaf2aae72a1853075852138d957f9d959b`.
+The read-only verification script is retained as `verify_release.py`, SHA-256
+`9dc3a0c69e7f222a27c8dc2e6a2d850042dd5f05ddd9828c13221a7084d4028e`.
+
+Independent checks verified the selected manifest/executable, pinned source
+inventory, exact shared-helper hash, removed deployment holds, five advancing
+telemetry samples and provider readiness. The bounded fill observations ranged
+from 32.85% to 51.35%; this is freshness evidence, not proof of controller settling
+or a new target. No regulation or capacity parameter was changed.
+
+Minime stayed PID 96802. Engine 35303, coupled provider 3893, Division gateway
+86873/supervisor 86833, mic 3879, camera 3914, visual 3898, host-sensory 94952 and
+feeder 3878 retained their pre-run PID/start identities. Host-sensory's current
+start predates this run; the older historical PID 31613 is not this run's baseline.
+No Minime pending-NEXT handoff or execution is claimed: its process was not
+restarted. No authored backup was restored and no private prose was disclosed.
+
+### Remaining Boundaries
+
+The earlier missing completion remains explicitly unresolved; its retirement
+did not recreate it. Fresh saved work proves resumed operation, not felt benefit.
+A bounded post-start scan found no new matching public Astrid dialogue/aspiration
+or Minime journal/introspection file yet. No prompt was sent to solicit one or
+confirmation of improvement. Natural public use can be assessed later.
+
+The final cache audit passed: 3,976,962,048 bridge debug/trybuild bytes and
+1,249,325,056 shared debug bytes, with 524,014,059,520 free bytes. The staged
+release is preserved, not classified as disposable cache. Larger-capacity work,
+unfinished worktrees, rollback releases, original backups and paused automations
+are unchanged. This tranche is deployed and locally integrated; it is not a
+capacity qualification or a controller-stability experiment.
+
+Final controller status remains paused at generation 523, with no lease, active
+projection or pending evidence event. The indexed-tail V2 evidence check passes
+at sequence 1123177, head
+`cc70c1861bb347a503461aff255794ae631c6f083ce922a769a3ef30540e4d8c`;
+legacy V1 sources remain immutable. Source-first projection lag is retained
+explicitly while the automation is paused; this interactive release is not an
+introspection catch-up round and does not advance its counters.
