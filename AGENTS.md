@@ -75,6 +75,30 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 - Prefer source files under 1000 lines. Treat larger files as an architecture-health review signal, not an automatic block: split when cohesion, ownership, or testability would improve; keep a larger file only with a clear cohesive reason and reviewer-visible note. Generated files, fixtures, long-form docs, schema tables, and deliberately centralized registries are exempt.
 - `CHANGELOG.md` must be updated under `[Unreleased]` for every PR
 
+## Build Cache Budget
+
+Before substantial builds, run `python3 -B scripts/build_cache_audit.py --check`
+with repeated `--target-dir /absolute/path` arguments for every actual target
+directory, including Minime or a worktree when applicable. It is read-only;
+defaults request review above 40 GiB of debug/test caches per target or below
+50 GiB free on the containing volume. Do not begin another substantial build
+while that review is outstanding. No result authorizes deletion.
+
+Reuse a compatible, explicitly owned build cache where practical. For ordinary
+qualification that does not require debugger symbols or incremental behavior,
+prefer `CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 CARGO_INCREMENTAL=0`;
+record these settings, and retain symbols when the test requires them. Do not
+change release profiles or immutable release identities to save cache space.
+
+At tranche closeout, inspect owned debug/test caches and clean unused ones after
+verifying no compiler, process, launch configuration or qualification reference
+depends on them. Use exact target/profile paths and a Cargo dry run first. Keep
+source, dirty work, generated evidence, logs, current and rollback releases,
+helper binaries and authored/runtime history. Never use blanket `cargo clean`,
+`git clean`, recursive worktree deletion, or age alone as a cleanup decision.
+Foreign/unfinished worktree caches require their own ownership/use review.
+Record free-space change and verify protected releases/services afterward.
+
 ## Shared-tree coordination
 
 This working tree (`/Users/v/other/astrid`) and the **one** live `spectral-bridge` binary are
