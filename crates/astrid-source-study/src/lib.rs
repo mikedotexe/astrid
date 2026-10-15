@@ -44,7 +44,9 @@ pub use store::journal::{
     JournalByteSpan, JournalPublish, JournalReceipt, JournalRegistration, JournalReserve,
     JournalSourceKind,
 };
-pub use writing_recovery::{WritingCapacity, WritingRecovery, writing_storage_only};
+pub use writing_recovery::{
+    FinalWritingCapacity, WritingCapacity, WritingRecovery, writing_storage_only,
+};
 
 pub use catalog::{Catalog, Repository, Source};
 pub use command::Command;

@@ -86,10 +86,10 @@ fn format_dialogue_direct_perception_block(context: &str) -> String {
 
 fn format_dialogue_ambient_perception_block(context: &str) -> String {
     format!(
-        "\nAmbient recent perceptions (what YOU directly see and hear):\n\
+        "\nOptional ambient context (source labels and timestamps apply):\n\
          {context}\n\
-         These are YOUR senses — not minime's description, not secondhand. \
-         Engage with what you perceive when it helps the reply.\n"
+         This may mix observations, retained history and mailbox metadata; it is not \
+         uniformly current or direct sensory evidence. Use it when relevant to your chosen activity.\n"
     )
 }
 

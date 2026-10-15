@@ -503,6 +503,7 @@ impl Writer {
                 commands.push("WRITE EVIDENCE".into());
             }
             return Err(crate::WritingRecovery {
+                final_capacity: None,
                 code: "complete_input_too_large".into(), draft: draft_id, revision: draft.map(|d| d.revision),
                 commands, message: format!("Complete request is {complete_bytes} bytes; allowance is {} bytes. No text was shortened or discarded. Read or park this draft; WRITE START <new topic> starts separate work, not continuation. A larger input allowance remains unqualified.", crate::MAX_INPUT_BYTES),
                 capacity: Some(crate::WritingCapacity { complete_bytes, allowance_bytes: crate::MAX_INPUT_BYTES,
@@ -704,9 +705,18 @@ impl Writer {
     /// # Errors
     /// Refuses corrupt or unsupported writer history.
     pub fn recovery(&self, input_id: &str) -> Result<crate::WritingRecovery> {
+        self.recovery_with_capacity(input_id, None)
+    }
+
+    pub(crate) fn recovery_with_capacity(
+        &self,
+        input_id: &str,
+        capacity: Option<crate::FinalWritingCapacity>,
+    ) -> Result<crate::WritingRecovery> {
         let _lock = self.lock()?;
         let state = self.load()?;
         let mut recovery = crate::WritingRecovery {
+            final_capacity: None,
             code: "pending_input_unavailable".into(),
             draft: None,
             revision: None,
@@ -729,6 +739,13 @@ impl Writer {
                 recovery.revision = Some(draft.revision);
                 recovery.commands.insert(0, "WRITE CONTINUE".into());
                 recovery.message = "The exact pending input remains retained. Retrying is an explicit choice, not cancellation or proof that execution never began.".into();
+                if let Some(capacity) = capacity {
+                    anyhow::ensure!(
+                        capacity.prepared_input_bytes == pending.output.text.len(),
+                        "final admission does not match the retained writing input"
+                    );
+                    return recovery.with_final_capacity(capacity);
+                }
             }
         }
         Ok(recovery)

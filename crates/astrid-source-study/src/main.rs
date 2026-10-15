@@ -30,6 +30,8 @@ enum Operation {
     },
     WritingRecovery {
         input_id: String,
+        #[serde(default)]
+        final_capacity: Option<astrid_source_study::FinalWritingCapacity>,
     },
     PreparationRevision,
     PrepareOnce {
@@ -114,9 +116,10 @@ fn run() -> Result<serde_json::Value> {
             &expected_revision,
             &request,
         )?)?),
-        Operation::WritingRecovery { input_id } => {
-            Ok(serde_json::to_value(reader.writing_recovery(&input_id)?)?)
-        },
+        Operation::WritingRecovery {
+            input_id,
+            final_capacity,
+        } => writing_recovery_response(&reader, &input_id, final_capacity),
         Operation::PreparationRevision => {
             Ok(serde_json::json!({"revision": reader.preparation_revision()?}))
         },
@@ -165,6 +168,18 @@ fn run() -> Result<serde_json::Value> {
             &response_json,
         )?)?),
     }
+}
+
+fn writing_recovery_response(
+    reader: &Reader,
+    input_id: &str,
+    final_capacity: Option<astrid_source_study::FinalWritingCapacity>,
+) -> Result<serde_json::Value> {
+    let recovery = match final_capacity {
+        Some(capacity) => reader.writing_capacity_recovery(input_id, capacity)?,
+        None => reader.writing_recovery(input_id)?,
+    };
+    Ok(serde_json::to_value(recovery)?)
 }
 fn main() {
     match run() {

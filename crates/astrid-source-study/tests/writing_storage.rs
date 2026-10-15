@@ -141,6 +141,114 @@ fn pending_input_is_not_retried_after_finish_and_late_output_is_preserved() {
     let resumed = prepare(&r, "resume", "WRITE RESUME d1");
     assert!(resumed.text.contains("Already accepted work retained."));
 }
+
+#[test]
+fn final_provider_capacity_recovery_preserves_pending_bytes_and_valid_choices() {
+    use astrid_source_study::FinalWritingCapacity;
+    let temp = tempfile::tempdir().unwrap();
+    let r = reader(temp.path());
+    let start = prepare(&r, "start", "WRITE START synthetic boundary");
+    deliver(&r, &start, &"x".repeat(45_000));
+    let output = prepare(&r, "continue", "WRITE CONTINUE");
+    assert!(output.text.len() + output.system_prompt.len() + 32 <= 48_000);
+    let id = output.navigation_id.as_deref().unwrap();
+    let path = temp.path().join("state/writing/drafts-v2.json");
+    let before = fs::read(&path).unwrap();
+    let capacity = FinalWritingCapacity {
+        prepared_input_bytes: output.text.len(),
+        system_bytes: 3_000,
+        wrapper_bytes: 500,
+        allowance_bytes: 48_000,
+    };
+    let recovery = r.writing_capacity_recovery(id, capacity.clone()).unwrap();
+    assert_eq!(recovery.code, "final_request_too_large");
+    assert_eq!(recovery.draft.as_deref(), Some("d1"));
+    assert_eq!(recovery.final_capacity, Some(capacity.clone()));
+    assert!(recovery.commands.contains(&"WRITE READ d1 1".into()));
+    assert!(recovery.commands.contains(&"WRITE PARK".into()));
+    assert!(!recovery.commands.contains(&"WRITE CONTINUE".into()));
+    assert!(
+        !recovery
+            .commands
+            .iter()
+            .any(|c| c.starts_with("WRITE EVIDENCE"))
+    );
+    assert_eq!(fs::read(&path).unwrap(), before);
+    assert_eq!(r.prepare_action("WRITE CONTINUE").unwrap(), output);
+    let mut wrong = capacity.clone();
+    wrong.prepared_input_bytes += 1;
+    assert!(r.writing_capacity_recovery(id, wrong).is_err());
+    let mut fits = capacity.clone();
+    fits.allowance_bytes = 100_000;
+    assert!(r.writing_capacity_recovery(id, fits).is_err());
+    let mut overflow = capacity.clone();
+    overflow.system_bytes = usize::MAX;
+    assert!(r.writing_capacity_recovery(id, overflow).is_err());
+    prepare(&r, "finish", "WRITE FINISH");
+    assert_eq!(
+        r.writing_capacity_recovery(id, capacity.clone())
+            .unwrap()
+            .code,
+        "draft_finished"
+    );
+    deliver(
+        &r,
+        &output,
+        "Late already-accepted output remains retained.",
+    );
+    prepare(&r, "other", "WRITE START unrelated synthetic work");
+    let stale = r.writing_capacity_recovery(id, capacity).unwrap();
+    assert_eq!(stale.code, "pending_input_unavailable");
+    assert!(!stale.commands.contains(&"WRITE PARK".into()));
+}
+
+#[test]
+fn compact_writing_guidance_keeps_balanced_choices_and_exact_return() {
+    let temp = tempfile::tempdir().unwrap();
+    let r = reader(temp.path());
+    let output = prepare(&r, "start", "WRITE START synthetic guidance");
+    let choices = output
+        .text
+        .split("Optional choices (never automatic):")
+        .nth(1)
+        .unwrap()
+        .split("\nTo choose another action")
+        .next()
+        .unwrap();
+    assert!(choices.len() < 450);
+    for command in [
+        "WRITE CONTINUE",
+        "WRITE PARK",
+        "WRITE FINISH",
+        "WRITE RESUME d1",
+        "WRITE READ d1 1",
+        "WRITE HELP",
+        "ACTIVITY_STATUS",
+    ] {
+        assert!(choices.contains(command));
+    }
+    assert!(!choices.contains("ACTIVITY_FOCUS WRITE"));
+    assert!(
+        choices
+            .lines()
+            .any(|line| line == "Return: WRITE RESUME d1")
+    );
+    assert!(
+        choices
+            .lines()
+            .any(|line| line == "Inspect: WRITE READ d1 1")
+    );
+    assert!(output.system_prompt.contains("Missing NEXT or REST stops"));
+    let help = prepare(&r, "help", "WRITE HELP");
+    for command in [
+        "WRITE BRANCH",
+        "WRITE REVISE",
+        "WRITE STOPPING_POINT",
+        "ACTIVITY_FOCUS",
+    ] {
+        assert!(help.text.contains(command), "{command}");
+    }
+}
 #[test]
 fn classification_does_not_treat_arbitrary_writing_as_metadata() {
     for action in [

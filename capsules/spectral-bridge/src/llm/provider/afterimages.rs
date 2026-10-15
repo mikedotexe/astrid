@@ -10,8 +10,13 @@ fn admit_feedback_and_afterimages(
     Option<ProtectedAdmissionV1>,
     Option<RuntimeFeedbackAdmissionV1>,
 )> {
+    let writing = protected.filter(|input| input.kind == ProtectedDialogueKindV1::PrivateWriting);
+    let capacity = writing.and_then(|input| final_writing_capacity(messages, input, limit));
     let admission =
         admit_runtime_feedback_and_protected_content(messages, protected, feedback, limit);
+    if writing.is_some() {
+        record_writing_admission(capacity, admission.is_some());
+    }
     if admission.is_none() {
         let _ = record_afterimage_request(messages, protected, backend, model, "admission_failed");
         return None;

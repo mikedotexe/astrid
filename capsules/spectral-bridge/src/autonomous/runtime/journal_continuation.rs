@@ -82,11 +82,9 @@ impl ReservedJournal {
             "invalid reserved public journal identity"
         );
         let hint = format!(
-            "Optional private continuation of the public journal you are writing now: \
-             choose `NEXT: WRITE FROM_JOURNAL {}`. This exact entry is reserved for this response and \
-             becomes available only after its public file is saved and verified. Choosing it \
-             copies visible authored prose into a new private draft; it does not alter the \
-             public original or authorize sharing. You may instead stop or choose another action.",
+            "Optional exact continuation, available after this entry is saved:\n\
+             NEXT: WRITE FROM_JOURNAL {}\nThis copies its prose into a new private draft; \
+             no transfer is automatic. Stopping or another activity is equally available. WRITE HELP has details.",
             receipt.entry_id,
         );
         Ok(Self {
@@ -223,6 +221,11 @@ mod tests {
             "NEXT: WRITE FROM_JOURNAL {}",
             reservation.entry_id
         )));
+        assert_eq!(
+            reservation.hint().lines().nth(1),
+            Some(format!("NEXT: WRITE FROM_JOURNAL {}", reservation.entry_id).as_str())
+        );
+        assert!(reservation.hint().len() < 360);
         assert!(!root.join("writing").exists());
         assert!(!root.join("reader/writing").exists());
         let action = format!("WRITE FROM_JOURNAL {}", reservation.entry_id);

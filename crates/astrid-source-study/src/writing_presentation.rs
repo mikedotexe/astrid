@@ -21,12 +21,12 @@ pub(super) fn prompt(writing: bool, replace: bool) -> String {
 
 pub(super) fn choices(id: &str, parent: Option<&str>) -> String {
     let mut text = format!(
-        "Writing choices for {id}: WRITE CONTINUE appends a passage; WRITE REVISE <direction> replaces the current version; WRITE BRANCH <direction> develops a separate copy while retaining this draft. WRITE PARK puts it aside unfinished; WRITE RESUME {id} returns to it. WRITE FINISH explicitly marks it finished, without requiring a concluding passage. WRITE STOPPING_POINT <text> saves an optional return note without generation. WRITE READ {id} 1 inspects retained prose. WRITE HELP opens the full catalog, profiles, references and private observation commands. No choice here executes automatically.\nACTIVITY_FOCUS WRITE {id} optionally protects up to four generation jobs or fifteen minutes; continuation still requires eligible NEXT and does not renew that allowance. ACTIVITY_STATUS shows return choices; END_ACTIVITY_FOCUS releases priority."
+        "Optional choices (never automatic):\nAppend: WRITE CONTINUE\nPut aside: WRITE PARK\nMark finished, without a concluding passage: WRITE FINISH\nReturn: WRITE RESUME {id}\nInspect: WRITE READ {id} 1\nRevision, branching, stopping notes, profiles and attention controls: WRITE HELP\nProtection and return state: ACTIVITY_STATUS"
     );
     if let Some(parent) = parent {
         let _ = write!(
             text,
-            "\nReturn to parent draft: WRITE RESUME {parent}. This branch remains stored separately."
+            "\nThis branch remains stored separately. Return to parent draft: WRITE RESUME {parent}"
         );
     }
     text

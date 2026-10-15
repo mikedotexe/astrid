@@ -677,5 +677,6 @@ fn finish_dialogue_completion_at(
         overflow,
         accepted_delivery,
         accepted_runtime_feedback: None,
+        writing_capacity_failure: None,
     }
 }

@@ -48,6 +48,7 @@ pub struct DialogueCompletionV1 {
     pub overflow: Option<crate::prompt_budget::PromptOverflow>,
     pub accepted_delivery: Option<PromptDeliveryReceiptV1>,
     pub accepted_runtime_feedback: Option<crate::runtime_action_feedback::RuntimeFeedbackReceiptV1>,
+    pub writing_capacity_failure: Option<astrid_source_study::FinalWritingCapacity>,
 }
 
 /// Shared across an outer timeout so the runtime can tell whether an exact
@@ -176,34 +177,13 @@ fn admit_protected_dialogue_content(
     if input.content_id.trim().is_empty() || input.source_text.is_empty() {
         return None;
     }
-    let marker = protected_digest(input.content_id.as_bytes());
     let heading = protected_source_heading(
         input,
         input
             .source_start_byte
             .checked_add(input.source_text.len())?,
     )?;
-    let mut ending = format!(
-        "\n[/activity-source {marker}]\nContinue your chosen activity. \
-         Respond to this source and end with one final NEXT line."
-    );
-    if input.kind == ProtectedDialogueKindV1::Letter
-        && let Some(message_id) = input.reply_message_id.as_deref()
-    {
-        // Keep the addressing contract alongside the protected source on every
-        // provider/fallback adaptation, while hashing only the original letter.
-        ending.push_str(&format!(
-            "\nA reply to Mike is optional. To address one to this letter, use exactly:\n\
-             INBOX_REPLY {message_id}\n\
-             Your words to Mike go here.\n\
-             END_INBOX_REPLY\n\
-             NEXT: LISTEN\n\
-             END_INBOX_REPLY closes the human passage; commands inside it are language. \
-             Put your chosen final NEXT after it (LISTEN is only an example). \
-             Only prose outside the human passage is shared through the ordinary peer signal \
-             and journal. You may write only the human reply and your final NEXT, or no reply."
-        ));
-    }
+    let ending = protected_source_ending(input);
     let system_bytes = messages
         .iter()
         .filter(|m| m.role == "system")
@@ -258,6 +238,35 @@ fn admit_protected_dialogue_content(
         content,
     });
     Some(admission)
+}
+
+fn protected_source_ending(input: &ProtectedDialogueInputV1) -> String {
+    let marker = protected_digest(input.content_id.as_bytes());
+    if input.kind == ProtectedDialogueKindV1::PrivateWriting {
+        return format!("\n[/activity-source {marker}]\nA final NEXT is optional; no NEXT or NEXT: REST stops here.");
+    }
+    let mut ending = format!(
+        "\n[/activity-source {marker}]\nContinue your chosen activity. \
+         Respond to this source and end with one final NEXT line."
+    );
+    if input.kind == ProtectedDialogueKindV1::Letter
+        && let Some(message_id) = input.reply_message_id.as_deref()
+    {
+        // Keep the addressing contract alongside the protected source on every
+        // provider/fallback adaptation, while hashing only the original letter.
+        ending.push_str(&format!(
+            "\nA reply to Mike is optional. To address one to this letter, use exactly:\n\
+             INBOX_REPLY {message_id}\n\
+             Your words to Mike go here.\n\
+             END_INBOX_REPLY\n\
+             NEXT: LISTEN\n\
+             END_INBOX_REPLY closes the human passage; commands inside it are language. \
+             Put your chosen final NEXT after it (LISTEN is only an example). \
+             Only prose outside the human passage is shared through the ordinary peer signal \
+             and journal. You may write only the human reply and your final NEXT, or no reply."
+        ));
+    }
+    ending
 }
 
 fn capture_submitted_delivery(

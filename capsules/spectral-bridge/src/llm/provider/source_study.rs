@@ -9,6 +9,18 @@ pub(crate) async fn generate_source_study_for_job(
     output: &astrid_source_study::StudyOutput,
     job: Option<&str>,
 ) -> DialogueCompletionV1 {
+    WRITING_ADMISSION.scope(std::cell::RefCell::default(), async {
+        let mut completion = generate_source_study_inner(output, job).await;
+        if completion.text.is_none() {
+            completion.writing_capacity_failure = writing_admission_failure();
+        }
+        completion
+    }).await
+}
+
+async fn generate_source_study_inner(
+    output: &astrid_source_study::StudyOutput, job: Option<&str>,
+) -> DialogueCompletionV1 {
     let private = output.input_kind == astrid_source_study::InputKind::PrivateWriting;
     let label = if private { "private_writing" } else { "self_study" };
     let input = ProtectedDialogueInputV1 {
@@ -36,6 +48,7 @@ pub(crate) async fn generate_source_study_for_job(
             overflow: None,
             accepted_delivery: Some(receipt),
             accepted_runtime_feedback: None,
+            writing_capacity_failure: None,
         };
     }
     let messages = vec![Message {

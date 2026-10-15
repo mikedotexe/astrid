@@ -467,6 +467,18 @@ impl Reader {
         crate::writing::Writer::new(self.directory.join("writing")).recovery(input_id)
     }
 
+    /// Recover from final provider admission without changing the retained draft.
+    /// # Errors
+    /// Refuses invalid history or byte counts not bound to the pending input.
+    pub fn writing_capacity_recovery(
+        &self,
+        input_id: &str,
+        capacity: crate::FinalWritingCapacity,
+    ) -> Result<crate::WritingRecovery> {
+        crate::writing::Writer::new(self.directory.join("writing"))
+            .recovery_with_capacity(input_id, Some(capacity))
+    }
+
     fn recovery_map(&self, state: &mut State, reason: &anyhow::Error) -> Result<StudyOutput> {
         self.recovery_with_candidates(state, reason, &[])
     }

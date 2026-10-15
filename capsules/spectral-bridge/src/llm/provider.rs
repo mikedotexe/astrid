@@ -20,6 +20,8 @@ include!("provider/prompt_contracts.rs");
 include!("provider/transport.rs");
 include!("provider/writing_profile.rs");
 include!("provider/protected_delivery.rs");
+include!("provider/writing_admission.rs");
+include!("provider/writing_admission_tests.rs");
 include!("provider/afterimages.rs");
 include!("provider/runtime_feedback.rs");
 include!("provider/provider_observation.rs");

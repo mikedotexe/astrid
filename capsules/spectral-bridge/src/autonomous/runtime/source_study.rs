@@ -232,7 +232,10 @@ async fn run_shared_source_study(
             None,
         );
         let notice = if private_request {
-            output.navigation_id.as_deref().and_then(|id| reader.writing_recovery(id).ok()).map_or_else(
+            output.navigation_id.as_deref().and_then(|id| match completion.writing_capacity_failure {
+                Some(capacity) => reader.writing_capacity_recovery(id, capacity).ok(),
+                None => reader.writing_recovery(id).ok(),
+            }).map_or_else(
                 || "Writing generation unavailable. No verified retry is offered; WRITE HELP lists inspection and return choices.".into(),
                 |recovery| format!("Writing generation unavailable. {recovery}"),
             )
