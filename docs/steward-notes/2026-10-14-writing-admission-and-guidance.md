@@ -368,4 +368,56 @@ rollout. Integration uses paired `codex/writing-admission-integration-20261015`
 checkouts, leaving the immutable build-source HEAD and bytes pinned. The mechanical
 copy receipt `integration-inputs.json` names exactly 22 Astrid and seven Minime
 paths and their original reviewed hashes. No foreign or larger-capacity files
-are included. Commit identities and final checks follow after integration.
+are included. Its SHA-256 is
+`f69affc0b502163cfdb263cd913ae62880cfa039c6e8098a603b9e5bf0a5ef07`.
+
+Implementation commits, fast-forwarded into both local main branches:
+
+- Astrid: `eb59e830cb34a5901c35d72e644c6753542fde44` (22 exact paths).
+- Minime: `38e0c292e89edcee2f45a27e3c22804b43b173d2` (seven exact paths).
+
+The full implementation diff and new qualifier were reviewed. Every staged blob
+matched its integration checkout; every implementation/test byte matched the
+qualified source. Cached diff checks passed. Immediately before committing,
+seven writing-storage tests, four bridge final-admission tests and 36 Minime
+continuation tests passed. Rust reused the pinned identical-source caches with
+one build job, no incremental compilation and debug-info-free test/dev profiles;
+the Minime rerun used the integration checkout and immutable staged helper. Domain
+audit again passed with zero violations and no baseline edits. Logs:
+`integration-writing-storage.log`, `integration-bridge-admission.log` and
+`integration-minime-tests.log`.
+
+Minime's three already-installed adapter files were verified byte-for-byte against
+the destination commit, then staged by exact path to permit its fast-forward.
+No reset, stash, forced checkout, rebase or foreign change was involved. Both
+canonical worktrees and indexes were clean afterward. Both local mains are ahead
+of origin; no push was requested or performed. Original release-source worktrees
+remain pinned and dirty by design, with all work represented in the integration
+commits rather than discarded from those immutable-source witnesses.
+
+Post-merge verification passed: all 773 canonical/external bridge build inputs
+match the selected release's hashes and modes; all 97 installed/loaded Minime
+inputs match its frozen snapshot. Process identities and launch configuration
+remain as verified above, the expected helper is selected, and both launch holds
+are absent. `rollout-after-git.json` SHA-256:
+`45603be83342d2d7b95808e3da03239255981bf3282a155c05560dfa78942406`.
+The before-Git receipt SHA-256 is
+`8ce3b569cfc3112afd176c366198fd248c5c63010a65718820dc9c3859af320b`.
+Passive post-merge telemetry advanced from 1197849849 to 1197852210 ms with fill
+ratios 0.7236483 and 0.74206835. This bounded sample establishes reception, not
+settling, long-term stability or a causal effect of the presentation repair.
+
+Controller remains paused at generation 525, no lease or active projection. V2
+indexed-tail verification passes at sequence 1123179, head
+`d5e73d888d703089db22226c39a4d0cec14eb5bbf7a45f777bff6b28c0093c2e`;
+V1 sources remain immutable. Source lag remains explicit. The final cache audit
+is within budget, with the same 3,977,211,904 bridge and 1,249,619,968 helper
+debug/test bytes and 517,261,004,800 free bytes. No cleanup was performed: these
+owned caches remain qualification references, and no new duplicate build cache
+was created for integration. Machine-wide free-space changes are not attributed
+to this rollout.
+
+This documentation-only follow-up records completion without changing runtime
+source or immutable manifests. Further natural-use evaluation, larger capacity
+qualification and the separate routine-feedback presentation review remain
+distinct work; no confirmation of subjective benefit was solicited.
