@@ -331,27 +331,6 @@ fn peer_mutation_boundary_match(action: &str) -> Option<(String, String)> {
     Some((verb, peer_id))
 }
 
-fn shared_investigation_response_contract(cue: &Option<Value>) -> String {
-    let Some(cue) = cue else {
-        return String::new();
-    };
-    let peer_claim = cue
-        .get("peer_claim_prompt")
-        .and_then(Value::as_str)
-        .unwrap_or("Cite one peer claim, then answer from the local evidence lane.");
-    let local_lane = cue
-        .get("local_lane")
-        .and_then(Value::as_str)
-        .unwrap_or("Local lane: native evidence.");
-    let advisory = cue
-        .get("advisory_note")
-        .and_then(Value::as_str)
-        .unwrap_or("Advisory only: no shared control authority.");
-    format!(
-        "Shared investigation response contract:\n- Peer claim to answer: {peer_claim}\n- Local evidence lane: {local_lane}\n- Allowed stances: support, counter, branch, hold.\n- Optional dossier capture: DOSSIER_CLAIM <local_id> :: claim: ...; basis: ...; stance: support|counter|branch|hold; next: ... or DOSSIER_EVIDENCE <local_id> :: claim_id: latest; evidence: ...\n- {advisory}\n"
-    )
-}
-
 fn preferred_charter_scaffold_next(
     experiment: &ExperimentRecord,
     recent_runs: &[ExperimentRunRecord],

@@ -261,7 +261,9 @@ impl Reader {
             // finding. Keep the pending source bytes, but refresh its framing on
             // resume. Retain the old complete input for late delivery verification
             // and choice provenance. Uninterrupted retries stay byte-exact.
-            state.pending_page_context_stale = true;
+            if input_kind != InputKind::InquiryReview {
+                state.pending_page_context_stale = true;
+            }
             state.sequence = state
                 .sequence
                 .checked_add(1)

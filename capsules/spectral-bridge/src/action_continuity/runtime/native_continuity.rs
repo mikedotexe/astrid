@@ -27,13 +27,10 @@ fn astrid_native_continuity(
                 .as_deref()
                 .is_some_and(|text| !text.trim().is_empty())
     }) || !thread.why_return.trim().is_empty();
-    let native_return_cue = format!(
-        "Astrid native return: name felt texture, motif continuity ({dominant_motif}), language thread, and artifact grounding."
-    );
     json!({
         "schema_version": 1,
         "native_register": "astrid_motif_language",
-        "native_return_cue": native_return_cue,
+        "native_return_cue": "",
         "evidence_lanes": {
             "felt_texture": {
                 "status": lane_status(felt_count > 0),
@@ -57,13 +54,9 @@ fn astrid_native_continuity(
     })
 }
 
-fn native_return_cue_line(native: &Value) -> String {
-    native
-        .get("native_return_cue")
-        .and_then(Value::as_str)
-        .filter(|cue| !cue.trim().is_empty())
-        .map(|cue| format!("Native return: {cue}\n"))
-        .unwrap_or_default()
+fn native_return_cue_line(_native: &Value) -> String {
+    // Historical cues prescribed a felt report. Preserve them in storage only.
+    String::new()
 }
 
 fn directed_shift_signal_text(value: &str) -> String {

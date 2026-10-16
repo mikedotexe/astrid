@@ -314,6 +314,10 @@ impl Writer {
                 }
                 state.active = Some(arg.into());
                 state.drafts.get_mut(arg).context("draft missing")?.finished = false;
+                notice = format!(
+                    "Return-and-write: selected {arg}; this action requests a new appended passage. Retained pending inputs remain unchanged.\n{}",
+                    serde_json::to_string_pretty(&presentation::return_facts(&state, arg)?)?
+                );
             },
             "READ" => {
                 let mut args = arg.split_whitespace();
@@ -342,6 +346,12 @@ impl Writer {
                         " End of draft.".into()
                     }
                 );
+                let _ = write!(
+                    notice,
+                    "\nReturn facts (inspection only):\n{}",
+                    serde_json::to_string_pretty(&presentation::return_facts(&state, id)?)?
+                );
+                notice.push_str(&presentation::stopping_point(draft));
                 writing = false;
             },
             "CONTINUE" => {},
@@ -381,6 +391,21 @@ impl Writer {
                         draft.parts.len(),
                         draft.revision,
                         if draft.finished { "finished" } else { "open" }
+                    );
+                    let _ = writeln!(
+                        notice,
+                        "Stopping point: {}. Pending draft deliveries: {}. Inspect without selecting: WRITE READ {id} 1. Return-and-write: WRITE RESUME {id}.",
+                        if draft.stopping_point.is_empty() {
+                            "absent"
+                        } else {
+                            "available on inspection"
+                        },
+                        state
+                            .pending
+                            .iter()
+                            .chain(state.retained_pending.values())
+                            .filter(|pending| pending.draft.as_deref() == Some(id))
+                            .count()
                     );
                 }
             },
@@ -691,14 +716,11 @@ impl Writer {
             .drafts
             .get(id)
             .context("draft not found; use WRITE LIST")?;
-        Ok(digest(serde_json::to_vec(&(
-            &draft.topic,
-            &draft.question,
-            &draft.evidence,
-            &draft.parts,
-            &draft.stopping_point,
-            draft.revision,
-        ))?))
+        presentation::authored_revision(draft)
+    }
+
+    pub(crate) fn return_facts_locked(&self, id: &str) -> Result<serde_json::Value> {
+        presentation::return_facts(&self.load()?, id)
     }
 
     /// Retry advice only when the exact pending input is still valid.

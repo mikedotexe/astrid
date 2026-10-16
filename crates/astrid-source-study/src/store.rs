@@ -194,20 +194,14 @@ pub struct Reader {
     pub(crate) runtime: Option<crate::trace::RuntimeRecords>,
 }
 
-fn pending_context_is_current(state: &State, page: &Page) -> bool {
-    !state.pending_page_context_stale
-        && state
-            .choice_sequences
-            .get(&page.id)
-            .is_none_or(|sequence| *sequence >= state.sequence)
-}
-
 fn retained_pending_output(state: &State, page: &Page) -> Option<StudyOutput> {
     state
         .pending_page_output
         .as_ref()
         .filter(|output| {
-            pending_context_is_current(state, page)
+            // Inspection has its own generation sequence but cannot revise the
+            // source context. Choice ordering remains solely delivery provenance.
+            !state.pending_page_context_stale
                 && output
                     .page
                     .as_ref()
@@ -605,7 +599,10 @@ impl Reader {
                     return self.output(&mut state, text, None, InputKind::InquiryReview);
                 }
                 if let crate::QuestionCommand::Review { id, page } = &command {
-                    let text = state.questions.review(id, *page)?;
+                    let mut review: Value =
+                        serde_json::from_str(&state.questions.review(id, *page)?)?;
+                    review["return_support"] = state.question_return_facts(id, &self.catalog);
+                    let text = serde_json::to_string_pretty(&review)?;
                     return self.output(&mut state, text, None, InputKind::InquiryReview);
                 }
                 let transition = matches!(
@@ -1060,6 +1057,17 @@ impl Reader {
             "source-study state is unreadable; preserving it instead of resetting progress",
         )?;
         crate::notebook_persistence::restore(&self.directory, &mut value)?;
+        // Older helpers can omit this flag. Preserve their sequence-based
+        // invalidation, while explicit false in current checkpoints allows a
+        // detached review's generation sequence without regenerating input.
+        if value.get("pending_page_context_stale").is_none() {
+            let stale = value["pending"]["id"]
+                .as_str()
+                .and_then(|id| value["choice_sequences"][id].as_u64())
+                .zip(value["sequence"].as_u64())
+                .is_some_and(|(prepared, current)| prepared < current);
+            value["pending_page_context_stale"] = stale.into();
+        }
         let legacy_cursor = value.get("reading_contexts").is_none();
         let mut state: State = serde_json::from_value(value)?;
         if legacy_cursor {

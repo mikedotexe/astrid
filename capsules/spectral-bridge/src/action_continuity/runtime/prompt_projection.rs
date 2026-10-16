@@ -126,7 +126,7 @@ pub fn prompt_summary() -> Option<String> {
         .as_ref()
         .map(|value| {
             format!(
-                "Motif allowance: {} dominant={} action_concentration={} returnability={}\nAllowance culture: deepen, branch, compare, release, rest, or hold space are all valid; branching preserves the original return point.\n",
+                "Motif allowance: {} dominant={} action_concentration={}\n{}\nAllowance culture: deepen, branch, compare, release, rest, or hold space are all valid; branching preserves the original return point.\n",
                 value
                     .get("quality")
                     .and_then(Value::as_str)
@@ -138,9 +138,7 @@ pub fn prompt_summary() -> Option<String> {
                 value
                     .get("action_base_concentration")
                     .map_or_else(|| "n/a".to_string(), Value::to_string),
-                value
-                    .get("returnability")
-                    .map_or_else(|| "n/a".to_string(), Value::to_string),
+                return_support::render(value),
             )
         })
         .unwrap_or_default();

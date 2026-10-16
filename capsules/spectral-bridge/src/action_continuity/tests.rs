@@ -1437,12 +1437,8 @@ fn peer_experiment_refs_are_advisory_not_local_selectors() {
     assert!(status.contains("Peer experiment reference"));
     assert!(review.contains("Suggested local next"));
     assert!(notice.contains("cannot bind runs"));
-    assert!(
-        unavailable_compare.contains(
-            "Peer experiment reference (EXPERIMENT_COMPARE) `exp_minime_receptivity_bias`"
-        )
-    );
-    assert!(unavailable_compare.contains("belongs to minime"));
+    assert!(unavailable_compare.contains("exp_minime_receptivity_bias"));
+    assert!(unavailable_compare.contains("\"owner\": \"minime\""));
     assert!(
         unavailable_compare
             .contains("Peer snapshot: not available from local action-thread files.")
@@ -1563,9 +1559,11 @@ fn shared_investigation_cue_preserves_distinct_agency() {
     let line = shared_investigation_line(&Some(cue.clone()));
     assert!(line.contains("Shared investigation, distinct lanes"));
     assert!(line.contains("Advisory only: no shared control authority"));
-    let contract = shared_investigation_response_contract(&Some(cue));
-    assert!(contract.contains("Peer claim to answer"));
-    assert!(contract.contains("Allowed stances: support, counter, branch, hold"));
+    let comparison = store
+        .experiment_compare_command(Some(&compare.replace("EXPERIMENT_COMPARE ", "")))
+        .unwrap();
+    assert!(!comparison.contains("Peer claim to answer"));
+    assert!(!comparison.contains("Allowed stances:"));
 
     let unrelated = json!({
         "experiment_id": "exp_minime_20990101_grocery-list",
@@ -4238,7 +4236,7 @@ fn continuity_return_renders_lifecycle_cues() {
             .contains("Lifecycle: needs_charter")
     );
     assert!(
-        store
+        !store
             .thread_status(None)
             .expect("thread status")
             .contains("Native return: Astrid native return")

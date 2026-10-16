@@ -27,6 +27,8 @@ use crate::db::{BridgeDb, unix_now};
 use crate::paths::bridge_paths;
 use crate::types::SpectralTelemetry;
 
+#[path = "runtime/experiment_comparison.rs"]
+mod experiment_comparison;
 #[path = "guards.rs"]
 mod guards;
 #[path = "ids.rs"]
@@ -35,6 +37,10 @@ mod ids;
 mod paths;
 #[path = "persistence.rs"]
 mod persistence;
+#[path = "runtime/retained_inspection.rs"]
+mod retained_inspection;
+#[path = "runtime/return_support.rs"]
+mod return_support;
 pub use guards::{CharterReason, CharterRequiredGuardAssessment, ResearchBudgetGuardAssessment};
 
 include!("runtime/core.rs");
@@ -76,3 +82,7 @@ mod reader_bookmark_tests;
 #[cfg(test)]
 #[path = "self_study_contract_tests.rs"]
 mod self_study_contract_tests;
+
+#[cfg(test)]
+#[path = "return_support_tests.rs"]
+mod return_support_tests;

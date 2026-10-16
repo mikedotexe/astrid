@@ -52,6 +52,9 @@ pub struct Response {
     #[serde(default)]
     pub invocation_granted: bool,
     pub pending_input_id: Option<String>,
+    /// Explicit status/return facts only; never private authored prose.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_state: Option<serde_json::Value>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -83,14 +86,41 @@ impl Reader {
         }
     }
 
-    fn activity_view(&self, state: &FocusState, now_ms: u64) -> Result<Response> {
+    fn activity_view(&self, state: &FocusState, now_ms: u64, inspect: bool) -> Result<Response> {
         let mut response = view(state, now_ms);
+        if inspect
+            && let Some(target) = state
+                .parked
+                .as_ref()
+                .or_else(|| state.window.as_ref().map(|w| &w.target))
+        {
+            let mut facts = match target {
+                Target::Write(id) => crate::writing::Writer::new(self.directory.join("writing"))
+                    .return_facts_locked(id)?,
+                Target::Question(id) => {
+                    let native = self.load()?;
+                    let mut facts = native.question_return_facts(id, &self.catalog);
+                    facts["authored_revision"] = native.questions.target_revision(id)?.into();
+                    facts["inspect_command"] = format!("SELF_STUDY QUESTION REVIEW {id}").into();
+                    facts
+                },
+            };
+            facts["return_effect"] = "RETURN_ACTIVITY selects retained native work only; it requests no generation and does not renew protection. A separate explicit action continues it.".into();
+            response.target_state = Some(facts);
+        }
         if let Some(target) = &state.parked {
-            response.return_command = Some(return_command(
-                target,
-                &self.target_revision(target)?,
-                state.revision,
-            ));
+            let source_matches = response
+                .target_state
+                .as_ref()
+                .and_then(|facts| facts["saved_sources_match_now"].as_bool())
+                .unwrap_or(true);
+            if source_matches {
+                response.return_command = Some(return_command(
+                    target,
+                    &self.target_revision(target)?,
+                    state.revision,
+                ));
+            }
         }
         Ok(response)
     }
@@ -204,6 +234,9 @@ impl Reader {
     ) -> Result<Response> {
         let _lock = self.lock()?;
         let owner = self.activity_owner()?;
+        let inspect = matches!(&request, Request::Status)
+            || matches!(&request, Request::Command { action }
+                if action == "ACTIVITY_STATUS" || action.starts_with("RETURN_ACTIVITY "));
         let path = self.directory.join("activity-focus-v1.json");
         let marker = self.directory.join("activity-transition-v1.json");
         let mut saved: Checkpoint = if path.exists() {
@@ -260,7 +293,7 @@ impl Reader {
         if matches!(request, Request::Status | Request::Next)
             || matches!(&request, Request::Command { action } if action == "ACTIVITY_STATUS")
         {
-            let mut result = self.activity_view(&saved.focus, now_ms)?;
+            let mut result = self.activity_view(&saved.focus, now_ms, inspect)?;
             result.pending_input_id = saved
                 .focus
                 .window
@@ -310,7 +343,7 @@ impl Reader {
                 prior == &fingerprint,
                 "conflicting activity operation retry"
             );
-            return self.activity_view(&saved.focus, now_ms);
+            return self.activity_view(&saved.focus, now_ms, inspect);
         }
         ensure!(
             expected_revision == Some(saved.focus.revision),
@@ -436,7 +469,7 @@ impl Reader {
             fs::remove_file(&marker)?;
             fs::File::open(&self.directory)?.sync_all()?;
         }
-        let mut result = self.activity_view(&saved.focus, now_ms)?;
+        let mut result = self.activity_view(&saved.focus, now_ms, inspect)?;
         result.invocation_granted = invocation_granted;
         Ok(result)
     }
@@ -468,5 +501,6 @@ fn view(state: &FocusState, now_ms: u64) -> Response {
         next_action: None,
         invocation_granted: false,
         pending_input_id: None,
+        target_state: None,
     }
 }

@@ -66,7 +66,7 @@ fn unfinished_work_can_branch_park_return_and_revise_without_implicit_closure() 
         assert!(
             branch
                 .text
-                .contains("Return to parent draft: WRITE RESUME d1")
+                .contains("Return-and-write to parent draft: WRITE RESUME d1")
         );
         assert!(branch.text.contains("WRITE RESUME d2"));
         assert!(branch.text.contains(original));

@@ -4,6 +4,8 @@ use crate::{Page, questions::QuestionCommand};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+#[path = "reading_return.rs"]
+mod return_presentation;
 
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub(super) struct ReadingCursor {
@@ -68,6 +70,21 @@ impl ReadingCursor {
 }
 
 impl State {
+    pub(super) fn question_return_facts(
+        &self,
+        id: &str,
+        catalog: &crate::Catalog,
+    ) -> serde_json::Value {
+        let cursor = if self.cursor_owner.as_deref() == Some(id) {
+            ReadingCursor::capture(self)
+        } else {
+            self.reading_contexts.get(id).cloned().unwrap_or_default()
+        };
+        let mut facts = cursor.return_facts(id, catalog);
+        facts["selected"] = (self.questions.active.as_deref() == Some(id)).into();
+        facts
+    }
+
     pub(super) fn migrate_cursors(&mut self) {
         // Attribute only positions that already carry their owning question.
         // Old global progress cannot reconstruct every historical inquiry.

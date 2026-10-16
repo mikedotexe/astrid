@@ -2222,10 +2222,7 @@ def native_continuity(
         return {
             "schema_version": 1,
             "native_register": "astrid_motif_language",
-            "native_return_cue": (
-                f"Astrid native return: name felt texture, motif continuity ({dominant}), "
-                "language thread, and artifact grounding."
-            ),
+            "native_return_cue": "",
             "evidence_lanes": {
                 "felt_texture": {"status": "present" if felt_count else "missing", "count": felt_count},
                 "motif_continuity": {
@@ -2247,10 +2244,7 @@ def native_continuity(
     return {
         "schema_version": 1,
         "native_register": "minime_spectral_state",
-        "native_return_cue": (
-            "Minime native return: state spectral condition, fill/pressure state, "
-            "recurrence pattern, and artifact grounding."
-        ),
+        "native_return_cue": "",
         "evidence_lanes": {
             "spectral_condition": {
                 "status": "present" if resonance or telemetry_count else "missing",
@@ -3758,7 +3752,6 @@ def render_markdown(report: dict[str, Any]) -> str:
                 )
             native = experiment.get("native_continuity_v1") or {}
             if native:
-                lines.append(f"- Native return: {native.get('native_return_cue')}")
                 lanes = native.get("evidence_lanes") or {}
                 lane_text = " ".join(
                     f"{name}={value.get('status', 'missing')}"
@@ -3901,9 +3894,6 @@ def render_markdown(report: dict[str, Any]) -> str:
                     lines.append(f"  Suggested NEXT: `{last_summary.get('resume_next')}`")
                 if last_summary.get("inspect_next"):
                     lines.append(f"  Inspect NEXT: `{last_summary.get('inspect_next')}`")
-            native = (being.get("projection") or {}).get("native_continuity_v1") or {}
-            if native:
-                lines.append(f"- Native return: {native.get('native_return_cue')}")
             safety_cue = (being.get("projection") or {}).get("preflight_safety_cue_v1") or {}
             if isinstance(safety_cue, dict) and safety_cue.get("cue"):
                 lines.append(f"- Preflight safety cue: {safety_cue.get('cue')}")

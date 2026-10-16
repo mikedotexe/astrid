@@ -55,7 +55,8 @@ def admission_preservation(root, owner, old, new):
     f.deliver(new, pending, "Synthetic completion across transition.\nNEXT: REST")
     fresh, _ = once(f, new, "fresh", "WRITE CONTINUE")
     f.check("Optional choices (never automatic):" in fresh["text"], "new inputs use compact choices")
-    f.check("Return: WRITE RESUME d1\n" in fresh["text"], "return command has exact boundary")
+    f.check("Return-and-write (new appended passage): WRITE RESUME d1\n" in fresh["text"],
+            "return command has exact boundary and explicit generation semantics")
     f.check(not (f.workspace / "journal").exists(), "private material never published")
     return dict(owner=owner, checks=f.checks, synthetic_state_hashes=file_hashes(f.state))
 
@@ -123,11 +124,17 @@ try:
 except WritingAdmissionRefused:
     pass
 try:
-    old.final_admission_recovery()
+    old_recovery = old.final_admission_recovery()
 except RuntimeError as error:
     check('no unchanged retry' in str(error), 'old helper fails closed instead of offering invalid retry')
 else:
-    raise ValueError('old helper silently claimed new recovery support')
+    check(isinstance(old_recovery, dict) and old_recovery.get('code') == 'final_request_too_large',
+          'recovery-capable old helper returns typed final-request refusal')
+    check(old_recovery.get('commands') == ['WRITE READ d1 1', 'WRITE PARK', 'WRITE HELP'],
+          'recovery-capable old helper offers no unchanged retry')
+    check(old_recovery.get('final_capacity') == dict(prepared_input_bytes=len(old.encode('utf-8')),
+          system_bytes=48_000, wrapper_bytes=0, allowance_bytes=48_000),
+          'recovery-capable old helper retains exact refused request counts')
 check(hashes(state) == before, 'old-helper refusal preserves all state')
 client.executable = helper
 unicode_prompt = client.prepare('WRITE CONTINUE')

@@ -231,12 +231,12 @@ fn compact_writing_guidance_keeps_balanced_choices_and_exact_return() {
     assert!(
         choices
             .lines()
-            .any(|line| line == "Return: WRITE RESUME d1")
+            .any(|line| line == "Return-and-write (new appended passage): WRITE RESUME d1")
     );
     assert!(
         choices
             .lines()
-            .any(|line| line == "Inspect: WRITE READ d1 1")
+            .any(|line| line == "Inspect (no selection or draft change): WRITE READ d1 1")
     );
     assert!(output.system_prompt.contains("Missing NEXT or REST stops"));
     let help = prepare(&r, "help", "WRITE HELP");

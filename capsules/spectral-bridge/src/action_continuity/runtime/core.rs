@@ -648,7 +648,7 @@ impl ActionContinuityStore {
             .as_ref()
             .map(|value| {
                 format!(
-                    "Motif allowance: {} dominant={} action_concentration={} returnability={}\n",
+                    "Motif allowance: {} dominant={} action_concentration={}\n{}\n",
                     value
                         .get("quality")
                         .and_then(Value::as_str)
@@ -660,9 +660,7 @@ impl ActionContinuityStore {
                     value
                         .get("action_base_concentration")
                         .map_or_else(|| "n/a".to_string(), Value::to_string),
-                    value
-                        .get("returnability")
-                        .map_or_else(|| "n/a".to_string(), Value::to_string),
+                    return_support::render(value),
                 )
             })
             .unwrap_or_default();
@@ -1382,60 +1380,20 @@ impl ActionContinuityStore {
         }
         let experiment = self.select_existing_experiment(db, thread, experiment, iso_now())?;
         Ok(format!(
-            "Resumed experiment `{}`: {}\nQuestion: {}\nNext: {}",
+            "Resumed experiment context `{}`: {}\nRetained question: {}\nSaved planned action (not executed by resume): {}\nThis selects stored context, not a restored state of understanding. Optional inspection: EXPERIMENT_STATUS {}",
             experiment.experiment_id,
             experiment.title,
             experiment.question,
             experiment
                 .planned_next
                 .as_deref()
-                .unwrap_or("EXPERIMENT_PLAN current")
+                .unwrap_or("(none)"),
+            experiment.experiment_id,
         ))
     }
 
     pub fn experiment_compare_command(&self, selector: Option<&str>) -> Result<String> {
-        let thread = self.ensure_active_thread(None)?;
-        let raw = selector.unwrap_or("current").trim();
-        let (left_raw, right_raw) = parse_experiment_compare(raw);
-        let left = self.resolve_experiment(&thread, left_raw.as_deref())?;
-        let allowance =
-            self.motif_allowance_snapshot(&thread.thread_id, Some(&left.experiment_id))?;
-        let left_runs = self.recent_experiment_runs(&thread.thread_id, &left.experiment_id, 4)?;
-        let left_run_text = render_run_list(&left_runs);
-        let mut shared = None::<Value>;
-        let right_text = if let Some(peer) = right_raw.as_deref().and_then(peer_experiment_ref) {
-            shared = self.shared_investigation_v1(&left);
-            self.format_peer_experiment_reference(&thread, &peer, "EXPERIMENT_COMPARE", None)
-        } else {
-            let right = self.resolve_experiment(&thread, right_raw.as_deref())?;
-            let right_runs =
-                self.recent_experiment_runs(&thread.thread_id, &right.experiment_id, 4)?;
-            format!(
-                "Local comparison target `{}`: {}\nQuestion: {}\nLatest runs:\n{}",
-                right.experiment_id,
-                right.title,
-                right.question,
-                render_run_list(&right_runs)
-            )
-        };
-        Ok(format!(
-            "Experiment comparison\nLeft `{}`: {}\nQuestion: {}\nLatest runs:\n{}\n\nRight:\n{}\n\n{}Motif allowance: {} (returnability={})\nSuggested next: EXPERIMENT_ALT_PATHS {}",
-            left.experiment_id,
-            left.title,
-            left.question,
-            left_run_text,
-            right_text,
-            shared_investigation_response_contract(&shared),
-            allowance
-                .get("quality")
-                .and_then(Value::as_str)
-                .unwrap_or("open_basin"),
-            allowance
-                .get("returnability")
-                .and_then(Value::as_f64)
-                .map_or_else(|| "n/a".to_string(), |value| round4(value).to_string()),
-            left.experiment_id,
-        ))
+        self.compare_retained_experiments(selector)
     }
 
     pub fn shared_investigation_start_command(
@@ -1998,7 +1956,7 @@ impl ActionContinuityStore {
             .and_then(Value::as_str)
             .unwrap_or("current motif");
         Ok(format!(
-            "Motif allowance for `{}`: {}\nQuestion: {}\nQuality: {} action_concentration={} motif_recurrence={} branches={}\n\nThree non-executing paths:\n- Deepen: EXPERIMENT_BIND current :: ACTION_PREFLIGHT {} {}\n- Contrast: EXPERIMENT_BRANCH Contrast {} :: What changes when this inquiry is compared against a different motif or source?\n- Rest/observe: EXPERIMENT_OBSERVE current :: Hold the {} motif without executing; note whether returnability improves.\n\nReturn point remains: EXPERIMENT_RESUME {}",
+            "Motif allowance for `{}`: {}\nQuestion: {}\nQuality: {} action_concentration={} motif_recurrence={} branches={}\n\nThree non-executing paths:\n- Deepen: EXPERIMENT_BIND current :: ACTION_PREFLIGHT {} {}\n- Contrast: EXPERIMENT_BRANCH Contrast {} :: What changes if I choose a different question or source?\n- Rest/inspect: saved {} material remains available through EXPERIMENT_STATUS current; no observation is required.\n\nReturn point remains: EXPERIMENT_RESUME {}",
             experiment.experiment_id,
             experiment.title,
             experiment.question,
@@ -6441,9 +6399,11 @@ impl ActionContinuityStore {
     }
 
     pub fn experiment_status(&self, selector: Option<&str>) -> Result<String> {
-        let thread = self.ensure_active_thread(None)?;
+        let Some(thread) = self.inspect_current_thread()? else {
+            return Ok("No selected action thread; no experiment was selected or created by inspection.".into());
+        };
         if let Some(peer) = selector.and_then(peer_experiment_ref) {
-            return self.record_peer_experiment_reference(None, &peer, "EXPERIMENT_STATUS", None);
+            return Ok(self.format_peer_experiment_reference(&thread, &peer, "EXPERIMENT_STATUS", None));
         }
         if selector_is_current(selector) && thread.active_experiment_id.is_none() {
             return Ok(no_active_experiment_message(&thread, "EXPERIMENT_STATUS"));
@@ -6453,9 +6413,11 @@ impl ActionContinuityStore {
     }
 
     pub fn experiment_review(&self, selector: Option<&str>) -> Result<String> {
-        let thread = self.ensure_active_thread(None)?;
+        let Some(thread) = self.inspect_current_thread()? else {
+            return Ok("No selected action thread; no experiment was selected or created by inspection.".into());
+        };
         if let Some(peer) = selector.and_then(peer_experiment_ref) {
-            return self.record_peer_experiment_reference(None, &peer, "EXPERIMENT_REVIEW", None);
+            return Ok(self.format_peer_experiment_reference(&thread, &peer, "EXPERIMENT_REVIEW", None));
         }
         if selector_is_current(selector) && thread.active_experiment_id.is_none() {
             return Ok(no_active_experiment_message(&thread, "EXPERIMENT_REVIEW"));
@@ -7189,7 +7151,7 @@ impl ActionContinuityStore {
             .as_ref()
             .map(|value| {
                 format!(
-                    "\nMotif allowance: {} dominant={} returnability={}\n",
+                    "\nMotif allowance: {} dominant={}\n{}\n",
                     value
                         .get("quality")
                         .and_then(Value::as_str)
@@ -7198,9 +7160,7 @@ impl ActionContinuityStore {
                         .get("dominant_motif")
                         .and_then(Value::as_str)
                         .unwrap_or("open inquiry"),
-                    value
-                        .get("returnability")
-                        .map_or_else(|| "n/a".to_string(), Value::to_string)
+                    return_support::render(value)
                 )
             })
             .unwrap_or_default();
@@ -9538,7 +9498,8 @@ impl ActionContinuityStore {
             .filter(|event| event.outcome_summary.to_ascii_lowercase().contains("peer"))
             .count() as f64
             / events.len().max(1) as f64;
-        let thread = self.read_thread(thread_id).ok();
+        // Projection is read-only: ordinary read_thread may refresh stored state.
+        let thread = self.inspect_retained_thread(thread_id).ok();
         let pressure_quality = thread
             .as_ref()
             .and_then(|thread| thread.thread_pressure_source_v1.as_ref())
@@ -9551,16 +9512,6 @@ impl ActionContinuityStore {
             .and_then(|value| value.get("quality"))
             .and_then(Value::as_str)
             .unwrap_or("unavailable");
-        let returnability = if thread
-            .as_ref()
-            .and_then(|thread| thread.current_next.as_ref())
-            .is_some()
-            || experiment_id.is_some()
-        {
-            0.78
-        } else {
-            0.45
-        };
         let pressure_rest = pressure_quality.contains("high")
             || pressure_quality.contains("pressurized")
             || fluctuation_quality.contains("frantic");
@@ -9588,7 +9539,7 @@ impl ActionContinuityStore {
             "source_read_concentration": round4(source_concentration),
             "peer_echo_recurrence": round4(peer_echo),
             "branch_count": branch_count,
-            "returnability": round4(returnability),
+            "return_support_v1": self.saved_return_support(thread_id, experiment_id),
             "pressure_quality": pressure_quality,
             "inhabitable_fluctuation_quality": fluctuation_quality,
             "advisory_only": true,
@@ -10134,7 +10085,7 @@ impl ActionContinuityStore {
             shared_investigation_object_line(&projection.shared_investigation_object_v1);
         let returnable_distinctions = self.experiment_returnable_distinctions_line(experiment);
         format!(
-            "Experiment `{}`: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}{}Thread: {}\nStatus: {}\nLifecycle: {}\nQuestion: {}\nHypothesis: {}\nAuthority: {}\nPlanned NEXT: {}\nContinuity return: {}\n{}{}{}\n{}\n{}\nMotif allowance: {} dominant={} action_concentration={} returnability={}\nLatest runs:\n{}",
+            "Experiment `{}`: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}{}Thread: {}\nStatus: {}\nLifecycle: {}\nQuestion: {}\nHypothesis: {}\nAuthority: {}\nSaved planned action (not executed by inspection): {}\nContinuity return: {}\n{}{}{}\n{}\n{}\nMotif allowance: {} dominant={} action_concentration={}\n{}\nLatest runs:\n{}",
             experiment.experiment_id,
             experiment.title,
             charter_now_bridge,
@@ -10178,9 +10129,7 @@ impl ActionContinuityStore {
             motif_allowance
                 .get("action_base_concentration")
                 .map_or_else(|| "n/a".to_string(), Value::to_string),
-            motif_allowance
-                .get("returnability")
-                .map_or_else(|| "n/a".to_string(), Value::to_string),
+            return_support::render(&motif_allowance),
             run_text
         )
     }
