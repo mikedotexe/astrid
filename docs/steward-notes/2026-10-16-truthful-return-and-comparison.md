@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-Implemented, qualified and gracefully activated as a paired release on October 16. The user explicitly approved qualified paired activation and local integration. The successful handoff and its preserved earlier refusal are recorded below. Local integration follows without moving the immutable build-source pins. No push or automation resume is authorized by this approval.
+Implemented, qualified, gracefully activated and integrated into both local main branches on October 16. The user explicitly approved qualified paired activation and local integration. The successful handoff, preserved earlier refusal and post-merge verification are recorded below. Immutable build-source pins remain unchanged. No push or automation resume is authorized by this approval.
 
 - Astrid base: `f8e5f44f991411aa59b35f38e1e5210e96392cac`.
 - Minime base: `9b0031b3e3da54d52bad9faa945f8695af30cc18`.
@@ -143,3 +143,18 @@ Pre-commit checks: 21 shared reader/writer tests, 11 bridge return-support tests
 - Passive telemetry samples advanced from 1297332374 to 1297337087 ms with fill ratios 0.63742477, 0.62797517 and 0.61968875. This establishes bounded reception only, not controller settling or subjective benefit. The first observation receipt retained only timestamps because its requested field names did not match the packet; the corrected second receipt uses `fill_ratio`.
 
 Controller pause 527 remains in place, with no lease or active projection. Indexed-tail evidence verification passes at sequence 1123181, head `4726143cb0a33eca2eca80bf6a15c0a6835e99254d94491b5bc12ce90c9e19f5`; V1 sources remain immutable. Canonical source lag remains explicit and is not hidden by this interactive implementation.
+
+## Local integration and closeout
+
+One coordinator committed the exact reviewed implementation sets and fast-forwarded both canonical local main branches:
+
+- Astrid: `8e2cfbddbf9bcd2f676ef55955622cd0ac68b566`, 28 owned paths.
+- Minime: `b8d47c7ad7adbf21b17f19942e6d3489b4ed65fb`, ten owned paths.
+- Integration receipt: `/Users/v/other/worktrees/truthful-return-20261016/integration-merge.json`, SHA-256 `071be3b797a45b257989b248d13a5871425b9fd2a5affed523ddfaddd55e1696`.
+- Post-merge live verification: `/Users/v/other/worktrees/truthful-return-20261016/rollout-after-git.json`, SHA-256 `97bae9e8f94ac312a25d0e058ef869e07a318ab339b6dbf1b83659fd54d51166`.
+
+The post-merge proof binds all 742 committed repository-local bridge inputs and the external inputs within the 780-input build inventory. It also verifies unchanged live bridge/helper identities, all 100 loaded Minime inputs, pending-NEXT restoration, released temporary holds and unchanged protected service/configuration identities. Build-source worktrees and their HEADs remain pinned for immutable-release verification and rollback; they are not disposable caches.
+
+Both canonical indexes are clean and Minime's working tree is clean. Astrid's 734 pre-existing foreign paths remain outside these commits, including the separate model-upgrade work and its changelog additions. One such path, `scripts/capture_stack_receipt.sh`, is also in the stage inventory: its committed version matches the qualified release, while its working-tree version remains the exact recorded foreign edit and was not activated. The first post-merge check stopped on this distinction; the corrected check verifies the committed release identity and independently validates the preserved foreign bytes. It does not claim the entire canonical working tree equals the release.
+
+Remote main tips were rechecked as Astrid `57167b732c63068267483531b082402226018296` and Minime `68ae81722079bac0c4470a117a8d6271ed5e6c08`. No push was performed. This documentation-only closeout does not modify activated source, authored state or launch configuration. Natural uptake of the new return/comparison affordances and subjective effects are not established by these operational checks; no confirmation was solicited.

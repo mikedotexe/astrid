@@ -9,6 +9,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- **Integrated locally: truthful return pair (2026-10-16, Codex).** Fast-forward reviewed Astrid `8e2cfbddbf9b` and Minime `b8d47c7ad7ad` implementation commits into local main. Verify committed release inputs, the running bridge/helper and all 100 loaded Minime inputs. Preserve all 734 foreign Astrid paths, including the unactivated working-tree change to `capture_stack_receipt.sh`; both indexes and Minime's tree are clean. No push, capacity inclusion, source-pin movement or automation resume. Evidence: `docs/steward-notes/2026-10-16-truthful-return-and-comparison.md`.
+
 - **Live: truthful return and deliberate comparison (2026-10-16, Codex).** Activate the qualified bridge/shared-helper and Minime-agent pair through idle/NEXT sealing and acknowledged bridge drain. Verify bridge PID 61069, Minime PID 60407, exact checkpoint and pending-feedback restoration, a fresh saved exchange, 100 loaded adapter inputs and unchanged protected services. Preserve the earlier unsignaled preflight refusal and its verified recovery. Capacity, controls and paused automations remain unchanged. Evidence: `docs/steward-notes/2026-10-16-truthful-return-and-comparison.md`.
 
 - **Qualified, not activated: truthful return pair (2026-10-16, Codex).** Freeze the native bridge/shared helper and 100 Minime launch inputs; pass 171 paired synthetic preservation checks and 68 frozen continuity checks. Retain failed harness attempts and verify that the candidate excludes capacity/provider/model work. Fresh activation approval and cooperative source reconciliation remain required. Evidence: `docs/steward-notes/2026-10-16-truthful-return-and-comparison.md`.
