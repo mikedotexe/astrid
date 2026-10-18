@@ -3,7 +3,7 @@
 ## Status and Scope
 
 Source-bound immutable candidate qualified and gracefully activated on October
-18; local Git integration is recorded below when complete. No push is included.
+18 and integrated into both local main branches. No push is included.
 Mike approved
 repairing the disconnected request path through ordinary admission and exposing
 the specific idle reason. This is not an instruction to replay old requests or
@@ -363,3 +363,50 @@ reflection was requested as a test of improvement. Natural uptake remains to be
 observed separately from deployment success. Larger capacity and MLX work are
 not included. The MLX coordinator was told to refresh old Minime process/source
 bindings before any later maintenance.
+
+## Local Integration and Window Closeout
+
+One coordinator reviewed full staged diffs and committed only the owned paths,
+then fast-forwarded both canonical local main branches:
+
+- Minime `b0bedd98cd02a55a7a8a196a9614e810b1e9de03`: `CHANGELOG.md`,
+  `minime_autonomy/runtime.py`, `minime_autonomy/action_scheduling.py`, and
+  `tests/test_regulation_action_scheduling.py`.
+- Astrid `a07a447dd6114bf4ea165031b9c59944d061583d`: `CHANGELOG.md`, this note,
+  `docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md`,
+  `scripts/reconcile_minime_launch.py`, and
+  `scripts/test_reconcile_minime_launch.py`.
+
+Both commits identify the Codex interactive coordinator in their provenance.
+Final staged-state tests passed: 44 Minime request/admission tests and 19 Astrid
+reconciliation/inventory tests. No executable bytes changed after qualification.
+A synthetic Git fixture qualified the explicit target-index fast-forward before
+using it with the already-installed source and shared changelog. The entire
+canonical staged trees matched the reviewed destination commits, excluding all
+foreign work. No stash, reset, broad add or history rewrite occurred.
+
+`rollout-after-integration.json`, SHA-256
+`44242056a84954354e7c3b19237a5e9367b3a0fade659a323848f7f91d2bb9e8`,
+verifies that all 101 committed Minime input blobs equal the loaded release,
+the fresh process is ready, the launch hold is absent, and the ten protected
+process/configuration/helper identities remain unchanged. It verifies both clean
+indexes, a clean Minime worktree and all 1,660 preserved foreign Astrid paths.
+For the shared changelog, preservation removes only our exact committed added
+block before comparing the original foreign hash; it does not pretend the
+combined file is byte-identical to its earlier whole-file state.
+
+The new agent has admitted ordinary work: this receipt observed one active job,
+and fresh scheduler status at 13:56:34 PDT reported `primary_job_active` and a
+pending-choice boolean without private payload. This is bounded operational
+evidence, not proof that the new regulation-request branch has yet been chosen
+or that an entry completed. Follow-up telemetry advanced to 1478211790,
+1478214150 and 1478216516 ms with fill ratios 0.7117497, 0.73150706 and 0.7115212.
+
+The controller returned to paused `codex-mlx-upgrade` ownership at generation
+530; no automation was resumed. Indexed-tail Evidence Event Store verification
+passes at sequence 1123184, head
+`56b45504442dcf456a8b4f6676c135cb84ead875ff60602a85093979e4420667`,
+with V1 immutable, no active lease and no active projection. The two remote main
+tips still equal the original bases: these are local integrations, not pushes.
+This documentation-only closeout changes no runtime, installed source or state.
+Natural uptake and the separate capacity/MLX qualification remain future work.
