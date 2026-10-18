@@ -72,6 +72,29 @@ class ReconciliationTests(unittest.TestCase):
             self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
                              (self.candidate / name).read_bytes())
 
+    def test_regulation_request_module_is_required_and_frozen_with_runtime(self):
+        added = "minime_autonomy/action_scheduling.py"
+        self.assertIn(added, tool.OVERLAY)
+        (self.canonical / added).unlink()
+        (self.candidate / added).write_text("# reviewed request admission\n")
+        runtime = "minime_autonomy/runtime.py"
+        (self.candidate / runtime).write_text("# reviewed queue integration\n")
+        self.refresh_status()
+        before = tool.inventory(self.canonical)
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(set(result["selected_inputs"]) - set(before), {added})
+        for name in (added, runtime):
+            self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+            self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                             (self.candidate / name).read_bytes())
+
+    def test_missing_regulation_request_module_cannot_produce_release(self):
+        (self.candidate / "minime_autonomy/action_scheduling.py").unlink()
+        with self.assertRaisesRegex(ValueError, "required candidate input missing"):
+            self.run_tool()
+        self.assertFalse((self.root / "out").exists())
+
     def test_legacy_recall_consumers_are_selected_without_touching_live_sources(self):
         names = ("minime_autonomy/expressive_journal.py", "minime_autonomy/research.py")
         for name in names:

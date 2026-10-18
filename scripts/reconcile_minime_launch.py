@@ -15,6 +15,7 @@ import shutil
 from qualify_geometry_release import inventory, require, sha, write_json
 
 OVERLAY = (
+    "minime_autonomy/action_scheduling.py",
     "minime_autonomy/action_vocabulary.py",
     "minime_autonomy/activity_focus.py",
     "minime_autonomy/afterimage_prompts.py",
