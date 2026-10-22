@@ -17,7 +17,7 @@ import time
 
 from minime_next_handoff import process, read_owned, unique
 from paired_minime_handoff import AgentOnlyHandoff
-from restart_minime_agent import LaunchdAgent, TERMINAL, qualified_inputs, read_json
+from restart_minime_agent import LaunchdAgent, TERMINAL, digest, qualified_inputs, read_json
 
 
 class DrainRefusal(RuntimeError):
@@ -76,7 +76,7 @@ def recover_unsignaled_hold(backend, handoff, receipts, expected_inputs):
         rows = [json.loads(line, object_pairs_hook=unique) for line in raw.splitlines()]
         allowed = {"waiting_for_idle", "idle_boundary_refused"}
         allowed |= ({"installation_held", "source_install_intent", "source_installed",
-                     "installed_waiting_for_unchanged_quiet_window"} if index == 0 else
+                     "installed_waiting_for_unchanged_quiet_window", "installed_sources_verified"} if index == 0 else
                     {"owned_unsignaled_hold_recovered"})
         require(rows and all(isinstance(row, dict) for row in rows)
                 and all(row.get("phase") in allowed for row in rows[:-1])
@@ -87,6 +87,11 @@ def recover_unsignaled_hold(backend, handoff, receipts, expected_inputs):
                     "signal_boundary", "signal_sent", "replacement_admission_released",
                     "accepted_work_signal_boundary", "accepted_work_signal_sent"} for row in rows),
                 "prior handoff is not an unsignaled owned failure")
+        for row in rows:
+            if row.get("phase") == "installed_sources_verified":
+                require(row.get("schema") == "minime_reviewed_install_v1"
+                        and row.get("selected_inputs_sha256") == digest(expected_inputs),
+                        "reviewed installation receipt differs from expected inputs")
         waits = [row for row in rows if row.get("phase") == "waiting_for_idle"]
         require(len(waits) == 1, "ambiguous prior process binding")
         if index == 0:

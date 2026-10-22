@@ -18,13 +18,14 @@ from pathlib import Path
 import re
 import stat
 import subprocess
-import time
 import uuid
 
 import bridge_stage
 from bridge_activate import LaunchdBridge, atomic_bytes
 from reconcile_minime_launch import OVERLAY, inventory, sha
-from restart_minime_agent import LaunchdAgent, qualified_inputs, read_json, reload_agent
+from restart_minime_agent import (
+    LaunchdAgent, ReviewedInstallation, digest, qualified_inputs, read_json, reload_agent,
+)
 
 BRIDGE = "com.astrid.spectral-bridge"
 ROOT = Path(__file__).resolve().parents[1]
@@ -175,9 +176,11 @@ class PairedHandoff:
             emit({"phase": "source_installed", "path": path, "sha256": selected[path]})
         if expected != selected:
             raise RuntimeError("installed inventory differs from qualified source")
-        emit({"phase": "installed_waiting_for_unchanged_quiet_window", "seconds": 185})
-        # Preserve the ordinary preflight's full 180-second quiet requirement.
-        time.sleep(185)
+        backend.reviewed_installation = ReviewedInstallation(backend, selected, self.assert_hold)
+        emit({"phase": "installed_sources_verified", "schema": "minime_reviewed_install_v1",
+              "selected_inputs_sha256": digest(selected)})
+        # Exact inventory + owned hold replace the fixed post-write aging delay.
+        # reload_agent still validates process identity, pending work and real idle.
 
     def assert_hold(self):
         if self.hold.is_symlink() or read_json(self.hold) != self.guard:
@@ -289,10 +292,15 @@ class InstalledHandoff(PairedHandoff):
                 and bridge_stage.verify_stage(old_stage)["manifest_sha256"] == guard["manifest_sha256"],
                 "original stage identity changed")
         backup = original.with_suffix(".source-before")
+        terminal = {k: v for k, v in rows[-1].items() if k != "recorded_at"}
+        complete = terminal in (
+            {"phase": "installed_waiting_for_unchanged_quiet_window", "seconds": 185},
+            {"phase": "installed_sources_verified", "schema": "minime_reviewed_install_v1",
+             "selected_inputs_sha256": digest(selected)},
+        )
         require(rows[0].get("phase") == "installation_held" and rows[0].get("backup") == str(backup)
-                and len(rows) == 2 * len(OVERLAY) + 2
-                and rows[-1].get("phase") == "installed_waiting_for_unchanged_quiet_window"
-                and rows[-1].get("seconds") == 185, "original installation is not completely receipted")
+                and len(rows) == 2 * len(OVERLAY) + 2 and complete,
+                "original installation is not completely receipted")
         order = ["scripts/launchd_autonomous_agent.sh", *(p for p in OVERLAY
                  if p != "scripts/launchd_autonomous_agent.sh")]
         for index, path in enumerate(order):
@@ -356,7 +364,6 @@ class InstalledHandoff(PairedHandoff):
                 and qualified.get("live_eligible_now") is False,
                 "qualification does not bind the explicit stage and installed Minime inputs")
         references[str(qualification)] = hashlib.sha256(qualification_raw).hexdigest()
-        backend.validate()
         require(backend.pid() == expected_pid and backend.identity(expected_pid) == expected_start,
                 "old agent PID/start identity changed")
         config, protected = backend.config(), backend.protected()
@@ -389,10 +396,20 @@ class InstalledHandoff(PairedHandoff):
         self.resume_args = (reconciliation, original, qualification, expected_pid)
         self.intent = {"phase": "resume_adoption_intent", "original_hold": original_guard,
                        "successor_hold": self.guard, "selected_stage": self.ready}
+        # Recovery authenticates complete receipts and the installed inventory
+        # anew, including an exact successor on retry, before bypassing edit age.
+        def verify_install_hold():
+            current = evidence_json(owned_bytes(self.hold, private=True))
+            require(current in (original_guard, self.guard),
+                    "installation hold ownership changed before recovery")
+        def validate_installed():
+            backend.reviewed_installation = ReviewedInstallation(backend, selected, verify_install_hold)
+            backend.validate()
         current = evidence_json(owned_bytes(self.hold, private=True))
         self.new_receipt = not os.path.lexists(self.receipt)
         if self.new_receipt:
             require(current == original_guard, "foreign or already adopted hold; use its exact recovery receipt")
+            validate_installed()
             fd = os.open(self.receipt, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         else:
             raw = owned_bytes(self.receipt, private=True)
@@ -415,6 +432,7 @@ class InstalledHandoff(PairedHandoff):
             require(current == self.guard or (current == original_guard and all(
                 row.get("outcome") == "failed" for row in rows[1:])),
                     "foreign, missing or stale successor hold")
+            validate_installed()
             fd = os.open(self.receipt, os.O_WRONLY | os.O_APPEND | os.O_NOFOLLOW | os.O_NONBLOCK)
         self.resume_handle = stack.enter_context(os.fdopen(fd, "a"))
         if not self.new_receipt:

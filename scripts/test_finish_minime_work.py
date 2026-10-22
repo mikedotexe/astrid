@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import Mock
 
 from finish_minime_work import DrainAgent, finish_accepted_work, recover_unsignaled_hold
-from restart_minime_agent import job_receipt, reload_agent
+from restart_minime_agent import digest, job_receipt, reload_agent
 from test_restart_minime_agent import Backend
 
 
@@ -273,6 +273,23 @@ class RecoveryTests(unittest.TestCase):
             self.assertTrue(hold.owned)
             self.assertEqual(result[0]["sha256"], hashlib.sha256(raw).hexdigest())
             self.assertEqual(backend.signals, [])
+
+    def test_new_install_receipt_is_accepted_only_for_exact_inputs(self):
+        for tampered in (False, True):
+            with self.subTest(tampered=tampered), tempfile.TemporaryDirectory() as tmp:
+                backend, hold, first, rows = self.fixture(Path(tmp).resolve())
+                rows.insert(1, {"phase": "installed_sources_verified",
+                    "schema": "minime_reviewed_install_v1", "selected_inputs_sha256":
+                        "0" * 64 if tampered else digest(backend.source)})
+                first.write_text("".join(json.dumps(row) + "\n" for row in rows))
+                if tampered:
+                    with self.assertRaisesRegex(RuntimeError, "differs from expected"):
+                        recover_unsignaled_hold(backend, hold, [first], backend.source)
+                    self.assertFalse(hold.owned)
+                else:
+                    recover_unsignaled_hold(backend, hold, [first], backend.source)
+                    self.assertTrue(hold.owned)
+                self.assertEqual(backend.signals, [])
 
     def test_signalled_unknown_changed_or_corrupt_attempt_cannot_be_claimed(self):
         for failure in ("signal", "boundary", "released", "incomplete", "outcome", "mode", "pid", "drift", "unknown"):

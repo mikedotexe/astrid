@@ -21,7 +21,7 @@ import subprocess
 import sys
 import time
 
-from deploy_preflight import COMPONENTS, preflight
+from deploy_preflight import COMPONENTS, preflight, reviewed_source_signatures
 from steward_control.config import load_config
 
 ROOT = Path("/Users/v/other/minime")
@@ -176,12 +176,38 @@ def job_outcome_proof(directory, job):
     return proof
 
 
+class ReviewedInstallation:
+    """Operation-local evidence, valid only under the installer's owned hold.
+
+    This replaces aging our own writes, not source reconciliation or drain.
+    Nothing is persisted as a reusable exemption or exposed as a CLI bypass.
+    """
+
+    def __init__(self, backend, inputs, verify_hold):
+        self.inputs = inputs.copy()
+        self.verify_hold = verify_hold
+        self.verify_hold()
+        if backend.inputs() != self.inputs:
+            raise RuntimeError("installed source inventory changed")
+        self.signatures = reviewed_source_signatures(backend.root, self.inputs)
+        self.validate(backend)
+
+    def validate(self, backend):
+        self.verify_hold()
+        if (backend.inputs() != self.inputs
+                or reviewed_source_signatures(backend.root, self.inputs) != self.signatures):
+            raise RuntimeError("reviewed installation changed; hold retained")
+        self.verify_hold()
+        return self.inputs.copy()
+
+
 class LaunchdAgent:
     def __init__(self, pause_generation, ack):
         self.pause_generation = pause_generation
         self.ack = ack
         self.root = ROOT
         self.domain = f"gui/{os.getuid()}"
+        self.reviewed_installation = None
 
     def job(self, label=LABEL):
         result = run(["launchctl", "print", f"{self.domain}/{label}"])
@@ -220,6 +246,8 @@ class LaunchdAgent:
         self.maintenance()
         from research_release_compatibility import verify_minime
         verify_minime(self.root, self.root / "workspace")
+        installation = getattr(self, "reviewed_installation", None)
+        reviewed = installation.validate(self) if installation is not None else None
         source = plistlib.loads((self.root / f"launchd/{LABEL}.plist").read_bytes())
         installed = plistlib.loads((Path.home() / f"Library/LaunchAgents/{LABEL}.plist").read_bytes())
         if source != installed or installed.get("KeepAlive") is not True:
@@ -232,9 +260,12 @@ class LaunchdAgent:
         for repo in (self.root, Path(__file__).resolve().parents[1]):
             paths = (COMPONENTS["minime-agent"]["build_paths"] if repo == self.root else
                      ("scripts/restart_minime_agent.py", "scripts/deploy_preflight.py"))
-            check = preflight(repo, ack=self.ack, build_paths=paths, external_roots=())
+            check = preflight(repo, ack=self.ack, build_paths=paths, external_roots=(),
+                              reviewed_inputs=reviewed if repo == self.root else None)
             if not check["ok"]:
                 raise RuntimeError(f"deployment preflight denied: {repo}: {check['reason']}")
+        if installation is not None:
+            installation.validate(self)
 
     def inputs(self):
         return source_inputs(self.root)

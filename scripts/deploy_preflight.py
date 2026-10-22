@@ -9,28 +9,32 @@ requires explicit acknowledgement whenever uncommitted binary inputs are folded
 into a build.
 
 This is the guard `build_bridge.sh` runs before that build. Two checks:
-  1. FOREIGN MID-EDIT (abort) — reuses steward_mutex.foreign_activity: if the tree
-     was mutated <window_s ago, another writer may be editing RIGHT NOW;
-     building would fold a half-written tree. Exit 3.
+  1. RECENT INPUT EDIT (abort) — a selected component input changed <window_s ago.
+     This is a source-stability heuristic, not evidence of another actor. Exit 3.
+     The installer may supply exact, owned installation evidence in-process;
+     no new CLI exemption is added.
   2. DIRTY COMPONENT SOURCE (refuse unless --ack) — uncommitted component build
      inputs and local path dependencies would be folded into the binary or
      service. Refuse (exit 2) and list them unless --ack "<reason>" makes folding
      them in an explicit, logged decision (exit 0).
 
-Clean tree → exit 0. The gate is deliberately scoped to what affects the BINARY
-(docs/scripts/workspace dirt doesn't), and foreign-active is checked first (a fresh
-dirty file may still be mid-edit, so abort rather than merely refuse).
+Clean inputs -> exit 0. Unrelated edits do not delay a component deployment.
+Git/status failures refuse inspection rather than masquerading as clean inputs.
 
 Usage:
   deploy_preflight.py [--component bridge|minime|model] [--repo PATH]
                       [--ack "reason"] [--window-s S] [--json]
   deploy_preflight.py --self-test
-Exit: 0 = ok to build; 2 = dirty bridge source, no --ack; 3 = foreign agent active.
+Exit: 0 = input preflight passed; 2 = dirty inputs, no --ack;
+      3 = recent input activity or failed source inspection.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
+import stat
 import subprocess
 import sys
 import time
@@ -41,7 +45,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-# Reuse the tested cross-agent detector rather than re-implementing it.
+# Keep the controller's broader activity detector unchanged. Deployment uses
+# the selected component scope instead, and retains these public defaults.
 from steward_mutex import (  # noqa: E402
     CODEX_STATE_DIR_DEFAULT,
     FOREIGN_ACTIVITY_WINDOW_S,
@@ -57,11 +62,22 @@ BRIDGE_BUILD_PATHS = (
     "capsules/spectral-bridge/src",
     "capsules/spectral-bridge/Cargo.toml",
     "capsules/spectral-bridge/Cargo.lock",
+    "capsules/spectral-bridge/build.rs",
+    "capsules/spectral-bridge/.cargo",
+    "capsules/.cargo",
+    "capsules/shared/managed_dir.rs",
+    "crates/astrid-capabilities",
+    "crates/astrid-core",
+    "crates/astrid-crypto",
+    "crates/astrid-storage",
     "crates/astrid-minime-protocol",
     "crates/astrid-source-study",
     "crates/astrid-public-web",
     "Cargo.toml",
     "Cargo.lock",
+    ".cargo",
+    "rust-toolchain",
+    "rust-toolchain.toml",
 )
 BRIDGE_LOCAL_PATH_DEPS = (
     Path("/Users/v/other/RASCII"),
@@ -75,6 +91,7 @@ COMPONENTS = {
     },
     "minime": {
         "repo": Path("/Users/v/other/minime"),
+        "activity_scope": "tree",
         "build_paths": (
             "minime/src",
             "minime/Cargo.toml",
@@ -84,6 +101,7 @@ COMPONENTS = {
     },
     "model": {
         "repo": Path("/Users/v/other/neural-triple-reservoir"),
+        "activity_scope": "tree",
         "build_paths": (
             "coupled_astrid_server.py",
             "coupled_http_gateway.py",
@@ -106,23 +124,65 @@ COMPONENTS = {
 }
 
 
-def _porcelain_paths(repo: Path, paths: list[str]) -> list[str]:
+def _porcelain_entries(repo: Path, paths: list[str]) -> list[tuple[str, str]]:
     try:
         out = subprocess.run(
-            ["git", "-C", str(repo), "status", "--porcelain", "-z", "--", *paths],
-            capture_output=True, text=True, timeout=10, check=False,
+            ["git", "-C", str(repo), "status", "--porcelain=v1", "-z",
+             "--untracked-files=all", "--", *paths],
+            capture_output=True, text=True, timeout=10, check=True,
         ).stdout
-    except (OSError, subprocess.SubprocessError):
-        return []
-    files: list[str] = []
-    for entry in out.split("\0"):
-        if len(entry) < 4:
-            continue
-        path = entry[3:]  # strip the 2-char XY status + space
-        if " -> " in path:  # rename: "R  old -> new" → destination
-            path = path.split(" -> ", 1)[1]
-        files.append(path)
-    return files
+    except (OSError, subprocess.SubprocessError) as error:
+        raise RuntimeError(f"cannot inspect component Git status: {repo}") from error
+    if out and not out.endswith("\0"):
+        raise RuntimeError("incomplete component Git status")
+    entries = iter(out.split("\0")[:-1])
+    result = []
+    for entry in entries:
+        if len(entry) < 4 or entry[2] != " ":
+            raise RuntimeError("malformed component Git status")
+        code, path = entry[:2], entry[3:]
+        result.append((code, path))
+        if "R" in code or "C" in code:
+            # In -z format the destination comes first, then a bare source path.
+            original = next(entries, None)
+            if not original:
+                raise RuntimeError("incomplete component rename status")
+            result.append((code, original))
+    return result
+
+
+def _porcelain_paths(repo: Path, paths: list[str]) -> list[str]:
+    return [path for _, path in _porcelain_entries(repo, paths)]
+
+
+def _file_stamp(value):
+    return (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns,
+            value.st_ctime_ns, value.st_mode)
+
+
+def reviewed_source_signatures(repo: Path, inputs: dict[str, str]) -> dict:
+    """Pin exact installed regular files; no symlinks, modes or edits can drift."""
+    root = repo.resolve(strict=True)
+    signatures = {}
+    for name, expected in inputs.items():
+        relative = Path(name)
+        if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+            raise RuntimeError("invalid reviewed source path")
+        path = root / relative
+        if path.resolve(strict=True) != path:
+            raise RuntimeError(f"reviewed source is not a canonical file: {name}")
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd, "rb") as handle:
+            before = os.fstat(handle.fileno())
+            if not stat.S_ISREG(before.st_mode):
+                raise RuntimeError(f"reviewed source is not regular: {name}")
+            digest = hashlib.file_digest(handle, "sha256").hexdigest()
+            stamp = _file_stamp(before)
+            if (digest != expected or stamp != _file_stamp(os.fstat(handle.fileno()))
+                    or stamp != _file_stamp(path.lstat())):
+                raise RuntimeError(f"reviewed source changed: {name}")
+        signatures[name] = stamp
+    return signatures
 
 
 def _git_root(path: Path) -> Path | None:
@@ -139,23 +199,23 @@ def _git_root(path: Path) -> Path | None:
     return Path(root).resolve() if root else None
 
 
-def _dirty_external_build_files(external_roots: tuple[Path, ...]) -> list[str]:
-    files: list[str] = []
+def _external_sources(external_roots: tuple[Path, ...]) -> list[tuple[str, Path | None, str]]:
+    files = []
     for root in external_roots:
         resolved = root.resolve()
         if not resolved.exists():
-            files.append(f"external-missing:{resolved}")
+            files.append((f"external-missing:{resolved}", None, ""))
             continue
         git_root = _git_root(resolved)
         if git_root is None:
-            files.append(f"external-unversioned:{resolved}")
+            files.append((f"external-unversioned:{resolved}", None, ""))
             continue
         try:
             rel = str(resolved.relative_to(git_root))
         except ValueError:
             rel = str(resolved)
-        for path in _porcelain_paths(git_root, [rel]):
-            files.append(f"{git_root.name}:{path}")
+        for code, path in _porcelain_entries(git_root, [rel]):
+            files.append((f"{git_root.name}:{path}", git_root / path, code))
     return files
 
 
@@ -166,7 +226,7 @@ def dirty_build_files(
 ) -> list[str]:
     """Return uncommitted files that a component build or reload would consume."""
     files = _porcelain_paths(repo, list(build_paths))
-    files.extend(_dirty_external_build_files(external_roots))
+    files.extend(label for label, _, _ in _external_sources(external_roots))
     return sorted(set(files))
 
 
@@ -187,14 +247,62 @@ def preflight(
     codex_state_dir: Path = CODEX_STATE_DIR_DEFAULT,
     build_paths: tuple[str, ...] = BRIDGE_BUILD_PATHS,
     external_roots: tuple[Path, ...] = BRIDGE_LOCAL_PATH_DEPS,
+    reviewed_inputs: dict[str, str] | None = None,
+    activity_scope: str = "component",
 ) -> dict:
     """Decide whether it's safe to build+deploy the bridge from `repo`.
     Returns {ok, exit_code, reason, dirty_files, foreign, ack}. Pure (caller acts)."""
     now = time.time() if now is None else now
-    foreign = foreign_activity(repo, codex_state_dir, window_s, now)
-    dirty = dirty_build_files(repo, build_paths, external_roots)
-    # Foreign mid-edit takes precedence: a freshly-mutated tree means a non-mutex
-    # agent is editing NOW — building would capture a half-written state.
+    # codex_state_dir remains API-compatible; agent liveness never established
+    # ownership of an edit. An owned installer supplies reviewed_inputs only
+    # while its complete source inventory and launch hold still match.
+    foreign = {"active": False, "tree_activity_age_s": None, "window_s": window_s,
+               "agent_guess": None, "scope": "component_inputs", "recent_files": [],
+               "reviewed_files": []}
+    dirty = []
+    try:
+        if activity_scope not in {"component", "tree"} or (
+                activity_scope == "tree" and reviewed_inputs is not None):
+            raise ValueError("unsupported source activity scope")
+        sources = [(name, repo / name, code) for code, name in
+                   _porcelain_entries(repo, list(build_paths))]
+        sources.extend(_external_sources(external_roots))
+        dirty = sorted({name for name, _, _ in sources})
+        if reviewed_inputs is not None:
+            reviewed_source_signatures(repo, reviewed_inputs)
+        ages = []
+        for name, path, code in sources:
+            if path is None:
+                continue  # Preserve explicit acknowledgement of unversioned dependencies.
+            if reviewed_inputs is not None and name in reviewed_inputs and path == repo / name:
+                foreign["reviewed_files"].append(name)
+                continue
+            try:
+                modified = path.lstat().st_mtime
+            except FileNotFoundError:
+                if not any(flag in code for flag in "DRC"):
+                    raise RuntimeError(f"component input disappeared: {name}")
+                # Deleted/renamed source has no file mtime. Its nearest surviving
+                # directory gives a conservative edit-age hint, not actor identity.
+                parent = path.parent
+                while not parent.exists():
+                    parent = parent.parent
+                modified = parent.stat().st_mtime
+            age = now - modified
+            ages.append(age)
+            if age <= window_s:
+                foreign["recent_files"].append(name)
+        foreign["tree_activity_age_s"] = min(ages) if ages else None
+        foreign["active"] = bool(foreign["recent_files"])
+        if activity_scope == "tree":
+            # Provider/engine dependency-scope qualification is separate. Keep
+            # their legacy activity policy until their input closure is reviewed.
+            foreign = {**foreign_activity(repo, codex_state_dir, window_s, now),
+                       "scope": "legacy_tree", "agent_guess": None,
+                       "recent_files": [], "reviewed_files": []}
+    except (OSError, RuntimeError, ValueError) as error:
+        return {"ok": False, "exit_code": 3, "reason": "source_inspection_failed",
+                "dirty_files": dirty, "foreign": foreign, "ack": ack, "error": str(error)}
     if foreign["active"]:
         return {"ok": False, "exit_code": 3, "reason": "foreign_active",
                 "dirty_files": dirty, "foreign": foreign, "ack": ack}
@@ -210,11 +318,15 @@ def preflight(
 
 def _render(result: dict) -> str:
     reason = result["reason"]
+    if reason == "source_inspection_failed":
+        return f"REFUSE - component source inspection failed: {result['error']}"
     if reason == "foreign_active":
         fa = result["foreign"]
-        return (f"✗ ABORT — another writer may be editing the tree "
-                f"now (last change {fa.get('tree_activity_age_s')}s ago). Do NOT build mid-edit; "
-                f"wait for it to settle, then re-run.")
+        scope = ("working tree (legacy engine/provider scope)" if fa["scope"] == "legacy_tree"
+                 else "selected component inputs")
+        return (f"REFUSE - {scope} changed recently "
+                f"({fa.get('tree_activity_age_s')}s ago): {', '.join(fa['recent_files'])}. "
+                "Actor unknown; finish/review those edits before retrying.")
     if reason == "dirty_no_ack":
         lines = [f"    {f}" for f in result["dirty_files"]]
         return ("✗ REFUSE — binary source/dependencies have uncommitted or unversioned "
@@ -225,7 +337,7 @@ def _render(result: dict) -> str:
         lines = ", ".join(result["dirty_files"])
         return (f"✓ OK (ACKED) — folding in uncommitted component source: {lines}\n"
                 f"  reason: {result['ack']}")
-    return "✓ OK — component source is clean and no concurrent edit is visible; safe to build."
+    return "OK - selected component inputs are clean; other deployment checks still apply."
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -251,6 +363,7 @@ def main(argv: list[str] | None = None) -> int:
         window_s=args.window_s,
         build_paths=component["build_paths"],
         external_roots=component["external_roots"],
+        activity_scope=component.get("activity_scope", "component"),
     )
     result["component"] = args.component
     if args.json:
@@ -339,17 +452,16 @@ class DeployPreflightTests(unittest.TestCase):
             self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (False, 3, "foreign_active"))
 
     def test_dirty_outside_bridge_does_not_block(self):
-        import os
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:
             repo = self._repo(tmp)
             doc = repo / "CHANGELOG.md"  # not compiled into the binary
             doc.write_text("dirty doc\n")
-            os.utime(doc, (time.time() - 9999, time.time() - 9999))  # stale → not foreign
             r = preflight(repo, codex_state_dir=Path(tmp) / "no_codex", external_roots=())
             self.assertEqual((r["ok"], r["reason"]), (True, "clean"))
 
     def test_dirty_external_path_dependency_refused_without_ack(self):
+        import os
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:
             repo_dir = Path(tmp) / "astrid"
@@ -366,6 +478,11 @@ class DeployPreflightTests(unittest.TestCase):
             self._git(dep, "add", "-A")
             self._git(dep, "commit", "-qm", "base")
             (src / "lib.rs").write_text("// dirty dep\n")
+
+            recent = preflight(repo, ack="review dependency", external_roots=(dep,))
+            self.assertEqual(recent["reason"], "foreign_active")
+            self.assertEqual(recent["foreign"]["recent_files"], ["RASCII:src/lib.rs"])
+            os.utime(src / "lib.rs", (time.time() - 9999, time.time() - 9999))
 
             r = preflight(
                 repo,

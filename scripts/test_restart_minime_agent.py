@@ -27,6 +27,8 @@ class Backend:
 
     def validate(self):
         self.validations += 1
+        if getattr(self, "reviewed_installation", None) is not None:
+            self.reviewed_installation.validate(self)
 
     def maintenance(self):
         pass

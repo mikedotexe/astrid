@@ -26,6 +26,7 @@ DO_BUILD=1
 DO_RESTART=0
 DO_DRAIN_ONLY=0
 STAGE_DIR=""
+REUSE_FROM=""
 ACTIVATE_STAGE=""
 RESUME_VERIFICATION=""
 RESUME_STOPPED_TRANSITION=""
@@ -53,7 +54,7 @@ PROMOTION_BACKUP=""
 CANDIDATE_INSTALLED=false
 
 usage() {
-  echo 'usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--stage-dir DIR | --activate-stage DIR --expected-pid PID [--legacy-stop-ack "explicit approval" | --resume-verification TRANSACTION | --resume-stopped-transition TRANSACTION] [--timeout-secs N] | --drain-only | --restart] [--no-build] [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]'
+  echo 'usage: build_bridge.sh [--ack "reason"] [--actor NAME] [--stage-dir DIR [--reuse-from VERIFIED_STAGE] | --activate-stage DIR --expected-pid PID [--legacy-stop-ack "explicit approval" | --resume-verification TRANSACTION | --resume-stopped-transition TRANSACTION] [--timeout-secs N] | --drain-only | --restart] [--no-build] [--promote-candidate ID --candidate-root DIR --candidate-identity FILE]'
 }
 
 while [ $# -gt 0 ]; do
@@ -65,6 +66,10 @@ while [ $# -gt 0 ]; do
     --restart)   DO_RESTART=1; shift ;;
     --drain-only) DO_DRAIN_ONLY=1; shift ;;
     --stage-dir) STAGE_DIR="${2:-}"; shift 2 ;;
+    --reuse-from)
+      [ -n "${2:-}" ] && [[ "${2:-}" != --* ]] \
+        || { echo "build_bridge: --reuse-from requires a verified stage directory" >&2; exit 64; }
+      REUSE_FROM="$2"; shift 2 ;;
     --activate-stage) ACTIVATE_STAGE="${2:-}"; shift 2 ;;
     --expected-pid) EXPECTED_PID="${2:-}"; shift 2 ;;
     --resume-verification)
@@ -91,6 +96,10 @@ done
 
 if [ -z "$ACTOR" ]; then
   echo "build_bridge: --actor cannot be empty" >&2
+  exit 64
+fi
+if [ -n "$REUSE_FROM" ] && { [ -z "$STAGE_DIR" ] || [ -n "$ACTIVATE_STAGE" ]; }; then
+  echo "build_bridge: --reuse-from requires staging, not activation" >&2
   exit 64
 fi
 
@@ -136,8 +145,10 @@ if [ -n "$STAGE_DIR" ]; then
   [ "$DO_RESTART" -eq 0 ] && [ "$DO_DRAIN_ONLY" -eq 0 ] && [ "$DO_BUILD" -eq 1 ] && [ -z "$PROMOTE_CANDIDATE" ] && [ -n "$ACK" ] \
     || { echo "build_bridge: staging requires --ack and cannot accompany restart/drain/no-build/promotion" >&2; exit 64; }
   python3 -B "$SCRIPT_ROOT/scripts/deploy_preflight.py" --repo "$SCRIPT_ROOT" --ack "$ACK"
+  STAGING_ARGS=(--source-root "$SCRIPT_ROOT" --stage-dir "$STAGE_DIR" --actor "$ACTOR" --ack "$ACK")
+  [ -z "$REUSE_FROM" ] || STAGING_ARGS+=(--reuse-from "$REUSE_FROM")
   exec env ASTRID_SANCTIONED_BRIDGE_STAGE=1 python3 -B "$SCRIPT_ROOT/scripts/bridge_stage.py" build \
-    --source-root "$SCRIPT_ROOT" --stage-dir "$STAGE_DIR" --actor "$ACTOR" --ack "$ACK"
+    "${STAGING_ARGS[@]}"
 fi
 if [ "$DO_DRAIN_ONLY" -eq 1 ]; then
   [ "$DO_RESTART" -eq 0 ] && [ -z "$PROMOTE_CANDIDATE" ] && [ -n "$ACK" ] \
