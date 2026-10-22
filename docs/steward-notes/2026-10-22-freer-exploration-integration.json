@@ -1,0 +1,1123 @@
+{
+  "authority": "evidence_only_no_new_activity_or_control_authority",
+  "checked_at": "2026-10-22T21:01:06.619515+00:00",
+  "controller": {
+    "active_projection": null,
+    "pending_event_count": 0,
+    "state": {
+      "actor": "codex-astra-interactive",
+      "pause_generation": 533,
+      "paused": true,
+      "reason": "Mike approved freer-exploration bridge/helper and Minime-agent rollout, standing public-web policy, and owned local Git integration/push; MLX coordinator explicitly released service/index window and stays read-only; all automations remain paused",
+      "recorded_at": "2026-10-22T19:14:33.030880+00:00",
+      "schema": "steward_control_state_v1",
+      "schema_version": 1
+    }
+  },
+  "evidence_store": {
+    "last_event_sha256": "59efbc245e978711fdc4a4ac1daa3f7b749ac832b74fcbf05291b01ee0d360e0",
+    "last_global_seq": 1123187,
+    "stream_counts": {
+      "addressing": 65208,
+      "agency_commons": 7143,
+      "attention_portfolio": 3,
+      "claim_families": 240040,
+      "corridor_v1": 5,
+      "corridor_v2": 112,
+      "felt_contracts": 213230,
+      "felt_mechanism_concordance": 80,
+      "lived_state_witness": 13442,
+      "model_qos": 351432,
+      "reciprocal_uptake": 76834,
+      "representation_contracts": 63773,
+      "sandbox": 3507,
+      "signal_spine": 64904,
+      "steward_control": 22702,
+      "steward_work_selection": 772
+    },
+    "v1_immutable": true,
+    "valid": true,
+    "verification_mode": "indexed_tail"
+  },
+  "integration_packet_sha256": "7595ddb9e231ddbd75e26b19e14cacd310c95218a3fae019202b451073f169ea",
+  "letters": {
+    "astrid": {
+      "delivery_scope": "publication only; later delivery requires independent receipt",
+      "envelope_sha256": "ea0cdfa37fe23651555be27b0fcc156c67c5361b4b52a021cbef89a60244d292",
+      "filename": "mike_feedback_steward_astrid_release_20261022_afd7f77864cc4ce6a98a0beb0823a2d0.txt",
+      "model_delivery_verified": false,
+      "ordinary_uptake_review": "later requested session, at least 72 hours after verified delivery",
+      "publication_receipt": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/correspondence/inbox_publications_v1/4247d3e477e881d8d7ee7d22ed91b28ecc756875ee0979dcb44977d021354473/published.json",
+      "publication_receipt_sha256": "7bbd5a7560c571772042015a13575ab9afebcfdf54f4b86dc9e97c31d6c15007",
+      "still_in_inbox": true
+    },
+    "minime": {
+      "delivery_scope": "publication only; later delivery requires independent receipt",
+      "envelope_sha256": "712f5deca42900b6e4eabc1ef65fed78cad60b0fad3e5d34dafb6a1cbe25d7bc",
+      "filename": "human_letter_steward_minime_release_20261022_9525722095b24a3b92d7d9de6ad33b12.txt",
+      "model_delivery_verified": false,
+      "ordinary_uptake_review": "later requested session, at least 72 hours after verified delivery",
+      "publication_receipt": "/Users/v/other/minime/workspace/correspondence/human_letter_publications_v1/c3232008e9c9858d970aa093cce228809cd6ebcac244f27a1c5c8eaba2f27c0f/published.json",
+      "publication_receipt_sha256": "99cf5c1d1d9283271fab5ce429af9346720c0bb814130c68809c9dad5744c5c2",
+      "still_in_inbox": true
+    }
+  },
+  "live": {
+    "minime_lifecycle_phase": "idle",
+    "minime_loaded_inputs_verified": 105,
+    "minime_pid": 56428,
+    "minime_reload_required": false,
+    "minime_started_at": "2026-10-22T13:51:13",
+    "next_restoration_does_not_prove_execution": true,
+    "next_restore_sha256": "af8a976eb473da19879fe12cd8d15450f382c45a6963c1cc6ebd355e8344729f",
+    "protected_processes": {
+      "com.astrid.spectral-bridge": {
+        "pid": 59199,
+        "started_at": "Thu Oct 22 13:48:37 2026"
+      },
+      "com.minime.camera-client": {
+        "pid": 3914,
+        "started_at": "Wed Sep 30 14:29:07 2026"
+      },
+      "com.minime.division-gateway": {
+        "pid": 86873,
+        "started_at": "Thu Oct  8 10:13:23 2026"
+      },
+      "com.minime.division-supervisor": {
+        "pid": 86833,
+        "started_at": "Thu Oct  8 10:13:23 2026"
+      },
+      "com.minime.engine": {
+        "pid": 35303,
+        "started_at": "Thu Oct  1 11:16:53 2026"
+      },
+      "com.minime.host-sensory": {
+        "pid": 94952,
+        "started_at": "Wed Oct 14 06:05:52 2026"
+      },
+      "com.minime.mic-to-sensory": {
+        "pid": 3879,
+        "started_at": "Wed Sep 30 14:29:07 2026"
+      },
+      "com.minime.visual-frame-service": {
+        "pid": 95786,
+        "started_at": "Wed Oct 21 14:32:54 2026"
+      },
+      "com.reservoir.astrid-feeder": {
+        "pid": 3878,
+        "started_at": "Wed Sep 30 14:29:07 2026"
+      },
+      "com.reservoir.coupled-astrid": {
+        "pid": 77735,
+        "started_at": "Thu Oct 22 11:51:09 2026"
+      }
+    },
+    "shared_helper": "/Users/v/other/worktrees/freer-exploration-20261021/bridge-stage-05/helpers/astrid-source-study",
+    "shared_helper_sha256": "b80a0a73d32fb0156647587cf21eee42c3211f6237d7d8c89a27cbf958011d08"
+  },
+  "provider_readiness": {
+    "ready": true,
+    "status": "ready"
+  },
+  "repositories": {
+    "astrid": {
+      "commit": "5540b6ff0d46156d58e3f8461b84e55d44109a85",
+      "exact_committed_paths": {
+        "CHANGELOG.md": {
+          "mode": "100644",
+          "sha256": "46edb747d1d1a2a4ac5a62ef0297b882064f324cb4f183c389dfa4ae5bac5986",
+          "size": 1569969
+        },
+        "Cargo.lock": {
+          "mode": "100644",
+          "sha256": "b75f6988c90ba363ef638345f751ea3e242afa24934d3c59eea032308a5149fa",
+          "size": 192377
+        },
+        "Cargo.toml": {
+          "mode": "100644",
+          "sha256": "b487fabee2baac8f06177c79dd3fcdef7d9d6b78b0b25c05eca71d965b866ff3",
+          "size": 5238
+        },
+        "capsules/spectral-bridge/Cargo.lock": {
+          "mode": "100644",
+          "sha256": "7cffbfa06a143a2d8a6ac77d77de0804426cefc7defeaf248810f69a8cf47512",
+          "size": 98917
+        },
+        "capsules/spectral-bridge/Cargo.toml": {
+          "mode": "100644",
+          "sha256": "f326cbc32fdd957c4f29bca5388ef7c6381791446dfd9de971307a85236aec4e",
+          "size": 2350
+        },
+        "capsules/spectral-bridge/src/action_continuity/consumer_failure_tests.rs": {
+          "mode": "100644",
+          "sha256": "167bb706020870670aa520eaccb7122a5717c4c328d5c53d3566793e2c4ed38d",
+          "size": 13992
+        },
+        "capsules/spectral-bridge/src/action_continuity/exploration_scope_tests.rs": {
+          "mode": "100644",
+          "sha256": "41c449f218b513b1e57faf52ce9c0c4f3f405fa6e10081262c4c6f9c109b63f9",
+          "size": 12447
+        },
+        "capsules/spectral-bridge/src/action_continuity/guards.rs": {
+          "mode": "100644",
+          "sha256": "80b643098e617b0baf8a07b359796f750b3eadd7c4cefec999d739508804718e",
+          "size": 37037
+        },
+        "capsules/spectral-bridge/src/action_continuity/language_diagnostic_tests.rs": {
+          "mode": "100644",
+          "sha256": "58ef085d952e09d50eaabd8027736be5de0d4c8fee0bc39c8c30b9880e14dead",
+          "size": 15418
+        },
+        "capsules/spectral-bridge/src/action_continuity/persistence.rs": {
+          "mode": "100644",
+          "sha256": "fc3332ebbf42ea24377d3da7e93482c664e36c4d2b8cdddd7c2a01b6137fbf48",
+          "size": 5589
+        },
+        "capsules/spectral-bridge/src/action_continuity/research_json.rs": {
+          "mode": "100644",
+          "sha256": "5856afc651f9e5ab17e8639478dcdfa46da54d570d6598d80c9760de9c6ae709",
+          "size": 2975
+        },
+        "capsules/spectral-bridge/src/action_continuity/research_routes.rs": {
+          "mode": "100644",
+          "sha256": "bea9da85885d8f14e36f15bc6913d12543a9e803e3c070955364882edd8e1ced",
+          "size": 2068
+        },
+        "capsules/spectral-bridge/src/action_continuity/research_transaction_tests.rs": {
+          "mode": "100644",
+          "sha256": "9e7b425172d85bef11cf85d67b0fc35b27898dff9ccba5e2337958c599e9d2ff",
+          "size": 30752
+        },
+        "capsules/spectral-bridge/src/action_continuity/research_transactions.rs": {
+          "mode": "100644",
+          "sha256": "1d1e6e35f36191d1294ec7a4b2c9b0ea43d62cb46c35579f1f228b54d99279dd",
+          "size": 26928
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime.rs": {
+          "mode": "100644",
+          "sha256": "e116a778a9db2a81cc0098f52dc0ee7a72063355b4e0108fd09d13752b988067",
+          "size": 3953
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/authority.rs": {
+          "mode": "100644",
+          "sha256": "61f6d8cf40d3c9df38c69d2adac23cc29344a867fbfc494b044957b4d585df3f",
+          "size": 34284
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/command_dispatch.rs": {
+          "mode": "100644",
+          "sha256": "bc4ffac91b8ea0ee23f8f50d2db06d60f425c5ace66940cddd9f39686cd0fab8",
+          "size": 30903
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/core.rs": {
+          "mode": "100644",
+          "sha256": "594b3ee3b7524e38316d0a7823a7fe0d77fb7a60b81a925db3a3ec63baef45ae",
+          "size": 406653
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/experiment_projection.rs": {
+          "mode": "100644",
+          "sha256": "2cfaa9f5300b33d533b136ad26851b87e720d8b5394afa27328c28fbb97ad796",
+          "size": 5531
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/guards.rs": {
+          "mode": "100644",
+          "sha256": "3f80c20c6f0d45820066e303936ab4c2efeb1fca113fea302e50dca31288d98b",
+          "size": 24363
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/language_diagnostics.rs": {
+          "mode": "100644",
+          "sha256": "33b5e2f4dcc00d70153dbe2ac483d085cab02cbeb48081eb1b2494bf3ff74765",
+          "size": 1704
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/native_continuity.rs": {
+          "mode": "100644",
+          "sha256": "bcd55c385c3b87af268d50a159c13a90354def50653fc81093bdf32d8e809e9d",
+          "size": 27252
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/prompt_projection.rs": {
+          "mode": "100644",
+          "sha256": "9e653fdfcccc17d15873168c0b258837184f9d6d597403d657ebe2cf01e90c63",
+          "size": 9491
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/read_more_availability.rs": {
+          "mode": "100644",
+          "sha256": "2ed799083b7f642a058311476259cc384f1cde59535a5fbdf52dda246548aa20",
+          "size": 2623
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/save_receipts.rs": {
+          "mode": "100644",
+          "sha256": "aa5eef155a3370f34f60f8d9e557c4aba0ec5acee31a627c5bbdbf9072e464ef",
+          "size": 9204
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/session_contract.rs": {
+          "mode": "100644",
+          "sha256": "139edd425b19f0ccc7d0ee97f418b5edea944df5b40183376d39af8e0296ad1a",
+          "size": 4181
+        },
+        "capsules/spectral-bridge/src/action_continuity/runtime/session_lifecycle.rs": {
+          "mode": "100644",
+          "sha256": "53ccd28f76268df75875051e36d40c5a082fa39ea8ba393154810d88b2d2802e",
+          "size": 22189
+        },
+        "capsules/spectral-bridge/src/action_continuity/tests.rs": {
+          "mode": "100644",
+          "sha256": "569f641e902e87dea1b4f39f093a054b6c7000b83c5156023b2aae504a516519",
+          "size": 194153
+        },
+        "capsules/spectral-bridge/src/authority_gate.rs": {
+          "mode": "100644",
+          "sha256": "8d09fa8e66afe6caf2a245c23cd2b191c2d4018f0c9e725d3bac37411948c11c",
+          "size": 178472
+        },
+        "capsules/spectral-bridge/src/authority_gate/persistence.rs": {
+          "mode": "100644",
+          "sha256": "7b464ca4072dfdd33df2358339767cc044bbfe62f840833eb455fe08c64750ed",
+          "size": 2992
+        },
+        "capsules/spectral-bridge/src/autonomous.rs": {
+          "mode": "100644",
+          "sha256": "09d7d146d428b40395a1dc1a033373e2ee2b1d970ce6174d57ebe442c24d0ca7",
+          "size": 527
+        },
+        "capsules/spectral-bridge/src/autonomous/activity_reading.rs": {
+          "mode": "100644",
+          "sha256": "c5554fa6a9f514ffac10cf9d0ebfd79eeadeedd0d58c840bfebc72e0459db914",
+          "size": 20210
+        },
+        "capsules/spectral-bridge/src/autonomous/activity_reading/persistence.rs": {
+          "mode": "100644",
+          "sha256": "27efe1686c118dfa3758e465741be827bdd9f076a68f374e69f96083783d72cd",
+          "size": 9564
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/dispatch.rs": {
+          "mode": "100644",
+          "sha256": "e9369441a9165dd096457c741e1f44cb4ad5700abf08defd4b2567bd4a997918",
+          "size": 38440
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/mike.rs": {
+          "mode": "100644",
+          "sha256": "fc2eba75e9e7ddad52ded44d4c4e3602f4cf51e18a3d21a6fdc5e14a90990160",
+          "size": 20100
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/mod.rs": {
+          "mode": "100644",
+          "sha256": "b5f59cdf9fd3b74b3f80219c0f1b7ffea47372d7035ef26aea4ace3f07a26832",
+          "size": 172604
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/modes.rs": {
+          "mode": "100644",
+          "sha256": "4b7c3408ff6f607d995f3c5209e95afafacf1f956e3e263993e1c4dd25302e25",
+          "size": 24819
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/research_jobs.rs": {
+          "mode": "100644",
+          "sha256": "acbfa2cf5fca86c992abdbd8c870565a2ac351fc0e4879d5f6c37184c5868500",
+          "size": 9972
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/research_reading.rs": {
+          "mode": "100644",
+          "sha256": "55069170595a8ab402f8995771cd811e3204e27ce23018bc777091b58ce8d5fb",
+          "size": 17675
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/research_reading_tests.rs": {
+          "mode": "100644",
+          "sha256": "bc9ed4ac891440357ed5431b090567eeb5072df7cdce2f8ad624f467ce10b6b1",
+          "size": 12715
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/steward_invitation.rs": {
+          "mode": "100644",
+          "sha256": "a6705d2b145612b981155966df736d29827a9f926dd528f92b8754b43975ce48",
+          "size": 15820
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/steward_invitation/tests.rs": {
+          "mode": "100644",
+          "sha256": "c7649b9644798d794d769aaeb616e4b357bb8413cc04df26ec28eaa46fefc4df",
+          "size": 17695
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/study_inquiries_tests.rs": {
+          "mode": "100644",
+          "sha256": "77163d2049f0fd16b5983064d23e64b7f0fe80cfdc977ccec09af5b6b8d27395",
+          "size": 3942
+        },
+        "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs": {
+          "mode": "100644",
+          "sha256": "c2f04913387987a9222c8bb009b5582fa040a35dc72d9a29cdb8c5b9f9b65a12",
+          "size": 33279
+        },
+        "capsules/spectral-bridge/src/autonomous/runtime.rs": {
+          "mode": "100644",
+          "sha256": "390a4227fcc02aaf35e3871e2b50518e820e331e69eda0083e1d6a5714b4e305",
+          "size": 5239
+        },
+        "capsules/spectral-bridge/src/autonomous/runtime/deployment_startup.rs": {
+          "mode": "100644",
+          "sha256": "46e117e5555ebb0a06b4b48b5d1693bed9b0430ca1b4b9aaec7bc2d35ffb79c6",
+          "size": 5323
+        },
+        "capsules/spectral-bridge/src/autonomous/runtime/inbox.rs": {
+          "mode": "100644",
+          "sha256": "054e9f6369d5c41f061b739201d7f814d86d020b705cd61546ddbf0eb492f326",
+          "size": 23125
+        },
+        "capsules/spectral-bridge/src/autonomous/runtime/orchestration.rs": {
+          "mode": "100644",
+          "sha256": "d83fb2feadbe1e958bdc0dfa9656331dfb8e490700f3d08e04050e5be1571af1",
+          "size": 312376
+        },
+        "capsules/spectral-bridge/src/autonomous/runtime/retained_accounts_tests.rs": {
+          "mode": "100644",
+          "sha256": "80a366644db614e36a5c60172a0fa0743e430a02b76c4eefda1c1860dbd62039",
+          "size": 2860
+        },
+        "capsules/spectral-bridge/src/autonomous/runtime/source_study.rs": {
+          "mode": "100644",
+          "sha256": "6782fa9b4af82367f3eb63736c7dc5b8ca061b89e848b248205c3703afd36280",
+          "size": 52528
+        },
+        "capsules/spectral-bridge/src/autonomous/runtime/state_persistence.rs": {
+          "mode": "100644",
+          "sha256": "e3094da9784bb089dedeea711c5d7f072e4e6c0f4a5a73410e7d3a22904b933f",
+          "size": 26867
+        },
+        "capsules/spectral-bridge/src/autonomous/runtime/tests.rs": {
+          "mode": "100644",
+          "sha256": "20dc51a8bdaa2313f32d6d8f87b7336513d0298c1e6994bbd89e7a44830309f3",
+          "size": 220880
+        },
+        "capsules/spectral-bridge/src/autonomous/state.rs": {
+          "mode": "100644",
+          "sha256": "67ddb2510cd713fd39b3e507444344d4125edb24e47a2d03b244e8ae021ad48b",
+          "size": 134951
+        },
+        "capsules/spectral-bridge/src/autonomous/state_definition.rs": {
+          "mode": "100644",
+          "sha256": "8e32d4d0a0445544707ccb0266089e03aa2e28464c2b9160e443f6bb635f98ce",
+          "size": 17429
+        },
+        "capsules/spectral-bridge/src/autonomous/study_handoff.rs": {
+          "mode": "100644",
+          "sha256": "48da9df5d44cde22e2594b5c7e25f31c6aaae2e2e0c0885d4fe2eae2b6623cc3",
+          "size": 27409
+        },
+        "capsules/spectral-bridge/src/autonomous/study_handoff_review_tests.rs": {
+          "mode": "100644",
+          "sha256": "60988422e3dc6e6c5399b891ec3c6740a1d08de1a65a83fd201a6158cecfbcf4",
+          "size": 10236
+        },
+        "capsules/spectral-bridge/src/autonomous/study_handoff_tests.rs": {
+          "mode": "100644",
+          "sha256": "b7f2a98d0ad87c5b35eaa046cb0f999fcc2a8b06bb797cec7730065b22306f1d",
+          "size": 18962
+        },
+        "capsules/spectral-bridge/src/autonomous/study_legacy_writing_tests.rs": {
+          "mode": "100644",
+          "sha256": "b349ec626fbcb9203458d91f4b55158596866cfcf285e710587cdff4ad650731",
+          "size": 7963
+        },
+        "capsules/spectral-bridge/src/autonomous/study_research.rs": {
+          "mode": "100644",
+          "sha256": "529bff52884c1c38601b1333fe7bd773df2e738278edb3a86c4dba50863a865e",
+          "size": 8745
+        },
+        "capsules/spectral-bridge/src/autonomous/study_research_tests.rs": {
+          "mode": "100644",
+          "sha256": "daccdc2a88e43595f3a44226ac4b797f222ec7faacd28a39ca6b597449547798",
+          "size": 25814
+        },
+        "capsules/spectral-bridge/src/autonomous/volition.rs": {
+          "mode": "100644",
+          "sha256": "b8f2cf5f8e44f022ec6d9e955bc49fc4759bcb061d0eb45ed513e76e6251233f",
+          "size": 32749
+        },
+        "capsules/spectral-bridge/src/autonomous/volition_tests.rs": {
+          "mode": "100644",
+          "sha256": "38427898b49e828260d38b043882bb0a55726f7c2efa88ef0b4e1bff4e90c3d3",
+          "size": 6905
+        },
+        "capsules/spectral-bridge/src/continuity_control_plane.rs": {
+          "mode": "100644",
+          "sha256": "b38063bcd86ec1556097759bb7fe2ead3f205e66845c5dbf22f107c746fb6881",
+          "size": 14109
+        },
+        "capsules/spectral-bridge/src/lib.rs": {
+          "mode": "100644",
+          "sha256": "43a948fafc0498785adeb5efc15aef8577228846903f53774c4523705c6b2b8e",
+          "size": 2107
+        },
+        "capsules/spectral-bridge/src/llm.rs": {
+          "mode": "100644",
+          "sha256": "9a586db749b354021256cf6684148a9279ae37f67168d8343219ef861edd9547",
+          "size": 2130
+        },
+        "capsules/spectral-bridge/src/llm/provider/embeddings.rs": {
+          "mode": "100644",
+          "sha256": "9c77ace5b2c26b9e866c8381ef30f62ce34128208fdba5d60b93836f5434cd67",
+          "size": 6955
+        },
+        "capsules/spectral-bridge/src/llm/provider/research.rs": {
+          "mode": "100644",
+          "sha256": "3a22d888af3b86505db5f45f00872f23c72dce3c0249acae7513ecd280a0824f",
+          "size": 20430
+        },
+        "capsules/spectral-bridge/src/llm_tests.rs": {
+          "mode": "100644",
+          "sha256": "bec4360e8f96658d719a99d0660c3e81bc0df578f4b088d4a854ba884b3a332c",
+          "size": 6798
+        },
+        "capsules/spectral-bridge/src/mcp.rs": {
+          "mode": "100644",
+          "sha256": "2cdd5ed9b34f06458fc61272062c30720fb7a2917eb19f38d9b196a27931a6c2",
+          "size": 120748
+        },
+        "capsules/spectral-bridge/src/mcp_tests.rs": {
+          "mode": "100644",
+          "sha256": "3beed291bfe9fe2b2738411acf2c36dd326c24abfcba4357493d5b58f9a03c27",
+          "size": 29533
+        },
+        "capsules/spectral-bridge/src/public_web.rs": {
+          "mode": "100644",
+          "sha256": "5ffd9672e22abc97f791cfc9cd71b03f0462daec3ee29fbbd7aedc967e1b5aa7",
+          "size": 4635
+        },
+        "capsules/spectral-bridge/src/public_web/fixture.rs": {
+          "mode": "100644",
+          "sha256": "e08b92108b9595f13608ce222114873192e901ad23fd3021100a094c04e8b252",
+          "size": 6263
+        },
+        "capsules/spectral-bridge/tests/authority_consumer_contract.rs": {
+          "mode": "100644",
+          "sha256": "9b7ba32de8caad05b4dda848e4c5ccda4187df6bac80f2146f1441e16b3c7141",
+          "size": 5795
+        },
+        "capsules/spectral-bridge/tests/random_range_offline.rs": {
+          "mode": "100644",
+          "sha256": "ee4e81f6db07cd57279cde148d0c0799d5ab21c364770235c8c3746baf97ac76",
+          "size": 2230
+        },
+        "crates/astrid-events/tests/unknown_message_preservation.rs": {
+          "mode": "100644",
+          "sha256": "71629c646354ffdebcb751c93c76b6f470121c7d28e14c5776177e06ea7cc25c",
+          "size": 4865
+        },
+        "crates/astrid-minime-protocol/src/lib.rs": {
+          "mode": "100644",
+          "sha256": "853effa4662035a2a1e886b2b8f1eb5d8e0a8fe1df4f8b6b3db92fb832fc38e7",
+          "size": 7420
+        },
+        "crates/astrid-minime-protocol/src/volition/mod.rs": {
+          "mode": "100644",
+          "sha256": "8a59e48616bc9f6c04a96b95a2635750a1fcab7d120afd7aa5e25e47d99c43a9",
+          "size": 8686
+        },
+        "crates/astrid-minime-protocol/src/volition/public_web.rs": {
+          "mode": "100644",
+          "sha256": "4a4ab6cc499dab0299874e864b61aa9303091721dbe0a4b54333fdb1c797ee70",
+          "size": 7713
+        },
+        "crates/astrid-minime-protocol/src/volition/public_web/operator.rs": {
+          "mode": "100644",
+          "sha256": "111b2e1ab796ea4a1c4019d879838b992bbc32498add84066cd5f14c5906b3a9",
+          "size": 3267
+        },
+        "crates/astrid-minime-protocol/src/volition/public_web/tests.rs": {
+          "mode": "100644",
+          "sha256": "56a533902c9a4ab9dc6a6295feb02bdb57d737d2d50060900029a6b743bb84fc",
+          "size": 5947
+        },
+        "crates/astrid-public-web/Cargo.toml": {
+          "mode": "100644",
+          "sha256": "827d6158dc45b223bf88ba7541f0242c1ebbf8e2902992a3d29ac732a0f5e64e",
+          "size": 761
+        },
+        "crates/astrid-public-web/README.md": {
+          "mode": "100644",
+          "sha256": "328de34c28eae186945519f42246563200328628dd85cc0a2229776b45d3996a",
+          "size": 12285
+        },
+        "crates/astrid-public-web/src/authority.rs": {
+          "mode": "100644",
+          "sha256": "69198ec3cc7c622d4050166974d7a0690a6a30adcabb9318bbe184a112329294",
+          "size": 7395
+        },
+        "crates/astrid-public-web/src/guard.rs": {
+          "mode": "100644",
+          "sha256": "093afdc698b8f2ff28811917d8e59f8c1a431978af80d060b0b91cdf0712de58",
+          "size": 3974
+        },
+        "crates/astrid-public-web/src/lib.rs": {
+          "mode": "100644",
+          "sha256": "9ae4e141fe72ce6fa6f25de74735b91e883093acaa74dda2aee255a5a3d15858",
+          "size": 4438
+        },
+        "crates/astrid-public-web/src/main.rs": {
+          "mode": "100644",
+          "sha256": "fbb9e5f0b11b3c02d8a3d7ee091fa56f3eeab5abf25187de065d5a977902f825",
+          "size": 4966
+        },
+        "crates/astrid-public-web/src/network.rs": {
+          "mode": "100644",
+          "sha256": "542a9ac482f58bada0f629fe57fab138d363641ed06a0c8a25d37650b149401c",
+          "size": 7583
+        },
+        "crates/astrid-public-web/src/operator.rs": {
+          "mode": "100644",
+          "sha256": "ebc694934a1a4d6a40982a980da04f1af6f01bf0d27bf06eed63eed545f1b1c8",
+          "size": 13125
+        },
+        "crates/astrid-public-web/src/tests.rs": {
+          "mode": "100644",
+          "sha256": "244876b19d63be7b91c78267e26bb2bcfb6e98f736eb8f8b0d06b9aaf9ea0349",
+          "size": 20909
+        },
+        "crates/astrid-public-web/src/tests/failures.rs": {
+          "mode": "100644",
+          "sha256": "4ee94c8abfde552a6633f1852baa82029d306ae677c25b570c7bb1e03ac09418",
+          "size": 14797
+        },
+        "crates/astrid-public-web/src/tests/operator.rs": {
+          "mode": "100644",
+          "sha256": "b27db53e8583ff9ab1f0032c768cff1b4a2f326edbd03a769bf88ba7bc9637db",
+          "size": 10613
+        },
+        "crates/astrid-public-web/src/transport.rs": {
+          "mode": "100644",
+          "sha256": "cf8415b928f0436e551e49af391f0fdd102a05481dfc1bafcc5b2279647855be",
+          "size": 10200
+        },
+        "crates/astrid-source-study/help-notebook.txt": {
+          "mode": "100644",
+          "sha256": "662828d86feede37a42fc59dadb4191b5d6ac49ec10e7bf068de641c2e9b8bbb",
+          "size": 4071
+        },
+        "crates/astrid-source-study/help-verification.txt": {
+          "mode": "100644",
+          "sha256": "3d6364d8691a94d0628fe16774ce4a9208a15361d24055cc3f5d824d1dca15a0",
+          "size": 2755
+        },
+        "crates/astrid-source-study/src/action_route.rs": {
+          "mode": "100644",
+          "sha256": "164161cdcd0fa7f777b21df7ad78599f74aaef27c81ed9250c04324e873b5ce7",
+          "size": 3975
+        },
+        "crates/astrid-source-study/src/command_boundary.rs": {
+          "mode": "100644",
+          "sha256": "d108a500ad2169351aac0c5fdbad9ff01a2ca05028898c5b9d8b272cf70510bc",
+          "size": 2546
+        },
+        "crates/astrid-source-study/src/lib.rs": {
+          "mode": "100644",
+          "sha256": "587ee79382eca3dd76ca69a1bbd655711e45508206664eac53b41d56c3ec3262",
+          "size": 2264
+        },
+        "crates/astrid-source-study/src/main.rs": {
+          "mode": "100644",
+          "sha256": "387d9db93bae10c717ddf50eb7dc13a91c696cae9bc9a556831d9095b3298155",
+          "size": 6698
+        },
+        "crates/astrid-source-study/src/notebook.rs": {
+          "mode": "100644",
+          "sha256": "cb610a03374f27c928c5a33ebe55d7ffa09dfa8a8e3e387418435597dca0f120",
+          "size": 24346
+        },
+        "crates/astrid-source-study/src/notebook_accounts.rs": {
+          "mode": "100644",
+          "sha256": "baa96db25eb3ad829fdcb3f27dbd81a9cc5320fd7abf3ea0299bba1a896c70b2",
+          "size": 4731
+        },
+        "crates/astrid-source-study/src/questions.rs": {
+          "mode": "100644",
+          "sha256": "269392f6c8a2707f73cd528212be2fecb208836ba6a71025098676e05a66aeef",
+          "size": 30091
+        },
+        "crates/astrid-source-study/src/relationships.rs": {
+          "mode": "100644",
+          "sha256": "68a140335c81c43b2e423075e063e721656e32199f65d1db77e15ad95568d811",
+          "size": 2109
+        },
+        "crates/astrid-source-study/src/response_choice.rs": {
+          "mode": "100644",
+          "sha256": "06a243da7f4f93a05ec1884c113338692ca167d992973da08206f8a017605a29",
+          "size": 15326
+        },
+        "crates/astrid-source-study/src/source_search.rs": {
+          "mode": "100644",
+          "sha256": "0f8851323465e0f5bdee583dac42352aae812543b9650ebd7a075f4fd1fc809f",
+          "size": 31378
+        },
+        "crates/astrid-source-study/src/store.rs": {
+          "mode": "100644",
+          "sha256": "cbe17bb76cffe378236598396cfbbff160c01c6f21b08a9b8a3538d11c34939c",
+          "size": 49666
+        },
+        "crates/astrid-source-study/src/store_navigation.rs": {
+          "mode": "100644",
+          "sha256": "756b4f308707824bc7352c1717c6a260d1f392f0b5b35ad7f3a884175a571178",
+          "size": 21197
+        },
+        "crates/astrid-source-study/src/verification_context.rs": {
+          "mode": "100644",
+          "sha256": "d643655ed78700daf0eefdc36e1efeda8fa0410cc2802e6d3e733fb834e1fd71",
+          "size": 5832
+        },
+        "crates/astrid-source-study/src/writing.rs": {
+          "mode": "100644",
+          "sha256": "68604fb3202fdd6d4baaed75ef19cc2c5decc314e6ac6aae8baa832e2d9ce710",
+          "size": 37755
+        },
+        "crates/astrid-source-study/src/writing_command.rs": {
+          "mode": "100644",
+          "sha256": "f329744c32f2085faa5f04bd98d87131fb7c73d5430ab20cf9bdb049d7596fe7",
+          "size": 2558
+        },
+        "crates/astrid-source-study/tests/history_context_matrix.rs": {
+          "mode": "100644",
+          "sha256": "2ea1348ae7a8c3251fdba321e97a393c00aebd94f1ec73035754137f708ab5ff",
+          "size": 6785
+        },
+        "crates/astrid-source-study/tests/open_alias.rs": {
+          "mode": "100644",
+          "sha256": "484c213d6a3e9a408e024caea8f493a893bc3e0e539ac438fce1cc58137e96f6",
+          "size": 4005
+        },
+        "crates/astrid-source-study/tests/response_choice.rs": {
+          "mode": "100644",
+          "sha256": "5ad672602aab869f45e4baf24ccdb50df6e59fdf3f30dc4a3a2d906d054ad38d",
+          "size": 13204
+        },
+        "crates/astrid-source-study/tests/retained_accounts.rs": {
+          "mode": "100644",
+          "sha256": "ad5b202952fbb587170cec974f541f34330cac12eafdc9667e096ad6605145f1",
+          "size": 12363
+        },
+        "crates/astrid-source-study/tests/selective_recall_comparison.rs": {
+          "mode": "100644",
+          "sha256": "2b7e39f28ae2b1d2fa701dd0d7c59aa5c35347bd279dfc9bc41fdbc0823dd60f",
+          "size": 9195
+        },
+        "crates/astrid-source-study/tests/verification_choices.rs": {
+          "mode": "100644",
+          "sha256": "ac40e950acad729238437321b9bb174f32549140d8dae3e09125fe9237f1f6a1",
+          "size": 18899
+        },
+        "crates/astrid-types/src/ipc.rs": {
+          "mode": "100644",
+          "sha256": "49f75326f335751535357dbbc9c40f5af862ddc215463a7dd5fc6ea83805fd95",
+          "size": 73682
+        },
+        "crates/astrid-types/tests/ipc_unknown_preservation.rs": {
+          "mode": "100644",
+          "sha256": "284b0f1482d2fcccd67f0527d89e39c20db0d25d1dcaf985c6f5ec67de95a70e",
+          "size": 4428
+        },
+        "docs/steward-notes/2026-10-18-dependable-navigation-and-verification.md": {
+          "mode": "100644",
+          "sha256": "ab82632bab9d083252daf9f05d473e7b8e3dc7d380f598b98476fd97c0baeb58",
+          "size": 24305
+        },
+        "docs/steward-notes/2026-10-20-consumer-failures-and-selective-recall.md": {
+          "mode": "100644",
+          "sha256": "17aae18201a06b9a7646ec1ddc61acae90c7a7395bdf55ce838fb5e8e6237e9c",
+          "size": 13750
+        },
+        "docs/steward-notes/2026-10-20-history-context-matrix.json": {
+          "mode": "100644",
+          "sha256": "32a24742a001c29cd73b949d21ea41d1cee0bb2f587a8dc4f7f5cf9f1176a110",
+          "size": 5102
+        },
+        "docs/steward-notes/2026-10-20-history-measurements-and-study-survey.md": {
+          "mode": "100644",
+          "sha256": "b523097321edbacb40bb4d8593784d3b341f1505a7971b10ae5c69f9e320a7ea",
+          "size": 18352
+        },
+        "docs/steward-notes/2026-10-20-history-scan-measurements.json": {
+          "mode": "100644",
+          "sha256": "fb6c55b82577fe63c22933bedbdacc179bf22fd191c3a513bbe72f299390d66e",
+          "size": 11213
+        },
+        "docs/steward-notes/2026-10-20-navigation-accounts-reconciliation.md": {
+          "mode": "100644",
+          "sha256": "b2d8380658ead6592679df7d6a995db741dda5f28abeef00383a842f3659a302",
+          "size": 8964
+        },
+        "docs/steward-notes/2026-10-20-partial-saves-and-retained-accounts.md": {
+          "mode": "100644",
+          "sha256": "fbc65bba1a1b02be6b46ae108606faaf530d92642515920031d936e2a93cdafb",
+          "size": 22428
+        },
+        "docs/steward-notes/2026-10-20-provenance-and-history-review.md": {
+          "mode": "100644",
+          "sha256": "0aac3c199887b765926a43bcdcf0b798e4a82d55c763b8a2863f38a5c70b5152",
+          "size": 13656
+        },
+        "docs/steward-notes/2026-10-20-selective-recall-comparison.json": {
+          "mode": "100644",
+          "sha256": "39bf652d711009589a2bc542176186c6cbcc4d5f19607a44fcd0cadf07013c40",
+          "size": 23289
+        },
+        "docs/steward-notes/2026-10-21-exploration-scope-and-return.md": {
+          "mode": "100644",
+          "sha256": "c669209b2cc325486242d237c74991a7c98c0b5702db2dcd572930e0eef9e6ab",
+          "size": 11384
+        },
+        "docs/steward-notes/2026-10-21-freer-exploration-implementation.md": {
+          "mode": "100644",
+          "sha256": "a35c1cff940ff45b06abec2f35e0a3e9c35c4c30ad9527a2a120a2f2bbd4572a",
+          "size": 24919
+        },
+        "docs/steward-notes/2026-10-22-freer-exploration-letter-astrid.txt": {
+          "mode": "100644",
+          "sha256": "a590dafb5f6e73afc9d06ff0cc9fbab1b78612d4072c6f846798414865e25223",
+          "size": 2543
+        },
+        "docs/steward-notes/2026-10-22-freer-exploration-letter-minime.txt": {
+          "mode": "100644",
+          "sha256": "f9a7319a3397d6c9776c3707e16def78c82db6caf7b151b2299b171bb629ee45",
+          "size": 2704
+        },
+        "docs/steward-notes/2026-10-22-freer-exploration-rollout.md": {
+          "mode": "100644",
+          "sha256": "e6e32171fb40edf5c9340497e97c51b00e2c439ff4f1efe5292064dd5cfdf41c",
+          "size": 19605
+        },
+        "docs/steward-notes/2026-10-22-language-consumer-trace.md": {
+          "mode": "100644",
+          "sha256": "dddc6a7f4fca09757b9c9525efd52836d2d70ac1654b061570d8fed1533bbb72",
+          "size": 12950
+        },
+        "docs/steward-notes/2026-10-22-quiet-drafts-and-control-evidence.md": {
+          "mode": "100644",
+          "sha256": "02be2c5830efa82297d3e83d0e58ef72de7762bb6fd957599fb2eaee7ba551e9",
+          "size": 9547
+        },
+        "docs/steward-notes/2026-10-22-renewed-immutable-language-qualification.md": {
+          "mode": "100644",
+          "sha256": "72092d82a0e61ce6ef0ff3bd3a5a93f48f5b48987557c8914e5d8d95c69923e6",
+          "size": 10646
+        },
+        "docs/steward-notes/2026-10-22-selected-language-and-history.md": {
+          "mode": "100644",
+          "sha256": "7613e2829d9a74787dd298da9fa8115409deb7d563c359643d0498adb28cd09f",
+          "size": 11437
+        },
+        "docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md": {
+          "mode": "100644",
+          "sha256": "e67abac4730c53cd2fc00d3e6a677a065bc0cd5f17d928f5017881b5eb4666cd",
+          "size": 1875628
+        },
+        "scripts/bridge_activate.py": {
+          "mode": "100644",
+          "sha256": "5458ced5b0126d75f3e5691603925630f030b796cb02a5e686b7b826fec41a0d",
+          "size": 42398
+        },
+        "scripts/bridge_release_launch.py": {
+          "mode": "100755",
+          "sha256": "c7f7c2ab271190966eb2e649a094ab3ad88ea8c1b0d12be6108d5cfd2210678d",
+          "size": 4545
+        },
+        "scripts/bridge_stage.py": {
+          "mode": "100644",
+          "sha256": "aa0b59571e417283c73ea7eecf3cc53009b61ac2113ccfd600fe49a54e07d7a3",
+          "size": 19743
+        },
+        "scripts/bridge_stopped_recovery.py": {
+          "mode": "100644",
+          "sha256": "0713037e78e85b3353bab92f196049cc4e05da4b434a6e7f2864313f27bb36bb",
+          "size": 19480
+        },
+        "scripts/deploy_preflight.py": {
+          "mode": "100755",
+          "sha256": "7a2cc14aefa6b84bb52dbd274a081301a59c0d69b0b7fd19794231b5a551b5fa",
+          "size": 19577
+        },
+        "scripts/launchd_spectral_bridge.sh": {
+          "mode": "100755",
+          "sha256": "0eefa84d07a4dc0aa094922876f03924ec21b24bd4042e7bf51113671c2c9a2e",
+          "size": 3774
+        },
+        "scripts/paired_minime_handoff.py": {
+          "mode": "100644",
+          "sha256": "4a7d3da4ddca3d3d3f10c0afe106782eca560873ccc9e291f0fc9a6344f5b83a",
+          "size": 32911
+        },
+        "scripts/public-web-provision/Cargo.lock": {
+          "mode": "100644",
+          "sha256": "ba7b99b6fdf1cc09cf40aff6eabb87192fdb2a2db8c4b2b8f58d0a48836496a0",
+          "size": 60768
+        },
+        "scripts/public-web-provision/Cargo.toml": {
+          "mode": "100644",
+          "sha256": "179398f3974fa01328672ab81e55bc35948e9bfac1ea7965737d9e09da0f67ca",
+          "size": 923
+        },
+        "scripts/public-web-provision/README.md": {
+          "mode": "100644",
+          "sha256": "9ea5bab8a38c4fb40bd741b39ec03fad2850552bc8447b09a5b1a456a34c230f",
+          "size": 8790
+        },
+        "scripts/public-web-provision/src/main.rs": {
+          "mode": "100644",
+          "sha256": "e3931e1067964327ce008237bc2383fc02a45af96c8c26a98594f8da05e092d4",
+          "size": 2274
+        },
+        "scripts/public-web-provision/src/private_fs.rs": {
+          "mode": "100644",
+          "sha256": "a749221b4f4c69f19b4bd264b86c5efd1bf3cd7a1314b881858fafab46916bcb",
+          "size": 5145
+        },
+        "scripts/public-web-provision/src/provision.rs": {
+          "mode": "100644",
+          "sha256": "f2b2905d2c2eb81a162247ed1229182cca0ebe91be4a82bee9087b69d1208db5",
+          "size": 18103
+        },
+        "scripts/public-web-provision/src/tests.rs": {
+          "mode": "100644",
+          "sha256": "ff2cf92bd3b4ad5e52d955d9780cc2c45a186b67337662924cebc92b0bbd7b8e",
+          "size": 19072
+        },
+        "scripts/qualify_geometry_release.py": {
+          "mode": "100644",
+          "sha256": "5871b0c92bb12868fddd2c6b4998659c976fe9e2e5daf2a792ab67ffdf297a83",
+          "size": 22606
+        },
+        "scripts/qualify_retained_accounts_release.py": {
+          "mode": "100644",
+          "sha256": "30e9395f3bbd956eb30783af85efed23c040b8fc3485e4389b20757894b1e26a",
+          "size": 12748
+        },
+        "scripts/reconcile_minime_launch.py": {
+          "mode": "100644",
+          "sha256": "d5a10024c5253ef5911fe37edbc6e2752a37f27944da84743795be90a4af3d23",
+          "size": 7879
+        },
+        "scripts/restart_minime_agent.py": {
+          "mode": "100644",
+          "sha256": "cafd5d3b0718e694848c1581e071c6b7ed1523ab6a621119e1e2a9fd77a2cc35",
+          "size": 27679
+        },
+        "scripts/test_bridge_activate.py": {
+          "mode": "100644",
+          "sha256": "53e5a473feed5bae1eb190750ebf4e7a5c1c1e063e1219144297b1427e070176",
+          "size": 46871
+        },
+        "scripts/test_bridge_release_launch.py": {
+          "mode": "100644",
+          "sha256": "f4afccb28d376fe4ee65196a9a2dec935fe0e9f178a54a4451c4c671ce6baabf",
+          "size": 5633
+        },
+        "scripts/test_bridge_stage.py": {
+          "mode": "100644",
+          "sha256": "c25b5d7e35dd7d41995ed3793fe5f213ca0254735903e9e2f6ce0feece005416",
+          "size": 22938
+        },
+        "scripts/test_paired_minime_handoff.py": {
+          "mode": "100644",
+          "sha256": "022d2cdb329b2af70739dcebefc196d1ff7b39e86c7474b9cf13e98d2e276192",
+          "size": 44009
+        },
+        "scripts/test_qualify_geometry_release.py": {
+          "mode": "100644",
+          "sha256": "1c0f20bcd4610b08866e4995d023699afddc0ee65383062fce09e0b695a19fc0",
+          "size": 11945
+        },
+        "scripts/test_qualify_retained_accounts_release.py": {
+          "mode": "100644",
+          "sha256": "a7d73a93e50f453e7ad3313908bbf558ec4827a35db0be2fb40b28beba0ae24e",
+          "size": 5228
+        },
+        "scripts/test_reconcile_minime_launch.py": {
+          "mode": "100644",
+          "sha256": "abb0ba69704f17e5c563fa2ff30fef601a89ddb47c7da290a6bf6b4cd906384d",
+          "size": 15507
+        },
+        "scripts/test_restart_minime_agent.py": {
+          "mode": "100644",
+          "sha256": "1285cf708fccb902c671f2ae6c142e62496cae1109278a01d9790ece605f0af7",
+          "size": 16956
+        }
+      },
+      "foreign_bytes_preserved": true,
+      "foreign_changelog_preserved": true,
+      "foreign_tracked_count": 8,
+      "foreign_untracked_count": 1662,
+      "index_empty": true,
+      "remote_main": "5540b6ff0d46156d58e3f8461b84e55d44109a85"
+    },
+    "minime": {
+      "commit": "73f1e390565c52f83c77fd4ffd31d38103c3bb33",
+      "exact_committed_paths": {
+        "CHANGELOG.md": {
+          "mode": "100644",
+          "sha256": "93de124e326ac4aa40cdafe3004a066c15aa52fa4b13711fa5404980d3ccf555",
+          "size": 369813
+        },
+        "continuity_control_plane.py": {
+          "mode": "100644",
+          "sha256": "87e523ee7bc87af2e553a6376e5d6a30b36001db0f854ada36186342a66e4b2e",
+          "size": 30762
+        },
+        "docs/steward-notes/2026-10-21-choice-preservation.md": {
+          "mode": "100644",
+          "sha256": "dfe1d7b8763cfbf4cdc19c93b4b179a1dac657a1730954e1c6c43527ef5cb2af",
+          "size": 1498
+        },
+        "launchd/autonomous-agent.env": {
+          "mode": "100644",
+          "sha256": "e7db21517828606f19f2ab501de6f85376f54c91e36f0cff518f6f7381398d5a",
+          "size": 1458
+        },
+        "minime_autonomy/action_vocabulary.py": {
+          "mode": "100644",
+          "sha256": "40ec54cb003cff5d535d8c65fda2c2f6e4a50aed1142bf1721b3d1af441c6e5f",
+          "size": 19039
+        },
+        "minime_autonomy/authority.py": {
+          "mode": "100644",
+          "sha256": "5c1d40792a0be41c31e3b50a72eb7d8f3782a1ac14586711e21468d7775dbd4c",
+          "size": 70853
+        },
+        "minime_autonomy/choice_presentation.py": {
+          "mode": "100644",
+          "sha256": "80af33ac7755c1c6ccabcce419076498490d01f6d01ffa3ec3e3350af011a6ae",
+          "size": 8120
+        },
+        "minime_autonomy/projection_snapshot.py": {
+          "mode": "100644",
+          "sha256": "84e1da8647401290b3b823aa20535bab111c643a87890c7811301fc9d6068902",
+          "size": 17499
+        },
+        "minime_autonomy/public_web.py": {
+          "mode": "100644",
+          "sha256": "f89c17917ecdf7163c826044f5481d64d9ae0bf4c4fbf2a4699acb9e5d7061cb",
+          "size": 18031
+        },
+        "minime_autonomy/research.py": {
+          "mode": "100644",
+          "sha256": "baa3c2493bd71e888a37784f9a47d890d93ee2c249cbda20beea0e17c05dfca1",
+          "size": 12167
+        },
+        "minime_autonomy/research_transactions.py": {
+          "mode": "100644",
+          "sha256": "53194dc046c54fc7e37d3267c0f762eabe9739c682b769b9b8faf039c76ee628",
+          "size": 25002
+        },
+        "minime_autonomy/runtime.py": {
+          "mode": "100644",
+          "sha256": "81f3c99e29aa707945c5dfde1e64a44ec94ceec5f723e8b026c6102af5bfa4a5",
+          "size": 2655912
+        },
+        "minime_autonomy/source_study.py": {
+          "mode": "100644",
+          "sha256": "29b7bb7c96c5c183e2585c0dd25b562e5349ea6037a3f5e16dc8e3cdd8bf3797",
+          "size": 18022
+        },
+        "minime_autonomy/writing.py": {
+          "mode": "100644",
+          "sha256": "217ffef910d6fef75b916c250ae13e26977293142d35e06dfcee894644e37a77",
+          "size": 5086
+        },
+        "scripts/launchd_autonomous_agent.sh": {
+          "mode": "100755",
+          "sha256": "49c5ccb19bc4463a8fb3bbe2e1cdfb6aea9629adbf9e32aca85d7b644f922037",
+          "size": 2757
+        },
+        "tests/test_action_continuity.py": {
+          "mode": "100644",
+          "sha256": "6016c1b6dfbec715ca56ecab44b236c35c0291e1f88cbace27ecf25877cb1d38",
+          "size": 47161
+        },
+        "tests/test_agent_lifecycle.py": {
+          "mode": "100644",
+          "sha256": "22fb2dcf76e5fb871c8200fa49e1537556e1add2f2ce58724cfbbd05f41c001e",
+          "size": 21057
+        },
+        "tests/test_autonomous_agent_low_fill_guard.py": {
+          "mode": "100644",
+          "sha256": "945124becb720bec51a9399efee5ea003e97cb57a1ffa0307edb25d6e9256824",
+          "size": 389010
+        },
+        "tests/test_choice_preservation.py": {
+          "mode": "100644",
+          "sha256": "131e01e40ced96ae6b2ea6269f739fc4b528d2e42a676a18e5c6604f6c8f3c34",
+          "size": 19937
+        },
+        "tests/test_experimental_continuity.py": {
+          "mode": "100644",
+          "sha256": "07ab78033720dbbbf7f0b98944e7dff951ddce34748a8c96a2f22adaf37c261c",
+          "size": 476864
+        },
+        "tests/test_history_scan_measurements.py": {
+          "mode": "100644",
+          "sha256": "c948e288c8b76cb9dc951f7361fe4e0e9558d4077b2bdb5a9b7fc1acd6c1c7e3",
+          "size": 2801
+        },
+        "tests/test_journal_recall_consumers.py": {
+          "mode": "100644",
+          "sha256": "9217020872c81e7e9e5690fd992f6204eec4dda2ca7a61152dfebc47de58d6cb",
+          "size": 8392
+        },
+        "tests/test_language_diagnostic_scope.py": {
+          "mode": "100644",
+          "sha256": "08a4f1a21a105056efa9e1d473e9156d69058f524c4f8ee9fd94be29486da972",
+          "size": 26788
+        },
+        "tests/test_maintenance_next_edges.py": {
+          "mode": "100644",
+          "sha256": "64b13ea53d042f1a0f33bd5f292c2f303978f211b5ac8ed3e6295fc2d3b68a80",
+          "size": 36533
+        },
+        "tests/test_projection_render_reuse.py": {
+          "mode": "100644",
+          "sha256": "d76f2b009661fe3f86d059a1554bf9e4a11933082c32c50370893e6fc4001c76",
+          "size": 18738
+        },
+        "tests/test_public_web.py": {
+          "mode": "100644",
+          "sha256": "f9b2b88c46ce79b7601a82f39216751f6694d407e61cf531d828b0c683f8d57d",
+          "size": 20295
+        },
+        "tests/test_remaining_exploration_restrictions.py": {
+          "mode": "100644",
+          "sha256": "34743c6f7cf123e28cdaf30cb730f90df0602ed06652fdf521812428ed4a614e",
+          "size": 20334
+        },
+        "tests/test_research_transactions.py": {
+          "mode": "100644",
+          "sha256": "4d10f0bda90e5f82be43b2f26b1593b83d47ec80653016f8777af9835e0e6252",
+          "size": 24940
+        },
+        "tests/test_source_study_follow_through.py": {
+          "mode": "100644",
+          "sha256": "47d446d4e2a2a7d3fac14a8fdc917ba2d8cc6b15989c33cb845a58f7d5b1e537",
+          "size": 52817
+        },
+        "tests/test_source_study_shared.py": {
+          "mode": "100644",
+          "sha256": "23d8474a71ecaf1039df17b2d275a62b8654e89ce961c40ef4a656a19a3e2eea",
+          "size": 14110
+        },
+        "tests/test_truthful_return_support.py": {
+          "mode": "100644",
+          "sha256": "81376e951aaae5f06714171032594f85ef4a58f64ecf95b69ac2002de0691b0e",
+          "size": 12496
+        },
+        "tests/test_web_choice_preservation.py": {
+          "mode": "100644",
+          "sha256": "47a95ec2debc5529b16f402cf2f6747945e92b7974814e057b76ae5072a02fba",
+          "size": 3285
+        }
+      },
+      "foreign_bytes_preserved": true,
+      "foreign_changelog_preserved": false,
+      "foreign_tracked_count": 0,
+      "foreign_untracked_count": 0,
+      "index_empty": true,
+      "remote_main": "73f1e390565c52f83c77fd4ffd31d38103c3bb33"
+    }
+  },
+  "schema": "freer_exploration_integration_closeout_v1",
+  "stage": {
+    "astrid_inputs_bound_to_commit": 788,
+    "committed_as_sha256": "126a4e9a7061a8c7658c27e387a074065c9992c521f52a5dcb1c73954e4da631",
+    "manifest_sha256": "5631834b00565d6aef4b98ce7e943cd2c55e160453f38f36f2b65d3151e90f0c",
+    "source_inputs_unchanged": 826
+  }
+}

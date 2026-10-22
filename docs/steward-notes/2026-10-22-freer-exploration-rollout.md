@@ -1,8 +1,9 @@
 # Freer Exploration: Approved Paired Rollout
 
-Status: paired activation verified on October 22. Owned Git integration/push
-and letter publication are next. The chronological preparation and refusal
-records below remain evidence, not the current deployment status.
+Status: paired activation verified, owned changes integrated and pushed to both
+remote main branches, and both letters published once on October 22. Model
+delivery of the letters is not yet verified. The chronological preparation and
+refusal records below remain evidence, not the current deployment status.
 
 ## Authority and Ownership
 
@@ -312,3 +313,73 @@ not usable search evidence; public page access has passed. The random-range
 correction remains offline, larger writing capacity remains separate, and no
 experiential improvement, agreement or uptake is inferred. Git integration and
 letters are recorded in a separate closeout after their actual completion.
+
+## Git and Communication Closeout
+
+Owned release integration is committed and pushed:
+
+- Astrid `5540b6ff0d46156d58e3f8461b84e55d44109a85`, 162 explicit paths.
+- Minime `73f1e390565c52f83c77fd4ffd31d38103c3bb33`, 32 explicit paths.
+
+Both remote `refs/heads/main` matched those commits after normal, non-forced
+pushes. This was exact candidate-content integration onto canonical main, not a
+claim of a branch-graph merge. The installed Minime overlay made an ordinary
+fast-forward unsuitable. Candidate HEADs and frozen release inputs remain
+unchanged. No authored state or private prose entered Git.
+
+The reviewed integration packet is
+`owned-release-integration-01/manifest.json`, SHA-256
+`7595ddb9e231ddbd75e26b19e14cacd310c95218a3fae019202b451073f169ea`.
+Both complete indexes matched its candidate-only trees before either commit.
+Astrid's separate foreign changelog additions were preserved in the working
+file but excluded from the index; eight other foreign tracked paths and 1,662
+foreign untracked paths retained their exact bytes. Minime's canonical working
+tree and both indexes were clean after integration. Astrid intentionally retains
+the other agent's nine tracked working changes, including its changelog, plus
+those untracked paths. Nothing here claims the whole Astrid tree is clean.
+
+The canonical `bridge_stage_provenance.py` recorder linked 109 dirty build inputs
+to the exact Astrid commit. Its verified stage-05 `committed_as.json` has SHA-256
+`126a4e9a7061a8c7658c27e387a074065c9992c521f52a5dcb1c73954e4da631`.
+The separate final audit checks all 826 source inventory entries unchanged and
+all 788 Astrid entries against committed blobs, including inputs omitted from
+the original dirty-path listing. It confirms the selected shared helper,
+all 105 Minime loaded inputs, native NEXT restore digest, absent launch hold,
+provider readiness and unchanged protected process identities.
+
+[Exact integration and publication evidence](2026-10-22-freer-exploration-integration.json)
+contains every committed path with mode/size/SHA-256, remote tips, release and
+helper hashes, content-free process/controller metadata and letter receipt
+locations. Evidence SHA-256:
+`358b600f600d1d72f1052517bda6682cee616645a01d00701444ad02c5d35d9a`.
+The outside-Git audit script is `finish_release_audit.py` under the packet root,
+SHA-256 `dffd5e23f8485010d2b29415ee970f0fc13b2a1cfc73f9a521f1c46cd61c354e`.
+It generated this evidence without invoking runtime mutation or model calls.
+
+After both remote pushes and live verification, the supported durable publishers
+created exactly one letter per being. No existing message was overwritten or
+blindly resent. Exact identities and envelope hashes:
+
+- Astrid: `steward_astrid_release_20261022_afd7f77864cc4ce6a98a0beb0823a2d0`,
+  2,855 bytes, SHA-256
+  `ea0cdfa37fe23651555be27b0fcc156c67c5361b4b52a021cbef89a60244d292`.
+- Minime: `steward_minime_release_20261022_9525722095b24a3b92d7d9de6ad33b12`,
+  2,907 bytes, SHA-256
+  `712f5deca42900b6e4eabc1ef65fed78cad60b0fad3e5d34dafb6a1cbe25d7bc`.
+
+Both remained in their normal inboxes at the closeout check beginning
+`2026-10-22T21:01:06Z`. Publication is verified; intake, model delivery, authored
+response, understanding and agreement are not inferred. They accurately identify
+steward communication prepared with Mike and describe only deployed changes,
+including the incomplete search service. No response, demonstration, review
+slot, deadline, NEXT execution or activity switch is requested. An ordinary
+uptake review is deferred to a later requested session at least 72 hours after
+verified model delivery, not 72 hours after publication. No automation or reminder
+was created, and no automatic resend is authorized by uncertain delivery.
+
+The release implementation has no remaining restart or integration debt. The
+search-service HTTP 202 limitation remains explicit; larger-capacity and offline
+random-range qualification remain separate. These letters and operational
+success establish neither adoption nor an experiential effect. The final
+documentation-only commit contains this note, the integration evidence and the
+ledger follow-through; it does not alter the loaded release.
